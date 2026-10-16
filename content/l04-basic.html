@@ -1,0 +1,99 @@
+        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
+          <p class="qset-lede">看 slides 之前先讀一遍這 9 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L4 基礎題（帶著問題看 slides）：Context 管理與 tool 設計" data-slides="https://cs2680.com/slides/4_agent_design_1.pdf">複製基礎題</button>
+            <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
+          </div>
+          <ol class="qlist qlist-basic">
+            <li class="bq" id="b1">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=5" target="_blank" rel="noopener">p.5–7</a> · ReAct 與 loop</p>
+                <p class="qtext">只推理和只行動的 model 各會出什麼問題？ReAct loop 在什麼時候停止？Slide 標出 harness 設計者的哪四項工作？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>只推理：沒有東西檢查推理，小錯誤累積成自信的幻覺。只行動：背後沒有計畫，model 重複同樣的動作。ReAct 讓 observation 修正下一個想法。</p>
+                  <p>Loop 在兩種情況停止：observation 已經回答問題，或停止規則（步數、時間、預算）到了。四項工作：組出 context、寫 tool 定義、驗證並執行 tool call、整理結果與管理 context（p.7，第 4 項可選）。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b2">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=11" target="_blank" rel="noopener">p.11–16</a> · 找程式碼</p>
+                <p class="qtext">Agent 找程式碼有哪四種做法？Grep 找不到什麼？哪一種做法處理改名時，連別名 import 都不會漏？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>四種：glob 與 grep、semantic search 與 repo map、外部訊號（stack trace、失敗的測試、git 歷史）、language server。Grep 只比對字面，用詞不同就找不到：p.12 問「rate-limit」，程式寫的是 throttle，只有 embedding 找得到。</p>
+                  <p>Language server。p.14 把 <code>charge()</code> 改名成 <code>capture()</code>：<code>textDocument/references</code> 找到 7 個檔案裡 42 個呼叫點，<code>rename</code> 連別名 import 一起處理。代價是每種語言一個常駐 server。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b3">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=18" target="_blank" rel="noopener">p.18–22</a> · 四種編輯方式</p>
+                <p class="qtext">四種編輯方式各有什麼弱點？哪一種的輸出量和檔案大小成正比？Search/replace 為什麼比 unified diff 穩？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>整檔重寫：長檔會 drift。Unified diff：行號或 context 行過期就套不上。Search/replace：需要完全相符、唯一的 anchor。AST 編輯：支援的語言有限。p.22 把它們放在 token 成本與穩健度兩個軸上。</p>
+                  <p>整檔重寫：p.18 的例子只改 4 行，卻要輸出 120 行。Search/replace 靠內容定位，不靠行號，輸出量只和改動大小成正比。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b4">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=23" target="_blank" rel="noopener">p.23–24</a> · Shell</p>
+                <p class="qtext">Slide 說 shell 是最強也最危險的 tool，用哪四個特性說明？設計執行 tool 時要想哪五件事？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>四個特性：composition（一次 call 串接、過濾、loop）、reach（檔案系統、網路、套件）、persistence（檔案和 process 在 call 結束後還在）、blast radius（shell 能做的事 agent 都能做）。</p>
+                  <p>五件事：失敗訊號（agent 看得懂錯誤嗎）、輸出量、執行時間（長時間與背景 process）、預算（何時停止重試）、隔離（在哪裡跑、碰得到什麼）。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b5">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=26" target="_blank" rel="noopener">p.26–27</a> · Tool 設計原則</p>
+                <p class="qtext">Tool 設計的五條原則是什麼？只給 shell 和完整的 SWE-agent 介面，解題率各多少？哪兩個「多給資訊」的設定反而更差？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>五條：數量少且正交、為用途量身打造（<code>search_orders</code> 勝過 <code>run_sql</code>）、輸出省 token、錯誤訊息要能教、預設冪等。</p>
+                  <p>只給 shell 11.0%，完整介面 18.0%。顯示整個檔案（full-file view）12.7%，保留完整歷史（full interaction history）15.0%，都低於 18.0%。拿掉專用編輯器是 10.3%。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b6">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=31" target="_blank" rel="noopener">p.31–39</a> · 八種 prompt 技巧</p>
+                <p class="qtext">八種技巧分成哪三層？什麼情況從 zero-shot 換成 few-shot？Self-consistency 為什麼要 temperature 大於 0，一致度低時怎麼辦？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>先用簡單的（zero-shot、few-shot、role）；加入推理（chain-of-thought、tree-of-thought、self-consistency）；設計成系統（prompt chaining、meta prompting）。每往下一層，token 與呼叫次數都增加。</p>
+                  <p>輸出格式少見，或規則用說的講不清楚時，換 few-shot。Self-consistency 用 temperature 0.7 取樣 5 次：每次走不同的推理路徑，答案仍一致才代表有把握；p.36 的門檻是 0.8，4/5 回傳 yes，3/5 交給人。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b7">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=41" target="_blank" rel="noopener">p.41–46</a> · Context 的成本</p>
+                <p class="qtext">Prompt 技巧為什麼會過時？Context 有哪三種成本？答案放在 20 份文件的開頭、中間、結尾，準確率各多少？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>新的 model 在訓練時已經學會那些技巧要做的事，所以 prompt 的建議依 model 而異，換 model 要重新調整（p.41–42）。三種成本：錢（每一步重送整個 window）、延遲（prompt 越長 prefill 越久）、注意力（window 越滿越難找回資訊）。</p>
+                  <p>p.45 的 lost in the middle：第 1 份 76%，第 10 份 55%，第 20 份 71%，呈 U 形。p.46 的 window 裡最大的一塊是使用者、LLM 與 tool 結果，約 80K 而且持續增加。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b8">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=48" target="_blank" rel="noopener">p.48–52</a> · 四種策略</p>
+                <p class="qtext">四種 context 管理策略的順序是什麼？前三種的例子各省下多少？Compaction 為什麼排最後，slide 給了哪三個警告？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Admission → offloading → transformation → compaction，從預防、無損排到有損、不可逆。Admission：DOM 48,000 token 變 900，少 98%，答案相同。Offloading：60 個 tool schema 42,000 變 3,100，少 93%。Transformation：96,000 變 24,000，少 75%，沒有做摘要。</p>
+                  <p>Compaction 用 LLM 摘要舊歷史，有損、不可逆，所以是最後手段。三個警告：留空間給輸出、保留 system prefix、compaction 後重新放入關鍵事實。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b9">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=53" target="_blank" rel="noopener">p.53–55</a> · 五種失敗與 harness</p>
+                <p class="qtext">Context 的五種失敗叫什麼？Drift 是什麼症狀？只換 harness 的實驗，兩個 benchmark 的解題數各從多少變多少，harness 改了哪四件事？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Poisoning、distraction、confusion、clash、drift。Drift：真正的目標埋在歷史裡，agent 換成一個相近的子目標。</p>
+                  <p>SWE-bench Verified 從 43/169 變 72/169；SWE-bench Pro 從 31/316 變 72/316。四件事：壓縮舊的 tool 輸出、最近的 observation 保持完整、偵測重複與停滯、卡住時介入。結論：有些看似 model 能力不足的失敗，原因在 context 與 control loop。</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>

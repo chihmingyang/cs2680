@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>L2 Claude Code 怎麼運作 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l01.html" rel="prev">← L1</a>
+      <span class="here">L2 / 8</span>
+      <a href="l03.html" rel="next">L3 →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page gutter article" data-lecture="l02" data-format="article" data-pdf="2_agent_use_1.pdf" data-pages-total="60">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 02 · 2026-09-09 · Part I</p>
+    <h1>Claude Code 怎麼運作</h1>
+    <p class="en-title">Agents use I: How Claude Code Works</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/2_agent_use_1.pdf" target="_blank" rel="noopener">2_agent_use_1.pdf ↗</a></li>
+      <li><span class="k">頁數</span>60</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">這堂把 Claude Code 當成 agent 的標本，拆開來看。它回答三個問題：一個 prompt 背後發生什麼、agent 怎麼記住事情、怎麼擴充 agent 的能力。</p>
+    <ul class="core">
+      <li><span><b>Agent = model + loop。</b>Model 只負責提議下一步。Harness（Claude Code 本身）負責執行、檢查權限、管理 context。</span></li>
+      <li><span><b>記憶就是每次都會載入的檔案。</b>它每一步都佔 context、都要付費，所以要精簡、要維護。</span></li>
+      <li><span><b>要保證發生的事，用 hook。</b>寫在 CLAUDE.md 的規則，model 可能沒照做；hook 是程式，事件發生就一定執行。</span></li>
+    </ul>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+  </section>
+
+  <div class="layout">
+    <nav class="toc" aria-label="本堂目錄">
+      <details open>
+        <summary>本堂目錄</summary>
+        <ol>
+          <li><a href="#s-arch">1 架構<span>全貌</span></a></li>
+          <li><a href="#s-ideas">2 核心觀念<span>p.7–50</span></a></li>
+          <li><a href="#s-background">3 觀念補充<span>背景</span></a></li>
+          <li><a href="#s-beyond">4 延伸思考<span>延伸</span></a></li>
+          <li><a href="#s-discuss">5 問題討論<span>基礎／進階</span></a></li>
+          <li><a href="#s-try">6 動手試試<span>範例</span></a></li>
+          <li><a href="#s-submit">7 交作業<span>上傳</span></a></li>
+          <li><a href="#wrap">延伸閱讀<span>—</span></a></li>
+        </ol>
+      </details>
+    </nav>
+
+    <div class="content">
+
+      <!-- ===================== 1 架構 ===================== -->
+      <section class="part" id="s-arch">
+        <header class="part-head">
+          <p class="kicker">1 · 架構</p>
+          <h2>Claude Code 的零件怎麼接在一起</h2>
+        </header>
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 760 480" role="img" aria-label="Claude Code 的架構圖。你的 prompt 進入 harness 的 agent loop。Loop 把 context 送給 model，model 提議下一步。提議先經過權限檢查與 hook，才在你的電腦或外部系統執行。執行結果放回 context window。持久記憶在 session 開始時載入 context，skill 在用到時才載入。Plugin 把 skill、MCP 設定、hook 打包成一個可安裝單位。">
+              <defs>
+                <marker id="l2c-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+              </defs>
+
+              <!-- harness frame -->
+              <rect x="232" y="16" width="276" height="404" rx="8" class="dg-frame"/>
+              <text x="246" y="38" class="dg-ta">Harness(Claude Code)</text>
+
+              <!-- inner: loop -->
+              <rect x="246" y="56" width="248" height="56" rx="4" class="dg-box"/>
+              <text x="370" y="80" text-anchor="middle" class="dg-tb">Agent loop</text>
+              <text x="370" y="100" text-anchor="middle" class="dg-ts">重複，直到 model 不再提議動作</text>
+
+              <!-- inner: guard -->
+              <rect x="246" y="144" width="248" height="72" rx="4" class="dg-box"/>
+              <text x="370" y="168" text-anchor="middle" class="dg-tb">權限檢查</text>
+              <text x="370" y="186" text-anchor="middle" class="dg-ts">manual / auto / bypass …</text>
+              <text x="370" y="205" text-anchor="middle" class="dg-ta">hook：事件發生就一定執行</text>
+
+              <!-- inner: context -->
+              <rect x="246" y="248" width="248" height="156" rx="4" class="dg-box"/>
+              <text x="370" y="272" text-anchor="middle" class="dg-tb">Context window</text>
+              <text x="370" y="290" text-anchor="middle" class="dg-ts">working memory，session 結束就消失</text>
+              <text x="262" y="316" class="dg-ts">· system prompt、tool 定義</text>
+              <text x="262" y="336" class="dg-ts">· CLAUDE.md、memory、skill 名稱</text>
+              <text x="262" y="356" class="dg-ts">· 對話與 tool 結果（每圈變大）</text>
+              <text x="262" y="386" class="dg-tm">滿了 → compaction(摘要舊內容)</text>
+
+              <!-- loop -> guard -->
+              <line x1="370" y1="112" x2="370" y2="142" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="378" y="132" class="dg-ts">tool call</text>
+
+              <!-- left column -->
+              <rect x="12" y="56" width="140" height="56" rx="4" class="dg-box"/>
+              <text x="82" y="80" text-anchor="middle" class="dg-tb">你</text>
+              <text x="82" y="100" text-anchor="middle" class="dg-ts">輸入 prompt</text>
+              <line x1="152" y1="84" x2="244" y2="84" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="198" y="76" text-anchor="middle" class="dg-ts">prompt</text>
+
+              <rect x="12" y="240" width="140" height="108" rx="4" class="dg-box"/>
+              <text x="82" y="262" text-anchor="middle" class="dg-tb">持久記憶</text>
+              <text x="82" y="284" text-anchor="middle" class="dg-ts">CLAUDE.md</text>
+              <text x="82" y="300" text-anchor="middle" class="dg-ts">你寫的規則</text>
+              <text x="82" y="322" text-anchor="middle" class="dg-ts">auto memory</text>
+              <text x="82" y="338" text-anchor="middle" class="dg-ts">Claude 的筆記</text>
+              <line x1="152" y1="294" x2="244" y2="294" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="198" y="286" text-anchor="middle" class="dg-ts">啟動時載入</text>
+
+              <rect x="12" y="360" width="140" height="48" rx="4" class="dg-box"/>
+              <text x="82" y="380" text-anchor="middle" class="dg-ta">Skill</text>
+              <text x="82" y="398" text-anchor="middle" class="dg-ts">程序與知識</text>
+              <line x1="152" y1="384" x2="244" y2="384" class="dg-line dg-dash" marker-end="url(#l2c-ah)"/>
+              <text x="198" y="376" text-anchor="middle" class="dg-ts">用到時載入</text>
+
+              <!-- right column: model -->
+              <rect x="588" y="44" width="160" height="80" rx="4" class="dg-box"/>
+              <text x="668" y="70" text-anchor="middle" class="dg-tb">Model(LLM)</text>
+              <text x="668" y="90" text-anchor="middle" class="dg-ts">無狀態</text>
+              <text x="668" y="108" text-anchor="middle" class="dg-ts">只負責提議下一步</text>
+              <line x1="494" y1="70" x2="586" y2="70" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="548" y="62" text-anchor="middle" class="dg-ts">送出 context</text>
+              <line x1="588" y1="100" x2="496" y2="100" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="548" y="118" text-anchor="middle" class="dg-ts">提議下一步</text>
+
+              <!-- right column: environment -->
+              <rect x="588" y="144" width="160" height="120" rx="4" class="dg-box"/>
+              <text x="668" y="166" text-anchor="middle" class="dg-tb">你的電腦與外部系統</text>
+              <text x="668" y="188" text-anchor="middle" class="dg-ts">內建 tool</text>
+              <text x="668" y="204" text-anchor="middle" class="dg-ts">Read、Edit、Bash …</text>
+              <text x="668" y="226" text-anchor="middle" class="dg-ta">MCP server</text>
+              <text x="668" y="242" text-anchor="middle" class="dg-ts">GitHub、Jira、DB …</text>
+              <line x1="494" y1="180" x2="586" y2="180" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="548" y="172" text-anchor="middle" class="dg-ts">執行</text>
+              <polyline points="668,264 668,326 496,326" class="dg-line" marker-end="url(#l2c-ah)"/>
+              <text x="582" y="318" text-anchor="middle" class="dg-ts">結果放回 context</text>
+
+              <!-- plugin bar -->
+              <rect x="12" y="436" width="736" height="34" rx="4" class="dg-box-soft"/>
+              <text x="380" y="458" text-anchor="middle" class="dg-t"><tspan class="dg-ta">Plugin</tspan>：把 skill、MCP 設定、hook、subagent 打包成一個可安裝單位</text>
+            </svg>
+          </div>
+          <figcaption>Model 只負責提議；所有動作都先經過 harness 的權限檢查，才會執行。記憶和 skill 都是放進 context 的文字。藍字是四種擴充機制：skill、MCP、hook、plugin。</figcaption>
+        </figure>
+        <div class="prose">
+          <p>看這張圖，抓住一個重點：model 只負責「想」，所有「做」都經過 harness。Harness 每次呼叫 model 時，model 只看得到 context window 裡的東西。記憶、skill、tool 的定義，都是 harness 放進 context 的文字。Hook 不經過 model，它掛在 harness 執行 tool 的路徑上。</p>
+        </div>
+      </section>
+
+      <!-- ===================== 2 核心觀念 ===================== -->
+      <section class="part" id="s-ideas">
+        <header class="part-head">
+          <p class="kicker">2 · 核心觀念</p>
+          <h2>三個觀念串起整堂課</h2>
+        </header>
+        <div class="ideas">
+          <div class="idea" id="i1">
+            <h3>一個 prompt，很多圈 loop <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=7" target="_blank" rel="noopener">p.7–17</a></h3>
+            <div class="prose">
+              <p>你打一個 prompt，Claude Code 會跑很多圈 loop。每一圈，harness 把整個 context 送給 model。Model 提議一個動作，例如跑 <code>pytest</code>。Harness 檢查權限，在你的電腦上執行，再把結果放回 context。Model 不再提議動作時，這一輪才結束。</p>
+              <p>這個結構有兩個後果。第一，成本和延遲隨圈數增加，因為每一圈都重送整個 context。第二，context 一直變大，快滿時就要 compaction，把舊的過程摘要起來。摘要會丟掉細節，所以重要的規則不能只靠對話記住。</p>
+            </div>
+          </div>
+          <div class="idea" id="i2">
+            <h3>Agent 的記憶，就是每次都會載入的檔案 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=18" target="_blank" rel="noopener">p.18–31</a></h3>
+            <div class="prose">
+              <p>Model 沒有狀態。它不記得上一個 session，也不記得上一圈 loop。Agent 看起來記得事情，是因為 harness 每次都把相關文字放進 context。</p>
+              <p>Claude Code 有兩套持久記憶。CLAUDE.md 是你寫的規則：怎麼跑測試、哪些事不准做、推不出來的專案事實。Auto memory 是 Claude 自己寫的筆記：你的偏好、你給過的糾正。兩者都在 session 開始時載入。</p>
+              <p>記憶有成本。每一行常駐內容，之後每一圈 loop 都要再送一次。過期的記憶比沒有記憶更糟，因為它會誤導 agent。所以 slide 建議把記憶當程式碼管理：review、刪減、放進版本控制。</p>
+            </div>
+          </div>
+          <div class="idea" id="i3">
+            <h3>四種擴充機制，各管一件事 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=33" target="_blank" rel="noopener">p.33–50</a></h3>
+            <div class="prose">
+              <p>內建的 tool（Read、Search、Edit、Shell 等）讓 agent 能動手。要擴充能力，有四種機制：skill 教 agent 怎麼做一件事；MCP 讓 agent 碰得到外部系統；hook 在特定事件發生時執行程式；plugin 把前三者打包，讓別人一個指令就能安裝。</p>
+              <p>最重要的差別：skill 和 MCP 都要等 model 決定使用，hook 不用。Model 的判斷是機率性的，hook 是確定性的。所以「一定要發生」或「一定不能發生」的事，要交給 hook 或權限設定，不要只寫在 CLAUDE.md。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 3 觀念補充 ===================== -->
+      <section class="part" id="s-background">
+        <header class="part-head">
+          <p class="kicker">3 · 觀念補充</p>
+          <h2>Slide 預設你已經懂的背景</h2>
+        </header>
+        <dl class="terms">
+          <div id="t1">
+            <dt>Prefix cache<small>每圈重送 context 為什麼還負擔得起</small></dt>
+            <dd>
+              <p>Provider 會暫存 prompt 開頭那一段的計算結果。下一個 request 只要開頭完全相同，那一段就直接讀快取，不必重算。讀快取的價格約是一般 input 的十分之一，部分 model 更低（L8 會細算）。</p>
+              <p>代價是：開頭只要改一個字，後面全部要重算。所以 system prompt、tool 定義、CLAUDE.md 放在最前面，而且不要常改。</p>
+            </dd>
+          </div>
+          <div id="t2">
+            <dt>機率性與確定性<small>規則寫在哪裡才擋得住</small></dt>
+            <dd>
+              <p>寫在 prompt 或 CLAUDE.md 的規則，是對 model 的要求。Model 大多會照做，但沒有保證。Hook、權限設定、CI 檢查是程式，條件成立就一定執行。</p>
+              <p>設計 agent 時，先分清楚兩類規則：可以「大多數時候遵守」的，和必須「每次都遵守」的。後者要放進程式。</p>
+            </dd>
+          </div>
+          <div id="t3">
+            <dt>漸進載入<small>progressive disclosure</small></dt>
+            <dd>
+              <p>Skill 和 MCP 一開始只把名稱和描述放進 context，用到時才載入全文 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=8" target="_blank" rel="noopener">p.8</a>。這和作業系統的 lazy loading 是同一個想法：先放索引，需要時才讀進來。L1 把 context window 比喻成 RAM；這個做法就是在節省 RAM。</p>
+            </dd>
+          </div>
+          <div id="t4">
+            <dt>Prompt injection<small>tool 輸出也是攻擊面</small></dt>
+            <dd>
+              <p>Agent 讀進來的網頁、檔案、MCP 回傳的結果，都會變成 context 裡的文字。文字裡如果藏著「忽略之前的指示…」，model 可能照做。這種攻擊叫 prompt injection。</p>
+              <p>對策：把 tool 輸出當資料，不當指令；危險動作一律經過權限檢查；MCP 的 token 只給最小權限 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=57" target="_blank" rel="noopener">p.57</a>。</p>
+            </dd>
+          </div>
+          <div id="t5">
+            <dt>N×M 整合問題<small>MCP 為什麼需要標準協定</small></dt>
+            <dd>
+              <p>沒有標準時，N 個 AI app 要接 M 個服務，就要寫 N×M 套整合。有了 MCP，每個 app 只實作一次 client，每個服務只提供一次 server <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=53" target="_blank" rel="noopener">p.53</a>。LSP 用同樣的方法，解決編輯器和程式語言之間的整合。</p>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ===================== 4 延伸思考 ===================== -->
+      <section class="part" id="s-beyond">
+        <header class="part-head">
+          <p class="kicker">4 · 延伸思考</p>
+          <h2>超出 slide 的推論</h2>
+        </header>
+        <p class="note-own">這一段是本文的延伸，不是 slide 的內容。</p>
+        <div class="ideas">
+          <div class="idea" id="x1">
+            <h3>產品差異在 harness，不只在 model</h3>
+            <div class="prose">
+              <p>這堂拆出來的 loop、權限、記憶、擴充機制，全部屬於 harness。L4 會看到一個實驗：model 不變，只改 harness，在小 context window 的設定下，SWE-bench 的解題數接近翻倍。</p>
+              <p>所以比較兩個 agent 時，要把 model 和 harness 分開看。一個簡單的做法是 2×2 實驗：兩個 model 乘上兩個 harness，看差異來自哪一邊。</p>
+            </div>
+          </div>
+          <div class="idea" id="x2">
+            <h3>CLAUDE.md 會累積技術債</h3>
+            <div class="prose">
+              <p>團隊一起用 agent 時，CLAUDE.md 會不斷變長：每個人遇到問題，就加一條規則。規則之間開始矛盾，過期的規則沒人刪。官方文件說，規則矛盾時，Claude 可能任選一條。</p>
+              <p>所以 CLAUDE.md 需要負責人，也需要 review，和程式碼一樣走 PR。也可以定期用 <code>/doctor</code> 檢查，找出不該放在裡面的內容。</p>
+            </div>
+          </div>
+          <div class="idea" id="x3">
+            <h3>自主程度要配合風險</h3>
+            <div class="prose">
+              <p>權限模式是一條光譜：每步都問（manual）、自動同意編輯（acceptEdits）、交給另一個 model 判斷（auto）、完全不問（bypass）。越往後越快，出錯時的代價也越大。</p>
+              <p>L3 的原則是「自主程度配合風險」。碰到正式資料或受監管的環境，用 hook 和權限設定守住底線，比相信 model 的判斷可靠。</p>
+            </div>
+          </div>
+          <div class="idea" id="x4">
+            <h3>記憶也是攻擊面</h3>
+            <div class="prose">
+              <p>Auto memory 會把對話內容寫進檔案，下次自動載入。Agent 如果讀到惡意內容並記下來，攻擊就會延續到之後的 session。L6 把這叫 persistent prompt injection。</p>
+              <p>所以記憶要能檢查、能刪除。用 <code>/memory</code> 可以瀏覽、修改或關閉 auto memory。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 5 問題討論 ===================== -->
+      <section class="part" id="s-discuss">
+        <header class="part-head">
+          <p class="kicker">5 · 問題討論</p>
+          <h2>讀書會討論題</h2>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡。進階題在讀完文章後回答，讀書會前發給大家。</p>
+        </header>
+        <div class="qtabs" role="tablist" aria-label="題目分組">
+          <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
+          <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
+        </div>
+        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
+          <p class="qset-lede">看 slides 之前先讀一遍這 8 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L2 基礎題（帶著問題看 slides）：Claude Code 怎麼運作" data-slides="https://cs2680.com/slides/2_agent_use_1.pdf">複製基礎題</button>
+            <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
+          </div>
+          <ol class="qlist qlist-basic">
+            <li class="bq" id="b1">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=7" target="_blank" rel="noopener">p.7–11</a> · Agent loop</p>
+                <p class="qtext">你輸入一個 prompt 之後，Claude Code 重複做哪三件事？重複到什麼時候才停？Model 和 harness 各負責哪一部分？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>三件事：收集 context、產生下一個 action、執行 tool。每一步的輸入是上一步的結果，直到 model 判斷任務完成。</p>
+                  <p>Model 只輸出文字，決定下一步，例如提議 <code>Bash("pytest")</code>。Harness（Claude Code 這個程式）組 context、檢查權限、呼叫 tool，再把結果放回 context。p.11 的例子有 5 次 tool 執行、6 次 inference。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b2">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=8" target="_blank" rel="noopener">p.8–9</a> · Context 的起點</p>
+                <p class="qtext">你還沒打第一個字，context 裡已經有哪些東西？Claude Code 為什麼不把整個 repo 送給 model，它怎麼拿到需要的程式碼？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>已經有 10,000 個以上的 token：系統指令、專案資訊、CLAUDE.md 與 memory、tool 定義，以及 skill 與 MCP 的名稱和描述。Skill 和 MCP 的完整內容要等 model 決定用時才載入（progressive disclosure）。</p>
+                  <p>Repo 可能有幾千個檔案，遠大於 context window。Repo 留在磁碟上，model 用 Grep、Read 這類 tool 按需取一小片。所以 agent 只知道它讀過的部分。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b3">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=12" target="_blank" rel="noopener">p.12</a> · 權限</p>
+                <p class="qtext">權限檢查發生在哪兩個步驟之間？四種權限模式差在哪裡？Slide 建議什麼情況才用 bypass？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>在「model 提議」和「harness 執行」之間。Tool call 只是提案，要先通過檢查，結果是 allowed、ask 或 denied。</p>
+                  <p>Manual 每個動作都問；Accept Edits 自動同意檔案編輯，其他仍問；Bypass 全部放行；Auto 由一個小 model 判斷。Bypass 在 model 判斷錯誤時沒有任何防線，所以只在可丟棄的環境（container、VM）裡用。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b4">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=16" target="_blank" rel="noopener">p.16</a> · Compaction</p>
+                <p class="qtext">Context 快滿時會發生什麼事？這個動作會丟掉什麼？哪個檔案在這之後會重新載入，這對你寫規則有什麼意義？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Claude Code 把舊的過程摘要起來，這叫 compaction。它是有損的，摘要會丟掉細節，包括你在對話裡講過的規則。</p>
+                  <p>CLAUDE.md 在 compaction 後會重新載入。所以重要的規則要寫進 CLAUDE.md，不要只在對話裡說一次。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b5">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=20" target="_blank" rel="noopener">p.20–23</a> · 兩種記憶</p>
+                <p class="qtext">Agent 的記憶分哪兩種？CLAUDE.md 和 auto memory 各由誰寫、適合放什麼？它們能不能「強制」agent 做某件事？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Context 是 working memory，session 結束就消失；persistent memory 存在檔案裡，下個 session 再載入。LLM 本身每次呼叫都從零開始。</p>
+                  <p>CLAUDE.md 由你寫，放指令、硬規則、難推得的事實。Auto memory 由 Claude 自己寫，放你的偏好、你給的糾正、專案背景。兩者都只是 context，model 可能沒照做；要一定擋下，用 hook。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b6">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=24" target="_blank" rel="noopener">p.24–26</a> · CLAUDE.md 的層級</p>
+                <p class="qtext">CLAUDE.md 有哪四個層級？它們互相覆蓋，還是全部串接？CLAUDE.md 太長時該怎麼拆，<code>paths:</code> 有什麼作用？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Managed policy（組織）、user（<code>~/.claude/CLAUDE.md</code>）、project（<code>./CLAUDE.md</code>）、local（<code>./CLAUDE.local.md</code>）。它們不互相覆蓋，全部串接進 context；範圍最大的先載入，離你最近的最後讀。</p>
+                  <p>太長時拆到 <code>.claude/rules/</code>，一個主題一個檔。加上 <code>paths:</code> 的 rule，只在 Claude 讀寫符合條件的檔案時才載入；沒有 <code>paths:</code> 的每個 session 都載入。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b7">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=35" target="_blank" rel="noopener">p.35–36、p.43</a> · 四種擴充機制</p>
+                <p class="qtext">Skill、MCP、hook、plugin 各解決什麼問題？四種裡哪一種不需要 model「決定使用」就會執行？為什麼這件事重要？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Skill 放做事的程序與知識；MCP 連到外部資料與動作；hook 在生命週期事件上自動執行；plugin 負責打包與發佈。</p>
+                  <p>只有 hook 綁在事件上，不需要 model 同意。Skill 和 MCP 都要等 model 決定使用才生效。所以必須強制的規則要用 hook，例如 PreToolUse 擋下某個指令。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b8">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=50" target="_blank" rel="noopener">p.50</a> · 設計練習</p>
+                <p class="qtext">「每次編輯後自動格式化」「從 Jira 讀一張 issue」「禁止寫入 production」各該用哪一種機制？先自己判斷，再看 slide 的答案。</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>自動格式化用 hook：綁在「編輯完成」這個事件，每次都要發生。讀 Jira 用 MCP：要碰外部系統。禁止寫入 production 用 hook 或 policy：必須強制，不能靠 model 記得。</p>
+                  <p>判斷順序：要強制嗎？用 hook。要碰外部嗎？用 MCP。要分享嗎？用 plugin。其餘是程序與知識，用 skill。</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
+          <p class="qset-lede">這 6 題可以在讀書會前先發給大家回答。每題附情境、回答要點與相關 slide。「參考觀點與追問」給主持人用，建議討論後再展開。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L2 進階題（讀書會討論）：Claude Code 怎麼運作" data-slides="https://cs2680.com/slides/2_agent_use_1.pdf">複製進階題</button>
+            <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
+          </div>
+          <ol class="qlist">
+            <li class="dq" id="q1">
+              <div class="qbody">
+                <p class="qtag">概念 · Agent loop · <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=7" target="_blank" rel="noopener">p.7–17</a></p>
+                <p class="qtext">用一個具體例子，說明一個 prompt 在 Claude Code 裡從輸入到完成的過程。哪些步驟由 model 決定，哪些由 harness 執行？</p>
+                <p class="qctx"><b>情境：</b>你在一個 Python 專案裡輸入「修好 tests/test_auth.py 失敗的測試」。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>依序列出每一圈 loop：model 提議什麼、harness 做了什麼、什麼結果放回 context。</li>
+                    <li>指出至少兩個可能出錯的地方，以及哪一層會擋下錯誤（model、權限、hook、測試）。</li>
+                    <li>估計這一輪至少有幾次 model inference，並說明理由。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>先畫出 p.11 的鏈：prompt → M₁ → T₁ → M₂ → … → 回答。再把 p.10 和 p.12 疊上去：每個 tool 執行前，都有一次權限檢查。</p>
+                  <p>可能出錯的地方：讀錯檔案、改錯位置、沒跑測試就宣稱完成。最後一種在 L6 叫 unverified success。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>典型過程：跑 pytest 看錯誤 → 讀測試和相關程式 → grep 呼叫點 → 修改 → 再跑 pytest → 通過後回報。每次 tool 之前有一次 inference，最後回報再一次，所以 5 次 tool 至少 6 次 inference。</li>
+                    <li>Model 決定：讀哪個檔、怎麼改、什麼時候停。Harness 執行：檢查權限、跑指令、把輸出放回 context、context 太大時 compaction。</li>
+                    <li>擋錯的層次：權限擋危險指令；hook 擋違反規則的編輯；測試擋錯誤的修改。「沒驗證就宣稱完成」要靠 Stop hook 檢查，或要求附上測試輸出（p.43 的「結束前確認測試」）。</li>
+                    <li>三種常見錯誤：沒讀測試對應的程式就修改；改測試的期望值來讓測試通過；只跑一個測試檔，弄壞別的測試。對策：CLAUDE.md 寫明「不改測試的期望值」，並要求最後跑整套測試。</li>
+                  </ul>
+                  <p><b>追問：</b>測試要跑 20 分鐘時，loop 會變成什麼樣子？Model 只看得到 context；哪些資訊不在 context 裡，卻會影響修改是否正確？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q2">
+              <div class="qbody">
+                <p class="qtag">估算 · Context 與成本 · <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=16" target="_blank" rel="noopener">p.8、p.16</a></p>
+                <p class="qtext">估算一個 50 步的任務，總共送出多少 input token，以及 prefix cache 大約能省下多少。</p>
+                <p class="qctx"><b>情境：</b>固定內容（system prompt、tool 定義、CLAUDE.md）共 15k token。每一步新增約 2k token（model 回覆加 tool 結果）。不考慮 compaction 和 output token。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>寫出計算方式和結果。</li>
+                    <li>假設 cache read 的價格是一般 input 的 0.1 倍，估算省下的比例。</li>
+                    <li>提出兩個降低成本的做法，並說明各自的代價。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>第 k 步送出的 context 是 15k + 2k×（k−1）。把 50 步加總。有 prefix cache 時，每一步只有新增的部分是新內容，其他都是上一步送過的前綴。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>總 input：k = 1…50 加總 15k + 2k×（k−1），得到 750k + 2,450k，約 3.2M token。</li>
+                    <li>新內容約 15k + 49×2k ≈ 113k token，其餘約 3.09M 是 cache read。以 0.1 倍計價，約等於 422k 個一般 input token，省下約 87%。Cache 寫入另有加價（約 1.25 倍），算進去約省 86%。</li>
+                    <li>這也解釋了 p.16 的「大部分成本來自 cache read」。L8 的課堂資料顯示，cache read 佔所有 token 的 97.6%。</li>
+                    <li>降成本的做法：先規劃再批次執行，減少步數（代價：規劃本身要花 token）；tool 只回傳必要的輸出（代價：可能漏資訊）；保持前綴穩定（代價：不能隨意改 system prompt）。</li>
+                  </ul>
+                  <p><b>追問：</b>第 30 步發生 compaction，context 從約 73k 壓到 20k，之後的成本怎麼變？有什麼隱藏代價？（提示：L8 p.26 說，compaction 丟掉的檔案，agent 之後要重讀；摘要也會讓 cache 重寫。）</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q3">
+              <div class="qbody">
+                <p class="qtag">設計 · 規則放在哪裡 · <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=22" target="_blank" rel="noopener">p.22–26、p.43</a></p>
+                <p class="qtext">下面 5 條規則，各該放在 CLAUDE.md、.claude/rules/、hook、權限設定，還是 CI？說明理由。</p>
+                <p class="qctx"><b>情境：</b>（a）測試一律用 <code>pytest -x</code>。（b）不准修改 <code>gen/</code> 底下的生成檔。（c）API 的錯誤回傳格式要一致。（d）不准把 secret 寫進 log 或 commit。（e）只有 migration 檔案要遵守的命名規則。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>每一條給出選擇和一句理由。</li>
+                    <li>說明你用什麼標準，區分「建議」和「必須」。</li>
+                    <li>指出哪一條需要兩層保護，並說明原因。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>依序問三個問題。違反時，後果是品質變差，還是出事？規則和所有檔案有關，還是只和部分檔案有關？它只約束 agent，還是也要約束人？</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>（a）CLAUDE.md：每個 session 都需要；違反了只是慢一點。</li>
+                    <li>（b）PreToolUse hook 擋 Edit 與 Write：違反會破壞生成流程，必須每次擋下（第 6 段有範例）。</li>
+                    <li>（c）.claude/rules/，用 <code>paths</code> 指向 API 目錄，再加 lint 或測試：這是品質規則，只和部分檔案有關。</li>
+                    <li>（d）兩層：hook 或權限擋 agent 的動作，CI 的 secret 掃描擋所有人的 commit。後果嚴重，而且人也會犯錯。</li>
+                    <li>（e）.claude/rules/ 加 <code>paths</code>：只在碰到 migration 時載入，平常不佔 context。</li>
+                  </ul>
+                  <p><b>追問：</b>CLAUDE.md 已經 300 行時，你會先刪哪些內容（對照 p.25 的「不該放」）？Hook 本身寫錯了，會造成什麼問題？誰來 review hook?</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q4">
+              <div class="qbody">
+                <p class="qtag">團隊實務 · Memory · <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=20" target="_blank" rel="noopener">p.20–31</a></p>
+                <p class="qtext">Slide 說記憶要像程式碼一樣 review 和版本控制；但 auto memory 是 Claude 自己寫、只存在個人電腦上。在團隊裡，你會怎麼管理這兩者？</p>
+                <p class="qctx"><b>情境：</b>團隊 6 個人共用一個 repo。每個人的 Claude 都依自己的糾正，累積各自的 auto memory。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>Auto memory 在團隊裡的一個好處和一個風險，各舉一個例子。</li>
+                    <li>一條規則：什麼留在個人的 auto memory，什麼升級成 repo 裡的 CLAUDE.md。</li>
+                    <li>誰負責 review CLAUDE.md，多久清理一次。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>Auto memory 依 repo 分開，同一個 repo 的 worktree 共用，但只存在本機（p.27）。它適合個人偏好。團隊都該遵守的事放在本機，就會讓每個人的 agent 行為不一致。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>好處：個人習慣不用每次重講，例如常用的測試指令、回覆語言。風險：harness 會一直載入記錯或過期的內容；每個人的 agent 行為漂移；團隊無法 review。</li>
+                    <li>一條可行的規則：同一個糾正，第二個人也需要時，就升級成 CLAUDE.md 的規則，並走 PR。</li>
+                    <li>CLAUDE.md 由 repo 的負責人 review，例如每個 sprint 檢查一次，刪掉過期或矛盾的規則。官方文件提醒：規則矛盾時，Claude 可能任選一條。</li>
+                    <li>個人用 <code>/memory</code> 定期檢查 auto memory。看到可疑內容，例如來自網頁的指示，就刪除，避免 persistent prompt injection（L6）。</li>
+                  </ul>
+                  <p><b>追問：</b>新人加入時，他的 agent 沒有任何 auto memory。這是缺點還是優點？你會在什麼情況下關掉 auto memory?</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q5">
+              <div class="qbody">
+                <p class="qtag">風險 · 權限政策 · <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=12" target="_blank" rel="noopener">p.12、p.57</a></p>
+                <p class="qtext">為三種環境各訂一個權限政策：個人筆電開發、CI pipeline、會碰到正式資料的維運工作。</p>
+                <p class="qctx"><b>情境：</b>可選的模式有 manual、acceptEdits、plan、auto、bypass。也可以搭配 hook，以及 MCP token 的權限範圍。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>每種環境選一個模式，並說明理由。</li>
+                    <li>你用什麼條件判斷「可以放寬」。</li>
+                    <li>至少一個不論哪種模式，都要用 hook 或權限硬擋的動作。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>從兩件事判斷：出錯時能不能復原，以及影響範圍有多大。可丟棄的環境可以放寬。會碰到正式資料或對外系統，就要收緊，並把關鍵動作做成確定性的檢查。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>個人筆電：auto 或 acceptEdits。出錯可以用 git 復原；但 push、大量刪檔、連外部系統仍然要確認。</li>
+                    <li>CI：在用完即丟的 container 裡執行，搭配明確的 allowlist。官方文件的 CI 範例是 <code>--permission-mode dontAsk</code> 加 <code>--allowedTools</code>：清單外的動作一律不做。</li>
+                    <li>維運工作：manual 或 plan，先看計畫再執行。寫入動作用 hook 擋，或要求人工核准；MCP token 只給唯讀（p.57）。</li>
+                    <li>不論模式都要硬擋的例子：刪除正式資料、對外發布、把 secret 送出去。</li>
+                  </ul>
+                  <p><b>追問：</b>Auto 模式由另一個 model 判斷；它判斷錯了，誰負責？你會怎麼稽核？Container 如果掛載了你的 <code>~/.ssh</code>，還算可丟棄的環境嗎？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q6">
+              <div class="qbody">
+                <p class="qtag">應用 · 擴充機制 · <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=35" target="_blank" rel="noopener">p.35–50</a></p>
+                <p class="qtext">挑一個你們團隊每週都會重複的工作流程，替它設計 skill、MCP、hook 與 plugin。</p>
+                <p class="qctx"><b>情境：</b>例如發版、處理 bug 單、整理測試報告、上線前檢查。選一個你熟悉的流程。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>用表格列出：流程步驟、使用的機制、理由。</li>
+                    <li>指出哪一步必須用 hook 保證，以及它擋下什麼。</li>
+                    <li>說明這套設定怎麼分享給團隊，版本怎麼管理。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>照 p.37 的發版例子拆：程序寫成 skill；要碰 GitHub、Jira、Slack 的步驟用 MCP；必須保證的檢查用 hook；最後打包成 plugin。有副作用的 skill 要設成只能手動觸發。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <p>以「處理 bug 單」為例：</p>
+                  <ul>
+                    <li>Skill <code>/triage-bug</code>：讀 bug 描述 → 找相關程式 → 重現 → 提出修正與測試 → 請人確認。因為會改程式，設 <code>disable-model-invocation: true</code>。</li>
+                    <li>MCP：Jira 讀 bug 單、更新狀態；GitHub 開 PR。Token 只給這個專案需要的權限。</li>
+                    <li>Hook：PostToolUse 在每次編輯後跑 formatter；Stop 前確認測試跑過；PreToolUse 擋下直接 push 到 main。</li>
+                    <li>Plugin：把 skill、MCP 設定、hook 打包，放在團隊的 marketplace 或 repo，用版本號管理。</li>
+                  </ul>
+                  <p><b>追問：</b>這套設定裡，哪一部分最容易過期？誰負責更新？不用 agent 時，這個流程今天卡在哪裡？Agent 真的解決了那個瓶頸嗎？</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <textarea class="copybox" id="copy-fallback" rows="8" readonly hidden aria-label="討論題文字，可手動複製"></textarea>
+
+        <h3 class="subhead">自我檢查</h3>
+        <div class="quiz">
+          <details>
+            <summary>你說「修好登入測試」，Claude Code 執行了 5 次 tool。總共至少有幾次 model inference？為什麼後面的比前面的貴？</summary>
+            <div class="answer"><p>至少 6 次：每次 tool 前一次，最後回答一次。每次 inference 都送出完整的 context，而 context 每一步都變長。</p></div>
+          </details>
+          <details>
+            <summary>你在 CLAUDE.md 寫了「不准修改 gen/」，Claude 還是改了。為什麼？怎麼改成一定擋得住？</summary>
+            <div class="answer"><p>CLAUDE.md 只是 context，model 可能沒照做。要強制，就用 PreToolUse hook：路徑在 <code>gen/</code> 底下，就以 exit code 2 擋下（見第 6 段的範例）。</p></div>
+          </details>
+          <details>
+            <summary>有一條規則只和資料庫 migration 有關。它該放在 CLAUDE.md，還是 .claude/rules/?</summary>
+            <div class="answer"><p>放在 <code>.claude/rules/</code>，用 <code>paths:</code> 指向 migration 目錄。Claude 碰到這些檔案時才載入，平常不佔 context。</p></div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 6 動手試試 ===================== -->
+      <section class="part" id="s-try">
+        <header class="part-head">
+          <p class="kicker">6 · 動手試試</p>
+          <h2>照著做一次</h2>
+          <p class="lede">每個範例都依 2026 年 10 月的 Claude Code 官方文件。點開才會展開。</p>
+        </header>
+        <div class="exlist">
+          <details class="ex">
+            <summary>寫一份夠用的 CLAUDE.md<span>p.25–26</span></summary>
+            <div class="exbody">
+              <p>只放三類：指令、硬規則、推不出來的事實。新專案可以先跑 <code>/init</code> 產生初稿，再刪掉 model 本來就知道的內容。</p>
+              <figure class="file"><figcaption>CLAUDE.md</figcaption><pre><code># billing-service
+
+## Commands
+- Test: `pytest -x tests/`
+- Lint: `ruff check . --fix`
+- Run locally: `make dev` (needs Docker)
+
+## Hard rules
+- Never commit to `main`. Open a PR.
+- Do not edit files under `gen/`. Run `make proto` instead.
+
+## Facts you cannot infer
+- `legacy/` is frozen. Only security fixes go there.
+- Money is an integer in cents. Never use float.</code></pre></figure>
+              <p>只和某些檔案有關的規則，拆到 <code>.claude/rules/</code>，用 <code>paths:</code> 指定範圍。Claude 讀寫符合的檔案時，這條規則才載入。</p>
+              <figure class="file"><figcaption>.claude/rules/db-migrations.md</figcaption><pre><code>---
+paths:
+  - "db/migrations/**/*.sql"
+---
+
+# Migration rules
+- Never edit a migration that is already merged. Add a new one.
+- Every migration needs a matching rollback.</code></pre></figure>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>用 hook 擋住對 gen/ 的修改<span>p.43</span></summary>
+            <div class="exbody">
+              <p>Slide 上的五個時間點，官方事件名稱依序是 <code>SessionStart</code>、<code>UserPromptSubmit</code>、<code>PreToolUse</code>、<code>PostToolUse</code>、<code>Stop</code>。下面用 <code>PreToolUse</code> 擋下對生成檔的修改。</p>
+              <figure class="file"><figcaption>.claude/settings.json</figcaption><pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-gen.sh" }
+        ]
+      }
+    ]
+  }
+}</code></pre></figure>
+              <figure class="file"><figcaption>.claude/hooks/block-gen.sh</figcaption><pre><code>#!/usr/bin/env bash
+# PreToolUse hook: block Edit and Write on files under gen/
+file=$(jq -r '.tool_input.file_path // empty')
+if [[ "$file" == */gen/* ]]; then
+  echo "gen/ is generated. Edit the .proto file, then run make proto." >&2
+  exit 2
+fi
+exit 0</code></pre></figure>
+              <p>Claude Code 從 stdin 把這次 tool call 的 JSON 傳給腳本。腳本以 exit code 2 結束，這次修改就不會執行；stderr 的內容會回給 Claude 當作原因。記得先執行 <code>chmod +x .claude/hooks/block-gen.sh</code>。腳本用到 <code>jq</code>。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>寫一個只能手動觸發的 skill<span>p.39–40</span></summary>
+            <div class="exbody">
+              <figure class="file"><figcaption>.claude/skills/release/SKILL.md</figcaption><pre><code>---
+name: release
+description: Prepare and publish a release.
+disable-model-invocation: true
+---
+
+Prepare release $ARGUMENTS.
+
+1. Read CHANGELOG.md and references/release-checklist.md.
+2. Confirm the version number with the user.
+3. Run `make test`. Stop if any test fails.
+4. Prepare the release commit.
+5. Ask the user before publishing.</code></pre></figure>
+              <p>輸入 <code>/release 2.4.0</code>,<code>$ARGUMENTS</code> 會換成 <code>2.4.0</code>。<code>disable-model-invocation: true</code> 讓這個 skill 只能手動觸發。發布、部署這類有副作用的流程，都應該這樣設。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>選一個權限模式啟動<span>p.12</span></summary>
+            <div class="exbody">
+              <p>新版 Claude Code（v2.1.283 起）預設是 auto 模式：由另一個 model 判斷每個動作能不能執行。在 session 裡按 Shift+Tab 切換；也可以啟動時指定：</p>
+              <pre><code>claude --permission-mode manual        # 改檔、跑指令、連網前先問你
+claude --permission-mode acceptEdits   # 檔案編輯自動同意
+claude --permission-mode plan          # 你核准計畫之前，不會改檔</code></pre>
+              <p>Bypass 模式完全不問，只在可丟棄的環境用，例如 container 或 VM。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 7 交作業 ===================== -->
+      <section class="part" id="s-submit">
+        <header class="part-head">
+          <p class="kicker">7 · 交作業</p>
+          <h2>上傳你的討論</h2>
+          <p class="lede">讀書會前，把你對進階題的回答貼在這裡。所有成員都看得到彼此的內容。重新送出會覆蓋你上一次的那一份。<a href="submissions.html">收作業總表</a>列出誰交了哪幾堂。</p>
+        </header>
+        <form class="subform" id="sub-form" hidden>
+          <label class="field"><span>顯示名稱（選填）</span><input type="text" id="sub-nick" maxlength="40" autocomplete="nickname" placeholder="留空就用你的帳號名稱"></label>
+          <label class="field"><span>你的討論</span><textarea id="sub-text" rows="10" placeholder="Q1. &#10;Q2. &#10;…"></textarea></label>
+          <div class="field" id="sub-filerow" hidden>
+            <label for="sub-file"><span>附件（選填：PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
+            <input type="file" id="sub-file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.txt,.csv,.json">
+            <ul class="attach" id="sub-attach"></ul>
+          </div>
+          <div class="copyrow">
+            <button type="submit" class="copybtn" id="sub-send">送出</button>
+            <button type="button" class="ghostbtn" id="sub-copy">複製成文字</button>
+            <span class="copyhint" id="sub-status" role="status"></span>
+          </div>
+        </form>
+        <p class="sub-note" id="sub-note" role="status">連線中…</p>
+        <h3 class="subhead">已收到的討論 <span class="count" id="sub-count"></span></h3>
+        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
+      </section>
+
+      <!-- ===================== 延伸閱讀 ===================== -->
+      <section class="wrap" id="wrap" aria-label="延伸閱讀">
+        <h2>延伸閱讀</h2>
+        <ul class="reading">
+          <li><a href="https://www.youtube.com/watch?v=EWvNQjAaOHw" target="_blank" rel="noopener">Andrej Karpathy：How I use LLMs（影片）</a></li>
+          <li><a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">Best practices for Claude Code</a></li>
+          <li><a href="https://simonwillison.net/guides/agentic-engineering-patterns/" target="_blank" rel="noopener">Simon Willison:Agentic Engineering Patterns</a></li>
+          <li><a href="https://cs2680.com/readings/sep-09.html" target="_blank" rel="noopener">課程的更多閱讀（9/09）</a></li>
+          <li>本文範例的依據：<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">memory</a>、<a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener">hooks</a>、<a href="https://code.claude.com/docs/en/skills" target="_blank" rel="noopener">skills</a>、<a href="https://code.claude.com/docs/en/permission-modes" target="_blank" rel="noopener">permission modes</a> 官方文件</li>
+        </ul>
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與下一堂">
+        <a class="prev" href="l01.html"><span>← 上一堂 L1</span>課程總覽與 AI 系統</a>
+        <a class="next" href="l03.html"><span>下一堂 L3 →</span>用多個 agent 放大產能</a>
+      </nav>
+      <p class="fineprint">本文整理自 CS2680 L2 的 slides，加上觀念補充與延伸思考；延伸思考是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的指令與設定依據 2026 年 10 月的官方文件。</p>
+    </div>
+  </div>
+</main>
+<script src="app.js"></script>
+<script src="submit.js"></script>
+</body>
+</html>

@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>L7 Agent 評估 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l06.html" rel="prev">← L6</a>
+      <span class="here">L7 / 8</span>
+      <a href="l08.html" rel="next">L8 →</a>
+    </nav>
+    <button class="toggle" id="gist-toggle" type="button" aria-pressed="false">只看重點</button>
+  </div>
+</header>
+
+<main class="page gutter" data-lecture="l07">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 07 · 2026-09-30 · Part I</p>
+    <h1>Agent 評估</h1>
+    <p class="en-title">Agent design IV: agent evaluation</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/7_agent_design_4.pdf" target="_blank" rel="noopener">7_agent_design_4.pdf ↗</a></li>
+      <li><span class="k">頁數</span>38</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 25 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">這堂課回答一個問題：怎麼知道一個 agent 真的會做事？做法是在可以重置的環境裡跑任務，再用明確的 grader 檢查結果。成功率之外，還要看可靠性、成本、速度，並提防 leakage。</p>
+    <ul class="core">
+      <li><span><b>Agent 評估量的是整個系統。</b>表現 = f（LLM、prompt、scaffold、tools、retriever、memory、environment）。換掉任何一塊，分數都會變。</span></li>
+      <li><span><b>評估 = 重置環境 → 在預算內跑 loop → grader 打分。</b>Grader 看最終答案、最終環境狀態或 trajectory。每個 benchmark 選的不同。</span></li>
+      <li><span><b>上線前看 pass^k，不只看 pass@k。</b>單次成功率 0.8 的 agent，4 次全部成功的機率只有 0.41（假設每次獨立）。客服 agent 必須每次都成功。</span></li>
+      <li><span><b>每個 benchmark 只量一種動作空間。</b>GAIA 量研究型問答，BFCL 量 tool call。WebArena 與 OSWorld 量操作介面，SWE-bench 與 Terminal-Bench 量改程式與系統，τ-bench 量對話加政策。</span></li>
+      <li><span><b>高分不等於可以上線。</b>Leakage、單一 user turn、成本、非確定性、副作用，都會讓分數失真。Benchmark 也會很快飽和。</span></li>
+    </ul>
+  </section>
+
+  <div class="layout">
+    <nav class="toc" aria-label="本堂目錄">
+      <details open>
+        <summary>本堂目錄</summary>
+        <ol>
+          <li><a href="#s-open">開場與課務<span>p.1–6</span></a></li>
+          <li><a href="#s-what">評估什麼：層級、歷史、目標<span>p.7–10</span></a></li>
+          <li><a href="#s-metric">Metric 與評估 loop<span>p.11–12</span></a></li>
+          <li><a href="#s-bench1">Benchmark：答案、tool、網頁、桌面<span>p.13–17</span></a></li>
+          <li><a href="#s-bench2">Benchmark：repo、客服、shell、公司<span>p.18–24</span></a></li>
+          <li><a href="#s-hard">為什麼評估很難<span>p.25–32</span></a></li>
+          <li><a href="#s-saturate">Benchmark 飽和得很快<span>p.33–35</span></a></li>
+          <li><a href="#s-future">演進與 Pareto frontier<span>p.36–38</span></a></li>
+          <li><a href="#wrap">重點與自我檢查<span>—</span></a></li>
+        </ol>
+      </details>
+    </nav>
+
+    <div class="content">
+
+      <!-- ===================== 開場與課務 ===================== -->
+      <section class="part" id="s-open">
+        <header class="part-head">
+          <p class="range">p.1–6</p>
+          <h2>開場與課務</h2>
+        </header>
+
+        <article class="slide compact" id="p1" data-pages="1">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=1" target="_blank" rel="noopener" aria-label="開啟原 slide 第 1 頁">p.<b>01</b></a>
+          <div class="body">
+            <h3>封面</h3>
+            <p class="gist">圖片頁，沒有可擷取的文字。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p2" data-pages="2">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=2" target="_blank" rel="noopener" aria-label="開啟原 slide 第 2 頁">p.<b>02</b></a>
+          <div class="body">
+            <h3>標題頁 <span class="orig">Agent design IV: evaluation</span></h3>
+            <p class="gist">Agent design 系列的第 4 堂。主題是怎麼評估一個 agent。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p3" data-pages="3">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=3" target="_blank" rel="noopener" aria-label="開啟原 slide 第 3 頁">p.<b>03</b></a>
+          <div class="body">
+            <h3>課務 <span class="orig">Logistics</span></h3>
+            <p class="gist">週四 3:30pm 在 SEC 4.308 有 office hour。期末 poster 發表在 12 月 7 日 9am–1pm；時間不行，請在本週內聯絡。Assignment 2 本週日截止。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p4" data-pages="4">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=4" target="_blank" rel="noopener" aria-label="開啟原 slide 第 4 頁">p.<b>04</b></a>
+          <div class="body">
+            <h3>Session log 規定 <span class="orig">Logistics: Claude Code session log</span></h3>
+            <p class="gist">Assignment 2 要附上完整的 Claude Code session log，位置在 <code>~/.claude/projects/</code>（Windows 是 <code>C:\Users\&lt;YourUsername&gt;\.claude\projects\</code>）。不要修改或刪除 log；slide 把竄改 log 列為違反學術誠信。用 AI 不扣分，但作業有一部分必須自己完成。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p5" data-pages="5">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=5" target="_blank" rel="noopener" aria-label="開啟原 slide 第 5 頁">p.<b>05</b></a>
+          <div class="body">
+            <h3>本堂流程 <span class="orig">Plan for today</span></h3>
+            <p class="gist">列了兩個主題：agent evaluation 與 cost-effective agents。這份 slides 只講 evaluation；cost-effective agents 出現在下一堂的預告（p.38）。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p6" data-pages="6">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=6" target="_blank" rel="noopener" aria-label="開啟原 slide 第 6 頁">p.<b>06</b></a>
+          <div class="body">
+            <h3>怎麼評估 agent 的能力？<span class="orig">How do you evaluate an agent's capability?</span></h3>
+            <p class="gist">本堂從四個角度回答：歷史與趨勢、metric、代表性的 benchmark、挑戰。</p>
+            <div class="teach">
+              <p>先想一個實際的問題：你改了 agent 的 system prompt。你怎麼知道新版比舊版好？</p>
+              <p>手動試 3 個例子不夠。你需要固定的任務、可以重置的環境、明確的評分規則。每題還要跑很多次。本堂依序介紹這些東西。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 評估什麼 ===================== -->
+      <section class="part" id="s-what">
+        <header class="part-head">
+          <p class="range">p.7–10</p>
+          <h2>評估什麼：層級、歷史、目標</h2>
+          <p class="lede">評估的對象從語言模型變成整個 agent 系統。評分方式也從比對文字，變成檢查環境狀態。</p>
+        </header>
+
+        <article class="slide" id="p7" data-pages="7">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=7" target="_blank" rel="noopener" aria-label="開啟原 slide 第 7 頁">p.<b>07</b></a>
+          <div class="body">
+            <h3>看內部，還是看結果 <span class="orig">Different ways to evaluate an agent</span></h3>
+            <p class="gist">Component-level 評估看 agent 內部的單一能力。End-to-end 評估只看結果：任務有沒有完成、花多少錢、花多久。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>層級</th><th>項目</th><th>問的問題</th></tr></thead>
+                <tbody>
+                  <tr><td>Component-level</td><td>Planning</td><td>任務拆解得對嗎？</td></tr>
+                  <tr><td>Component-level</td><td>Tool use</td><td>找得到、選得對、參數填得對嗎？</td></tr>
+                  <tr><td>Component-level</td><td>Memory</td><td>能擷取、整合、取回資訊嗎？</td></tr>
+                  <tr><td>Component-level</td><td>Error recovery</td><td>出錯之後能修正嗎？</td></tr>
+                  <tr><td>End-to-end</td><td>Success rate</td><td>任務完成了嗎？</td></tr>
+                  <tr><td>End-to-end</td><td>Cost</td><td>每個任務花多少錢？</td></tr>
+                  <tr><td>End-to-end</td><td>Latency</td><td>多久完成？</td></tr>
+                </tbody>
+              </table></div>
+              <p>兩種評估互補。End-to-end 告訴你 agent 能不能用。Component-level 告訴你它為什麼失敗。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>訂機票任務失敗了。End-to-end 只回報「失敗」。Component-level 能找出原因：拆錯步驟、選錯 tool、填錯參數，或忘了使用者先前給的條件。p.15 的 BFCL 主要量 tool use 這一項。</p></div></aside>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>類比軟體測試：component-level 像 unit test，end-to-end 像 integration test。兩種都要有。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p8" data-pages="8">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=8" target="_blank" rel="noopener" aria-label="開啟原 slide 第 8 頁">p.<b>08</b></a>
+          <div class="body">
+            <h3>Benchmark 的歷史 <span class="orig">A bit of history</span></h3>
+            <p class="gist">每個時期的 benchmark，反映當時 model 剛具備的能力。測試對象從語言模型，一路走到 tool use 與 agent。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>時期</th><th>重點</th><th>代表 benchmark</th></tr></thead>
+                <tbody>
+                  <tr><td>2018 以前</td><td>Language modeling、單一任務</td><td>Penn Treebank、WikiText、LAMBADA、SQuAD</td></tr>
+                  <tr><td>2018–2019</td><td>Transfer learning、通用 NLU</td><td>GLUE、SuperGLUE、ARC、HellaSwag、WinoGrande</td></tr>
+                  <tr><td>2020–2022</td><td>Foundation model 的能力</td><td>MMLU、BIG-bench、GSM8K、MATH、HumanEval、TruthfulQA、HELM</td></tr>
+                  <tr><td>2023–2024</td><td>Agent、tool use、長 context、多模態</td><td>MT-Bench、Chatbot Arena、AlpacaEval、IFEval、LongBench、MMMU、GPQA、AgentBench、WebArena、GAIA、SWE-bench、OSWorld、τ-bench</td></tr>
+                  <tr><td>2024–2025</td><td>更難、更穩健、更新鮮</td><td>MMLU-Pro、LiveBench、LiveCodeBench、MMMU-Pro、FrontierMath、Humanity's Last Exam</td></tr>
+                  <tr><td>2025–2026</td><td>範圍更大、指示更少、更接近真實工作</td><td>GDPval、BrowseComp、Terminal-Bench、ARC-AGI-3</td></tr>
+                </tbody>
+              </table></div>
+              <p>看最後兩列。「新鮮」代表題目要持續更新，避免 model 在訓練時看過。「指示更少」代表 agent 要自己補齊缺少的資訊。p.26–31 會再談這兩點。</p>
+              <p>2018–2019 那列的 ARC 是 AI2 的科學選擇題。它和 p.33 的 ARC-AGI 是不同的 benchmark。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p9" data-pages="9-10">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=9" target="_blank" rel="noopener" aria-label="開啟原 slide 第 9 到 10 頁">p.<b class="multi">09–10</b></a>
+          <div class="body">
+            <h3>五種評估目標 <span class="orig">Evaluation objectives</span></h3>
+            <p class="gist">評估目標分五種：預測文字、答對、得到偏好、寫出能跑的程式、完成互動任務。每種的「成功」定義不同。p.10 和 p.9 內容相同。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>目標</th><th>代表 benchmark</th><th>怎樣算成功</th></tr></thead>
+                <tbody>
+                  <tr><td>預測文字</td><td>PTB、WikiText</td><td>對真實的文字給出高機率</td></tr>
+                  <tr><td>給出正確答案</td><td>MMLU、GSM8K、GPQA、HLE（Humanity's Last Exam）</td><td>和已知答案相符</td></tr>
+                  <tr><td>給出較受偏好的回覆</td><td>Arena、AlpacaEval、MT-Bench</td><td>人或 model 給出較好的評價</td></tr>
+                  <tr><td>寫出能運作的程式</td><td>HumanEval、LiveCodeBench、SWE-bench</td><td>通過可執行的測試</td></tr>
+                  <tr><td>完成互動任務</td><td>WebArena、OSWorld、τ-bench、Terminal-Bench</td><td>環境達到要求的狀態</td></tr>
+                </tbody>
+              </table></div>
+              <p>越往下，grader（評分元件）越需要「執行」。前兩列只要比對文字。最後一列要先架好網站、桌面或資料庫，讓 agent 跑完，再檢查狀態。所以 agent 評估也是一個系統工程問題。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>第 3 列用人或 judge model 當裁判。Judge model 有已知的偏誤，例如偏好較長的回答。WebArena-Verified（p.16）因此拿掉 LLM-as-judge，改用確定性的檢查。</p></div></aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Metric 與評估 loop ===================== -->
+      <section class="part" id="s-metric">
+        <header class="part-head">
+          <p class="range">p.11–12</p>
+          <h2>Metric 與評估 loop</h2>
+          <p class="lede">Metric 決定什麼算成功。評估 loop 決定每一次怎麼跑。下圖用 3 個任務、各跑 4 次，比較 pass@k 和 pass^k。</p>
+        </header>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 700 276" role="img" aria-label="pass@4 與 pass^4 的比較。3 個任務各跑 4 次。任務 A 4 次都成功；任務 B 第 2 次失敗；任務 C 只有第 3 次成功。pass@4 只要至少 1 次成功，3 個任務都算，得 3/3 = 1.00。pass^4 要 4 次全部成功，只有任務 A 算，得 1/3 = 0.33。">
+              <text x="14" y="40" class="dg-tm">任務</text>
+              <text x="186" y="40" text-anchor="middle" class="dg-tm">Run 1</text>
+              <text x="246" y="40" text-anchor="middle" class="dg-tm">Run 2</text>
+              <text x="306" y="40" text-anchor="middle" class="dg-tm">Run 3</text>
+              <text x="366" y="40" text-anchor="middle" class="dg-tm">Run 4</text>
+              <text x="487" y="24" text-anchor="middle" class="dg-tb">pass@4</text>
+              <text x="487" y="41" text-anchor="middle" class="dg-ts">至少 1 次成功就算</text>
+              <text x="625" y="24" text-anchor="middle" class="dg-tb">pass^4</text>
+              <text x="625" y="41" text-anchor="middle" class="dg-ts">4 次全部成功才算</text>
+              <line x1="410" y1="12" x2="410" y2="236" class="dg-soft"/>
+
+              <text x="14" y="78" class="dg-t">A 改航班</text>
+              <rect x="160" y="56" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="186" y="78" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="220" y="56" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="246" y="78" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="280" y="56" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="306" y="78" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="340" y="56" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="366" y="78" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="428" y="56" width="118" height="34" rx="4" class="dg-box-accent"/>
+              <text x="487" y="78" text-anchor="middle" class="dg-tb">算</text>
+              <rect x="566" y="56" width="118" height="34" rx="4" class="dg-box-accent"/>
+              <text x="625" y="78" text-anchor="middle" class="dg-tb">算</text>
+
+              <text x="14" y="122" class="dg-t">B 退票</text>
+              <rect x="160" y="100" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="186" y="122" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="220" y="100" width="52" height="34" rx="4" class="dg-box-soft"/>
+              <text x="246" y="122" text-anchor="middle" class="dg-tb">✗</text>
+              <rect x="280" y="100" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="306" y="122" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="340" y="100" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="366" y="122" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="428" y="100" width="118" height="34" rx="4" class="dg-box-accent"/>
+              <text x="487" y="122" text-anchor="middle" class="dg-tb">算</text>
+              <rect x="566" y="100" width="118" height="34" rx="4" class="dg-box-soft"/>
+              <text x="625" y="122" text-anchor="middle" class="dg-t">不算：Run 2 ✗</text>
+
+              <text x="14" y="166" class="dg-t">C 加行李</text>
+              <rect x="160" y="144" width="52" height="34" rx="4" class="dg-box-soft"/>
+              <text x="186" y="166" text-anchor="middle" class="dg-tb">✗</text>
+              <rect x="220" y="144" width="52" height="34" rx="4" class="dg-box-soft"/>
+              <text x="246" y="166" text-anchor="middle" class="dg-tb">✗</text>
+              <rect x="280" y="144" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="306" y="166" text-anchor="middle" class="dg-tb">✓</text>
+              <rect x="340" y="144" width="52" height="34" rx="4" class="dg-box-soft"/>
+              <text x="366" y="166" text-anchor="middle" class="dg-tb">✗</text>
+              <rect x="428" y="144" width="118" height="34" rx="4" class="dg-box-accent"/>
+              <text x="487" y="166" text-anchor="middle" class="dg-tb">算</text>
+              <rect x="566" y="144" width="118" height="34" rx="4" class="dg-box-soft"/>
+              <text x="625" y="166" text-anchor="middle" class="dg-t">不算：3 次 ✗</text>
+
+              <line x1="10" y1="194" x2="690" y2="194" class="dg-soft"/>
+              <text x="14" y="222" class="dg-tb">分數</text>
+              <text x="276" y="222" text-anchor="middle" class="dg-t">12 次裡成功 8 次（0.67）</text>
+              <text x="487" y="222" text-anchor="middle" class="dg-ta">3/3 = 1.00</text>
+              <text x="625" y="222" text-anchor="middle" class="dg-ta">1/3 = 0.33</text>
+              <text x="14" y="262" class="dg-ts">✓ 成功　✗ 失敗　資料為示意</text>
+            </svg>
+          </div>
+          <figcaption>3 個任務各跑 4 次（示意資料）。pass@4 只要 4 次裡有 1 次成功，所以 3 個任務都算，得 1.00。pass^4 要 4 次全部成功：任務 B 只失敗 1 次，也不算，最後只得 0.33。同一份結果，兩個 metric 差 3 倍。</figcaption>
+        </figure>
+
+        <article class="slide" id="p11" data-pages="11">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=11" target="_blank" rel="noopener" aria-label="開啟原 slide 第 11 頁">p.<b>11</b></a>
+          <div class="body">
+            <h3>除了成功率，還要看什麼 <span class="orig">Metrics</span></h3>
+            <p class="gist">早期 benchmark 用 perplexity、accuracy / F1、win rate。Agent 還要看 pass@k、pass^k、cost、latency。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>Metric</th><th>意思</th><th>要注意</th></tr></thead>
+                <tbody>
+                  <tr><td>Perplexity</td><td>在沒看過的文字上，平均 negative log-likelihood 再取指數</td><td>越低越好；只量語言建模</td></tr>
+                  <tr><td>Accuracy / F1</td><td>答對的比例；F1 是 precision 與 recall 的調和平均</td><td>需要標準答案</td></tr>
+                  <tr><td>Win rate</td><td>兩兩比較時，裁判選中你的比例</td><td>結果依賴裁判</td></tr>
+                  <tr><td>pass@k</td><td>k 次嘗試中，至少 1 次成功</td><td>常見於程式生成評估，例如 HumanEval</td></tr>
+                  <tr><td>pass^k</td><td>k 次嘗試全部成功</td><td>τ-bench 提出</td></tr>
+                  <tr><td>Cost</td><td>每個任務的總花費</td><td>大多是 LLM 費用；常漏算 tool call 與 cache miss</td></tr>
+                  <tr><td>Latency</td><td>完成任務的總時間</td><td>不只 LLM 的時間；tool 執行、跑測試也算</td></tr>
+                </tbody>
+              </table></div>
+              <p>Cache miss 指 prefix cache 沒有命中。這時輸入 token 要用完整價格計費。Agent 每一步都重送 context，所以 miss 一多，成本就上升。L8 會細談。</p>
+              <p><b>為什麼 production agent 要看 pass^k。</b>客服 agent 每天服務很多客戶。每位客戶只有一次機會。失敗一次，就是一筆錯的訂單或一位不滿的客戶。使用者不會替你重試 4 次，再挑最好的一次。</p>
+              <p>pass@k 適合「能重試、又能自動驗證」的情境。例：產生 5 個 patch，跑測試，留下通過的那個。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>假設每次執行彼此獨立，單次成功率 p = 0.8，k = 4：</p>
+                <pre><code>pass@4 = 1 − (1 − 0.8)^4 = 1 − 0.0016 = 0.9984
+pass^4 = 0.8^4                    = 0.4096</code></pre>
+                <p>同一個 agent，pass@4 接近 100%，pass^4 只有 41%。k 越大，差距越大。真實的多次執行不一定獨立，所以實務上用實測次數計算（見 p.12）。</p>
+              </div></aside>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>不要把整體成功率直接取 k 次方。課程筆記的理由：每題難度不同，要逐題算 pass^k 再平均。用上圖的資料：整體成功率 8/12，取 4 次方得 0.20；逐題算再平均得 0.33。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p12" data-pages="12">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=12" target="_blank" rel="noopener" aria-label="開啟原 slide 第 12 頁">p.<b>12</b></a>
+          <div class="body">
+            <h3>Benchmark 的評估 loop <span class="orig">Benchmark evaluation loop</span></h3>
+            <p class="gist">每個任務都跑同一個流程：重置環境，在預算內反覆 observe 與 act。最後 grader 依最終答案、最終環境狀態、trajectory 打分。</p>
+            <div class="teach">
+              <ol>
+                <li>重置環境到任務的初始狀態。</li>
+                <li>讓 agent 觀察環境，選出一個 action。</li>
+                <li>執行這個 action，改變環境。</li>
+                <li>重複第 2、3 步，直到 agent 結束或預算用完。</li>
+                <li>交給 grader 打分：最終答案、最終環境狀態、trajectory。</li>
+              </ol>
+              <p>Slide 的 pseudocode 把打分的元件叫 task evaluator。本頁統一稱 grader。</p>
+              <ul>
+                <li><b>為什麼要重置：</b>上一次執行可能改了環境，例如多建了一個 issue。不重置，每次的起點就不同，結果無法比較。</li>
+                <li><b>為什麼要預算：</b>Agent 可能陷入 loop，一直重試同一個動作。步數、金額、時間的上限，保證評估會結束。</li>
+                <li><b>Grader 看什麼：</b>依 benchmark 而定。GAIA 只看答案；WebArena、OSWorld 看環境狀態；τ-bench 看資料庫加回覆。</li>
+              </ul>
+              <figure class="file"><figcaption>eval_loop.py（示意，不綁定任何 SDK）</figcaption><pre><code>import time
+
+def run_trial(task, agent, env, max_steps=50, max_usd=2.0):
+    env.reset(task.initial_state)              # 1. 重置
+    history, usd, answer = [], 0.0, None
+    start = time.monotonic()
+    for _ in range(max_steps):                 # 預算：步數
+        obs = env.observe()
+        action = agent.act(task.instruction, obs, history, env.tools)
+        usd += action.llm_usd
+        if action.is_final:                    # agent 宣告完成
+            answer = action.text
+            break
+        result = env.execute(action)           # tool call、點擊、shell 指令
+        usd += result.tool_usd                 # tool 也要算錢
+        history.append((obs, action, result))  # trajectory
+        if usd &gt; max_usd:                      # 預算：金額
+            break
+    score = task.grade(answer, env.state(), history)   # 打分
+    return {"task": task.id, "score": score, "steps": len(history),
+            "usd": usd, "sec": time.monotonic() - start}
+
+def run_benchmark(tasks, agent, make_env, trials=4):
+    # 每次 trial 都用新的環境，結果互不影響
+    return [run_trial(t, agent, make_env(t))
+            for t in tasks for _ in range(trials)]</code></pre></figure>
+              <p>跑完之後，依任務分組，數出每題成功幾次，再算 pass^k。下表用上圖的資料：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>任務</th><th>4 次結果</th><th class="num">成功</th><th class="num">pass^1</th><th class="num">pass^2</th><th class="num">pass^4</th><th class="num">pass@4</th></tr></thead>
+                <tbody>
+                  <tr><td>A 改航班</td><td>✓ ✓ ✓ ✓</td><td class="num">4/4</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1</td></tr>
+                  <tr><td>B 退票</td><td>✓ ✗ ✓ ✓</td><td class="num">3/4</td><td class="num">0.75</td><td class="num">0.50</td><td class="num">0.00</td><td class="num">1</td></tr>
+                  <tr><td>C 加行李</td><td>✗ ✗ ✓ ✗</td><td class="num">1/4</td><td class="num">0.25</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">1</td></tr>
+                  <tr><td><b>平均</b></td><td></td><td class="num">8/12</td><td class="num"><b>0.67</b></td><td class="num"><b>0.50</b></td><td class="num"><b>0.33</b></td><td class="num"><b>1.00</b></td></tr>
+                </tbody>
+              </table></div>
+              <p>pass^k 隨 k 下降：0.67 → 0.50 → 0.33。掉得越快，agent 越不穩定。pass@4 是 1.00，完全看不出這個問題。</p>
+              <figure class="file"><figcaption>pass_k.py（課程筆記的估計式）</figcaption><pre><code>from math import comb
+
+def pass_hat_k(n, c, k):   # pass^k：n 次中 c 次成功，任取 k 次全部成功
+    return comb(c, k) / comb(n, k)
+
+def pass_at_k(n, c, k):    # pass@k：任取 k 次，至少 1 次成功
+    return 1 - comb(n - c, k) / comb(n, k)
+
+# 任務 B：n=4，c=3
+pass_hat_k(4, 3, 2)   # 3/6 = 0.50
+pass_hat_k(4, 3, 4)   # 0/1 = 0.00
+pass_at_k(4, 3, 4)    # 1.00</code></pre></figure>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Benchmark(一) ===================== -->
+      <section class="part" id="s-bench1">
+        <header class="part-head">
+          <p class="range">p.13–17</p>
+          <h2>Benchmark（一）：找答案、呼叫 tool、操作網頁與桌面</h2>
+          <p class="lede">p.13–24 介紹 8 個 benchmark。讀每一個時，問兩件事：agent 在哪裡做事？Grader 檢查什麼？</p>
+        </header>
+
+        <article class="slide" id="p13" data-pages="13">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=13" target="_blank" rel="noopener" aria-label="開啟原 slide 第 13 頁">p.<b>13</b></a>
+          <div class="body">
+            <h3>GAIA：研究型問答 <span class="orig">GAIA: General AI Assistant</span></h3>
+            <p class="gist">GAIA 有 466 題人工撰寫的問題。Agent 要上網、讀檔、計算，最後交出一個短答案。</p>
+            <div class="teach">
+              <ul>
+                <li>題目類型：網頁瀏覽、試算表、PDF、圖片、音訊、計算。</li>
+                <li>答案很短：一個數字、字串或清單，例如 <code>17.4</code>、<code>4,381</code>。</li>
+                <li>沒有固定的 tool API。每個 agent 自備 search、browser、Python、shell。</li>
+                <li>所以 GAIA 測的是整個 agent 系統，不只是 LLM。</li>
+              </ul>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Level</th><th>步數</th><th>Tool</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td>最多 5 步</td><td>0 或 1 個</td></tr>
+                  <tr><td>2</td><td>5 到 10 步</td><td>多個</td></tr>
+                  <tr><td>3</td><td>不限長度</td><td>很多</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>「自備 tool」代表分數同時反映 model 與 harness。兩個團隊用同一個 LLM，搜尋 tool 不同，分數就可能不同。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p14" data-pages="14">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=14" target="_blank" rel="noopener" aria-label="開啟原 slide 第 14 頁">p.<b>14</b></a>
+          <div class="body">
+            <h3>GAIA 怎麼評分 <span class="orig">GAIA: can an assistant research and return the right answer?</span></h3>
+            <p class="gist">GAIA 只看最終答案。正規化之後完全相符得 1 分，否則 0 分。中間步驟不計分。</p>
+            <div class="teach">
+              <p>Slide 的例子：附件試算表列出一些電影。找出符合兩個條件的那一部，查出導演，回報導演的出生地。課程筆記說明這是示意題，不是公開的考題。</p>
+              <p>Agent 的過程：search → 開網頁 → 下載 PDF → 抽出表格 → 跑 Python → 回答。圖中標示 grader 丟掉中間過程，只對答案打分。圖中的答案 4,381 和題目問的出生地對不上；兩者都只是示意。</p>
+              <pre><code>score = (1/N) · Σ 1[ normalize(ŷ) = normalize(y) ]</code></pre>
+              <p>意思：N 題裡，正規化後和標準答案相同的比例。正規化會消除格式差異，例如大小寫、空白、千分位逗號。所以 <code>4381</code> 和 <code>4,381</code> 算相同。</p>
+              <ul>
+                <li><b>量得到：</b>推理、檢索、選 tool、整合資訊。評分乾淨，可以重現。</li>
+                <li><b>量不到：</b>改變外界的動作，例如寄 email、訂機票、改資料庫、送出表單、更新 issue。</li>
+              </ul>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>只看答案的評分，看不到過程。Agent 可能用錯的方法剛好答對。它也可能在過程中做了不該做的事。p.32 會再談。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p15" data-pages="15">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=15" target="_blank" rel="noopener" aria-label="開啟原 slide 第 15 頁">p.<b>15</b></a>
+          <div class="body">
+            <h3>BFCL：tool call 可靠嗎 <span class="orig">BFCL: is the model's tool interface reliable?</span></h3>
+            <p class="gist">BFCL（Berkeley Function Calling Leaderboard）測 model 能不能正確呼叫 tool：選對 tool、填對參數、不做多餘的呼叫。</p>
+            <div class="teach">
+              <p>Slide 的例子：「訂下週一從 Boston 到 Chicago 最便宜的航班。」可用的 tool 有三個：</p>
+              <pre><code>search_flights(...)
+book_flight(flight_id, passenger_id)
+get_weather(...)</code></pre>
+              <div class="table-wrap"><table>
+                <thead><tr><th>行為</th><th>判定</th><th>原因</th></tr></thead>
+                <tbody>
+                  <tr><td>先 <code>search_flights</code>，挑最便宜的，再 <code>book_flight</code></td><td>正確</td><td>先查再訂</td></tr>
+                  <tr><td>直接填 <code>passenger_id="P123"</code></td><td>錯：編造 ID</td><td>使用者沒給 ID，應該先問</td></tr>
+                  <tr><td>呼叫 <code>get_weather</code></td><td>錯：無關的呼叫</td><td>訂機票不需要天氣</td></tr>
+                </tbody>
+              </table></div>
+              <p>表中的 <code>"P123"</code> 是本筆記的示意值。BFCL 的評分方式：</p>
+              <ul>
+                <li><b>AST 檢查：</b>把 model 輸出的 call 解析成語法樹（abstract syntax tree），比對 function 名稱、參數與值。</li>
+                <li><b>Execution 檢查：</b>真的執行 call，比對執行結果。</li>
+                <li><b>Multi-turn 任務：</b>每一輪都檢查狀態和回覆。</li>
+              </ul>
+              <p>V4 加入 web search 與 memory 類別。Slide 建議看各類別的分數，不要只看總分。總分是各類別的平均，會蓋住弱項。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>為什麼「編造 ID」危險：<code>book_flight</code> 會真的寫入訂單。參數錯了，可能訂到別人名下。缺資訊時，正確的行為是問使用者。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p16" data-pages="16">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=16" target="_blank" rel="noopener" aria-label="開啟原 slide 第 16 頁">p.<b>16</b></a>
+          <div class="body">
+            <h3>WebArena：完成網頁流程 <span class="orig">WebArena: can the agent complete a web workflow?</span></h3>
+            <p class="gist">WebArena 有 812 個網頁任務，在自架的網站上執行。Grader 檢查最終狀態：做到得 1 分，沒做到得 0 分。</p>
+            <div class="teach">
+              <p>例子：在 GitLab 建立 issue「Update onboarding documentation」，指派給 Alex，加上 documentation label。</p>
+              <ul>
+                <li><b>網站：</b>購物、管理後台、Reddit 類論壇、GitLab、地圖、Wikipedia，全部自架。自架才能每次重置成相同狀態。</li>
+                <li><b>Observation：</b>accessibility tree。這是瀏覽器提供給輔助工具的頁面結構，每個元素有 ID、角色、文字。</li>
+                <li><b>Action：</b>對元素 ID 做 click 或 type，完成時 stop。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>簡化的 observation 與 action（示意）：</p>
+                <pre><code>[1201] link 'Projects'
+[1342] textbox 'Title'
+[1388] button 'Create issue'
+
+type [1342] [Update onboarding documentation]
+click [1388]</code></pre>
+              </div></aside>
+              <p>評分流程：重置網站快照 → 跑 agent 的 trajectory → 用 functional check 檢查最終狀態。Issue 任務檢查三件事：issue 存在、assignee 正確、label 正確。其他任務可能檢查最終 URL、頁面內容、後端狀態或文字答案。</p>
+              <p>為什麼檢查最終狀態：建立同一個 issue 有很多條路。檢查結果，任何正確的路都能得分。</p>
+              <p>WebArena-Verified（ServiceNow，2025）要求結構化輸出，拿掉 LLM-as-judge，改用 HTTP trace 上的確定性檢查。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p17" data-pages="17">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=17" target="_blank" rel="noopener" aria-label="開啟原 slide 第 17 頁">p.<b>17</b></a>
+          <div class="body">
+            <h3>OSWorld：操作真的電腦 <span class="orig">OSWorld: can the agent operate an actual computer?</span></h3>
+            <p class="gist">OSWorld 讓 agent 操作真實的桌面 VM。Agent 看螢幕截圖，用滑鼠和鍵盤動作。共 369 個任務。</p>
+            <div class="teach">
+              <p>例子：在試算表加一個計算欄、排序、存成 <code>result.xlsx</code>。過程：截圖 → 點開 LibreOffice → 截圖 → 點儲存格 → 輸入公式 → … → 存檔。</p>
+              <p>和 WebArena 的差別：WebArena 給結構化的元素 ID。OSWorld 只給像素。Agent 要從截圖找出按鈕的位置，再算出滑鼠座標。這叫 GUI grounding。</p>
+              <ul>
+                <li><b>範圍：</b>瀏覽器、Office、檔案、系統 app，也有跨 app 的流程。</li>
+                <li><b>評分：</b>設定初始狀態，讓 agent 執行，再由 grader 檢查最終狀態，給出 reward。不是每一步都計分。</li>
+                <li><b>檢查項目：</b>試算表的儲存格與公式、檔案位置、設定值、app 設定。</li>
+                <li><b>OSWorld 2.0（2026）：</b>108 個長流程，常超過 1 小時、數百步。每個流程約 27 個 checkpoint，可以給部分分數。</li>
+              </ul>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>為什麼長流程需要 checkpoint：數百步的任務，很少有 agent 能全部做完。只有 0 或 1 分時，大家都是 0，看不出差別。Checkpoint 讓「做到一半」也能比較。</p></div></aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Benchmark(二) ===================== -->
+      <section class="part" id="s-bench2">
+        <header class="part-head">
+          <p class="range">p.18–24</p>
+          <h2>Benchmark（二）：改 repo、服務客戶、下指令、模擬公司</h2>
+          <p class="lede">這 4 個 benchmark 的動作會改變真實狀態：repo、資料庫、系統、公司工具。p.24 把 8 個 benchmark 放進同一張表。</p>
+        </header>
+
+        <article class="slide" id="p18" data-pages="18">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=18" target="_blank" rel="noopener" aria-label="開啟原 slide 第 18 頁">p.<b>18</b></a>
+          <div class="body">
+            <h3>SWE-bench：修真實 repo 的 issue <span class="orig">SWE-bench: can the agent fix a real repository issue?</span></h3>
+            <p class="gist">SWE-bench 給 agent 一個真實的 repo 和一個 GitHub issue。Agent 產生 patch；patch 套用後通過 repo 的測試，才算解決。</p>
+            <div class="teach">
+              <p>例子：某個 library function 收到空的 index 時會丟 exception。要改成回傳空結果，並保留原有行為。</p>
+              <p>典型過程：grep repo → 讀實作 → 讀測試 → 跑測試 → 改檔 → 再跑測試 → debug → 產生 patch。</p>
+              <p>評分：把 patch 套到 repo，跑測試，判斷 issue 是否解決。測試分兩組。一組原本失敗，修好後要通過。另一組原本就通過，改完後仍要通過，用來抓出「改壞別的功能」。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>版本</th><th>特點</th></tr></thead>
+                <tbody>
+                  <tr><td>Verified</td><td>人工確認過的題目</td></tr>
+                  <tr><td>Lite</td><td>300 題的子集</td></tr>
+                  <tr><td>Multilingual</td><td>9 種程式語言</td></tr>
+                  <tr><td>Multimodal</td><td>issue 裡有圖片</td></tr>
+                  <tr><td>Pro</td><td>更難，常要改多個檔案</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>測試只檢查有寫到的行為。Patch 可能通過測試，寫法卻是錯的，例如只針對測試資料寫特例。Verified 版本請人逐題確認：issue 描述夠清楚，測試也合理。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p19" data-pages="19">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=19" target="_blank" rel="noopener" aria-label="開啟原 slide 第 19 頁">p.<b>19</b></a>
+          <div class="body">
+            <h3>τ-bench：對話、政策、改資料 <span class="orig">τ-bench: can an agent interact with a user, follow policy, and change backend state?</span></h3>
+            <p class="gist">τ-bench 有兩個角色在互動：LLM 扮演的模擬客戶，和要遵守航空公司政策的 agent。Agent 的 tool 會改變真實的資料庫。</p>
+            <div class="teach">
+              <p>政策的例子：basic economy 機票不能更改。客戶說：「我要把明天的航班改成晚上那班。」典型流程：</p>
+              <ol>
+                <li>確認客戶身分。</li>
+                <li>查詢訂位紀錄。</li>
+                <li>搜尋晚上的航班。</li>
+                <li>說明票價差額。</li>
+                <li>取得客戶確認。</li>
+                <li>呼叫 <code>change_booking</code>，更新訂位。</li>
+              </ol>
+              <p>評分：檢查最後的資料庫狀態。這一題同時測三件事：和人對話、遵守政策、正確改資料。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>換一個情況：這張票是 basic economy（示意）。</p>
+                <pre><code>客戶 ：我要把明天的航班改成晚上那班。
+Agent：請提供您的 user ID 和訂位代號。
+客戶 ：（提供資料）
+Agent → tool call：查詢訂位
+Agent：這張是 basic economy 機票。依政策，不能更改航班。</code></pre>
+                <p>這時的目標狀態是「資料庫不變」。Agent 若照樣呼叫 <code>change_booking</code>，資料庫就和目標不同，這題得 0 分。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p20" data-pages="20">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=20" target="_blank" rel="noopener" aria-label="開啟原 slide 第 20 頁">p.<b>20</b></a>
+          <div class="body">
+            <h3>τ-bench 的評分與 pass^k <span class="orig">τ-bench scores end state and consistency</span></h3>
+            <p class="gist">τ-bench 的 reward 是 r = r_action × r_output，兩項都要是 1 才得分。它也提出 pass^k：同一題獨立跑 k 次，全部成功的機率。</p>
+            <div class="teach">
+              <ul>
+                <li><code>r_action</code> = 1：最終資料庫和標註的目標狀態一致。</li>
+                <li><code>r_output</code> = 1：給客戶的回覆包含必要的資訊。</li>
+                <li>用乘法：任何一項是 0，總分就是 0。</li>
+              </ul>
+              <p>唯讀的 call 可以不同。Agent 多查一次訂位沒關係。不該有的寫入，會直接讓這題失敗。</p>
+              <p>Slide 的 pass^k 例子：4 次都成功，pass^4 才算這題；pass@4 只要 1 次成功。計算方法見 p.11 的例子與 p.12 的報表。</p>
+              <p>新版 τ³-bench 修正了有問題的任務，並加入更多領域、知識檢索與語音評估。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>比喻：pass@k 像考試能考 4 次，取最好的一次。pass^k 像飛機降落，每一次都必須成功。客服 agent 屬於後者。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p21" data-pages="21">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=21" target="_blank" rel="noopener" aria-label="開啟原 slide 第 21 頁">p.<b>21</b></a>
+          <div class="body">
+            <h3>Terminal-Bench：用 shell 完成真實工作 <span class="orig">Terminal-Bench: can an agent finish a real task through a shell?</span></h3>
+            <p class="gist">Terminal-Bench 讓 agent 在 Docker container 裡用 shell 完成真實工作。結束後，測試腳本檢查系統的最終狀態，給出 pass 或 fail。</p>
+            <div class="teach">
+              <p>任務不只是修 repo 的 bug。領域包括程式開發、系統管理與 server 設定、資料處理、模型訓練、資安、科學計算流程。</p>
+              <p>每個任務打包成三樣東西。檔名依 slide；內容是本筆記的示意，實際目錄結構以官方 repo 為準。</p>
+              <figure class="file"><figcaption>一個 Terminal-Bench 任務（示意）</figcaption><pre><code>instruction.md     # 給 agent 的任務說明
+Dockerfile         # 建立初始環境
+tests/test.sh      # 檢查最終系統狀態，回傳 pass 或 fail</code></pre></figure>
+              <figure class="file"><figcaption>tests/test.sh（示意：資料處理任務）</figcaption><pre><code>#!/usr/bin/env bash
+# 只檢查最終狀態，不看 agent 打過哪些指令
+set -e
+test -f /app/output.csv                          # 產出檔存在
+python3 /tests/check_output.py /app/output.csv   # 內容正確</code></pre></figure>
+              <ul>
+                <li><b>版本：</b>TB 2.0 有 89 題。TB 4.0 刪掉已飽和的題目，剩 66 題。</li>
+                <li><b>解答不公開：</b>每題有人類寫的解答，但不公開。這能降低 leakage 的風險（p.26）。</li>
+                <li><b>Timeout：</b>8 小時。</li>
+                <li><b>代表任務：</b>在運作中的 KV service 上部署新 protocol。過程中不能斷線，latency 也要維持。</li>
+              </ul>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>為什麼刪題：所有 agent 都會做的題目，分不出強弱，只會墊高分數。刪掉之後，分數才能反映差距。p.34 談飽和。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p22" data-pages="22">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=22" target="_blank" rel="noopener" aria-label="開啟原 slide 第 22 頁">p.<b>22</b></a>
+          <div class="body">
+            <h3>Terminal-Bench 的定位 <span class="orig">Terminal-Bench: between SWE-bench and OSWorld</span></h3>
+            <p class="gist">Terminal-Bench 介於 SWE-bench 和 OSWorld 之間。範圍比 SWE-bench 大，又不需要 OSWorld 的滑鼠座標。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th></th><th>SWE-bench</th><th>Terminal-Bench</th><th>OSWorld</th></tr></thead>
+                <tbody>
+                  <tr><td>Agent 怎麼動作</td><td>改一個 repo 的檔案</td><td>在 container 裡下 shell 指令</td><td>滑鼠點擊與按鍵</td></tr>
+                  <tr><td>Agent 看到什麼</td><td>程式碼與測試輸出</td><td>Terminal 輸出</td><td>螢幕截圖</td></tr>
+                  <tr><td>任務範圍</td><td>修一個 GitHub issue</td><td>設定、debug、修復、建置</td><td>操作任何桌面 app</td></tr>
+                  <tr><td>評分</td><td>Repo 的測試</td><td>對最終系統狀態跑測試</td><td>檢查最終狀態</td></tr>
+                </tbody>
+              </table></div>
+              <p>Terminal-Bench 沒有 GUI grounding。它專心測長流程推理和系統操作，不測「按鈕在螢幕哪裡」。</p>
+              <p>選 benchmark 的原則：挑動作空間和你的 agent 相同的。Coding agent 看 SWE-bench 和 Terminal-Bench；操作電腦的 agent 看 OSWorld。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p23" data-pages="23">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=23" target="_blank" rel="noopener" aria-label="開啟原 slide 第 23 頁">p.<b>23</b></a>
+          <div class="body">
+            <h3>TheAgentCompany：模擬一家公司 <span class="orig">TheAgentCompany: mimicking a company</span></h3>
+            <p class="gist">TheAgentCompany 模擬一家軟體公司，有 175 個任務。Agent 要用公司的工具，也要和 LLM 模擬的同事溝通。Checkpoint 讓沒做完的任務也能拿部分分數。</p>
+            <div class="teach">
+              <p>公司環境：GitLab（程式碼）、Plane（工單）、ownCloud（文件）、RocketChat（團隊聊天），加上 LLM 模擬的同事。任務領域有軟體開發、專案管理、資料科學、HR、財務。</p>
+              <p>一個工作的例子：</p>
+              <ol>
+                <li>讀取工單（Plane）。</li>
+                <li>詢問同事（RocketChat）。</li>
+                <li>查看 repo（GitLab）。</li>
+                <li>撰寫程式（workspace）。</li>
+                <li>執行測試（terminal）。</li>
+                <li>更新 issue（Plane）。</li>
+                <li>回報結果（RocketChat）。</li>
+              </ol>
+              <p>部分分數的公式：</p>
+              <pre><code>S_partial = 0.5 · earned/total + 0.5 · S_full</code></pre>
+              <p><code>earned/total</code> 是拿到的 checkpoint 比例。整個任務完成時，<code>S_full</code> 是 1，否則是 0。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Checkpoint</th><th>任務完成</th><th>計算</th><th class="num">S_partial</th></tr></thead>
+                <tbody>
+                  <tr><td>4/8</td><td>否</td><td>0.5 × 0.5 + 0.5 × 0</td><td class="num">0.25</td></tr>
+                  <tr><td>7/8</td><td>否</td><td>0.5 × 0.875 + 0.5 × 0 = 0.4375</td><td class="num">0.44</td></tr>
+                  <tr><td>8/8</td><td>是</td><td>0.5 × 1 + 0.5 × 1</td><td class="num">1.00</td></tr>
+                </tbody>
+              </table></div>
+              <p>驗算：7/8 = 0.875，乘 0.5 得 0.4375，四捨五入就是 slide 上的 0.44。三個例子都和公式相符。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>注意分數的跳躍：7/8 只拿 0.44；做完最後一步，才跳到 1.00。公式讓「完成」佔一半的分數。部分分數能看出進度，但「差一步」不會看起來像成功。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p24" data-pages="24">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=24" target="_blank" rel="noopener" aria-label="開啟原 slide 第 24 頁">p.<b>24</b></a>
+          <div class="body">
+            <h3>8 個 benchmark 總表 <span class="orig">Agent benchmarks</span></h3>
+            <p class="gist">8 個 benchmark 放在一起比：agent 在哪裡做事、做什麼動作、grader 檢查什麼。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>Benchmark</th><th>Agent 在哪裡</th><th>典型動作</th><th>Grader 檢查什麼</th></tr></thead>
+                <tbody>
+                  <tr><td>GAIA</td><td>Web、檔案、程式 tool</td><td>搜尋、讀檔、計算</td><td>短的最終答案</td></tr>
+                  <tr><td>WebArena</td><td>自架網站</td><td>點擊、輸入、導覽</td><td>網站或後端狀態</td></tr>
+                  <tr><td>OSWorld</td><td>完整的桌面 VM</td><td>滑鼠、鍵盤、操作 app</td><td>檔案、app、系統狀態</td></tr>
+                  <tr><td>SWE-bench</td><td>軟體 repo</td><td>讀、改、跑測試</td><td>Patch 通過測試</td></tr>
+                  <tr><td>BFCL</td><td>Function / API 介面</td><td>結構化的 function call</td><td>Call、參數、結果狀態</td></tr>
+                  <tr><td>τ-bench</td><td>客服 API 與對話</td><td>和客戶對話、呼叫 API</td><td>資料庫狀態與回覆</td></tr>
+                  <tr><td>Terminal-Bench</td><td>隔離的 terminal container</td><td>任意 shell 指令</td><td>任務專屬的測試</td></tr>
+                  <tr><td>TheAgentCompany</td><td>模擬的軟體公司</td><td>用 web app、寫程式、和同事對話</td><td>Checkpoint 與最終狀態</td></tr>
+                </tbody>
+              </table></div>
+              <p>讀表方法：看最後一欄。只有 GAIA 只看答案；其他 7 個都檢查某種狀態。檢查狀態更接近真實工作，但環境更難架設與重置。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 為什麼評估很難 ===================== -->
+      <section class="part" id="s-hard">
+        <header class="part-head">
+          <p class="range">p.25–32</p>
+          <h2>為什麼 agent 評估很難</h2>
+          <p class="lede">分數會失真。Slide 列出六類原因：leakage、單一 user turn、成本與 latency、非確定性、副作用、評分方式。</p>
+        </header>
+
+        <article class="slide compact" id="p25" data-pages="25">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=25" target="_blank" rel="noopener" aria-label="開啟原 slide 第 25 頁">p.<b>25</b></a>
+          <div class="body">
+            <h3>分隔頁 <span class="orig">Agent Evaluation is Challenging and Evolving</span></h3>
+            <p class="gist">接下來先講挑戰（p.26–32），再講演進（p.33–37）。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p26" data-pages="26">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=26" target="_blank" rel="noopener" aria-label="開啟原 slide 第 26 頁">p.<b>26</b></a>
+          <div class="body">
+            <h3>Data leakage 的四層 <span class="orig">Data leakage: four layers, not just training</span></h3>
+            <p class="gist">Data leakage（資料洩漏）不只發生在訓練。Agent 評估至少有四層：訓練、評估當下、環境、benchmark overfitting。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>層</th><th>怎麼發生</th><th>例（示意）</th></tr></thead>
+                <tbody>
+                  <tr><td>Training leakage</td><td>題目或人類的修正，出現在訓練資料裡</td><td>Model 背過某個 issue 的 patch</td></tr>
+                  <tr><td>Eval-time leakage</td><td>Agent 評估時上網，抄到之後才出現的修正</td><td>搜到已 merge 的 PR，照抄</td></tr>
+                  <tr><td>Environment leakage</td><td>Sandbox 暴露未來的 commit 或隱藏的測試</td><td>執行 <code>git log --all</code>，看到修正的 commit</td></tr>
+                  <tr><td>Benchmark overfitting</td><td>用公開的測試集調 prompt 與 scaffold</td><td>反覆看失敗案例，改到分數變高</td></tr>
+                </tbody>
+              </table></div>
+              <p>Tool 越真實，leakage 的入口越多。Agent benchmark 需要的資訊，常常可以直接搜尋到。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>有 web search 的 agent 做 SWE-bench，可能搜到這個 issue 的修正。這時分數反映「找答案」的能力。它沒有量到「解題」的能力。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p27" data-pages="27">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=27" target="_blank" rel="noopener" aria-label="開啟原 slide 第 27 頁">p.<b>27</b></a>
+          <div class="body">
+            <h3>Leakage 會從整個 stack 進來 <span class="orig">Leakage can occur through the whole agent stack</span></h3>
+            <p class="gist">Agent 的表現 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment）。每一個輸入都可能把答案帶進來。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>元件</th><th>Leakage 怎麼發生</th></tr></thead>
+                <tbody>
+                  <tr><td>Base model</td><td>Pretraining 資料含有 benchmark 題目</td></tr>
+                  <tr><td>Fine-tuning</td><td>用 benchmark 解答當 agent 的訓練 trajectory</td></tr>
+                  <tr><td>Prompt</td><td>Few-shot 範例取自測試題</td></tr>
+                  <tr><td>Retrieval</td><td>RAG 語料庫收錄了 benchmark 答案</td></tr>
+                  <tr><td>Memory</td><td>存了先前做這個 benchmark 的紀錄</td></tr>
+                  <tr><td>Web search</td><td>搜到公開的解答</td></tr>
+                  <tr><td>Environment</td><td>暴露未來的 git commit 或隱藏檔案</td></tr>
+                  <tr><td>Scaffold</td><td>針對 benchmark 手寫的規則</td></tr>
+                  <tr><td>Agent 開發流程</td><td>研究者反覆看失敗案例、調整系統</td></tr>
+                </tbody>
+              </table></div>
+              <p>所以「model 沒有用測試集訓練」不足以證明分數乾淨。Model 只是 f 的一個輸入。其他輸入都能帶入答案，和訓練資料無關。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>Memory 的例子：agent 有跨 session 的 memory。第 1 輪評估時，它記下「task 17 的答案是 4,381」。第 2 輪跑到同一題，它直接從 memory 取答案。分數變高，能力沒變。對策：每次評估都從空的 memory 開始，也就是 p.12 的重置。</p></div></aside>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>最後一列最容易忽略：開發者自己也是 leakage 的管道。你每看一次失敗案例、改一次 prompt，就把測試集的資訊帶進系統。常見的對策：留一份 held-out 測試集，開發時不看，最後才跑一次。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p28" data-pages="28">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=28" target="_blank" rel="noopener" aria-label="開啟原 slide 第 28 頁">p.<b>28</b></a>
+          <div class="body">
+            <h3>只有一個 user turn 的問題 <span class="orig">Challenges with Agent Evaluation: a single user turn</span></h3>
+            <p class="gist">多數 benchmark 只給一個完整的指令：prompt 進去，最終狀態出來，中間沒有使用者。真實工作會模糊、會修改、會中斷。</p>
+            <div class="teach">
+              <p>真實的情況：條件沒講完、做到一半收到糾正、目標中途改變。</p>
+              <p>單一 turn 的評分會獎勵「有自信地猜」。Agent 問一個釐清問題，要多花步數，卻拿不到分數。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>指令：「幫我訂下週一去 Chicago 的機票。」指令沒說幾點、哪個機場、預算多少。</p>
+                <ul>
+                  <li>Agent 甲：直接訂最便宜的早班機。</li>
+                  <li>Agent 乙：先問「您希望幾點出發？」</li>
+                </ul>
+                <p>單一 turn 的 benchmark 沒有人回答問題。乙只能停下來，得 0 分。標準答案若剛好是最便宜的班機，甲得 1 分。真實的使用者可能比較喜歡乙。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p29" data-pages="29-30">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=29" target="_blank" rel="noopener" aria-label="開啟原 slide 第 29 到 30 頁">p.<b class="multi">29–30</b></a>
+          <div class="body">
+            <h3>圖片頁 <span class="orig">Challenges with Agent Evaluation: a single user turn</span></h3>
+            <p class="gist">這 2 頁主要是圖片。p.29 只有一行字：這是你們在 Assignment 1 使用 Claude Code 的方式。p.30 只有標題。前後頁在講單一 user turn 的問題，請直接看原 slide。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p31" data-pages="31">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=31" target="_blank" rel="noopener" aria-label="開啟原 slide 第 31 頁">p.<b>31</b></a>
+          <div class="body">
+            <h3>多輪互動要測三件事 <span class="orig">Challenges with Agent Evaluation: a single user turn</span></h3>
+            <p class="gist">這頁重複 p.28 的重點，再加上多輪評估要測的三件事：clarification、recovery、memory。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>能力</th><th>要問的問題</th><th>測法（本筆記示意）</th></tr></thead>
+                <tbody>
+                  <tr><td>Clarification</td><td>目標不清楚時，agent 會問嗎？</td><td>故意少給一個必要條件，看它有沒有問</td></tr>
+                  <tr><td>Recovery</td><td>中途收到糾正，agent 會重新規劃嗎？</td><td>第 3 輪改需求，看它有沒有改計畫</td></tr>
+                  <tr><td>Memory</td><td>前面給的限制，後面還記得嗎？</td><td>第 1 輪說「預算 300 美元」，第 6 輪檢查有沒有超過</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>τ-bench 用 LLM 模擬客戶，是往多輪互動走的一步。BFCL 的 multi-turn 任務也是（p.15）。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p32" data-pages="32">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=32" target="_blank" rel="noopener" aria-label="開啟原 slide 第 32 頁">p.<b>32</b></a>
+          <div class="body">
+            <h3>還有四個挑戰 <span class="orig">Challenges with Agent Evaluation: there are more</span></h3>
+            <p class="gist">還有四個挑戰：成本與 latency、非確定性、安全與副作用、評分方式本身。</p>
+            <div class="teach">
+              <ul>
+                <li><b>成本與 latency：</b>只看成功率不夠。Slide 的對比：一次跑 200 步、花 40 美元；另一次 12 步、花 0.30 美元。兩次都成功，價差約 133 倍。</li>
+                <li><b>非確定性：</b>同一個 agent 做同一題，結果可能不同。只跑一次的分數，大多是雜訊。</li>
+                <li><b>安全與副作用：</b>過程中刪了檔案、寄了 email、花了錢，分數都不會扣。</li>
+                <li><b>評分方式：</b>只看結果，會放過運氣好或不安全的執行。比對 trajectory，會判錯其他正確的做法。</li>
+              </ul>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>為什麼 outcome-only 會放過不安全的執行：grader 只看終點。例：agent 修好了 bug，但過程中把 API key 印進 log，還寄測試信給真實客戶。最終狀態正確，grader 給滿分。實務上兩種方式搭配：看結果，也用規則掃描 trajectory 裡的危險動作。</p></div></aside>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>非確定性有多大：假設 benchmark 有 50 題，每題成功率 0.6，各題獨立。只跑一次，總分的標準差約 0.07（<code>√(0.6 × 0.4 / 50) ≈ 0.069</code>）。所以一次得 60%、一次得 66%，可能只是運氣。做法：每題跑多次，報告平均與範圍。</p></div></aside>
+              <p>Slide 最後的邀請：MaDSys 團隊在做一個用真實流量評估 agent 的研究平台。有興趣、每週能投入 20 小時以上的同學，可以聯絡講師。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 飽和 ===================== -->
+      <section class="part" id="s-saturate">
+        <header class="part-head">
+          <p class="range">p.33–35</p>
+          <h2>Benchmark 飽和得很快</h2>
+          <p class="lede">新的 benchmark 推出後，frontier model（當時最強的 model）很快就追上。看到高分時，先問這個 benchmark 還分得出強弱嗎。</p>
+        </header>
+
+        <article class="slide" id="p33" data-pages="33">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=33" target="_blank" rel="noopener" aria-label="開啟原 slide 第 33 頁">p.<b>33</b></a>
+          <div class="body">
+            <h3>Frontier 追上得多快 <span class="orig">How fast the frontier caught up</span></h3>
+            <p class="gist">Slide 用 6 個 benchmark 說明：frontier model 追上人類基準線，或大幅拉高分數，只花了 6 到 39 個月。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>Benchmark（推出年）</th><th>基準線或變化</th><th class="num">花了多久</th><th class="num">最高分</th></tr></thead>
+                <tbody>
+                  <tr><td>GLUE（2018）</td><td>人類水準 87.1</td><td class="num">14 個月</td><td class="num">91.1</td></tr>
+                  <tr><td>MMLU（2020）</td><td>專家水準 89.8</td><td class="num">39 個月</td><td class="num">92.3</td></tr>
+                  <tr><td>GPQA Diamond（2023）</td><td>博士專家 69.7</td><td class="num">10 個月</td><td class="num">96.0</td></tr>
+                  <tr><td>SWE-bench Verified（2024）</td><td>33% → 95%</td><td class="num">22 個月</td><td class="num">95.0</td></tr>
+                  <tr><td>ARC-AGI-2（2025）</td><td>一般人類 60</td><td class="num">11 個月</td><td class="num">95.0</td></tr>
+                  <tr><td>ARC-AGI-3（2026）</td><td>0.5% → 62.7%</td><td class="num">6 個月</td><td class="num">62.7</td></tr>
+                </tbody>
+              </table></div>
+              <p>以上都是 slide 上的數字。ARC-AGI-3 的數字旁有星號，slide 沒有可擷取的註解。</p>
+              <p>含意：一個 benchmark 推出幾年內，就可能分不出頂尖 model 的差別。看到高分時，先確認這個 benchmark 是否已經飽和。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p34" data-pages="34">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=34" target="_blank" rel="noopener" aria-label="開啟原 slide 第 34 頁">p.<b>34</b></a>
+          <div class="body">
+            <h3>Benchmark 很快就飽和 <span class="orig">Benchmarks saturate quickly</span></h3>
+            <p class="gist">「飽和」指 frontier model 達到人類基準線，或頂尖 model 之間拉不開差距。Slide 用時間軸列出 2016 年到 2026 年 9 月的 benchmark。</p>
+            <div class="teach">
+              <p>時間軸依類別分組：單一任務、NLU 套件、知識與推理、assistant、agent。另外標出已飽和與仍開放的 benchmark。</p>
+              <p>列出的 benchmark 有 SQuAD 1.1、GLUE、SuperGLUE、ARC-AGI-1、MMLU、MATH、HumanEval、Chatbot Arena、MT-Bench、WebArena、SWE-bench（後來轉向 Verified）。還有 GPQA Diamond、MMMU、OSWorld、FrontierMath、Humanity's Last Exam、ARC-AGI-2。最新的是 Terminal-Bench、GDPval、SWE-bench Pro、Remote Labor Index、ARC-AGI-3、OSWorld 2.0。</p>
+              <p>哪些已經飽和，slide 用顏色標示。文字擷取看不出來，請對照原 slide。</p>
+              <p>飽和後的對策，本堂都看過：出更難的版本（SWE-bench Pro）、刪掉飽和的題目（Terminal-Bench 4.0）、出更長的任務（OSWorld 2.0）。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p35" data-pages="35">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=35" target="_blank" rel="noopener" aria-label="開啟原 slide 第 35 頁">p.<b>35</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">沒有可擷取的文字。前一頁講 benchmark 飽和，後一頁講評估方式的演進，請直接看原 slide。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 演進與 Pareto ===================== -->
+      <section class="part" id="s-future">
+        <header class="part-head">
+          <p class="range">p.36–38</p>
+          <h2>評估的演進與 Pareto frontier</h2>
+          <p class="lede">評估對象變成整個系統。比較兩個 agent 時，要同時看能力、成本、速度。下圖說明 Assignment 3 會用到的 dominance 與 Pareto frontier。</p>
+        </header>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 700 330" role="img" aria-label="能力與成本的示意散佈圖，不是實際數據。橫軸是每題成本，越左越好；縱軸是能力，越上越好。A、B、C 三點沒有其他點能支配，連成 Pareto frontier，也就是 Rank 1。B 比 D 便宜，能力也比 D 高，所以 B 支配 D；B 右下方整塊區域都受 B 支配。D、E、G 是 Rank 2，F 是 Rank 3。">
+              <defs>
+                <marker id="l7b-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+              </defs>
+              <text x="690" y="20" text-anchor="end" class="dg-ts">示意圖，不是實際數據</text>
+              <text x="88" y="24" class="dg-t">能力（越高越好）</text>
+
+              <rect x="240" y="140" width="360" height="150" class="dg-box-soft"/>
+              <text x="592" y="281" text-anchor="end" class="dg-ts">B 支配的區域</text>
+
+              <line x1="80" y1="290" x2="80" y2="36" class="dg-line" marker-end="url(#l7b-ah)"/>
+              <line x1="80" y1="290" x2="616" y2="290" class="dg-line" marker-end="url(#l7b-ah)"/>
+              <text x="340" y="318" text-anchor="middle" class="dg-t">每題成本（越低越好）</text>
+
+              <polyline points="130,230 240,140 440,80" class="dg-accent"/>
+              <text x="424" y="70" text-anchor="end" class="dg-ta">Pareto frontier（Rank 1）</text>
+
+              <line x1="178" y1="112" x2="138" y2="72" class="dg-line" marker-end="url(#l7b-ah)"/>
+              <text x="182" y="128" class="dg-ts">更好</text>
+
+              <line x1="246" y1="143" x2="331" y2="181" class="dg-line dg-dash" marker-end="url(#l7b-ah)"/>
+              <text x="256" y="180" class="dg-ts">支配</text>
+
+              <circle cx="130" cy="230" r="6" class="dg-fill-accent"/>
+              <text x="120" y="235" text-anchor="end" class="dg-tb">A</text>
+              <circle cx="240" cy="140" r="6" class="dg-fill-accent"/>
+              <text x="249" y="127" class="dg-tb">B</text>
+              <circle cx="440" cy="80" r="6" class="dg-fill-accent"/>
+              <text x="449" y="73" class="dg-tb">C</text>
+              <circle cx="340" cy="185" r="5" class="dg-fill-ink"/>
+              <text x="349" y="178" class="dg-tb">D</text>
+              <circle cx="540" cy="120" r="5" class="dg-fill-ink"/>
+              <text x="549" y="113" class="dg-tb">E</text>
+              <circle cx="210" cy="262" r="5" class="dg-fill-ink"/>
+              <text x="219" y="255" class="dg-tb">G</text>
+              <circle cx="500" cy="240" r="5" class="dg-box"/>
+              <text x="509" y="233" class="dg-tb">F</text>
+
+              <circle cx="626" cy="64" r="5" class="dg-fill-accent"/>
+              <text x="636" y="68" class="dg-t">Rank 1</text>
+              <circle cx="626" cy="86" r="5" class="dg-fill-ink"/>
+              <text x="636" y="90" class="dg-t">Rank 2</text>
+              <circle cx="626" cy="108" r="5" class="dg-box"/>
+              <text x="636" y="112" class="dg-t">Rank 3</text>
+            </svg>
+          </div>
+          <figcaption>示意圖，不是實際數據。往左上走越好。A、B、C 沒有其他點能支配，組成 Pareto frontier（Rank 1）。B 比 D 便宜，能力也比 D 高，所以 B 支配 D。拿掉 Rank 1 後，不受支配的 D、E、G 是 Rank 2。Slide 的圖也沒有畫第三個維度：速度。</figcaption>
+        </figure>
+
+        <article class="slide" id="p36" data-pages="36">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=36" target="_blank" rel="noopener" aria-label="開啟原 slide 第 36 頁">p.<b>36</b></a>
+          <div class="body">
+            <h3>評估方式還在演進 <span class="orig">Agent evaluation is still evolving</span></h3>
+            <p class="gist">評估對象從 base model 變成整個 agent 系統。互動方式、grader、資料集、metric、關注重點都跟著改變。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>面向</th><th>早期的評估</th><th>目前的前沿</th></tr></thead>
+                <tbody>
+                  <tr><td>評估對象</td><td>Base model</td><td>Model + prompt + tools + agent harness</td></tr>
+                  <tr><td>互動</td><td>靜態、單一 turn</td><td>有狀態、長流程</td></tr>
+                  <tr><td>Grader</td><td>Exact match 或 likelihood</td><td>測試、環境狀態、人、judge model</td></tr>
+                  <tr><td>資料集</td><td>固定且公開</td><td>新鮮、隱藏、動態，或考慮 contamination</td></tr>
+                  <tr><td>主要 metric</td><td>平均 accuracy</td><td>系統效率，加上成功率、可靠性、品質、成本、latency</td></tr>
+                  <tr><td>主要關注</td><td>跨樣本的泛化</td><td>在真實限制與安全要求下穩定完成任務</td></tr>
+                </tbody>
+              </table></div>
+              <p>這張表是整堂課的摘要。評估對象對應 p.27，互動對應 p.28–31。Grader 對應 p.12–24，資料集對應 p.26，metric 對應 p.11。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p37" data-pages="37">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=37" target="_blank" rel="noopener" aria-label="開啟原 slide 第 37 頁">p.<b>37</b></a>
+          <div class="body">
+            <h3>能力、成本、速度與 Pareto frontier <span class="orig">More dimensions to consider for a real-world agent</span></h3>
+            <p class="gist">真實的 agent 至少要看三個維度：能力（越高越好）、成本（越低越好）、速度。Assignment 3 會用這三個維度評分。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Dominance（支配）：</b>A 在每個 metric 都不比 B 差，且至少一個比 B 好，就說 A 支配 B。</li>
+                <li><b>Pareto frontier（Rank 1）：</b>沒有任何 agent 能支配的那一群。</li>
+                <li><b>Rank 2、Rank 3：</b>拿掉 Rank 1，剩下不受支配的是 Rank 2，依此類推。</li>
+                <li>Slide 的圖只畫能力和成本，沒有畫速度。Slide 也提到 agent 的易用性（usability）。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>三個 agent（示意，假設速度相同）：</p>
+                <div class="table-wrap"><table>
+                  <thead><tr><th>Agent</th><th class="num">成功率</th><th class="num">每題成本</th></tr></thead>
+                  <tbody>
+                    <tr><td>X</td><td class="num">70%</td><td class="num">$1.20</td></tr>
+                    <tr><td>Y</td><td class="num">72%</td><td class="num">$0.40</td></tr>
+                    <tr><td>Z</td><td class="num">80%</td><td class="num">$3.00</td></tr>
+                  </tbody>
+                </table></div>
+                <p>Y 支配 X：更便宜，成功率也更高。Y 和 Z 互不支配：Z 比較強，Y 比較便宜。所以 Pareto frontier 是 Y 和 Z。</p>
+              </div></aside>
+              <p>為什麼不合成一個分數：把能力和成本加權成一個數字，要先決定權重。每個使用者的權重不同。Pareto frontier 不需要權重，只排除明顯較差的選項。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>對 Assignment 3 的含意：新版 agent 最好能支配舊版。也就是至少一個維度更好，其他維度不變差。只追成功率，可能換來又貴又慢的 agent。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p38" data-pages="38">
+          <a class="tab" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=38" target="_blank" rel="noopener" aria-label="開啟原 slide 第 38 頁">p.<b>38</b></a>
+          <div class="body">
+            <h3>下一堂 <span class="orig">Next class</span></h3>
+            <p class="gist">主題：cost-effective agents、case study、不同類型的 agent、agentic framework。見 <a href="l08.html">L8</a>。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 收尾 ===================== -->
+      <section class="wrap" id="wrap" aria-label="重點與自我檢查">
+        <h2>帶走的重點</h2>
+        <ul class="takeaways">
+          <li>Agent 評估量的是整個系統。換掉 prompt、tool、memory 或環境，分數都會變。</li>
+          <li>評估 loop：重置環境 → 在預算內執行 → grader 打分。先弄清楚 grader 看的是答案、狀態還是 trajectory。</li>
+          <li>上線前看 pass^k。逐題計算再平均，不要把整體成功率取 k 次方。</li>
+          <li>成功率之外，也要報告成本（含 tool 與 cache miss）、latency，以及多次執行的變異。</li>
+          <li>選動作空間和你的 agent 相同的 benchmark。同時確認它是否飽和、有沒有 leakage。</li>
+          <li>比較 agent 時用 dominance：至少一個維度變好、其他維度不變差，才算真的進步。</li>
+        </ul>
+
+        <h2>自我檢查</h2>
+        <div class="quiz">
+          <details>
+            <summary>一個 agent 的單次成功率是 0.9，假設每次執行獨立。pass@3 和 pass^3 各是多少？客服 agent 該看哪一個？</summary>
+            <div class="answer"><p>pass@3 = 1 − 0.1³ = 0.999。pass^3 = 0.9³ = 0.729。客服看 pass^3：每位客戶只有一次機會，agent 必須每次都成功。</p></div>
+          </details>
+          <details>
+            <summary>你的 coding agent 在 SWE-bench 的分數從 40% 跳到 70%。你只改了一件事：加上 web search tool。可能的原因是什麼？怎麼檢查？</summary>
+            <div class="answer"><p>可能是 eval-time leakage：agent 搜到了這個 issue 的修正或 PR。檢查 trajectory 裡的搜尋紀錄與造訪的網址。也可以封鎖相關網域後重跑，看分數是否回落。</p></div>
+          </details>
+          <details>
+            <summary>為什麼「model 沒有用測試集訓練」不足以證明 agent 的分數乾淨？舉兩個其他管道。</summary>
+            <div class="answer"><p>表現 = f（LLM、prompt、scaffold、tools、retriever、memory、environment），model 只是其中一個輸入。其他管道例如：memory 存了上一輪的答案；sandbox 的 git 歷史有未來的修正 commit；few-shot 範例取自測試題；開發者反覆看失敗案例來調整系統。</p></div>
+          </details>
+          <details>
+            <summary>TheAgentCompany 的某個任務有 10 個 checkpoint。Agent 拿到 9 個，任務沒有完成。S_partial 是多少？</summary>
+            <div class="answer"><p>0.5 × 9/10 + 0.5 × 0 = 0.45。只差最後一步，分數還不到一半。</p></div>
+          </details>
+          <details>
+            <summary>Agent X 成功率 65%、每題 $0.50；Agent Y 成功率 65%、每題 $0.80。假設速度相同，誰支配誰？</summary>
+            <div class="answer"><p>X 支配 Y。兩者能力相同，X 比較便宜。X 在每個維度都不比 Y 差，而且成本更好。</p></div>
+          </details>
+        </div>
+
+        <h2>延伸閱讀</h2>
+        <ul class="reading">
+          <li><a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">課程筆記：Agent evaluation and benchmarks</a></li>
+          <li><a href="https://arxiv.org/abs/2406.12045" target="_blank" rel="noopener">τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains</a></li>
+          <li><a href="https://arxiv.org/abs/2311.12983" target="_blank" rel="noopener">GAIA: a benchmark for General AI Assistants</a></li>
+          <li><a href="https://www.swebench.com" target="_blank" rel="noopener">SWE-bench Leaderboards</a></li>
+        </ul>
+
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與下一堂">
+        <a class="prev" href="l06.html"><span>← 上一堂 L6</span>Agent memory 與可靠性</a>
+        <a class="next" href="l08.html"><span>下一堂 L8 →</span>成本、速度與 harness 架構</a>
+      </nav>
+      <p class="fineprint">本頁是 CS2680 slides 的學習筆記：用自己的話改寫並延伸說明。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。pass@k / pass^k 的估計式依據課程筆記（2026 年 10 月）。標示「示意」的程式、對話與數字，是本筆記自擬的例子。圖片頁沒有可擷取的文字，請對照原 slide。</p>
+    </div>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>L4 Context 管理與 tool 設計 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l03.html" rel="prev">← L3</a>
+      <span class="here">L4 / 8</span>
+      <a href="l05.html" rel="next">L5 →</a>
+    </nav>
+    <button class="toggle" id="gist-toggle" type="button" aria-pressed="false">只看重點</button>
+  </div>
+</header>
+
+<main class="page gutter" data-lecture="l04">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 04 · 2026-09-16 · Part I</p>
+    <h1>Context 管理與 tool 設計</h1>
+    <p class="en-title">Agents design I: context management and tool design</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/4_agent_design_1.pdf" target="_blank" rel="noopener">4_agent_design_1.pdf ↗</a></li>
+      <li><span class="k">頁數</span>58</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 25 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">L2 從使用者的角度看 agent。這堂課換成設計者的角度：loop 怎麼寫、給 model 哪些 tool、每一步讓 model 看到什麼。</p>
+    <ul class="core">
+      <li><span><b>Loop 很短，難在周邊。</b>ReAct loop 寫成程式只有二十幾行。真正的工作在 harness：寫 tool 定義、驗證並執行 tool call、管理 context。</span></li>
+      <li><span><b>Tool 要為 model 設計。</b>少而正交、輸出精簡、錯誤訊息要教 model 怎麼修。SWE-agent 的實驗：只給 shell 解出 11.0%，專用介面解出 18.0%。</span></li>
+      <li><span><b>Context 是有限資源。</b>每一步都重送整個 window，內容越長，準確率越低。先擋在門外，再移出去、再刪舊的；LLM 摘要（compaction）是最後手段。</span></li>
+      <li><span><b>Prompt 技巧依任務選。</b>從 zero-shot 開始，有需要才加範例、推理步驟或多次取樣。換 model 就要重新調整。</span></li>
+      <li><span><b>Agent = Model × Harness。</b>Slide 引用的實驗：同一個 model 只換 harness，解題數變成約 2 倍。</span></li>
+    </ul>
+  </section>
+
+  <div class="layout">
+    <nav class="toc" aria-label="本堂目錄">
+      <details open>
+        <summary>本堂目錄</summary>
+        <ol>
+          <li><a href="#s-open">開場與課務<span>p.1–4</span></a></li>
+          <li><a href="#s-loop">Agent loop 與 ReAct<span>p.5–8</span></a></li>
+          <li><a href="#s-search">找程式碼：search 與 read<span>p.9–16</span></a></li>
+          <li><a href="#s-edit">改程式碼、shell 與 tool 設計<span>p.17–27</span></a></li>
+          <li><a href="#s-prompt">Prompt engineering<span>p.28–42</span></a></li>
+          <li><a href="#s-context">Context 是有限資源<span>p.43–47</span></a></li>
+          <li><a href="#s-manage">管理 context 的四種策略<span>p.48–53</span></a></li>
+          <li><a href="#s-harness">Agent = Model × Harness<span>p.54–58</span></a></li>
+          <li><a href="#wrap">重點與自我檢查<span>—</span></a></li>
+        </ol>
+      </details>
+    </nav>
+
+    <div class="content">
+
+      <!-- ===================== 開場與課務 ===================== -->
+      <section class="part" id="s-open">
+        <header class="part-head">
+          <p class="range">p.1–4</p>
+          <h2>開場與課務</h2>
+        </header>
+
+        <article class="slide compact" id="p1" data-pages="1">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=1" target="_blank" rel="noopener" aria-label="開啟原 slide 第 1 頁">p.<b>01</b></a>
+          <div class="body">
+            <h3>封面</h3>
+            <p class="gist">圖片頁，沒有可擷取的文字。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p2" data-pages="2">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=2" target="_blank" rel="noopener" aria-label="開啟原 slide 第 2 頁">p.<b>02</b></a>
+          <div class="body">
+            <h3>標題頁 <span class="orig">Agent Design I: context management and tool design</span></h3>
+            <p class="gist">Agent design 系列的第一堂。主題是 context 管理與 tool 設計。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p3" data-pages="3">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=3" target="_blank" rel="noopener" aria-label="開啟原 slide 第 3 頁">p.<b>03</b></a>
+          <div class="body">
+            <h3>課務 <span class="orig">Logistics</span></h3>
+            <p class="gist">Assignment 1 本週日（9/20）截止：分享你的 repo，並填寫 Google 表單。Assignment 1 分享的報名，本週四（9/17）開放。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p4" data-pages="4">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=4" target="_blank" rel="noopener" aria-label="開啟原 slide 第 4 頁">p.<b>04</b></a>
+          <div class="body">
+            <h3>本堂流程 <span class="orig">Plan for today</span></h3>
+            <p class="gist">Agent loop（ReAct）→ tool 設計 → context 管理。Context 管理再分成 prompt engineering 與 context engineering 兩段。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Agent loop ===================== -->
+      <section class="part" id="s-loop">
+        <header class="part-head">
+          <p class="range">p.5–8</p>
+          <h2>Agent loop：ReAct 與它的程式骨架</h2>
+          <p class="lede">先看 loop 本身，再看 harness 設計者要負責什麼。本頁後面的每一段，都在展開其中一項責任。</p>
+        </header>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 700 386" role="img" aria-label="Agent loop 流程圖：使用者請求放進 messages，交給 model。Model 給出最終回答就結束；發出 tool call 就由 harness 執行，結果附上 tool_call_id 放回 context，再交給 model。四個編號標出 harness 設計者的工作：組出 context、寫 tool 定義、驗證並執行、整理結果與管理 context。">
+              <defs>
+                <marker id="l4a-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+                <marker id="l4a-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/>
+                </marker>
+              </defs>
+
+              <rect x="112" y="12" width="478" height="292" rx="6" class="dg-frame"/>
+              <text x="122" y="296" class="dg-tm">loop · 最多 MAX_STEPS 圈</text>
+
+              <rect x="10" y="40" width="92" height="44" rx="4" class="dg-box"/>
+              <text x="56" y="67" text-anchor="middle" class="dg-t">使用者請求</text>
+
+              <rect x="262" y="40" width="176" height="44" rx="4" class="dg-box-accent"/>
+              <text x="350" y="58" text-anchor="middle" class="dg-tb">Model</text>
+              <text x="350" y="75" text-anchor="middle" class="dg-ts">決定下一步</text>
+
+              <rect x="600" y="40" width="90" height="44" rx="4" class="dg-box"/>
+              <text x="645" y="67" text-anchor="middle" class="dg-t">回傳答案</text>
+
+              <rect x="124" y="226" width="170" height="44" rx="4" class="dg-box"/>
+              <text x="209" y="253" text-anchor="middle" class="dg-t">回傳 tool 結果</text>
+
+              <rect x="406" y="226" width="170" height="44" rx="4" class="dg-box"/>
+              <text x="491" y="253" text-anchor="middle" class="dg-t">執行 tool</text>
+
+              <line x1="102" y1="62" x2="260" y2="62" class="dg-line" marker-end="url(#l4a-ah)"/>
+              <text x="170" y="54" text-anchor="middle" class="dg-ts">放進 messages</text>
+
+              <line x1="438" y1="62" x2="598" y2="62" class="dg-line" marker-end="url(#l4a-ah)"/>
+              <text x="512" y="54" text-anchor="middle" class="dg-ts">最終回答</text>
+
+              <line x1="424" y1="84" x2="424" y2="224" class="dg-accent" marker-end="url(#l4a-ahs)"/>
+              <text x="434" y="170" class="dg-ta">tool call</text>
+
+              <line x1="406" y1="248" x2="296" y2="248" class="dg-line" marker-end="url(#l4a-ah)"/>
+              <text x="351" y="240" text-anchor="middle" class="dg-ts">stdout、錯誤</text>
+
+              <line x1="276" y1="226" x2="276" y2="86" class="dg-line" marker-end="url(#l4a-ah)"/>
+              <text x="266" y="164" text-anchor="end" class="dg-ts">結果加回 messages</text>
+              <text x="266" y="180" text-anchor="end" class="dg-ts">（附上 tool_call_id）</text>
+
+              <circle cx="232" cy="62" r="10" class="dg-box-accent"/>
+              <text x="232" y="66" text-anchor="middle" class="dg-ta">1</text>
+              <circle cx="424" cy="122" r="10" class="dg-box-accent"/>
+              <text x="424" y="126" text-anchor="middle" class="dg-ta">2</text>
+              <circle cx="560" cy="210" r="10" class="dg-box-accent"/>
+              <text x="560" y="214" text-anchor="middle" class="dg-ta">3</text>
+              <circle cx="142" cy="210" r="10" class="dg-box-accent"/>
+              <text x="142" y="214" text-anchor="middle" class="dg-ta">4</text>
+
+              <text x="10" y="328" class="dg-tm">harness 設計者的四項工作</text>
+              <circle cx="20" cy="348" r="9" class="dg-box-accent"/>
+              <text x="20" y="352" text-anchor="middle" class="dg-ta">1</text>
+              <text x="36" y="352" class="dg-t">組出 context</text>
+              <text x="300" y="352" text-anchor="end" class="dg-tm">p.28–47</text>
+              <circle cx="370" cy="348" r="9" class="dg-box-accent"/>
+              <text x="370" y="352" text-anchor="middle" class="dg-ta">2</text>
+              <text x="386" y="352" class="dg-t">寫 tool 定義</text>
+              <text x="690" y="352" text-anchor="end" class="dg-tm">p.9–27</text>
+              <circle cx="20" cy="372" r="9" class="dg-box-accent"/>
+              <text x="20" y="376" text-anchor="middle" class="dg-ta">3</text>
+              <text x="36" y="376" class="dg-t">驗證參數、檢查權限、執行</text>
+              <text x="300" y="376" text-anchor="end" class="dg-tm">p.23–24</text>
+              <circle cx="370" cy="372" r="9" class="dg-box-accent"/>
+              <text x="370" y="376" text-anchor="middle" class="dg-ta">4</text>
+              <text x="386" y="376" class="dg-t">整理結果、管理 context</text>
+              <text x="690" y="376" text-anchor="end" class="dg-tm">p.48–53</text>
+            </svg>
+          </div>
+          <figcaption>依 p.6–7 重畫。藍色箭頭是 model 的決定；執行 tool、回傳結果、加回 messages 都由 harness 完成。編號是 slide 標出的四項設計者工作；編號放的位置與對應頁碼，是本筆記的整理。</figcaption>
+        </figure>
+
+        <article class="slide" id="p5" data-pages="5">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=5" target="_blank" rel="noopener" aria-label="開啟原 slide 第 5 頁">p.<b>05</b></a>
+          <div class="body">
+            <h3>ReAct：推理和行動放在同一個 loop <span class="orig">The ReAct loop</span></h3>
+            <p class="gist">ReAct 讓 model 輪流做三件事：Thought（想）、Action（做）、Observation（看結果）。想法決定下一個動作；結果修正下一個想法。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>做法</th><th>每一步做什麼</th><th>結果</th></tr></thead>
+                <tbody>
+                  <tr><td>只推理（reason only）</td><td>一直想，不碰環境</td><td>沒有東西檢查推理。小錯誤累積成自信的幻覺。</td></tr>
+                  <tr><td>只行動（act only）</td><td>一直呼叫 tool，背後沒有計畫</td><td>Model 重複同樣的動作。</td></tr>
+                  <tr><td>ReAct</td><td>想 → 做 → 看結果 → 再想</td><td>Observation 修正錯誤的想法。</td></tr>
+                </tbody>
+              </table></div>
+              <p>Loop 在兩種情況停止：observation 已經回答問題，或停止規則（步數、時間、預算上限）結束執行。在程式裡，Action 是 tool call，Observation 是 tool 結果（p.6）。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>一段 ReAct 過程（示意）：</p>
+                <pre><code>Thought:     測試說 session 太早過期。先找過期時間在哪裡算。
+Action:      grep -rn "expires" src/auth/
+Observation: src/auth/session.py:41   expires = now + 60
+Thought:     60 秒太短。設定檔寫 3600，要確認設定有沒有讀進來。
+Action:      read src/auth/config.py
+Observation: SESSION_TTL = int(os.getenv("SESSION_TTL", 3600))</code></pre>
+                <p>第 2 個 Thought 用上了第 1 個 Observation。只推理的 model 看不到 60 這個數字，只能猜。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p6" data-pages="6">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=6" target="_blank" rel="noopener" aria-label="開啟原 slide 第 6 頁">p.<b>06</b></a>
+          <div class="body">
+            <h3>Agent loop 寫成程式 <span class="orig">The agent loop (code)</span></h3>
+            <p class="gist">Agent loop 的程式很短：呼叫 model、執行 tool call、把結果加回訊息清單。重複到 model 給出最終回答，或超過步數上限。</p>
+            <div class="teach">
+              <figure class="file"><figcaption>agent.py（依 slide 的 pseudocode 改寫，不綁定任何 SDK）</figcaption><pre><code>MAX_STEPS = 30
+
+def run_agent(task: str, tools: dict) -&gt; str:
+    messages = [
+        {"role": "system", "content": "You are a coding agent. Call tools to inspect and change the repo."},
+        {"role": "user", "content": task},
+    ]
+    schemas = [t.schema for t in tools.values()]   # 送給 model 的 tool 定義
+    for _ in range(MAX_STEPS):
+        reply = call_model(messages, schemas)      # 佔位：接上你的 LLM SDK
+        messages.append(reply.message)             # model 的回覆也要留在歷史裡
+        if not reply.tool_calls:                   # 沒有 tool call = 最終回答
+            return reply.text
+        for call in reply.tool_calls:
+            try:
+                tool = tools[call.name]            # 名稱不存在，也算錯誤
+                args = tool.validate(call.arguments)
+                result = tool.run(**args)
+            except Exception as err:               # 錯誤也回給 model，讓它修正
+                result = {"error": str(err)}
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.id,           # 標明是哪一個 call 的結果
+                "content": serialize(result),
+            })
+    raise RuntimeError(f"Agent stopped: hit MAX_STEPS={MAX_STEPS}")</code></pre></figure>
+              <ul>
+                <li><b><code>messages</code></b>：這就是 context。每一圈都整份送給 model。</li>
+                <li><b><code>validate</code></b>：model 的輸出不可信。JSON 可能壞掉，型別可能不對，路徑可能在 repo 外面。</li>
+                <li><b><code>tool_call_id</code></b>：model 一次可以發出多個 tool call。每個結果都要標明對應哪一個。</li>
+                <li><b><code>MAX_STEPS</code></b>：沒有上限的 loop 可能一直燒錢。到達上限就明確失敗。</li>
+              </ul>
+              <p>Tool 出錯時，程式不中止。錯誤訊息放回 context；model 讀到錯誤，下一圈就能修正（p.26）。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p7" data-pages="7">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=7" target="_blank" rel="noopener" aria-label="開啟原 slide 第 7 頁">p.<b>07</b></a>
+          <div class="body">
+            <h3>Loop 的流程與設計者的工作 <span class="orig">The agent loop</span></h3>
+            <p class="gist">Model 每一圈只做一個決定：給出最終回答，或發出 tool call。其他事情都是 harness 設計者的工作。</p>
+            <div class="teach">
+              <p>Slide 在 loop 上標出設計者的四項工作，見本段開頭的圖。第 4 項「整理結果、管理 context」是可選的。權限檢查的細節見 L2 p.12。</p>
+              <p>這四件事都在 model 之外。所以同一個 model 放進不同的 harness，表現會差很多（p.55）。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p8" data-pages="8">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=8" target="_blank" rel="noopener" aria-label="開啟原 slide 第 8 頁">p.<b>08</b></a>
+          <div class="body">
+            <h3>Coding agent 的三個元件 <span class="orig">Components of a coding agent</span></h3>
+            <p class="gist">Coding agent 有三個元件：model 加 loop、tool 加防護、state。三者共用同一個 context window，所以要一起設計。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>元件</th><th>內容</th><th>負責</th></tr></thead>
+                <tbody>
+                  <tr><td>01 Model + agent loop</td><td>LLM 提議動作，看結果，再重複</td><td>決定下一步</td></tr>
+                  <tr><td>02 Tools + guardrails</td><td>search、read、edit、跑測試、shell；外加權限、sandbox、人工核准</td><td>Tool 決定能力；guardrail 保住安全</td></tr>
+                  <tr><td>03 State</td><td>Context（現在 window 裡的東西）與 memory（跨步驟保留的東西）</td><td>組出 context；保留這一輪之後還要用的資訊</td></tr>
+                </tbody>
+              </table></div>
+              <p>為什麼要一起設計：grep tool 一次回傳 5,000 行，tool 的決定就變成 context 的問題。一份很長的 memory，也會擠掉任務的空間。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Search 與 read ===================== -->
+      <section class="part" id="s-search">
+        <header class="part-head">
+          <p class="range">p.9–16</p>
+          <h2>找程式碼：search 與 read tools</h2>
+          <p class="lede">Agent 看不到整個 repo（L2 p.9）。它要靠 tool 找到相關的程式碼。這一段比較四種找法。</p>
+        </header>
+
+        <article class="slide compact" id="p9" data-pages="9">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=9" target="_blank" rel="noopener" aria-label="開啟原 slide 第 9 頁">p.<b>09</b></a>
+          <div class="body">
+            <h3>思考題：該給 agent 哪些 tool？<span class="orig">What tools should we provide to agents?</span></h3>
+            <p class="gist">課堂投票，四類：search/read、edit/write、execution、其他。先自己列清單，再讀 p.11–27 對照。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p10" data-pages="10">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=10" target="_blank" rel="noopener" aria-label="開啟原 slide 第 10 頁">p.<b>10</b></a>
+          <div class="body">
+            <h3>思考題：agent 怎麼找到相關的程式碼？<span class="orig">How should an agent find relevant code?</span></h3>
+            <p class="gist">課堂投票。答案是 p.11–14 的四種做法：grep、semantic search、外部訊號、language server。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p11" data-pages="11">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=11" target="_blank" rel="noopener" aria-label="開啟原 slide 第 11 頁">p.<b>11</b></a>
+          <div class="body">
+            <h3>Glob 與 grep <span class="orig">Tool search and read: glob and grep</span></h3>
+            <p class="gist">Agent 用 ls、glob、grep 一步步縮小範圍。不用建索引，結果永遠反映 repo 的現況。代價是回合數和 context；字面比對也找不到用詞不同的程式。</p>
+            <div class="teach">
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>Slide 的例子：「修好登入的 timeout」。每一行是一次 tool call：</p>
+                <pre><code>Grep  "timeout"  path=src/    → 37 hits in 12 files（太多）
+Glob  src/**/auth/*.ts        → src/auth/retry.ts
+Read  src/auth/retry.ts       → RETRY_MS = 500，修正</code></pre>
+              </div></aside>
+              <ul>
+                <li><b>成本</b>：每一次搜尋都是一圈 loop，結果也佔 context。37 筆結果全部讀進來，context 很快就滿。</li>
+                <li><b>盲點</b>：grep 只比對字面。搜「timeout」，找不到寫成 <code>deadline</code> 或 <code>ttl</code> 的程式。</li>
+                <li><b>技巧</b>：先用 <code>grep -rl</code> 只列檔名，再挑檔案讀。輸出小很多。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p12" data-pages="12">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=12" target="_blank" rel="noopener" aria-label="開啟原 slide 第 12 頁">p.<b>12</b></a>
+          <div class="body">
+            <h3>Semantic search 與 repo map <span class="orig">Tool search and read: semantic search</span></h3>
+            <p class="gist">事先把程式碼建成索引，查詢時就很快。索引有兩種：用 embedding 依「意思」找，或用 repo map 依「結構」找。代價是要建索引，還要一直重新同步。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Semantic（embedding）</b>：把程式切成片段，每段轉成一個向量。查詢也轉成向量，再取距離最近的片段。意思相近、用詞不同的文字，向量也會靠近。</li>
+                <li><b>Structural（repo map）</b>：列出檔案樹，加上排序過的 symbol（class、函式簽名）。Aider 的 repo map 是代表例子。</li>
+              </ul>
+              <p>Slide 的例子：問「where do we rate-limit」，第一次查詢就找到 <code>throttle.ts</code>。程式用的詞是 throttle。字面比對會漏掉它，embedding 找得到。</p>
+              <figure class="file"><figcaption>repo map（示意，依 slide 的圖）</figcaption><pre><code>aider/coders/base_coder.py:
+    class Coder:
+        def apply_updates(self)
+aider/commands.py:
+    class Commands:</code></pre></figure>
+              <p>Repo map 不列函式內容。幾千個檔案，也能壓成一小段文字，讓 model 先看地圖再決定讀哪裡。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>Agent 一直在改檔案。索引沒跟上，查詢就回傳舊的程式碼。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p13" data-pages="13">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=13" target="_blank" rel="noopener" aria-label="開啟原 slide 第 13 頁">p.<b>13</b></a>
+          <div class="body">
+            <h3>外部訊號：stack trace、失敗的測試、git 歷史 <span class="orig">Tool search and read: extrinsic signals</span></h3>
+            <p class="gist">原始碼以外的證據，常常直接指出問題在哪。Debug 時，這是精準度最高的訊號；但只有部分任務有這種訊號。</p>
+            <div class="teach">
+              <p>Slide 的例子：結帳 crash 的回報。</p>
+              <ol>
+                <li>讀 stack trace：它指向 <code>cart.ts:88</code>，列出 3 個 frame。</li>
+                <li>讀 <code>tax.ts</code> 第 20–60 行：<code>applyTax</code> 有進位（rounding）錯誤。</li>
+                <li>修正後跑 <code>pytest tests/tax.py</code>：全部通過。整個過程沒有用到搜尋。</li>
+              </ol>
+              <p>Git 歷史也是外部訊號。<code>git log -S "applyTax" --oneline</code> 列出新增或刪除過這個字串的 commit。<code>git blame -L 20,60 src/tax.ts</code> 顯示每一行最後在哪個 commit 修改。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p14" data-pages="14">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=14" target="_blank" rel="noopener" aria-label="開啟原 slide 第 14 頁">p.<b>14</b></a>
+          <div class="body">
+            <h3>Language server（LSP）<span class="orig">Tool search and read: language server (LSP)</span></h3>
+            <p class="gist">向編譯器等級的索引查詢定義、引用、symbol、型別。它能正確處理 import、overload、改名；grep 只能猜。代價是每種語言要一個常駐的 server，冷啟動也慢。</p>
+            <div class="teach">
+              <p>Slide 的例子：把 <code>charge()</code> 改名成 <code>capture()</code>。</p>
+              <ol>
+                <li>呼叫 <code>textDocument/references</code>：找到 7 個檔案裡的 42 個呼叫點。</li>
+                <li>呼叫 <code>textDocument/rename</code>：用別名 import 的地方也一起處理。</li>
+                <li>跑型別檢查：沒有找不到的 symbol。</li>
+              </ol>
+              <figure class="file"><figcaption>LSP 請求（JSON-RPC；line 與 character 從 0 開始算）</figcaption><pre><code>{"jsonrpc": "2.0", "id": 7, "method": "textDocument/references",
+ "params": {"textDocument": {"uri": "file:///repo/src/pay.ts"},
+            "position": {"line": 11, "character": 16},
+            "context": {"includeDeclaration": true}}}</code></pre></figure>
+              <p>Grep 為什麼做不到：寫了 <code>import { charge as c } from "./pay"</code> 之後，呼叫點寫的是 <code>c()</code>。字面上沒有 charge。Language server 解析過程式，知道 <code>c</code> 就是 <code>charge</code>。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>Claude Code 官方文件建議 typed language 安裝 code intelligence plugin：一次「go to definition」，可以取代 grep 加讀好幾個候選檔。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p15" data-pages="15-16">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=15" target="_blank" rel="noopener" aria-label="開啟原 slide 第 15 到 16 頁">p.<b class="multi">15–16</b></a>
+          <div class="body">
+            <h3>四種找法的比較 <span class="orig">Search and read: a comparison</span></h3>
+            <p class="gist">先用 grep。名字找不到東西時，再用索引或 LSP。p.16 與 p.15 內容相同。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>做法</th><th>靠什麼找</th><th>適合</th><th>主要成本</th></tr></thead>
+                <tbody>
+                  <tr><td>glob / grep</td><td>字面上的名稱與路徑</td><td>知道或猜得到名稱</td><td>每次搜尋的回合數與 context</td></tr>
+                  <tr><td>Semantic index</td><td>片段的意思（embedding）</td><td>用詞和程式對不上</td><td>建索引、重新同步</td></tr>
+                  <tr><td>外部訊號</td><td>stack trace、失敗的測試、git 歷史</td><td>回報已經指向程式碼</td><td>只有部分任務有</td></tr>
+                  <tr><td>Language server</td><td>編譯器的 symbol graph</td><td>修改要跟著引用走</td><td>每種語言一個常駐 server</td></tr>
+                </tbody>
+              </table></div>
+              <p>「名字找不到」：你不知道該 grep 哪個詞，例如只知道症狀「結帳很慢」。這時 semantic search 或 repo map 比較快。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Edit、shell、tool 設計 ===================== -->
+      <section class="part" id="s-edit">
+        <header class="part-head">
+          <p class="range">p.17–27</p>
+          <h2>改程式碼、shell 與 tool 設計原則</h2>
+          <p class="lede">找到程式碼之後，agent 要改它、跑它。這一段比較四種編輯方式，再談 shell 與 tool 設計原則。</p>
+        </header>
+
+        <article class="slide compact" id="p17" data-pages="17">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=17" target="_blank" rel="noopener" aria-label="開啟原 slide 第 17 頁">p.<b>17</b></a>
+          <div class="body">
+            <h3>思考題：agent 該怎麼改程式碼？<span class="orig">How should an agent edit code?</span></h3>
+            <p class="gist">課堂投票。答案是 p.18–21 的四種編輯方式。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p18" data-pages="18">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=18" target="_blank" rel="noopener" aria-label="開啟原 slide 第 18 頁">p.<b>18</b></a>
+          <div class="body">
+            <h3>整檔重寫 <span class="orig">Tool edit: whole-file rewrite</span></h3>
+            <p class="gist">Model 重新產生整個檔案，tool 直接覆寫。沒有 patch 語法會寫錯，每次都套得上。代價：輸出量和檔案大小成正比，沒要改的程式也可能跑掉。</p>
+            <div class="teach">
+              <p>Slide 的例子：幫 API client 加 retry。Agent 讀 <code>client.ts</code>（120 行），再寫回完整的檔案。實際只改 4 行；diff 顯示第一次就套用成功。</p>
+              <ul>
+                <li><b>成本</b>：改 4 行，卻要輸出 120 行。Output token 一個一個產生，比讀 input 慢，單價通常也較高。</li>
+                <li><b>Drift</b>：沒改的 116 行也要重新寫出來。檔案越長，越容易漏掉註解、改到縮排，或寫成「其餘不變」的省略號。</li>
+              </ul>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>Claude Code 的 <code>Write</code> tool 就是整檔覆寫，適合建立新檔案。修改既有檔案時，它用 search-replace 的 <code>Edit</code> tool（p.20）。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p19" data-pages="19">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=19" target="_blank" rel="noopener" aria-label="開啟原 slide 第 19 頁">p.<b>19</b></a>
+          <div class="body">
+            <h3>Unified diff / patch <span class="orig">Tool edit: unified diff / patch</span></h3>
+            <p class="gist">Model 輸出一份 patch，另一個 tool 負責套用。格式精簡、方便 review，人和 CI 本來就在用。代價：行號或上下文對不上，hunk 就套不上去。</p>
+            <div class="teach">
+              <p>Slide 的例子：調高兩個檔案的 retry 上限。Agent 先讀 <code>client.ts</code> 與 <code>api.ts</code> 找定位點。接著輸出一份有 2 個 hunk 的 patch，再執行 <code>git apply patch.diff</code>。</p>
+              <figure class="file"><figcaption>patch.diff（示意：其中一個 hunk）</figcaption><pre><code>--- a/src/client.ts
++++ b/src/client.ts
+@@ -41,3 +41,3 @@
+   const timeoutMs = opts.timeoutMs ?? 5000;
+-  const maxRetries = 3;
++  const maxRetries = 5;
+   const backoff = new Backoff(200);</code></pre></figure>
+              <p>怎麼讀：<code>@@ -41,3 +41,3 @@</code> 表示舊檔從第 41 行起共 3 行，新檔也是。<code>-</code> 開頭的行要刪除，<code>+</code> 開頭的行要加入。空白開頭的行是上下文（context 行），用來定位。</p>
+              <p>為什麼會失敗：header 與 context 行，都由 model 依讀檔當時的版本寫出。</p>
+              <ul>
+                <li><b>行號</b>：前一個 edit 在上面插入 5 行，第 41 行就變成第 46 行。只認行號的 tool 會失敗；GNU <code>patch</code> 會在附近搜尋 context 行，並回報 offset。</li>
+                <li><b>Context 行</b>：必須和檔案一字不差。檔案後來改過，或 model 記錯一個空白，就對不上。</li>
+                <li><b>行數</b>：header 的行數寫錯，tool 會判定 patch 損壞。</li>
+              </ul>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p><code>git apply</code> 預設全有或全無：一個 hunk 套不上，整份 patch 都不套用。Agent 要重讀檔案，重寫 patch。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p20" data-pages="20">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=20" target="_blank" rel="noopener" aria-label="開啟原 slide 第 20 頁">p.<b>20</b></a>
+          <div class="body">
+            <h3>Search and replace <span class="orig">Tool edit: search and replace</span></h3>
+            <p class="gist">Model 給出一段要找的原文（anchor）和要換成的新文字。輸出量和改動大小成正比，和檔案大小無關。代價：anchor 不唯一、過期，或空白不一致，就會失敗。</p>
+            <div class="teach">
+              <p>Slide 的例子：調高 retry 次數。先用 <code>grep -n "retries = 3"</code> 確認只有一處符合。再用一次 call 把 3 換成 5。最後讀回檔案確認，其他部分都沒動。</p>
+              <figure class="file"><figcaption>SEARCH/REPLACE 區塊（Aider 的格式，簡化）</figcaption><pre><code>src/api.ts
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH
+  retries = 3,
+=======
+  retries = 5,
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</code></pre></figure>
+              <p>為什麼比 diff 穩：它靠內容定位，不靠行號。三種失敗情況：</p>
+              <ul>
+                <li><b>不唯一</b>：<code>retries = 3</code> 出現兩次，tool 不知道改哪一個。解法：anchor 多帶幾行。</li>
+                <li><b>過期</b>：formatter 或前一次 edit 已經改過檔案。</li>
+                <li><b>空白不符</b>：tab 與空格不同，或行尾多一個空白。</li>
+              </ul>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>Claude Code 的 <code>Edit</code> tool 就是這種設計，參數是 <code>old_string</code> 與 <code>new_string</code>。<code>old_string</code> 不唯一時，edit 直接失敗，除非設定 <code>replace_all</code>。報錯比改錯地方安全。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p21" data-pages="21">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=21" target="_blank" rel="noopener" aria-label="開啟原 slide 第 21 頁">p.<b>21</b></a>
+          <div class="body">
+            <h3>結構化編輯（AST）<span class="orig">Tool edit: structured / AST edits</span></h3>
+            <p class="gist">Model 指定一個對 symbol 的操作，例如改名或加參數。結果不受排版影響，也不會產生語法錯誤。代價：每種語言都要有工具，能表達的修改種類也有限。</p>
+            <div class="teach">
+              <p>AST（abstract syntax tree，抽象語法樹）是 parser 把原始碼轉成的樹狀結構。工具修改這棵樹，再把樹印回原始碼。所以結果一定能 parse。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>Slide 的例子：幫 <code>fetchUser()</code> 加一個 timeout 參數，預設 5 秒。</p>
+                <pre><code>add_param(symbol="fetchUser", name="timeout", default="5s")
+→ 工具改寫函式簽名，以及 18 個呼叫點
+→ parse 與型別檢查都通過（構造上就合法）</code></pre>
+              </div></aside>
+              <p>限制：model 只能做工具提供的操作。「改寫這段折扣邏輯」沒有對應的 AST 操作，還是要用 p.18–20 的方法。Slide 附了兩個參考：<a href="https://www.youtube.com/watch?v=lCrC-qojPpU" target="_blank" rel="noopener">Abstract syntax trees（影片）</a>、<a href="https://pierce.dev/notes/how-language-servers-work" target="_blank" rel="noopener">How language servers work</a>。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p22" data-pages="22">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=22" target="_blank" rel="noopener" aria-label="開啟原 slide 第 22 頁">p.<b>22</b></a>
+          <div class="body">
+            <h3>四種編輯方式的取捨 <span class="orig">How agents apply edits</span></h3>
+            <p class="gist">四種方式在 token 成本與穩健度之間取捨。穩健度指改動有沒有落在想改的位置。每一種都有自己的弱點。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>方式</th><th>Token 成本（p.18–21）</th><th>弱點（p.22）</th></tr></thead>
+                <tbody>
+                  <tr><td>整檔重寫</td><td>高：和檔案大小成正比</td><td>長檔案會 drift</td></tr>
+                  <tr><td>Unified diff</td><td>低：只寫改動與上下文</td><td>行號過期就套不上</td></tr>
+                  <tr><td>Search / replace</td><td>低：和改動大小成正比</td><td>需要完全相符、唯一的 anchor</td></tr>
+                  <tr><td>結構化 / AST</td><td>低：只寫一個操作</td><td>支援的語言有限</td></tr>
+                </tbody>
+              </table></div>
+              <p>各方式在 slide 圖上的位置，請看原 slide。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>本筆記整理的選法：新檔案或很短的檔案，用整檔重寫。一般修改，用 search-replace。跨很多檔案的改名，用 LSP 或 AST。要交給人 review 的改動，輸出 diff。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p23" data-pages="23">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=23" target="_blank" rel="noopener" aria-label="開啟原 slide 第 23 頁">p.<b>23</b></a>
+          <div class="body">
+            <h3>Shell：最強也最危險的 tool <span class="orig">Tool execution: effectively a shell</span></h3>
+            <p class="gist">有了 shell，agent 就能做 shell 能做的所有事。所以 shell 是最強的 tool，也是最危險的 tool。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>特性</th><th>意思</th><th>例子</th></tr></thead>
+                <tbody>
+                  <tr><td>Composition</td><td>一次 call 就能串接、過濾、loop、重試</td><td><code>pytest -q 2&gt;&amp;1 | tail -n 20</code></td></tr>
+                  <tr><td>Reach</td><td>碰得到檔案系統、網路、套件管理、已安裝的程式</td><td><code>pip install</code>、<code>curl</code>、<code>docker</code></td></tr>
+                  <tr><td>Persistence</td><td>檔案和 process 在 call 結束後還在</td><td><code>npm run dev &amp;</code> 留下一個常駐的 server</td></tr>
+                  <tr><td>Blast radius</td><td>Shell 能做的事，agent 都能做</td><td><code>rm -rf</code>、<code>git push --force</code></td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>網頁可能藏有 prompt injection（L2 p.33）。Agent 同時有 shell 和網路時，可能把 <code>~/.ssh</code> 的內容送出去。所以 shell 要放進 sandbox，再加上權限檢查（L2 p.12）。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p24" data-pages="24">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=24" target="_blank" rel="noopener" aria-label="開啟原 slide 第 24 頁">p.<b>24</b></a>
+          <div class="body">
+            <h3>設計執行 tool 要想的五件事 <span class="orig">Tool execution: things to think about</span></h3>
+            <p class="gist">失敗訊號、輸出量、執行時間、預算、隔離。這五件事都要在 harness 裡明確處理。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>項目</th><th>要回答的問題</th><th>做法舉例</th></tr></thead>
+                <tbody>
+                  <tr><td>失敗訊號</td><td>Agent 看得懂錯誤，並能採取行動嗎？</td><td>回傳 exit code 與 stderr，不要只回「failed」</td></tr>
+                  <tr><td>輸出量</td><td>夠用，又不過量嗎？</td><td>只回最後幾十行；完整 log 存檔，回傳路徑</td></tr>
+                  <tr><td>執行時間</td><td>長時間或背景的 process 怎麼辦？</td><td>設定 timeout；dev server 放到背景，之後再讀 log</td></tr>
+                  <tr><td>預算</td><td>什麼時候停止重試，交回控制？</td><td>同一個錯誤連續 3 次，就停下來回報</td></tr>
+                  <tr><td>隔離</td><td>程式在哪裡跑？碰得到什麼？</td><td>container、只掛載 repo、關閉網路</td></tr>
+                </tbody>
+              </table></div>
+              <figure class="file"><figcaption>一個設計良好的 tool 結果（示意）</figcaption><pre><code>exit_code: 1    duration: 12.4s
+stdout (last 3 of 1,834 lines; full log: /tmp/run-17.log)
+  FAILED tests/test_tax.py::test_rounding
+  AssertionError: 10.0 != 10.01
+  1 failed, 211 passed</code></pre></figure>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p25" data-pages="25">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=25" target="_blank" rel="noopener" aria-label="開啟原 slide 第 25 頁">p.<b>25</b></a>
+          <div class="body">
+            <h3>另外五種常用 tool <span class="orig">Five more tools commonly used</span></h3>
+            <p class="gist">除了 search、edit、shell，還有五種常用的 tool：筆記、subagent、web、瀏覽器畫面、問使用者。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>Tool</th><th>做什麼</th><th>為什麼需要</th></tr></thead>
+                <tbody>
+                  <tr><td>A. Memory 與筆記</td><td>把發現寫進檔案</td><td>Compaction 之後，計畫還在</td></tr>
+                  <tr><td>B. Subagent</td><td>把探索工作交出去</td><td>拿回一份短清單，不是 40 次讀檔的內容</td></tr>
+                  <tr><td>C. Web search 與 fetch</td><td>查文件與網路資料</td><td>先讀已安裝的原始碼，再查網路</td></tr>
+                  <tr><td>D. 瀏覽器與畫面回饋</td><td>截圖渲染結果，回給 model</td><td>版面錯誤要看畫面才看得出來</td></tr>
+                  <tr><td>E. 問使用者</td><td>提出一個問題</td><td>一個便宜的問題，勝過一個自信但錯誤的 patch</td></tr>
+                </tbody>
+              </table></div>
+              <p>C 的原因：網路文件可能是別的版本；已安裝的原始碼才是實際執行的版本。例：<code>pip show -f requests</code> 列出安裝位置與檔案。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p26" data-pages="26">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=26" target="_blank" rel="noopener" aria-label="開啟原 slide 第 26 頁">p.<b>26</b></a>
+          <div class="body">
+            <h3>Tool 設計原則 <span class="orig">Tool design best practices</span></h3>
+            <p class="gist">五條原則：數量少且不重疊、為用途量身打造、輸出省 token、錯誤訊息要能教、預設冪等（idempotent）。</p>
+            <div class="teach">
+              <ul>
+                <li><b>少且正交</b>：<code>grep_repo</code>、<code>search_code</code>、<code>find_text</code> 功能重疊。Model 會猶豫該用哪一個，甚至每個都試一次。</li>
+                <li><b>專用</b>：<code>search_orders(customer_id)</code> 勝過通用的 <code>run_sql</code>。對照見下方。</li>
+                <li><b>輸出省 token</b>：截斷、分頁、摘要。Tool 的輸出會進 context，所以 tool 設計就是 context 設計。</li>
+                <li><b>錯誤要能教</b>：回傳修正方法，不要只回「invalid argument」。</li>
+                <li><b>預設冪等</b>：同一個 call 跑兩次，結果和跑一次相同。Agent 遇到 timeout 時，不知道上一次有沒有成功。Tool 冪等，重試就安全。</li>
+              </ul>
+              <figure class="file"><figcaption>不好：通用的 run_sql（JSON Schema；外層欄位名稱依 SDK 而定）</figcaption><pre><code>{
+  "name": "run_sql",
+  "description": "Run SQL on the production database.",
+  "input_schema": {
+    "type": "object",
+    "properties": {"query": {"type": "string"}},
+    "required": ["query"]
+  }
+}</code></pre></figure>
+              <figure class="file"><figcaption>好：專用的 search_orders</figcaption><pre><code>{
+  "name": "search_orders",
+  "description": "List one customer's orders, newest first. Use for order status, refund or shipping questions.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "customer_id": {"type": "string", "description": "Customer ID, e.g. C-10293"},
+      "status": {"type": "string", "enum": ["open", "shipped", "refunded"]},
+      "limit": {"type": "integer", "default": 10, "maximum": 50}
+    },
+    "required": ["customer_id"]
+  }
+}</code></pre></figure>
+              <p>差在哪：<code>run_sql</code> 要 model 先知道 table 和欄位，而且什麼都能做，包括 <code>DROP TABLE</code>。<code>search_orders</code> 只能讀一位客戶的訂單。它的參數有型別與上限，輸出最多 50 筆。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>錯誤訊息的對照：</p>
+                <pre><code>✗ {"error": "invalid argument"}
+✓ {"error": "customer_id 'jane@example.com' is an email. Use an ID like 'C-10293'. Call find_customer(email=...) to get it."}</code></pre>
+                <p>第一種，model 只能亂猜。第二種，model 下一圈就知道要先呼叫 <code>find_customer</code>。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p27" data-pages="27">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=27" target="_blank" rel="noopener" aria-label="開啟原 slide 第 27 頁">p.<b>27</b></a>
+          <div class="body">
+            <h3>只給 shell 就好嗎？<span class="orig">Can we just provide the shell tool?</span></h3>
+            <p class="gist">不夠。Slide 的數據（GPT-4）：只給 shell，解出 11.0% 的題目；完整的 SWE-agent 介面，解出 18.0%。為 model 設計的 tool，勝過原始的 shell。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>設定（slide 的標籤）</th><th class="num">解題率</th><th>和完整設計差在哪</th></tr></thead>
+                <tbody>
+                  <tr><td>No specialized editor</td><td class="num">10.3%</td><td>拿掉專用的 edit 指令</td></tr>
+                  <tr><td>Shell only</td><td class="num">11.0%</td><td>只有 shell</td></tr>
+                  <tr><td>Full-file view</td><td class="num">12.7%</td><td>開檔時顯示整個檔案，不是一次 100 行</td></tr>
+                  <tr><td>Full interaction history</td><td class="num">15.0%</td><td>保留全部舊的 observation，不只最近 5 個</td></tr>
+                  <tr><td>Purpose-built SWE-agent</td><td class="num">18.0%</td><td>完整設計</td></tr>
+                </tbody>
+              </table></div>
+              <p>數據來自 SWE-agent 論文（Yang et al., 2024）。論文把 agent 與電腦之間的介面，稱為 agent-computer interface（ACI）。IDE 是為人設計的介面；model 也需要為 model 設計的介面。表上看得出兩件事：</p>
+              <ul>
+                <li>介面設計的影響很大：同一個 model，只換介面，解題率從 11.0% 升到 18.0%。</li>
+                <li>多給資訊不一定好：顯示整個檔案、保留完整歷史，都比預設差。這和 p.44–45 的 context 問題是同一件事。</li>
+              </ul>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>Slide 只標 GPT-4。論文寫的是 GPT-4 Turbo，benchmark 是 SWE-bench Lite（300 題），18.0% 就是 54 題。SWE-agent 的 edit 指令附有 linter：edit 改出語法錯誤，linter 就拒絕，並把錯誤回給 model。這就是 p.26 的「錯誤要能教」。</p></div></aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Prompt engineering ===================== -->
+      <section class="part" id="s-prompt">
+        <header class="part-head">
+          <p class="range">p.28–42</p>
+          <h2>Prompt engineering：八種技巧與怎麼選</h2>
+          <p class="lede">每種技巧都附一個例子，並說明什麼時候換下一種。</p>
+        </header>
+
+        <article class="slide compact" id="p28" data-pages="28">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=28" target="_blank" rel="noopener" aria-label="開啟原 slide 第 28 頁">p.<b>28</b></a>
+          <div class="body">
+            <h3>分隔頁 <span class="orig">Context Management</span></h3>
+            <p class="gist">進入 context 管理。先講 prompt engineering（p.29–42），再講 context engineering（p.43–53）。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p29" data-pages="29">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=29" target="_blank" rel="noopener" aria-label="開啟原 slide 第 29 頁">p.<b>29</b></a>
+          <div class="body">
+            <h3>從 prompt 到 agent 系統 <span class="orig">From prompts to agent systems</span></h3>
+            <p class="gist">四個名詞代表四個時期的關注點：怎麼下指令、model 該看到什麼、agent 怎麼運作、怎樣算成功。Slide 註明：列出名詞是為了讓你看懂，不代表認同。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>時期</th><th>名稱</th><th>核心問題</th><th>處理的東西</th></tr></thead>
+                <tbody>
+                  <tr><td>2023–2024</td><td>Prompt engineering</td><td>怎麼對 model 下指令？</td><td>措辭、範例、輸出格式</td></tr>
+                  <tr><td>2025–2026</td><td>Context engineering</td><td>Model 該看到什麼？</td><td>retrieval、memory、歷史、compaction</td></tr>
+                  <tr><td>2026</td><td>Harness engineering</td><td>Agent 該怎麼運作？</td><td>loop、tool、sandbox、重試、停止條件</td></tr>
+                  <tr><td>Now → Next</td><td>Goal engineering</td><td>怎樣才算成功？</td><td>目標、標準、限制、取捨</td></tr>
+                </tbody>
+              </table></div>
+              <p>每一層都包含前一層。本堂的 p.30–42 屬於第一層，p.43–53 屬於第二層，loop 與 tool 屬於第三層。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p30" data-pages="30">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=30" target="_blank" rel="noopener" aria-label="開啟原 slide 第 30 頁">p.<b>30</b></a>
+          <div class="body">
+            <h3>八種技巧 <span class="orig">Prompt engineering</span></h3>
+            <p class="gist">Zero-shot、few-shot、role/persona、chain-of-thought、tree-of-thoughts、self-consistency、prompt chaining、meta prompting。p.31–38 一頁講一種。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p31" data-pages="31">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=31" target="_blank" rel="noopener" aria-label="開啟原 slide 第 31 頁">p.<b>31</b></a>
+          <div class="body">
+            <h3>Zero-shot：只給指令 <span class="orig">Zero-shot prompting: instruction only</span></h3>
+            <p class="gist">只給指令，不給範例。任務常見、格式用文字講得清楚時，用 zero-shot。規則講不清楚時，換 few-shot。</p>
+            <div class="teach">
+              <figure class="file"><figcaption>Slide 的例子：客服工單分類（本筆記改寫）</figcaption><pre><code>System: Label the support ticket as billing, bug, feature or other.
+        If it is unclear, use "other". Reply with JSON only.
+User:   Crashes when I export a PDF.
+Model:  {"label": "bug"}</code></pre></figure>
+              <p>這個 prompt 列出全部標籤，也規定了輸出格式，程式可以直接 parse。「不清楚就選 other」給 model 一個出口，避免它硬選一個標籤。</p>
+              <p>「規則講不清楚」（tacit rule）的例子：語氣很急、卻沒說問題的工單，該歸哪一類？這種規則用例子示範比較容易。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p32" data-pages="32">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=32" target="_blank" rel="noopener" aria-label="開啟原 slide 第 32 頁">p.<b>32</b></a>
+          <div class="body">
+            <h3>Few-shot：指令加範例 <span class="orig">Few-shot prompting: instruction plus examples</span></h3>
+            <p class="gist">指令加上幾個範例。輸出格式少見，或規則用示範比用說的容易時，用 few-shot。任務需要多個步驟時，換 chain-of-thought。</p>
+            <div class="teach">
+              <pre><code>Charged twice this month.     → billing
+Can you add dark mode?        → feature
+asdfgh                        → other
+Crashes when I export a PDF.  → ?        ← 留給 model</code></pre>
+              <p>範例 <code>asdfgh → other</code> 示範了一條沒寫出來的規則：亂打的文字歸 other。三個範例也同時固定了輸出格式。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>Model 會模仿範例的表面特徵。範例都很短，或某個標籤特別多，答案也會跟著偏。範例要涵蓋每個標籤，順序要打散。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p33" data-pages="33">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=33" target="_blank" rel="noopener" aria-label="開啟原 slide 第 33 頁">p.<b>33</b></a>
+          <div class="body">
+            <h3>Role 與 persona <span class="orig">Role &amp; persona prompting</span></h3>
+            <p class="gist">指定一個角色和讀者。語氣、判斷標準或讀者很重要時，用 role prompting。需要推理步驟時，換 chain-of-thought。</p>
+            <div class="teach">
+              <p>Slide 的例子：model 扮演資深 SRE，替主管審閱一份 postmortem。規則：標出證據缺口、不推測、最多 5 點。範例輸出：時間軸漏了 04:12 的 alert 確認（ack）；這是證據缺口，不是事故原因。</p>
+              <p>為什麼有效：一個角色帶入很多隱含的選擇，例如用詞、重點、細節深度。「給主管看」就代表要短、先講結論。具體限制（最多 5 點）仍要明寫。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p34" data-pages="34">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=34" target="_blank" rel="noopener" aria-label="開啟原 slide 第 34 頁">p.<b>34</b></a>
+          <div class="body">
+            <h3>Chain-of-thought：寫出步驟 <span class="orig">Chain-of-thought: make the steps explicit</span></h3>
+            <p class="gist">要 model 先寫出中間步驟，再給答案。任務真的有多個步驟，或錯誤來自跳步時，用 CoT。有好幾條可行的路時，換 tree-of-thought。</p>
+            <div class="teach">
+              <pre><code>Q: 3 features/week for 4 weeks, then 5/week for 2 weeks. Total?
+   Show each step. End with "ANSWER: &lt;n&gt;".
+A: 3 × 4 = 12
+   5 × 2 = 10
+   12 + 10 = 22
+   ANSWER: 22</code></pre>
+              <p>為什麼有效：model 一次產生一個 token。寫出 12 和 10 之後，最後的加法只要讀前面的結果。不寫出來，model 要在一步之內同時算三件事。固定的 <code>ANSWER:</code> 格式，讓程式能取出答案。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>對 reasoning model，這招的效果變小。原因見 p.41。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p35" data-pages="35">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=35" target="_blank" rel="noopener" aria-label="開啟原 slide 第 35 頁">p.<b>35</b></a>
+          <div class="body">
+            <h3>Tree-of-thought：分支、評分、剪枝 <span class="orig">Tree-of-thought: branch, score, prune</span></h3>
+            <p class="gist">先提出幾個方案，每個打分，只展開好的，刪掉差的。有好幾條路、而且評分便宜時，用 ToT。只有一個正確答案時，換 self-consistency。</p>
+            <div class="teach">
+              <p>Slide 的例子：提出 3 個降低結帳延遲的方法，每個依影響（impact）與成本（effort）打 1–5 分。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>方案</th><th class="num">Impact</th><th class="num">Effort</th><th>處理</th></tr></thead>
+                <tbody>
+                  <tr><td>A. Cache warm-up</td><td class="num">3</td><td class="num">2</td><td>刪掉</td></tr>
+                  <tr><td>B. 移除第三方服務</td><td class="num">5</td><td class="num">4</td><td>第二個展開</td></tr>
+                  <tr><td>C. Lazy-load 資源</td><td class="num">4</td><td class="num">1</td><td>第一個展開</td></tr>
+                </tbody>
+              </table></div>
+              <p>為什麼刪 A：C 的影響比 A 大，成本又比 A 低。和 CoT 的差別：CoT 只走一條路，第一步選錯就一路錯。ToT 保留幾條路，可以比較，也可以回頭；代價是呼叫次數變多。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p36" data-pages="36">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=36" target="_blank" rel="noopener" aria-label="開啟原 slide 第 36 頁">p.<b>36</b></a>
+          <div class="body">
+            <h3>Self-consistency：取樣再投票 <span class="orig">Self-consistency: sample, then vote</span></h3>
+            <p class="gist">同一個 prompt 取樣好幾次，再多數決。只有一個正確答案、答錯代價又高時，用它。工作能拆成幾個階段時，換 prompt chaining。</p>
+            <div class="teach">
+              <pre><code>prompt: "Is this invoice a duplicate?"   samples: 5   temperature: 0.7
+answers:   yes  yes  no  yes  yes
+majority:  yes      agreement = 4/5 = 0.8
+0.8 ≥ 門檻 0.8   → 回傳 yes
+若只有 3/5 = 0.6 → 交給人處理</code></pre>
+              <p>為什麼 temperature 要大於 0：temperature = 0 時，model 每次都選機率最高的 token。5 次結果幾乎相同，投票永遠是 5/5，沒有資訊。T = 0.7 讓每次取樣走不同的推理路徑；路徑不同、答案仍一致，才代表有把握。</p>
+              <p>一致度可以當作信心分數：低於門檻，就交給人。代價：5 次取樣就是 5 倍成本。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p37" data-pages="37">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=37" target="_blank" rel="noopener" aria-label="開啟原 slide 第 37 頁">p.<b>37</b></a>
+          <div class="body">
+            <h3>Prompt chaining：一次 call 一件事 <span class="orig">Prompt chaining: one job per call</span></h3>
+            <p class="gist">把工作拆成幾個階段，每次 call 只做一件事。每段輸出都能驗證時，用 chaining。要調整的是 prompt 本身時，換 meta prompting。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>階段</th><th>輸入</th><th>輸出</th></tr></thead>
+                <tbody>
+                  <tr><td>1. 擷取</td><td>email 內文</td><td><code>{vendor, amount, date}</code></td></tr>
+                  <tr><td>2. 驗證、補資料</td><td>階段 1 的輸出</td><td>再加上 <code>vendor_id</code></td></tr>
+                  <tr><td>3. 草擬回信</td><td>階段 2 的輸出</td><td><code>{subject, body}</code></td></tr>
+                </tbody>
+              </table></div>
+              <p>某一段的輸出不符合 schema，就只重跑那一段。</p>
+              <p>為什麼比一個大 prompt 好：每個 prompt 變短。每段輸出都能用程式檢查。出錯時，你知道是哪一段。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p38" data-pages="38">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=38" target="_blank" rel="noopener" aria-label="開啟原 slide 第 38 頁">p.<b>38</b></a>
+          <div class="body">
+            <h3>Meta prompting：讓 model 寫 prompt <span class="orig">Meta prompting: let the model write the prompt</span></h3>
+            <p class="gist">讓 model 改寫 prompt。你有一組 eval 測試、要調整的是 prompt 本身時，用它。分數不再進步時，回頭重選技巧。</p>
+            <div class="teach">
+              <p>Slide 的做法：把目前的 prompt、10 個測試案例、其中失敗的 3 個交給 model。要求：修好這 3 個，不能弄壞其他 7 個，只回傳新 prompt。結果：v2 多了一條明確的拒答規則，eval 分數從 8/10 變成 10/10。</p>
+              <p>為什麼 eval set 是前提：沒有測試，就無法確認「沒弄壞其他 7 個」。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>10 個失敗 3 個應該是 7/10，但 slide 寫改寫前是 8/10；兩個數字對不上。另外，只用 10 個案例調 prompt，容易過度貼合（overfit）。要另外保留一組不參與調整的測試。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p39" data-pages="39">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=39" target="_blank" rel="noopener" aria-label="開啟原 slide 第 39 頁">p.<b>39</b></a>
+          <div class="body">
+            <h3>怎麼選技巧 <span class="orig">Choosing the right technique</span></h3>
+            <p class="gist">三個層次：先用簡單的；需要時加推理；最後才設計成系統。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>層次</th><th>技巧</th><th>什麼時候用</th></tr></thead>
+                <tbody>
+                  <tr><td rowspan="3">先用簡單的</td><td>Zero-shot</td><td>常見任務</td></tr>
+                  <tr><td>Few-shot</td><td>輸出格式少見，或規則難以說明</td></tr>
+                  <tr><td>Role / persona</td><td>語氣或判斷標準很重要</td></tr>
+                  <tr><td rowspan="3">加入推理</td><td>Chain-of-thought</td><td>多步驟推理</td></tr>
+                  <tr><td>Tree-of-thought</td><td>有幾條值得評分的路</td></tr>
+                  <tr><td>Self-consistency</td><td>多次取樣、多數決</td></tr>
+                  <tr><td rowspan="2">設計成系統</td><td>Prompt chaining</td><td>可拆開的階段，交接時驗證</td></tr>
+                  <tr><td>Meta prompting</td><td>Prompt 本身就是要調整的產物</td></tr>
+                </tbody>
+              </table></div>
+              <p>每往下一層，token 與呼叫次數都增加。所以從上往下試，夠用就停。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p40" data-pages="40">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=40" target="_blank" rel="noopener" aria-label="開啟原 slide 第 40 頁">p.<b>40</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">沒有可擷取的文字。前後頁在講怎麼選技巧，以及有些技巧已經過時。請直接看原 slide。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p41" data-pages="41">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=41" target="_blank" rel="noopener" aria-label="開啟原 slide 第 41 頁">p.<b>41</b></a>
+          <div class="body">
+            <h3>有些技巧已經過時 <span class="orig">Some of the techniques are already expired</span></h3>
+            <p class="gist">有些技巧已經過時。是哪些，slide 要你在 assignment 自己找出來。</p>
+            <div class="teach">
+              <p>過時的原因：新的 model 在訓練時，已經學會這些技巧要做的事。公開的例子：OpenAI 的 reasoning model 指南（2026-10）寫，要 reasoning model「think step by step」沒有必要，有時反而有害。這類 model 回答前已經會自己推理。</p>
+              <p>實務做法：換 model 時，把 prompt 裡的技巧一次拿掉一個，用 eval 比較分數。有幫助的才留下。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p42" data-pages="42">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=42" target="_blank" rel="noopener" aria-label="開啟原 slide 第 42 頁">p.<b>42</b></a>
+          <div class="body">
+            <h3>寫 prompt 的四條原則 <span class="orig">Designing prompts: four best practices</span></h3>
+            <p class="gist">從簡單開始；分段；具體而精簡；大任務拆小。Prompt 的建議依 model 而異，換 model 就要重新調整。</p>
+            <div class="teach">
+              <ol>
+                <li>從簡單開始，反覆調整。需要時才加 context。</li>
+                <li>分段：背景、指令、tool、輸出規格。</li>
+                <li>寫得具體、精簡。巧妙的措辭沒有幫助。</li>
+                <li>把大任務拆成子任務。不要一開始就塞滿複雜要求。</li>
+              </ol>
+              <figure class="file"><figcaption>分段的 prompt（示意）</figcaption><pre><code>## Context
+You triage tickets for a billing app.
+
+## Instructions
+Label the ticket: billing, bug, feature or other. If unsure, use other.
+
+## Output
+JSON only: {"label": "..."}
+
+## Ticket
+"""
+Crashes when I export a PDF.
+"""</code></pre></figure>
+              <p>Slide 的例子用 <code>### Instruction ###</code> 標出指令，順序是指令、分隔符號、資料。分隔符號幫 model 分清指令與資料，但擋不住所有 prompt injection。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Context 是有限資源 ===================== -->
+      <section class="part" id="s-context">
+        <header class="part-head">
+          <p class="range">p.43–47</p>
+          <h2>Context 是有限資源</h2>
+          <p class="lede">Prompt engineering 管一段指令怎麼寫。Context engineering 管整個 window：每一步讓 model 看到什麼。</p>
+        </header>
+
+        <article class="slide" id="p43" data-pages="43">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=43" target="_blank" rel="noopener" aria-label="開啟原 slide 第 43 頁">p.<b>43</b></a>
+          <div class="body">
+            <h3>Context engineering 的定義 <span class="orig">Context engineering</span></h3>
+            <p class="gist">Slide 引用 Karpathy（2025）的定義：「filling the context window with just the right information for the next step」。重點是「下一步」：每一步需要的資訊都不同。</p>
+            <div class="teach">
+              <p>Agent 每跑一圈，harness 都要重新決定放什麼、拿掉什麼。這就是 p.7 的第 1 項與第 4 項工作。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p44" data-pages="44">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=44" target="_blank" rel="noopener" aria-label="開啟原 slide 第 44 頁">p.<b>44</b></a>
+          <div class="body">
+            <h3>Context 有三種成本 <span class="orig">Context is a finite resource</span></h3>
+            <p class="gist">Context 有三種成本：錢、延遲、注意力。放更多 context，不等於得到更好的答案。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>成本</th><th>原因</th></tr></thead>
+                <tbody>
+                  <tr><td>錢</td><td>每一步都重送整個 window，每一輪都再付一次。</td></tr>
+                  <tr><td>延遲</td><td>Prompt 越長，prefill 越久，decode 也變慢。</td></tr>
+                  <tr><td>注意力</td><td>Window 越滿，model 越難找回資訊；中間的內容最容易漏掉（p.45）。</td></tr>
+                </tbody>
+              </table></div>
+              <p>Prefill 是 model 讀完整個 prompt 的階段。Decode 是一個一個產生輸出 token 的階段。兩個階段都隨 context 變長而變慢。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p45" data-pages="45">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=45" target="_blank" rel="noopener" aria-label="開啟原 slide 第 45 頁">p.<b>45</b></a>
+          <div class="body">
+            <h3>長度與位置都會降低準確率 <span class="orig">Length and position both cost accuracy</span></h3>
+            <p class="gist">兩組研究：輸入越長，準確率越低（context rot）；答案放在中間，準確率最低（lost in the middle）。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Context Rot（Chroma）</b>：輸入的 token 越多，兩條線都越低。兩條線是「簡單查找」與「有干擾項的查找」；干擾項是很像答案、但不是答案的內容。圖上的 73%、46%、40% 屬於哪條線，請看原圖。</li>
+                <li><b>Lost in the Middle（Liu et al., TACL 2024）</b>：把答案放在 20 份文件中的不同位置，再量準確率。</li>
+              </ul>
+              <div class="table-wrap"><table>
+                <thead><tr><th>答案的位置</th><th class="num">第 1 份</th><th class="num">第 5 份</th><th class="num">第 10 份</th><th class="num">第 15 份</th><th class="num">第 20 份</th></tr></thead>
+                <tbody><tr><td>準確率</td><td class="num">76%</td><td class="num">61%</td><td class="num">55%</td><td class="num">59%</td><td class="num">71%</td></tr></tbody>
+              </table></div>
+              <p>Slide 的數字呈 U 形：開頭和結尾最好，中間最差。Agent 的 context 裡，開頭是 system prompt，結尾是最新的訊息，中間是舊的 tool 結果。所以重要的指示要放在開頭或結尾。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p46" data-pages="46">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=46" target="_blank" rel="noopener" aria-label="開啟原 slide 第 46 頁">p.<b>46</b></a>
+          <div class="body">
+            <h3>Context window 的組成 <span class="orig">Anatomy of the context window</span></h3>
+            <p class="gist">一輪 agent 的 token 預算（slide 的示意）：使用者訊息、model 回覆與 tool 結果佔最多，而且一直變大。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>區塊</th><th class="num">約略 token</th></tr></thead>
+                <tbody>
+                  <tr><td>System prompt</td><td class="num">~2K</td></tr>
+                  <tr><td>Tool 定義</td><td class="num">~6K</td></tr>
+                  <tr><td>檢索到的 context</td><td class="num">~25K</td></tr>
+                  <tr><td>對話歷史</td><td class="num">~8K</td></tr>
+                  <tr><td>使用者 + LLM + tool 結果</td><td class="num">~80K，持續增加</td></tr>
+                </tbody>
+              </table></div>
+              <p>圖上另有一塊 Project environment。數字依 slide 文字的順序對應，請以原圖為準。Slide 最後問：context 太大怎麼辦？答案在 p.48–52。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p47" data-pages="47">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=47" target="_blank" rel="noopener" aria-label="開啟原 slide 第 47 頁">p.<b>47</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">沒有可擷取的文字。前一頁問 context 太大怎麼辦；下一頁開始講四種策略。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 四種策略 ===================== -->
+      <section class="part" id="s-manage">
+        <header class="part-head">
+          <p class="range">p.48–53</p>
+          <h2>管理 context 的四種策略</h2>
+          <p class="lede">四種策略有先後順序。越前面越便宜、越不會遺失資訊；compaction 排在最後。</p>
+        </header>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 700 232" role="img" aria-label="四種 context 管理策略，由左到右從預防、無損排到有損、不可逆：admission、offloading、transformation、compaction。前三種畫出 slide 的前後 token 數，每組用自己的比例尺：48,000 變 900，42,000 變 3,100，96,000 變 24,000。Compaction 沒有數字，只畫示意。">
+              <defs>
+                <marker id="l4b-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-soft"/>
+                </marker>
+              </defs>
+              <text x="20" y="14" class="dg-ts">預防、無損</text>
+              <text x="350" y="14" text-anchor="middle" class="dg-ts">前一層不夠，才用下一層</text>
+              <text x="680" y="14" text-anchor="end" class="dg-ts">有損、不可逆</text>
+              <line x1="20" y1="24" x2="678" y2="24" class="dg-soft" marker-end="url(#l4b-ah)"/>
+
+              <rect x="20" y="36" width="150" height="44" rx="4" class="dg-box"/>
+              <text x="95" y="54" text-anchor="middle" class="dg-tb">1 Admission</text>
+              <text x="95" y="71" text-anchor="middle" class="dg-ts">在門口把關</text>
+              <rect x="190" y="36" width="150" height="44" rx="4" class="dg-box"/>
+              <text x="265" y="54" text-anchor="middle" class="dg-tb">2 Offloading</text>
+              <text x="265" y="71" text-anchor="middle" class="dg-ts">放外面，要用再拿</text>
+              <rect x="360" y="36" width="150" height="44" rx="4" class="dg-box"/>
+              <text x="435" y="54" text-anchor="middle" class="dg-tb">3 Transformation</text>
+              <text x="435" y="71" text-anchor="middle" class="dg-ts">刪掉舊的</text>
+              <rect x="530" y="36" width="150" height="44" rx="4" class="dg-box"/>
+              <text x="605" y="54" text-anchor="middle" class="dg-tb">4 Compaction</text>
+              <text x="605" y="71" text-anchor="middle" class="dg-ts">LLM 摘要</text>
+
+              <text x="20" y="102" class="dg-ts">前 · 原始 DOM</text>
+              <rect x="20" y="108" width="150" height="16" class="dg-box-soft"/>
+              <text x="166" y="120" text-anchor="end" class="dg-tm">48,000</text>
+              <text x="20" y="142" class="dg-ts">後 · 擷取結果</text>
+              <rect x="20" y="148" width="2.8" height="16" class="dg-fill-accent"/>
+              <text x="29" y="160" class="dg-ta">900</text>
+              <text x="20" y="186" class="dg-tb">少 98%</text>
+              <text x="20" y="202" class="dg-ts">答案相同</text>
+              <text x="20" y="222" class="dg-tm">全長 = 48,000</text>
+
+              <text x="190" y="102" class="dg-ts">前 · 60 個 schema</text>
+              <rect x="190" y="108" width="150" height="16" class="dg-box-soft"/>
+              <text x="336" y="120" text-anchor="end" class="dg-tm">42,000</text>
+              <text x="190" y="142" class="dg-ts">後 · 索引 + 3 個</text>
+              <rect x="190" y="148" width="11.1" height="16" class="dg-fill-accent"/>
+              <text x="207" y="160" class="dg-ta">3,100</text>
+              <text x="190" y="186" class="dg-tb">少 93%</text>
+              <text x="190" y="202" class="dg-ts">60 個都拿得到</text>
+              <text x="190" y="222" class="dg-tm">全長 = 42,000</text>
+
+              <text x="360" y="102" class="dg-ts">前 · 全部結果</text>
+              <rect x="360" y="108" width="150" height="16" class="dg-box-soft"/>
+              <text x="506" y="120" text-anchor="end" class="dg-tm">96,000</text>
+              <text x="360" y="142" class="dg-ts">後 · 只留最新</text>
+              <rect x="360" y="148" width="37.5" height="16" class="dg-fill-accent"/>
+              <text x="404" y="160" class="dg-ta">24,000</text>
+              <text x="360" y="186" class="dg-tb">少 75%</text>
+              <text x="360" y="202" class="dg-ts">沒有做摘要</text>
+              <text x="360" y="222" class="dg-tm">全長 = 96,000</text>
+
+              <text x="530" y="102" class="dg-ts">前 · 到達上限</text>
+              <rect x="530" y="108" width="150" height="16" class="dg-box-soft"/>
+              <text x="676" y="120" text-anchor="end" class="dg-tm">滿</text>
+              <text x="530" y="142" class="dg-ts">後 · 摘要 + 最近</text>
+              <rect x="530" y="148" width="150" height="16" class="dg-frame"/>
+              <text x="536" y="160" class="dg-tm">大小不固定</text>
+              <text x="530" y="186" class="dg-tb">有損、不可逆</text>
+              <text x="530" y="202" class="dg-ts">原文不再留在 context</text>
+              <text x="530" y="222" class="dg-tm">示意：slide 沒有數字</text>
+            </svg>
+          </div>
+          <figcaption>依 p.48–52 整理。前三組的數字來自 slide。每組的「前」畫成全長，「後」依同一個比例縮短；各組的比例尺不同，標在最下方。Compaction 的 slide 沒有給數字，所以只畫示意。</figcaption>
+        </figure>
+
+        <article class="slide" id="p48" data-pages="48">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=48" target="_blank" rel="noopener" aria-label="開啟原 slide 第 48 頁">p.<b>48</b></a>
+          <div class="body">
+            <h3>四種策略的順序 <span class="orig">Managing the context window</span></h3>
+            <p class="gist">四種策略從預防、無損，排到有損、不可逆：admission、offloading、transformation、compaction。</p>
+            <div class="teach">
+              <p>依序使用：前一層不夠，才用下一層。前兩層在內容進入 window 之前處理，什麼都不會遺失。後兩層處理已經在 window 裡的內容，刪掉的部分越來越難找回。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p49" data-pages="49">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=49" target="_blank" rel="noopener" aria-label="開啟原 slide 第 49 頁">p.<b>49</b></a>
+          <div class="body">
+            <h3>Admission：在門口把關 <span class="orig">Admission: guard what enters the window</span></h3>
+            <p class="gist">內容進入 window 之前就先篩選。Slide 的例子：原始 DOM 有 48,000 token，擷取後只剩 900 token，小 98%，答案相同。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Targeted retrieval</b>：查詢範圍要窄；只取需要的欄位，不取整份文件。</li>
+                <li><b>Tool output shaping</b>：丟掉 DOM，只留擷取的結果。</li>
+                <li><b>Truncation</b>：無法 shaping 時，才直接截斷。</li>
+                <li><b>Isolation</b>：把原始資料交給 subagent，只拿回結果。</li>
+              </ul>
+              <figure class="file"><figcaption>Tool output shaping（示意）</figcaption><pre><code>def get_prices(url: str) -&gt; list[dict]:
+    html = http_get(url)              # 原始 DOM：約 48,000 token
+    rows = parse_price_rows(html)     # 在 tool 裡解析，不交給 model
+    return [{"name": r.name, "price": r.price} for r in rows]   # 約 900 token</code></pre></figure>
+              <p>為什麼 truncation 排在 shaping 後面：截斷不看內容，答案可能剛好在切掉的那一段。Shaping 依內容挑選，所以答案相同。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p50" data-pages="50">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=50" target="_blank" rel="noopener" aria-label="開啟原 slide 第 50 頁">p.<b>50</b></a>
+          <div class="body">
+            <h3>Offloading：拿得到，但不常駐 <span class="orig">Offloading: keep it retrievable, not resident</span></h3>
+            <p class="gist">資訊放在 window 外面，要用時再拿。Slide 的例子：60 個 tool schema 常駐要 42,000 token；改成索引加 3 個 schema，只要 3,100 token。小 93%，60 個都還能用。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Progressive tool definition</b>：需要時才載入 schema。</li>
+                <li><b>Tool search</b>：保留一份索引，要用時才查。</li>
+                <li><b>Tool output offload</b>：回傳一個 handle（例如檔案路徑），需要時再讀。</li>
+                <li><b>外部化的任務清單</b>：計畫存在磁碟上。</li>
+                <li><b>Persistent memory</b>：筆記寫在外面，只留一份小索引。</li>
+              </ul>
+              <p>和 admission 的差別：admission 決定內容要不要進來。Offloading 讓內容留在外面，但保證拿得到。代價是多一次 tool call。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>Claude Code 的做法（官方文件，2026-10）：MCP tool 的定義預設延後載入，只有 tool 名稱與 server 說明進入 context。MCP tool 的輸出超過上限時，Claude Code 把結果存成檔案，在對話裡只留檔案路徑。L2 的 skill 只先載入 description，也是 offloading。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p51" data-pages="51">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=51" target="_blank" rel="noopener" aria-label="開啟原 slide 第 51 頁">p.<b>51</b></a>
+          <div class="body">
+            <h3>Transformation：有選擇地刪掉歷史 <span class="orig">Transformation: selectively drop the history</span></h3>
+            <p class="gist">刪掉過期或重複的舊內容，不做摘要。Slide 的例子：96,000 token 變成 24,000 token，小 75%，沒有任何內容經過摘要。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Deduplication</b>：每個物件只留最新的狀態。例：同一個檔案讀了 4 次，只留最後一次。</li>
+                <li><b>Observation masking</b>：超過 N 步的 tool 結果，換成一行佔位文字。</li>
+                <li><b>Sliding window</b>：只留開頭與最近的幾輪。開頭有 system prompt 與原始任務，不能丟。</li>
+              </ul>
+              <figure class="file"><figcaption>Observation masking（示意）</figcaption><pre><code>第 3 步  Read src/tax.ts  → 1,240 行的檔案內容
+⋯ 過了 N 步，同一筆變成 ⋯
+第 3 步  Read src/tax.ts  → [舊輸出已移除；需要時請再 Read]</code></pre></figure>
+              <p>為什麼對目前的任務無損：model 讀完舊結果，已經做出決定。決定寫在 model 自己的回覆裡，回覆沒有刪。但之後要引用原文時，例如某一行原本怎麼寫，只能重新執行 tool。檔案已經改過的話，舊版本就拿不回來，所以對之後的引用有損。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p52" data-pages="52">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=52" target="_blank" rel="noopener" aria-label="開啟原 slide 第 52 頁">p.<b>52</b></a>
+          <div class="body">
+            <h3>Compaction：LLM 摘要是最後手段 <span class="orig">Compaction: LLM as the last resort</span></h3>
+            <p class="gist">用 LLM 把舊歷史寫成摘要，讓 window 重新有空間。這是最後手段：有損、不可逆，本身也要花一次 model 呼叫。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Rolling summary</b>：一邊做，一邊摘要舊的 tool 結果。</li>
+                <li><b>Full summary</b>：到達上限時，重寫整段歷史。</li>
+                <li><b>Auto memory</b>：把關鍵事實存到 window 外面。</li>
+              </ul>
+              <p>Slide 的三個警告：留空間給輸出；保留 system prefix；compaction 後重新放入關鍵事實。保留 prefix 的原因：指令不會在摘要中走樣，prefix cache 也能繼續命中。</p>
+              <p>為什麼排最後：</p>
+              <ul>
+                <li><b>有損</b>：摘要由 model 決定留什麼。它不知道之後會需要哪個細節。</li>
+                <li><b>不可逆</b>：原文不在 context，也沒有 handle 可以拿回來。</li>
+                <li><b>有成本</b>：摘要要先讀完整段歷史，這本身就是一次大的 model 呼叫。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>Claude Code 的 <code>/compact</code> 可以加指示，告訴摘要要保留什麼，例如 <code>/compact Keep the failing test names and the list of edited files</code>。也可以在 CLAUDE.md 寫一段「Compact instructions」。CLAUDE.md 在 compaction 後會重新載入（L2 p.16），這就是「重新放入關鍵事實」。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p53" data-pages="53">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=53" target="_blank" rel="noopener" aria-label="開啟原 slide 第 53 頁">p.<b>53</b></a>
+          <div class="body">
+            <h3>Context 的五種壞法 <span class="orig">Five ways context fails</span></h3>
+            <p class="gist">Breunig（2025）整理出五種 context 失敗：poisoning、distraction、confusion、clash、drift。叫得出名字，修法就很明顯。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>失敗</th><th>症狀</th><th>對應的策略（本筆記整理）</th></tr></thead>
+                <tbody>
+                  <tr><td>Poisoning（中毒）</td><td>幻覺進入 window，之後 agent 把它當成事實引用</td><td>寫入筆記前先驗證；發現後刪掉那段</td></tr>
+                  <tr><td>Distraction（分心）</td><td>歷史太長，agent 開始模仿自己過去的動作</td><td>Observation masking、sliding window（p.51）</td></tr>
+                  <tr><td>Confusion（混淆）</td><td>不相關的 tool 與文件，把答案帶偏</td><td>Admission、tool search（p.49–50）</td></tr>
+                  <tr><td>Clash（衝突）</td><td>新資訊和舊資訊矛盾，兩者都還留著</td><td>Deduplication，只留最新狀態（p.51）</td></tr>
+                  <tr><td>Drift（偏移）</td><td>真正的目標埋在歷史中間，agent 改追一個相近的子目標</td><td>目標寫在檔案，定期重新放入（p.50、p.52）</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>Drift 的例子：任務是「修好結帳的 bug」。Agent 發現 lint 錯誤，開始逐一修 lint，30 步後還在修。解法：把任務寫進 <code>TODO.md</code>，harness 每 10 步把它重新放進 context。</p></div></aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== Agent = Model × Harness ===================== -->
+      <section class="part" id="s-harness">
+        <header class="part-head">
+          <p class="range">p.54–58</p>
+          <h2>Agent = Model × Harness</h2>
+          <p class="lede">Model 決定上限，harness 決定實際表現。最後一頁是選讀：ReAct 以外的 loop。</p>
+        </header>
+
+        <article class="slide compact" id="p54" data-pages="54">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=54" target="_blank" rel="noopener" aria-label="開啟原 slide 第 54 頁">p.<b>54</b></a>
+          <div class="body">
+            <h3>Model 決定上限 <span class="orig">Agent = Model × Harness</span></h3>
+            <p class="gist">Model 的能力決定上限；harness 決定實際發揮出多少。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p55" data-pages="55">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=55" target="_blank" rel="noopener" aria-label="開啟原 slide 第 55 頁">p.<b>55</b></a>
+          <div class="body">
+            <h3>只換 harness，解題數約變 2 倍 <span class="orig">Changing the harness improves accuracy by 2×</span></h3>
+            <p class="gist">Slide 引用 Lewis（2026）的實驗：model 不變，只改 harness。兩個 benchmark 的完整解題數都大幅上升。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>Benchmark</th><th class="num">基本 harness</th><th class="num">改良 harness</th><th class="num">倍數</th></tr></thead>
+                <tbody>
+                  <tr><td>SWE-bench Verified</td><td class="num">43 / 169</td><td class="num">72 / 169</td><td class="num">1.7×</td></tr>
+                  <tr><td>SWE-bench Pro</td><td class="num">31 / 316</td><td class="num">72 / 316</td><td class="num">2.3×</td></tr>
+                </tbody>
+              </table></div>
+              <p>改良的 harness 做了四件事：壓縮舊的 tool 輸出；最近的 observation 保持完整；偵測重複與停滯；卡住時介入。前兩件就是 p.51 的 transformation。</p>
+              <p>Slide 的結論：有些看似 model 能力不足的失敗，原因是 context 或 control loop。p.27 的 SWE-agent 也是同一個結論。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>論文摘要寫明：Verified 的比較用 20,480 token 的小 window。Window 越小，context 管理的影響越大。這個倍數不能直接套到所有設定。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p56" data-pages="56">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=56" target="_blank" rel="noopener" aria-label="開啟原 slide 第 56 頁">p.<b>56</b></a>
+          <div class="body">
+            <h3>自己實驗 <span class="orig">Agent = Model × Harness</span></h3>
+            <p class="gist">Slide 要你在 assignment 自己實驗：loop、prompt、tool、context 管理、失敗處理，都會影響結果。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p57" data-pages="57">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=57" target="_blank" rel="noopener" aria-label="開啟原 slide 第 57 頁">p.<b>57</b></a>
+          <div class="body">
+            <h3>下一堂 <span class="orig">Next class</span></h3>
+            <p class="gist">Agent design II。Slide 列出接下來的主題：persistent memory、省成本的 agent、安全、multi-agent 設計。下一堂 <a href="l05.html">L5</a> 講 multi-agent 架構與溝通。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p58" data-pages="58">
+          <a class="tab" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=58" target="_blank" rel="noopener" aria-label="開啟原 slide 第 58 頁">p.<b>58</b></a>
+          <div class="body">
+            <h3>選讀：ReAct 以外的 loop <span class="orig">Optional reading: beyond the ReAct loop</span></h3>
+            <p class="gist">四種控制流程，差在什麼時候回頭：ReAct 每一步都回頭；Reflexion 失敗後回頭；plan-and-execute 偏離計畫時回頭；tree search 不回頭，一次展開很多分支。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>流程</th><th>什麼時候回頭</th><th>步驟</th></tr></thead>
+                <tbody>
+                  <tr><td>ReAct</td><td>每一步</td><td>Thought → Act → Observe</td></tr>
+                  <tr><td>Reflexion</td><td>失敗之後</td><td>Attempt → Evaluate → Critique → Retry</td></tr>
+                  <tr><td>Plan-and-execute</td><td>偏離計畫時</td><td>Plan → Execute steps → Re-plan</td></tr>
+                  <tr><td>Tree search</td><td>不回頭</td><td>分支 A、B、C 平行探索，只留最好的</td></tr>
+                </tbody>
+              </table></div>
+              <p>Reflexion 的 Critique 是一段文字檢討；下一次嘗試會讀到它。Tree search 和 p.35 的 tree-of-thought 一樣，都是「分支、評分、留最好的」。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 收尾 ===================== -->
+      <section class="wrap" id="wrap" aria-label="重點與自我檢查">
+        <h2>帶走的重點</h2>
+        <ul class="takeaways">
+          <li>Agent loop 很短。表現取決於 harness 的四項工作：組 context、寫 tool、驗證並執行、管理結果。</li>
+          <li>Tool 要為 model 設計：少而正交、專用、輸出精簡、錯誤能教、可安全重試。只給 shell 是 11.0%，專用介面是 18.0%。</li>
+          <li>編輯方式在 token 成本與穩健度之間取捨。Search-replace 靠內容定位；diff 依賴行號與 context 行；整檔重寫要重抄全部。</li>
+          <li>Context 越長越貴、越慢、越不準。依序用 admission、offloading、transformation；compaction 留到最後。</li>
+          <li>Prompt 技巧從 zero-shot 開始，夠用就停。換 model 時，用 eval 重新驗證每個技巧。</li>
+        </ul>
+
+        <h2>自我檢查</h2>
+        <div class="quiz">
+          <details>
+            <summary>你的 agent 執行 tool 時拋出例外，整個程式就中止。依 p.6 的骨架，該怎麼改？</summary>
+            <div class="answer"><p>捕捉例外，把錯誤訊息當成 tool 結果，附上 <code>tool_call_id</code> 放回 messages。Model 讀到錯誤，下一圈可以修正參數或換做法。</p></div>
+          </details>
+          <details>
+            <summary>Agent 用 unified diff 連續修改同一個檔案，第二份 patch 常常套不上。為什麼？怎麼改善？</summary>
+            <div class="answer"><p>第二份 patch 的行號與 context 行，是依第一次修改前的內容寫的。第一次修改後，這些內容已經過期。改善：每次修改後重新讀檔；或改用 search-replace，它靠內容定位，不靠行號。</p></div>
+          </details>
+          <details>
+            <summary>你用 temperature 0 做 self-consistency，5 次取樣都答 yes。這代表 model 很有把握嗎？</summary>
+            <div class="answer"><p>不代表。Temperature 0 時，model 每次都選機率最高的 token，5 次結果本來就幾乎相同。要用大於 0 的 temperature（例如 0.7），讓每次走不同的推理路徑，一致度才有意義。</p></div>
+          </details>
+          <details>
+            <summary>Agent 讀了 20 個大檔案，context 快滿了。你先用哪一種策略？為什麼 compaction 不是第一選擇？</summary>
+            <div class="answer"><p>先用 transformation：對舊的讀檔結果做 observation masking 或 dedup，需要時再讀。之後讀檔用 admission：只讀需要的行。Compaction 有損、不可逆，摘要本身又要一次大的 model 呼叫，所以留到最後。</p></div>
+          </details>
+        </div>
+
+        <h2>延伸閱讀</h2>
+        <ul class="reading">
+          <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a></li>
+          <li><a href="https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents" target="_blank" rel="noopener">OpenAI：A practical guide to building agents</a></li>
+          <li><a href="https://lilianweng.github.io/posts/2023-06-23-agent" target="_blank" rel="noopener">Lilian Weng：LLM Powered Autonomous Agents</a></li>
+          <li><a href="https://cs2680.com/readings/sep-16.html" target="_blank" rel="noopener">課程的更多閱讀（9/16）</a></li>
+          <li>本頁補充資料的出處：<a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">SWE-agent 論文</a>（p.27）、<a href="https://arxiv.org/abs/2608.26218" target="_blank" rel="noopener">Same Model, Different Harness</a>（p.55）、Claude Code 官方文件 <a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">costs</a> 與 <a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noopener">mcp</a>（p.14、p.50、p.52）</li>
+        </ul>
+
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與下一堂">
+        <a class="prev" href="l03.html"><span>← 上一堂 L3</span>用多個 agent 放大產能</a>
+        <a class="next" href="l05.html"><span>下一堂 L5 →</span>Multi-agent 架構與溝通</a>
+      </nav>
+      <p class="fineprint">本頁是 CS2680 slides 的學習筆記：用自己的話改寫並延伸說明。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的範例依據 2026 年 10 月的官方文件。圖片頁沒有可擷取的文字，請對照原 slide。</p>
+    </div>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

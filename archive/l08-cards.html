@@ -1,0 +1,1493 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>L8 成本、速度與 harness 架構 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l07.html" rel="prev">← L7</a>
+      <span class="here">L8 / 8</span>
+    </nav>
+    <button class="toggle" id="gist-toggle" type="button" aria-pressed="false">只看重點</button>
+  </div>
+</header>
+
+<main class="page gutter" data-lecture="l08">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 08 · 2026-10-07 · Part I</p>
+    <h1>成本、速度與 harness 架構</h1>
+    <p class="en-title">Advanced agent design I: Cost and performance</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/8_agent_design_5.pdf" target="_blank" rel="noopener">8_agent_design_5.pdf ↗</a></li>
+      <li><span class="k">附錄</span><a href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener">8_assignment3.pdf ↗</a></li>
+      <li><span class="k">頁數</span>61</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 25 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">這堂課回答兩個問題：agent 的錢花在哪裡，時間花在哪裡。後半比較三種 harness 架構，再看 8 個真實 harness 的獨特設計。</p>
+    <ul class="core">
+      <li><span><b>成本是一串乘數。</b>Cost = Users × Sessions/User × Turns/Session × Steps/Turn × Tokens/Step × Price/Token。使用量會成長，所以 agent 設計要壓低後四項。</span></li>
+      <li><span><b>重讀 context 是大宗。</b>每一步都重送整個 context。Assignment 1 的 Claude Code 資料中，97.6% 的 token 是 cache read。Turn 數變 2 倍，成本約變 4 倍。</span></li>
+      <li><span><b>每個省錢手段都有反向成本。</b>Compaction、routing、subagent、speculation 都可能讓總花費變多。在同一組任務上量淨效果，並替每個任務設上限。</span></li>
+      <li><span><b>完成時間看 critical path。</b>平行、非同步、speculative action 減少等待，但通常多花 token。</span></li>
+      <li><span><b>架構決定能換什麼、能隔離什麼。</b>Monolithic 簡單又快；modular 容易換元件；microkernel 的隔離與擴展最好，但通訊成本最高。</span></li>
+    </ul>
+  </section>
+
+  <div class="layout">
+    <nav class="toc" aria-label="本堂目錄">
+      <details open>
+        <summary>本堂目錄</summary>
+        <ol>
+          <li><a href="#s-open">開場與課務<span>p.1–5</span></a></li>
+          <li><a href="#s-cost">成本從哪裡來<span>p.6–8</span></a></li>
+          <li><a href="#s-turns">減少 turn 與 step<span>p.9–13</span></a></li>
+          <li><a href="#s-tokens">減少每一步的 token<span>p.14–21</span></a></li>
+          <li><a href="#s-price">降低單價、控管預算<span>p.22–30</span></a></li>
+          <li><a href="#s-speed">讓 agent 更快<span>p.31–42</span></a></li>
+          <li><a href="#s-arch">三種 harness 架構<span>p.43–52</span></a></li>
+          <li><a href="#s-cases">8 個 harness 的獨特設計<span>p.53–61</span></a></li>
+          <li><a href="#s-a3">附錄：Assignment 3<span>A3</span></a></li>
+          <li><a href="#wrap">重點與自我檢查<span>—</span></a></li>
+        </ol>
+      </details>
+    </nav>
+
+    <div class="content">
+
+      <!-- ===================== 開場與課務 ===================== -->
+      <section class="part" id="s-open">
+        <header class="part-head">
+          <p class="range">p.1–5</p>
+          <h2>開場與課務</h2>
+        </header>
+
+        <article class="slide compact" id="p1" data-pages="1">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=1" target="_blank" rel="noopener" aria-label="開啟原 slide 第 1 頁">p.<b>01</b></a>
+          <div class="body">
+            <h3>封面</h3>
+            <p class="gist">圖片頁，沒有可擷取的文字。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p2" data-pages="2">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=2" target="_blank" rel="noopener" aria-label="開啟原 slide 第 2 頁">p.<b>02</b></a>
+          <div class="body">
+            <h3>標題頁 <span class="orig">Agent design V: cost-effective agents</span></h3>
+            <p class="gist">Slide 上的標題是 Agent design V。課程網站把這堂列為 Advanced agent design I。主題：讓 agent 更省錢、更快。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p3" data-pages="3">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=3" target="_blank" rel="noopener" aria-label="開啟原 slide 第 3 頁">p.<b>03</b></a>
+          <div class="body">
+            <h3>Assignment 3 開始 <span class="orig">Logistics</span></h3>
+            <p class="gist">Assignment 3 今天開始，佔總成績 20%。請把它當期中考，提早開始。</p>
+            <div class="teach">
+              <ul>
+                <li>難度比之前的作業高很多。</li>
+                <li>Leaderboard 每天能提交的次數有限。這份作業不能用 late day。</li>
+                <li>下週有 office hour，時間未定。</li>
+                <li>配分調整：Assignment 4 改為 20 分，Assignment 5 改為 10 分。</li>
+                <li>原因：Assignment 5 太難，而且和 course project、其他課的 project 重疊。</li>
+              </ul>
+              <p>作業內容見<a href="#s-a3">附錄</a>。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p4" data-pages="4">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=4" target="_blank" rel="noopener" aria-label="開啟原 slide 第 4 頁">p.<b>04</b></a>
+          <div class="body">
+            <h3>課務：時程與 session log <span class="orig">Logistics</span></h3>
+            <p class="gist">部分講次提前，配合作業調整。另有 2 堂加分的 paper presentation，今天開放報名。Claude Code session log 要涵蓋所有相關 session；不能改動 log，改動違反學術誠信。</p>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p5" data-pages="5">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=5" target="_blank" rel="noopener" aria-label="開啟原 slide 第 5 頁">p.<b>05</b></a>
+          <div class="body">
+            <h3>本堂流程 <span class="orig">Plan for today</span></h3>
+            <p class="gist">三段：cost-effective agent → agent 架構 → coding agent 案例研究（8 個 harness）。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 成本從哪裡來 ===================== -->
+      <section class="part" id="s-cost">
+        <header class="part-head">
+          <p class="range">p.6–8</p>
+          <h2>成本從哪裡來</h2>
+          <p class="lede">先把成本拆成幾個乘數。每個乘數都能單獨壓低。本堂只算 LLM 的成本。</p>
+        </header>
+
+        <article class="slide compact" id="p6" data-pages="6">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=6" target="_blank" rel="noopener" aria-label="開啟原 slide 第 6 頁">p.<b>06</b></a>
+          <div class="body">
+            <h3>分隔頁 <span class="orig">Design Cost-Effective Agents</span></h3>
+            <p class="gist">開始講 cost-effective agent。本堂只看 LLM 成本，不計其他 compute 成本。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p7" data-pages="7">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=7" target="_blank" rel="noopener" aria-label="開啟原 slide 第 7 頁">p.<b>07</b></a>
+          <div class="body">
+            <h3>Session 的結構 <span class="orig">Structure of a session</span></h3>
+            <p class="gist">一個 session 有多個 turn。一個 turn 從使用者訊息開始，經過多次 model call 與 tool call，最後回覆使用者。</p>
+            <div class="teach">
+              <p>本堂用三個層級的詞。後面每一頁都照這個定義：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>層級</th><th>是什麼</th><th>例子</th></tr></thead>
+                <tbody>
+                  <tr><td>Session</td><td>一次完整的對話</td><td>從開啟 Claude Code 到關閉</td></tr>
+                  <tr><td>Turn</td><td>使用者送出一則訊息，到 agent 回覆</td><td>「修好登入測試」→「全部通過」</td></tr>
+                  <tr><td>Step</td><td>一次 model call，加上它要求的 tool call</td><td>Model 要求 <code>Bash(pytest)</code>，harness 執行</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>用詞不同：Claude Code 文件的 turn 指一次 tool-use 來回，接近本堂的 step。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p8" data-pages="8">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=8" target="_blank" rel="noopener" aria-label="開啟原 slide 第 8 頁">p.<b>08</b></a>
+          <div class="body">
+            <h3>成本的乘法公式 <span class="orig">Where does cost come from?</span></h3>
+            <p class="gist">Cost = Users × Sessions/User × Turns/Session × Steps/Turn × Tokens/Step × Price/Token。前兩項會成長；agent 設計要壓低後四項。</p>
+            <div class="teach">
+              <p>這是乘法。任何一項減半，總成本就減半。所以每一項都值得單獨優化。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>因子</th><th>趨勢</th><th>由什麼決定</th><th>本堂位置</th></tr></thead>
+                <tbody>
+                  <tr><td>Users、Sessions/User</td><td>成長</td><td>產品的採用度與使用頻率</td><td>不在本堂範圍</td></tr>
+                  <tr><td>Turns/Session</td><td>壓低</td><td>Agent 的 trajectory</td><td>p.9–10</td></tr>
+                  <tr><td>Steps/Turn</td><td>壓低</td><td>Agent 的 trajectory</td><td>p.11–13</td></tr>
+                  <tr><td>Tokens/Step</td><td>壓低</td><td>Agent 的 trajectory</td><td>p.14–21</td></tr>
+                  <tr><td>Price/Token</td><td>壓低</td><td>單價：cache、batch、routing、系統優化</td><td>p.22–25</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 減少 turn 與 step ===================== -->
+      <section class="part" id="s-turns">
+        <header class="part-head">
+          <p class="range">p.9–13</p>
+          <h2>減少 turn 與 step</h2>
+          <p class="lede">每個 turn、每個 step 都要重送整個 context。減少次數，是最直接的省法。</p>
+        </header>
+
+        <article class="slide" id="p9" data-pages="9">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=9" target="_blank" rel="noopener" aria-label="開啟原 slide 第 9 頁">p.<b>09</b></a>
+          <div class="body">
+            <h3>全班資料：每個 session 幾個 turn <span class="orig">Your Claude Code usage: turns per session</span></h3>
+            <p class="gist">多數 session 只有一個 prompt。單一 prompt 的 session 佔 68%（Assignment 1）與 75%（Assignment 2）。</p>
+            <div class="teach">
+              <ul>
+                <li>多數同學每個任務開一個新 session。</li>
+                <li>少數人跑「馬拉松」session：100 個以上的 turn。</li>
+              </ul>
+              <p>從成本看，這是好習慣。新 session 從乾淨的 context 開始。馬拉松 session 的每個 turn 都重讀前面所有內容（<a href="#p10">p.10</a>）。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>換任務時，在 Claude Code 輸入 <code>/clear</code>。它開始一段 context 為空的新對話。想留在同一段對話、只釋放空間，改用 <code>/compact</code>。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p10" data-pages="10">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=10" target="_blank" rel="noopener" aria-label="開啟原 slide 第 10 頁">p.<b>10</b></a>
+          <div class="body">
+            <h3>減少使用者的 turn 數 <span class="orig">Reduce (user) turns per task</span></h3>
+            <p class="gist">第 k 個 turn 要重讀第 1 到 k−1 個 turn。所以總成本隨 turn 數的平方成長。</p>
+            <div class="teach">
+              <p>算一次。假設每個 turn 新增 L 個 token：</p>
+              <ul>
+                <li>第 1 個 turn 送出 L。</li>
+                <li>第 2 個 turn 送出 2L：第 1 個 turn 加上自己。</li>
+                <li>第 k 個 turn 送出 kL。</li>
+                <li>總共 <code>L × (1 + 2 + … + k) = L × k(k+1)/2</code>，約 k²/2 個 L。</li>
+              </ul>
+              <p>例：10 個 turn 送出 55L，不是 10L。Turn 數變 2 倍（20 個），總量變 210L，約 4 倍。Prefix cache 讓重讀變便宜（<a href="#p16">p.16</a>），但平方關係不變。</p>
+              <p>使用者回來追問，常見原因有三個：沒有計畫、agent 太早停下、沒人檢查結果。對應的解法：</p>
+              <ol>
+                <li>先規劃（front-load planning）：開工前確認一次目標與計畫。</li>
+                <li>拆解任務（structured decomposition）：每個子任務都有完成條件。</li>
+                <li>交回前自我驗證（self-verification）：先跑測試、檢查輸出，再回報。</li>
+              </ol>
+              <p>目標：agent 自己做完，中途不需要使用者介入。</p>
+              <figure class="file"><figcaption>一次講清楚的 prompt（範例）</figcaption><pre><code>目標：修好 tests/test_auth.py 的 3 個失敗測試。
+1. 先讀相關檔案，列出計畫。等我確認一次。
+2. 確認後自己做完，不要再問我。
+3. 每個子任務寫明完成條件（哪個測試會通過）。
+4. 回報前跑 pytest -x tests/，全部通過才回報。</code></pre></figure>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p11" data-pages="11">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=11" target="_blank" rel="noopener" aria-label="開啟原 slide 第 11 頁">p.<b>11</b></a>
+          <div class="body">
+            <h3>全班資料：每個 turn 幾個 step <span class="orig">Your Claude Code usage: steps per turn</span></h3>
+            <p class="gist">多數 turn 只有幾個 step。Step 數的中位數是 3（Assignment 1）與 4（Assignment 2）。</p>
+            <div class="teach">
+              <ul>
+                <li>Slide 的解釋：多數同學把 effort 設在 medium 或 high。</li>
+                <li>少數 turn 跑了將近 1,000 個 step。</li>
+              </ul>
+              <p>這是長尾分布。看成本時，要同時看中位數與 p90 這類尾端數字。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p12" data-pages="12">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=12" target="_blank" rel="noopener" aria-label="開啟原 slide 第 12 頁">p.<b>12</b></a>
+          <div class="body">
+            <h3>減少每個 turn 的 step <span class="orig">Reduce steps per turn</span></h3>
+            <p class="gist">每次 model call 都重讀整個 context。先規劃再批次執行，可以把 4 次 model call 減成 2 次。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>做法</th><th>流程</th><th class="num">Model call</th></tr></thead>
+                <tbody>
+                  <tr><td>一個動作一次 call</td><td>Model → tool → model → tool → model → tool → model</td><td class="num">4</td></tr>
+                  <tr><td>先規劃，再批次</td><td>Model → 3 個 tool 平行執行 → model</td><td class="num">2</td></tr>
+                </tbody>
+              </table></div>
+              <ul>
+                <li><b>批次處理獨立的 call：</b>5 個檔案在一個 step 讀完，不要分成 5 個 step。</li>
+                <li><b>重用計畫與 skill：</b>重播以前成功的做法，不要每次重新推導。</li>
+                <li><b>一開始就載入 context：</b>開頭就讀需要的檔案，不要每一步讀一個。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div><p>對話這樣打：「先一次讀完 <code>src/auth/</code> 下的檔案和 <code>tests/test_auth.py</code>，再提出修改計畫。」Model 可以在同一個回覆裡發出多個 Read，harness 在同一步執行完。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p13" data-pages="13">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=13" target="_blank" rel="noopener" aria-label="開啟原 slide 第 13 頁">p.<b>13</b></a>
+          <div class="body">
+            <h3>重用計畫、skill 與經驗：相關論文 <span class="orig">Reuse plans, skills and experience: related papers</span></h3>
+            <p class="gist">ADVANCED，略讀即可。重用只在任務會重複時划算；維護 memory 和過期的條目，可能吃掉省下的錢。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Skill 庫：</b>Voyager（2023）存可執行的 skill；SkillRL（2026）同時改進 skill 庫與 policy。</li>
+                <li><b>從經驗萃取心得：</b>ExpeL（2023）萃取可重用的 insight；ReasoningBank（2025）保留成功與失敗 run 的策略。</li>
+                <li><b>Playbook 與計畫範本：</b>Test-Time Plan Caching（2025）重用並調整計畫範本。</li>
+                <li><b>持久的對話 memory：</b>Mem0（2025）儲存並更新事實；LightMem（2025）離線整併；SimpleMem（2026）壓縮 memory。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 每一步的 token ===================== -->
+      <section class="part" id="s-tokens">
+        <header class="part-head">
+          <p class="range">p.14–21</p>
+          <h2>減少每一步的 token</h2>
+          <p class="lede">每一步送出的 token 大多是重讀的 context。Input 量大但便宜；output 量小但貴。兩邊各有省法。</p>
+        </header>
+
+        <article class="slide" id="p14" data-pages="14">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=14" target="_blank" rel="noopener" aria-label="開啟原 slide 第 14 頁">p.<b>14</b></a>
+          <div class="body">
+            <h3>全班資料：每一步送出多少 token <span class="orig">Your Claude Code usage: tokens per step</span></h3>
+            <p class="gist">主 agent 每一步的 token 數，中位數是 200K–300K，p90 是 600K–700K。Subagent 小很多：中位數約 80K，p90 約 200K。</p>
+            <div class="teach">
+              <ul>
+                <li>Slide 的圖：主 agent 的中位數是 208K（Assignment 1）與 301K（Assignment 2）。</li>
+                <li>這些 token 幾乎都是 input：每一步重送的整個 context。</li>
+              </ul>
+              <p>Subagent 從乾淨的 context 開始，所以每一步小得多。p.17 的「隔離探索」利用的就是這一點。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p15" data-pages="15">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=15" target="_blank" rel="noopener" aria-label="開啟原 slide 第 15 頁">p.<b>15</b></a>
+          <div class="body">
+            <h3>全班資料：token 隨 step 成長 <span class="orig">Your Claude Code usage: tokens over steps</span></h3>
+            <p class="gist">Context 累積得很快。到第 500 步左右，context 約 670K（Assignment 1）與 650K（Assignment 2）。</p>
+            <div class="teach">
+              <p>每一步都加入 model 回覆、tool 輸出、讀進來的檔案，直到 compaction 才清掉。以 1M 的 context window 算（L2 p.16），650K 已用掉約三分之二。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p16" data-pages="16">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=16" target="_blank" rel="noopener" aria-label="開啟原 slide 第 16 頁">p.<b>16</b></a>
+          <div class="body">
+            <h3>大部分 token 是 cache read <span class="orig">Your Claude Code usage: most tokens are cache reads</span></h3>
+            <p class="gist">Assignment 1 的 token 有 97.6% 是 cache read。Slide 給的價格比：cache read : input : output = 1 : 10 : 50。</p>
+            <div class="teach">
+              <ul>
+                <li>量的比例：output 約是 fresh prefill 的 1/5；fresh prefill 約是 cache read 的 1/100。</li>
+                <li>Fresh prefill 是第一次送進 model 的 token，會寫入 cache（cache write）。</li>
+                <li>Cache read 單價最低，但量太大，所以仍是成本大宗。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>估一步的成本。單位是「input-token 單位」：1 個 base input token = 1 單位。</p>
+                <div class="table-wrap"><table>
+                  <thead><tr><th>種類</th><th class="num">Token</th><th class="num">單價</th><th class="num">成本</th></tr></thead>
+                  <tbody>
+                    <tr><td>Cache read</td><td class="num">300K</td><td class="num">0.1</td><td class="num">30K</td></tr>
+                    <tr><td>Fresh input</td><td class="num">5K</td><td class="num">1</td><td class="num">5K</td></tr>
+                    <tr><td>Output</td><td class="num">1K</td><td class="num">5</td><td class="num">5K</td></tr>
+                    <tr><td>合計</td><td class="num">306K</td><td class="num"></td><td class="num">40K</td></tr>
+                  </tbody>
+                </table></div>
+                <p>Cache read 佔 token 的 98%，佔成本的 75%。沒有 cache 時，305K 的 input 全以 1 倍計價，加上 output 共 310K 單位，是有 cache 的 7.8 倍。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p17" data-pages="17">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=17" target="_blank" rel="noopener" aria-label="開啟原 slide 第 17 頁">p.<b>17</b></a>
+          <div class="body">
+            <h3>減少每一步的 input token <span class="orig">Reduce input tokens per step: keep context lean</span></h3>
+            <p class="gist">留在 context 裡的 token，之後每一步都要再付一次。三個方向：丟掉過期的、縮小進來的、只載入需要的。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>方向</th><th>做法</th></tr></thead>
+                <tbody>
+                  <tr><td>丟掉過期的</td><td>截短過時的 tool 結果；遮掉用過的 tool 輸出；把舊 turn 摘要成目前狀態（compaction）</td></tr>
+                  <tr><td>縮小進來的</td><td>壓縮 observation：只留錯誤，不放整份 log；大輸出寫進檔案，context 只放路徑</td></tr>
+                  <tr><td>只載入需要的</td><td>只載入相關的 tool 與 memory；探索交給 subagent，只拿回摘要（例：Claude Code 內建的 Explore）</td></tr>
+                </tbody>
+              </table></div>
+              <p>算一下：20K 的測試 log 留在 context 50 步，共重讀 1M token。只留 500 token 的錯誤摘要，只有 25K。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>跑測試時，完整輸出寫進檔案，只把重點放進 context：</p>
+                <pre><code>pytest -x tests/ &gt; /tmp/test.log 2&gt;&amp;1
+grep -nE "FAILED|Error" /tmp/test.log | head -n 20</code></pre>
+                <p>在 Claude Code 輸入 <code>/context</code>，可以看到哪些內容佔用 context。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p18" data-pages="18">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=18" target="_blank" rel="noopener" aria-label="開啟原 slide 第 18 頁">p.<b>18</b></a>
+          <div class="body">
+            <h3>減少 input token：相關論文 <span class="orig">Reduce input tokens: related papers</span></h3>
+            <p class="gist">ADVANCED，略讀即可。四類：壓縮歷史、把 context 當外部 memory、壓縮 prompt、讓 tool 資料不進 context。</p>
+            <div class="teach">
+              <ul>
+                <li><b>壓縮 agent 歷史：</b>ACON（2025）把 peak context 降 26–54%；Active Context Compression（2026）少 23% token；TRACE（2026）指出摘要會造成重工。</li>
+                <li><b>Context 當外部 memory：</b>MemGPT（2023）；Scroll（2026）保留完整的外部 log，由程式決定 model 看到什麼。</li>
+                <li><b>壓縮 prompt：</b>LLMLingua（2023）最多少 20 倍 token；LongLLMLingua、LLMLingua-2（2024）；Prompt Compression in the Wild（2026）發現只有長 prompt 才划算。</li>
+                <li><b>Tool 資料不進 context：</b>Code execution with MCP（2025）在程式裡過濾結果，150K 降到 2K token；Tool Search（2025）少 85% 的 tool token；Programmatic Tool Calling 少 37%。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p19" data-pages="19">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=19" target="_blank" rel="noopener" aria-label="開啟原 slide 第 19 頁">p.<b>19</b></a>
+          <div class="body">
+            <h3>減少 output token：要求少一點 <span class="orig">Reduce output tokens per step: ask for less</span></h3>
+            <p class="gist">在 prompt 裡講清楚長度、格式、要省略什麼。再用 API 的 output 上限當保險。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Prompt 限制：</b>字數上限、只回 JSON、只要前 3 項、不要重述問題、不要解釋推理。</li>
+                <li><b>精簡的 system prompt：</b>要求簡潔；使用者沒要求時，省略背景。</li>
+                <li><b>Output 上限：</b>在 API 設硬上限，例如 <code>max_tokens=300</code> 或 <code>max_output_tokens=300</code>。</li>
+              </ul>
+              <p>Output 上限有兩個陷阱。回答可能在句子中間斷掉，所以要搭配精簡的 prompt。推理（reasoning）也算 output，可能先用完上限。</p>
+              <figure class="file"><figcaption>要求精簡結構化輸出的 prompt（範例）</figcaption><pre><code>Answer in at most 80 words. Return only JSON:
+{"cause": "&lt;one sentence&gt;", "files": ["&lt;path&gt;"], "fix": "&lt;one sentence&gt;"}
+Do not restate the question. Do not explain your reasoning.</code></pre></figure>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>官方文件（2026-10）：Claude API 的 <code>max_tokens</code> 包含 thinking 與回覆文字。撞到上限時，<code>stop_reason</code> 是 <code>max_tokens</code>。程式要檢查它，不要把截斷的 JSON 當成完整結果。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p20" data-pages="20">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=20" target="_blank" rel="noopener" aria-label="開啟原 slide 第 20 頁">p.<b>20</b></a>
+          <div class="body">
+            <h3>減少 output token：schema 與 effort <span class="orig">Reduce output tokens per step: schema and effort</span></h3>
+            <p class="gist">用 schema 只要求需要的欄位。推理量依步驟調整：查找用 low，除錯用 high。</p>
+            <div class="teach">
+              <p><b>Structured output。</b>Slide 的例子只有兩個欄位：<code>{"action": "search", "argument": "KV cache"}</code>。限制 enum 與選填欄位，model 就加不了多餘的內容。對使用 tool 的 agent，tool call 旁邊的說明文字全是成本。</p>
+              <figure class="file"><figcaption>action.schema.json（範例）</figcaption><pre><code>{
+  "type": "object",
+  "properties": {
+    "action":   {"type": "string", "enum": ["search", "read", "edit", "done"]},
+    "argument": {"type": "string"}
+  },
+  "required": ["action", "argument"],
+  "additionalProperties": false
+}</code></pre></figure>
+              <p><b>Adaptive effort。</b>查找與格式化用 low；規劃與除錯用 high。可以每個 call 或每一步設定，形式是 reasoning effort 或 thinking token 預算。Claude API 的欄位是 <code>output_config.effort</code>；Claude Code 有 <code>--effort</code> flag 與 <code>/effort</code> 指令。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>查找專用的 subagent：便宜的 model、低 effort、唯讀 tool、精簡輸出。</p>
+                <pre><code>---
+name: file-finder
+description: Finds files and symbols. Use for quick lookups.
+tools: Read, Glob, Grep
+model: haiku
+effort: low
+---
+
+Return only matching paths and line numbers. No explanation.</code></pre>
+                <p>存成 <code>.claude/agents/file-finder.md</code>。這個例子同時用到 p.17（隔離探索）、p.20（effort）、p.23（routing）。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p21" data-pages="21">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=21" target="_blank" rel="noopener" aria-label="開啟原 slide 第 21 頁">p.<b>21</b></a>
+          <div class="body">
+            <h3>減少 output token：相關論文 <span class="orig">Reduce output tokens: related papers</span></h3>
+            <p class="gist">ADVANCED，略讀即可。四類：prompt 與預算、adaptive effort、structured output 與 decoding、只輸出有改的部分。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Prompt 與預算：</b>Concise CoT（2024）；CCoT（2024）限制 CoT 字數；Chain of Draft（2025）用簡短草稿推理；TALE（2024）設推理 token 預算。</li>
+                <li><b>Adaptive effort：</b>Ares（2026）每一步選 effort；When to Plan（2025）只在有用時規劃；s1、L1（2025）強制 thinking 預算；Reason Efficiently；ShorterBetter。</li>
+                <li><b>Structured output 與 decoding：</b><span class="en">Let Me Speak Freely?</span>（2024）發現嚴格格式可能傷害推理；XGrammar、SGLang（2024）；JSONSchemaBench（2025）。</li>
+                <li><b>只輸出有改的部分：</b>AdaEdit（2026）選擇輸出 diff 或整個檔；CodeStruct（2026）在 AST 層級編輯；Tool-making agents（2026）做出可重用的 tool，output token 少 58%。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 單價與預算 ===================== -->
+      <section class="part" id="s-price">
+        <header class="part-head">
+          <p class="range">p.22–30</p>
+          <h2>降低單價、控管預算</h2>
+          <p class="lede">同樣的 token 數，單價可以差 100 倍。這一段講怎麼買到便宜的 token，以及怎麼替任務設上限。</p>
+        </header>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 680 284" role="img" aria-label="對數刻度上的五種 token 單價，以 base input 為 1 倍：batch 加 cache 的 input 是 0.05 倍，cached input 是 0.1 倍，batch input 是 0.5 倍，base input 是 1 倍，output 是 5 倍。最上面一列分成兩段：batch 乘 0.5，再 cache 乘 0.1。">
+              <text x="483.3" y="28" text-anchor="middle" class="dg-ts">基準：base input = 1×</text>
+              <line x1="483.3" y1="38" x2="483.3" y2="232" class="dg-soft"/>
+
+              <text x="188" y="68" text-anchor="end" class="dg-t">Batch + cached input</text>
+              <line x1="483.3" y1="64" x2="433.1" y2="64" class="dg-accent"/>
+              <line x1="433.1" y1="64" x2="266.3" y2="64" class="dg-accent"/>
+              <line x1="433.1" y1="57" x2="433.1" y2="71" class="dg-accent"/>
+              <text x="477" y="51" text-anchor="end" class="dg-ts">batch ×0.5</text>
+              <text x="349.7" y="51" text-anchor="middle" class="dg-ts">再 cache ×0.1</text>
+              <circle cx="266.3" cy="64" r="5" class="dg-fill-accent"/>
+              <text x="255" y="68" text-anchor="end" class="dg-tb">0.05×</text>
+
+              <text x="188" y="104" text-anchor="end" class="dg-t">Cached input</text>
+              <line x1="483.3" y1="100" x2="316.5" y2="100" class="dg-accent"/>
+              <circle cx="316.5" cy="100" r="5" class="dg-fill-accent"/>
+              <text x="305" y="104" text-anchor="end" class="dg-tb">0.1×</text>
+
+              <text x="188" y="140" text-anchor="end" class="dg-t">Batch input</text>
+              <line x1="483.3" y1="136" x2="433.1" y2="136" class="dg-accent"/>
+              <circle cx="433.1" cy="136" r="5" class="dg-fill-accent"/>
+              <text x="422" y="140" text-anchor="end" class="dg-tb">0.5×</text>
+
+              <text x="188" y="176" text-anchor="end" class="dg-t">Base input</text>
+              <circle cx="483.3" cy="172" r="5" class="dg-fill-ink"/>
+              <text x="494" y="176" class="dg-tb">1×</text>
+
+              <text x="188" y="212" text-anchor="end" class="dg-t">Output</text>
+              <line x1="483.3" y1="208" x2="599.8" y2="208" class="dg-line"/>
+              <circle cx="599.8" cy="208" r="5" class="dg-fill-ink"/>
+              <text x="611" y="212" class="dg-tb">5×</text>
+
+              <line x1="200" y1="232" x2="650" y2="232" class="dg-soft"/>
+              <line x1="266.3" y1="232" x2="266.3" y2="237" class="dg-soft"/>
+              <line x1="316.5" y1="232" x2="316.5" y2="237" class="dg-soft"/>
+              <line x1="433.1" y1="232" x2="433.1" y2="237" class="dg-soft"/>
+              <line x1="483.3" y1="232" x2="483.3" y2="237" class="dg-soft"/>
+              <line x1="599.8" y1="232" x2="599.8" y2="237" class="dg-soft"/>
+              <text x="266.3" y="250" text-anchor="middle" class="dg-tm">0.05×</text>
+              <text x="316.5" y="250" text-anchor="middle" class="dg-tm">0.1×</text>
+              <text x="433.1" y="250" text-anchor="middle" class="dg-tm">0.5×</text>
+              <text x="483.3" y="250" text-anchor="middle" class="dg-tm">1×</text>
+              <text x="599.8" y="250" text-anchor="middle" class="dg-tm">5×</text>
+              <text x="200" y="274" class="dg-ts">← 更便宜</text>
+              <text x="425" y="274" text-anchor="middle" class="dg-ts">每個 token 的單價（對數刻度）</text>
+              <text x="650" y="274" text-anchor="end" class="dg-ts">更貴 →</text>
+            </svg>
+          </div>
+          <figcaption>Slide p.22 的五種單價，依比例畫在對數刻度上。對數刻度上，折扣相乘就是距離相加：batch（×0.5）加 cache（×0.1）得到 0.05×。p.16 的 1 : 10 : 50 就是第 2、4、5 列。</figcaption>
+        </figure>
+
+        <article class="slide" id="p22" data-pages="22">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=22" target="_blank" rel="noopener" aria-label="開啟原 slide 第 22 頁">p.<b>22</b></a>
+          <div class="body">
+            <h3>降低單價：cache 與 batch <span class="orig">Reduce price per token: caching and batching</span></h3>
+            <p class="gist">Cache read 只要 base input 的 0.1×；batch 是 0.5×；兩者疊加是 0.05×。前提：prefix 保持穩定，工作可以等。</p>
+            <div class="teach">
+              <ul>
+                <li><b>保持 prefix 穩定：</b>system prompt、tool 定義、早期歷史放在最前面，而且不要改。</li>
+                <li><b>能等的工作用 batch：</b>eval、backfill、大量批次工作。</li>
+              </ul>
+              <p>Prefix cache 從第一個 token 開始比對。中間改了一個 token，後面全部 cache miss。所以會變的內容放最後。</p>
+              <figure class="file"><figcaption>對 cache 友善的 request 排列（範例）</figcaption><pre><code>[system prompt]       固定
+[tool definitions]    固定，順序也不變
+[CLAUDE.md]           固定
+[早期對話]             只往後加，不改舊的
+[這一步的新訊息]        每步不同</code></pre></figure>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>常見錯誤：在 system prompt 開頭放現在時間。每個 request 的開頭都不同，cache 每次都 miss。</p></div></aside>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>官方文件（2026-10）：Message Batches 的 input 與 output 都打 5 折，多數 batch 在 1 小時內完成。Cache read 一般是 0.1×；Opus 5.5 與 Sonnet 5.5 是 0.05×。兩種折扣可以疊加。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p23" data-pages="23">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=23" target="_blank" rel="noopener" aria-label="開啟原 slide 第 23 頁">p.<b>23</b></a>
+          <div class="body">
+            <h3>降低單價：model routing <span class="orig">Reduce price per token: model routing</span></h3>
+            <p class="gist">簡單的步驟交給便宜的 model，難的交給貴的。三種時機：開始前選、失敗才升級、每一步重選。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>策略</th><th>怎麼做</th><th>判斷依據</th></tr></thead>
+                <tbody>
+                  <tr><td>開始前選</td><td>每個 turn 生成前，選定一個 model</td><td>用偏好資料訓練的 router；也能選 agent 角色</td></tr>
+                  <tr><td>失敗才升級</td><td>先用便宜的 model；檢查沒過，再換大的</td><td>Learned scorer、self-verification、執行結果</td></tr>
+                  <tr><td>每一步重選</td><td>Trajectory 變長時，重新選 model</td><td>依歷史與預算；orchestrator 把 model 當 tool 呼叫</td></tr>
+                </tbody>
+              </table></div>
+              <p>難處：便宜 model 的一個規劃錯誤，會浪費後面很多步。規劃這種「錯了很貴」的步驟，值得用大 model。</p>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>「失敗才升級」的骨架。Assignment 3 剛好提供 Starter、Standard、Expert 三種 model（見附錄）。</p>
+                <pre><code>for model in ["starter", "standard", "expert"]:   # 由便宜到貴
+    patch = agent.solve(task, model=model)
+    if run_tests(patch).passed:                  # 執行結果當檢查
+        return patch
+return None</code></pre>
+              </div></aside>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>每一步換 model 有隱藏成本。KV cache 由 model 的權重算出，不能跨 model 共用。換到新 model，整個 context 要重新 prefill，用 fresh input 的價格計費。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p24" data-pages="24">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=24" target="_blank" rel="noopener" aria-label="開啟原 slide 第 24 頁">p.<b>24</b></a>
+          <div class="body">
+            <h3>系統層的降價手段（後面的課） <span class="orig">Price per token: system techniques in later lectures</span></h3>
+            <p class="gist">單價也能靠系統層降低：model、serving engine、硬體。後面幾堂課會講。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Model：</b>MoE 與 sparsity、quantization、pruning、distillation、針對工作負載的 fine-tuning。</li>
+                <li><b>Serving engine：</b>speculative decoding、KV cache 優化、更好的 request 排程。</li>
+                <li><b>硬體：</b>更快的 kernel、更好的 kernel 排程、專用加速器。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p25" data-pages="25">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=25" target="_blank" rel="noopener" aria-label="開啟原 slide 第 25 頁">p.<b>25</b></a>
+          <div class="body">
+            <h3>降低單價：相關論文 <span class="orig">Price per token: related papers</span></h3>
+            <p class="gist">ADVANCED，略讀即可。Prefix caching 與三種 routing 各有代表論文。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Prefix caching：</b>vLLM（2023，PagedAttention）；SGLang（2024，RadixAttention）；Prompt Cache（2024，模組化重用）。</li>
+                <li><b>開始前選：</b>RouteLLM（2024，學出來的 router）；MasRouter（2025，也選 agent 角色）。</li>
+                <li><b>失敗才升級：</b>FrugalGPT（2023，learned cascade）；AutoMix（2023，self-verification）；EcoAssistant（2023，execution feedback）。</li>
+                <li><b>每一步重選：</b>ToolOrchestra（2025，小型 orchestrator）；BAAR、MTRouter（2026，考慮預算）。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p26" data-pages="26">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=26" target="_blank" rel="noopener" aria-label="開啟原 slide 第 26 頁">p.<b>26</b></a>
+          <div class="body">
+            <h3>每個節省都有反向成本 <span class="orig">Every saving has a counter-cost</span></h3>
+            <p class="gist">淨節省 = 毛節省 − 反向成本。兩者都要在同一組任務上量。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>手段</th><th>反向成本</th></tr></thead>
+                <tbody>
+                  <tr><td>Compaction</td><td>丟掉的檔案要重讀；摘要改變了 prefix，cache 要重寫</td></tr>
+                  <tr><td>Routing 到便宜 model</td><td>一個壞計畫多出很多步，或整次失敗</td></tr>
+                  <tr><td>Subagent</td><td>每個 subagent 都重讀共用的檔案與指示</td></tr>
+                  <tr><td>Speculation</td><td>猜錯浪費 token，還和主流程搶同一批 tool</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>粗估 compaction 何時回本。單位同 p.16。</p>
+                <ul>
+                  <li>壓縮前：每步讀 600K 的 cache，花 60K 單位。</li>
+                  <li>壓縮後：context 剩 100K，每步花 10K 單位。每步省 50K。</li>
+                  <li>一次性成本：新的 100K prefix 要重新寫入 cache，花 100K。丟掉的檔案要重讀，再花 30K。</li>
+                </ul>
+                <p>130K ÷ 50K，約 3 步回本。任務如果 2 步內結束，compaction 反而虧錢。產生摘要的那次 model call 還沒算進去。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p27" data-pages="27">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=27" target="_blank" rel="noopener" aria-label="開啟原 slide 第 27 頁">p.<b>27</b></a>
+          <div class="body">
+            <h3>替每個任務設預算，停滯就停 <span class="orig">Cap each task's budget; stop when progress stalls</span></h3>
+            <p class="gist">每個任務都設上限。進度停滯就停下，交出摘要。有摘要的停止，比失控的 run 便宜。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>上限（slide 的示意值）</th><th class="num">例</th></tr></thead>
+                <tbody>
+                  <tr><td>金額</td><td class="num">$10</td></tr>
+                  <tr><td>Model call 次數</td><td class="num">80 次</td></tr>
+                  <tr><td>Tool 執行時間</td><td class="num">15 分鐘</td></tr>
+                  <tr><td>每一步的重試</td><td class="num">2 次</td></tr>
+                </tbody>
+              </table></div>
+              <p>上限要從實際 trace 定。Slide 的做法：成功任務的 p95，乘以 2。例：成功任務花費的 p95 是 $4.80，上限就設約 $10。</p>
+              <p>停止條件：verifier 通過；N 步內沒有新的測試通過；同一個錯誤重複出現；碰到任一上限（交出摘要再停）。</p>
+              <figure class="file"><figcaption>budget.yaml（範例，欄位名稱自訂）</figcaption><pre><code>per_task:
+  max_usd: 10
+  max_model_calls: 80
+  max_tool_minutes: 15
+  max_retries_per_step: 2
+stop_when:
+  - verifier_passes
+  - no_new_passing_test_in_steps: 10
+  - same_error_repeats: 3
+on_limit: handoff_with_summary</code></pre></figure>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>Claude Code 在 print mode 有兩個對應的 flag：</p>
+                <pre><code>claude -p --max-budget-usd 10 --max-turns 80 "修好 tests/test_auth.py"</code></pre>
+                <p><code>--max-turns</code> 計算 tool-use 來回，約等於 model call 次數。<code>--max-budget-usd</code> 依本機估算；最後一個回應可能超過上限，要留餘裕。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p28" data-pages="28-29">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=28" target="_blank" rel="noopener" aria-label="開啟原 slide 第 28 到 29 頁">p.<b class="multi">28–29</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">這 2 頁沒有可擷取的文字。前後頁在講預算上限與「需不需要 LLM」，請直接看原 slide。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p30" data-pages="30">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=30" target="_blank" rel="noopener" aria-label="開啟原 slide 第 30 頁">p.<b>30</b></a>
+          <div class="body">
+            <h3>真的需要 LLM 嗎？ <span class="orig">Do you need an LLM at all?</span></h3>
+            <p class="gist">只有需要推理的步驟，才用 LLM。其他步驟用 script、規則或小型 model，每次呼叫幾乎不花錢。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>情況</th><th>改用</th></tr></thead>
+                <tbody>
+                  <tr><td>每次步驟都一樣</td><td>寫 script。讓 LLM 寫一次程式，之後只跑程式。</td></tr>
+                  <tr><td>輸入格式固定</td><td>用規則解析：regex、parser、template。</td></tr>
+                  <tr><td>只要一個標籤或分數</td><td>訓練小型分類器，例如 GBM（gradient boosting）。</td></tr>
+                  <tr><td>流程固定、推理很少</td><td>用 script 跑流程，只在需要的步驟呼叫 LLM。</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>從 CHANGELOG 取出最新版本號。格式固定，一行 regex 就夠：</p>
+                <pre><code>grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 1</code></pre>
+                <p>用 LLM 做同一件事，每次都要付 token。這行指令每次執行都是零元。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 讓 agent 更快 ===================== -->
+      <section class="part" id="s-speed">
+        <header class="part-head">
+          <p class="range">p.31–42</p>
+          <h2>讓 agent 更快</h2>
+          <p class="lede">省錢的手段多半也省時間。但平行與 speculation 用更多 token 換更少等待。先找出 critical path，再決定優化哪裡。</p>
+        </header>
+
+        <article class="slide compact" id="p31" data-pages="31">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=31" target="_blank" rel="noopener" aria-label="開啟原 slide 第 31 頁">p.<b>31</b></a>
+          <div class="body">
+            <h3>分隔頁：讓 agent 更快 <span class="orig">Make your agent faster</span></h3>
+            <p class="gist">更快的 agent 通常也更便宜，但不一定。五個槓桿：加速 LLM serving、改進 orchestration、加速 tool call、平行化、speculative action。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p32" data-pages="32">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=32" target="_blank" rel="noopener" aria-label="開啟原 slide 第 32 頁">p.<b>32</b></a>
+          <div class="body">
+            <h3>完成時間由 critical path 決定 <span class="orig">Completion time is the critical path</span></h3>
+            <p class="gist">序列執行時，總時間約等於每一步相加。平行執行時，總時間約等於 critical path：最長的那條相依鏈。</p>
+            <div class="teach">
+              <p>序列的每一步包含 queue、setup、prefill、reasoning、tool、orchestration。平行的例子：plan 之後，worker A 和 B 同時做，最後 merge。</p>
+              <pre><code>serial:   [plan 5][A 20.......][B 30..............][merge 5]   = 60 s
+parallel: [plan 5][A 20.......]
+                  [B 30..............][merge 5]                = 40 s</code></pre>
+              <p>平行時，critical path 是 plan → B → merge。把 A 加速一倍，總時間不變。把 B 縮短 10 秒，總時間就少 10 秒。</p>
+              <aside class="callout caution"><span class="tag">CAUTION</span><div><p>省錢和省時間會衝突。小 model 單價低，但可能多走幾步，結果更慢。平行減少等待，但 token 總量變多。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p33" data-pages="33">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=33" target="_blank" rel="noopener" aria-label="開啟原 slide 第 33 頁">p.<b>33</b></a>
+          <div class="body">
+            <h3>加速 LLM serving <span class="orig">Speed up LLM serving</span></h3>
+            <p class="gist">前半段的每個省錢手段，也會降低 latency：更少 turn、更少 step、更少 token、更便宜的 serving。關鍵工具是 cache 與小 model。</p>
+            <div class="teach">
+              <p>Cache 命中的部分不用重算 prefill，第一個 token 更快出來。Output 一次產生一個 token，越短等越少。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p34" data-pages="34">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=34" target="_blank" rel="noopener" aria-label="開啟原 slide 第 34 頁">p.<b>34</b></a>
+          <div class="body">
+            <h3>改進 orchestration <span class="orig">Improve orchestration</span></h3>
+            <p class="gist">減少 harness 自己造成的等待。四個做法：非同步執行、持續存在的 session、串流與 pipeline、把服務放在一起。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>做法</th><th>例子</th><th>省下什麼</th></tr></thead>
+                <tbody>
+                  <tr><td>Async execution</td><td>Tool 執行時，先開始下一步</td><td>空等 tool 的時間</td></tr>
+                  <tr><td>Persistent session</td><td>同一個 shell 或瀏覽器跨步驟使用</td><td>每步重新啟動的時間</td></tr>
+                  <tr><td>Stream and pipeline</td><td>LLM 回應還沒結束，就開始 tool call</td><td>等完整回應的時間</td></tr>
+                  <tr><td>Colocate services</td><td>Tool 和 model 跑在同一台主機</td><td>網路來回的時間</td></tr>
+                </tbody>
+              </table></div>
+              <p>Stream 的機制：回應是串流送出的。Tool call 的參數一完整，harness 就能開始執行。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p35" data-pages="35">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=35" target="_blank" rel="noopener" aria-label="開啟原 slide 第 35 頁">p.<b>35</b></a>
+          <div class="body">
+            <h3>加速 tool call <span class="orig">Speed up tool calls</span></h3>
+            <p class="gist">Build、test、載入網頁，可能比 model call 還久。優化 model 之前，先量每一步的 tool 時間。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Cache tool 結果：</b>重複的讀取與搜尋直接用 cache。</li>
+                <li><b>更快的硬體：</b>重的運算放到 server，不要在筆電上跑。</li>
+                <li><b>更好的 tool：</b>同樣的工作，換更快、更便宜的 tool。只在需要時呼叫。</li>
+                <li><b>Fail fast：</b>卡住的 call 要有 timeout。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <pre><code>timeout 300 pytest -x tests/   # 5 分鐘沒跑完就中止；-x 遇到第一個失敗就停
+rg -n "create_session" src/    # ripgrep，通常比 grep -r 快</code></pre>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p36" data-pages="36">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=36" target="_blank" rel="noopener" aria-label="開啟原 slide 第 36 頁">p.<b>36</b></a>
+          <div class="body">
+            <h3>平行化 <span class="orig">Parallelize work</span></h3>
+            <p class="gist">讀 A、B、C 三個檔案：序列要等三次，平行只等一次。工作量相同，等待時間是三分之一。</p>
+            <div class="teach">
+              <ul>
+                <li><b>平行 tool call：</b>獨立的 call 在同一步發出。</li>
+                <li><b>平行 subagent：</b>把獨立的子任務分出去，最後合併摘要。</li>
+              </ul>
+              <p>只有獨立的工作能平行。共用狀態的工作，需要一個 merge 步驟。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p37" data-pages="37">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=37" target="_blank" rel="noopener" aria-label="開啟原 slide 第 37 頁">p.<b>37</b></a>
+          <div class="body">
+            <h3>Speculative action <span class="orig">Speculative actions</span></h3>
+            <p class="gist">便宜的 model 先猜下一個動作，趁主 model 還在想時先執行。猜中就省下等待；猜錯就丟掉，損失一次 call。</p>
+            <div class="teach">
+              <ol>
+                <li>Predict：便宜的 model 猜下一個 action。</li>
+                <li>Run early：主 model 思考時，先執行猜測。</li>
+                <li>Compare：主 model 決定後，比對猜測。</li>
+              </ol>
+              <p>划算的條件：常常猜中，而且動作可以撤銷。所以適合讀檔、搜尋這類唯讀動作。<code>git push</code>、寄信、刪檔不能先做。</p>
+              <p>Slide 的開放問題：GPU、CPU、API 預算有限時，怎麼排程 speculative call，讓省下的時間大於浪費的工作？</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>同樣的想法也出現在 CPU 的 branch prediction。CPU 先猜分支的方向，往下執行。猜錯就丟掉結果，重新執行。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p38" data-pages="38">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=38" target="_blank" rel="noopener" aria-label="開啟原 slide 第 38 頁">p.<b>38</b></a>
+          <div class="body">
+            <h3>猜什麼 <span class="orig">What gets speculated</span></h3>
+            <p class="gist">ADVANCED，略讀即可。猜測的範圍從一個 call 擴大到一整段 trajectory。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Tool intent</b>（下一個用哪個 tool）：SPORK [8]。</li>
+                <li><b>Tool call</b>（tool 加參數）：PASTE [5]、Speculative Tool Calls [2]。</li>
+                <li><b>Next action</b>（任何動作或 API 回應）：Speculative Actions [1]。</li>
+                <li><b>Branches</b>（同時試幾條路）：B-PASTE [6]。</li>
+                <li><b>Trajectory</b>（已執行的多步鏈）：Speculative Macro Commit [10]。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p39" data-pages="39">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=39" target="_blank" rel="noopener" aria-label="開啟原 slide 第 39 頁">p.<b>39</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">沒有可擷取的文字。前後頁在講 speculation 的種類與預測來源，請直接看原 slide。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p40" data-pages="40">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=40" target="_blank" rel="noopener" aria-label="開啟原 slide 第 40 頁">p.<b>40</b></a>
+          <div class="body">
+            <h3>預測從哪裡來 <span class="orig">Where predictions come from</span></h3>
+            <p class="gist">ADVANCED，略讀即可。三種來源：小 model、同一個 model 的早期分支、過去的 trace。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Model-based：</b>小的 draft model 預測大 model 的下一步。Speculative Actions [1]、Speculative Tool Calls [2]。</li>
+                <li><b>Self-speculative：</b>同一個 model 的早期 fork 預測自己之後的 tool call。SPORK [8]。</li>
+                <li><b>History-based：</b>過去的 trace 預測下一個 tool，參數取自上一步的結果。PASTE [5]、Speculate with Memory [9]。</li>
+                <li><b>Lossless 與 lossy：</b>Lossless 保留結果前一定驗證；lossy 的 SPAgent [3] 省略部分檢查。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p41" data-pages="41">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=41" target="_blank" rel="noopener" aria-label="開啟原 slide 第 41 頁">p.<b>41</b></a>
+          <div class="body">
+            <h3>兩個例子：PASTE 與 SPORK <span class="orig">Two examples</span></h3>
+            <p class="gist">PASTE 用過去的 trace 猜下一個 tool。SPORK 從 model 自己的推理，提早看出它要呼叫什麼。</p>
+            <div class="teach">
+              <p><b>PASTE</b>：過去的 trace 常出現這個模式。</p>
+              <pre><code>search(q) → visit(results[0].url) → extract(page)</code></pre>
+              <p><code>search(q)</code> 一開始，harness 就預期下一步是 visit。URL 取自 search 的結果。所以 model 還在生成時，visit 已經在跑。</p>
+              <p><b>SPORK</b>：model 先推理約 2,000 個 token，才發出 tool call。推理的早期，意圖常已很清楚，例如「要搜尋 q」。一個 fork 出來的 probe 提早發出 <code>search(q)</code>。主 model 正式發出 tool call 時，結果已經準備好。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p42" data-pages="42">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=42" target="_blank" rel="noopener" aria-label="開啟原 slide 第 42 頁">p.<b>42</b></a>
+          <div class="body">
+            <h3>在迴圈中優化 <span class="orig">Optimize in a loop</span></h3>
+            <p class="gist">跑一次並記錄 → 找出成本與延遲的來源 → 一次只改一件事 → 用同一組任務重新評估。重複。Slide 提醒：Assignment 4 會用到。</p>
+            <div class="teach">
+              <ol>
+                <li>Run and profile：記錄每個 call、token、tool 與等待時間。</li>
+                <li>Measure：找出成本與延遲從哪裡來。</li>
+                <li>Change one thing：只改一項，例如 compaction、routing、caching 或平行化。</li>
+                <li>Re-evaluate：用同一組任務，看成功率、花費、p95 latency。</li>
+              </ol>
+              <p>一次只改一件事，才知道效果來自哪裡。</p>
+              <figure class="file"><figcaption>trace.jsonl（範例：每一步記一行）</figcaption><pre><code>{"task": "t07", "step": 12, "model": "standard", "cache_read": 284000, "input": 4100, "output": 820, "tool": "Bash", "tool_ms": 8400, "wait_ms": 1900}</code></pre></figure>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 三種 harness 架構 ===================== -->
+      <section class="part" id="s-arch">
+        <header class="part-head">
+          <p class="range">p.43–52</p>
+          <h2>三種 harness 架構</h2>
+          <p class="lede">同樣的功能，可以放在同一個程式裡、介面後面，或另一個服務裡。差別在於邊界的位置。</p>
+        </header>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 720 312" role="img" aria-label="三種 harness 架構的邊界位置。Monolithic：memory、tools、context、planner、executor 都在同一個 agent 裡，元件之間用函式呼叫。Modular：agent controller 透過介面呼叫可抽換的 provider，全部仍在同一個 process。Microkernel：agent runtime 只管狀態、排程、安全，透過標準協定把執行請求送給獨立部署的記憶、工具、執行服務。">
+              <defs>
+                <marker id="l8b-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/>
+                </marker>
+              </defs>
+              <text x="120" y="18" text-anchor="middle" class="dg-tb">Monolithic</text>
+              <text x="120" y="35" text-anchor="middle" class="dg-ts">全部在一個 runtime</text>
+              <text x="360" y="18" text-anchor="middle" class="dg-tb">Modular</text>
+              <text x="360" y="35" text-anchor="middle" class="dg-ts">一個 controller 加介面</text>
+              <text x="600" y="18" text-anchor="middle" class="dg-tb">Microkernel</text>
+              <text x="600" y="35" text-anchor="middle" class="dg-ts">最小核心加外部服務</text>
+
+              <rect x="8" y="48" width="224" height="214" rx="6" class="dg-frame"/>
+              <text x="16" y="63" class="dg-tm">一個 process</text>
+              <rect x="24" y="72" width="192" height="176" rx="4" class="dg-box-accent"/>
+              <text x="120" y="91" text-anchor="middle" class="dg-tb">Agent</text>
+              <rect x="34" y="100" width="84" height="28" rx="4" class="dg-box"/>
+              <text x="76" y="119" text-anchor="middle" class="dg-t">memory</text>
+              <rect x="122" y="100" width="84" height="28" rx="4" class="dg-box"/>
+              <text x="164" y="119" text-anchor="middle" class="dg-t">tools</text>
+              <rect x="34" y="136" width="84" height="28" rx="4" class="dg-box"/>
+              <text x="76" y="155" text-anchor="middle" class="dg-t">context</text>
+              <rect x="122" y="136" width="84" height="28" rx="4" class="dg-box"/>
+              <text x="164" y="155" text-anchor="middle" class="dg-t">planner</text>
+              <rect x="78" y="172" width="84" height="28" rx="4" class="dg-box"/>
+              <text x="120" y="191" text-anchor="middle" class="dg-t">executor</text>
+              <text x="120" y="230" text-anchor="middle" class="dg-ta">元件之間：函式呼叫</text>
+
+              <rect x="248" y="48" width="224" height="214" rx="6" class="dg-frame"/>
+              <text x="256" y="63" class="dg-tm">一個 process</text>
+              <rect x="264" y="72" width="192" height="36" rx="4" class="dg-box-accent"/>
+              <text x="360" y="95" text-anchor="middle" class="dg-tb">Agent controller</text>
+              <line x1="252" y1="146" x2="468" y2="146" class="dg-accent dg-dash"/>
+              <text x="256" y="140" class="dg-ta">介面</text>
+              <line x1="311" y1="108" x2="311" y2="158" class="dg-accent" marker-end="url(#l8b-ah)"/>
+              <text x="318" y="132" class="dg-tm">sandbox.run(code)</text>
+              <rect x="264" y="160" width="94" height="40" rx="4" class="dg-box"/>
+              <text x="311" y="177" text-anchor="middle" class="dg-t">Sandbox</text>
+              <text x="311" y="193" text-anchor="middle" class="dg-ts">Docker</text>
+              <rect x="362" y="160" width="94" height="40" rx="4" class="dg-box"/>
+              <text x="409" y="177" text-anchor="middle" class="dg-t">Memory</text>
+              <text x="409" y="193" text-anchor="middle" class="dg-ts">Redis</text>
+              <rect x="264" y="208" width="94" height="40" rx="4" class="dg-box"/>
+              <text x="311" y="225" text-anchor="middle" class="dg-t">Tools</text>
+              <text x="311" y="241" text-anchor="middle" class="dg-ts">MCP</text>
+              <rect x="362" y="208" width="94" height="40" rx="4" class="dg-box"/>
+              <text x="409" y="225" text-anchor="middle" class="dg-t">Context</text>
+              <text x="409" y="241" text-anchor="middle" class="dg-ts">Sliding window</text>
+
+              <rect x="488" y="48" width="224" height="76" rx="6" class="dg-frame"/>
+              <text x="496" y="63" class="dg-tm">核心 process</text>
+              <rect x="504" y="72" width="192" height="42" rx="4" class="dg-box-accent"/>
+              <text x="600" y="90" text-anchor="middle" class="dg-tb">Agent runtime</text>
+              <text x="600" y="106" text-anchor="middle" class="dg-ts">狀態・排程・安全</text>
+              <line x1="488" y1="146" x2="712" y2="146" class="dg-accent"/>
+              <text x="492" y="140" class="dg-ta">協定</text>
+              <line x1="677" y1="114" x2="677" y2="164" class="dg-accent" marker-end="url(#l8b-ah)"/>
+              <text x="671" y="138" text-anchor="end" class="dg-ts">執行請求</text>
+              <rect x="488" y="156" width="70" height="106" rx="6" class="dg-frame"/>
+              <rect x="565" y="156" width="70" height="106" rx="6" class="dg-frame"/>
+              <rect x="642" y="156" width="70" height="106" rx="6" class="dg-frame"/>
+              <rect x="493" y="166" width="60" height="44" rx="4" class="dg-box"/>
+              <text x="523" y="184" text-anchor="middle" class="dg-t">記憶服務</text>
+              <text x="523" y="201" text-anchor="middle" class="dg-ts">資料庫</text>
+              <rect x="570" y="166" width="60" height="44" rx="4" class="dg-box"/>
+              <text x="600" y="184" text-anchor="middle" class="dg-t">工具服務</text>
+              <text x="600" y="201" text-anchor="middle" class="dg-ts">Tool API</text>
+              <rect x="647" y="166" width="60" height="44" rx="4" class="dg-box"/>
+              <text x="677" y="184" text-anchor="middle" class="dg-t">執行服務</text>
+              <text x="677" y="201" text-anchor="middle" class="dg-ts">Sandbox</text>
+              <text x="523" y="236" text-anchor="middle" class="dg-tm">container</text>
+              <text x="600" y="236" text-anchor="middle" class="dg-tm">container</text>
+              <text x="677" y="236" text-anchor="middle" class="dg-tm">container</text>
+
+              <text x="120" y="286" text-anchor="middle" class="dg-t">邊界：沒有內部邊界</text>
+              <text x="120" y="303" text-anchor="middle" class="dg-ts">通訊最快；隔離最難</text>
+              <text x="360" y="286" text-anchor="middle" class="dg-t">邊界：介面，仍在同一 process</text>
+              <text x="360" y="303" text-anchor="middle" class="dg-ts">換 provider，不用改 agent</text>
+              <text x="600" y="286" text-anchor="middle" class="dg-t">邊界：協定，跨 process</text>
+              <text x="600" y="303" text-anchor="middle" class="dg-ts">隔離與擴展最強；通訊最貴</text>
+            </svg>
+          </div>
+          <figcaption>差別在於呼叫跨過什麼邊界。Monolithic 只有函式呼叫。Modular 多一層介面，仍在同一個 process。Microkernel 的呼叫經過協定，送到另一個 container 或機器。邊界越外面，隔離越強，每次呼叫也越慢。</figcaption>
+        </figure>
+
+        <article class="slide compact" id="p43" data-pages="43">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=43" target="_blank" rel="noopener" aria-label="開啟原 slide 第 43 頁">p.<b>43</b></a>
+          <div class="body">
+            <h3>分隔頁：agent 架構 <span class="orig">Agent Architecture</span></h3>
+            <p class="gist">三種架構：monolithic、modular、microkernel。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p44" data-pages="44">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=44" target="_blank" rel="noopener" aria-label="開啟原 slide 第 44 頁">p.<b>44</b></a>
+          <div class="body">
+            <h3>三種 harness 架構 <span class="orig">Three harness architectures</span></h3>
+            <p class="gist">責任一步步移出 agent：從程式碼，到介面，到服務。</p>
+            <div class="teach">
+              <ol>
+                <li><b>Monolithic：</b>memory、tools、context、planning、execution 全在一個 runtime。</li>
+                <li><b>Modular：</b>一個 controller 透過介面使用元件：MemoryProvider、ToolProvider、ContextProvider、SandboxProvider。</li>
+                <li><b>Microkernel：</b>核心只保留協調工作（狀態、排程、安全）。Memory、tools、執行都是外部服務，透過標準協定溝通。</li>
+              </ol>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>名稱借自作業系統。Microkernel 只在 kernel 保留排程、process 間通訊等最少功能；檔案系統與驅動程式在 kernel 外，以獨立的 process 執行。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p45" data-pages="45">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=45" target="_blank" rel="noopener" aria-label="開啟原 slide 第 45 頁">p.<b>45</b></a>
+          <div class="body">
+            <h3>Monolithic harness <span class="orig">Monolithic harness</span></h3>
+            <p class="gist">Agent 在一個 runtime 裡擁有一切。簡單、快，但難以替換元件，也難以隔離。</p>
+            <div class="teach">
+              <figure class="file"><figcaption>monolithic.py（依 slide 的草稿整理）</figcaption><pre><code>class CodingAgent:
+    def __init__(self):
+        self.memory   = Memory()
+        self.tools    = Tools()
+        self.context  = ContextManager()
+        self.planner  = Planner()
+        self.executor = Executor()
+
+    def run(self, task):
+        while not self.finished:
+            action = self.planner.plan(task, self.context)
+            result = self.executor.execute(action)
+            self.context.update(result)</code></pre></figure>
+              <div class="table-wrap"><table>
+                <thead><tr><th>優點</th><th>缺點</th></tr></thead>
+                <tbody>
+                  <tr><td>容易實作、容易除錯</td><td>很難只換一個元件</td></tr>
+                  <tr><td>通訊開銷最小</td><td>元件緊密耦合</td></tr>
+                  <tr><td>內部狀態容易共用</td><td>很難和其他 agent 共用基礎設施</td></tr>
+                  <tr><td>執行開銷低</td><td>很難強制隔離</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p46" data-pages="46">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=46" target="_blank" rel="noopener" aria-label="開啟原 slide 第 46 頁">p.<b>46</b></a>
+          <div class="body">
+            <h3>Modular harness <span class="orig">Modular harness</span></h3>
+            <p class="gist">一個 controller 透過介面委派工作。元件可以抽換，但 controller 仍掌管整個生命週期。</p>
+            <div class="teach">
+              <figure class="file"><figcaption>modular.py（依 slide 的草稿整理）</figcaption><pre><code>agent = CodingAgent(
+    memory_provider=RedisMemory(),
+    tool_provider=MCPTools(),
+    context_provider=SlidingWindowContext(),
+    sandbox_provider=DockerSandbox(),  # 換成 Firecracker：只改這一行
+)</code></pre></figure>
+              <p>Agent 只認識介面，例如「有 <code>run(code)</code> 的 sandbox」，不知道背後是 Docker 還是 Firecracker。測試時可以換成假的 provider。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>優點</th><th>缺點</th></tr></thead>
+                <tbody>
+                  <tr><td>容易替換元件</td><td>Controller 仍掌管生命週期</td></tr>
+                  <tr><td>容易測試與擴充</td><td>協調邏輯越來越複雜</td></tr>
+                  <tr><td>責任分得清楚</td><td>元件仍可能一起當掉</td></tr>
+                  <tr><td>第三方實作可以直接接上</td><td>要一起調校元件時，還是得改 controller</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p47" data-pages="47">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=47" target="_blank" rel="noopener" aria-label="開啟原 slide 第 47 頁">p.<b>47</b></a>
+          <div class="body">
+            <h3>Agent microkernel <span class="orig">Agent microkernel</span></h3>
+            <p class="gist">Runtime 只負責協調；能力由外部服務提供：記憶服務接資料庫，工具服務接 tool API，執行服務管 sandbox。</p>
+            <div class="teach">
+              <p>每個服務可以跑在獨立的 container 或機器上。Runtime 用標準協定呼叫它們。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>優點</th><th>缺點</th></tr></thead>
+                <tbody>
+                  <tr><td>每個服務獨立擴展</td><td>通訊開銷較高</td></tr>
+                  <tr><td>故障隔離較好</td><td>故障模式更多</td></tr>
+                  <tr><td>確實執行時，隔離更強</td><td>端到端除錯更難</td></tr>
+                  <tr><td>基礎設施共用、集中管理</td><td>需要標準的協定與生命週期</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>L2 的 MCP 就是這種標準協定。Agent 不需要知道 GitHub 怎麼連；它只對 MCP server 發出 tool call。</p></div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p48" data-pages="48">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=48" target="_blank" rel="noopener" aria-label="開啟原 slide 第 48 頁">p.<b>48</b></a>
+          <div class="body">
+            <h3>例子：執行一段 Python <span class="orig">Running one Python snippet</span></h3>
+            <p class="gist">同一件事在三種架構裡走的路不同。Monolithic 最少跳轉；microkernel 由執行服務負責配置、隔離與 sandbox 的生命週期。</p>
+            <div class="teach">
+              <div class="table-wrap"><table>
+                <thead><tr><th>架構</th><th>路徑</th><th>特性</th></tr></thead>
+                <tbody>
+                  <tr><td>Monolithic</td><td>Agent 直接在本機執行 Python</td><td>跳轉最少；很難強制隔離</td></tr>
+                  <tr><td>Modular</td><td>Agent 呼叫 <code>SandboxProvider.run(code)</code></td><td>換 provider，不用改 agent</td></tr>
+                  <tr><td>Microkernel</td><td>Runtime 送出執行請求 → 執行服務配置 sandbox → 執行 → 回傳結果</td><td>執行服務管配置、隔離、生命週期</td></tr>
+                </tbody>
+              </table></div>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>Microkernel 的一次執行請求（示意，不是真實的 API）：</p>
+                <pre><code>POST /v1/executions
+{"language": "python", "code": "print(1 + 1)", "timeout_s": 30}
+
+200 OK
+{"sandbox_id": "sb-42", "stdout": "2\n", "exit_code": 0}</code></pre>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p49" data-pages="49-50">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=49" target="_blank" rel="noopener" aria-label="開啟原 slide 第 49 到 50 頁">p.<b class="multi">49–50</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">這 2 頁沒有可擷取的文字。前後頁在比較三種架構，請直接看原 slide。</p>
+          </div>
+        </article>
+
+        <article class="slide" id="p51" data-pages="51">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=51" target="_blank" rel="noopener" aria-label="開啟原 slide 第 51 頁">p.<b>51</b></a>
+          <div class="body">
+            <h3>三種設計的取捨 <span class="orig">Trade-offs of the three designs</span></h3>
+            <p class="gist">Microkernel 用簡單與低開銷，換取隔離、共用與擴展。單一 agent 用 monolithic；多 agent 的基礎設施用 microkernel。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th></th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
+                <tbody>
+                  <tr><td>設計原則</td><td>全部整合</td><td>介面抽象</td><td>最小核心 + 服務</td></tr>
+                  <tr><td>中央 controller</td><td>有</td><td>有</td><td>有，但縮小</td></tr>
+                  <tr><td>替換元件</td><td>困難</td><td>容易</td><td>容易（協定相符時）</td></tr>
+                  <tr><td>執行隔離</td><td>可選</td><td>可選</td><td>架構的重點</td></tr>
+                  <tr><td>元件部署</td><td>通常一起</td><td>一起或分開</td><td>常常各自獨立</td></tr>
+                  <tr><td>獨立擴展</td><td>有限</td><td>可以</td><td>強</td></tr>
+                  <tr><td>通訊成本</td><td>低</td><td>低到中</td><td>可能較高</td></tr>
+                  <tr><td>典型用途</td><td>單獨的 agent</td><td>Agent framework</td><td>Multi-agent 基礎設施</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p52" data-pages="52">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=52" target="_blank" rel="noopener" aria-label="開啟原 slide 第 52 頁">p.<b>52</b></a>
+          <div class="body">
+            <h3>圖片頁</h3>
+            <p class="gist">沒有可擷取的文字。位置在架構比較與 8 個 harness 的案例之間，請直接看原 slide。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 8 個 harness ===================== -->
+      <section class="part" id="s-cases">
+        <header class="part-head">
+          <p class="range">p.53–61</p>
+          <h2>案例：8 個 harness 的獨特設計</h2>
+          <p class="lede">讀每個設計時問一件事：它解決成本、速度、安全、可靠性中的哪一個問題？</p>
+        </header>
+
+        <article class="slide" id="p53" data-pages="53">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=53" target="_blank" rel="noopener" aria-label="開啟原 slide 第 53 頁">p.<b>53</b></a>
+          <div class="body">
+            <h3>8 個 harness <span class="orig">The eight harnesses</span></h3>
+            <p class="gist">8 個 coding agent harness 的總表。p.54–60 各講一個 harness 的獨特設計；Claude Code 除外，L2 已經拆解過它。</p>
+            <div class="teach">
+              <div class="table-wrap"><table class="wide">
+                <thead><tr><th>簡稱</th><th>Harness</th><th>開發者 · 語言</th><th>一句話</th></tr></thead>
+                <tbody>
+                  <tr><td>CC</td><td>Claude Code</td><td>Anthropic · TypeScript（閉源）</td><td>包住 Claude 的 policy 層與 typed hook</td></tr>
+                  <tr><td>CX</td><td>Codex CLI</td><td>OpenAI · Rust</td><td>先 sandbox，再詢問</td></tr>
+                  <tr><td>DSH</td><td>DeepSeek Harness</td><td>DeepSeek AI · TypeScript</td><td>一切都是 plugin，連 loop 也是</td></tr>
+                  <tr><td>OC</td><td>OpenCode</td><td>Anomaly（SST）· TypeScript、Bun</td><td>一個 session server 加上輕量 client</td></tr>
+                  <tr><td>PI</td><td>Pi</td><td>Mario Zechner / Earendil · TypeScript</td><td>小核心，用 TypeScript 擴充</td></tr>
+                  <tr><td>OMP</td><td>oh-my-pi</td><td>Can Bölük / Stencil Labs · TypeScript + Rust</td><td>Pi 的 fork，內建原生 tool 與 IDE</td></tr>
+                  <tr><td>CLAW</td><td>OpenClaw</td><td>OpenClaw Foundation · TypeScript</td><td>接各種聊天頻道的助理 gateway</td></tr>
+                  <tr><td>HM</td><td>Hermes Agent</td><td>Nous Research · Python</td><td>會自己寫 skill 的 agent</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p54" data-pages="54">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=54" target="_blank" rel="noopener" aria-label="開啟原 slide 第 54 頁">p.<b>54</b></a>
+          <div class="body">
+            <h3>Codex CLI 獨有的設計 <span class="orig">Unique to Codex CLI</span></h3>
+            <p class="gist">指令先在不能連網的 sandbox 裡執行；只有要離開 sandbox，才問你。Patch 必須符合一個 Lark 文法。</p>
+            <div class="teach">
+              <ul>
+                <li><b>先 sandbox，再核准。</b>L2 p.12 的 Manual 模式每個動作都問。問太多次，人會不看就按同意。Codex CLI 把防線放在 sandbox：裡面的指令直接跑，最壞情況也出不了 sandbox。要越過邊界時，才需要你核准。</li>
+                <li><b>Patch 符合文法。</b>Lark 是 Python 的一套 parser 工具。Codex 用 Lark 文法規定 patch 的外框（envelope），harness 因此能可靠地解析 patch。這和 p.21 的 structured decoding 同一類：用文法約束輸出。套用時，每段 hunk 最多比對 4 輪，從完全相同開始逐輪放寬。</li>
+              </ul>
+              <figure class="file"><figcaption>Codex 的 patch 外框（簡化）</figcaption><pre><code>*** Begin Patch
+*** Update File: src/auth/session.py
+@@ def create_session(user):
+-    ttl = 60
++    ttl = 3600
+*** End Patch</code></pre></figure>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p55" data-pages="55">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=55" target="_blank" rel="noopener" aria-label="開啟原 slide 第 55 頁">p.<b>55</b></a>
+          <div class="body">
+            <h3>DeepSeek Harness 獨有的設計 <span class="orig">Unique to DeepSeek Harness</span></h3>
+            <p class="gist">連 agent loop 都是 plugin。每個 request 是 session log 的凍結 view。編輯採用 compare-and-swap：model 讀過之後檔案變了，這次編輯就失敗。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Loop 也是 plugin。</b>Loop、adapter、tool、log、approval 都是 plugin。YAML 設定層可以替換任何一個。想試新的 loop 策略，不用 fork 整個 harness。</li>
+                <li><b>Request 來自 log。</b>Harness 只往 log 尾端加 entry。所以任何一次 request 都能從 log 重建，方便除錯與重播。Log 只往後加，前一個 request 也就是下一個的 prefix，prefix cache 容易命中。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>Compare-and-swap（CAS）擋下的情況：</p>
+                <ol>
+                  <li>Model 讀取 <code>config.py</code>，這時是版本 v1。</li>
+                  <li>你在編輯器裡改了 <code>config.py</code>，變成 v2。</li>
+                  <li>Model 依照 v1 的內容提出修改。</li>
+                </ol>
+                <p>沒有檢查時，這次修改可能蓋掉你的改動，或改到錯的位置。CAS 記下 model 讀取時的版本，寫入前再比對一次。名稱來自 CPU 的 compare-and-swap 指令。</p>
+                <pre><code>def edit(path, old, new):
+    if file_hash(path) != hash_at_last_read[path]:
+        return "error: file changed since you read it. Read it again."
+    apply_edit(path, old, new)</code></pre>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p56" data-pages="56">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=56" target="_blank" rel="noopener" aria-label="開啟原 slide 第 56 頁">p.<b>56</b></a>
+          <div class="body">
+            <h3>OpenCode 獨有的設計 <span class="orig">Unique to OpenCode</span></h3>
+            <p class="gist">Harness 本身是一個 server。編輯允許模糊比對，但有大小上限。每一步都存快照，<code>/undo</code> 能還原檔案。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Harness 是 server。</b>TUI、SDK、web app 都呼叫同一個 OpenAPI HTTP server。Session 存在 server 裡；每個介面都只是 client。</li>
+                <li><b>有上限的模糊編輯。</b>Model 寫出的舊文字常和檔案有小差異，例如縮排。OpenCode 依序試 9 種 replacer，從完全相符到只對齊錨點（anchor）。比對越寬鬆，越可能改錯地方。所以模糊比對的範圍太大時，harness 拒絕這次編輯。</li>
+                <li><b>每一步一個快照。</b>一個 shadow git repository 記錄每一步的檔案，所以 <code>/undo</code> 也能還原檔案，不只撤回對話。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p57" data-pages="57">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=57" target="_blank" rel="noopener" aria-label="開啟原 slide 第 57 頁">p.<b>57</b></a>
+          <div class="body">
+            <h3>Pi 獨有的設計 <span class="orig">Unique to Pi</span></h3>
+            <p class="gist">核心很小：4 個 tool，沒有 MCP、subagent、approval。Cache 保溫前先算錢：預期省下 $0.05 以上，才送 keep-alive。</p>
+            <div class="teach">
+              <ul>
+                <li><b>最小核心。</b>其他功能都由 extension 提供。Tool 少，tool 定義就短，每一步重送的固定 prefix 也小（L2 p.8）。</li>
+                <li><b>給別的專案用的函式庫。</b>pi-ai 用 10 種 wire API 支援 42 家 provider。Wire API 指 HTTP request 的格式，很多 provider 共用同一種。Slide 提到另有 3 個專案使用 Pi 的程式碼。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>為什麼保溫要先算錢。Claude API 的 cache 預設存活 5 分鐘，每次讀取重新計時（官方文件，2026-10）。以 200K 的 prefix 和 p.16 的單位計：一次 keep-alive 讀 cache，花 20K；過期後以 1.25× 重寫，花 250K。</p>
+                <p>使用者 5 分鐘內回來，或再也不回來，保溫都是浪費。所以 Pi 先估預期的節省，再決定送不送。</p>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p58" data-pages="58">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=58" target="_blank" rel="noopener" aria-label="開啟原 slide 第 58 頁">p.<b>58</b></a>
+          <div class="body">
+            <h3>oh-my-pi 獨有的設計 <span class="orig">Unique to oh-my-pi</span></h3>
+            <p class="gist">Hashline 編輯：用 4 位 hex 的檔案 tag 加行號指定位置，model 不用重打舊文字。IDE 功能在同一個 process 裡。</p>
+            <div class="teach">
+              <ul>
+                <li><b>Hashline 編輯。</b>重打舊文字要花 output token，而 output 最貴（5×）。重打錯一個字，編輯就失敗。改用位置指定，兩個問題都消失。但檔案改過之後，同一個行號可能指到別的內容。所以行號編輯要能確認檔案沒變（對照 p.55 的 CAS）。</li>
+                <li><b>IDE 在 process 裡。</b>一個 shell 跨所有 call 持續開著（p.34 的 persistent session）。原生 tool 提供搜尋、AST、LSP、debugger。LSP 能直接找到定義與引用，不用靠 grep 猜。</li>
+                <li><b>特殊的 context 方法。</b>snapcompact 把舊歷史轉成圖片，是另一種 compaction。TTSR 在 regex 符合時停下並重試。可以在生成途中攔下走錯的方向，不用等錯的輸出寫完再修。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <pre><code># 字串取代：model 要重打舊文字（Claude Code 的 Edit）
+Edit(file_path="src/auth/session.py",
+     old_string="    ttl = 60",
+     new_string="    ttl = 3600")
+
+# hashline 的概念（示意，不是真實語法）
+edit src/auth/session.py tag=3f9a line=42 -&gt; "    ttl = 3600"</code></pre>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p59" data-pages="59">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=59" target="_blank" rel="noopener" aria-label="開啟原 slide 第 59 頁">p.<b>59</b></a>
+          <div class="body">
+            <h3>OpenClaw 獨有的設計 <span class="orig">Unique to OpenClaw</span></h3>
+            <p class="gist">27 個聊天頻道的訊息，進入每個 session 一條的 queue lane。Compaction 前，先用一個看不見的 turn 寫下有日期的筆記。不可信的文字用 fence 隔開。</p>
+            <div class="teach">
+              <ul>
+                <li><b>有 queue lane 的 gateway。</b>同一個 session 的訊息排在同一條 lane，依序處理。Run 進行中又來新訊息時，queue mode 決定怎麼處理。</li>
+                <li><b>Compaction 前先存 memory。</b>Compaction 會丟掉細節（L2 p.16）。所以 OpenClaw 先跑一個 silent turn，讓 agent 把重點寫成有日期的筆記。之後同時用全文搜尋與向量搜尋找回筆記。全文搜尋抓精確的名稱與 ID；向量搜尋抓意思相近、用字不同的內容。</li>
+                <li><b>Fence、taint、sentinel。</b>Fence 把不可信的文字（網頁、email）包起來，標明它是資料。讀過網路的 turn 會帶上 taint 標記；一般的 taint tracking 會對這種 turn 做更嚴的檢查。Sentinel 一般是 canary：放在 secret 旁的假值，出現在輸出裡就代表外洩。Slide 沒有細說 OpenClaw 怎麼處理這兩種訊號。</li>
+              </ul>
+              <aside class="callout example"><span class="tag">EXAMPLE</span><div>
+                <p>Claude Code 的近似做法：<code>PreCompact</code> hook 在 compaction 前備份 transcript。差別：hook 是固定的程式；OpenClaw 的 silent turn 由 model 挑重點。</p>
+                <pre><code>{
+  "hooks": {
+    "PreCompact": [
+      { "hooks": [ { "type": "command", "command": ".claude/hooks/archive.sh" } ] }
+    ]
+  }
+}</code></pre>
+              </div></aside>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="p60" data-pages="60">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=60" target="_blank" rel="noopener" aria-label="開啟原 slide 第 60 頁">p.<b>60</b></a>
+          <div class="body">
+            <h3>Hermes Agent 獨有的設計 <span class="orig">Unique to Hermes Agent</span></h3>
+            <p class="gist">背景的 fork 檢查 nudged turn，再修改 memory 與 skill。Context 用到 50% 就 compaction，是 8 個中最早的。Tool 執行前，先把 tool call 寫進資料庫。</p>
+            <div class="teach">
+              <ul>
+                <li><b>會學習的 fork。</b>主 agent 繼續工作；背景的 fork 檢查每個 nudged turn（slide 的用語），把學到的事寫進 memory 和 skill。風險同 L2 p.31：寫錯的 memory 會誤導之後的每個 session。</li>
+                <li><b>最早的 compaction。</b>以 1M 的 window 算，Hermes 在 500K 時就壓縮。早壓縮讓之後的每一步更便宜。但 p.26 的反向成本會更常發生：丟掉的檔案要重讀，cache 要重寫。</li>
+                <li><b>執行前先存檔。</b>這是資料庫 write-ahead log 的概念：副作用發生前，先把 tool call 寫進 session 資料庫。Process 在執行中當掉，重啟後 harness 知道哪些 call 已經開始，就能避免盲目重做，例如重複寄出同一封信。</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide compact" id="p61" data-pages="61">
+          <a class="tab" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=61" target="_blank" rel="noopener" aria-label="開啟原 slide 第 61 頁">p.<b>61</b></a>
+          <div class="body">
+            <h3>下一堂 <span class="orig">Next class</span></h3>
+            <p class="gist">Agent 的 safety 與 security，以及會自我演化的 harness。</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 附錄：Assignment 3 ===================== -->
+      <section class="part" id="s-a3">
+        <header class="part-head">
+          <p class="range">附錄 · 8_assignment3.pdf</p>
+          <h2>附錄：Assignment 3（MadsOpt）</h2>
+          <p class="lede">同一堂課發布的作業說明。卡片依主題排序，tab 連到整份 PDF。作業的三個指標正好是本堂主題：解出幾題、每題的花費、每題的時間。</p>
+        </header>
+
+        <article class="slide" id="a3-1" data-aux-pages="1">
+          <a class="tab" href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener" aria-label="開啟 Assignment 3 的原 slides">A3.<b>1</b></a>
+          <div class="body">
+            <h3>作業概觀 <span class="orig">Assignment 3: MadsOpt: Harness Competition</span></h3>
+            <p class="gist">一場 harness 競賽：26 個任務，分屬 3 種 container。Agent 和任務在不同的 container，用 HTTP 溝通。</p>
+            <div class="teach">
+              <p>評估是離線的：唯一連得到的主機是 <code>api.cs2680.com</code>。所以評估時，agent 不能上網查資料，也不能下載套件。需要的東西要事先放進你的程式。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="a3-2" data-aux-pages="2">
+          <a class="tab" href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener" aria-label="開啟 Assignment 3 的原 slides">A3.<b>2</b></a>
+          <div class="body">
+            <h3>流程 <span class="orig">Framework</span></h3>
+            <p class="gist">Dispatcher 把任務交給 agent；agent 產生 patch；patch 經過評估，結果回到 agent。最多 5 個任務同時跑。</p>
+            <div class="teach">
+              <ol>
+                <li>Dispatcher 把任務資訊傳給你的 agent。</li>
+                <li>Agent 處理任務，產生一個 patch。</li>
+                <li>評估 patch，把結果送回 agent。</li>
+              </ol>
+              <p>結果會回到 agent，所以 agent 能依評估結果決定下一步，例如 p.23 的「失敗才升級」。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="a3-3" data-aux-pages="3">
+          <a class="tab" href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener" aria-label="開啟 Assignment 3 的原 slides">A3.<b>3</b></a>
+          <div class="body">
+            <h3>限制 <span class="orig">Limits</span></h3>
+            <p class="gist">三種 model：Expert、Standard、Starter。每次 <code>evaluate()</code> 最多 35 分鐘，總共最多 4 小時。花費上限：每天 $30，每次 run $10。</p>
+            <div class="teach">
+              <p>如果一次 run 跑完全部 26 個任務，平均每個任務只有約 $0.38。這就是 p.23 的 routing 與 p.27 的預算上限派上用場的地方。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="a3-4" data-aux-pages="4">
+          <a class="tab" href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener" aria-label="開啟 Assignment 3 的原 slides">A3.<b>4</b></a>
+          <div class="body">
+            <h3>程式結構 <span class="orig">Code structure</span></h3>
+            <p class="gist">只有 <code>src</code> 資料夾會上傳：壓成 <code>src.zip</code>。Dispatcher 與評分腳本和 leaderboard 上的版本相同，不要修改。</p>
+            <div class="teach">
+              <figure class="file"><figcaption>作業目錄</figcaption><pre><code>init.sh                      # 產生 session log
+package_claude_sessions.py   # 產生 session log
+src/                         # agent 邏輯與 sandbox request，唯一上傳的部分
+dispatcher/                  # 與 leaderboard 相同，不要改
+evaluation_scripts/          # 評分測試，與 leaderboard 相同，不要改</code></pre></figure>
+              <p>為什麼不要改後兩個：leaderboard 用自己的版本。你在本機改了，本機的分數就和 leaderboard 對不上。Session log 的規定見 <a href="#p4">p.4</a>：不能改動。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="a3-5" data-aux-pages="5">
+          <a class="tab" href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener" aria-label="開啟 Assignment 3 的原 slides">A3.<b>5</b></a>
+          <div class="body">
+            <h3>提交到 leaderboard <span class="orig">Leaderboard submission</span></h3>
+            <p class="gist">提交 <code>src.zip</code>。提交依序排隊處理；看起來沒希望的，可以取消。指標：解出的任務數、每個解出任務的花費、每個解出任務的時間。</p>
+            <div class="teach">
+              <ul>
+                <li>登入資訊在原 slide 上，供修課學生使用。</li>
+                <li>取消的提交仍然算次數，也會用掉當天的預算。</li>
+              </ul>
+              <p>指標以「解出的任務」為單位。花在沒解出任務上的錢與時間，也會拉高這兩個數字。所以卡住的任務要早點停（p.27）。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" id="a3-6" data-aux-pages="6">
+          <a class="tab" href="https://cs2680.com/slides/8_assignment3.pdf" target="_blank" rel="noopener" aria-label="開啟 Assignment 3 的原 slides">A3.<b>6</b></a>
+          <div class="body">
+            <h3>評分 <span class="orig">Grading</span></h3>
+            <p class="gist">Leaderboard 80 分、writeup 10 分、影片 10 分。Leaderboard 分數由名次 r 決定：有任一次提交達到 baseline（16 題），得分是 <code>max(81 − r, 50)</code>；否則是 <code>81 − r</code>。</p>
+            <div class="teach">
+              <ul>
+                <li>Leaderboard 用 skyline 圖呈現三個指標。最低要求：解出 7 個任務。</li>
+                <li>名次 r 計算排在你前面的人數，同分同名次，例如 1、1、1、4。</li>
+              </ul>
+              <p>算幾個例子：第 1 名得 80 分，剛好是滿分。第 4 名得 77 分。第 40 名有到 baseline 得 50 分，沒到只有 41 分。所以先穩定解出 16 題，等於保住 50 分。</p>
+              <aside class="callout note"><span class="tag">NOTE</span><div><p>Skyline 是資料庫用語：沒有別的資料在所有指標上都比它好，它就在 skyline 上。Slide 沒有說明三個指標怎麼合成名次。</p></div></aside>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===================== 收尾 ===================== -->
+      <section class="wrap" id="wrap" aria-label="重點與自我檢查">
+        <h2>帶走的重點</h2>
+        <ul class="takeaways">
+          <li>成本是一串乘數。使用量會成長，所以要壓低 turn、step、token 和單價。</li>
+          <li>每一步都重讀整個 context。Turn 數的影響是平方；cache read 是 token 的大宗。保持 prefix 穩定，丟掉過期的內容。</li>
+          <li>每個省錢手段都有反向成本。在同一組任務上量淨效果，並替每個任務設上限與停止條件。</li>
+          <li>完成時間由 critical path 決定。平行與 speculation 用更多 token 換更少等待。</li>
+          <li>架構的邊界越往外，隔離與擴展越強，每次呼叫也越貴。</li>
+        </ul>
+
+        <h2>自我檢查</h2>
+        <div class="quiz">
+          <details>
+            <summary>一個 session 有 20 個 turn，每個 turn 新增 10K token。總共送出多少 input token？拆成 2 個各 10 turn 的 session 呢？</summary>
+            <div class="answer"><p>一個 session：<code>10K × (1 + 2 + … + 20) = 2.1M</code>。兩個 session：<code>2 × 10K × 55 = 1.1M</code>，約一半。每個 session 的 turn 數減半，成本降到約四分之一；兩個加起來是一半。</p></div>
+          </details>
+          <details>
+            <summary>一步有 400K cache read、2K fresh input、2K output。用 p.16 的 1 : 10 : 50，哪一項最貴？該先優化什麼？</summary>
+            <div class="answer"><p>以 input-token 單位計：cache read 是 40K，fresh input 是 2K，output 是 10K。Cache read 最貴，所以先縮小 context（p.17），不是先縮短 output。</p></div>
+          </details>
+          <details>
+            <summary>你把 compaction 門檻從 90% 調到 50%，總成本反而上升。可能的原因？</summary>
+            <div class="answer"><p>反向成本（p.26）：丟掉的檔案要重讀；摘要改變 prefix，cache 要重寫；產生摘要本身也要一次 model call。壓縮越頻繁，這些成本越常發生。要在同一組任務上比較淨成本。</p></div>
+          </details>
+          <details>
+            <summary>DeepSeek Harness 為什麼用 compare-and-swap 編輯？沒有它會怎樣？</summary>
+            <div class="answer"><p>Model 讀檔之後，你、另一個 subagent 或 formatter 可能改過檔案。Model 依舊版本提出的修改，可能蓋掉別人的改動，或改到錯的位置。CAS 讓這次編輯失敗，要求 model 先重讀檔案。</p></div>
+          </details>
+        </div>
+
+        <h2>延伸閱讀</h2>
+        <ul class="reading">
+          <li><a href="https://cs2680.com/notes/cost-effective-agents.html" target="_blank" rel="noopener">課程筆記：Cost-effective agents</a></li>
+          <li>本頁價格與設定範例的依據：<a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">pricing</a>、<a href="https://platform.claude.com/docs/en/build-with-claude/batch-processing" target="_blank" rel="noopener">batch processing</a>、<a href="https://platform.claude.com/docs/en/build-with-claude/effort" target="_blank" rel="noopener">effort</a>、<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">CLI reference</a> 官方文件</li>
+        </ul>
+
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與總覽">
+        <a class="prev" href="l07.html"><span>← 上一堂 L7</span>Agent 評估</a>
+        <a class="next" href="index.html"><span>回總覽 →</span>CS2680 觀念導讀</a>
+      </nav>
+      <p class="fineprint">本頁是 CS2680 slides 的學習筆記：用自己的話改寫並延伸說明。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。價格與設定範例依據 2026 年 10 月的 Claude API 與 Claude Code 官方文件。圖片頁沒有可擷取的文字，請對照原 slide。</p>
+
+    </div>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

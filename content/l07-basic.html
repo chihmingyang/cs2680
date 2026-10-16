@@ -1,0 +1,99 @@
+        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
+          <p class="qset-lede">看 slides 之前先讀一遍這 9 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L7 基礎題（帶著問題看 slides）：Agent 評估" data-slides="https://cs2680.com/slides/7_agent_design_4.pdf">複製基礎題</button>
+            <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
+          </div>
+          <ol class="qlist qlist-basic">
+            <li class="bq" id="b1">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=7" target="_blank" rel="noopener">p.7</a> · 兩種評估層級</p>
+                <p class="qtext">評估 agent 分哪兩個層級？Component-level 看哪四種能力？End-to-end 看哪三個數字？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Component-level 看 agent 內部：planning（任務拆解）、tool use（找到、選對、填對參數）、memory（擷取、整合、取回）、error recovery（出錯後能不能修正）。</p>
+                  <p>End-to-end 只看結果：success rate、每個任務的 cost、完成的 latency。前者回答為什麼失敗，後者回答能不能用。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b2">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=9" target="_blank" rel="noopener">p.9–11</a> · 評估目標與 metric</p>
+                <p class="qtext">評估目標分哪五種？Agent 時代多了哪些 metric？Cost 和 latency 各常漏算什麼？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>五種：預測文字、給出正確答案、給出較受偏好的回覆、寫出能運作的程式、完成互動任務。越往後，grader 越需要執行環境。</p>
+                  <p>早期用 perplexity、accuracy / F1、win rate。Agent 多了 pass@k（k 次至少 1 次成功）、pass^k（k 次全部成功，τ-bench 提出）、cost、latency。Cost 常漏算 tool call 與 cache miss；latency 不只 LLM 的時間，tool 執行與跑測試也算。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b3">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=12" target="_blank" rel="noopener">p.12</a> · 評估 loop</p>
+                <p class="qtext">Benchmark 的評估 loop 有哪幾步？什麼時候停？最後 evaluator 可以依哪三種東西打分？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>先把環境重置到任務的初始狀態。然後 agent 反覆 observe 環境、選一個 action、執行它。直到 agent 結束，或預算（步數、金額、時間）用完。</p>
+                  <p>Evaluator 依最終答案、最終環境狀態、trajectory 打分。每個 benchmark 選的不同：GAIA 只看答案，WebArena 與 OSWorld 看狀態，τ-bench 看資料庫加回覆。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b4">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=13" target="_blank" rel="noopener">p.13–17</a> · 四個 benchmark 的差別</p>
+                <p class="qtext">GAIA 怎麼評分，它量不到什麼？WebArena 和 OSWorld 的 observation 差在哪裡？OSWorld 2.0 為什麼加 checkpoint？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>GAIA 有 466 題，只看最終答案：正規化後完全相符得 1 分，否則 0 分。它量得到推理、檢索、選 tool；量不到改變外界的動作，例如寄 email、訂機票、改資料庫。</p>
+                  <p>WebArena 給 accessibility tree，每個元素有 ID，agent 對 ID 做 click 或 type。OSWorld 只給螢幕截圖，agent 要自己算出滑鼠座標（GUI grounding）。OSWorld 2.0 的 108 個流程常超過 1 小時、數百步，每個約 27 個 checkpoint，讓做到一半也能給部分分數。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b5">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=18" target="_blank" rel="noopener">p.18–20</a> · SWE-bench 與 τ-bench</p>
+                <p class="qtext">SWE-bench 的測試分哪兩組，各抓什麼？τ-bench 的 reward 怎麼算？pass^k 是什麼意思？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>一組原本失敗，修好後要通過；另一組原本就通過，改完後仍要通過，用來抓「改壞別的功能」。Patch 套上去跑測試，兩組都過才算解決。</p>
+                  <p>τ-bench 的 r = r_action × r_output：最終資料庫和目標狀態一致，而且回覆含必要資訊，任一項是 0 總分就是 0。pass^k 是同一題獨立跑 k 次全部成功的機率；pass@k 只要 1 次成功。客服 agent 要看 pass^k。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b6">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=21" target="_blank" rel="noopener">p.21–24</a> · Terminal-Bench 與總表</p>
+                <p class="qtext">Terminal-Bench 為什麼介於 SWE-bench 和 OSWorld 之間？TB 4.0 為什麼刪題，剩幾題？TheAgentCompany 的部分分數怎麼算？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Agent 在 container 裡下 shell 指令，範圍比修一個 repo 的 issue 大（設定、debug、建置），又不需要 OSWorld 的滑鼠座標。評分是對最終系統狀態跑測試腳本。TB 4.0 刪掉已飽和的題目，從 89 題剩 66 題；解答不公開，timeout 8 小時。</p>
+                  <p>S_partial = 0.5 × earned/total + 0.5 × S_full。拿到 7/8 個 checkpoint 但沒完成，得 0.44；全部完成才是 1.00。p.24 的總表裡，只有 GAIA 只看答案，其他 7 個都檢查某種狀態。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b7">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=26" target="_blank" rel="noopener">p.26–27</a> · Leakage</p>
+                <p class="qtext">Data leakage 有哪四層？Agent 的表現是哪些東西的函數？為什麼「model 沒用測試集訓練」不夠？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>四層：training leakage（題目進了訓練資料）、eval-time leakage（評估時上網抄到修正）、environment leakage（sandbox 暴露未來的 commit 或隱藏測試）、benchmark overfitting（用公開測試集調 prompt 與 scaffold）。</p>
+                  <p>P = f（LLM、prompt、scaffold、tools、retriever、memory、environment）。每個輸入都能帶進答案：few-shot 範例取自測試題、RAG 收錄答案、memory 存了上一輪、web search 搜到解答、開發者反覆看失敗案例。Model 只是其中一個輸入。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b8">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=28" target="_blank" rel="noopener">p.28–32</a> · 單一 turn 與其他挑戰</p>
+                <p class="qtext">多數 benchmark 只有一個 user turn，這會漏掉什麼？多輪評估要測哪三件事？p.32 還列了哪四個挑戰，成本的例子差幾倍？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>真實工作會模糊、會修改、會中斷；單一 turn 的評分會獎勵有自信地猜，問釐清問題反而拿不到分。多輪要測 clarification（會不會問）、recovery（收到糾正會不會重新規劃）、memory（前面的限制後面還記不記得）。</p>
+                  <p>四個挑戰：成本與 latency、非確定性、安全與副作用、評分方式本身。成本的例子：一次 200 步花 40 美元，另一次 12 步花 0.30 美元，兩次都成功，相差約 133 倍。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b9">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=33" target="_blank" rel="noopener">p.33–37</a> · 飽和與 Pareto frontier</p>
+                <p class="qtext">Frontier model 追上 benchmark 要多久？SWE-bench Verified 從幾分升到幾分？什麼叫 A 支配 B，Pareto frontier 是什麼？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>6 到 39 個月：GLUE 14 個月、MMLU 39 個月、GPQA Diamond 10 個月、ARC-AGI-3 只要 6 個月。SWE-bench Verified 從 33% 到 95%，花了 22 個月。所以看到高分，先確認 benchmark 有沒有飽和。</p>
+                  <p>真實 agent 要看能力、成本、速度三個維度。A 在每個 metric 都不比 B 差，且至少一個更好，就說 A 支配 B。沒有任何 agent 能支配的那群是 Pareto frontier（Rank 1）；拿掉它們後不受支配的是 Rank 2。</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>

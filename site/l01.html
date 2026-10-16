@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>L1 課程總覽與 AI 系統 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <span class="here">L1 / 8</span>
+      <a href="l02.html" rel="next">L2 →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page gutter article" data-lecture="l01" data-format="article" data-pdf="1_intro.pdf" data-pages-total="52">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 01 · 2026-09-02 · Part I</p>
+    <h1>課程總覽與 AI 系統</h1>
+    <p class="en-title">Course overview and logistics</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/1_intro.pdf" target="_blank" rel="noopener">1_intro.pdf ↗</a></li>
+      <li><span class="k">頁數</span>52</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 20 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">這堂前半講課務，後半畫出整門課的地圖。它回答兩個問題：AI 系統和傳統系統差在哪裡，以及 agent 為什麼是一個系統問題。結論是：agent 的目標是任務成功，tokens/sec 只是手段。</p>
+    <ul class="core">
+      <li><span><b>AI workload 打破傳統系統的假設。</b>Decode 受記憶體頻寬限制；同一個 prompt 可能得到不同輸出；大叢集每幾小時壞一張 GPU。</span></li>
+      <li><span><b>Agent 把一次 inference 拉成一條鏈。</b>infer → tool → infer …，每一步都等上一步。延遲、狀態和失敗沿著整條鏈累積。</span></li>
+      <li><span><b>優化目標要換。</b>Tokens/sec 高，agent 仍可能又慢又貴。要看任務成功率，和每個成功任務的成本。</span></li>
+    </ul>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+  </section>
+
+  <div class="layout">
+    <nav class="toc" aria-label="本堂目錄">
+      <details open>
+        <summary>本堂目錄</summary>
+        <ol>
+          <li><a href="#s-arch">1 架構<span>全貌</span></a></li>
+          <li><a href="#s-ideas">2 核心觀念<span>p.30–46</span></a></li>
+          <li><a href="#s-background">3 觀念補充<span>背景</span></a></li>
+          <li><a href="#s-beyond">4 延伸思考<span>延伸</span></a></li>
+          <li><a href="#s-discuss">5 問題討論<span>基礎／進階</span></a></li>
+          <li><a href="#s-try">6 動手試試<span>練習</span></a></li>
+          <li><a href="#s-submit">7 交作業<span>上傳</span></a></li>
+          <li><a href="#wrap">延伸閱讀<span>—</span></a></li>
+        </ol>
+      </details>
+    </nav>
+
+    <div class="content">
+
+      <!-- ===================== 1 架構 ===================== -->
+      <section class="part" id="s-arch">
+        <header class="part-head">
+          <p class="kicker">1 · 架構</p>
+          <h2>整門課的零件怎麼接在一起</h2>
+        </header>
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 760 436" role="img" aria-label="Agentic 系統的 6 層 stack，由上到下：Application / User、Agent / Harness、Model、Serving System、Runtime / Kernels、Hardware。左側標出課程 Part I（L2–L8，作業 A1–A3）負責上面兩層，Part II（10/19 起，作業 A4–A5）負責 model 以下各層。每層右側寫出 L1 在這一層談的主題與頁碼。Agent / Harness 對右側的外部環境送出 tool call，外部環境回傳結果。右下是跨層議題，例子是 prefix cache。底部說明：元件指標各量一層，agent 的目標要在最上層量。">
+              <defs>
+                <marker id="l1a-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+                <marker id="l1a-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/>
+                </marker>
+              </defs>
+
+              <!-- layers -->
+              <rect x="150" y="16" width="380" height="40" rx="4" class="dg-box"/>
+              <text x="164" y="41" class="dg-tb">Application / User</text>
+              <text x="518" y="41" text-anchor="end" class="dg-ta">任務成功率、$ / 成功任務 p.43</text>
+
+              <rect x="150" y="64" width="380" height="56" rx="4" class="dg-box-accent"/>
+              <text x="164" y="86" class="dg-tb">Agent / Harness</text>
+              <text x="518" y="86" text-anchor="end" class="dg-ta">新的電腦、系統問題 p.38–45</text>
+              <text x="164" y="108" class="dg-ts">planning · context · memory · tools · subagents</text>
+
+              <rect x="150" y="128" width="380" height="40" rx="4" class="dg-box"/>
+              <text x="164" y="153" class="dg-tb">Model</text>
+              <text x="518" y="153" text-anchor="end" class="dg-ta">accuracy（ML 的視角）p.30</text>
+
+              <rect x="150" y="176" width="380" height="56" rx="4" class="dg-box"/>
+              <text x="164" y="198" class="dg-tb">Serving System</text>
+              <text x="518" y="198" text-anchor="end" class="dg-ta">prefill / decode · KV cache p.32–34</text>
+              <text x="164" y="220" class="dg-ts">batching · scheduling · routing · caching</text>
+
+              <rect x="150" y="240" width="380" height="56" rx="4" class="dg-box"/>
+              <text x="164" y="262" class="dg-tb">Runtime / Kernels</text>
+              <text x="518" y="262" text-anchor="end" class="dg-ta">加總順序與不確定性 p.33</text>
+              <text x="164" y="284" class="dg-ts">CUDA · Triton · collectives</text>
+
+              <rect x="150" y="304" width="380" height="56" rx="4" class="dg-box"/>
+              <text x="164" y="326" class="dg-tb">Hardware</text>
+              <text x="518" y="326" text-anchor="end" class="dg-ta">故障率與耗電 p.36</text>
+              <text x="164" y="348" class="dg-ts">GPU · CPU · memory · network · storage</text>
+
+              <!-- course parts -->
+              <path d="M144,18 H138 V118 H144" class="dg-accent"/>
+              <text x="130" y="56" text-anchor="end" class="dg-ta">課程 Part I</text>
+              <text x="130" y="74" text-anchor="end" class="dg-ts">L2–L8</text>
+              <text x="130" y="90" text-anchor="end" class="dg-ts">作業 A1–A3</text>
+
+              <path d="M144,130 H138 V358 H144" class="dg-line"/>
+              <text x="130" y="232" text-anchor="end" class="dg-tb">課程 Part II</text>
+              <text x="130" y="250" text-anchor="end" class="dg-ts">10/19 起</text>
+              <text x="130" y="266" text-anchor="end" class="dg-ts">作業 A4–A5</text>
+
+              <!-- external environment -->
+              <rect x="596" y="64" width="156" height="56" rx="4" class="dg-box-soft"/>
+              <text x="674" y="86" text-anchor="middle" class="dg-tb">外部環境（tools）</text>
+              <text x="674" y="106" text-anchor="middle" class="dg-ts">web · 檔案 · API · 人</text>
+              <line x1="532" y1="82" x2="594" y2="82" class="dg-accent" marker-end="url(#l1a-ahs)"/>
+              <text x="563" y="75" text-anchor="middle" class="dg-ta">tool call</text>
+              <line x1="594" y1="102" x2="532" y2="102" class="dg-line dg-dash" marker-end="url(#l1a-ah)"/>
+              <text x="563" y="117" text-anchor="middle" class="dg-ts">結果</text>
+
+              <!-- cross-layer labels -->
+              <rect x="596" y="128" width="156" height="232" rx="4" class="dg-box-soft"/>
+              <text x="674" y="152" text-anchor="middle" class="dg-tb">跨層議題</text>
+              <text x="674" y="178" text-anchor="middle" class="dg-ts">agent serving</text>
+              <text x="674" y="198" text-anchor="middle" class="dg-ts">hardware co-design</text>
+              <text x="674" y="218" text-anchor="middle" class="dg-ts">scheduling · caching</text>
+              <line x1="612" y1="238" x2="736" y2="238" class="dg-soft"/>
+              <text x="674" y="262" text-anchor="middle" class="dg-ta">例：prefix cache</text>
+              <text x="674" y="284" text-anchor="middle" class="dg-ts">harness 固定開頭</text>
+              <text x="674" y="304" text-anchor="middle" class="dg-ts">serving 重用 KV cache</text>
+
+              <!-- metrics bar -->
+              <rect x="8" y="378" width="744" height="48" rx="4" class="dg-box-soft"/>
+              <text x="380" y="398" text-anchor="middle" class="dg-t">TTFT、TPOT、GPU 使用率各量一層：有用，但不夠。</text>
+              <text x="380" y="417" text-anchor="middle" class="dg-ta">Agent 的目標在最上層量（p.43）。</text>
+            </svg>
+          </div>
+          <figcaption>依 p.42 重畫的 6 層 stack。Part I 講上面兩層，Part II 往下講到硬體。每層右側的藍字是 L1 在這一層談的主題。注意：p.29 與 p.37 的 Part I / II 指本堂後半的兩段，和課程的 Part I / II 不同。</figcaption>
+        </figure>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 720 420" role="img" aria-label="兩條時間軸。上：傳統 LLM serving，一個 request 經過一次 inference，回傳一個 response，目標是 throughput。下：agent serving，GPU 上的 inference 和 tool、retrieval 輪流進行。Tool 執行時，這個 agent 在等，它的 KV cache 仍佔著 GPU 記憶體，而且每一步變大。整條鏈都在 critical path 上；batching 讓每一步慢一點，幾十步加起來就慢很多。">
+              <defs>
+                <marker id="l1b-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+                <marker id="l1b-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/>
+                </marker>
+              </defs>
+
+              <!-- traditional serving -->
+              <text x="10" y="22" class="dg-tb">傳統 LLM serving：一個 request，一次 inference</text>
+              <text x="10" y="59" class="dg-tm">GPU</text>
+              <line x1="56" y1="55" x2="118" y2="55" class="dg-line" marker-end="url(#l1b-ah)"/>
+              <text x="86" y="47" text-anchor="middle" class="dg-ts">request</text>
+              <rect x="120" y="38" width="230" height="34" rx="4" class="dg-box-accent"/>
+              <text x="235" y="52" text-anchor="middle" class="dg-tb">inference</text>
+              <text x="235" y="66" text-anchor="middle" class="dg-ts">prefill + decode</text>
+              <line x1="350" y1="55" x2="412" y2="55" class="dg-line" marker-end="url(#l1b-ah)"/>
+              <text x="381" y="47" text-anchor="middle" class="dg-ts">response</text>
+              <text x="430" y="51" class="dg-ta">目標：throughput</text>
+              <text x="430" y="67" class="dg-ts">大 batch，GPU 不閒置</text>
+              <text x="10" y="101" class="dg-tm">Tool</text>
+              <text x="120" y="101" class="dg-ts">（沒有 tool call）</text>
+
+              <line x1="10" y1="122" x2="710" y2="122" class="dg-soft"/>
+
+              <!-- agent serving -->
+              <text x="10" y="148" class="dg-tb">Agent serving：一個 prompt 展開成一條鏈</text>
+              <text x="10" y="185" class="dg-tm">GPU</text>
+              <text x="10" y="259" class="dg-tm">Tool</text>
+              <text x="10" y="318" class="dg-tm">KV cache</text>
+              <line x1="56" y1="181" x2="118" y2="181" class="dg-line" marker-end="url(#l1b-ah)"/>
+              <text x="86" y="173" text-anchor="middle" class="dg-ts">prompt</text>
+
+              <rect x="120" y="164" width="44" height="34" rx="4" class="dg-box-accent"/>
+              <text x="142" y="185" text-anchor="middle" class="dg-t">infer</text>
+              <rect x="172" y="166" width="124" height="30" rx="4" class="dg-frame"/>
+              <text x="234" y="185" text-anchor="middle" class="dg-ts">等 tool 結果</text>
+              <rect x="300" y="164" width="52" height="34" rx="4" class="dg-box-accent"/>
+              <text x="326" y="185" text-anchor="middle" class="dg-t">infer</text>
+              <rect x="360" y="166" width="124" height="30" rx="4" class="dg-frame"/>
+              <text x="422" y="185" text-anchor="middle" class="dg-ts">等 tool 結果</text>
+              <rect x="488" y="164" width="62" height="34" rx="4" class="dg-box-accent"/>
+              <text x="519" y="185" text-anchor="middle" class="dg-t">infer</text>
+              <text x="574" y="185" text-anchor="middle" class="dg-tb">⋯</text>
+              <rect x="598" y="164" width="92" height="34" rx="4" class="dg-box-accent"/>
+              <text x="644" y="185" text-anchor="middle" class="dg-t">infer：回答</text>
+
+              <rect x="168" y="238" width="132" height="34" rx="4" class="dg-box"/>
+              <text x="234" y="259" text-anchor="middle" class="dg-t">tool：pytest</text>
+              <rect x="356" y="238" width="52" height="34" rx="4" class="dg-box"/>
+              <text x="382" y="259" text-anchor="middle" class="dg-t">Read</text>
+              <rect x="408" y="238" width="80" height="34" rx="4" class="dg-box"/>
+              <text x="448" y="259" text-anchor="middle" class="dg-t">retrieval</text>
+
+              <line x1="158" y1="199" x2="172" y2="235" class="dg-accent" marker-end="url(#l1b-ahs)"/>
+              <text x="180" y="221" class="dg-ta">tool call</text>
+              <line x1="296" y1="237" x2="310" y2="201" class="dg-line dg-dash" marker-end="url(#l1b-ah)"/>
+              <text x="316" y="221" class="dg-ts">結果</text>
+              <line x1="346" y1="199" x2="360" y2="235" class="dg-accent" marker-end="url(#l1b-ahs)"/>
+              <text x="368" y="221" class="dg-ta">tool call</text>
+              <line x1="484" y1="237" x2="498" y2="201" class="dg-line dg-dash" marker-end="url(#l1b-ah)"/>
+              <text x="504" y="221" class="dg-ts">結果</text>
+
+              <!-- KV cache occupancy -->
+              <path d="M120,326 V318 H300 V312 H488 V306 H598 V298 H690 V326 Z" class="dg-box-soft"/>
+              <polyline points="120,326 120,318 300,318 300,312 488,312 488,306 598,306 598,298 690,298 690,326" class="dg-line"/>
+              <text x="120" y="346" class="dg-ta">等 tool 時，KV cache 仍佔著 GPU 記憶體，而且每一步變大</text>
+
+              <path d="M120,358 V366 H690 V358" class="dg-soft"/>
+              <text x="405" y="388" text-anchor="middle" class="dg-t">Critical path：inference、tool、等待全部串在一起</text>
+              <text x="405" y="408" text-anchor="middle" class="dg-ta">Batching 讓每次 infer 慢一點；乘上幾十步，agent 就慢很多</text>
+            </svg>
+          </div>
+          <figcaption>上：傳統 serving 一個 request 只跑一次 inference。下：agent 的一個 prompt 在 GPU 與 tool 之間來回。藍色方塊越來越寬，代表 context 每一步變長；虛線框是等 tool 的時間（p.41）。</figcaption>
+        </figure>
+        <div class="prose">
+          <p>兩張圖一起看。第一張是空間：系統分 6 層，課程從上往下講。第二張是時間：agent 把一次 inference 拉成一條鏈，每一步都在 critical path 上。這堂的主張落在交點：下層為 throughput 做的優化，放到上層的鏈上不一定划算。</p>
+        </div>
+      </section>
+
+      <!-- ===================== 2 核心觀念 ===================== -->
+      <section class="part" id="s-ideas">
+        <header class="part-head">
+          <p class="kicker">2 · 核心觀念</p>
+          <h2>四個觀念串起整堂課</h2>
+        </header>
+        <div class="ideas">
+          <div class="idea" id="i1">
+            <h3>AI 系統優化的東西，和 AI/ML 不同 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=30" target="_blank" rel="noopener">p.30–31</a></h3>
+            <div class="prose">
+              <p>同一個 model，兩種人問不同的問題。ML 研究者問：該用哪個 model，它答對幾題？系統工程師問：怎麼在上千張 GPU 上穩定地訓練與 serve？前者優化 accuracy，後者優化 GPU 使用率、資源浪費、停機時間與碳排。</p>
+              <p>系統這一側的零件和傳統系統一樣：scheduling、狀態管理、通訊、caching、fault tolerance。差別在 workload 的性質。p.31：把 model 的能力變成產品，比 AI 本身更難。</p>
+            </div>
+          </div>
+          <div class="idea" id="i2">
+            <h3>AI workload 打破傳統系統的五個假設 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32–36</a></h3>
+            <div class="prose">
+              <p>傳統服務隱含幾個假設：處理時間可以預測、同樣的輸入得到同樣的輸出、狀態小、故障少見。LLM 的 workload 打破每一條。一個請求分兩個階段：prefill 受算力限制，decode 受記憶體頻寬限制。執行時間取決於輸出多少 token，事先無法得知。</p>
+              <p>浮點數的加總順序會改變結果，所以同一個 prompt 可能得到不同輸出。狀態很大：權重從幾 GB 到幾 TB，KV cache 每個 token 要幾十到幾百 KB，瓶頸常在搬資料。Model 與 workload 變化快。故障是常態：16K 張 GPU 約每 3 小時壞一張；一台 server 從 800 W 升到 6,000 W。</p>
+            </div>
+          </div>
+          <div class="idea" id="i3">
+            <h3>Agent 是一種新的電腦，也是一個系統問題 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=38" target="_blank" rel="noopener">p.38–45</a></h3>
+            <div class="prose">
+              <p>Slide 把 agent 看成一台新的電腦：LLM 是 CPU，context window 是 RAM，tool 是周邊裝置，harness 是 OS，agent 是 application。兩個不同點：程式用自然語言寫，每次可能走不同路徑；LLM 出錯是常態，所以 harness 要像 OS 一樣做隔離與權限控制。</p>
+              <p>傳統 serving 是 request → inference → response。Agent 把它拉成 infer → tool → infer → retrieval → … 的鏈，跨過 GPU、CPU、storage、network 與外部服務。每一步都等上一步，所以整條鏈都在 critical path 上。Tool 執行時 agent 用不到 GPU，它的 KV cache 卻還佔著記憶體。這帶出 p.44 的新問題：狀態管理、prefix caching、checkpoint。要優化先要看得到，所以 observability 是一等問題（p.45）。</p>
+            </div>
+          </div>
+          <div class="idea" id="i4">
+            <h3>目標：在限制下讓任務成功 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=43" target="_blank" rel="noopener">p.43–46</a></h3>
+            <div class="prose">
+              <p>Throughput 不適合當 agent 的目標。目標是在 latency、cost、resources、reliability、security 的限制下，讓任務成功率最高。TTFT、TPOT、GPU 使用率都有用，但各自只量一個元件。要看任務層級：成功率、端到端延遲、每個任務的 token 數、每個成功任務的花費與耗能。</p>
+              <p>例：A 跑 100 次花 $40，成功 50 次，每個成功任務 $0.80。B 花 $60，成功 90 次，約 $0.67。B 每次較貴，換算後反而便宜。p.46 用 9 個問題收尾，要求你能用數字回答。第 5 段的討論題從這裡出發。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 3 觀念補充 ===================== -->
+      <section class="part" id="s-background">
+        <header class="part-head">
+          <p class="kicker">3 · 觀念補充</p>
+          <h2>Slide 預設你已經懂的背景</h2>
+        </header>
+        <dl class="terms">
+          <div id="t1">
+            <dt>Prefill 與 decode<small>同一個請求的兩種瓶頸</small></dt>
+            <dd>
+              <p>Prefill 一次處理整段 prompt，每個權重讀一次就用在幾千個 token 上，瓶頸在算力。Decode 一次只生成 1 個 token，每一步都要讀完全部權重和 KV cache，瓶頸在記憶體頻寬。</p>
+              <p>判斷方法：比較每讀 1 byte 做幾次運算（arithmetic intensity），和 GPU 的算力 ÷ 頻寬。H100 的比值約 295（989 TFLOPS ÷ 3.35 TB/s）。Decode 在 batch 1 時只有約 1；batching 就是把它往上推 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32</a>。</p>
+            </dd>
+          </div>
+          <div id="t2">
+            <dt>浮點數沒有結合律<small>同一個 prompt 為什麼有不同輸出</small></dt>
+            <dd>
+              <p>浮點數每做一次運算就捨入一次，所以 <code>(a + b) + c</code> 和 <code>a + (b + c)</code> 可能不相等。GPU 把 matmul 切成小塊平行加總，切法由 kernel 決定。Batch size 一變，kernel 可能換，加總順序跟著改變。</p>
+              <p>Model 每一步替每個候選 token 打分數（logit），greedy decoding 選最高分。前兩名很接近時，捨入誤差就能讓它們互換。所以 temperature 0 只固定了選法，不保證輸出可重現 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=33" target="_blank" rel="noopener">p.33</a>。</p>
+            </dd>
+          </div>
+          <div id="t3">
+            <dt>KV cache<small>agent 的狀態為什麼這麼大</small></dt>
+            <dd>
+              <p>Attention 讓每個新 token 參考前面所有的 token。Model 把每個 token 在每一層的 key 和 value 存起來重用，這就是 KV cache。每個 token 的大小 = 2 × 層數 × KV head 數 × head 維度 × byte 數。</p>
+              <p>以 32 層、8 個 KV head、head 維度 128、BF16 的 8B model 為例，每個 token 要 128 KiB。100K token 的 session 約 13 GB，接近權重的 16 GB。Prefix cache 保留共同開頭的 KV cache 給下一個請求重用 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=34" target="_blank" rel="noopener">p.34</a>。</p>
+            </dd>
+          </div>
+          <div id="t4">
+            <dt>MTBF 與叢集故障<small>大叢集為什麼一直在壞</small></dt>
+            <dd>
+              <p>MTBF 是單一元件平均多久故障一次。假設每張 GPU 獨立故障，N 張的叢集平均每 MTBF ÷ N 就壞一張：50,000 小時 ÷ 16,384 張 ≈ 3 小時 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=36" target="_blank" rel="noopener">p.36</a>。年故障率 9% 換算是約每 6 小時一張，量級相同。</p>
+            </dd>
+          </div>
+          <div id="t5">
+            <dt>平行化的切法<small>一張 GPU 放不下時</small></dt>
+            <dd>
+              <p>Data parallelism 複製整個 model，各處理不同請求。Tensor parallelism 把每一層的矩陣切給多張 GPU；pipeline parallelism 按層切；expert parallelism 把 MoE 的 expert 分到不同 GPU。切得越細，GPU 之間交換的資料越多，所以 tensor parallelism 通常留在同一台機器內走 NVLink <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=34" target="_blank" rel="noopener">p.34</a>。</p>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ===================== 4 延伸思考 ===================== -->
+      <section class="part" id="s-beyond">
+        <header class="part-head">
+          <p class="kicker">4 · 延伸思考</p>
+          <h2>超出 slide 的推論</h2>
+        </header>
+        <p class="note-own">這一段是本文的延伸，不是 slide 的內容。</p>
+        <div class="ideas">
+          <div class="idea" id="x1">
+            <h3>Tokens/sec 會把 agent 的優化帶錯方向</h3>
+            <div class="prose">
+              <p>Tokens/sec 是 serving 層的指標，適合做容量規劃。拿來評估 agent 有三個盲點：大 batch 讓 critical path 上的每一步變慢；繞遠路的 agent 生成更多 token，數字反而好看；tool 的時間不在裡面。</p>
+              <p>指標一旦變成目標，團隊就會去優化它，不管它還代不代表原本的目的（Goodhart's law）。所以儀表板最上面放任務層級的指標，tokens/sec 留在 serving 的分頁。第 5 段第 3 題請你設計這組指標。</p>
+            </div>
+          </div>
+          <div class="idea" id="x2">
+            <h3>不確定性改變團隊測試 LLM 功能的方式</h3>
+            <div class="prose">
+              <p>傳統測試假設同樣的輸入得到同樣的輸出，所以可以比對字串。LLM 功能沒有這個保證，temperature 0 也沒有。字串比對的測試會時好時壞；團隊習慣直接重跑之後，真正的退步也跟著漏掉。</p>
+              <p>做法分兩層。Harness 的程式碼是確定性的：錄下 model 的回覆（record / replay），用一般的 unit test 測。Model 的行為用 eval 測：同一題跑多次，檢查性質，看通過率。L7 的 pass^k 是同一個想法。</p>
+            </div>
+          </div>
+          <div class="idea" id="x3">
+            <h3>長時間的 agent run 需要可靠性工程</h3>
+            <div class="prose">
+              <p>對單一個 run，GPU 故障很少見：30 分鐘的 run 跑在 8 張 GPU 上，遇到故障的機率約 0.008%。但一天跑 10 萬個這種 run，就有約 8 個會遇到。Tool 逾時、API 錯誤更常見：每步 1% 出錯時，60 步全部順利的機率只有約 55%。</p>
+              <p>所以長的 run 要用分散式系統的老方法：每一步存 checkpoint，有副作用的 tool 要冪等（idempotent），重試要有上限。L4 的「tool 預設冪等」和 L6 的「checkpoint 與回滾」處理同一個問題。第 5 段第 5 題請你設計一套復原機制。</p>
+            </div>
+          </div>
+          <div class="idea" id="x4">
+            <h3>9 個問題裡，Part II 負責 stack 的下半部</h3>
+            <div class="prose">
+              <p>p.46 的 9 個問題，Part I 已經碰到幾個：L3 與 L5 談什麼時候開 subagent；L8 談每個成功任務的成本。剩下的多半在 stack 的下半部。依課表推測：batching 的取捨在 10/19–10/21；KV 狀態與排程在 11/02；routing 在 11/23。讀 Part II 時，拿 p.46 當檢查表，每堂回答一題。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 5 問題討論 ===================== -->
+      <section class="part" id="s-discuss">
+        <header class="part-head">
+          <p class="kicker">5 · 問題討論</p>
+          <h2>讀書會討論題</h2>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡。進階題在讀完文章後回答，讀書會前發給大家。</p>
+        </header>
+        <div class="qtabs" role="tablist" aria-label="題目分組">
+          <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
+          <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
+        </div>
+        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
+          <p class="qset-lede">看 slides 之前先讀一遍這 9 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L1 基礎題（帶著問題看 slides）：課程總覽與 AI 系統" data-slides="https://cs2680.com/slides/1_intro.pdf">複製基礎題</button>
+            <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
+          </div>
+          <ol class="qlist qlist-basic">
+            <li class="bq" id="b1">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=28" target="_blank" rel="noopener">p.28</a> · Agentic coding 的等級</p>
+                <p class="qtext">Slide 把 agentic coding 分成幾個等級？從 Level 3 到 Level 4，你做的事有什麼改變？Level 5 多了什麼？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>6 個等級，Level 0 到 Level 5：no AI、assist（自動補完）、supervised（AI 寫函式，你 review）、scoped（交出一個任務，再 review 程式碼）、goal-driven、parallel agents。</p>
+                  <p>Level 3 你還是逐行 review 程式碼。Level 4 由 AI 寫全部，改由測試負責驗證。Level 5 用多個 subagent 平行分工。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b2">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=30" target="_blank" rel="noopener">p.30–31</a> · AI 系統是什麼</p>
+                <p class="qtext">AI/ML 的視角和 AI systems 的視角，各問什麼問題、各優化什麼？Slide 說 AI 系統的零件和傳統系統有什麼關係？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>AI/ML 問該用哪個 model、怎麼設計，優化 accuracy 與能力。AI systems 問怎麼大規模地訓練與 serve，優化 GPU 使用率（performance）、資源浪費（efficiency）、停機時間（reliability）、碳排（sustainability）。</p>
+                  <p>零件和傳統系統一樣：scheduling、狀態管理、通訊、caching、fault tolerance、security、observability。p.31 補充：把 model 的能力變成產品，比 AI 本身更難。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b3">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32</a> · Prefill 與 decode</p>
+                <p class="qtext">一次 LLM 請求分哪兩個階段？各受什麼限制？為什麼一個請求要跑多久，事先無法預測？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Prefill 一次處理整段 prompt，受算力限制（compute-bound）。Decode 一次生成 1 個 token，每一步都要讀全部權重和 KV cache，受記憶體頻寬限制（memory-bandwidth-bound）。</p>
+                  <p>執行時間取決於 model 輸出多少 token，這個數字要等生成結束才知道。所以 scheduler 很難決定先跑誰、要預留多少記憶體。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b4">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=33" target="_blank" rel="noopener">p.33</a> · 不確定的運算</p>
+                <p class="qtext">同一個 prompt，為什麼可能得到不同的輸出？Batch size 在這裡扮演什麼角色？Slide 把誤差來源分成哪三類？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>浮點數加法沒有結合律，加總順序一變，結果就差一點點。Model 替每個候選 token 打分數，前兩名很接近時，這一點差異就能換掉下一個 token，後面的文字全部改變。</p>
+                  <p>Batch size 改變時，GPU 可能換 kernel 或換切法，加總順序跟著變。三類來源：runtime（排程、記憶體存取順序、batch size）、software（FMA、autotuning、subnormal）、hardware（CUDA core 與 tensor core、不同世代的數值格式）。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b5">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=34" target="_blank" rel="noopener">p.34–36</a> · 狀態、故障與耗電</p>
+                <p class="qtext">AI 系統的狀態有多大？16K 張 GPU 的叢集多久壞一張？一台 server 的功率從多少升到多少？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>權重從幾 GB 到幾 TB；KV cache 每個 token 要幾十到幾百 KB。瓶頸常在搬資料，GPU 放不下時要搬到 CPU 記憶體或 SSD。</p>
+                  <p>GPU 的 MTBF 是 50,000 小時、年故障率 9%。16K 張 GPU 的叢集約每 3 小時壞一張。GPU 每張 700–1000 W，一台 server 放 4–8 張，功率從 800 W 升到 6,000 W。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b6">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=38" target="_blank" rel="noopener">p.38–40</a> · Agent 是什麼</p>
+                <p class="qtext">Slide 把 agent 的工作拆成哪 5 步？把 agent 比成電腦時，LLM、context window、tool、harness 各對應什麼？哪兩點和傳統電腦不同？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Plan、act、observe、adapt、deliver。Agent 用 AI model 對目標推理、使用外部 tool、執行多步動作，直到任務完成。</p>
+                  <p>LLM 是 CPU，context window 是 RAM，tool 是周邊裝置，harness 是 OS，agent 是 application。不同點：programming model 用自然語言，同一份程式每次可能走不同路徑；failure model 以 LLM 出錯為常態，所以 harness 要做隔離與權限控制。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b7">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=41" target="_blank" rel="noopener">p.41–42</a> · 為什麼是系統問題</p>
+                <p class="qtext">傳統 serving 和 agent serving 的流程各長什麼樣？Agent 等 tool 的時候，GPU 上發生什麼事？Stack 分哪 6 層？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>傳統是 request → inference → response。Agent 是 infer → tool → infer → retrieval → … 的長鏈，跨過 GPU、CPU、storage、network 與外部服務。每一步都等上一步，整條鏈都在 critical path 上。</p>
+                  <p>Tool 執行時，這個 agent 用不到 GPU，它的 KV cache 卻還佔著記憶體。6 層由上到下：Application / User、Agent / Harness、Model、Serving System、Runtime / Kernels、Hardware。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b8">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=43" target="_blank" rel="noopener">p.43–44</a> · 要優化什麼</p>
+                <p class="qtext">Slide 說哪個目標不適合 agent？要優化的目標是什麼，受哪些限制？TTFT、TPOT、GPU 使用率這些指標，slide 怎麼評價？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>Throughput 不適合當 agent 的目標。目標是讓任務成功率最高，限制是 latency、cost、resources、reliability、security。</p>
+                  <p>TTFT、TPOT、tool-call latency、GPU 使用率「有用，但不夠」。要看任務成功率、端到端延遲、每個任務的 token 數、每個成功任務的花費與耗能。Tokens/sec 高，agent 仍可能更慢、更貴。</p>
+                </div></details>
+              </div>
+            </li>
+            <li class="bq" id="b9">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=45" target="_blank" rel="noopener">p.45–46</a> · Observability 與 9 個問題</p>
+                <p class="qtext">Agent 的 trace 是什麼形狀？Slide 用哪一句話說明 observability 的重要？課程要你回答幾個問題，而且要答到什麼程度？</p>
+                <details><summary>參考答案</summary><div class="hint">
+                  <p>一棵巢狀的 trajectory：session → turn → agent step → model request、tool call、tool result → subagent → …。那一句是「You cannot optimize what you cannot observe.」</p>
+                  <p>9 個問題，從 batching 為什麼拖慢 agent，到怎麼優化每個成功任務的成本。Slide 要求課程結束時，你能用數字（quantitatively）回答它們。</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
+          <p class="qset-lede">這 6 題可以在讀書會前先發給大家回答。每題附情境、回答要點與相關 slide。「參考觀點與追問」給主持人用，建議討論後再展開。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L1 進階題（讀書會討論）：課程總覽與 AI 系統" data-slides="https://cs2680.com/slides/1_intro.pdf">複製進階題</button>
+            <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
+          </div>
+          <ol class="qlist">
+            <li class="dq" id="q1">
+              <div class="qbody">
+                <p class="qtag">概念 · Decode 與 batching · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32</a></p>
+                <p class="qtext">為什麼 decode 受記憶體頻寬限制，prefill 卻受算力限制？Batching 改變了哪一部分，哪一部分沒變？</p>
+                <p class="qctx"><b>情境：</b>一個 8B 參數的 model 用 BF16 存，權重 16 GB。一個請求的 prompt 有 2,000 個 token，要生成 500 個 token。Serving 系統可以一次跑 1 個請求，或把 32 個請求併成一個 batch。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>分別估算 prefill 與 decode 每讀 1 byte 的權重，大約做幾次運算。</li>
+                    <li>說明 batch 從 1 變成 32 時，哪些記憶體讀取可以分攤，哪些不行。</li>
+                    <li>指出 batch 一直加大時，會先撞到哪兩種限制。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>從一個參數算起：BF16 佔 2 byte，每個 token 用它做 1 次乘加，即 2 次運算。Prefill 的 2,000 個 token 共用同一次讀取；decode 每一步只有 1 個 token。KV cache 屬於每個請求自己。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>Prefill：每個權重讀 1 次，用在 2,000 個 token 上，約 2,000 FLOPs/byte。這遠高於 GPU 的算力 ÷ 頻寬（H100 約 295），所以受算力限制。</li>
+                    <li>Decode（batch 1）：每一步讀完 16 GB，只算 1 個 token，約 1 FLOP/byte。GPU 大部分時間在等資料。</li>
+                    <li>Batch 32：權重讀一次，32 個請求共用，強度約變成 32 FLOPs/byte。只看權重，throughput 接近 32 倍。</li>
+                    <li>不能分攤的：每個請求的 KV cache 要各自讀。Context 越長，KV 的讀取越佔比重，batching 的好處越小。</li>
+                    <li>兩種限制：KV cache 先塞滿記憶體容量；或強度超過 GPU 的比值，變成受算力限制。在那之前，每一步也因為 KV 的讀取變慢（p.46 第 1 題）。</li>
+                  </ul>
+                  <p><b>追問：</b>Decode 為什麼不能像 prefill 一樣一次算很多個 token？哪一種技術試著突破這一點？（提示：課表 10/28 的 speculative decoding。）</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q2">
+              <div class="qbody">
+                <p class="qtag">估算 · Decode 的速度上限 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32、p.34</a></p>
+                <p class="qtext">估算單一請求 decode 的速度上限。Batch 變成 32 時，每個請求和整張 GPU 的速度各變成多少？</p>
+                <p class="qctx"><b>情境：</b>8B model，BF16，權重 16 GB。GPU 記憶體頻寬 1.6 TB/s，容量 96 GB。每個 token 的 KV cache 是 128 KiB（32 層、8 個 KV head、head 維度 128）。每個請求的 context 是 4,096 個 token。只算讀記憶體的時間。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>寫出 batch 1 的算式：每個 token 要幾 ms，每秒最多幾個 token。</li>
+                    <li>算出 batch 32 每一步要讀幾 GB，以及每個請求與整張 GPU 每秒各幾個 token。</li>
+                    <li>估算每個請求的 context 變成 32K token 時，96 GB 最多放得下幾個請求。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>每一步的時間約等於要讀的 byte 數 ÷ 頻寬。權重每一步讀一次，所有請求共用；KV cache 每個請求各讀自己的。容量先扣掉權重，再除以每個請求的 KV cache 大小。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>Batch 1，不計 KV：16 GB ÷ 1.6 TB/s = 10 ms，每秒最多 100 個 token。加上 4,096 個 token 的 KV（≈ 0.54 GB），約 10.3 ms，每秒約 97 個。</li>
+                    <li>Batch 32：每一步讀 16 + 32 × 0.54 ≈ 33.2 GB，約 20.7 ms。每個請求每秒約 48 個 token，整張 GPU 約 1,540 個。忽略 KV 會算出 3,200 個，KV 讓數字少一半以上。</li>
+                    <li>容量：96 − 16 = 80 GB 給 KV。32K token 的請求每個要 4.3 GB，最多放 18 個，batch 32 放不下。</li>
+                    <li>對 agent 的意義：一步生成 500 個 token，batch 1 約 5.2 秒，batch 32 約 10.4 秒。40 步的 run，critical path 上多出約 3.5 分鐘。</li>
+                  </ul>
+                  <p><b>追問：</b>32 個請求共用同一段 2,000 token 的 system prompt 時，哪些成本可以省下來？Agent 的 context 每一步都變長，這組算式要怎麼改？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q3">
+              <div class="qbody">
+                <p class="qtag">設計 · Agent 服務的指標 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=43" target="_blank" rel="noopener">p.43、p.45</a></p>
+                <p class="qtext">替一個內部的 coding agent 服務設計一組指標，並說明為什麼 tokens/sec 不該當主要指標。</p>
+                <p class="qctx"><b>情境：</b>團隊有 200 位工程師用這個 agent 修 bug、寫測試。團隊自己 serve model。主管要你每週回報「agent 有沒有變好」。現有的儀表板只有 tokens/sec、TTFT 與 GPU 使用率。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>列出 4–6 個指標，分成主要指標與護欄指標，各寫出定義與資料來源。</li>
+                    <li>舉一個 tokens/sec 變好、agent 卻變差的具體例子。</li>
+                    <li>說明「任務成功」怎麼判定、由誰判定，以及這個判定可能有什麼偏差。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>從 p.43 的兩欄出發：哪些指標只量一個元件，哪些量整個任務。最難的是定義成功：測試通過、PR 合併、使用者沒有重做，各有偏差。護欄指標防止團隊為了主要指標犧牲別的東西。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>主要指標：任務成功率，依任務類型分開算；每個成功任務的成本，等於總花費 ÷ 成功數；端到端延遲的 p50 與 p95。</li>
+                    <li>診斷指標：每個任務的 step 數與 token 數；時間花在 model、tool、排隊各多少。這些要靠 p.45 的 trace。</li>
+                    <li>護欄指標：人工介入率、危險動作的攔截次數、合併後又 revert 的 PR 數。</li>
+                    <li>反例：batch 加大，tokens/sec 上升，但 critical path 上每一步變慢。或換一個話多的 model：每秒 200 個、共 20,000 個 token 要 100 秒；每秒 100 個、共 5,000 個只要 50 秒。</li>
+                    <li>成功的判定：先用自動訊號（測試通過、CI 綠燈），再每週抽樣人工 review。只看「使用者沒抱怨」會高估成功率：失敗的人常常就不再用了。</li>
+                  </ul>
+                  <p><b>追問：</b>成功率上升 5%，每個成功任務的成本也上升 20%，這週算變好還是變差？你會怎麼事先訂出換算規則？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q4">
+              <div class="qbody">
+                <p class="qtag">團隊實務 · 不確定性與測試 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=33" target="_blank" rel="noopener">p.33</a></p>
+                <p class="qtext">Temperature 0 也不保證輸出可重現。團隊要怎麼替 LLM 功能寫測試，才能在 CI 裡穩定地抓到退步？</p>
+                <p class="qctx"><b>情境：</b>一個功能把使用者的 bug 描述轉成 JSON，欄位是 component、severity、steps。CI 有 50 個測試案例，每個都比對完整的 JSON 字串。最近一週，每次 CI 都有 2–5 個案例隨機失敗，大家開始直接按 rerun。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>指出這些隨機失敗至少兩個可能的來源。</li>
+                    <li>把測試分成確定性的部分與 model 行為的部分，各提出一種寫法。</li>
+                    <li>訂出判定退步的規則：每個案例跑幾次、通過率低於多少算退步，並說明理由。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>先分清楚哪些程式碼是確定性的：prompt 組裝、JSON parse、欄位驗證。只有 model 的輸出不確定，這部分改成檢查性質，再用多次執行的通過率判斷。樣本少時，通過率的誤差很大。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>來源：伺服器每次的 batch 不同，加總順序跟著變（p.33）；provider 更新了 model 或 serving 設定；prompt 裡有日期這類每次不同的內容。</li>
+                    <li>確定性的部分：錄下 model 的回覆，用 record / replay 跑一般的 unit test。這一層必須 100% 穩定，失敗就是程式的錯。</li>
+                    <li>Model 的部分：不比對字串，改檢查性質。JSON 能 parse、欄位齊全、severity 是允許的值、component 和標準答案一致。</li>
+                    <li>判定規則：每個案例跑 10–20 次，看整體通過率。注意誤差：20 次過 18 次，95% 信賴區間約 70%–97%。兩個版本 18/20 對 16/20，Fisher exact test 的 p 值約 0.66，不能說退步。</li>
+                    <li>上線前改看 pass^k（L7）：k 次都成功才算過。對 agent 更重要：一個 token 不同，可能換掉整個 tool call。</li>
+                  </ul>
+                  <p><b>追問：</b>每個案例跑 20 次，CI 的成本和時間都變成 20 倍。哪些檢查放在每個 PR，哪些放到每晚？Provider 換了 model 版本，你怎麼第一時間知道？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q5">
+              <div class="qbody">
+                <p class="qtag">風險 · 長 run 的復原 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=44" target="_blank" rel="noopener">p.36、p.44、p.46</a></p>
+                <p class="qtext">一個 30 分鐘的 agent run 在第 25 分鐘失敗。設計一套 checkpoint 與復原機制，並說明它的代價。</p>
+                <p class="qctx"><b>情境：</b>Agent 在做一次資料庫 migration：讀 schema、改程式、跑測試、在 staging 資料庫執行 SQL、開 PR。全程約 60 步，每步平均 30 秒。第 25 分鐘時，serving 的一張 GPU 故障，進行中的 inference 中斷。當時 context 約 120K token；SQL 已經執行，PR 還沒開。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>列出 checkpoint 要存哪些狀態，以及在哪些時間點存。</li>
+                    <li>分別寫出三種失敗的復原方式：inference 中斷、tool 失敗、model 走錯方向。</li>
+                    <li>估算有、沒有 checkpoint 時各要重做多少工作，並指出 checkpoint 本身的代價。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>把 run 看成一連串的 step。每一步結束時有三種狀態：trajectory（model 回覆與 tool 結果）、工作目錄、外部系統的副作用。前兩種可以存下來重放，第三種要靠冪等或補償動作。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>存什麼：完整的 trajectory；工作目錄的狀態，例如每步一個 git commit；副作用的紀錄，例如 migration 版本、PR 編號。</li>
+                    <li>什麼時候存：每個 tool 結果回來之後。有副作用的動作，執行前先記「打算做」，執行後再記「做完了」，像資料庫的 write-ahead log。</li>
+                    <li>Inference 中斷：換一台 replica，用 trajectory 重建 context，重做那一步。代價是重新 prefill 120K token；KV cache 若存在 CPU 記憶體或 SSD，可以直接載回（p.46 第 3 題）。</li>
+                    <li>Tool 失敗：有上限的重試，加上 backoff。SQL 要冪等：先查 migration 版本，執行過就跳過（L4）。Model 走錯方向：回到上一個驗證過的 checkpoint 重新規劃（L6），只重做最後一步不夠。</li>
+                    <li>估算：沒有 checkpoint 就從頭重來，損失 25 分鐘，token 也要重付。每步存 checkpoint，最多損失 1 步（約 30 秒）加一次 120K token 的 prefill。代價是儲存空間、每步多一點延遲，以及復原程式本身的 bug。</li>
+                  </ul>
+                  <p><b>追問：</b>如果 migration 跑在正式環境的資料庫，你的設計要改哪裡？Trajectory 裡有 secret 時，checkpoint 要怎麼存？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q6">
+              <div class="qbody">
+                <p class="qtag">應用 · 課程的 9 個問題 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=46" target="_blank" rel="noopener">p.46</a></p>
+                <p class="qtext">從 p.46 的 9 個問題挑一題，套到你們團隊的系統或流程上。你會怎麼量它？</p>
+                <p class="qctx"><b>情境：</b>例如你們用 agent 處理 bug 單、寫測試、產生報告，或你們在 serve 一個內部的 model。選一個你熟悉的情境。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>把問題改寫成你們團隊的版本，並寫出要量的 1–2 個數字。</li>
+                    <li>說明資料從哪裡來：log、trace、帳單，還是要新增量測點。</li>
+                    <li>設計一個最小的實驗：比較哪兩種做法、跑多少次、怎麼判定結果。</li>
+                  </ul>
+                </div>
+                <details><summary>思考方向</summary><div class="hint">
+                  <p>9 個問題都可以改寫成同一個句型：在什麼限制下，比較哪兩種做法，看哪個數字。先找手上已有的資料，例如 API 帳單或 CI log。看不到 trajectory，就先補 observability（p.45）。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <p>以第 9 題「怎麼優化每個成功任務的成本」為例：</p>
+                  <ul>
+                    <li>改寫：我們的 bug 修復 agent，每修好一個 bug 花多少錢？換較小的 model 會更省嗎？</li>
+                    <li>數字：每個成功任務的成本，等於一週的 API 花費 ÷ 合併的修復 PR 數。另外看成功率與每個任務的 step 數。</li>
+                    <li>資料來源：API 回傳的 usage 欄位，依任務 ID 加總；成功與否看 PR 的狀態。沒有任務 ID 就先補上。</li>
+                    <li>實驗：取 50 個過去的 bug，兩種設定各跑 3 次，比較成功率與每個成功任務的成本。差距小於誤差時不下結論（見第 4 題）。</li>
+                    <li>同一個實驗也回答第 2 題：大 model 每次較貴，但少繞路、成功率高時，每個成功任務反而便宜（p.43）。</li>
+                  </ul>
+                  <p><b>追問：</b>你挑的這一題，答案會不會隨著 model 更新而改變？多久要重新量一次？</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <textarea class="copybox" id="copy-fallback" rows="8" readonly hidden aria-label="討論題文字，可手動複製"></textarea>
+
+        <h3 class="subhead">自我檢查</h3>
+        <div class="quiz">
+          <details>
+            <summary>Prefill 和 decode，哪一個受算力限制？為什麼 decode 不能把很多 token 併成一次運算？</summary>
+            <div class="answer"><p>Prefill。Prompt 的 token 全部已知，可以平行計算，權重讀一次就用在幾千個 token 上。Decode 的第 n 個 token 要等第 n−1 個生成後才能算。</p></div>
+          </details>
+          <details>
+            <summary>Agent A 每次嘗試花 $0.30，成功率 40%。Agent B 每次花 $0.50，成功率 80%。哪一個的每個成功任務成本較低？</summary>
+            <div class="answer"><p>B。A：$0.30 ÷ 0.4 = $0.75。B：$0.50 ÷ 0.8 = $0.625。只看每次呼叫的價格，會選錯。</p></div>
+          </details>
+          <details>
+            <summary>為什麼 agent 比單輪的聊天更需要 prefix cache?</summary>
+            <div class="answer"><p>Agent 每一步都重送整段 context，開頭完全相同。Prefix cache 保留開頭的 KV cache，下一步只要 prefill 新增的部分。Context 越長，省得越多。</p></div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 6 動手試試 ===================== -->
+      <section class="part" id="s-try">
+        <header class="part-head">
+          <p class="kicker">6 · 動手試試</p>
+          <h2>自己算一次</h2>
+          <p class="lede">三個小練習，只用 Python 標準函式庫。解答在每個練習的最後。</p>
+        </header>
+        <div class="exlist">
+          <details class="ex">
+            <summary>用 Python 看加總順序怎麼改變結果<span>p.33</span></summary>
+            <div class="exbody">
+              <p>GPU 的 kernel 把加總切成小塊。下面用 float32 模擬：同一組 4,096 個數字，只改分組大小。</p>
+              <figure class="file"><figcaption>fp_order.py</figcaption><pre><code>import random, struct
+
+def f32(x):                      # round a 64-bit float to float32
+    return struct.unpack("f", struct.pack("f", x))[0]
+
+def sum_f32(xs):                 # round after every add, like float32 hardware
+    s = 0.0
+    for x in xs:
+        s = f32(s + x)
+    return s
+
+def chunked_sum(xs, chunk):      # sum each chunk, then sum the partial results
+    parts = [sum_f32(xs[i:i + chunk]) for i in range(0, len(xs), chunk)]
+    return sum_f32(parts)
+
+random.seed(0)
+xs = [f32(random.uniform(-1, 1)) for _ in range(4096)]
+rival = 45.49479                 # logit of another candidate token
+for chunk in (4096, 512, 64, 8):
+    s = chunked_sum(xs, chunk)
+    print(f"chunk={chunk:&gt;4} sum={s:.7f} winner={'A' if s &gt; rival else 'B'}")</code></pre></figure>
+              <pre><code>$ python3 fp_order.py
+chunk=4096 sum=45.4947853 winner=B
+chunk= 512 sum=45.4947968 winner=A
+chunk=  64 sum=45.4947891 winner=B
+chunk=   8 sum=45.4948082 winner=A</code></pre>
+              <p><b>練習：</b>（1）4 種分組的總和最多差多少？（2）<code>rival</code> 是另一個候選 token 的 logit，winner 為什麼換來換去？（3）這和 temperature 0 有什麼關係？</p>
+              <p><b>解答：</b>（1）最大差約 0.000023，約是總和的 5 × 10⁻⁷。（2）兩個 logit 的差距比加總誤差還小，分組一變，大小關係就變。（3）Kernel 依 batch size 選切法，切法就是這裡的 chunk。差距小於誤差時，換一個 batch size 就可能換掉 argmax。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>估算 decode 的速度上限<span>p.32、p.34</span></summary>
+            <div class="exbody">
+              <p>只算讀記憶體的時間。數字和第 5 段第 2 題相同。</p>
+              <figure class="file"><figcaption>decode_bound.py</figcaption><pre><code>weights = 8e9 * 2                # 8B params x 2 bytes (BF16)
+bw = 1.6e12                      # memory bandwidth, bytes/s
+kv_tok = 2 * 32 * 8 * 128 * 2    # K,V x layers x KV heads x head dim x bytes
+
+for ctx in (4096, 32768):
+    for batch in (1, 8, 32):
+        need = weights + batch * ctx * kv_tok   # weights shared, KV per request
+        step = need / bw                        # one decode step reads all of it
+        print(f"ctx={ctx:&gt;5} batch={batch:&gt;2}  step={step * 1e3:5.1f} ms"
+              f"  per-request={1 / step:5.1f} tok/s  total={batch / step:5.0f} tok/s")</code></pre></figure>
+              <pre><code>$ python3 decode_bound.py
+ctx= 4096 batch= 1  step= 10.3 ms  per-request= 96.8 tok/s  total=   97 tok/s
+ctx= 4096 batch= 8  step= 12.7 ms  per-request= 78.8 tok/s  total=  631 tok/s
+ctx= 4096 batch=32  step= 20.7 ms  per-request= 48.2 tok/s  total= 1543 tok/s
+ctx=32768 batch= 1  step= 12.7 ms  per-request= 78.8 tok/s  total=   79 tok/s
+ctx=32768 batch= 8  step= 31.5 ms  per-request= 31.8 tok/s  total=  254 tok/s
+ctx=32768 batch=32  step= 95.9 ms  per-request= 10.4 tok/s  total=  334 tok/s</code></pre>
+              <p><b>練習：</b>（1）ctx 4K 時，batch 從 1 加到 32，每個請求和整張 GPU 的速度各變幾倍？（2）ctx 32K、batch 32 這一列，在 96 GB 的 GPU 上跑得起來嗎？（3）把 <code>bw</code> 改成 <code>3.35e12</code>，速度怎麼變？</p>
+              <p><b>解答：</b>（1）每個請求約剩一半；整張 GPU 約 16 倍。KV 讀取不能分攤，所以不是 32 倍。（2）不行：16 + 32 × 4.3 ≈ 153 GB，超過容量。（3）每一列約快 2.1 倍。只要還受頻寬限制，速度就和頻寬成正比。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>算叢集多久壞一張 GPU<span>p.36</span></summary>
+            <div class="exbody">
+              <p>用 slide 的數字：MTBF 50,000 小時、16,384 張 GPU。假設每張 GPU 獨立故障，間隔服從指數分布。</p>
+              <figure class="file"><figcaption>fleet.py</figcaption><pre><code>import math
+mtbf, gpus = 50_000, 16_384           # hours, cluster size (p.36)
+print(f"cluster: one failure every {mtbf / gpus:.2f} h")
+print(f"AFR implied by MTBF: {1 - math.exp(-8760 / mtbf):.1%}")
+print(f"with AFR 9%: one failure every {8760 / (0.09 * gpus):.2f} h")
+p_run = 1 - math.exp(-8 * 0.5 / mtbf)  # 30-min run on an 8-GPU replica
+print(f"P(one run hits a GPU failure): {p_run:.4%}")
+print(f"runs hit per day at 100,000 runs/day: {100_000 * p_run:.1f}")
+print(f"P(60 steps all succeed at 99% each): {0.99 ** 60:.1%}")</code></pre></figure>
+              <pre><code>$ python3 fleet.py
+cluster: one failure every 3.05 h
+AFR implied by MTBF: 16.1%
+with AFR 9%: one failure every 5.94 h
+P(one run hits a GPU failure): 0.0080%
+runs hit per day at 100,000 runs/day: 8.0
+P(60 steps all succeed at 99% each): 54.7%</code></pre>
+              <p><b>練習：</b>（1）叢集多久壞一張？一天幾次？（2）MTBF 換算成 AFR 是多少？和 slide 的 9% 一致嗎？（3）一個 run 遇到 GPU 故障的風險，和每步 1% 出錯、共 60 步的風險，哪個大？</p>
+              <p><b>解答：</b>（1）約 3.05 小時一次，一天約 8 次。（2）約 16%，和 9% 不一致；用 9% 算是約 5.9 小時一次，量級相同。（3）GPU 故障約 0.008%；每步 1% 出錯時，60 步全部順利只有約 55%。對單一個 run，tool 與 API 的失敗才是主要風險。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 7 交作業 ===================== -->
+      <section class="part" id="s-submit">
+        <header class="part-head">
+          <p class="kicker">7 · 交作業</p>
+          <h2>上傳你的討論</h2>
+          <p class="lede">讀書會前，把你對進階題的回答貼在這裡。所有成員都看得到彼此的內容。重新送出會覆蓋你上一次的那一份。<a href="submissions.html">收作業總表</a>列出誰交了哪幾堂。</p>
+        </header>
+        <form class="subform" id="sub-form" hidden>
+          <label class="field"><span>顯示名稱（選填）</span><input type="text" id="sub-nick" maxlength="40" autocomplete="nickname" placeholder="留空就用你的帳號名稱"></label>
+          <label class="field"><span>你的討論</span><textarea id="sub-text" rows="10" placeholder="Q1. &#10;Q2. &#10;…"></textarea></label>
+          <div class="field" id="sub-filerow" hidden>
+            <label for="sub-file"><span>附件（選填：PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
+            <input type="file" id="sub-file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.txt,.csv,.json">
+            <ul class="attach" id="sub-attach"></ul>
+          </div>
+          <div class="copyrow">
+            <button type="submit" class="copybtn" id="sub-send">送出</button>
+            <button type="button" class="ghostbtn" id="sub-copy">複製成文字</button>
+            <span class="copyhint" id="sub-status" role="status"></span>
+          </div>
+        </form>
+        <p class="sub-note" id="sub-note" role="status">連線中…</p>
+        <h3 class="subhead">已收到的討論 <span class="count" id="sub-count"></span></h3>
+        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
+      </section>
+
+      <!-- ===================== 延伸閱讀 ===================== -->
+      <section class="wrap" id="wrap" aria-label="延伸閱讀">
+        <h2>延伸閱讀</h2>
+        <ul class="reading">
+          <li><a href="https://cs2680.com" target="_blank" rel="noopener">課程網站 cs2680.com</a></li>
+          <li>OS：<a href="https://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank" rel="noopener">Operating Systems: Three Easy Pieces</a></li>
+          <li>ML 系統：<a href="https://mlsysbook.ai" target="_blank" rel="noopener">Machine Learning Systems</a></li>
+          <li>LLM：<a href="https://arxiv.org/abs/2501.09223" target="_blank" rel="noopener">Foundations of Large Language Models</a></li>
+          <li>Deep learning：<a href="https://fleuret.org/francois/lbdl.html" target="_blank" rel="noopener">The Little Book of Deep Learning</a></li>
+          <li>p.39 引用的影片：<a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ&amp;t=874" target="_blank" rel="noopener">Andrej Karpathy, Software Is Changing (Again)</a></li>
+          <li>p.33 的延伸，batch size 與不確定性：<a href="https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/" target="_blank" rel="noopener">Thinking Machines, Defeating Nondeterminism in LLM Inference</a></li>
+        </ul>
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="回總覽與下一堂">
+        <a class="prev" href="index.html"><span>← 回總覽</span>課程地圖與所有講次</a>
+        <a class="next" href="l02.html"><span>下一堂 L2 →</span>Claude Code 怎麼運作</a>
+      </nav>
+      <p class="fineprint">本文整理自 CS2680 L1 的 slides，加上觀念補充與延伸思考；延伸思考是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。數值例子由本文用 python3 計算，不是 slide 的數字。課表對照依據 2026 年 10 月的課程網站。</p>
+    </div>
+  </div>
+</main>
+<script src="app.js"></script>
+<script src="submit.js"></script>
+</body>
+</html>
