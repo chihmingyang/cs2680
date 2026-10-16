@@ -22,6 +22,8 @@
 4. 加上交作業段落：`python3 -I tools/add_submit.py site`（只動還沒有 `#s-submit` 的頁面）。
    同時在 `site/submit.js` 的 `LECTURES` 和 `site/submissions.html` 的表頭加一欄。
 5. 發布：index.html 加上改動的 lXX.html，到上面的 artifact。發布時**不要**改 capabilities（省略就沿用）。
+   index.html 是主頁：artifact 發布時會自動在外面包一層 `<!doctype html>…<body>`，所以它從 `<title>` 開始，不要自己加 doctype。
+   其他頁面以 files 發布，各自帶完整的 `<!doctype html>`。比對線上版和 repo 時，忽略 index.html 的這層外殼。
 
 ## 交作業（讀書會收作業）
 
@@ -34,7 +36,7 @@
                     {"path": "submissions/{self}", "write": "interact"}]},
    "user": {"scopes": ["profile"]},
    "assets": {"upload": "interact"},
-   "downloads": true}
+   "downloads": {}}
   ```
   所有登入的人可讀；每個人只能寫自己的 doc；owner（主持人）可以改或刪任何人的。
 - 誰能送出：同一個 claude.ai 組織的成員（Contributor 以上），或用 email 邀請為 Editor 的外部成員
