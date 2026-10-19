@@ -4,9 +4,13 @@
 Usage: python3 -I check_article.py site/lXX.html --pages N --pdf FILE.pdf [--fix-time]
 
 Checks: tag balance; required sections (#s-arch #s-ideas #s-background #s-beyond
-#s-discuss #s-try #wrap) and parts (tldr, diagram, quiz, reading, pager, fineprint,
-read-time, read-box); TOC anchors; every a.ref points at the PDF with #page in 1..N;
-STE heuristics on prose; reading time.
+#s-discuss #s-try #wrap) and parts (tldr, diagram, quiz, reading list, pager, fineprint,
+read-time, read-box, side nav); nav anchors; every a.ref points at the PDF with #page in 1..N;
+data-pages-total equals N; STE heuristics on prose; reading time.
+
+Reading time: text inside <details class="ex deep"> (the optional 深入 blocks) is left
+out of the main estimate and reported on its own. --fix-time writes the main estimate
+to span.read-time and the deep estimate to span.deep-time (if the page has one).
 """
 import argparse
 import re
@@ -22,8 +26,11 @@ FILLERS = ["其實", "基本上", "非常", "相當", "可以說", "事實上", 
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
 REQUIRED_IDS = ["s-arch", "s-ideas", "s-background", "s-beyond", "s-discuss", "s-try", "wrap", "read-box"]
-REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "ol.qlist", "div.quiz", "ul.reading", "nav.pager",
-                    "p.fineprint", "span.read-time", "nav.toc"]
+REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "ol.qlist", "div.quiz", "nav.pager",
+                    "p.fineprint", "span.read-time"]
+# the page layout changed over time; one of each group must be present
+REQUIRED_ANY = [("nav.toc", "aside.sidenav"), ("ul.reading", "ol.rg")]
+DEEP = re.compile(r'<details class="ex deep"[^>]*>.*?</details>', re.S)
 
 
 class P(HTMLParser):
@@ -46,7 +53,7 @@ class P(HTMLParser):
             self.ids.add(a["id"])
         if tag == "a" and "ref" in cls:
             self.refs.append(a.get("href") or "")
-        if tag == "nav" and "toc" in cls:
+        if (tag == "nav" and "toc" in cls) or (tag in {"ol"} and "sn-secs" in cls):
             self.in_toc = True
         if tag == "a" and self.in_toc and (a.get("href") or "").startswith("#"):
             self.toc.append(a["href"][1:])
@@ -83,7 +90,7 @@ class P(HTMLParser):
             if t == tag:
                 break
             self.errors.append(f"unclosed <{t}> before </{tag}> (line {self.getpos()[0]})")
-        if tag == "nav":
+        if tag == "nav" or (tag == "ol" and self.in_toc and not any(t == "ol" for t, _, _ in self.stack)):
             self.in_toc = False
 
     def handle_data(self, data):
@@ -118,6 +125,12 @@ def main():
     for c in REQUIRED_CLASSES:
         if c not in p.seen:
             problems.append(f"missing {c}")
+    for group in REQUIRED_ANY:
+        if not any(c in p.seen for c in group):
+            problems.append(f"missing {' or '.join(group)}")
+    m_total = re.search(r'data-pages-total="(\d+)"', html)
+    if m_total and int(m_total.group(1)) != args.pages:
+        problems.append(f"data-pages-total={m_total.group(1)} but --pages {args.pages}")
     for a in p.toc:
         if a not in p.ids:
             problems.append(f"TOC link #{a} has no target")
@@ -135,10 +148,17 @@ def main():
     long_ones = [s for s in sentences if units(s) > args.long]
     fillers = {f: prose.count(f) for f in FILLERS if f in prose}
     passive = len(re.findall(r"被[一-鿿]", prose))
-    body_text = re.sub(r"<[^>]+>", " ", html.split("<main", 1)[-1])
+    main_html = html.split("<main", 1)[-1]
+    deep_html = "".join(DEEP.findall(main_html))
+    body_text = re.sub(r"<[^>]+>", " ", DEEP.sub(" ", main_html))
     total = units(body_text)
-    raw = total / 400
-    minutes = int(-(-raw // 1)) if raw < 15 else max(5, round(raw / 5) * 5)
+    deep_total = units(re.sub(r"<[^>]+>", " ", deep_html))
+
+    def to_min(u):
+        raw = u / 400
+        return int(-(-raw // 1)) if raw < 15 else max(5, round(raw / 5) * 5)
+    minutes = to_min(total)
+    deep_minutes = to_min(deep_total) if deep_total else 0
 
     print(f"{path.name}: {len(p.refs)} slide refs, {len(sentences)} prose sentences "
           f"(avg {sum(map(units, sentences)) / max(1, len(sentences)):.1f} units, > {args.long}: {len(long_ones)})")
@@ -146,9 +166,12 @@ def main():
         print(f"    LONG({units(s)}): {s[:80]}")
     if fillers:
         print(f"  filler words: {fillers}")
-    print(f"  passive 被: {passive}; text units: {total} -> about {minutes} min")
+    print(f"  passive 被: {passive}; text units: {total} -> about {minutes} min"
+          + (f"; deep blocks: {len(DEEP.findall(main_html))}, {deep_total} units -> about {deep_minutes} min" if deep_total else ""))
     if args.fix_time:
         new = re.sub(r'<span class="read-time">[^<]*</span>', f'<span class="read-time">約 {minutes} 分鐘</span>', html, count=1)
+        if deep_total:
+            new = re.sub(r'<span class="deep-time">[^<]*</span>', f'<span class="deep-time">約 {deep_minutes} 分鐘</span>', new, count=1)
         if new != html:
             path.write_text(new, encoding="utf-8")
             print(f"  read-time set to 約 {minutes} 分鐘")
