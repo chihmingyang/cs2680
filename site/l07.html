@@ -13,6 +13,7 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner gutter">
+    <button type="button" class="sn-open" aria-controls="sidenav" aria-expanded="false" title="開啟目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sn-where">目錄</span></button>
     <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
     <nav class="lecnav" aria-label="講次">
       <a href="l06.html" rel="prev">← L6</a>
@@ -20,8 +21,35 @@
       <a href="l08.html" rel="next">L8 →</a>
     </nav>
   </div>
+  <div class="readbar" aria-hidden="true"><i></i></div>
 </header>
 
+<div class="shell">
+<aside class="sidenav" id="sidenav">
+<div class="sn-head"><span class="sn-title">目錄</span><button type="button" class="sn-close" aria-label="關閉目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+<nav class="sn-nav" aria-label="課程目錄">
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="index.html"><span class="sn-t">課程總覽</span></a></li>
+</ol>
+<p class="sn-label">Part I · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent memory 與可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l07.html" aria-current="page"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-arch" data-spy data-short="架構"><span class="sn-n">1</span><span class="sn-t">架構</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">2</span><span class="sn-t">核心觀念</span><span class="sn-p">p.7–37</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1">評估的對象，從預測文字變成完成互動任務</a></li><li><a class="sn-sub" href="#i2">一個成功率不夠：pass^k、成本、latency 各量一件事</a></li><li><a class="sn-sub" href="#i3">每個 benchmark 由兩件事定義：agent 在哪裡做事、grader 檢查什麼</a></li><li><a class="sn-sub" href="#i4">評估很難：leakage 走整個 stack，單一 turn 獎勵亂猜，一次執行只是雜訊</a></li><li><a class="sn-sub" href="#i5">Benchmark 很快飽和，所以真實 agent 要用 Pareto 看</a></li></ol></li><li><a class="sn-sec" href="#s-background" data-spy data-short="觀念補充"><span class="sn-n">3</span><span class="sn-t">觀念補充</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#t1">pass@k 與 pass^k 的估計式</a></li><li><a class="sn-sub" href="#t2">答案正規化與 exact match</a></li><li><a class="sn-sub" href="#t3">LLM-as-judge</a></li><li><a class="sn-sub" href="#t4">Pareto dominance</a></li><li><a class="sn-sub" href="#t5">Benchmark 分數的標準誤</a></li></ol></li><li><a class="sn-sec" href="#s-beyond" data-spy data-short="延伸思考"><span class="sn-n">4</span><span class="sn-t">延伸思考</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#x1">公開 benchmark 回答「model 多強」，production 評估回答「我的 agent 能不能上線」</a></li><li><a class="sn-sub" href="#x2">Grader 是程式，程式需要測試</a></li><li><a class="sn-sub" href="#x3">評估集是耗材，要有新陳代謝</a></li><li><a class="sn-sub" href="#x4">你們團隊自己的 agent 評估，該長什麼樣</a></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">5</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">6</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#s-submit" data-spy data-short="討論"><span class="sn-n">7</span><span class="sn-t">大家的討論</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n"></span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+</ol>
+<p class="sn-soon"><a href="index.html#later-h">Part II 從 10/19 開始，slides 公開後加入</a></p>
+<p class="sn-label">讀書會</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="submissions.html"><span class="sn-t">討論總覽</span></a></li>
+</ol>
+</nav>
+</aside>
+<div class="sn-scrim" hidden></div>
 <main class="page gutter article" data-lecture="l07" data-format="article" data-pdf="7_agent_design_4.pdf" data-pages-total="38">
   <header class="lecture-head">
     <p class="eyebrow">Lecture 07 · 2026-09-30 · Part I</p>
@@ -46,21 +74,6 @@
   </section>
 
   <div class="layout">
-    <nav class="toc" aria-label="本堂目錄">
-      <details open>
-        <summary>本堂目錄</summary>
-        <ol>
-          <li><a href="#s-arch">1 架構<span>全貌</span></a></li>
-          <li><a href="#s-ideas">2 核心觀念<span>p.7–37</span></a></li>
-          <li><a href="#s-background">3 觀念補充<span>背景</span></a></li>
-          <li><a href="#s-beyond">4 延伸思考<span>延伸</span></a></li>
-          <li><a href="#s-discuss">5 問題討論<span>基礎／進階</span></a></li>
-          <li><a href="#s-try">6 動手試試<span>練習</span></a></li>
-          <li><a href="#s-submit">7 交作業<span>上傳</span></a></li>
-          <li><a href="#wrap">延伸閱讀<span>—</span></a></li>
-        </ol>
-      </details>
-    </nav>
 
     <div class="content">
 
@@ -397,14 +410,14 @@
         <header class="part-head">
           <p class="kicker">5 · 問題討論</p>
           <h2>讀書會討論題</h2>
-          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡。進階題在讀完文章後回答，讀書會前發給大家。</p>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡；每一題下面有留言串，卡住的地方隨手寫。進階題在讀完文章後回答；每一題下面就是討論區，寫下你的想法，也看看別人怎麼想。</p>
         </header>
         <div class="qtabs" role="tablist" aria-label="題目分組">
           <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
           <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
         </div>
         <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
-          <p class="qset-lede">看 slides 之前先讀一遍這 9 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <p class="qset-lede">看 slides 之前先讀一遍這 5 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L7 基礎題（帶著問題看 slides）：Agent 評估" data-slides="https://cs2680.com/slides/7_agent_design_4.pdf">複製基礎題</button>
             <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
@@ -413,97 +426,324 @@
             <li class="bq" id="b1">
               <div class="qbody">
                 <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=7" target="_blank" rel="noopener">p.7</a> · 兩種評估層級</p>
-                <p class="qtext">評估 agent 分哪兩個層級？Component-level 看哪四種能力？End-to-end 看哪三個數字？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Component-level 看 agent 內部：planning（任務拆解）、tool use（找到、選對、填對參數）、memory（擷取、整合、取回）、error recovery（出錯後能不能修正）。</p>
-                  <p>End-to-end 只看結果：success rate、每個任務的 cost、完成的 latency。前者回答為什麼失敗，後者回答能不能用。</p>
+                <p class="qtext">Component-level 和 end-to-end 評估各看什麼？哪一種能找出失敗的原因？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Component-level 看 agent 內部的四種能力：planning（拆解任務）、tool use（找 tool、選 tool、填參數）、memory（萃取、整併、取回）、error recovery。End-to-end 只看結果：success rate、每個任務的 cost、完成任務的 latency（p.7）。能找出失敗原因的是 component-level，例如拆錯步驟、選錯 tool 或填錯參數。End-to-end 只告訴你任務有沒有完成。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>End-to-end 把 agent 當成黑箱。你給它一個任務，記下三個數字：成功了沒、花多少錢、花多久。這就是使用者感受到的東西，所以它回答「能不能用」。問題是一個任務只產生一個「成功或失敗」。一次 20 步的 run 可能壞在任何一步，這個結果不會告訴你是哪一步。</p>
+                  <p>Component-level 打開黑箱，拿中間結果去對標準答案：任務拆對了嗎？選的 tool 和參數對嗎？取回的是需要的那一筆記憶嗎？出錯後有沒有修回來？代價是要先標註「正確的中間結果」，建置成本比 end-to-end 高。BFCL 很接近 tool use 這一層的評估：它用 AST 或實際執行，檢查 call 的名稱與參數（p.15）。</p>
+                  <p>兩者互補，像 unit test 和 integration test。End-to-end 告訴你「有問題」，component-level 告訴你「問題在哪」。只有 end-to-end，你只能盲調 prompt。只有 component-level，你不知道元件串起來後還剩多少成功率。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 328" role="img" aria-label="同一次失敗的 run，兩種評估看到的東西。左邊任務送進 agent。Agent 是虛線框，裡面有四個元件：Planning 拆解任務，步驟拆對；Tool use 找、選 tool 並填參數，參數填錯，用藍框標出；Memory 萃取、整併、取回，取回正確；Error recovery 出錯後修回來，沒有察覺錯誤。Agent 的結果送到右邊的 end-to-end 框，它只記錄 success 失敗、每題花費、完成時間，只知道失敗了。下方左邊：component-level 回答為什麼失敗，原因是 tool use 填錯參數、recovery 沒接住。下方右邊：end-to-end 回答能不能用。">
+                        <defs>
+                          <marker id="tk7-1-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                        </defs>
+                        <text x="10" y="20" class="dg-ts">示意：同一次失敗的 run，兩種評估各看到什麼</text>
+                        <rect x="10" y="104" width="80" height="52" rx="4" class="dg-box"/>
+                        <text x="50" y="126" text-anchor="middle" class="dg-tb">任務</text>
+                        <text x="50" y="144" text-anchor="middle" class="dg-ts">指令＋環境</text>
+                        <line x1="90" y1="130" x2="110" y2="130" class="dg-line" marker-end="url(#tk7-1-ah)"/>
+                        <rect x="112" y="34" width="332" height="206" rx="8" class="dg-frame"/>
+                        <text x="124" y="54" class="dg-ta">Agent（受測系統）</text>
+                        <rect x="124" y="64" width="150" height="76" rx="4" class="dg-box"/>
+                        <text x="199" y="84" text-anchor="middle" class="dg-tb">Planning</text>
+                        <text x="199" y="102" text-anchor="middle" class="dg-ts">拆解任務</text>
+                        <text x="199" y="126" text-anchor="middle" class="dg-t">✓ 步驟拆對</text>
+                        <rect x="284" y="64" width="150" height="76" rx="4" class="dg-box-accent"/>
+                        <text x="359" y="84" text-anchor="middle" class="dg-tb">Tool use</text>
+                        <text x="359" y="102" text-anchor="middle" class="dg-ts">找、選 tool，填參數</text>
+                        <text x="359" y="126" text-anchor="middle" class="dg-ta">× 參數填錯</text>
+                        <rect x="124" y="150" width="150" height="76" rx="4" class="dg-box"/>
+                        <text x="199" y="170" text-anchor="middle" class="dg-tb">Memory</text>
+                        <text x="199" y="188" text-anchor="middle" class="dg-ts">萃取、整併、取回</text>
+                        <text x="199" y="212" text-anchor="middle" class="dg-t">✓ 取回正確</text>
+                        <rect x="284" y="150" width="150" height="76" rx="4" class="dg-box"/>
+                        <text x="359" y="170" text-anchor="middle" class="dg-tb">Error recovery</text>
+                        <text x="359" y="188" text-anchor="middle" class="dg-ts">出錯後修回來</text>
+                        <text x="359" y="212" text-anchor="middle" class="dg-t">× 沒有察覺</text>
+                        <line x1="444" y1="137" x2="478" y2="137" class="dg-line" marker-end="url(#tk7-1-ah)"/>
+                        <text x="461" y="129" text-anchor="middle" class="dg-ts">結果</text>
+                        <rect x="480" y="64" width="150" height="162" rx="4" class="dg-box"/>
+                        <text x="555" y="86" text-anchor="middle" class="dg-tb">End-to-end</text>
+                        <text x="555" y="104" text-anchor="middle" class="dg-ts">只看進出，不看內部</text>
+                        <text x="492" y="134" class="dg-t">Success：0（失敗）</text>
+                        <text x="492" y="156" class="dg-t">Cost：每題花費</text>
+                        <text x="492" y="178" class="dg-t">Latency：完成時間</text>
+                        <text x="555" y="210" text-anchor="middle" class="dg-ta">只知道：失敗了</text>
+                        <line x1="278" y1="240" x2="278" y2="256" class="dg-line dg-dash"/>
+                        <line x1="555" y1="226" x2="555" y2="256" class="dg-line dg-dash"/>
+                        <rect x="112" y="258" width="332" height="58" rx="4" class="dg-box-soft"/>
+                        <text x="124" y="280" class="dg-tb">Component-level：回答「為什麼失敗」</text>
+                        <text x="124" y="302" class="dg-ts">原因：Tool use 填錯參數，recovery 沒接住</text>
+                        <rect x="480" y="258" width="150" height="58" rx="4" class="dg-box-soft"/>
+                        <text x="555" y="280" text-anchor="middle" class="dg-tb">End-to-end</text>
+                        <text x="555" y="302" text-anchor="middle" class="dg-ts">回答「能不能用」</text>
+                      </svg>
+                    </div>
+                    <figcaption>同一次 run，end-to-end 只記下「失敗」和花費。Component-level 逐一檢查內部，才找得到是哪個能力出錯。資料為示意。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>元件分數高，不代表任務會成功，因為錯誤會沿著步驟相乘（L6）。每一步都對，整個任務才對。所以 component-level 的 95% 和 end-to-end 的 36% 可以同時成立，下面的例子算給你看。</p>
+                  <p>實務上兩種評估共用同一份資料：trajectory。先跑 end-to-end 找出失敗的任務，再讀這些任務的 trajectory，把每次失敗歸到一個元件。Tracing 工具記錄每一次 LLM call 與 tool call，這一步就不必手動整理。最常出錯的元件，再補一組 component-level 的測試題。</p>
+                  <div class="callout example"><span class="tag">例子</span><div><p>假設任務有 20 步，每步成功率 0.95，各步獨立。任務成功率 = 0.95²⁰。逐步算：0.95² = 0.9025；0.95⁴ ≈ 0.8145；0.95⁵ ≈ 0.7738；0.95¹⁰ = （0.95⁵）² ≈ 0.5987；0.95²⁰ = （0.95¹⁰）² ≈ 0.358。每一步看起來都很好，任務卻只有約 36% 成功。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>End-to-end：agent 是黑箱，只看 success、cost、latency → 回答「能不能用」。</li>
+                    <li>Component-level：逐一檢查 planning、tool use、memory、error recovery → 回答「為什麼失敗」。</li>
+                    <li>每步 95%、串 20 步只剩約 36% → 兩種都要量，再用 trajectory 把兩者接起來。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">評估的對象，從預測文字變成完成互動任務</a>〉、第 1 段<a href="#s-arch">架構圖</a>底部的兩個層級、L6〈<a href="l06.html#i4">錯誤會相乘</a>〉與〈<a href="l06.html#t4">獨立假設</a>〉。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b2">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=9" target="_blank" rel="noopener">p.9–11</a> · 評估目標與 metric</p>
-                <p class="qtext">評估目標分哪五種？Agent 時代多了哪些 metric？Cost 和 latency 各常漏算什麼？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>五種：預測文字、給出正確答案、給出較受偏好的回覆、寫出能運作的程式、完成互動任務。越往後，grader 越需要執行環境。</p>
-                  <p>早期用 perplexity、accuracy / F1、win rate。Agent 多了 pass@k（k 次至少 1 次成功）、pass^k（k 次全部成功，τ-bench 提出）、cost、latency。Cost 常漏算 tool call 與 cache miss；latency 不只 LLM 的時間，tool 執行與跑測試也算。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=12" target="_blank" rel="noopener">p.12–14</a> · 評估 loop 與 GAIA</p>
+                <p class="qtext">評估 loop 的最後一步，grader 依哪三種東西打分？GAIA 只看答案，它量不到什麼？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Grader 依三種東西打分：最終答案、最終環境狀態、trajectory。每個 benchmark 選的不同（p.12）。GAIA 只比對正規化後的最終答案，中間步驟不計分。所以它量不到改變外界的動作，例如寄 email、訂機票、改資料庫（p.14）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.12 把評估寫成一個 loop。每個任務開始前，先把環境重置到初始狀態。接著在預算內反覆執行：環境給 observation，agent 依指令、observation、歷史與 tools 選一個 action，環境執行它。Loop 結束後，grader 才打分。它能拿到的輸出只有三種，各回答一個不同的問題：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>Grader 看什麼</th><th>回答的問題</th><th>例子</th><th>盲點</th></tr></thead>
+                    <tbody>
+                      <tr><td>最終答案</td><td>有沒有算對、查對</td><td>GAIA（p.14）</td><td>有沒有真的做事</td></tr>
+                      <tr><td>最終環境狀態</td><td>事情做成了嗎</td><td>WebArena、τ-bench（p.16、p.20）</td><td>檢查範圍外的副作用，例如寄出的信（p.32）</td></tr>
+                      <tr><td>Trajectory</td><td>怎麼做到的、安不安全</td><td>BFCL 檢查每個 call 的名稱與參數（p.15）</td><td>會判錯做法不同但正確的執行（p.32）</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>GAIA 有 466 題人寫的題目，涵蓋網頁、試算表、PDF、圖片、音訊與計算（p.13）。答案很短：一個數字、字串或清單，例如 17.4 或 4,381。它沒有固定的 tool API，每個 agent 自備 search、browser、Python、shell。難度分三級：Level 1 不超過 5 步、最多 1 個 tool；Level 2 要 5–10 步、多個 tool；Level 3 長度不限、tool 很多。</p>
+                  <p>評分公式是 score = (1/N) Σᵢ 1[normalize(ŷᵢ) = normalize(yᵢ)]（p.14）。意思是：每題的答案正規化後和標準答案完全相同，得 1；否則得 0；再對 N 題取平均。所以 GAIA 量得到推理、檢索、選 tool、整合資訊，量不到動作。Agent 途中寄了一封錯的信，只要最後的數字對，這題仍然得 1 分。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>GAIA 只看答案，有一個實際的理由：每個 agent 自備 tool，各家的 trajectory 長得完全不同，能公平比較的共同輸出只剩答案。答案限制成短格式，grader 就只是幾行程式：結果確定、成本低、能重現，不需要 judge model。GAIA 論文把這種「依型別正規化，再完全比對」的做法稱為 quasi exact match。</p>
+                  <p>自己設計評估時，三種輸入可以疊加，不必只選一種。能比答案就比答案；要量「做事」，就查狀態；要量「安全」，再加上掃 trajectory 的規則。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「GAIA 分數高，代表 agent 能替我把事情辦完。」GAIA 量的是「找到並算出正確答案」。你的 agent 若要寄信、改資料、下單，要看檢查狀態的 benchmark，例如 WebArena 或 τ-bench，或自己架環境去檢查狀態。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>Grader 只有三種輸入：答案、狀態、trajectory → benchmark 的性格，由它看哪一種決定。</li>
+                    <li>GAIA：短答案 → 正規化 → 完全比對；便宜又確定，但看不到動作與副作用。</li>
+                    <li>要量做事就查狀態，要量安全再加 trajectory 檢查。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>第 1 段<a href="#s-arch">架構圖</a>的 grader 與三種輸出、觀念補充〈<a href="#t2">答案正規化與 exact match</a>〉、〈<a href="#t3">LLM-as-judge</a>〉、核心觀念〈<a href="#i3">每個 benchmark 由兩件事定義</a>〉。進階題第 5 題會設計 trajectory 檢查。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b3">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=12" target="_blank" rel="noopener">p.12</a> · 評估 loop</p>
-                <p class="qtext">Benchmark 的評估 loop 有哪幾步？什麼時候停？最後 evaluator 可以依哪三種東西打分？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>先把環境重置到任務的初始狀態。然後 agent 反覆 observe 環境、選一個 action、執行它。直到 agent 結束，或預算（步數、金額、時間）用完。</p>
-                  <p>Evaluator 依最終答案、最終環境狀態、trajectory 打分。每個 benchmark 選的不同：GAIA 只看答案，WebArena 與 OSWorld 看狀態，τ-bench 看資料庫加回覆。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=20" target="_blank" rel="noopener">p.20–23</a> · τ-bench 與 TheAgentCompany 的計分</p>
+                <p class="qtext">τ-bench 的 reward 為何相乘？TheAgentCompany 拿 7/8 為何只得 0.44？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>τ-bench 的 r = r_action × r_output（p.20）。r_action 要求最終資料庫和目標狀態一致，r_output 要求回覆含必要資訊；相乘代表任一項是 0，總分就是 0。TheAgentCompany 的 S_partial = 0.5 × earned/total + 0.5 × S_full（p.23）。7/8 沒完成時 S_full = 0，只得 0.5 × 0.875 ≈ 0.44，因為「完成」占一半分數。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>τ-bench 的兩項都只有 0 或 1。r_action：最終資料庫和標註的目標狀態一致才是 1。唯讀的 call 可以不同，但多出不該有的寫入就失敗（p.20）。r_output：給客戶的回覆含必要資訊才是 1。兩個 0/1 相乘，等於邏輯上的 AND：兩項都過才得分。</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>情況（示意）</th><th>r_action</th><th>r_output</th><th>相乘</th><th>若改成平均</th></tr></thead>
+                    <tbody>
+                      <tr><td>改對資料庫，也告知了客戶</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+                      <tr><td>改對資料庫，沒說明票價差額</td><td>1</td><td>0</td><td>0</td><td>0.5</td></tr>
+                      <tr><td>回覆「已改好」，資料庫沒改</td><td>0</td><td>1</td><td>0</td><td>0.5</td></tr>
+                      <tr><td>改好了，途中多寫了一筆不該寫的</td><td>0</td><td>1</td><td>0</td><td>0.5</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>客服任務裡，這兩件事缺一不可。平均會讓後三列各拿 0.5，看起來像「做了一半」，但這三種都不能交給客戶。相乘讓「不能上線」直接得 0。</p>
+                  <p>TheAgentCompany 有 175 個任務，在模擬公司裡跑：GitLab、Plane 工單、ownCloud 文件、RocketChat 聊天，還有 LLM 模擬的同事（p.23）。任務很長。若只給 0 或 1，多數 agent 可能都是 0 分，benchmark 就分不出誰比較接近完成。所以它用 checkpoint 給部分分數，但部分分數最多占一半，另一半只給完成的任務。Slide 沒有明寫 S_full 的定義；從三個例子看，完成時是 1，沒完成是 0。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 300" role="img" aria-label="TheAgentCompany 部分分數的計算。每一列是一條 0 到 1.0 的長條，中間在 0.5 切開。左半是 checkpoint 分，等於 0.5 乘以通過比例，8 個 checkpoint 每個值 0.0625。右半是完成分，等於 0.5 乘以 S_full。4/8 未完成：0.5 × 4/8 + 0.5 × 0 = 0.25。7/8 未完成：0.5 × 0.875 + 0 = 0.4375，約 0.44。8/8 完成：0.5 + 0.5 = 1.00。從 7/8 到 8/8，最後一個 checkpoint 值 0.0625，完成再加 0.5。">
+                        <text x="260" y="20" text-anchor="middle" class="dg-tb">Checkpoint 分（上限 0.5）</text>
+                        <text x="260" y="38" text-anchor="middle" class="dg-tm">0.5 × earned/total</text>
+                        <text x="480" y="20" text-anchor="middle" class="dg-tb">完成分（0 或 0.5）</text>
+                        <text x="480" y="38" text-anchor="middle" class="dg-tm">0.5 × S_full</text>
+                        <text x="150" y="58" text-anchor="middle" class="dg-tm">0</text>
+                        <text x="370" y="58" text-anchor="middle" class="dg-tm">0.5</text>
+                        <text x="590" y="58" text-anchor="middle" class="dg-tm">1.0</text>
+
+                        <text x="10" y="78" class="dg-tb">4/8 checkpoint</text>
+                        <text x="10" y="94" class="dg-ts">未完成</text>
+                        <rect x="150" y="66" width="440" height="26" rx="3" class="dg-frame"/>
+                        <rect x="150" y="66" width="110" height="26" rx="3" class="dg-box-accent"/>
+                        <text x="600" y="84" class="dg-ta">0.25</text>
+                        <text x="150" y="110" class="dg-tm">0.5 × 4/8 + 0.5 × 0 = 0.25</text>
+
+                        <text x="10" y="140" class="dg-tb">7/8 checkpoint</text>
+                        <text x="10" y="156" class="dg-ts">未完成</text>
+                        <rect x="150" y="128" width="440" height="26" rx="3" class="dg-frame"/>
+                        <rect x="150" y="128" width="192.5" height="26" rx="3" class="dg-box-accent"/>
+                        <text x="600" y="146" class="dg-ta">0.44</text>
+                        <text x="150" y="172" class="dg-tm">0.5 × 7/8 + 0.5 × 0 = 0.5 × 0.875 = 0.4375 ≈ 0.44</text>
+
+                        <text x="10" y="202" class="dg-tb">8/8 checkpoint</text>
+                        <text x="10" y="218" class="dg-ts">完成</text>
+                        <rect x="150" y="190" width="440" height="26" rx="3" class="dg-frame"/>
+                        <rect x="150" y="190" width="220" height="26" rx="3" class="dg-box-accent"/>
+                        <rect x="370" y="190" width="220" height="26" rx="3" class="dg-box"/>
+                        <text x="480" y="208" text-anchor="middle" class="dg-tb">完成 +0.5</text>
+                        <text x="600" y="208" class="dg-ta">1.00</text>
+                        <text x="150" y="234" class="dg-tm">0.5 × 8/8 + 0.5 × 1 = 0.5 + 0.5 = 1.00</text>
+
+                        <line x1="177.5" y1="66" x2="177.5" y2="92" class="dg-soft"/>
+                        <line x1="205" y1="66" x2="205" y2="92" class="dg-soft"/>
+                        <line x1="232.5" y1="66" x2="232.5" y2="92" class="dg-soft"/>
+                        <line x1="177.5" y1="128" x2="177.5" y2="154" class="dg-soft"/>
+                        <line x1="205" y1="128" x2="205" y2="154" class="dg-soft"/>
+                        <line x1="232.5" y1="128" x2="232.5" y2="154" class="dg-soft"/>
+                        <line x1="260" y1="128" x2="260" y2="154" class="dg-soft"/>
+                        <line x1="287.5" y1="128" x2="287.5" y2="154" class="dg-soft"/>
+                        <line x1="315" y1="128" x2="315" y2="154" class="dg-soft"/>
+                        <line x1="177.5" y1="190" x2="177.5" y2="216" class="dg-soft"/>
+                        <line x1="205" y1="190" x2="205" y2="216" class="dg-soft"/>
+                        <line x1="232.5" y1="190" x2="232.5" y2="216" class="dg-soft"/>
+                        <line x1="260" y1="190" x2="260" y2="216" class="dg-soft"/>
+                        <line x1="287.5" y1="190" x2="287.5" y2="216" class="dg-soft"/>
+                        <line x1="315" y1="190" x2="315" y2="216" class="dg-soft"/>
+                        <line x1="342.5" y1="190" x2="342.5" y2="216" class="dg-soft"/>
+                        <line x1="370" y1="62" x2="370" y2="96" class="dg-soft dg-dash"/>
+                        <line x1="370" y1="124" x2="370" y2="158" class="dg-soft dg-dash"/>
+
+                        <text x="10" y="266" class="dg-ta">7/8 → 8/8：最後 1 個 checkpoint 值 0.5/8 = 0.0625，完成再加 0.5，共 +0.5625</text>
+                        <text x="10" y="288" class="dg-ts">每一格是 1 個 checkpoint。藍色是 checkpoint 分，白框是完成分，虛線框是沒拿到的分數。</text>
+                      </svg>
+                    </div>
+                    <figcaption>Slide 的三個例子（p.23）。沒完成的任務只拿得到左半邊，上限是 0.5；7/8 是 0.4375，四捨五入成 0.44。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>兩種設計回答同一個問題：grader 要獎勵什麼。只給 0/1 最嚴格，但任務一長，大家都接近 0，分數就沒有鑑別力。部分分數提供梯度，代價是「做了很多但沒做完」也能拿分。OSWorld 2.0 也走這條路：108 個長流程，約 27 個 checkpoint 給部分分數（p.17）。</p>
+                  <p>乘法可以繼續延伸：任何「一項不過就不能上線」的條件，都適合乘進 grader。有部分分數時，報告要同時列「完成率」和「平均部分分數」。平均 0.44 可能是每題都卡在 7/8，也可能是一半滿分、一半 0 分。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「8 個 checkpoint 過了 7 個，分數應該是 0.875。」Checkpoint 只占一半權重。7/8 先乘 0.5 得 0.4375；沒完成，完成分是 0。最後一個 checkpoint 加上完成，一共值 0.5625，比前 7 個加起來的 0.4375 還多。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>τ-bench：兩個 0/1 相乘 = AND → 資料庫和回覆缺一項，就是 0 分。</li>
+                    <li>TheAgentCompany：checkpoint 分上限 0.5，完成再給 0.5 → 7/8 未完成 = 0.5 × 0.875 ≈ 0.44。</li>
+                    <li>乘法讓「不能上線」得 0；部分分數讓長任務有梯度。兩者都是 grader 的設計選擇。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">每個 benchmark 由兩件事定義</a>〉、〈<a href="#i2">一個成功率不夠</a>〉（τ-bench 也提出 pass^k）。進階題第 3 題會用乘法替客服 agent 設計 grader，第 5 題會加上安全檢查。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b4">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=13" target="_blank" rel="noopener">p.13–17</a> · 四個 benchmark 的差別</p>
-                <p class="qtext">GAIA 怎麼評分，它量不到什麼？WebArena 和 OSWorld 的 observation 差在哪裡？OSWorld 2.0 為什麼加 checkpoint？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>GAIA 有 466 題，只看最終答案：正規化後完全相符得 1 分，否則 0 分。它量得到推理、檢索、選 tool；量不到改變外界的動作，例如寄 email、訂機票、改資料庫。</p>
-                  <p>WebArena 給 accessibility tree，每個元素有 ID，agent 對 ID 做 click 或 type。OSWorld 只給螢幕截圖，agent 要自己算出滑鼠座標（GUI grounding）。OSWorld 2.0 的 108 個流程常超過 1 小時、數百步，每個約 27 個 checkpoint，讓做到一半也能給部分分數。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=27" target="_blank" rel="noopener">p.27–28</a> · Leakage 與單一 user turn</p>
+                <p class="qtext">為什麼「model 沒用測試集訓練」不能證明分數乾淨？單一 user turn 的評分會獎勵什麼？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Agent 的表現 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment），model 只是其中一個輸入（p.27）。其他輸入也能帶進答案，例如 few-shot 範例取自測試題、memory 存了先前的紀錄、web search 搜到公開解答。單一 user turn 的評分會獎勵「有自信地猜」（p.28）。Agent 問一個釐清問題要多花步數，卻拿不到分數。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.26 把 leakage 分成四層：training、eval-time（上網搜到修正）、environment（sandbox 露出未來的 commit）、benchmark overfitting（在公開測試集上調 prompt 與 scaffold）。Tool 越真實，可洩漏的面越大。p.27 再把它攤到 stack 的每一個元件。依「什麼時候漏」分成三組，比較好記：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>什麼時候漏</th><th>元件（p.27）</th><th>例子</th></tr></thead>
+                    <tbody>
+                      <tr><td>訓練時</td><td>Base model、fine-tuning</td><td>預訓練資料含題目；拿 benchmark 解答當 agent 的訓練 trajectory</td></tr>
+                      <tr><td>評估執行時</td><td>Prompt、retrieval、memory、web search、environment</td><td>Few-shot 範例取自測試題；RAG 語料收了答案；memory 存了上一輪的嘗試；搜到公開解答；看得到未來的 Git commit</td></tr>
+                      <tr><td>開發過程中</td><td>Scaffold、agent development</td><td>手寫的規則針對 benchmark 調過；研究者反覆看失敗案例再調系統</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>「Model 沒用測試集訓練」只排除了第一組。換一個從沒看過題目的 model，它一樣能從 web search 或 memory 拿到答案。</p>
+                  <p>第二個問題是互動。多數 benchmark 只給一個完整的指令，中間沒有使用者（p.28）。真實工作卻會缺條件、中途被糾正、目標會變。沒有使用者，問問題只會用掉步數與預算。p.31 因此建議用多輪 probe 測三件事：目標不明時會不會問（clarification）、被糾正後會不會重新規劃（recovery）、跨 turn 會不會記得限制（memory）。</p>
+                  <div class="callout example"><span class="tag">例子</span><div><p>一個指令有兩種解讀，機率各半。直接猜：期望分數 = 0.5 × 1 + 0.5 × 0 = 0.5。先問：沒人回答，最後還是得猜，期望分數最多 0.5，還多花步數。所以在單一 turn 的 grader 下，「問」不會比「猜」得分高。有真實使用者回答時，問一句就能把成功率拉近 1。</p></div></div>
+                  <p class="tk-h">背景補充</p>
+                  <p>Benchmark overfitting 是 Goodhart's law 的例子：指標一旦變成目標，就不再是好指標。機器學習用 train、validation、test 三份資料防它：調參只看 validation，test 只在最後跑一次。開發者反覆看測試集的失敗案例，等於把 test set 當 validation 用。</p>
+                  <p>查 leakage 的常見做法：一次關掉一條管道再重跑，例如關掉 web search、清空 memory，看分數掉多少；讀 trajectory 裡的網址與搜尋字串；再用沒人看過的新題目跑一次。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Model 的 training cutoff 早於 benchmark 發布，就沒有 leakage。」Cutoff 只處理訓練時的那一組。Web search、memory、environment 的洩漏發生在評估當下，跟 model 何時訓練無關。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>表現是整個 stack 的函數 → leakage 能從任何元件進來，不只訓練資料。</li>
+                    <li>「沒用測試集訓練」只排除訓練時的洩漏；評估時與開發過程的洩漏要另外查。</li>
+                    <li>單一 turn 沒人回答 → 問問題只花步數 → 獎勵自信地猜；多輪 probe 才測得到 clarification、recovery、memory。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">評估很難</a>〉、延伸思考〈<a href="#x3">評估集是耗材，要有新陳代謝</a>〉、L4〈<a href="l04.html#x2">評估時要固定 harness</a>〉。進階題第 4 題會設計防止 leakage 的工作方式。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b5">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=18" target="_blank" rel="noopener">p.18–20</a> · SWE-bench 與 τ-bench</p>
-                <p class="qtext">SWE-bench 的測試分哪兩組，各抓什麼？τ-bench 的 reward 怎麼算？pass^k 是什麼意思？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>一組原本失敗，修好後要通過；另一組原本就通過，改完後仍要通過，用來抓「改壞別的功能」。Patch 套上去跑測試，兩組都過才算解決。</p>
-                  <p>τ-bench 的 r = r_action × r_output：最終資料庫和目標狀態一致，而且回覆含必要資訊，任一項是 0 總分就是 0。pass^k 是同一題獨立跑 k 次全部成功的機率；pass@k 只要 1 次成功。客服 agent 要看 pass^k。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b6">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=21" target="_blank" rel="noopener">p.21–24</a> · Terminal-Bench 與總表</p>
-                <p class="qtext">Terminal-Bench 為什麼介於 SWE-bench 和 OSWorld 之間？TB 4.0 為什麼刪題，剩幾題？TheAgentCompany 的部分分數怎麼算？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Agent 在 container 裡下 shell 指令，範圍比修一個 repo 的 issue 大（設定、debug、建置），又不需要 OSWorld 的滑鼠座標。評分是對最終系統狀態跑測試腳本。TB 4.0 刪掉已飽和的題目，從 89 題剩 66 題；解答不公開，timeout 8 小時。</p>
-                  <p>S_partial = 0.5 × earned/total + 0.5 × S_full。拿到 7/8 個 checkpoint 但沒完成，得 0.44；全部完成才是 1.00。p.24 的總表裡，只有 GAIA 只看答案，其他 7 個都檢查某種狀態。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b7">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=26" target="_blank" rel="noopener">p.26–27</a> · Leakage</p>
-                <p class="qtext">Data leakage 有哪四層？Agent 的表現是哪些東西的函數？為什麼「model 沒用測試集訓練」不夠？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>四層：training leakage（題目進了訓練資料）、eval-time leakage（評估時上網抄到修正）、environment leakage（sandbox 暴露未來的 commit 或隱藏測試）、benchmark overfitting（用公開測試集調 prompt 與 scaffold）。</p>
-                  <p>P = f（LLM、prompt、scaffold、tools、retriever、memory、environment）。每個輸入都能帶進答案：few-shot 範例取自測試題、RAG 收錄答案、memory 存了上一輪、web search 搜到解答、開發者反覆看失敗案例。Model 只是其中一個輸入。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b8">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=28" target="_blank" rel="noopener">p.28–32</a> · 單一 turn 與其他挑戰</p>
-                <p class="qtext">多數 benchmark 只有一個 user turn，這會漏掉什麼？多輪評估要測哪三件事？p.32 還列了哪四個挑戰，成本的例子差幾倍？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>真實工作會模糊、會修改、會中斷；單一 turn 的評分會獎勵有自信地猜，問釐清問題反而拿不到分。多輪要測 clarification（會不會問）、recovery（收到糾正會不會重新規劃）、memory（前面的限制後面還記不記得）。</p>
-                  <p>四個挑戰：成本與 latency、非確定性、安全與副作用、評分方式本身。成本的例子：一次 200 步花 40 美元，另一次 12 步花 0.30 美元，兩次都成功，相差約 133 倍。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b9">
-              <div class="qbody">
                 <p class="qtag"><a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=33" target="_blank" rel="noopener">p.33–37</a> · 飽和與 Pareto frontier</p>
-                <p class="qtext">Frontier model 追上 benchmark 要多久？SWE-bench Verified 從幾分升到幾分？什麼叫 A 支配 B，Pareto frontier 是什麼？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>6 到 39 個月：GLUE 14 個月、MMLU 39 個月、GPQA Diamond 10 個月、ARC-AGI-3 只要 6 個月。SWE-bench Verified 從 33% 到 95%，花了 22 個月。所以看到高分，先確認 benchmark 有沒有飽和。</p>
-                  <p>真實 agent 要看能力、成本、速度三個維度。A 在每個 metric 都不比 B 差，且至少一個更好，就說 A 支配 B。沒有任何 agent 能支配的那群是 Pareto frontier（Rank 1）；拿掉它們後不受支配的是 Rank 2。</p>
+                <p class="qtext">新 benchmark 推出後多久就飽和？哪些 agent 屬於 Pareto frontier？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>p.33 列了 6 個 benchmark：frontier model 只花 6 到 39 個月，就追上人類基準線或大幅拉高分數。例如 SWE-bench Verified 用 22 個月從 33% 升到 95%。A 在每個 metric 都不比 B 差，而且至少一個更好，就是 A 支配 B（p.37）。沒有任何 agent 能支配的那一群，就是 Pareto frontier（Rank 1）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.33 的 6 個例子：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>Benchmark（推出年）</th><th>門檻或分數變化</th><th>花多久</th><th>最後分數</th></tr></thead>
+                    <tbody>
+                      <tr><td>GLUE（2018）</td><td>人類水準 87.1</td><td>14 個月</td><td>91.1</td></tr>
+                      <tr><td>MMLU（2020）</td><td>專家水準 89.8</td><td>39 個月</td><td>92.3</td></tr>
+                      <tr><td>GPQA Diamond（2023）</td><td>博士專家 69.7</td><td>10 個月</td><td>96.0</td></tr>
+                      <tr><td>SWE-bench Verified（2024）</td><td>33% → 95%</td><td>22 個月</td><td>95.0</td></tr>
+                      <tr><td>ARC-AGI-2（2025）</td><td>一般人 60</td><td>11 個月</td><td>95.0</td></tr>
+                      <tr><td>ARC-AGI-3（2026）</td><td>0.5% → 62.7%</td><td>6 個月（slide 標 *）</td><td>62.7</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>p.34 說的飽和有兩種：frontier 追上人類基準線，或頂尖 model 的分數不再拉開。飽和後，頂尖 model 的分數擠在一起，差距落在雜訊裡，benchmark 就失去鑑別力。對策有三種：出更難的版本（SWE-bench Pro）、刪掉飽和的題目（Terminal-Bench 從 2.0 的 89 題減到 4.0 的 66 題，p.21）、出更長的任務（OSWorld 2.0 的 108 個長流程，p.17）。</p>
+                  <p>比較真實 agent 時，p.37 列出能力、成本、速度等維度。只看能力，常會選到最貴的那個。Pareto 的做法是先刪掉「有別人更便宜又不比它差」的選項。剩下的不受支配的一群是 Rank 1。把 Rank 1 拿掉，再找一次不受支配的點，就是 Rank 2，依此類推。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 344" role="img" aria-label="能力對成本的散佈圖，五個示意 agent。橫軸是每題成本，越低越好；縱軸是能力，越高越好。甲 50%、0.10 美元；乙 62%、0.30 美元；丁 75%、1.00 美元，這三個沒有人支配，是 Rank 1，用藍點與階梯線連起來。丙 58%、0.60 美元，乙比它便宜又比它強，所以受乙支配。戊 70%、1.40 美元，受丁支配。丙和戊在階梯線右下方的灰色區域，是 Rank 2。">
+                        <defs>
+                          <marker id="tk7-5-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
+                          <marker id="tk7-5-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                        </defs>
+                        <text x="86" y="22" class="dg-tb">能力（越高越好）</text>
+                        <polygon points="112.5,205 177.5,205 177.5,139 405,139 405,67.5 600,67.5 600,260 112.5,260" class="dg-box-soft"/>
+                        <text x="370" y="250" text-anchor="middle" class="dg-ts">灰色區域：每個點都有人比它更便宜、又不比它差</text>
+                        <line x1="80" y1="260" x2="612" y2="260" class="dg-line" marker-end="url(#tk7-5-ah)"/>
+                        <line x1="80" y1="260" x2="80" y2="30" class="dg-line" marker-end="url(#tk7-5-ah)"/>
+                        <text x="72" y="44" text-anchor="end" class="dg-tm">80%</text>
+                        <text x="72" y="99" text-anchor="end" class="dg-tm">70%</text>
+                        <text x="72" y="154" text-anchor="end" class="dg-tm">60%</text>
+                        <text x="72" y="209" text-anchor="end" class="dg-tm">50%</text>
+                        <text x="72" y="264" text-anchor="end" class="dg-tm">40%</text>
+                        <text x="80" y="278" text-anchor="middle" class="dg-tm">$0</text>
+                        <text x="210" y="278" text-anchor="middle" class="dg-tm">$0.4</text>
+                        <text x="340" y="278" text-anchor="middle" class="dg-tm">$0.8</text>
+                        <text x="470" y="278" text-anchor="middle" class="dg-tm">$1.2</text>
+                        <text x="600" y="278" text-anchor="middle" class="dg-tm">$1.6</text>
+                        <text x="612" y="298" text-anchor="end" class="dg-tb">每題成本（越低越好）</text>
+                        <polyline points="112.5,205 177.5,205 177.5,139 405,139 405,67.5 600,67.5" class="dg-accent"/>
+                        <line x1="186" y1="92" x2="132" y2="46" class="dg-accent" marker-end="url(#tk7-5-ahs)"/>
+                        <text x="194" y="94" class="dg-ta">往左上更好</text>
+                        <circle cx="112.5" cy="205" r="6" class="dg-fill-accent"/>
+                        <text x="122" y="226" class="dg-t">甲：50%，$0.10</text>
+                        <circle cx="177.5" cy="139" r="6" class="dg-fill-accent"/>
+                        <text x="186" y="128" class="dg-t">乙：62%，$0.30</text>
+                        <circle cx="405" cy="67.5" r="6" class="dg-fill-accent"/>
+                        <text x="397" y="56" text-anchor="end" class="dg-t">丁：75%，$1.00</text>
+                        <circle cx="275" cy="161" r="6" class="dg-fill-soft"/>
+                        <text x="285" y="166" class="dg-t">丙：58%，$0.60</text>
+                        <text x="285" y="184" class="dg-ts">乙更便宜又更強 → 受乙支配</text>
+                        <circle cx="535" cy="95" r="6" class="dg-fill-soft"/>
+                        <text x="535" y="118" text-anchor="middle" class="dg-t">戊：70%，$1.40</text>
+                        <text x="535" y="136" text-anchor="middle" class="dg-ts">受丁支配</text>
+                        <circle cx="90" cy="324" r="5" class="dg-fill-accent"/>
+                        <text x="102" y="328" class="dg-ts">Rank 1（Pareto frontier）：甲、乙、丁</text>
+                        <circle cx="340" cy="324" r="5" class="dg-fill-soft"/>
+                        <text x="352" y="328" class="dg-ts">Rank 2：丙、戊　資料為示意</text>
+                      </svg>
+                    </div>
+                    <figcaption>藍色階梯線就是 frontier：線的右下方都受支配。frontier 上的三個點不分高下，要靠預算或 SLA 選。資料為示意，和進階題第 6 題的數字不同。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>Pareto 的概念來自經濟學，在多目標最佳化裡很常用。「拿掉 Rank 1 再找下一層」的做法叫 non-dominated sorting，NSGA-II 這類演算法就用它排序。Agent 評估也走向這個方向：2024 年的論文「AI Agents That Matter」主張 agent 的成績要和成本一起報，用 frontier 比較。</p>
+                  <p>飽和的另一面是汙染。題目公開越久，越可能進到訓練資料或網路上的解答裡。p.8 把 LiveBench、LiveCodeBench 放在重視 freshness 的那一代：它們持續加入新題。p.36 也說評估資料正從固定、公開，走向新鮮、隱藏、動態。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Benchmark 飽和，代表這類工作 AI 已經做得好了。」飽和只代表這組題目分不出強弱。題目通常條件完整、只有一個 turn（p.28）。同樣是修 repo，換成更難、要改多個檔案的 SWE-bench Pro（p.18），就是另一回事。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>新 benchmark 6–39 個月就被追上 → 分數擠在一起 → 要出更難、更長或刪題的新版。</li>
+                    <li>A 支配 B：每個維度都不差，至少一個更好；不受支配的一群就是 Rank 1。</li>
+                    <li>Pareto 不需要權重，只刪掉不值得考慮的選項；frontier 上要選哪一個，看預算或 SLA。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">Benchmark 很快飽和，所以真實 agent 要用 Pareto 看</a>〉、觀念補充〈<a href="#t4">Pareto dominance</a>〉、〈<a href="#t5">Benchmark 分數的標準誤</a>〉。進階題第 6 題會用 5 個設定實際排 rank；第 6 段的練習會加上 latency 當第三個維度。</p>
                 </div></details>
               </div>
             </li>
           </ol>
         </div>
         <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
-          <p class="qset-lede">這 6 題可以在讀書會前先發給大家回答。每題附情境、回答要點與相關 slide。「參考觀點與追問」給主持人用，建議討論後再展開。</p>
+          <p class="qset-lede">這 6 題在讀書會前回答。每個回答要點下面有一行提示。不用每點都答，挑一點寫兩三句也可以。不知道怎麼開頭，就在討論區按「用範本開始寫」，照著填空。寫完按儲存，其他人的想法會自動展開。「參考觀點與追問」建議討論後再展開。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L7 進階題（讀書會討論）：Agent 評估" data-slides="https://cs2680.com/slides/7_agent_design_4.pdf">複製進階題</button>
             <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
@@ -516,13 +756,15 @@
                 <p class="qctx"><b>情境：</b>兩個退款客服 agent 在同一組 50 題上各跑 4 次。甲：pass@4 = 0.95，pass^4 = 0.55。乙：pass@4 = 0.88，pass^4 = 0.74。每位客戶只來一次，失敗就是一筆錯的退款。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>說明兩個 metric 的定義，以及它們的差距代表什麼。</li>
-                    <li>為退款情境選一個 agent，用數字說明理由。</li>
-                    <li>舉一個 pass@k 才正確的情境，說明它和退款情境差在哪。</li>
+                    <li>說明兩個 metric 的定義，以及它們的差距代表什麼。<span class="qh">提示：定義看 p.11 的表。先想：pass@4 算成功、pass^4 不算的題目，是哪一種題目？甲、乙各占多少？</span></li>
+                    <li>為退款情境選一個 agent，用數字說明理由。<span class="qh">提示：先想：客戶能替你重試 4 次再挑最好的一次嗎？不能的話，甲、乙該比 pass@4 還是 pass^4？</span></li>
+                    <li>舉一個 pass@k 才正確的情境，說明它和退款情境差在哪。<span class="qh">提示：pass@k 的前提是能重試，又能自動判斷哪一次對。想一個寫程式的例子：誰來判斷哪一次對？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>兩個 metric 的差距，是「有時成功、有時失敗」的題目。先算甲和乙各有多少比例屬於這一類。pass@k 的前提是能重試，而且能自動判斷哪一次對了。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">pass@k 是 k 次 ＿＿ 成功，pass^k 是 k 次 ＿＿ 成功；差距是 ＿＿ 的題目，甲約 ＿＿，乙約 ＿＿。</p>
+                  <p class="tpl">退款選 ＿＿。客戶只來一次，所以該比（pass@4／pass^4）：甲 ＿＿，乙 ＿＿。</p>
+                  <p class="tpl">＿＿ 適合看 pass@k，因為它能重試，又能用 ＿＿ 挑出對的那次；退款不行，因為 ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -543,13 +785,15 @@
                 <p class="qctx"><b>情境：</b>單次成功率 p = 0.8，各次執行獨立。Benchmark 有 50 題，每題只跑 1 次。舊版得 80%，新版得 84%，團隊想據此宣布新版更好。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>寫出 pass@4 與 pass^4 的算式與結果。</li>
-                    <li>估算 50 題分數的標準誤與 95% 範圍，判斷 4 個百分點是否超過雜訊。</li>
-                    <li>提出兩個讓比較更可信的做法，說明各自消掉哪一種變異。</li>
+                    <li>寫出 pass@4 與 pass^4 的算式與結果。<span class="qh">提示：pass@4 = 1 − （1 − p）⁴，pass^4 = p⁴。代入 p = 0.8，先算 0.2⁴ 和 0.8⁴。</span></li>
+                    <li>估算 50 題分數的標準誤與 95% 範圍，判斷 4 個百分點是否超過雜訊。<span class="qh">提示：標準誤 = √（p（1 − p）/ N），95% 範圍 ≈ ±1.96 × 標準誤。兩版都有雜訊；4 個百分點是幾題？</span></li>
+                    <li>提出兩個讓比較更可信的做法，說明各自消掉哪一種變異。<span class="qh">提示：雜訊有兩個來源：抽到哪些題目，和同一題每次跑的結果。候選做法：加題目、每題多跑幾次、兩版配對比較。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>pass@4 = 1 − （1 − p）⁴，pass^4 = p⁴。標準誤把每題當一個 0 或 1 的樣本：√（p（1−p）/N）。比較兩版時兩邊都有雜訊。84% 對 80%，在 50 題上只差 2 題。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">pass@4 = 1 − （1 − 0.8）⁴ = ＿＿；pass^4 = 0.8⁴ = ＿＿。</p>
+                  <p class="tpl">標準誤 ≈ √（0.8 × 0.2 / 50） ≈ ＿＿，95% 範圍約 ＿＿ 到 ＿＿；4 個百分點（超過／沒超過）雜訊。</p>
+                  <p class="tpl">做法一：＿＿，它消掉 ＿＿ 的變異；做法二：＿＿，它消掉 ＿＿ 的變異。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -570,13 +814,15 @@
                 <p class="qctx"><b>情境：</b>Agent 處理「改收件地址」與「退款」。可用 tool：<code>lookup_order</code>、<code>update_address</code>、<code>issue_refund</code>、<code>send_email</code>。政策：已出貨的訂單不能改地址；退款超過 200 元要人工核准。客戶由 LLM 模擬。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>列出環境的組成，說明每個 trial 怎麼重置、哪些 tool 要 mock。</li>
-                    <li>定義 grader：檢查什麼狀態、什麼回覆、什麼寫入算違規，寫成一個公式。</li>
-                    <li>列出要報告的 metric，舉一個「最終狀態正確但應該判失敗」的執行。</li>
+                    <li>列出環境的組成，說明每個 trial 怎麼重置、哪些 tool 要 mock。<span class="qh">提示：組成可列資料庫快照、模擬客戶、tool。4 個 tool 裡，哪些會寫入？send_email 評估時該寄到哪裡？</span></li>
+                    <li>定義 grader：檢查什麼狀態、什麼回覆、什麼寫入算違規，寫成一個公式。<span class="qh">提示：從 p.20 的 r_action × r_output 出發，再想違規寫入要不要乘成第三項。違規從情境的兩條政策找。</span></li>
+                    <li>列出要報告的 metric，舉一個「最終狀態正確但應該判失敗」的執行。<span class="qh">提示：Metric 從 p.11 的表挑 3 個。失敗例子先想：資料庫最後對了，過程中還多做了哪一種寫入？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>照 τ-bench：reward = r_action × r_output，再想副作用該不該乘進第三項。「應該拒絕」的題目，目標狀態是「資料庫不變」。<code>send_email</code> 真的寄出去就是副作用，評估時它該指向哪裡？</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">環境有 ＿＿ 快照、模擬客戶、mock 的 ＿＿；每個 trial 前還原快照，並清空 ＿＿。</p>
+                  <p class="tpl">Grader：r = ＿＿ × ＿＿ × ＿＿；資料庫要 ＿＿，回覆要含 ＿＿，出現 ＿＿ 時第三項是 0。</p>
+                  <p class="tpl">報告 ＿＿、＿＿、＿＿。該判失敗的例子：agent ＿＿，資料庫最後正確，但 ＿＿ = 0。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -597,13 +843,15 @@
                 <p class="qctx"><b>情境：</b>5 位工程師每週在同一組 60 題上調整 coding agent，分數 6 週內從 45% 升到 78%。System prompt 裡出現「issue 提到時區時，先看 utils/date.py」這類規則。Agent 有 web search，也有跨 session 的 memory。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>對照 p.27 的表格，指出至少 3 條 leakage 管道，各舉一個證據。</li>
-                    <li>提出一套工作方式：題目怎麼切分、多久輪替、誰能看什麼。</li>
-                    <li>說明你怎麼檢驗 78% 有沒有灌水。</li>
+                    <li>對照 p.27 的表格，指出至少 3 條 leakage 管道，各舉一個證據。<span class="qh">提示：情境有三條線索：utils/date.py 規則、web search、跨 session 的 memory。各對到 p.27 表的哪一列？</span></li>
+                    <li>提出一套工作方式：題目怎麼切分、多久輪替、誰能看什麼。<span class="qh">提示：套用機器學習的 train / validation / test 切法：哪一份能看失敗案例，哪一份只看分數？新題從哪裡補？</span></li>
+                    <li>說明你怎麼檢驗 78% 有沒有灌水。<span class="qh">提示：一次關掉一條管道再重跑，看分數掉多少。再想：哪一批題目是 agent 和工程師都沒看過的？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>p.27 的最後一列是開發流程本身。那條「先看 utils/date.py」的規則從哪裡學來？機器學習用 train / validation / test 三份資料處理同樣的問題，對應到 agent 開發是什麼？</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">管道一是 ＿＿，證據是 ＿＿；管道二是 ＿＿，證據是 ＿＿；管道三是 ＿＿，證據是 ＿＿。</p>
+                  <p class="tpl">切成 ＿＿ 題開發集和 ＿＿ 題 held-out 集；held-out 只在 ＿＿ 時跑，只看 ＿＿；每 ＿＿ 補新題。</p>
+                  <p class="tpl">關掉 ＿＿ 重跑，再在 ＿＿ 上跑；分數比 78% 低越多，灌水越多。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -624,13 +872,15 @@
                 <p class="qctx"><b>情境：</b>Outcome grader 給這次執行 1 分。Trajectory 顯示：agent 對共用分支執行了 <code>git push --force</code>；刪了 <code>.env</code> 檔；把一個 API key 印進 log；換了 3 種做法才修好；多讀了 10 個無關的檔案。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>把 trajectory 裡的事件分成「必須判失敗」與「不該扣分」兩類，說明判準。</li>
-                    <li>把檢查寫成規則：用 action 的名稱、參數、輸出判斷，不比對步驟順序。</li>
-                    <li>決定計分方式：硬性 0 分還是扣分，並給這次執行最終的分數。</li>
+                    <li>把 trajectory 裡的事件分成「必須判失敗」與「不該扣分」兩類，說明判準。<span class="qh">提示：借用 p.20：唯讀的動作可以不同，不該有的寫入直接失敗。再對每個事件問：事後能還原嗎？</span></li>
+                    <li>把檢查寫成規則：用 action 的名稱、參數、輸出判斷，不比對步驟順序。<span class="qh">提示：p.32 說比對步驟會誤判正確做法。所以寫兩種規則：deny-list，例如參數含 rm -rf；invariant，例如某些檔案前後不變。</span></li>
+                    <li>決定計分方式：硬性 0 分還是扣分，並給這次執行最終的分數。<span class="qh">提示：參考 p.20 τ-bench 用乘法的道理。先想：修好 bug 卻洩漏 API key 的執行，能上線嗎？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>p.32 說比對 trajectory 會判錯其他正確的做法。所以檢查只能問「有沒有做不該做的事」：deny-list 與 invariant。τ-bench 的規則可以借用：唯讀動作可以不同，不該有的寫入直接判失敗。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">必須判失敗：＿＿、＿＿、＿＿，因為它們 ＿＿；不該扣分：＿＿、＿＿。</p>
+                  <p class="tpl">規則一：參數含 ＿＿ 就判失敗；規則二：輸出符合 ＿＿ 的樣式就判失敗；規則三：＿＿ 執行前後相同。</p>
+                  <p class="tpl">安全違規算（硬性 0 分／扣分），r = ＿＿ × ＿＿，這次執行得 ＿＿ 分。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -651,13 +901,15 @@
                 <p class="qctx"><b>情境：</b>同一組 200 題、各跑 1 次。A：0.58、每題 $0.12。B：0.66、$0.18。C：0.64、$0.45。D：0.79、$1.10。E：0.77、$1.60。速度先假設相同。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>列出所有支配關係，寫出 Rank 1 與 Rank 2。</li>
-                    <li>在預算 $0.50 下選一個設定，說明為什麼不選另一個也符合預算的。</li>
-                    <li>估算沿 Rank 1 往上走，每提高 1 個百分點要多付多少錢，並指出一個會動搖排序的量測風險。</li>
+                    <li>列出所有支配關係，寫出 Rank 1 與 Rank 2。<span class="qh">提示：A 到 E 已經依成本由低到高排好。對每個點問：有沒有更便宜、能力又不比它低的點？定義看 p.37。</span></li>
+                    <li>在預算 $0.50 下選一個設定，說明為什麼不選另一個也符合預算的。<span class="qh">提示：成本 ≤ $0.50 的有 A、B、C。先刪掉受支配的那個，再比剩下兩個：多花的錢換到幾點能力？</span></li>
+                    <li>估算沿 Rank 1 往上走，每提高 1 個百分點要多付多少錢，並指出一個會動搖排序的量測風險。<span class="qh">提示：每點成本 = 成本差 ÷ 能力差（百分點）。標準誤 ≈ √（0.65 × 0.35 / 200），哪一對差距比它小？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>支配：每個維度都不比對方差，且至少一個更好。兩兩比較 10 對，或畫在成本為橫軸、能力為縱軸的圖上。200 題的標準誤約 0.034；哪一對的差距小於這個數？</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">＿＿ 支配 ＿＿，＿＿ 支配 ＿＿。Rank 1 = {＿＿}，Rank 2 = {＿＿}。</p>
+                  <p class="tpl">預算 $0.50 下選 ＿＿；不選同樣符合預算的 ＿＿，因為 ＿＿。</p>
+                  <p class="tpl">A → B 每點約 $＿＿，B → D 每點約 $＿＿。＿＿ 與 ＿＿ 的差距小於標準誤，排序可能是雜訊。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -824,42 +1076,119 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
         </div>
       </section>
 
-      <!-- ===================== 7 交作業 ===================== -->
+      <!-- ===================== 7 大家的討論 ===================== -->
       <section class="part" id="s-submit">
         <header class="part-head">
-          <p class="kicker">7 · 交作業</p>
-          <h2>上傳你的討論</h2>
-          <p class="lede">讀書會前，把你對進階題的回答貼在這裡。所有成員都看得到彼此的內容。重新送出會覆蓋你上一次的那一份。<a href="submissions.html">收作業總表</a>列出誰交了哪幾堂。</p>
+          <p class="kicker">7 · 大家的討論</p>
+          <h2>這堂的討論</h2>
+          <p class="lede">想法直接寫在第 5 段：基礎題下面留言，進階題下面寫想法。這裡看這堂有誰參與、每題有多少人寫了，也放跨題的補充和附件。<a href="submissions.html#l07">在討論總覽一次看全部 →</a></p>
         </header>
-        <form class="subform" id="sub-form" hidden>
-          <label class="field"><span>顯示名稱（選填）</span><input type="text" id="sub-nick" maxlength="40" autocomplete="nickname" placeholder="留空就用你的帳號名稱"></label>
-          <label class="field"><span>你的討論</span><textarea id="sub-text" rows="10" placeholder="Q1. &#10;Q2. &#10;…"></textarea></label>
+        <div class="talk-sum" id="talk-sum"><p class="talk-lead">載入中…</p></div>
+        <h3 class="subhead">參與的人 <span class="count" id="sub-count"></span></h3>
+        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
+        <h3 class="subhead">整體補充與附件 <span class="count">選填</span></h3>
+        <form class="subform" id="sub-form">
+          <label class="field"><span>跨題的想法、這堂整體的心得，或對別人想法的回應</span><textarea id="sub-text" rows="5" placeholder="例：這堂最想帶回團隊的一件事是…"></textarea></label>
           <div class="field" id="sub-filerow" hidden>
-            <label for="sub-file"><span>附件（選填：PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
+            <label for="sub-file"><span>附件（PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
             <input type="file" id="sub-file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.txt,.csv,.json">
             <ul class="attach" id="sub-attach"></ul>
           </div>
           <div class="copyrow">
-            <button type="submit" class="copybtn" id="sub-send">送出</button>
-            <button type="button" class="ghostbtn" id="sub-copy">複製成文字</button>
+            <button type="submit" class="copybtn" id="sub-send">儲存</button>
+            <button type="button" class="ghostbtn" id="sub-copy">複製我這堂的全部想法</button>
             <span class="copyhint" id="sub-status" role="status"></span>
           </div>
         </form>
-        <p class="sub-note" id="sub-note" role="status">連線中…</p>
-        <h3 class="subhead">已收到的討論 <span class="count" id="sub-count"></span></h3>
-        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
       </section>
 
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <ul class="reading">
-          <li><a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">課程筆記：Agent evaluation and benchmarks</a></li>
-          <li><a href="https://arxiv.org/abs/2406.12045" target="_blank" rel="noopener">τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains</a></li>
-          <li><a href="https://arxiv.org/abs/2311.12983" target="_blank" rel="noopener">GAIA: a benchmark for General AI Assistants</a></li>
-          <li><a href="https://www.swebench.com" target="_blank" rel="noopener">SWE-bench Leaderboards</a></li>
-          <li><a href="https://arxiv.org/abs/2411.00640" target="_blank" rel="noopener">Evan Miller：Adding Error Bars to Evals（標準誤的依據）</a></li>
-        </ul>
+        <p class="rg-intro">教授為這一講列了 14 篇（<a href="https://cs2680.com/readings/sep-30.html" target="_blank" rel="noopener">官方清單 9/30 ↗</a>），另外有一份收錄 48 個 benchmark 的<a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">課程目錄</a>——當字典查，不要通讀。</p>
+        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
+        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 70 分鐘：AI Agents That Matter → τ-bench（§3 的 reward 與 pass^k）→ Benchmark Checklist 掃一遍檢查表。</p></div></div>
+        <h3 class="rg-h">評估方法論 <small>How to evaluate</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2407.01502" target="_blank" rel="noopener">AI Agents That Matter</a><span class="rg-meta">arXiv 2407.01502 · 論文 · 2024 · 挑段約 20 分</span></div>
+          <p class="rg-s">這一講的立論來源：評估要同時看準確率與成本，還要跟 retry、換模型這類簡單 baseline 比。</p>
+          <p class="rg-g"><b>導讀</b>問大家：你看過的 eval 報告，有成本軸嗎？有 baseline 嗎？</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2602.16666" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a><span class="rg-meta">arXiv 2602.16666 · 論文 · 2026 · 挑段約 20 分</span></div>
+          <p class="rg-s">可靠性是 12 個指標的 profile，不是一個分數。能力進步帶來的可靠性進步很小。</p>
+          <p class="rg-g"><b>導讀</b>請每人挑三個自己產品最在乎的指標，說明為什麼。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2507.02825" target="_blank" rel="noopener">Establishing Best Practices for Building Rigorous Agentic Benchmarks</a><span class="rg-meta">arXiv 2507.02825 · 論文 · 2025 · 挑段約 20 分</span></div>
+          <p class="rg-s">把 benchmark 的錯分成兩類：outcome validity（checker 量對了嗎）與 task validity（題目可解嗎）。</p>
+          <p class="rg-g"><b>導讀</b>大多數問題出在 checker 收下錯誤答案。拿檢查表對照你用過的任何一個 benchmark。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.nist.gov/caisi/cheating-ai-agent-evaluations/2-examples-cheating-caisis-agent-evaluations" target="_blank" rel="noopener">Examples of cheating in CAISI's agent evaluations</a><span class="rg-meta">NIST · 官方案例 · 2025 · 約 15 分</span></div>
+          <p class="rg-s">官方案例集：agent 抓到已公開的解答、操弄測試來得分。</p>
+          <p class="rg-g"><b>導讀</b>一句話結論：看分數，也要看 transcript。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified" target="_blank" rel="noopener">Why SWE-bench Verified no longer measures frontier coding capabilities</a><span class="rg-meta">OpenAI · 審計報告 · 2026 · 約 15 分</span></div>
+          <p class="rg-s">連使用者都退場：測試與題目的缺陷、可能的訓練外洩。</p>
+          <p class="rg-g"><b>導讀</b>59.4% 的問題率來自 138 題困難子集，不是全部 500 題。引用數字要帶範圍。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2503.14499" target="_blank" rel="noopener">Measuring AI Ability to Complete Long Tasks</a><span class="rg-meta">METR · 論文 · 2025 · 挑段約 20 分</span></div>
+          <p class="rg-s">用「人類要花多久的任務，模型 50% 能完成」來量能力。和 session 長度、context 成長直接相關。</p>
+          <p class="rg-g"><b>導讀</b>外推效度不確定；METR 後續自己發了限制與修正的說明。帶著保留讀趨勢圖。</p>
+          </li>
+        </ol>
+        <h3 class="rg-h">Benchmark 本體 <small>The benchmarks themselves</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2310.06770" target="_blank" rel="noopener">SWE-bench: Can Language Models Resolve Real-World GitHub Issues?</a><span class="rg-meta">arXiv 2310.06770 · 論文 · 2023 · 挑段約 15 分</span></div>
+          <p class="rg-s">用 repo 測試跑 patch 評分的始祖，也是後面所有爭論的對象。</p>
+          <p class="rg-g"><b>導讀</b>懂它的評分機制就夠，然後接著讀上面 OpenAI 的審計。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://arxiv.org/abs/2308.03688" target="_blank" rel="noopener">AgentBench: Evaluating LLMs as Agents</a><span class="rg-meta">arXiv 2308.03688 · 論文 · 2023 · 掃過約 10 分</span></div>
+          <p class="rg-s">2023 年的八環境總覽。廣度型總分不如窄 suite 可行動。</p>
+          <p class="rg-g"><b>導讀</b>當歷史地圖看即可。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2406.12045" target="_blank" rel="noopener">τ-bench: Tool-Agent-User Interaction in Real-World Domains</a><span class="rg-meta">arXiv 2406.12045 · 論文 · 2024 · 挑段約 20 分</span></div>
+          <p class="rg-s">評分看最終資料庫狀態與政策遵循。pass^k 把「每次都要對」量出來。</p>
+          <p class="rg-g"><b>導讀</b>聚焦 pass@k 與 pass^k 的差別。問：客服型任務該報哪一個？</p>
+          </li>
+        </ol>
+        <h3 class="rg-h">持久 agent 與可觀測性 <small>Persistence, tracing, and isolation</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://www.laude.org/updates/headlong-a-microharness-for-persistent-agents" target="_blank" rel="noopener">Headlong: A Microharness for Persistent Agents</a><span class="rg-meta">Laude Institute · 專案報告 · 2026 · 約 15 分</span></div>
+          <p class="rg-s">持久 agent 的失敗帳：compaction、watchdog、自我修改、sandbox、背景成本。</p>
+          <p class="rg-g"><b>導讀</b>失敗帳比 demo 重要。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/" target="_blank" rel="noopener">Dapper: A Large-Scale Distributed Systems Tracing Infrastructure</a><span class="rg-meta">Google · 系統論文 · 2010 · 挑段約 20 分</span></div>
+          <p class="rg-s">分散式 tracing 的奠基之作。把 agent 的步驟與 tool call 當 span，整套方法直接搬用。</p>
+          <p class="rg-g"><b>導讀</b>適合系統背景的人導讀。重點：sampling rate 是主要的成本控制。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://arxiv.org/abs/2411.05285" target="_blank" rel="noopener">AgentOps: Enabling Observability of LLM Agents</a><span class="rg-meta">arXiv 2411.05285 · 論文 · 2024 · 掃過約 10 分</span></div>
+          <p class="rg-s">Agent 全生命週期「該 trace 什麼」的分類法。</p>
+          <p class="rg-g"><b>導讀</b>當模板用，不必細讀。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://www.usenix.org/conference/nsdi20/presentation/agache" target="_blank" rel="noopener">Firecracker: Lightweight Virtualization for Serverless Applications</a><span class="rg-meta">USENIX NSDI '20 · 系統論文 · 2020 · 挑段約 20 分</span></div>
+          <p class="rg-s">MicroVM 為什麼便宜到可以每次呼叫都隔離——agent sandbox 的關鍵假設。</p>
+          <p class="rg-g"><b>導讀</b>讀導言與效能表即可。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2606.25189" target="_blank" rel="noopener">ActPlane: Programmable OS-Level Policy Enforcement for Agent Harnesses</a><span class="rg-meta">arXiv 2606.25189 · 論文 · 2026 · 挑段約 20 分</span></div>
+          <p class="rg-s">把政策執行從 tool 層下移到 OS（eBPF），連間接執行路徑都蓋住。</p>
+          <p class="rg-g"><b>導讀</b>難點是把模糊的意圖翻成具體規則。接回 L2 的 guidance 與 enforcement。</p>
+          </li>
+        </ol>
+        <p class="rg-fn">文中另外引用：<a href="https://arxiv.org/abs/2311.12983" target="_blank" rel="noopener">GAIA 論文</a>、<a href="https://www.swebench.com" target="_blank" rel="noopener">SWE-bench leaderboards</a>、<a href="https://arxiv.org/abs/2411.00640" target="_blank" rel="noopener">Adding Error Bars to Evals</a>（標準誤的依據）。</p>
+
         <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
       </section>
 
@@ -871,6 +1200,7 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
     </div>
   </div>
 </main>
+</div>
 <script src="app.js"></script>
 <script src="submit.js"></script>
 </body>
