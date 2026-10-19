@@ -8,9 +8,13 @@ Checks: tag balance; required sections (#s-arch #s-ideas #s-background #s-beyond
 read-time, read-box, side nav); nav anchors; every a.ref points at the PDF with #page in 1..N;
 data-pages-total equals N; STE heuristics on prose; reading time.
 
-Reading time: text inside <details class="ex deep"> (the optional 深入 blocks) is left
-out of the main estimate and reported on its own. --fix-time writes the main estimate
-to span.read-time and the deep estimate to span.deep-time (if the page has one).
+Reading time (400 text units per minute):
+  main  = text a reader sees before opening anything: every <details> body is left
+          out, its <summary> line is kept. This is the 「閱讀」 number.
+  deep  = text inside <details class="ex deep"> (the optional 深入 blocks).
+  full  = all text with every block opened.
+--fix-time writes main to span.read-time, deep to span.deep-time and full to
+span.full-time (each only if the page has that span).
 """
 import argparse
 import re
@@ -98,6 +102,22 @@ class P(HTMLParser):
             self.text.append(data)
 
 
+def visible_only(h):
+    """Drop every <details> body (nested ones too); keep the top-level <summary> lines."""
+    out, depth = [], 0
+    for tok in re.split(r"(<details\b[^>]*>|</details>|<summary\b.*?</summary>)", h, flags=re.S):
+        if tok.startswith("<details"):
+            depth += 1
+        elif tok == "</details>":
+            depth -= 1
+        elif tok.startswith("<summary"):
+            if depth <= 1:
+                out.append(tok)
+        elif depth == 0:
+            out.append(tok)
+    return "".join(out)
+
+
 def units(s):
     return len(CJK.findall(s)) + len(WORD.findall(s))
 
@@ -148,17 +168,18 @@ def main():
     long_ones = [s for s in sentences if units(s) > args.long]
     fillers = {f: prose.count(f) for f in FILLERS if f in prose}
     passive = len(re.findall(r"被[一-鿿]", prose))
-    main_html = html.split("<main", 1)[-1]
+    main_html = re.sub(r"<script.*?</script>|<svg.*?</svg>", " ", html.split("<main", 1)[-1], flags=re.S)
     deep_html = "".join(DEEP.findall(main_html))
-    body_text = re.sub(r"<[^>]+>", " ", DEEP.sub(" ", main_html))
-    total = units(body_text)
+    total = units(re.sub(r"<[^>]+>", " ", visible_only(main_html)))
     deep_total = units(re.sub(r"<[^>]+>", " ", deep_html))
+    full_total = units(re.sub(r"<[^>]+>", " ", main_html))
 
     def to_min(u):
         raw = u / 400
         return int(-(-raw // 1)) if raw < 15 else max(5, round(raw / 5) * 5)
     minutes = to_min(total)
     deep_minutes = to_min(deep_total) if deep_total else 0
+    full_minutes = to_min(full_total)
 
     print(f"{path.name}: {len(p.refs)} slide refs, {len(sentences)} prose sentences "
           f"(avg {sum(map(units, sentences)) / max(1, len(sentences)):.1f} units, > {args.long}: {len(long_ones)})")
@@ -166,12 +187,14 @@ def main():
         print(f"    LONG({units(s)}): {s[:80]}")
     if fillers:
         print(f"  filler words: {fillers}")
-    print(f"  passive 被: {passive}; text units: {total} -> about {minutes} min"
-          + (f"; deep blocks: {len(DEEP.findall(main_html))}, {deep_total} units -> about {deep_minutes} min" if deep_total else ""))
+    print(f"  passive 被: {passive}; main (closed blocks): {total} units -> about {minutes} min"
+          + (f"; deep blocks: {len(DEEP.findall(main_html))}, {deep_total} units -> about {deep_minutes} min" if deep_total else "")
+          + f"; everything open: {full_total} units -> about {full_minutes} min")
     if args.fix_time:
         new = re.sub(r'<span class="read-time">[^<]*</span>', f'<span class="read-time">約 {minutes} 分鐘</span>', html, count=1)
         if deep_total:
             new = re.sub(r'<span class="deep-time">[^<]*</span>', f'<span class="deep-time">約 {deep_minutes} 分鐘</span>', new, count=1)
+        new = re.sub(r'<span class="full-time">[^<]*</span>', f'<span class="full-time">約 {full_minutes} 分鐘</span>', new, count=1)
         if new != html:
             path.write_text(new, encoding="utf-8")
             print(f"  read-time set to 約 {minutes} 分鐘")

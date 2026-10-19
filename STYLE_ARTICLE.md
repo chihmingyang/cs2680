@@ -29,7 +29,7 @@
 1. `<head>`:同 l02(fonts、styles.css)。`<title>LX 中文標題 · CS2680</title>`。
 2. `header.topbar`:brand、`nav.lecnav`(上一堂 / LX / 8 / 下一堂;第一堂和最後一堂只留存在的方向)。**不要**放「只看重點」按鈕。
 3. `main.page.gutter.article[data-lecture="lXX"][data-format="article"][data-pdf="<pdf>"][data-pages-total="N"]`。**不要**放 `.proto` 試做標語。
-4. `header.lecture-head`:eyebrow、h1、`.en-title`、`ul.meta`(Slides 連結、頁數、`<li><span class="k">頁碼</span>PDF 檢視器的頁數</li>`、`<span class="read-time">`;有深入區塊時再加 `<li><span class="k">深入</span><span class="deep-time">約 N 分鐘</span>,選讀</li>`)。`main` 的 `data-pages-total` 和「頁數」都等於現行 PDF 的實際頁數。
+4. `header.lecture-head`:eyebrow、h1、`.en-title`、`ul.meta`(Slides 連結、頁數、`<li><span class="k">頁碼</span>PDF 檢視器的頁數</li>`、`<span class="read-time">`;有深入區塊時再加 `<li><span class="k">深入</span><span class="deep-time">約 N 分鐘</span>,選讀</li>`;最後是 `<li><span class="k">全部展開</span><span class="full-time">約 N 分鐘</span></li>`)。`main` 的 `data-pages-total` 和「頁數」都等於現行 PDF 的實際頁數。
 5. `section.tldr`「先看這裡」:`.thesis` 2–3 句、`ul.core` 3 條(`<b>粗體重點。</b>` + 1–2 句)、`.readhow` 一句讀法。
 6. 左側目錄 `aside.sidenav`(在 `main` 之前)加上 `div.layout > div.content`:照 l02 現行的寫法。本堂那一列展開 `ol.sn-secs`;核心觀念那一項的 `span.sn-p` 寫頁碼範圍;子項 `ol.sn-subs` 連到 `#i1…`、`#t1…`、`#x1…`。舊版的 `nav.toc` 已經不用。
 7. 六個段落 + 延伸閱讀(見第 4 節)。
@@ -143,8 +143,12 @@
 
 ## 7. 長度
 
-- 主線閱讀時間目標 **12–16 分鐘**(check 腳本估算，不含深入區塊)。第 5 段可以長，其他段落要精簡。
-- 深入區塊另計，全篇約 **8–12 分鐘**。check 腳本會分開印出兩個數字;`--fix-time` 把主線寫進 `span.read-time`,把深入寫進 `span.deep-time`。
+- check 腳本印出三個時間(每分鐘 400 字):
+  - **主線**:不展開任何 `details` 時看得到的文字。目標 **12–16 分鐘**。這是頁面上的「閱讀」,也是首頁列表的分鐘數。
+  - **深入**:`details.ex.deep` 裡的文字，全篇約 **8–12 分鐘**。
+  - **全部展開**:所有文字，包含參考答案、重點複習、深入區塊。
+- `--fix-time` 把三個數字寫進 `span.read-time`、`span.deep-time`、`span.full-time`。改完頁面後，首頁 `index.html` 那一列的「約 N 分」也要改成同一個主線數字。
+- 第 5 段可以長(多半在收合區塊裡，不算主線)，其他段落要精簡。
 
 ## 8. 驗證(必做)
 
@@ -164,15 +168,15 @@ python3 -I tools/shot_article.py site/lXX.html     # 用 Read 看產生的圖
 
 | 檔案 | PDF | 頁數 | 日期 | 英文標題 | 中文標題 | 上一堂 / 下一堂 |
 |---|---|---|---|---|---|---|
-| l01.html | 1_intro.pdf | 52 | 2026-09-02 | Course overview and logistics | 課程總覽與 AI 系統 | — / L2 Claude Code 怎麼運作 |
-| l03.html | 3_agent_use_2.pdf | 83 | 2026-09-14 | Agents use II: 100x Engineer with Multi-agents | 用多個 agent 放大產能 | L2 Claude Code 怎麼運作 / L4 Context 管理與 tool 設計 |
-| l04.html | 4_agent_design_1.pdf | 58 | 2026-09-16 | Agents design I: context management and tool design | Context 管理與 tool 設計 | L3 / L5 Multi-agent 架構與溝通 |
-| l05.html | 5_agent_design_2.pdf | 49 | 2026-09-23 | Agents design II: multi-agent architecture, coordination, and communication | Multi-agent 架構與溝通 | L4 / L6 Agent memory 與可靠性 |
-| l06.html | 6_agent_design_3.pdf | 33 | 2026-09-28 | Agents design III: agent memory and reliability | Agent memory 與可靠性 | L5 / L7 Agent 評估 |
-| l07.html | 7_agent_design_4.pdf | 38 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 | L6 / L8 成本、速度與 harness 架構 |
-| l08.html | 8_agent_design_5.pdf | 61 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 | L7 / — |
+| l01.html | 1_intro.pdf | 50 | 2026-09-02 | Course overview and logistics | 課程總覽與 AI 系統 | — / L2 Claude Code 怎麼運作 |
+| l03.html | 3_agent_use_2.pdf | 72 | 2026-09-14 | Agents use II: 100x Engineer with Multi-agents | 用多個 agent 放大產能 | L2 Claude Code 怎麼運作 / L4 Context 管理與 tool 設計 |
+| l04.html | 4_agent_design_1.pdf | 56 | 2026-09-16 | Agents design I: context management and tool design | Context 管理與 tool 設計 | L3 / L5 Multi-agent 架構與溝通 |
+| l05.html | 5_agent_design_2.pdf | 46 | 2026-09-23 | Agents design II: multi-agent architecture, coordination, and communication | Multi-agent 架構與溝通 | L4 / L6 Agent memory 與可靠性 |
+| l06.html | 6_agent_design_3.pdf | 31 | 2026-09-28 | Agents design III: agent memory and reliability | Agent memory 與可靠性 | L5 / L7 Agent 評估 |
+| l07.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 | L6 / L8 成本、速度與 harness 架構 |
+| l08.html | 8_agent_design_5.pdf | 54 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 | L7 / — |
 
-- 表裡的頁數是寫文章當時的數字。L3、L5、L8 和現行 PDF 可能不同，動手前先做第 10 節的對照。L2 是 `2_agent_use_1.pdf`,現行 53 頁(2026-10-19 已修正)。
+- 表裡的頁數是 2026-10-19 對照過的現行 PDF 頁數。L2 是 `2_agent_use_1.pdf`,53 頁。課程之後若再重新匯出 PDF,照第 10 節重新對照。
 - L1 沒有上一堂:lecnav 只放「L1 / 8」和「L2 →」;pager 左邊是「← 回總覽」連到 `index.html`。
 - L8 沒有下一堂:lecnav 只放「← L7」和「L8 / 8」;pager 右邊是「回總覽 →」連到 `index.html`。
 
@@ -193,18 +197,38 @@ python3 -I tools/fix_pages.py tools/pagemap/lXX.json site/lYY.html --xref LX    
 ```
 
   腳本只改本堂的頁碼。「L8 p.26」這類別堂的引用會保留。同一份 map 對同一個檔案只能跑一次;完整頁面有防呆，片段和 `--xref` 沒有，重跑前先看 `git diff`。
-- 對照狀態(2026-10-19):
+- 對照狀態(2026-10-19,八堂都已修正):
 
-| 講次 | 文章寫的頁數 | 現行 PDF | 狀態 |
-|---|---|---|---|
-| L2 | 60 | 53 | 已修正，`tools/pagemap/l02.json` |
-| L3 | 83 | 約 72 | 差很多，待逐頁對照 |
-| L5 | 49 | 約 45 | 差很多，待逐頁對照 |
-| L8 | 61 | 約 54 | 差很多，待逐頁對照 |
-| L1、L4 | 52、58 | 約 51、57 | 可能只差最後的空白頁，待確認 |
-| L6、L7 | 33、38 | 33、38 | 看起來一致 |
+| 講次 | 舊頁數 → 現行 PDF | 不在現行 PDF 的舊頁 |
+|---|---|---|
+| L1 | 52 → 50 | 2、4 |
+| L2 | 60 → 53 | 1、13–15、30、44、47–48 |
+| L3 | 83 → 72 | 1、21、37、46、54–60 |
+| L4 | 58 → 56 | 1、40、47 |
+| L5 | 49 → 46 | 1、33–34、46 |
+| L6 | 33 → 31 | 1、19 |
+| L7 | 38 → 37 | 1、35 |
+| L8 | 61 → 54 | 1、28–29、39、49–50、52 |
 
-  「約」是用 WebFetch 估的數字，不精確。修正前一定要照上面三步在檢視器裡確認。
+  每一堂的對照表在 `tools/pagemap/lXX.json`。做法：用瀏覽器的 pdf.js 讀出現行 PDF 每一頁的標題，和 `archive/lXX-cards.html` 每張卡的英文標題比對;標題對不上的頁(改過標題、只有圖)逐一人工確認。跨堂引用(例如 L2 裡的「L8 p.26」、首頁的「L1 p.42」)也一起改了。
+
+- 用瀏覽器讀頁標題的方法(在 cs2680.com 的任一頁執行，回傳「頁數 | slide 編號 | 標題」):
+
+```js
+const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs');
+pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+const doc = await pdfjs.getDocument('/slides/3_agent_use_2.pdf').promise;
+const out = [];
+for (let i = 1; i <= doc.numPages; i++) {
+  const items = (await (await doc.getPage(i)).getTextContent()).items.filter(t => t.str.trim());
+  const words = items.filter(t => !/^\d{1,3}$/.test(t.str.trim()));
+  const big = words.reduce((a, t) => (!a || t.height > a.height + 0.5 ? t : a), null);
+  out.push(i + ' | ' + (items[0]?.str.trim() || '-') + ' | ' + (big ? big.str : ''));
+}
+out.join('\n')
+```
+
+  slide 右下角的編號(第二欄)和頁數常常不同，只當參考。
 
 ## 11. 既有講次補深入區塊(L3–L8)
 
