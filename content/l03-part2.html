@@ -13,13 +13,13 @@
         <ol class="qlist">
           <li class="dq" id="q1">
             <div class="qbody">
-              <p class="qtag">概念 · Skill 與 hook 的分工 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=7" target="_blank" rel="noopener">p.7–15</a></p>
+              <p class="qtag">概念 · Skill 與 hook 的分工 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=6" target="_blank" rel="noopener">p.6–14</a></p>
               <p class="qtext">Superpowers 沒有換 model，為什麼 agent 的行為會從「直接寫 code」變成「先問清楚再動手」？只裝 skill 為什麼不夠，一定要加 SessionStart hook？</p>
               <p class="qctx"><b>情境：</b>你的團隊寫了 5 個流程 skill，放進 <code>.claude/skills/</code>。兩週後你發現，agent 大約一半的任務沒有用到任何 skill，直接開始改程式。</p>
               <div class="qcover"><b>回答時請涵蓋</b>
                 <ul>
                   <li>說明 model 怎麼決定要不要載入一個 skill，以及這個決定為什麼會失敗。</li>
-                  <li>指出 hook 保證了什麼、沒有保證什麼（用 p.12 的 matcher <code>startup|clear|compact</code> 說明）。</li>
+                  <li>指出 hook 保證了什麼、沒有保證什麼（用 p.11 的 matcher <code>startup|clear|compact</code> 說明）。</li>
                   <li>提出至少兩個 hook 以外的做法，讓 skill 更常用到，並說明各自的限制。</li>
                 </ul>
               </div>
@@ -29,9 +29,9 @@
               </div></details>
               <details><summary>參考觀點與追問</summary><div class="hint">
                 <ul>
-                  <li>行為改變的來源是 context，不是 model。Superpowers 把流程寫成 skill，每個 skill 寫明關卡與下一個 skill（p.10–11）。Model 讀到這些程序，就照程序走。</li>
-                  <li>只裝 skill 的問題：載入與否由 model 依 description 判斷。任務看起來簡單時，model 常跳過查 skill，直接動手（p.12）。這就是情境裡「一半任務沒用到」的原因。</li>
-                  <li>Hook 補的是確定性。<code>SessionStart</code> 在 session 開始時執行；matcher 含 <code>clear</code> 與 <code>compact</code>，所以 /clear 與 compaction 後規則會再放一次。它保證規則一定在 context 裡；要載入哪個 skill，仍由 model 判斷（p.14）。</li>
+                  <li>行為改變的來源是 context，不是 model。Superpowers 把流程寫成 skill，每個 skill 寫明關卡與下一個 skill（p.9–10）。Model 讀到這些程序，就照程序走。</li>
+                  <li>只裝 skill 的問題：載入與否由 model 依 description 判斷。任務看起來簡單時，model 常跳過查 skill，直接動手（p.11）。這就是情境裡「一半任務沒用到」的原因。</li>
+                  <li>Hook 補的是確定性。<code>SessionStart</code> 在 session 開始時執行；matcher 含 <code>clear</code> 與 <code>compact</code>，所以 /clear 與 compaction 後規則會再放一次。它保證規則一定在 context 裡；要載入哪個 skill，仍由 model 判斷（p.13）。</li>
                   <li>Hook 以外的做法：把「先讀 using-superpowers」寫進 CLAUDE.md（每次載入，但 compaction 後可能摘要掉）；把 skill 做成 <code>/名稱</code> 由人手動叫用（確定，但要靠人記得）；用 <code>UserPromptSubmit</code> hook 在每個 prompt 後附上提醒（確定，但每輪多花 token）。</li>
                   <li>衡量方式：記錄一週內有多少任務載入了流程 skill。只有數字能證明 hook 有效，這是 L7 評估的觀念。</li>
                 </ul>
@@ -42,7 +42,7 @@
 
           <li class="dq" id="q2">
             <div class="qbody">
-              <p class="qtag">估算 · Subagent 省下的 context 與成本 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=33" target="_blank" rel="noopener">p.33–40</a></p>
+              <p class="qtag">估算 · Subagent 省下的 context 與成本 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=31" target="_blank" rel="noopener">p.31–37</a></p>
               <p class="qtext">一次大型程式碼搜尋的結果，直接放進主對話，和交給 subagent 處理，兩者的 token 用量差多少？算出數字，再說明 token 以外的差別。</p>
               <p class="qctx"><b>情境：</b>主對話目前 60k token，context window 200k。你要搜尋一個 pattern 在整個 repo 的用法，結果約 80k token。這之後對話還會進行 30 輪。Subagent 版本：subagent 用 4 輪讀完結果，交回 2k 的摘要。價格用 Opus 4.6 的定價：base input $5/MTok，cache hit $0.50，cache write $6.25。</p>
               <div class="qcover"><b>回答時請涵蓋</b>
@@ -53,7 +53,7 @@
                 </ul>
               </div>
               <details><summary>思考方向</summary><div class="hint">
-                <p>每一輪都重送整個 context（L2 p.11）。放進主對話的 80k，之後 30 輪每輪都再送一次。Subagent 的 context 在它結束時就丟掉，主對話只多 2k。</p>
+                <p>每一輪都重送整個 context（L2 p.10）。放進主對話的 80k，之後 30 輪每輪都再送一次。Subagent 的 context 在它結束時就丟掉，主對話只多 2k。</p>
                 <p>Cache 讓重送變便宜，但不會變成免費。另外看 context window：60k 加 80k 是 140k，離 200k 還剩多少？</p>
               </div></details>
               <details><summary>參考觀點與追問</summary><div class="hint">
@@ -62,16 +62,16 @@
                   <li>Subagent 版本：4 輪的 context 約 20k、100k、102k、104k，合計 326k input，其中約 104k 是新 token，222k 是 cache hit。費用約 104k × $6.25 ＋ 222k × $0.50 ≈ $0.76。摘要 2k × 30 輪 ＝ 60k，約 $0.03。合計約 $0.79，token 合計約 386k。</li>
                   <li>比較：token 少約 6 倍（2.48M 對 0.39M），費用省約 $0.91。沒有 cache 時差距更大：2.4M × $5 ＝ $12。L8 會講 cache 怎麼改變這類計算。</li>
                   <li>Token 以外的差別更重要。直接放進去後，主對話是 140k，佔 window 70%。再過幾輪就要 compaction，compaction 會丟細節，而且丟哪些你無法控制（L4 會講 context 管理）。</li>
-                  <li>Subagent 的代價：摘要是有損壓縮，subagent 也沒有對話歷史。減少損失的做法：在任務訊息寫明回報格式（例如每個命中附 <code>file:line</code>）、把相關規則寫進任務訊息（Explore 不讀 CLAUDE.md，p.34）、要求回傳「沒找到什麼」而不只是「找到什麼」。</li>
+                  <li>Subagent 的代價：摘要是有損壓縮，subagent 也沒有對話歷史。減少損失的做法：在任務訊息寫明回報格式（例如每個命中附 <code>file:line</code>）、把相關規則寫進任務訊息（Explore 不讀 CLAUDE.md，p.32）、要求回傳「沒找到什麼」而不只是「找到什麼」。</li>
                 </ul>
-                <p><b>追問：</b>如果這次搜尋的結果，後面 30 輪裡有 10 輪要逐行引用，哪一種做法比較好？為什麼 slide 說「要頻繁來回討論的工作留在主對話」（p.40）？</p>
+                <p><b>追問：</b>如果這次搜尋的結果，後面 30 輪裡有 10 輪要逐行引用，哪一種做法比較好？為什麼 slide 說「要頻繁來回討論的工作留在主對話」（p.37）？</p>
               </div></details>
             </div>
           </li>
 
           <li class="dq" id="q3">
             <div class="qbody">
-              <p class="qtag">設計 · 替任務選擴展方式 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=28" target="_blank" rel="noopener">p.28–50</a></p>
+              <p class="qtag">設計 · 替任務選擴展方式 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=26" target="_blank" rel="noopener">p.26–46</a></p>
               <p class="qtext">下面四個任務，各該用手動平行、subagent、agent team、workflow，還是 /goal？替每一個選一種做法，說明理由，並指出你放棄的選項為什麼不適合。</p>
               <p class="qctx"><b>情境：</b>（a）把 300 個檔案從 library A 換成 library B，每個檔案的改法相同、彼此獨立。（b）Review 一個大 PR，要從安全、效能、測試覆蓋三個角度看，而且三方的發現要互相挑戰。（c）追一個 flaky test，你要一邊看 log 一邊和 agent 討論假設。（d）一直修到 <code>npm run lint</code> 零錯誤，但不能動 <code>tests/</code> 底下的檔案。</p>
               <div class="qcover"><b>回答時請涵蓋</b>
@@ -82,17 +82,17 @@
                 </ul>
               </div>
               <details><summary>思考方向</summary><div class="hint">
-                <p>用 p.50 的表：/goal 做到可驗證的終點；subagent 的結果回到 Claude；team 的成員互相傳訊；workflow 由 script 持有計畫。再用 p.40 的表判斷：要來回討論的工作，留在主對話。</p>
+                <p>用 p.46 的表：/goal 做到可驗證的終點；subagent 的結果回到 Claude；team 的成員互相傳訊；workflow 由 script 持有計畫。再用 p.37 的表判斷：要來回討論的工作，留在主對話。</p>
                 <p>(a) 的關鍵是數量。300 個子任務的結果，如果都回到主對話，主對話會發生什麼事？</p>
               </div></details>
               <details><summary>參考觀點與追問</summary><div class="hint">
                 <ul>
-                  <li>(a) Workflow。300 個獨立、做法相同的檔案，計畫可以寫成 script；每個檔案一個 subagent，中間結果存在 script 變數，不進主 context（p.47）。用 subagent 也能做，但 300 份摘要都回到主對話，主對話會撐爆或頻繁 compaction。Agent team 不適合：沒有需要討論的事，token 卻隨人數成長。</li>
-                  <li>(b) Agent team。題目要求三方互相挑戰，這需要 teammate 之間傳訊（p.41–43）。只要三份獨立報告的話，3 個 subagent 平行就夠，而且便宜（p.44）。從 3 到 5 個 teammate 開始，官方文件也這樣建議。</li>
-                  <li>(c) 主對話。要頻繁來回、幾個階段共用大量 context、在意延遲，三條都命中 p.40 左欄。Subagent 從零開始，每次都要重新收集 context。可以把「跑 100 次測試收集失敗 log」這類輸出很長的步驟交給 subagent，討論留在主對話。</li>
+                  <li>(a) Workflow。300 個獨立、做法相同的檔案，計畫可以寫成 script；每個檔案一個 subagent，中間結果存在 script 變數，不進主 context（p.43）。用 subagent 也能做，但 300 份摘要都回到主對話，主對話會撐爆或頻繁 compaction。Agent team 不適合：沒有需要討論的事，token 卻隨人數成長。</li>
+                  <li>(b) Agent team。題目要求三方互相挑戰，這需要 teammate 之間傳訊（p.38–40）。只要三份獨立報告的話，3 個 subagent 平行就夠，而且便宜（p.41）。從 3 到 5 個 teammate 開始，官方文件也這樣建議。</li>
+                  <li>(c) 主對話。要頻繁來回、幾個階段共用大量 context、在意延遲，三條都命中 p.37 左欄。Subagent 從零開始，每次都要重新收集 context。可以把「跑 100 次測試收集失敗 log」這類輸出很長的步驟交給 subagent，討論留在主對話。</li>
                   <li>(d) /goal。終點可驗證：lint 的輸出會出現在對話裡，評估 model 讀得到。條件範例：<code>/goal npm run lint exits 0; no file under tests/ is modified (git status shows no changes there); or stop after 20 turns</code>。限制條件擋住「刪測試讓 lint 過」這種捷徑；停止條款限制花費。</li>
-                  <li>共同原則：先問任務切不切得開（p.61）。切不開的任務，加 agent 只會多出重複的工作。(a) 切得開，(c) 切不開。</li>
-                  <li>手動平行適合的情境不在這四題裡：你同時有兩三個不相關的任務，各開一個 worktree（p.30）。超過 3 個，計畫只在你腦中就會出問題（p.32）。</li>
+                  <li>共同原則：先問任務切不切得開（p.50）。切不開的任務，加 agent 只會多出重複的工作。(a) 切得開，(c) 切不開。</li>
+                  <li>手動平行適合的情境不在這四題裡：你同時有兩三個不相關的任務，各開一個 worktree（p.28）。超過 3 個，計畫只在你腦中就會出問題（p.30）。</li>
                 </ul>
                 <p><b>追問：</b>(a) 的 300 個檔案裡，有 20 個會互相 import。Workflow 要怎麼改？只用 Amdahl's law 估：如果 20% 的工作必須循序做，16 個 agent 最多快幾倍？（答：1 ÷（0.2 ＋ 0.8 ÷ 16）＝ 4 倍。）</p>
               </div></details>
@@ -101,7 +101,7 @@
 
           <li class="dq" id="q4">
             <div class="qbody">
-              <p class="qtag">團隊實務 · 讓多個 agent 過夜跑 backlog · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=51" target="_blank" rel="noopener">p.51–61</a></p>
+              <p class="qtag">團隊實務 · 讓多個 agent 過夜跑 backlog · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=47" target="_blank" rel="noopener">p.47–50</a></p>
               <p class="qtext">參考 C compiler 案例的做法，設計一套讓 4 個 agent 無人看管地處理 issue backlog 的協調方式。只能用 git、檔案和測試，不能有 manager agent。</p>
               <p class="qctx"><b>情境：</b>Backlog 有 40 個標了 <code>agent-ok</code> 的 issue，大多是小修正。4 個 agent 各在自己的 container，共用一個 remote repo。晚上 10 點開始，早上 6 點前要有結果。每個 issue 都有至少一個對應的測試。</p>
               <div class="qcover"><b>回答時請涵蓋</b>
@@ -112,17 +112,17 @@
                 </ul>
               </div>
               <details><summary>思考方向</summary><div class="hint">
-                <p>p.53 的四步迴圈：讀 repo → 認領 → 實作並測試 → merge、push、解鎖。Git 拒絕後到的 push，這就是鎖。再想 L2 的 memory 觀念：狀態放在檔案，不放在 model。</p>
+                <p>p.49 的四步迴圈：讀 repo → 認領 → 實作並測試 → merge、push、解鎖。Git 拒絕後到的 push，這就是鎖。再想 L2 的 memory 觀念：狀態放在檔案，不放在 model。</p>
                 <p>「宣稱完成」和「完成」的差別，要靠一個 agent 改不了的訊號。測試是候選，但 agent 能改測試。</p>
               </div></details>
               <details><summary>參考觀點與追問</summary><div class="hint">
                 <ul>
-                  <li>認領：在 <code>current_tasks/</code> 寫一個以 issue 編號命名的檔案，內容是 agent 名稱和時間，commit 後 push（p.53）。兩個 agent 同時認領時，remote 已有新 commit，git 拒絕後到的 push；它 pull 之後看到鎖，改挑別的 issue。這是樂觀鎖。</li>
+                  <li>認領：在 <code>current_tasks/</code> 寫一個以 issue 編號命名的檔案，內容是 agent 名稱和時間，commit 後 push（p.49）。兩個 agent 同時認領時，remote 已有新 commit，git 拒絕後到的 push；它 pull 之後看到鎖，改挑別的 issue。這是樂觀鎖。</li>
                   <li>Stale lock：agent 當掉，鎖會留著。檔案裡寫時間，超過例如 90 分鐘就視為過期，其他 agent 可以接手。或者每個 session 結束時由 harness 清鎖，不靠 model 記得。</li>
-                  <li>Session 開始時讀：<code>PROGRESS.md</code>（哪些 issue 完成、哪些卡住、為什麼）、該 issue 的描述、相關測試。結束時寫：這個 issue 的進度、沒解決的問題、下一步。C compiler 案例的每個 agent 都從空 container 開始，進度文件是它唯一的記憶（p.52）。</li>
+                  <li>Session 開始時讀：<code>PROGRESS.md</code>（哪些 issue 完成、哪些卡住、為什麼）、該 issue 的描述、相關測試。結束時寫：這個 issue 的進度、沒解決的問題、下一步。C compiler 案例的每個 agent 都從空 container 開始，進度文件是它唯一的記憶（p.48）。</li>
                   <li>進度訊號：每個 issue 的測試從紅變綠，整套測試仍然全綠。CI 跑在 merge 之後，agent 改不了 CI 的結果。另外加一條規則，用 hook 或 CI 檢查：不准修改 <code>tests/</code> 裡既有的測試。</li>
                   <li>早上的判斷：三類。CI 綠且 PR 已開的 issue 算完成，人只 review diff。有 lock 但沒有 PR 的，看 PROGRESS.md 的紀錄決定重跑或放棄。測試改過的，先當作失敗。</li>
-                  <li>Merge conflict 會發生（p.61）。做法：每個 agent 在自己的 branch 工作，push 前先 rebase；衝突解不開就寫進 PROGRESS.md 留給人，不要硬解。40 個 issue 分 4 個 agent，每個 agent 約 10 個，平均每個 issue 不到 1 小時，所以要設每個 issue 的時間上限。</li>
+                  <li>Merge conflict 會發生（p.50）。做法：每個 agent 在自己的 branch 工作，push 前先 rebase；衝突解不開就寫進 PROGRESS.md 留給人，不要硬解。40 個 issue 分 4 個 agent，每個 agent 約 10 個，平均每個 issue 不到 1 小時，所以要設每個 issue 的時間上限。</li>
                 </ul>
                 <p><b>追問：</b>如果 40 個 issue 裡有 8 個改同一個模組，這套做法會出什麼問題？你會在認領階段還是 merge 階段處理？</p>
               </div></details>
@@ -131,9 +131,9 @@
 
           <li class="dq" id="q5">
             <div class="qbody">
-              <p class="qtag">風險與取捨 · 壓縮 model 讀到的內容 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=17" target="_blank" rel="noopener">p.17–27</a></p>
+              <p class="qtag">風險與取捨 · 壓縮 model 讀到的內容 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=16" target="_blank" rel="noopener">p.16–25</a></p>
               <p class="qtext">Caveman 用 proxy 壓縮 model 讀到的每一個 request。這能省多少，會冒什麼風險？什麼情況下值得，什麼情況下不值得？</p>
-              <p class="qctx"><b>情境：</b>你的團隊每個 agent session 平均 1M input token、70k output token（p.51 案例的平均）。有人提議裝一個壓縮 proxy，預估 input 少 40%。另一人提議只用 response skill，output 少 65%。價格：input $5/MTok，output $25/MTok。</p>
+              <p class="qctx"><b>情境：</b>你的團隊每個 agent session 平均 1M input token、70k output token（p.47 案例的平均）。有人提議裝一個壓縮 proxy，預估 input 少 40%。另一人提議只用 response skill，output 少 65%。價格：input $5/MTok，output $25/MTok。</p>
               <div class="qcover"><b>回答時請涵蓋</b>
                 <ul>
                   <li>分別算出兩個提議省下的 token 比例和費用比例。</li>
@@ -142,28 +142,28 @@
                 </ul>
               </div>
               <details><summary>思考方向</summary><div class="hint">
-                <p>先算 token，再算錢。Output 單價是 input 的 5 倍，所以兩種算法的結論不同。再看 p.22 的保留清單：否定詞、數字、單位、路徑。想一想，壓縮 log 時刪掉其中一個會怎樣。</p>
+                <p>先算 token，再算錢。Output 單價是 input 的 5 倍，所以兩種算法的結論不同。再看 p.20 的保留清單：否定詞、數字、單位、路徑。想一想，壓縮 log 時刪掉其中一個會怎樣。</p>
                 <p>Proxy 也是一個新的零件，位在 agent 和 model 之間。所有程式碼和 secret 都經過它。</p>
               </div></details>
               <details><summary>參考觀點與追問</summary><div class="hint">
                 <ul>
-                  <li>Token：每個 session 1.07M。Output 少 65% 省 45.5k，占 4.3%。Input 少 40% 省 400k，占 37.4%。以 token 數看，輸入方向重要約 9 倍，這是 p.18 的論點。</li>
+                  <li>Token：每個 session 1.07M。Output 少 65% 省 45.5k，占 4.3%。Input 少 40% 省 400k，占 37.4%。以 token 數看，輸入方向重要約 9 倍，這是 p.17 的論點。</li>
                   <li>費用：每個 session 約 $5.00 input ＋ $1.75 output ＝ $6.75。Output 少 65% 省 $1.14（16.9%）；input 少 40% 省 $2.00（29.6%）。Output 單價高，所以 response skill 的效果比 token 數顯示的好。真實帳單還要算 cache：input 大多是 cache hit，單價更低，proxy 省的錢會再縮小。</li>
-                  <li>風險一，語意翻轉：log 裡的「not found」壓成「found」；保留清單才特別列出否定詞（p.22）。風險二，刪掉 debug 需要的細節：stack trace 中段被截掉，agent 修錯層。Caveman 用 <code>caveman_retrieve</code> 取回原文補救（p.25），但 agent 要知道該取回。風險三，diff 的行號或 hunk 標頭改變，agent 改錯位置。</li>
-                  <li>風險四，多一個不確定來源：壓縮本身是程式（確定），但它改變了 model 的輸入，同一個任務的結果變得更難重現（p.68）。風險五，安全：proxy 讀得到所有原始碼、token、secret。自架的 proxy 要管好；第三方的 proxy 等於多一個供應商拿到你的程式碼。</li>
+                  <li>風險一，語意翻轉：log 裡的「not found」壓成「found」；保留清單才特別列出否定詞（p.20）。風險二，刪掉 debug 需要的細節：stack trace 中段被截掉，agent 修錯層。Caveman 用 <code>caveman_retrieve</code> 取回原文補救（p.23），但 agent 要知道該取回。風險三，diff 的行號或 hunk 標頭改變，agent 改錯位置。</li>
+                  <li>風險四，多一個不確定來源：壓縮本身是程式（確定），但它改變了 model 的輸入，同一個任務的結果變得更難重現（p.57）。風險五，安全：proxy 讀得到所有原始碼、token、secret。自架的 proxy 要管好；第三方的 proxy 等於多一個供應商拿到你的程式碼。</li>
                   <li>測法：固定一組任務（例如 30 個有測試的 issue），開壓縮和不開各跑幾次，比較成功率、步數、費用。只省錢但成功率掉，就不划算：失敗的 run 要重跑，重跑的 token 全是浪費。這是 L7 的評估方法，也是 L8「一次只改一件事」的原則。</li>
                   <li>值得的情況：log、測試輸出、搜尋結果很長的工作，例如 CI 修復、大型 refactor。不值得的情況：需要逐字精確的工作，例如 security review、處理法規文件。</li>
                 </ul>
-                <p><b>追問：</b>Slide 說 hook 改不了送給 model 的 request（p.26）。如果你自己寫 harness，壓縮該放在哪一層？和 proxy 比，各有什麼好處？</p>
+                <p><b>追問：</b>Slide 說 hook 改不了送給 model 的 request（p.24）。如果你自己寫 harness，壓縮該放在哪一層？和 proxy 比，各有什麼好處？</p>
               </div></details>
             </div>
           </li>
 
           <li class="dq" id="q6">
             <div class="qbody">
-              <p class="qtag">應用 · 把一個流程寫成 skill 鏈 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=10" target="_blank" rel="noopener">p.10–14、p.79</a></p>
+              <p class="qtag">應用 · 把一個流程寫成 skill 鏈 · <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=9" target="_blank" rel="noopener">p.9–13、p.68</a></p>
               <p class="qtext">挑一個你們團隊重複在做的流程，照 Superpowers 的方式，把它寫成 3 個串起來的 skill。寫出每個 skill 的名稱、進入條件、人工核准關卡、下一個 skill，以及一個可以驗證的終點。</p>
-              <p class="qctx"><b>情境：</b>例如「處理一張 bug ticket」：重現 → 找 root cause → 修正並加測試 → 開 PR。每個 skill 用 p.10 的格式寫 5 到 7 步。另外說明：這個流程在 p.79 的委派階梯上是第幾級，哪些步驟要留給人。</p>
+              <p class="qctx"><b>情境：</b>例如「處理一張 bug ticket」：重現 → 找 root cause → 修正並加測試 → 開 PR。每個 skill 用 p.9 的格式寫 5 到 7 步。另外說明：這個流程在 p.68 的委派階梯上是第幾級，哪些步驟要留給人。</p>
               <div class="qcover"><b>回答時請涵蓋</b>
                 <ul>
                   <li>寫出 3 個 skill 的 frontmatter 與步驟，每個 skill 至少一個關卡或驗證要求。</li>
@@ -172,7 +172,7 @@
                 </ul>
               </div>
               <details><summary>思考方向</summary><div class="hint">
-                <p>p.11 的六種成分：name、description、instructions、checkpoints、references、scripts。流程型 skill 多寫三樣：進入條件、禁止動作、下一個 skill。</p>
+                <p>p.10 的六種成分：name、description、instructions、checkpoints、references、scripts。流程型 skill 多寫三樣：進入條件、禁止動作、下一個 skill。</p>
                 <p>關卡放在「做錯了很貴」的地方。重現錯 bug 只浪費時間；修錯地方會進 production。</p>
               </div></details>
               <details><summary>參考觀點與追問</summary><div class="hint">
@@ -198,11 +198,11 @@
           </details>
           <details>
             <summary>你和 team lead 在對話裡講好「不要動 legacy/」。Teammate 還是改了。為什麼？</summary>
-            <div class="answer"><p>Teammate 不繼承 lead 的對話，只載入 CLAUDE.md、MCP server 與 skill（p.42）。規則要寫進 spawn prompt 或 CLAUDE.md；要強制，用 PreToolUse hook。</p></div>
+            <div class="answer"><p>Teammate 不繼承 lead 的對話，只載入 CLAUDE.md、MCP server 與 skill（p.39）。規則要寫進 spawn prompt 或 CLAUDE.md；要強制，用 PreToolUse hook。</p></div>
           </details>
           <details>
             <summary>兩個 agent 同一秒認領同一個任務，都 commit 了 lock file。誰贏？為什麼不會兩個都贏？</summary>
-            <div class="answer"><p>先 push 成功的贏。Remote 有了新 commit，git 拒絕第二個 push；它 pull 之後看到 lock file，改挑別的任務（p.53）。這是樂觀鎖。</p></div>
+            <div class="answer"><p>先 push 成功的贏。Remote 有了新 commit，git 拒絕第二個 push；它 pull 之後看到 lock file，改挑別的任務（p.49）。這是樂觀鎖。</p></div>
           </details>
         </div>
       </section>
@@ -216,7 +216,7 @@
         </header>
         <div class="exlist">
           <details class="ex">
-            <summary>用 SessionStart hook 保證規則一定在 context 裡<span>p.12–13</span></summary>
+            <summary>用 SessionStart hook 保證規則一定在 context 裡<span>p.11–12</span></summary>
             <div class="exbody">
               <p>這是 Superpowers 的做法，縮小成一個專案能用的版本。Hook 在 session 開始、/clear 之後、compaction 之後各執行一次，把一份規則檔的內容加進 context。</p>
               <figure class="file"><figcaption>.claude/settings.json</figcaption><pre><code>{
@@ -245,7 +245,7 @@ EOF</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>兩個任務，兩個 worktree，兩個 session<span>p.30–31</span></summary>
+            <summary>兩個任務，兩個 worktree，兩個 session<span>p.28–29</span></summary>
             <div class="exbody">
               <p>最短的做法是 <code>-w</code>。Claude Code 會在 <code>.claude/worktrees/&lt;name&gt;/</code> 建 worktree，branch 叫 <code>worktree-&lt;name&gt;</code>。離開 session 時，有改動它會問你要保留或刪除。</p>
               <figure class="file"><figcaption>terminal 1 與 terminal 2</figcaption><pre><code># terminal 1
@@ -269,7 +269,7 @@ git branch -d fix/flaky-test</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>定義一個唯讀的 reviewer subagent，再明確委派<span>p.35–39</span></summary>
+            <summary>定義一個唯讀的 reviewer subagent，再明確委派<span>p.33–36</span></summary>
             <div class="exbody">
               <p>一個 subagent 就是一個 Markdown 檔。Frontmatter 是設定，body 是它的 system prompt。只給三個唯讀 tool，它就改不了檔案。</p>
               <figure class="file"><figcaption>.claude/agents/code-reviewer.md</figcaption><pre><code>---
@@ -290,7 +290,7 @@ Report only high and medium severity issues, each with file:line.</code></pre></
             </div>
           </details>
           <details class="ex">
-            <summary>寫一個 /goal 檢查得到的條件，和一個 /loop 的 prompt<span>p.48–49</span></summary>
+            <summary>寫一個 /goal 檢查得到的條件，和一個 /loop 的 prompt<span>p.44–45</span></summary>
             <div class="exbody">
               <p>好的 goal 條件有三部分：可量測的終點、檢查方法、限制條件。再加一個停止條款，限制花費。條件不必加引號。</p>
               <figure class="file"><figcaption>在 session 裡輸入</figcaption><pre><code>/goal all tests in tests/auth pass (pytest exits 0) and ruff reports 0 errors;
@@ -309,7 +309,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
         <ul class="reading">
-          <li><a href="https://www.anthropic.com/engineering/building-c-compiler" target="_blank" rel="noopener">Building a C compiler with a team of parallel Claudes（p.51–61 的原文）</a></li>
+          <li><a href="https://www.anthropic.com/engineering/building-c-compiler" target="_blank" rel="noopener">Building a C compiler with a team of parallel Claudes（p.47–50 的原文）</a></li>
           <li><a href="https://code.claude.com/docs/en/agent-teams" target="_blank" rel="noopener">Orchestrate teams of Claude Code sessions（agent teams 官方文件）</a></li>
           <li><a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ" target="_blank" rel="noopener">Andrej Karpathy：Software is changing (again)（影片）</a></li>
           <li><a href="https://openai.com/index/research-acceleration-view-inside-openai/" target="_blank" rel="noopener">OpenAI：Research acceleration: The view inside OpenAI</a></li>

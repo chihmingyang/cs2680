@@ -11,12 +11,13 @@
 - 讀者先自己一頁一頁看完 slides,再讀這篇。**不要逐頁重講 slide。**
 - 這篇提供 slide 給不了的東西：整堂的架構、串起主線的觀念、slide 預設你懂的背景、超出 slide 的延伸思考，以及讀書會討論題。
 - 讀者是軟體工程師，程度從新手到資深都有。讀者偏好：講工具或流程時，要附具體範例(檔案內容、實際指令)。
+- 讀者的時間有限，但也不想一直另外查資料。所以分兩層：主線維持短;slide 預設你懂、讀者卻要另外查的背景，放進預設收合的「深入」區塊(第 4 節「深入區塊」)。卡住才展開，不卡就不花時間。
 - 這是讀書會教材。主持人會在讀書會**之前**把討論題發給成員回答，所以第 5 段要最紮實。
 - 討論題維持**通用**:不要寫特定公司、產品或專案名稱。用「你們團隊」「一個你熟悉的流程」這類說法。
 
 ## 2. 素材來源
 
-1. **主要來源**:`/home/claude/cs2680/archive/lXX-cards.html`。這是同一堂課的舊版逐頁導讀，內容已對照 slides 寫成，數字與事實都驗證過。用它取得 slide 的事實、頁碼、例子。
+1. **主要來源**:`/home/claude/cs2680/archive/lXX-cards.html`。這是同一堂課的舊版逐頁導讀，內容已對照 slides 寫成，數字與事實都驗證過。用它取得 slide 的事實和例子。**它的頁碼可能來自較早的 PDF 匯出，不要直接抄**;頁碼照第 10 節對照現行 PDF。
 2. Slide 本身:`https://cs2680.com/slides/<pdf>`。只有在舊版頁面不清楚、或你要確認某個細節時，才用 WebFetch 去查(shell 連不到這個網站)。
 3. 一般知識：只寫你確定正確的內容。不確定就不寫。
 4. 補充 Claude Code 或其他產品的細節前，先查官方文件(WebFetch `https://code.claude.com/docs/en/...`)。
@@ -28,9 +29,9 @@
 1. `<head>`:同 l02(fonts、styles.css)。`<title>LX 中文標題 · CS2680</title>`。
 2. `header.topbar`:brand、`nav.lecnav`(上一堂 / LX / 8 / 下一堂;第一堂和最後一堂只留存在的方向)。**不要**放「只看重點」按鈕。
 3. `main.page.gutter.article[data-lecture="lXX"][data-format="article"][data-pdf="<pdf>"][data-pages-total="N"]`。**不要**放 `.proto` 試做標語。
-4. `header.lecture-head`:eyebrow、h1、`.en-title`、`ul.meta`(Slides 連結、頁數、`<span class="read-time">`)。
+4. `header.lecture-head`:eyebrow、h1、`.en-title`、`ul.meta`(Slides 連結、頁數、`<li><span class="k">頁碼</span>PDF 檢視器的頁數</li>`、`<span class="read-time">`;有深入區塊時再加 `<li><span class="k">深入</span><span class="deep-time">約 N 分鐘</span>,選讀</li>`;最後是 `<li><span class="k">全部展開</span><span class="full-time">約 N 分鐘</span></li>`)。`main` 的 `data-pages-total` 和「頁數」都等於現行 PDF 的實際頁數。
 5. `section.tldr`「先看這裡」:`.thesis` 2–3 句、`ul.core` 3 條(`<b>粗體重點。</b>` + 1–2 句)、`.readhow` 一句讀法。
-6. `div.layout` > `nav.toc` + `div.content`。TOC 七項，右欄文字照 l02:`全貌`、`p.X–Y`、`背景`、`延伸`、`讀書會`、`範例`(或 `練習`)、`—`。
+6. 左側目錄 `aside.sidenav`(在 `main` 之前)加上 `div.layout > div.content`:照 l02 現行的寫法。本堂那一列展開 `ol.sn-secs`;核心觀念那一項的 `span.sn-p` 寫頁碼範圍;子項 `ol.sn-subs` 連到 `#i1…`、`#t1…`、`#x1…`。舊版的 `nav.toc` 已經不用。
 7. 六個段落 + 延伸閱讀(見第 4 節)。
 8. `nav.pager`、`p.fineprint`(照 l02 的句型，改成這一堂)、`<script src="app.js">`。
 
@@ -44,6 +45,7 @@
 ### 2 核心觀念 `section.part#s-ideas`
 - 3–5 個 `div.idea`。每個有 `h3`(觀念句)+ `a.ref`(slide 頁碼範圍)+ `div.prose`(2–3 段)。
 - 用文章串起 slide 的主線：問題 → 機制 → 後果。重點是因果與連結，不是條列 slide 內容。
+- 每個 `div.idea` 的 `div.prose` 後面，放一個 `div.exlist.deeplist`,內含 2–5 個「深入」區塊(見下方「深入區塊」)。
 
 ### 3 觀念補充 `section.part#s-background`
 - `dl.terms`,4–6 個條目。每條:`dt`(名詞 + `<small>` 一句用途)、`dd`(2–5 句)。
@@ -77,6 +79,50 @@
 ### 延伸閱讀 `section.wrap#wrap`
 - `h2` 延伸閱讀 + `ul.reading`(用舊版頁面的閱讀清單)+ `label.readmark`(`input#read-box`)。
 
+### 深入區塊 `details.ex.deep`(放在第 2 段每個核心觀念裡)
+
+範本是 l02.html 的 `#d1`–`#d12`。
+
+**目的。** 補上 slide 預設你懂、讀者卻要另外查的背景。主線不變長。讀者看 slides 卡住時，才展開對應的區塊。
+
+**結構。**
+
+```html
+<div class="exlist deeplist">
+  <details class="ex deep" id="d1">
+    <summary>深入｜一次 model 呼叫，實際送出什麼<span>p.6–10</span></summary>
+    <div class="exbody prose">
+      <p>…</p>
+      <figure class="file"><figcaption>示意：…</figcaption><pre><code>…</code></pre></figure>
+      <ul><li>…</li></ul>
+      <div class="table-wrap"><table class="wide">…</table></div>
+    </div>
+  </details>
+  …
+</div>
+```
+
+- 位置：`div.idea` 裡、`div.prose` 後面。每個核心觀念 2–5 塊。
+- `id` 用 `d1…dN`,全頁不重複。`summary` 以「深入｜」開頭，寫一個問題或主題;`span` 寫 PDF 檢視器頁碼。
+- 內文用 `div.exbody.prose`。可以用 `p`、`ul`/`ol`、`figure.file`、`pre`、`div.table-wrap > table`(三欄以上加 `.wide`)。不要另寫 CSS。
+- 每塊約 150–450 字。全篇深入合計約 8–12 分鐘。
+- 簡化過的資料格式，在 `figcaption` 寫「示意」。
+
+**怎麼找缺口。** 一頁一頁看 slides,自問「沒用過這個工具的工程師，看到這頁會卡在哪裡」。優先寫這六種：
+
+1. **機制的實際樣子**:資料、檔案、request 長什麼樣。例：L2 `#d1` 的 request JSON。
+2. **數量感**:token、延遲、成本、上限的具體數字。例：L2 `#d1` 的 token 換算。
+3. **Slide 只帶過一句的頁**:主線沒提、slide 也沒解釋的頁。例：L2 `#d2`(不讀整個 repo)。
+4. **容易混淆的一組概念**:用表格比較。例：L2 `#d2`(agentic search 與 RAG)、`#d3`(六種權限模式)。
+5. **跨頁的總表**:把散在多頁的事實串成一張表。例：L2 `#d4`(檔案地圖)、`#d5`(什麼時候進 context)。
+6. **讀者會問的「為什麼不直接…」**:例：L2 `#d10`(為什麼不用 Bash 跑 `gh`)。
+
+讀者在讀書會或對話裡提過的問題，也是缺口的來源。L2 的 `#d5`–`#d7` 就來自讀者的追問。
+
+**不要寫。** 逐頁重講 slide;和主線、第 3 段或基礎題「重點複習」重複的內容;沒查證的產品細節。Claude Code、API 價格這類細節，先查官方文件，再寫明版本或日期。
+
+**和基礎題「重點複習」分工。** 第 5 段每一題基礎題的參考答案，已經寫成重點複習(答案、重點拆解、背景補充、常見誤解、例子)。寫深入區塊前先讀完它們。已經講過的，用一句話指過去，例如「規則的寫法見第 5 段基礎題第 1 題的重點複習」。深入區塊只補它們沒講的部分。
+
 ## 5. 語言：繁體中文 + 英文術語，ASD-STE100 約 75–80%
 
 1. 一句只講一件事。描述句 ≤ 40 字(英文詞算 1 字)。
@@ -97,7 +143,12 @@
 
 ## 7. 長度
 
-- 閱讀時間目標 **12–16 分鐘**(check 腳本估算)。第 5 段可以長，其他段落要精簡。
+- check 腳本印出三個時間(每分鐘 400 字):
+  - **主線**:不展開任何 `details` 時看得到的文字。目標 **12–16 分鐘**。這是頁面上的「閱讀」,也是首頁列表的分鐘數。
+  - **深入**:`details.ex.deep` 裡的文字，全篇約 **8–12 分鐘**。
+  - **全部展開**:所有文字，包含參考答案、重點複習、深入區塊。
+- `--fix-time` 把三個數字寫進 `span.read-time`、`span.deep-time`、`span.full-time`。改完頁面後，首頁 `index.html` 那一列的「約 N 分」也要改成同一個主線數字。
+- 第 5 段可以長(多半在收合區塊裡，不算主線)，其他段落要精簡。
 
 ## 8. 驗證(必做)
 
@@ -108,20 +159,85 @@ python3 -I tools/check_article.py site/lXX.html --pages N --pdf FILE.pdf --fix-t
 python3 -I tools/shot_article.py site/lXX.html     # 用 Read 看產生的圖
 ```
 
-- check 必須印出 `OK`。`LONG` 句子要拆短;`passive 被` 要改寫成主動。
+- check 必須印出 `OK`。`LONG` 句子要拆短;`passive 被` 要改寫成主動。check 也會檢查 `data-pages-total` 是否等於 `--pages`。
 - 用 Read 看截圖一次：圖裡文字有沒有重疊、超出框、箭頭有沒有接好;討論卡片排版是否正常。發現問題修一次即可。
+- 有深入區塊時，把全部 `details.deep` 打開(`e.open = true`)再截圖，桌面 1280px、手機 390px 各一次。看表格能不能左右滑、`pre` 有沒有撐破版面。
+- 發布前先讀線上版(Artifact read)。線上版可能比 repo 新(例如介面調整)，要在線上版的基礎上修改。
 
 ## 9. 各堂資料
 
 | 檔案 | PDF | 頁數 | 日期 | 英文標題 | 中文標題 | 上一堂 / 下一堂 |
 |---|---|---|---|---|---|---|
-| l01.html | 1_intro.pdf | 52 | 2026-09-02 | Course overview and logistics | 課程總覽與 AI 系統 | — / L2 Claude Code 怎麼運作 |
-| l03.html | 3_agent_use_2.pdf | 83 | 2026-09-14 | Agents use II: 100x Engineer with Multi-agents | 用多個 agent 放大產能 | L2 Claude Code 怎麼運作 / L4 Context 管理與 tool 設計 |
-| l04.html | 4_agent_design_1.pdf | 58 | 2026-09-16 | Agents design I: context management and tool design | Context 管理與 tool 設計 | L3 / L5 Multi-agent 架構與溝通 |
-| l05.html | 5_agent_design_2.pdf | 49 | 2026-09-23 | Agents design II: multi-agent architecture, coordination, and communication | Multi-agent 架構與溝通 | L4 / L6 Agent memory 與可靠性 |
-| l06.html | 6_agent_design_3.pdf | 33 | 2026-09-28 | Agents design III: agent memory and reliability | Agent memory 與可靠性 | L5 / L7 Agent 評估 |
-| l07.html | 7_agent_design_4.pdf | 38 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 | L6 / L8 成本、速度與 harness 架構 |
-| l08.html | 8_agent_design_5.pdf | 61 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 | L7 / — |
+| l01.html | 1_intro.pdf | 50 | 2026-09-02 | Course overview and logistics | 課程總覽與 AI 系統 | — / L2 Claude Code 怎麼運作 |
+| l03.html | 3_agent_use_2.pdf | 72 | 2026-09-14 | Agents use II: 100x Engineer with Multi-agents | 用多個 agent 放大產能 | L2 Claude Code 怎麼運作 / L4 Context 管理與 tool 設計 |
+| l04.html | 4_agent_design_1.pdf | 56 | 2026-09-16 | Agents design I: context management and tool design | Context 管理與 tool 設計 | L3 / L5 Multi-agent 架構與溝通 |
+| l05.html | 5_agent_design_2.pdf | 46 | 2026-09-23 | Agents design II: multi-agent architecture, coordination, and communication | Multi-agent 架構與溝通 | L4 / L6 Agent memory 與可靠性 |
+| l06.html | 6_agent_design_3.pdf | 31 | 2026-09-28 | Agents design III: agent memory and reliability | Agent memory 與可靠性 | L5 / L7 Agent 評估 |
+| l07.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 | L6 / L8 成本、速度與 harness 架構 |
+| l08.html | 8_agent_design_5.pdf | 54 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 | L7 / — |
 
+- 表裡的頁數是 2026-10-19 對照過的現行 PDF 頁數。L2 是 `2_agent_use_1.pdf`,53 頁。課程之後若再重新匯出 PDF,照第 10 節重新對照。
 - L1 沒有上一堂:lecnav 只放「L1 / 8」和「L2 →」;pager 左邊是「← 回總覽」連到 `index.html`。
 - L8 沒有下一堂:lecnav 只放「← L7」和「L8 / 8」;pager 右邊是「回總覽 →」連到 `index.html`。
+
+## 10. 頁碼規則
+
+- 頁碼一律用 **PDF 檢視器的頁數**(第幾頁 / 共幾頁)。`a.ref` 的 `#page=N` 也開到這一頁。不用 slide 右下角印的編號，因為它會跳號(隱藏頁仍佔編號)。
+- 課程可能重新匯出 PDF:拿掉封面或隱藏頁，頁數就會變。舊頁碼會整段偏移。
+- 寫新文章或補深入之前，先對照現行 PDF:
+  1. 在瀏覽器打開 PDF(shell 連不到 cs2680.com;用 Claude 的瀏覽器，或請使用者附上 PDF)。
+  2. 記下總頁數，和 `data-pages-total`、meta 的「頁數」比對。
+  3. 從頭到尾挑 5 個以上的點，對照「檢視器頁數 → slide 標題」，和文章引用的頁碼比對。
+- 有偏移時，寫一份 `tools/pagemap/lXX.json`(舊頁碼 → 新頁碼，並在 `note` 寫明對照方法與日期)，再跑：
+
+```bash
+python3 -I tools/fix_pages.py tools/pagemap/lXX.json site/lXX.html               # 本堂頁面
+python3 -I tools/fix_pages.py tools/pagemap/lXX.json content/lXX-*.html --no-guard  # 片段
+python3 -I tools/fix_pages.py tools/pagemap/lXX.json site/lYY.html --xref LX        # 別堂引用的「LX p.N」
+```
+
+  腳本只改本堂的頁碼。「L8 p.26」這類別堂的引用會保留。同一份 map 對同一個檔案只能跑一次;完整頁面有防呆，片段和 `--xref` 沒有，重跑前先看 `git diff`。
+- 對照狀態(2026-10-19,八堂都已修正):
+
+| 講次 | 舊頁數 → 現行 PDF | 不在現行 PDF 的舊頁 |
+|---|---|---|
+| L1 | 52 → 50 | 2、4 |
+| L2 | 60 → 53 | 1、13–15、30、44、47–48 |
+| L3 | 83 → 72 | 1、21、37、46、54–60 |
+| L4 | 58 → 56 | 1、40、47 |
+| L5 | 49 → 46 | 1、33–34、46 |
+| L6 | 33 → 31 | 1、19 |
+| L7 | 38 → 37 | 1、35 |
+| L8 | 61 → 54 | 1、28–29、39、49–50、52 |
+
+  每一堂的對照表在 `tools/pagemap/lXX.json`。做法：用瀏覽器的 pdf.js 讀出現行 PDF 每一頁的標題，和 `archive/lXX-cards.html` 每張卡的英文標題比對;標題對不上的頁(改過標題、只有圖)逐一人工確認。跨堂引用(例如 L2 裡的「L8 p.26」、首頁的「L1 p.42」)也一起改了。
+
+- 用瀏覽器讀頁標題的方法(在 cs2680.com 的任一頁執行，回傳「頁數 | slide 編號 | 標題」):
+
+```js
+const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs');
+pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+const doc = await pdfjs.getDocument('/slides/3_agent_use_2.pdf').promise;
+const out = [];
+for (let i = 1; i <= doc.numPages; i++) {
+  const items = (await (await doc.getPage(i)).getTextContent()).items.filter(t => t.str.trim());
+  const words = items.filter(t => !/^\d{1,3}$/.test(t.str.trim()));
+  const big = words.reduce((a, t) => (!a || t.height > a.height + 0.5 ? t : a), null);
+  out.push(i + ' | ' + (items[0]?.str.trim() || '-') + ' | ' + (big ? big.str : ''));
+}
+out.join('\n')
+```
+
+  slide 右下角的編號(第二欄)和頁數常常不同，只當參考。
+
+## 11. 既有講次補深入區塊(L3–L8)
+
+依序做，一次一堂：
+
+1. **頁碼**:照第 10 節對照現行 PDF。有偏移就先修，再寫深入區塊，避免新內容又要重算頁碼。
+2. **基礎**:發布前的線上版可能比 repo 新。先用 Artifact read 取得線上的 `lXX.html`,在它上面修改。
+3. **缺口清單**:一頁一頁看 slides,對照現行文章，依 slide 段落列出缺口(第 4 節「深入區塊」的六種)。每個核心觀念挑 2–5 個最常卡住的。
+4. **查證**:產品細節查官方文件;數字用 python 驗算。
+5. **撰寫**:照 l02 的 `#d1`–`#d12` 寫。先讀第 5 段基礎題的重點複習，不重複。頁碼直接寫新頁碼。
+6. **驗證**:`punct.py` → `check_article.py`(看主線與深入的分鐘數)→ 展開全部深入區塊截圖(桌面、手機)。
+7. **發布**:只發布改動的檔案(`lXX.html`,必要時加 `index.html`)。不要改 capabilities。

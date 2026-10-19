@@ -13,23 +13,53 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner gutter">
+    <button type="button" class="sn-open" aria-controls="sidenav" aria-expanded="false" title="開啟目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sn-where">目錄</span></button>
     <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
     <nav class="lecnav" aria-label="講次">
       <a href="l07.html" rel="prev">← L7</a>
       <span class="here">L8 / 8</span>
     </nav>
   </div>
+  <div class="readbar" aria-hidden="true"><i></i></div>
 </header>
 
-<main class="page gutter article" data-lecture="l08" data-format="article" data-pdf="8_agent_design_5.pdf" data-pages-total="61">
+<div class="shell">
+<aside class="sidenav" id="sidenav">
+<div class="sn-head"><span class="sn-title">目錄</span><button type="button" class="sn-close" aria-label="關閉目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+<nav class="sn-nav" aria-label="課程目錄">
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="index.html"><span class="sn-t">課程總覽</span></a></li>
+</ol>
+<p class="sn-label">Part I · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent memory 與可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-arch" data-spy data-short="架構"><span class="sn-n">1</span><span class="sn-t">架構</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">2</span><span class="sn-t">核心觀念</span><span class="sn-p">p.6–54</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1">成本是一串乘數，大宗是重讀的 context</a></li><li><a class="sn-sub" href="#i2">Turn 越多越貴，而且是平方；step 要批次</a></li><li><a class="sn-sub" href="#i3">每一步少送一點：context 要精簡，output 要節制</a></li><li><a class="sn-sub" href="#i4">單價可以差 100 倍，但每個省法都有反向成本</a></li><li><a class="sn-sub" href="#i5">完成時間看 critical path；架構決定邊界在哪裡</a></li></ol></li><li><a class="sn-sec" href="#s-background" data-spy data-short="觀念補充"><span class="sn-n">3</span><span class="sn-t">觀念補充</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#t1">為什麼 turn 數是平方</a></li><li><a class="sn-sub" href="#t2">Cache read 與 batch 的計價</a></li><li><a class="sn-sub" href="#t3">Routing 的三種時機</a></li><li><a class="sn-sub" href="#t4">Critical path</a></li><li><a class="sn-sub" href="#t5">Compare-and-swap 編輯</a></li></ol></li><li><a class="sn-sec" href="#s-beyond" data-spy data-short="延伸思考"><span class="sn-n">4</span><span class="sn-t">延伸思考</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#x1">便宜不一定快，平行不一定便宜</a></li><li><a class="sn-sub" href="#x2">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub" href="#x3">Harness 的設計把假設寫進結構裡</a></li><li><a class="sn-sub" href="#x4">Microkernel 只在共用基礎設施時回本</a></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">5</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">6</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#s-submit" data-spy data-short="討論"><span class="sn-n">7</span><span class="sn-t">大家的討論</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n"></span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+</ol>
+<p class="sn-soon"><a href="index.html#later-h">Part II 從 10/19 開始，slides 公開後加入</a></p>
+<p class="sn-label">讀書會</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="submissions.html"><span class="sn-t">討論總覽</span></a></li>
+</ol>
+</nav>
+</aside>
+<div class="sn-scrim" hidden></div>
+<main class="page gutter article" data-lecture="l08" data-format="article" data-pdf="8_agent_design_5.pdf" data-pages-total="54">
   <header class="lecture-head">
     <p class="eyebrow">Lecture 08 · 2026-10-07 · Part I</p>
     <h1>成本、速度與 harness 架構</h1>
     <p class="en-title">Advanced agent design I: Cost and performance</p>
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/8_agent_design_5.pdf" target="_blank" rel="noopener">8_agent_design_5.pdf ↗</a></li>
-      <li><span class="k">頁數</span>61</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 20 分鐘</span></li>
+      <li><span class="k">頁數</span>54</li>
+      <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 30 分鐘</span></li>
     </ul>
   </header>
 
@@ -45,21 +75,6 @@
   </section>
 
   <div class="layout">
-    <nav class="toc" aria-label="本堂目錄">
-      <details open>
-        <summary>本堂目錄</summary>
-        <ol>
-          <li><a href="#s-arch">1 架構<span>全貌</span></a></li>
-          <li><a href="#s-ideas">2 核心觀念<span>p.7–61</span></a></li>
-          <li><a href="#s-background">3 觀念補充<span>背景</span></a></li>
-          <li><a href="#s-beyond">4 延伸思考<span>延伸</span></a></li>
-          <li><a href="#s-discuss">5 問題討論<span>基礎／進階</span></a></li>
-          <li><a href="#s-try">6 動手試試<span>範例</span></a></li>
-          <li><a href="#s-submit">7 交作業<span>上傳</span></a></li>
-          <li><a href="#wrap">延伸閱讀<span>—</span></a></li>
-        </ol>
-      </details>
-    </nav>
 
     <div class="content">
 
@@ -79,7 +94,7 @@
               </defs>
 
               <text x="3" y="18" class="dg-ta">Cost =</text>
-              <text x="757" y="18" text-anchor="end" class="dg-ts">只算 LLM 成本（p.6–8）</text>
+              <text x="757" y="18" text-anchor="end" class="dg-ts">只算 LLM 成本（p.5–7）</text>
 
               <!-- factor row -->
               <rect x="3" y="30" width="114" height="46" rx="4" class="dg-box-soft"/>
@@ -122,7 +137,7 @@
               <text x="124" y="130" text-anchor="middle" class="dg-ts">由產品的採用度決定</text>
               <text x="124" y="150" text-anchor="middle" class="dg-ts">會持續成長，不在本堂範圍</text>
               <text x="124" y="200" text-anchor="middle" class="dg-ts">乘法：任何一項減半，總成本就減半</text>
-              <text x="124" y="256" text-anchor="middle" class="dg-tm">p.8</text>
+              <text x="124" y="256" text-anchor="middle" class="dg-tm">p.7</text>
 
               <!-- turns levers -->
               <rect x="259" y="100" width="114" height="170" rx="4" class="dg-box"/>
@@ -132,7 +147,7 @@
               <text x="267" y="176" class="dg-ts">· 交回前自我驗證</text>
               <text x="267" y="194" class="dg-ts">· 換任務開新對話</text>
               <text x="267" y="230" class="dg-t">總成本 ∝ turn²</text>
-              <text x="316" y="260" text-anchor="middle" class="dg-tm">p.9–10</text>
+              <text x="316" y="260" text-anchor="middle" class="dg-tm">p.8–9</text>
 
               <!-- steps levers -->
               <rect x="387" y="100" width="114" height="170" rx="4" class="dg-box"/>
@@ -141,7 +156,7 @@
               <text x="395" y="158" class="dg-ts">· 重用計畫與 skill</text>
               <text x="395" y="176" class="dg-ts">· 一開始載入檔案</text>
               <text x="395" y="230" class="dg-t">4 次 call → 2 次</text>
-              <text x="444" y="260" text-anchor="middle" class="dg-tm">p.11–13</text>
+              <text x="444" y="260" text-anchor="middle" class="dg-tm">p.10–12</text>
 
               <!-- tokens levers -->
               <rect x="515" y="100" width="114" height="170" rx="4" class="dg-box"/>
@@ -152,7 +167,7 @@
               <text x="523" y="194" class="dg-ts">· 要求少一點</text>
               <text x="523" y="212" class="dg-ts">· schema 限欄位</text>
               <text x="523" y="230" class="dg-ts">· 調整 effort</text>
-              <text x="572" y="260" text-anchor="middle" class="dg-tm">p.14–21</text>
+              <text x="572" y="260" text-anchor="middle" class="dg-tm">p.13–20</text>
 
               <!-- price levers -->
               <rect x="643" y="100" width="114" height="170" rx="4" class="dg-box"/>
@@ -163,19 +178,19 @@
               <text x="651" y="194" class="dg-ts">· routing 選 model</text>
               <text x="651" y="212" class="dg-ts">· serving 層優化</text>
               <text x="651" y="230" class="dg-t">單價 0.05× 到 5×</text>
-              <text x="700" y="260" text-anchor="middle" class="dg-tm">p.22–25</text>
+              <text x="700" y="260" text-anchor="middle" class="dg-tm">p.21–24</text>
 
               <!-- bottom bars -->
               <rect x="3" y="286" width="754" height="46" rx="4" class="dg-box-accent"/>
-              <text x="380" y="306" text-anchor="middle" class="dg-tb">每個節省都有反向成本（p.26–27）</text>
+              <text x="380" y="306" text-anchor="middle" class="dg-tb">每個節省都有反向成本（p.25–26）</text>
               <text x="380" y="324" text-anchor="middle" class="dg-ts">淨節省 = 毛節省 − 反向成本，在同一組任務上量。替每個任務設上限，停滯就停。</text>
 
               <rect x="3" y="344" width="754" height="46" rx="4" class="dg-box-soft"/>
-              <text x="380" y="364" text-anchor="middle" class="dg-tb">完成時間 ≠ 成本（p.31–42）</text>
+              <text x="380" y="364" text-anchor="middle" class="dg-tb">完成時間 ≠ 成本（p.28–38）</text>
               <text x="380" y="382" text-anchor="middle" class="dg-ts">時間由 critical path 決定。平行與 speculation 省時間，但多花 token。</text>
             </svg>
           </div>
-          <figcaption>Slide p.8 的乘法公式，加上每一項對應的槓桿。設計 agent 時只能壓低右邊四項。藍框是貫穿全堂的提醒：每個節省都有反向成本。</figcaption>
+          <figcaption>Slide p.7 的乘法公式，加上每一項對應的槓桿。設計 agent 時只能壓低右邊四項。藍框是貫穿全堂的提醒：每個節省都有反向成本。</figcaption>
         </figure>
         <div class="prose">
           <p>看這張圖，先記住一件事：這是乘法。任何一項減半，總成本就減半，所以每一項都值得單獨優化。但每個槓桿都有代價。藍框那一行是整堂課的紀律：毛節省要扣掉反向成本，而且要在同一組任務上量。最下面一行提醒你，時間和錢是兩個目標。</p>
@@ -265,7 +280,7 @@
               <text x="600" y="303" text-anchor="middle" class="dg-ts">隔離與擴展最強；通訊最貴</text>
             </svg>
           </div>
-          <figcaption>後半堂的三種 harness 架構（p.44–51）。差別在於呼叫跨過什麼邊界：函式呼叫、介面、協定。邊界越外面，隔離與擴展越強，每次呼叫也越慢。</figcaption>
+          <figcaption>後半堂的三種 harness 架構（p.40–45）。差別在於呼叫跨過什麼邊界：函式呼叫、介面、協定。邊界越外面，隔離與擴展越強，每次呼叫也越慢。</figcaption>
         </figure>
       </section>
 
@@ -277,14 +292,14 @@
         </header>
         <div class="ideas">
           <div class="idea" id="i1">
-            <h3>成本是一串乘數，大宗是重讀的 context <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=7" target="_blank" rel="noopener">p.7–8、p.14–16</a></h3>
+            <h3>成本是一串乘數，大宗是重讀的 context <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=6" target="_blank" rel="noopener">p.6–7、p.13–15</a></h3>
             <div class="prose">
               <p>一個 turn 從使用者訊息開始，到 agent 回覆結束。一個 step 是一次 model call，加上它要求的 tool call。Slide 把成本寫成乘法：Cost = Users × Sessions/User × Turns/Session × Steps/Turn × Tokens/Step × Price/Token。乘法的好處是每一項都能單獨優化。前兩項會隨產品成長，所以 agent 設計要壓低後四項。</p>
               <p>全班的 Claude Code 資料給了基準。主 agent 每一步的 token 數，中位數 200K–300K，p90 600K–700K，幾乎都是重送的 context。Assignment 1 的 token 有 97.6% 是 cache read。Cache read 單價最低，但量太大，仍是成本大宗。</p>
             </div>
           </div>
           <div class="idea" id="i2">
-            <h3>Turn 越多越貴，而且是平方；step 要批次 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=9" target="_blank" rel="noopener">p.9–13</a></h3>
+            <h3>Turn 越多越貴，而且是平方；step 要批次 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=8" target="_blank" rel="noopener">p.8–12</a></h3>
             <div class="prose">
               <p>第 k 個 turn 要重讀前 k−1 個 turn 的內容。所以 turn 數加倍，總量約變 4 倍。全班多數 session 只有一個 prompt，從成本看是好習慣。</p>
               <p>使用者回來追問，常見原因有三個：沒有計畫、agent 太早停、沒人檢查結果。對應的解法：先規劃、拆解任務、交回前自我驗證。目標是 agent 一次做完。</p>
@@ -292,7 +307,7 @@
             </div>
           </div>
           <div class="idea" id="i3">
-            <h3>每一步少送一點：context 要精簡，output 要節制 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=17" target="_blank" rel="noopener">p.17–21</a></h3>
+            <h3>每一步少送一點：context 要精簡，output 要節制 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=16" target="_blank" rel="noopener">p.16–20</a></h3>
             <div class="prose">
               <p>留在 context 裡的 token，之後每一步都再付一次。Slide 給三個方向：丟掉過期的、縮小進來的、只載入需要的。一份 20K 的測試 log 留 50 步，重讀 1M token。只留 500 token 的錯誤摘要，只要 25K。</p>
               <p>探索類的工作交給 subagent。Subagent 從乾淨的 context 開始，每一步的中位數約 80K。主 agent 只拿回摘要。</p>
@@ -300,7 +315,7 @@
             </div>
           </div>
           <div class="idea" id="i4">
-            <h3>單價可以差 100 倍，但每個省法都有反向成本 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=22" target="_blank" rel="noopener">p.22–30</a></h3>
+            <h3>單價可以差 100 倍，但每個省法都有反向成本 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=21" target="_blank" rel="noopener">p.21–27</a></h3>
             <div class="prose">
               <p>同樣的 token，價格可以差 100 倍。Cache read 是 base input 的 0.1×，batch 是 0.5×，疊加是 0.05×。條件是 prefix 穩定、工作能等。Routing 把簡單的步驟交給便宜的 model。</p>
               <p>每個節省都有反向成本。Compaction 丟掉的檔案要重讀，摘要改了 prefix，cache 要重寫。便宜 model 的一個壞計畫會多出很多步。每個 subagent 都重讀共用的檔案。Speculation 猜錯就浪費 token。淨節省 = 毛節省 − 反向成本，兩者都要在同一組任務上量。</p>
@@ -308,7 +323,7 @@
             </div>
           </div>
           <div class="idea" id="i5">
-            <h3>完成時間看 critical path；架構決定邊界在哪裡 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=31" target="_blank" rel="noopener">p.31–61</a></h3>
+            <h3>完成時間看 critical path；架構決定邊界在哪裡 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=28" target="_blank" rel="noopener">p.28–54</a></h3>
             <div class="prose">
               <p>省錢的手段多半也省時間，但兩者不同。序列執行時，總時間是每步相加。平行時，總時間是最長的那條相依鏈，也就是 critical path。平行與 speculative action 用更多 token 換更少等待。</p>
               <p>速度的其他槓桿在 harness：非同步執行、持久的 shell、串流中就開始 tool call、tool 與 model 放在一起。Tool 本身也可能比 model 慢，先量時間。優化要在迴圈裡做：記錄、量測、一次改一件事、同一組任務重測。</p>
@@ -326,38 +341,38 @@
         </header>
         <dl class="terms">
           <div id="t1">
-            <dt>為什麼 turn 數是平方<small>p.10 背後的算式</small></dt>
+            <dt>為什麼 turn 數是平方<small>p.9 背後的算式</small></dt>
             <dd>
-              <p>假設每個 turn 新增 L 個 token。第 1 個 turn 送 L，第 2 個送 2L，第 k 個送 kL。總量是 1 到 k 的和乘上 L，約 k²/2 個 L。10 個 turn 送 55L；20 個 turn 送 210L，約 4 倍 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=10" target="_blank" rel="noopener">p.10</a>。</p>
+              <p>假設每個 turn 新增 L 個 token。第 1 個 turn 送 L，第 2 個送 2L，第 k 個送 kL。總量是 1 到 k 的和乘上 L，約 k²/2 個 L。10 個 turn 送 55L；20 個 turn 送 210L，約 4 倍 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=9" target="_blank" rel="noopener">p.9</a>。</p>
               <p>Prefix cache 讓重讀便宜 10 倍，但平方關係不變。所以換任務就用 <code>/clear</code> 開一段乾淨的對話。</p>
             </dd>
           </div>
           <div id="t2">
             <dt>Cache read 與 batch 的計價<small>兩種折扣怎麼疊</small></dt>
             <dd>
-              <p>Prefix cache 從第一個 token 開始比對。開頭相同的部分直接讀快取，收 0.1× 的價格。中間改了一個 token，後面全部重算，寫入 cache 還要加價（Claude API 的 5 分鐘 cache 是 1.25×）<a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=22" target="_blank" rel="noopener">p.22</a>。</p>
+              <p>Prefix cache 從第一個 token 開始比對。開頭相同的部分直接讀快取，收 0.1× 的價格。中間改了一個 token，後面全部重算，寫入 cache 還要加價（Claude API 的 5 分鐘 cache 是 1.25×）<a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=21" target="_blank" rel="noopener">p.21</a>。</p>
               <p>Batch 把能等的 request 排隊處理，input 與 output 都打 5 折，多數在 1 小時內完成。兩種折扣可以疊加，得到 0.05×。Opus 5.5 與 Sonnet 5.5 的 cache read 更低，是 0.05×。</p>
             </dd>
           </div>
           <div id="t3">
             <dt>Routing 的三種時機<small>便宜與貴的 model 怎麼分工</small></dt>
             <dd>
-              <p>開始前選：每個 turn 開始時，由 router 選定一個 model。失敗才升級：先用便宜的 model，verifier 沒過再換大的。每一步重選：trajectory 變長時，依歷史與預算重選 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=23" target="_blank" rel="noopener">p.23</a>。</p>
+              <p>開始前選：每個 turn 開始時，由 router 選定一個 model。失敗才升級：先用便宜的 model，verifier 沒過再換大的。每一步重選：trajectory 變長時，依歷史與預算重選 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=22" target="_blank" rel="noopener">p.22</a>。</p>
               <p>隱藏成本：KV cache 由 model 的權重算出，不能跨 model 共用。換 model 後，整個 context 要以 fresh input 的價格重新 prefill。「錯了很貴」的規劃步驟，值得直接用大 model。</p>
             </dd>
           </div>
           <div id="t4">
             <dt>Critical path<small>平行時決定總時間的那條鏈</small></dt>
             <dd>
-              <p>把任務畫成相依圖，最長的那條路徑就是 critical path。例：plan 5 秒、A 20 秒、B 30 秒、merge 5 秒。序列 60 秒；平行 40 秒，路徑是 plan → B → merge <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=32" target="_blank" rel="noopener">p.32</a>。</p>
+              <p>把任務畫成相依圖，最長的那條路徑就是 critical path。例：plan 5 秒、A 20 秒、B 30 秒、merge 5 秒。序列 60 秒；平行 40 秒，路徑是 plan → B → merge <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=29" target="_blank" rel="noopener">p.29</a>。</p>
               <p>把 A 加速一倍，總時間不變。把 B 縮短 10 秒，總時間就少 10 秒。所以優化前先找出哪一條鏈最長。</p>
             </dd>
           </div>
           <div id="t5">
             <dt>Compare-and-swap 編輯<small>檔案改過就拒絕寫入</small></dt>
             <dd>
-              <p>名稱來自 CPU 的 compare-and-swap 指令：先比對目前的值是否仍是預期值，相同才寫入。DeepSeek Harness 記下 model 讀檔時的版本，寫入前再比對一次 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=55" target="_blank" rel="noopener">p.55</a>。</p>
-              <p>Model 讀過之後，你或另一個 subagent 可能改了檔案。沒有檢查時，這次編輯會蓋掉別人的改動。oh-my-pi 的 hashline 編輯用行號指定位置，同樣需要這種檢查 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=58" target="_blank" rel="noopener">p.58</a>。</p>
+              <p>名稱來自 CPU 的 compare-and-swap 指令：先比對目前的值是否仍是預期值，相同才寫入。DeepSeek Harness 記下 model 讀檔時的版本，寫入前再比對一次 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=48" target="_blank" rel="noopener">p.48</a>。</p>
+              <p>Model 讀過之後，你或另一個 subagent 可能改了檔案。沒有檢查時，這次編輯會蓋掉別人的改動。oh-my-pi 的 hashline 編輯用行號指定位置，同樣需要這種檢查 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=51" target="_blank" rel="noopener">p.51</a>。</p>
             </dd>
           </div>
         </dl>
@@ -381,15 +396,15 @@
           <div class="idea" id="x2">
             <h3>淨節省只能在同一組任務上量</h3>
             <div class="prose">
-              <p>p.26 的公式簡單，難在量測。Agent 的 trajectory 有隨機性，同一個任務跑兩次，step 數可能差一倍。所以比較兩個設定時，要用同一組任務、跑多次、看分布。</p>
-              <p>p.42 的「一次只改一件事」是同一個理由。同時改 compaction 門檻和 model，就分不出效果來自哪裡。L7 的評估方法在這裡派上用場。</p>
+              <p>p.25 的公式簡單，難在量測。Agent 的 trajectory 有隨機性，同一個任務跑兩次，step 數可能差一倍。所以比較兩個設定時，要用同一組任務、跑多次、看分布。</p>
+              <p>p.38 的「一次只改一件事」是同一個理由。同時改 compaction 門檻和 model，就分不出效果來自哪裡。L7 的評估方法在這裡派上用場。</p>
             </div>
           </div>
           <div class="idea" id="x3">
             <h3>Harness 的設計把假設寫進結構裡</h3>
             <div class="prose">
               <p>Codex CLI 先 sandbox 再詢問。它的假設是：隔離比詢問可靠，人問多了會不看就同意。Claude Code 的權限模式把判斷交給人或分類器。它的假設是：環境不一定能隔離。</p>
-              <p>兩種假設都成立，差別在部署環境。讀 p.53–60 時，可以問每個設計背後假設了什麼。例如 Hermes 在 50% 就 compaction，假設長任務很多。</p>
+              <p>兩種假設都成立，差別在部署環境。讀 p.46–53 時，可以問每個設計背後假設了什麼。例如 Hermes 在 50% 就 compaction，假設長任務很多。</p>
             </div>
           </div>
           <div class="idea" id="x4">
@@ -407,14 +422,14 @@
         <header class="part-head">
           <p class="kicker">5 · 問題討論</p>
           <h2>讀書會討論題</h2>
-          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡。進階題在讀完文章後回答，讀書會前發給大家。</p>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡；每一題下面有留言串，卡住的地方隨手寫。進階題在讀完文章後回答；每一題下面就是討論區，寫下你的想法，也看看別人怎麼想。</p>
         </header>
         <div class="qtabs" role="tablist" aria-label="題目分組">
           <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
           <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
         </div>
         <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
-          <p class="qset-lede">看 slides 之前先讀一遍這 9 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <p class="qset-lede">看 slides 之前先讀一遍這 5 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L8 基礎題（帶著問題看 slides）：成本、速度與 harness 架構" data-slides="https://cs2680.com/slides/8_agent_design_5.pdf">複製基礎題</button>
             <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
@@ -422,98 +437,331 @@
           <ol class="qlist qlist-basic">
             <li class="bq" id="b1">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=7" target="_blank" rel="noopener">p.7–8</a> · 成本公式</p>
-                <p class="qtext">Slide 把一個 session 分成哪三個層級？成本公式有哪六個乘數？哪些會隨產品成長，哪些是 agent 設計要壓低的？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Session、turn、step。一個 turn 從使用者訊息開始，到 agent 回覆結束；一個 step 是一次 model call 加上它要求的 tool call。</p>
-                  <p>Cost = Users × Sessions/User × Turns/Session × Steps/Turn × Tokens/Step × Price/Token。前兩項隨採用度成長；後四項由 agent 的 trajectory 與單價決定，是設計要壓低的部分。本堂只算 LLM 成本。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=7" target="_blank" rel="noopener">p.7–9</a> · 成本公式與 turn</p>
+                <p class="qtext">成本公式的哪幾項是 agent 設計要壓低的？為什麼總成本隨 turn 數的平方成長？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Agent 設計要壓低後四項：Turns/Session、Steps/Turn、Tokens/Step、Price/Token。前兩項 Users、Sessions/User 隨產品的採用度成長（p.7）。每一步都重送整個 context，所以第 k 個 turn 要重讀第 1 到 k−1 個 turn。加總是 1 + 2 + … + k，約 k²/2 個 turn 的量（p.9）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>先分清兩個單位。一個 turn 從使用者訊息開始，到 agent 回覆結束。一個 step 是一次 model call，加上它要求的 tool call。一個 turn 通常有好幾個 step（p.6）。</p>
+                  <p>成本公式是乘法（p.7）。任何一項減半，總成本就減半。Users 與 Sessions/User 變多，代表產品有人用，agent 設計不去壓它。設計能控制的是後四項：turn 數、step 數、每步的 token 數、單價。</p>
+                  <p>平方的算式：假設每個 turn 新增 L 個 token。第 1 個 turn 送 L，第 2 個送 2L，第 k 個送 kL。k 個 turn 共送 L × (1 + 2 + … + k) = L × k(k+1)/2。10 個 turn 是 55L，20 個 turn 是 210L。210 ÷ 55 ≈ 3.8，所以 turn 數加倍，總量約變 4 倍。</p>
+                  <p>全班的資料：只有一個 prompt 的 session，Assignment 1 佔 68%，Assignment 2 佔 75%；少數 marathon session 超過 100 個 turn（p.8）。使用者回來追問，原因是沒有計畫、agent 太早停、或沒檢查結果。對應的解法：先確認目標與計畫、拆成附 done check 的子任務、交回前自我驗證（p.9）。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 284" role="img" aria-label="20 根長條，每一根代表一個 turn 送出的 token 量。第 k 根高 k 格：最上面 1 格是這個 turn 新增的 L，下面 k 減 1 格是重讀前面的 turn。長條排成一個三角形。虛線把前 10 個 turn 分開：前 10 個 turn 共 1 加到 10 等於 55L；20 個 turn 共 1 加到 20 等於 210L。210 除以 55 約 3.8，turn 加倍，總量約 4 倍。總量等於三角形面積，和 k 平方成正比。">
+                        <defs>
+                          <marker id="tk8-1-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                        </defs>
+                        <text x="8" y="20" class="dg-tb">第 k 個 turn 送出 kL：新增 L，再加上重讀前面 k − 1 個 turn</text>
+                        <rect x="60" y="56" width="14" height="10" class="dg-box-accent"/>
+                        <text x="80" y="65" class="dg-ts">這個 turn 新增的 token（L）</text>
+                        <rect x="60" y="74" width="14" height="10" class="dg-box-soft"/>
+                        <text x="80" y="83" class="dg-ts">重讀前面的 turn</text>
+                        <text x="62" y="118" class="dg-tb">前 10 個 turn</text>
+                        <text x="62" y="136" class="dg-t">1 + 2 + … + 10 = 55L</text>
+                        <rect x="56" y="228" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="78" y="228" width="18" height="8" class="dg-box-soft"/>
+                        <rect x="78" y="220" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="100" y="220" width="18" height="16" class="dg-box-soft"/>
+                        <rect x="100" y="212" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="122" y="212" width="18" height="24" class="dg-box-soft"/>
+                        <rect x="122" y="204" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="144" y="204" width="18" height="32" class="dg-box-soft"/>
+                        <rect x="144" y="196" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="166" y="196" width="18" height="40" class="dg-box-soft"/>
+                        <rect x="166" y="188" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="188" y="188" width="18" height="48" class="dg-box-soft"/>
+                        <rect x="188" y="180" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="210" y="180" width="18" height="56" class="dg-box-soft"/>
+                        <rect x="210" y="172" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="232" y="172" width="18" height="64" class="dg-box-soft"/>
+                        <rect x="232" y="164" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="254" y="164" width="18" height="72" class="dg-box-soft"/>
+                        <rect x="254" y="156" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="276" y="156" width="18" height="80" class="dg-box-soft"/>
+                        <rect x="276" y="148" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="298" y="148" width="18" height="88" class="dg-box-soft"/>
+                        <rect x="298" y="140" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="320" y="140" width="18" height="96" class="dg-box-soft"/>
+                        <rect x="320" y="132" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="342" y="132" width="18" height="104" class="dg-box-soft"/>
+                        <rect x="342" y="124" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="364" y="124" width="18" height="112" class="dg-box-soft"/>
+                        <rect x="364" y="116" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="386" y="116" width="18" height="120" class="dg-box-soft"/>
+                        <rect x="386" y="108" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="408" y="108" width="18" height="128" class="dg-box-soft"/>
+                        <rect x="408" y="100" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="430" y="100" width="18" height="136" class="dg-box-soft"/>
+                        <rect x="430" y="92" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="452" y="92" width="18" height="144" class="dg-box-soft"/>
+                        <rect x="452" y="84" width="18" height="8" class="dg-box-accent"/>
+                        <rect x="474" y="84" width="18" height="152" class="dg-box-soft"/>
+                        <rect x="474" y="76" width="18" height="8" class="dg-box-accent"/>
+                        <line x1="274" y1="100" x2="274" y2="244" class="dg-soft dg-dash"/>
+                        <line x1="50" y1="236" x2="506" y2="236" class="dg-line" marker-end="url(#tk8-1-ah)"/>
+                        <text x="65" y="252" text-anchor="middle" class="dg-tm">1</text>
+                        <text x="263" y="252" text-anchor="middle" class="dg-tm">10</text>
+                        <text x="483" y="252" text-anchor="middle" class="dg-tm">20</text>
+                        <text x="512" y="240" class="dg-tm">turn</text>
+                        <text x="504" y="84" class="dg-tb">20 個 turn</text>
+                        <text x="504" y="102" class="dg-t">1 + … + 20 = 210L</text>
+                        <text x="504" y="128" class="dg-ta">210 ÷ 55 ≈ 3.8</text>
+                        <text x="504" y="146" class="dg-ta">turn 加倍</text>
+                        <text x="504" y="164" class="dg-ta">→ 總量約 4 倍</text>
+                        <text x="504" y="196" class="dg-ts">第 20 個 turn 送 20L</text>
+                        <text x="504" y="212" class="dg-ts">新增 L，重讀 19L</text>
+                        <text x="320" y="274" text-anchor="middle" class="dg-ta">總量 = 所有長條的面積 ≈ 三角形 → 和 k² 成正比</text>
+                      </svg>
+                    </div>
+                    <figcaption>每一根長條是一個 turn 送出的量。藍色是新增的部分，灰色是重讀的部分。Turn 數加倍，三角形的底和高都加倍，面積約變 4 倍。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>1 + 2 + … + k = k(k+1)/2 是等差級數的和。圖上的長條疊成三角形，而三角形面積和邊長的平方成正比，所以總量是 k 的平方。</p>
+                  <p>Prefix cache 讓重讀的部分只收 0.1× 的價格。它只改變係數，不改變形狀：總量仍是平方。一個 turn 裡的 step 也一樣：每次 model call 都重讀整個 context（p.11），所以 step 數多的 turn 也是平方成長。實務上，換任務就用 Claude Code 的 <code>/clear</code> 開一段乾淨的對話。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「平方成長是因為 attention 的計算量是 O(n²)。」不是同一件事。這裡的平方來自計費：API 依 token 數線性收費，但每個 turn 都把歷史重送一次，加總起來才變成平方。Attention 的 O(n²) 是 model 內部的計算量。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>成本是乘法：設計只壓低 turn、step、每步 token、單價這四項，任一項減半，總成本就減半。</li>
+                    <li>第 k 個 turn 送 kL → 總量 L × k(k+1)/2 → turn 數加倍，成本約 4 倍。</li>
+                    <li>減少追問：先規劃、拆成附 done check 的子任務、交回前自我驗證；換任務就開新 session。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">成本是一串乘數</a>〉、〈<a href="#i2">Turn 越多越貴，而且是平方</a>〉；觀念補充〈<a href="#t1">為什麼 turn 數是平方</a>〉；L2〈<a href="l02.html#i1">一個 prompt，很多圈 loop</a>〉。進階題第 2 題用實際單價再算一次。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b2">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=9" target="_blank" rel="noopener">p.9–12</a> · Turn 與 step</p>
-                <p class="qtext">為什麼總成本隨 turn 數的平方成長？使用者回來追問的三個原因和對應解法是什麼？先規劃再批次執行，能把 4 次 model call 減成幾次？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>第 k 個 turn 要重讀第 1 到 k−1 個 turn，所以總量約與 k² 成正比。全班資料：單一 prompt 的 session 佔 68%（Assignment 1）與 75%（Assignment 2）。</p>
-                  <p>原因：沒有計畫、agent 太早停、沒人檢查結果。解法：先規劃（front-load planning）、拆解任務、交回前自我驗證。p.12：一個動作一次 call 要 4 次；先規劃、再平行執行 3 個 tool，只要 2 次。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=15" target="_blank" rel="noopener">p.15–16</a> · 每一步的 token</p>
+                <p class="qtext">全班的 token 有幾 % 是 cache read？精簡 context 有哪三個方向？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Assignment 1 的 token 有 97.6% 是 cache read（p.15）。p.16 的三個方向：丟掉過期的（截短舊 tool 結果、遮掉用過的 tool 輸出、compaction）；縮小進來的（只留錯誤、大輸出寫進檔案）；只載入需要的（相關的 tool 與 memory、探索交給 subagent）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>Agent 每一步都重送整個 context。這一步新增的只有上一步的回覆與 tool 輸出。其餘部分和上一個 request 相同，所以直接讀 prefix cache。全班主 agent 每一步的 token 數，中位數 200K–300K，p90 600K–700K（p.13）。到第 500 步左右，context 約 650K–670K（p.14）。</p>
+                  <p>p.15 給了數量的比例：fresh prefill 比 cache read 少約 100 倍，output 又比 fresh prefill 少約 5 倍。價格比是 cache read : input : output = 1 : 10 : 50。Cache read 的單價只低 10 倍，量卻多約 100 倍，所以它仍是成本大宗。</p>
+                  <p>三個方向背後是同一句話（p.16）：留在 context 的 token，之後每一步都再付一次。所以要在源頭處理，不要等 context 滿了才處理。</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>方向</th><th>做法（p.16）</th><th>省在哪裡</th></tr></thead>
+                    <tbody>
+                      <tr><td>丟掉過期的</td><td>截短舊 tool 結果、遮掉用過的 tool 輸出、compaction、把舊 turn 摘要成狀態</td><td>用過的內容，之後不再每步重付</td></tr>
+                      <tr><td>縮小進來的</td><td>壓縮 observation、只留錯誤不留整份 log、大輸出寫進檔案只傳路徑</td><td>新內容一進來就小</td></tr>
+                      <tr><td>只載入需要的</td><td>只載入相關的 tool 與 memory；探索交給 subagent，只拿回摘要</td><td>不需要的內容從頭就不進來</td></tr>
+                    </tbody>
+                  </table></div>
+                  <div class="callout example"><span class="tag">例子</span><div><p>一份 20K token 的測試 log 留在 context 50 步：20K × 50 = 1,000K，重讀 1M token。只留 500 token 的錯誤摘要：500 × 50 = 25K。差 40 倍，而且 model 需要的資訊都還在。</p></div></div>
+                  <p class="tk-h">背景補充</p>
+                  <p>Subagent 是第三個方向最常見的做法。它從乾淨的 context 開始，每一步的中位數約 80K，p90 約 200K（p.13）。讀檔、搜尋的中間結果留在 subagent 裡，主 agent 只收到最後的摘要。Skill 的漸進載入也是同一個想法：先只放名稱與描述，用到才載入全文。</p>
+                  <p>三個方向的風險不同。截短與只留錯誤，丟的是確定用不到的內容。Compaction 是有損的：摘要可能漏掉之後需要的細節，而且摘要改了 prefix，cache 要重寫。這是 B3 的反向成本。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Cache read 只要 0.1×，所以 context 大一點沒關係。」單價低 10 倍，量卻多約 100 倍，cache read 仍是大宗。Context 變長，prefill 也變慢，model 也更難找到中間的資訊。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>每一步重送整個 context → 大部分 token 是 cache read（Assignment 1：97.6%）。</li>
+                    <li>單價最低，不代表花費最少：量多約 100 倍 → 先縮小 context，再管 output。</li>
+                    <li>丟掉過期的、縮小進來的、只載入需要的：留下的 token 每一步都要再付一次。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">大宗是重讀的 context</a>〉、〈<a href="#i3">context 要精簡，output 要節制</a>〉；L2〈<a href="l02.html#t3">漸進載入</a>〉；L4〈<a href="l04.html#i4">Context 是有限資源</a>〉、〈<a href="l04.html#x4">無損與有損的排序</a>〉。進階題第 1 題用 1 : 10 : 50 算出每一項的成本。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b3">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=14" target="_blank" rel="noopener">p.14–16</a> · 全班的 token 資料</p>
-                <p class="qtext">主 agent 每一步送出多少 token（中位數與 p90）？Subagent 差多少？Cache read 佔全部 token 的幾 %？Slide 給的價格比是多少？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>主 agent 中位數 200K–300K，p90 600K–700K；subagent 中位數約 80K，p90 約 200K。到第 500 步左右，context 約 650K–670K。</p>
-                  <p>Assignment 1 的 token 有 97.6% 是 cache read。價格比 cache read : input : output = 1 : 10 : 50。Output 比 fresh prefill 少 5 倍，fresh prefill 比 cache read 少 100 倍。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=21" target="_blank" rel="noopener">p.21–25</a> · 單價與反向成本</p>
+                <p class="qtext">Cache read 與 batch 各把單價降到幾倍？為什麼每個省法都要算反向成本？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Cache read 降到 base input 的 0.1×，前提是 prefix 保持穩定：system prompt、tool 定義、早期歷史放最前面，而且不改。Batch 降到 0.5×，前提是工作可以等，例如 eval、backfill（p.21）。每個省法都帶來新的花費，可能讓總花費變多，例如 compaction 後要重讀檔案、重寫 cache。所以淨節省 = 毛節省 − 反向成本，兩者要在同一組任務上量（p.25）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.21 的價格以 base input 為 1×：output 5×、batch input 0.5×、cached input 0.1×，batch 加 cache 是 0.05×。最貴和最便宜差 5 ÷ 0.05 = 100 倍。同樣的 token，放的位置和送的時機不同，價格就差兩個數量級。</p>
+                  <p>Cache 的條件來自它的比對方式。Prefix cache 從第一個 token 往後比對，相同的部分才讀快取。中間改了一個 token，後面全部以 fresh input 的價格重算。所以不變的內容放前面，會變的內容放最後。Batch 的條件是能等：eval、backfill、大量的離線工作。互動中的 agent 要即時回應，用不上 batch。</p>
+                  <p>p.25 列出四個省法各自的反向成本：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>省法</th><th>毛節省</th><th>反向成本（p.25）</th></tr></thead>
+                    <tbody>
+                      <tr><td>Compaction</td><td>context 變小</td><td>丟掉的檔案要重讀；摘要改了 prefix，cache 要重寫</td></tr>
+                      <tr><td>Routing</td><td>便宜 model 的單價低</td><td>一個壞計畫多出很多步，或整次失敗</td></tr>
+                      <tr><td>Subagent</td><td>主 agent 的 context 變小</td><td>每個 subagent 都重讀共用的檔案與指示</td></tr>
+                      <tr><td>Speculation</td><td>少等待</td><td>猜錯就浪費 token，還搶同一批 tool</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>反向成本常常比毛節省晚出現，也更難看到。所以 p.26 再加一道保險：替每個任務設上限，數字從 trace 定，例如成功任務 p95 的 2 倍。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>寫入 cache 不是免費的。Claude API 寫入 5 分鐘的 cache，要付 1.25× 的價格。Cache 一段時間沒被讀到就失效，下一次又要重寫。Batch 在 Claude API 上 input 與 output 都打 5 折，多數在 1 小時內完成。</p>
+                  <p>Routing 還有一個隱藏的價格成本。KV cache 由 model 的權重算出，不能跨 model 共用。換 model 後，整個 context 要以 fresh input 的價格重新 prefill。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「開了 prompt caching，input 就自動省 90%。」只有開頭完全相同才會命中。System prompt 開頭放了時間戳記，每個 request 從前幾個 token 就不同，cache 永遠不會命中。用 API 回傳的 <code>cache_read_input_tokens</code> 確認命中率，不要只看設定。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>以 base input 為 1×：output 5×、batch 0.5×、cache read 0.1×、疊加 0.05× → 單價差 100 倍。</li>
+                    <li>Cache 要 prefix 穩定 → 不變的放前面，會變的放最後；batch 要工作能等。</li>
+                    <li>淨節省 = 毛節省 − 反向成本 → 在同一組任務上量，再替每個任務設上限。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">單價可以差 100 倍</a>〉；觀念補充〈<a href="#t2">Cache read 與 batch 的計價</a>〉、〈<a href="#t3">Routing 的三種時機</a>〉；延伸思考〈<a href="#x2">淨節省只能在同一組任務上量</a>〉；L2〈<a href="l02.html#t1">Prefix cache</a>〉。進階題第 3 題算 routing 的淨效果，第 4 題從 trace 訂上限。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b4">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=17" target="_blank" rel="noopener">p.17–20</a> · 減少每一步的 token</p>
-                <p class="qtext">精簡 context 的三個方向是什麼？20K 的測試 log 留在 context 50 步，和只留 500 token 的摘要，各重讀多少？減少 output 有哪三招？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>丟掉過期的（截短、遮掉、摘要舊 turn）、縮小進來的（只留錯誤、大輸出寫進檔案）、只載入需要的（相關 tool 與 memory、探索交給 subagent）。20K × 50 步重讀 1M token；500 token 的摘要只要 25K。</p>
-                  <p>Prompt 裡限制長度與格式、API 設 output 上限、用 schema 只要求需要的欄位。推理量依步驟調整：查找用 low，除錯用 high。上限的陷阱：回答可能斷在中間，reasoning 也算 output。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=29" target="_blank" rel="noopener">p.29</a> · 完成時間</p>
+                <p class="qtext">平行執行時，完成時間由什麼決定？為什麼省錢和省時間會衝突？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>由 critical path 決定，也就是最長的那條相依鏈。序列執行時，完成時間才是每一步相加（p.29）。兩者會衝突：小 model 單價低，但可能多走幾步，結果更慢。平行減少等待，但 token 總量變多（p.29）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.29 畫了兩條時間軸。序列時，一個請求依序經過排隊、setup、prefill、推理、tool、orchestration，總時間約等於每段相加。平行時，plan 之後 worker A 與 B 同時跑，最後 merge。Merge 要等兩個 worker 都做完，所以總時間由較長的那條決定。</p>
+                  <p>下圖用觀念補充〈Critical path〉的數字算一次。A 不在 critical path 上，它做完後還要等 B 10 秒。把 A 加速一倍，總時間不變；把 B 縮短 10 秒，總時間就少 10 秒。所以優化前先找出最長的那條鏈。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 300" role="img" aria-label="同一個任務的兩種排法，橫軸是時間，0 到 60 秒。上排序列：plan 5 秒、A 20 秒、B 30 秒、merge 5 秒接連執行，共 60 秒。下排平行：plan 5 秒後，A 與 B 同時開始；A 20 秒後做完，等 B 10 秒；B 30 秒後做完，再 merge 5 秒，共 40 秒。藍色標出 critical path：plan、B、merge。右側列出：A 加速一倍仍是 40 秒；B 縮短 10 秒變 30 秒。底部提醒：平行少等 20 秒，但兩個 worker 各讀一次共用的 context，token 變多。">
+                        <defs>
+                          <marker id="tk8-4-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                        </defs>
+                        <text x="8" y="20" class="dg-tb">同一個任務：plan 5 秒 → A 20 秒、B 30 秒 → merge 5 秒</text>
+                        <text x="8" y="60" class="dg-tb">序列</text>
+                        <rect x="70" y="40" width="45" height="30" rx="3" class="dg-box"/>
+                        <text x="92.5" y="59" text-anchor="middle" class="dg-ts">plan</text>
+                        <rect x="115" y="40" width="180" height="30" rx="3" class="dg-box"/>
+                        <text x="205" y="60" text-anchor="middle" class="dg-t">A 20 秒</text>
+                        <rect x="295" y="40" width="270" height="30" rx="3" class="dg-box"/>
+                        <text x="430" y="60" text-anchor="middle" class="dg-t">B 30 秒</text>
+                        <rect x="565" y="40" width="45" height="30" rx="3" class="dg-box"/>
+                        <text x="587.5" y="59" text-anchor="middle" class="dg-ts">merge</text>
+                        <text x="600" y="90" text-anchor="end" class="dg-t">時間 = 每一步相加 = 5 + 20 + 30 + 5 = 60 秒</text>
+                        <text x="8" y="146" class="dg-tb">平行</text>
+                        <rect x="70" y="110" width="45" height="60" rx="3" class="dg-box-accent"/>
+                        <text x="92.5" y="144" text-anchor="middle" class="dg-ts">plan</text>
+                        <rect x="115" y="110" width="180" height="26" rx="3" class="dg-box"/>
+                        <text x="205" y="128" text-anchor="middle" class="dg-t">A 20 秒</text>
+                        <rect x="295" y="110" width="90" height="26" rx="3" class="dg-frame"/>
+                        <text x="340" y="127" text-anchor="middle" class="dg-ts">等 B 10 秒</text>
+                        <rect x="115" y="144" width="270" height="26" rx="3" class="dg-box-accent"/>
+                        <text x="250" y="162" text-anchor="middle" class="dg-t">B 30 秒</text>
+                        <rect x="385" y="110" width="45" height="60" rx="3" class="dg-box-accent"/>
+                        <text x="407.5" y="144" text-anchor="middle" class="dg-ts">merge</text>
+                        <path d="M70,180 V186 H430 V180" class="dg-accent"/>
+                        <text x="250" y="204" text-anchor="middle" class="dg-ta">critical path：plan → B → merge = 5 + 30 + 5 = 40 秒</text>
+                        <text x="450" y="118" class="dg-tb">改哪一段才有用？</text>
+                        <text x="450" y="140" class="dg-ts">A 加速一倍 → 仍 40 秒</text>
+                        <text x="450" y="160" class="dg-ts">B 縮短 10 秒 → 30 秒</text>
+                        <line x1="430" y1="174" x2="430" y2="226" class="dg-soft dg-dash"/>
+                        <line x1="610" y1="96" x2="610" y2="226" class="dg-soft dg-dash"/>
+                        <line x1="70" y1="226" x2="624" y2="226" class="dg-line" marker-end="url(#tk8-4-ah)"/>
+                        <text x="70" y="242" text-anchor="middle" class="dg-tm">0</text>
+                        <text x="160" y="242" text-anchor="middle" class="dg-tm">10</text>
+                        <text x="250" y="242" text-anchor="middle" class="dg-tm">20</text>
+                        <text x="340" y="242" text-anchor="middle" class="dg-tm">30</text>
+                        <text x="430" y="242" text-anchor="middle" class="dg-tm">40</text>
+                        <text x="520" y="242" text-anchor="middle" class="dg-tm">50</text>
+                        <text x="610" y="242" text-anchor="middle" class="dg-tm">60</text>
+                        <text x="340" y="260" text-anchor="middle" class="dg-ts">時間（秒）</text>
+                        <text x="320" y="288" text-anchor="middle" class="dg-ta">平行少等 20 秒；代價是兩個 worker 各讀一次共用的 context，token 變多</text>
+                      </svg>
+                    </div>
+                    <figcaption>同一組步驟，序列 60 秒，平行 40 秒。藍色是 critical path。A 有 10 秒空檔，加速 A 不會讓任務提早完成。</figcaption>
+                  </figure>
+                  <p>速度的槓桿分四類。省錢的手段多半也省時間：turn、step、token 變少，prefill 與 decode 都變短（p.30）。Orchestration：非同步執行、持久的 shell、串流中就開始 tool call、tool 與 model 放在一起（p.31）。Tool：快取結果、卡住就早點失敗，調 model 之前先量每一步的 tool 時間（p.32）。平行：獨立的 tool call 放在同一步，獨立的子任務交給平行的 subagent（p.33）。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>Critical path 來自專案管理的 critical path method。不在 critical path 上的工作有空檔（slack），縮短它們不會讓專案提早完成。把 agent 的 trace 畫成相依圖，就能用同一套方法找瓶頸。</p>
+                  <p>Speculative action 是用錢換時間的極端例子（p.34）。便宜的 model 先猜下一個動作並提前執行，主 model 決定後再比對。猜中就省下等待；猜錯，token 和 tool 時間都白花，而且有副作用的動作不能先做。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「開 4 個平行 subagent，就快 4 倍，而且每個 context 更小，所以更省。」時間的下限是最長的那條分支，加上 plan 與 merge。Token 方面，每個 subagent 都要重讀共用的檔案與指示（p.25），總量通常變多。平行買到的是時間，不是錢。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>序列：時間 = 每一步相加；平行：時間 = critical path，也就是最長的相依鏈。</li>
+                    <li>只有縮短 critical path 上的步驟，完成時間才會變短 → 先找出最長的鏈，再優化。</li>
+                    <li>便宜不一定快（小 model 多走幾步），快不一定便宜（平行與 speculation 多花 token）→ 時間與花費要分開量。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">完成時間看 critical path</a>〉；觀念補充〈<a href="#t4">Critical path</a>〉；延伸思考〈<a href="#x1">便宜不一定快，平行不一定便宜</a>〉；L3〈<a href="l03.html#x1">協調開銷決定平行加速的上限</a>〉。進階題第 5 題估算 speculation 能省多少時間。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b5">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=22" target="_blank" rel="noopener">p.22–23</a> · 單價</p>
-                <p class="qtext">Cache read、batch 各是 base input 的幾倍？疊加後是多少？各有什麼前提？Model routing 有哪三種時機？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Cache read 0.1×，batch 0.5×，疊加 0.05×。前提：prefix 保持穩定（system prompt、tool 定義、早期歷史放最前面且不改），以及工作可以等（eval、backfill）。</p>
-                  <p>開始前選（router 每個 turn 選定 model）、失敗才升級（便宜 model 先做，檢查沒過再換大的）、每一步重選（trajectory 變長時依歷史與預算重選）。便宜 model 的一個規劃錯誤會浪費後面很多步。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b6">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=26" target="_blank" rel="noopener">p.26–27、p.30</a> · 反向成本與預算</p>
-                <p class="qtext">Compaction、routing、subagent、speculation 的反向成本各是什麼？任務的上限怎麼從 trace 定？什麼情況不需要 LLM？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Compaction：丟掉的檔案要重讀，摘要重寫 cache。Routing：便宜 model 的壞計畫多出很多步或失敗。Subagent：每個都重讀共用的檔案與指示。Speculation：猜錯浪費 token，還搶同一批 tool。淨節省 = 毛節省 − 反向成本，兩者在同一組任務上量。</p>
-                  <p>上限取成功任務 p95 的 2 倍；示意值是 $10、80 次 model call、15 分鐘 tool 時間、每步重試 2 次。停滯就停下，交出摘要。步驟每次都一樣、輸入格式固定、只要一個標籤時，用 script、規則或小型 model。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b7">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=32" target="_blank" rel="noopener">p.32–37</a> · 速度</p>
-                <p class="qtext">序列與平行執行的完成時間各由什麼決定？Orchestration 有哪四個做法？Speculative action 的三個步驟是什麼，什麼時候划算？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>序列：每一步相加。平行：critical path，最長的那條相依鏈。Orchestration：非同步執行、持久的 session、串流與 pipeline、把服務放在一起。Tool 可能比 model 慢，要先量，卡住的 call 要有 timeout。</p>
-                  <p>Predict（便宜 model 猜下一個 action）、run early（主 model 思考時先執行）、compare（決定後比對）。划算的條件：常常猜中，而且動作可以撤銷；猜錯的代價是一次白跑的 call。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b8">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=44" target="_blank" rel="noopener">p.44–51</a> · 三種 harness 架構</p>
-                <p class="qtext">Monolithic、modular、microkernel 的邊界各在哪裡？執行一段 Python 時三者走的路徑有什麼不同？各自的典型用途是什麼？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Monolithic：memory、tools、context、planning、execution 全在一個 runtime，元件之間是函式呼叫。Modular：一個 controller 透過介面（MemoryProvider、SandboxProvider 等）使用可抽換的元件。Microkernel：核心只留狀態、排程、安全，能力是外部服務，用標準協定溝通。</p>
-                  <p>p.48：monolithic 直接在本機執行；modular 呼叫 <code>SandboxProvider.run(code)</code>；microkernel 送執行請求給執行服務，由它配置 sandbox。用途：單獨的 agent、agent framework、multi-agent 基礎設施。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b9">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=54" target="_blank" rel="noopener">p.54–60</a> · 8 個 harness 的設計</p>
-                <p class="qtext">哪個 harness 先 sandbox 再詢問？哪個用 compare-and-swap 編輯？哪個 compaction 最早，門檻在哪裡，它還在 tool 執行前先做什麼？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Codex CLI 先在不能連網的 sandbox 裡執行，要越過邊界才問你（p.54）。DeepSeek Harness 的編輯用 compare-and-swap：model 讀過之後檔案變了，這次編輯就失敗（p.55）。</p>
-                  <p>Hermes Agent 在 context 用到 50% 就 compaction，是 8 個中最早的；它也在 tool 執行前先把 tool call 寫進 session 資料庫（p.60）。其他例子：OpenCode 每一步存快照供 <code>/undo</code>；Pi 保溫 cache 前先算預期省下是否超過 $0.05。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=40" target="_blank" rel="noopener">p.40–44</a> · 三種 harness 架構</p>
+                <p class="qtext">三種架構的邊界各在哪裡？執行一段 Python 時，三者的路徑差在哪裡？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Monolithic 沒有內部邊界：memory、tools、context、planning、execution 全在一個 runtime。Modular 的邊界是介面，controller 透過 SandboxProvider 這類介面使用元件。Microkernel 的邊界是協定，核心只留狀態、排程、安全，其他能力交給外部服務（p.40–43）。執行 Python 時，monolithic 在本機直接執行；modular 呼叫 <code>SandboxProvider.run(code)</code>；microkernel 送執行請求給執行服務，由它配置 sandbox、執行、回傳結果（p.44）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.40 用一句話串起三者：責任從 agent 移到介面，再移到服務。Monolithic 的 agent class 自己建立 memory、tools、context、planner、executor（p.41）。它簡單、好除錯、開銷低，但元件難替換，也難和別的 agent 共用。Modular 的 agent 接收可抽換的 provider：把 Docker 換成 Firecracker，只改一個 provider（p.42）。但 controller 仍管 lifecycle，元件仍可能在同一個 failure domain。Microkernel 的核心透過標準協定呼叫外部服務，服務可以放在不同機器（p.43）。它換到獨立擴展與故障隔離，代價是通訊開銷、更多故障模式、端對端除錯更難。</p>
+                  <p>p.44 用同一個動作比較三者。差別在誰負責 sandbox：monolithic 由 agent 自己執行；modular 由 provider 負責，但 controller 仍管它的 lifecycle；只有 microkernel 把 sandbox 的配置、隔離、lifecycle 交給獨立的服務。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 300" role="img" aria-label="同一段 Python 在三種架構中的路徑。Monolithic：一個 process 裡，agent 用函式呼叫直接在本機執行 Python；跳數最少，通訊最快，隔離難強制。Modular：一個 process 裡，agent 呼叫 SandboxProvider.run(code)，穿過介面，交給 provider 執行，provider 可以是 Docker 或 Firecracker；換 provider 不改 agent，lifecycle 仍由 controller 管。Microkernel：核心 process 裡的 agent runtime 管狀態、排程、安全，透過協定送執行請求給獨立 container 裡的執行服務；執行服務依序配置 sandbox、執行 Python、回傳結果，結果經協定回到 runtime；跳數最多，配置、隔離、生命週期歸服務。">
+                        <defs>
+                          <marker id="tk8-5-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                          <marker id="tk8-5-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
+                        </defs>
+                        <text x="108" y="18" text-anchor="middle" class="dg-tb">Monolithic</text>
+                        <text x="108" y="35" text-anchor="middle" class="dg-ts">沒有內部邊界</text>
+                        <text x="320" y="18" text-anchor="middle" class="dg-tb">Modular</text>
+                        <text x="320" y="35" text-anchor="middle" class="dg-ts">邊界：介面</text>
+                        <text x="532" y="18" text-anchor="middle" class="dg-tb">Microkernel</text>
+                        <text x="532" y="35" text-anchor="middle" class="dg-ts">邊界：協定（跨 process）</text>
+                        <rect x="8" y="48" width="200" height="202" rx="6" class="dg-frame"/>
+                        <text x="16" y="63" class="dg-tm">一個 process</text>
+                        <rect x="28" y="72" width="160" height="36" rx="4" class="dg-box-accent"/>
+                        <text x="108" y="95" text-anchor="middle" class="dg-tb">Agent</text>
+                        <line x1="108" y1="108" x2="108" y2="186" class="dg-line" marker-end="url(#tk8-5-ah)"/>
+                        <text x="116" y="150" class="dg-ts">函式呼叫</text>
+                        <rect x="28" y="188" width="160" height="44" rx="4" class="dg-box"/>
+                        <text x="108" y="206" text-anchor="middle" class="dg-t">在本機執行 Python</text>
+                        <text x="108" y="223" text-anchor="middle" class="dg-ts">由 agent 自己執行</text>
+                        <rect x="220" y="48" width="200" height="202" rx="6" class="dg-frame"/>
+                        <text x="228" y="63" class="dg-tm">一個 process</text>
+                        <rect x="240" y="72" width="160" height="36" rx="4" class="dg-box-accent"/>
+                        <text x="320" y="95" text-anchor="middle" class="dg-tb">Agent</text>
+                        <line x1="270" y1="108" x2="270" y2="186" class="dg-line" marker-end="url(#tk8-5-ah)"/>
+                        <text x="278" y="130" class="dg-tm">SandboxProvider</text>
+                        <text x="278" y="146" class="dg-tm">.run(code)</text>
+                        <line x1="224" y1="164" x2="416" y2="164" class="dg-accent dg-dash"/>
+                        <text x="410" y="158" text-anchor="end" class="dg-ta">介面</text>
+                        <rect x="240" y="188" width="160" height="44" rx="4" class="dg-box"/>
+                        <text x="320" y="206" text-anchor="middle" class="dg-t">Provider 執行 Python</text>
+                        <text x="320" y="223" text-anchor="middle" class="dg-ts">Docker 或 Firecracker</text>
+                        <rect x="432" y="48" width="200" height="72" rx="6" class="dg-frame"/>
+                        <text x="440" y="63" class="dg-tm">核心 process</text>
+                        <rect x="452" y="70" width="160" height="42" rx="4" class="dg-box-accent"/>
+                        <text x="532" y="88" text-anchor="middle" class="dg-tb">Agent runtime</text>
+                        <text x="532" y="104" text-anchor="middle" class="dg-ts">狀態・排程・安全</text>
+                        <line x1="436" y1="136" x2="628" y2="136" class="dg-accent"/>
+                        <text x="540" y="130" text-anchor="middle" class="dg-ta">協定</text>
+                        <line x1="476" y1="112" x2="476" y2="156" class="dg-accent" marker-end="url(#tk8-5-ahs)"/>
+                        <text x="484" y="152" class="dg-ts">執行請求</text>
+                        <line x1="604" y1="158" x2="604" y2="114" class="dg-accent dg-dash" marker-end="url(#tk8-5-ahs)"/>
+                        <text x="596" y="152" text-anchor="end" class="dg-ts">結果</text>
+                        <rect x="432" y="158" width="200" height="92" rx="6" class="dg-box-soft"/>
+                        <text x="440" y="174" class="dg-tm">執行服務（獨立 container）</text>
+                        <text x="452" y="196" class="dg-t">① 配置 sandbox</text>
+                        <text x="452" y="216" class="dg-t">② 執行 Python</text>
+                        <text x="452" y="236" class="dg-t">③ 回傳結果</text>
+                        <text x="108" y="272" text-anchor="middle" class="dg-t">跳數最少，通訊最快</text>
+                        <text x="108" y="290" text-anchor="middle" class="dg-ts">隔離難強制</text>
+                        <text x="320" y="272" text-anchor="middle" class="dg-t">換 provider，不改 agent</text>
+                        <text x="320" y="290" text-anchor="middle" class="dg-ts">lifecycle 仍由 controller 管</text>
+                        <text x="532" y="272" text-anchor="middle" class="dg-t">跳數最多，隔離最強</text>
+                        <text x="532" y="290" text-anchor="middle" class="dg-ts">配置、隔離、lifecycle 歸服務</text>
+                      </svg>
+                    </div>
+                    <figcaption>同一段 Python 的三條路徑（p.44）。由左到右，呼叫跨過的邊界從函式呼叫變成介面，再變成協定。只有 microkernel 把 sandbox 的管理交給獨立的服務。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>這三個名稱借自作業系統。Linux 是 monolithic kernel：檔案系統與 driver 都在 kernel 裡，彼此用函式呼叫。Microkernel（如 MINIX 3、seL4）只在 kernel 留排程、IPC、記憶體管理，driver 跑在 user space，用訊息溝通。取捨和 harness 一樣：隔離與可替換，換來每次呼叫的 IPC 開銷。</p>
+                  <p>Modular 對應軟體設計的 dependency injection：程式依賴介面，不依賴實作。Microkernel 需要的「標準協定」，在 tool 這一層就是 MCP 這類協定。Firecracker 是 AWS 開源的 microVM，隔離比一般 container 更強。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Modular 抽出了 SandboxProvider，執行就隔離了。」介面是程式碼的邊界，不是安全邊界。p.45 把 modular 的執行隔離標為可選：provider 若在本機跑 Python，就和 monolithic 一樣沒有隔離。隔離來自 provider 的實作，例如 container 或 microVM。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>三種架構的差別是呼叫跨過的邊界：函式呼叫 → 介面 → 協定。</li>
+                    <li>邊界越外面 → 隔離、替換、獨立擴展越強 → 每次呼叫的跳數與除錯成本也越高。</li>
+                    <li>p.45 的典型用途：單一 agent 用 monolithic，agent framework 用 modular，multi-agent 基礎設施用 microkernel。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>第 1 段的<a href="#s-arch">三種 harness 架構圖</a>；核心觀念〈<a href="#i5">架構決定邊界在哪裡</a>〉；延伸思考〈<a href="#x3">Harness 的設計把假設寫進結構裡</a>〉、〈<a href="#x4">Microkernel 只在共用基礎設施時回本</a>〉；L2〈<a href="l02.html#t5">N×M 整合問題</a>〉；L5〈<a href="l05.html#t3">Partial failure</a>〉。進階題第 6 題替團隊選架構。</p>
                 </div></details>
               </div>
             </li>
           </ol>
         </div>
         <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
-          <p class="qset-lede">這 6 題可以在讀書會前先發給大家回答。每題附情境、回答要點與相關 slide。「參考觀點與追問」給主持人用，建議討論後再展開。</p>
+          <p class="qset-lede">這 6 題在讀書會前回答。每個回答要點下面有一行提示。不用每點都答，挑一點寫兩三句也可以。不知道怎麼開頭，就在討論區按「用範本開始寫」，照著填空。寫完按儲存，其他人的想法會自動展開。「參考觀點與追問」建議討論後再展開。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L8 進階題（讀書會討論）：成本、速度與 harness 架構" data-slides="https://cs2680.com/slides/8_agent_design_5.pdf">複製進階題</button>
             <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
@@ -521,25 +769,27 @@
           <ol class="qlist">
             <li class="dq" id="q1">
               <div class="qbody">
-                <p class="qtag">概念 · Cache read 為什麼是大宗 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=14" target="_blank" rel="noopener">p.14–16</a></p>
+                <p class="qtag">概念 · Cache read 為什麼是大宗 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=13" target="_blank" rel="noopener">p.13–15</a></p>
                 <p class="qtext">為什麼 agent 的 token 大多是 cache read？這件事對「先優化什麼」有什麼含意？</p>
                 <p class="qctx"><b>情境：</b>一個主 agent 的某一步送出 500K cache read、5K fresh input、1K output，接近全班的 p90。價格比 cache read : input : output = 1 : 10 : 50。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>說明每一步的 context 由哪些部分組成，為什麼大部分是前一步送過的內容。</li>
-                    <li>算出這一步三種 token 各佔多少成本，指出哪一項最大。</li>
-                    <li>比較兩個做法：output 減半，或 context 減半。各省多少？</li>
+                    <li>說明每一步的 context 由哪些部分組成，為什麼大部分是前一步送過的內容。<span class="qh">提示：L2 的 loop 每一步都重送整個 context。p.21 列了 prefix 的組成；這一步新增的只有哪兩樣？</span></li>
+                    <li>算出這一步三種 token 各佔多少成本，指出哪一項最大。<span class="qh">提示：以 cache read 單價為 1，成本 = token 數 × 價格比：500K × 1、5K × 10、1K × 50，再比大小。</span></li>
+                    <li>比較兩個做法：output 減半，或 context 減半。各省多少？<span class="qh">提示：Output 減半只砍 output 那一項的一半；context 減半主要砍 cache read 那一項的一半。代入上一點的數字。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>回到 L2 的 loop：每一步都重送整個 context，只有新訊息是新的。把 token 數乘上單價，再比較。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">每一步的 context 包含 ＿＿、＿＿ 與歷史對話；這一步只新增 ＿＿，其餘是送過的 prefix。</p>
+                  <p class="tpl">以 cache read 為 1 單位：cache read ＿＿、fresh input ＿＿、output ＿＿，最大的是 ＿＿。</p>
+                  <p class="tpl">Output 減半省 ＿＿，context 減半省 ＿＿，所以先縮小（output／context）。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>Context 的組成：system prompt、tool 定義、CLAUDE.md、歷史對話、tool 結果。每一步只新增上一步的回覆與 tool 輸出，其餘都是送過的 prefix，直接讀 cache。</li>
                     <li>成本（以 input token 為 1 單位）：cache read 500K × 1 = 500K；fresh 5K × 10 = 50K；output 1K × 50 = 50K。合計 600K。Cache read 佔 token 的 98.8%，佔成本的 83%。</li>
-                    <li>Output 減半只省 25K，約 4%。Context 減半省 250K，約 42%。所以先縮小 context（p.17），再管 output（p.19）。</li>
-                    <li>反過來看：prefix 改了一個 token，500K 全部以 fresh 計價，這一步變成 5,100K，約 8.5 倍。所以會變的內容放最後（p.22）。</li>
+                    <li>Output 減半只省 25K，約 4%。Context 減半省 250K，約 42%。所以先縮小 context（p.16），再管 output（p.18）。</li>
+                    <li>反過來看：prefix 改了一個 token，500K 全部以 fresh 計價，這一步變成 5,100K，約 8.5 倍。所以會變的內容放最後（p.21）。</li>
                     <li>含意：優化順序是 context 大小 → turn 與 step 數 → 單價 → output。隔離探索的 subagent 就是在縮小主 agent 的 context。</li>
                   </ul>
                   <p><b>追問：</b>97.6% 是 Assignment 1 的數字。什麼樣的工作負載會讓這個比例下降？比例下降代表更省錢嗎？</p>
@@ -549,18 +799,20 @@
 
             <li class="dq" id="q2">
               <div class="qbody">
-                <p class="qtag">估算 · 一步與一個 session 的成本 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=10" target="_blank" rel="noopener">p.10、p.16</a></p>
+                <p class="qtag">估算 · 一步與一個 session 的成本 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=9" target="_blank" rel="noopener">p.9、p.15</a></p>
                 <p class="qtext">估算一個 session 的花費，再看 turn 數加倍時花費怎麼變。</p>
                 <p class="qctx"><b>情境：</b>以 input $3 / MTok 為基準，依 1 : 10 : 50，cache read 是 $0.30 / MTok，output 是 $15 / MTok。Session 開始時固定內容 20K token。每一步新增 3K fresh input 與 500 output，下一步起進入 cache。一個 turn 10 步。忽略 cache write 的加價與 compaction。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>寫出第 1 步與第 40 步各花多少，說明哪一項主導。</li>
-                    <li>算出 4 個 turn（40 步）與 8 個 turn（80 步）的總花費，求比值。</li>
-                    <li>比較：8 個 turn 放在同一個 session，和拆成 2 個各 4 turn 的 session，差多少？代價是什麼？</li>
+                    <li>寫出第 1 步與第 40 步各花多少，說明哪一項主導。<span class="qh">提示：第 j 步的 cache 是 <code>20K + 3K × (j − 1)</code>。三種 token 各乘情境的單價（每 MTok），再相加。</span></li>
+                    <li>算出 4 個 turn（40 步）與 8 個 turn（80 步）的總花費，求比值。<span class="qh">提示：n 步的 cache 共 <code>20K × n + 3K × n(n − 1)/2</code>；fresh、output 乘 n。n 代入 40、80。</span></li>
+                    <li>比較：8 個 turn 放在同一個 session，和拆成 2 個各 4 turn 的 session，差多少？代價是什麼？<span class="qh">提示：2 個 session 的花費 = 2 × 40 步的花費。再想代價：第二個 session 開始時，還記得第一個做過什麼嗎？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>第 j 步讀的 cache 是 <code>20K + 3K × (j − 1)</code>。把 40 步加總，cache read 的部分是等差級數。用 python 算最快。Turn 加倍時，fresh 與 output 線性成長，cache read 接近平方成長。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">第 1 步約 $＿＿，由（fresh 與 output／cache read）主導；第 40 步約 $＿＿，由 ＿＿ 主導。</p>
+                  <p class="tpl">40 步共約 $＿＿，80 步共約 $＿＿，比值約 ＿＿；cache read 那一項的比值是 ＿＿。</p>
+                  <p class="tpl">拆成 2 個 session 共約 $＿＿，省 ＿＿%；代價是 ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -568,34 +820,36 @@
                     <li>40 步：cache read 共 3.14M token → $0.94；fresh 120K → $0.36；output 20K → $0.30。合計約 $1.60。</li>
                     <li>80 步：cache read 共 11.08M → $3.32；fresh $0.72；output $0.60。合計約 $4.64，是 40 步的 2.9 倍；cache read 那一項是 3.5 倍。</li>
                     <li>拆成 2 個 session：2 × $1.60 = $3.20，比 $4.64 省 31%。代價：第二個 session 不記得第一個做過什麼，要重讀檔案或靠摘要交接（L6）。</li>
-                    <li>這就是 p.10 的結論。換任務就開新 session；同一個任務要一次講清楚，減少追問。</li>
+                    <li>這就是 p.9 的結論。換任務就開新 session；同一個任務要一次講清楚，減少追問。</li>
                   </ul>
-                  <p><b>追問：</b>把 compaction 加回來：第 40 步後把 context 壓到 30K，之後的 40 步省多少？p.26 的反向成本（重寫 cache、重讀檔案、產生摘要那次 call）要怎麼估？</p>
+                  <p><b>追問：</b>把 compaction 加回來：第 40 步後把 context 壓到 30K，之後的 40 步省多少？p.25 的反向成本（重寫 cache、重讀檔案、產生摘要那次 call）要怎麼估？</p>
                 </div></details>
               </div>
             </li>
 
             <li class="dq" id="q3">
               <div class="qbody">
-                <p class="qtag">設計 · Routing 策略 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=23" target="_blank" rel="noopener">p.23、p.26</a></p>
+                <p class="qtag">設計 · Routing 策略 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=22" target="_blank" rel="noopener">p.22、p.25</a></p>
                 <p class="qtext">為一個混合的工作負載選一種 routing 策略。它省下什麼？反向成本是什麼？</p>
                 <p class="qctx"><b>情境：</b>每天 1,000 個任務。70% 簡單（改文案、小修 bug）、25% 中等、5% 困難（跨多個模組）。小 model 每個任務約 $0.02，通過率依序 95%、60%、20%。大 model 每個任務約 $0.10，幾乎都能通過。每個任務都有自動化測試可以當 verifier。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>在三種時機（開始前選、失敗才升級、每一步重選）中選一種，說明理由。</li>
-                    <li>估算你的策略每天花多少，和全部用大 model 比較。</li>
-                    <li>指出至少兩個反向成本，以及你會用哪個指標量淨效果。</li>
+                    <li>在三種時機（開始前選、失敗才升級、每一步重選）中選一種，說明理由。<span class="qh">提示：看 p.22 表的「判斷依據」欄。這裡每個任務都有自動化測試，哪一種時機能直接拿它當檢查？</span></li>
+                    <li>估算你的策略每天花多少，和全部用大 model 比較。<span class="qh">提示：以失敗才升級為例，每類的期望成本 = 0.02 + 失敗率 × 0.10。三類依 70%、25%、5% 加權，再乘 1,000。</span></li>
+                    <li>指出至少兩個反向成本，以及你會用哪個指標量淨效果。<span class="qh">提示：看 p.25 的 routing 那一項；再想測試漏掉錯誤時會怎樣。指標從通過率、每個解出任務的花費、p95 時間挑。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>有可靠的 verifier 時，「失敗才升級」最容易做：測試過了就收工。算期望成本：小 model 的費用一定花；失敗的部分再加大 model 的費用。難題的失敗率高，等於跑兩次。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">我選（開始前選／失敗才升級／每一步重選），因為情境裡的 ＿＿ 可以直接當它的判斷依據。</p>
+                  <p class="tpl">期望成本：簡單 $＿＿、中等 $＿＿、困難 $＿＿；每天約 $＿＿，全用大 model 是 $＿＿。</p>
+                  <p class="tpl">反向成本：＿＿ 與 ＿＿。我在同一組任務上比較 ＿＿，量淨效果。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>選「失敗才升級」：先用小 model，測試沒過再換大 model。不需要訓練 router。</li>
                     <li>每類的期望成本：簡單 0.02 + 0.05 × 0.10 = $0.025；中等 0.02 + 0.40 × 0.10 = $0.06；困難 0.02 + 0.80 × 0.10 = $0.10。加權：0.7 × 0.025 + 0.25 × 0.06 + 0.05 × 0.10 = $0.0375。每天約 $37.5；全部用大 model 是 $100，省 62.5%。</li>
                     <li>困難任務沒有省到：$0.10 對 $0.10，而且 80% 跑兩次，latency 變長。失敗率超過 80% 的類別，直接用大 model 更好。Break-even 的失敗率是 0.08 ÷ 0.10 = 80%。</li>
-                    <li>反向成本：verifier 不完整時，錯誤解會通過；小 model 的壞計畫會多出很多步（p.26）；換 model 後 KV cache 不能共用，要重新 prefill。</li>
+                    <li>反向成本：verifier 不完整時，錯誤解會通過；小 model 的壞計畫會多出很多步（p.25）；換 model 後 KV cache 不能共用，要重新 prefill。</li>
                     <li>量淨效果：同一組任務上比較每個解出任務的花費、通過率、p95 時間。只看費用會漏掉通過率下降。</li>
                   </ul>
                   <p><b>追問：</b>把 verifier 換成「model 自己說完成了」，策略還成立嗎？L6 的 unverified success 會怎麼影響期望成本？</p>
@@ -605,22 +859,24 @@
 
             <li class="dq" id="q4">
               <div class="qbody">
-                <p class="qtag">團隊實務 · 預算上限與停止規則 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=27" target="_blank" rel="noopener">p.27、p.42</a></p>
+                <p class="qtag">團隊實務 · 預算上限與停止規則 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=26" target="_blank" rel="noopener">p.26、p.38</a></p>
                 <p class="qtext">從 trace 資料替每個任務訂出預算上限與停止規則。誰負責調整？多久看一次？</p>
                 <p class="qctx"><b>情境：</b>你們的 agent 上個月跑了 240 個任務，200 個成功。成功任務的花費 p50 $1.20、p95 $4.80；model call 數 p95 是 40 次；tool 時間 p95 是 7.5 分鐘。40 個失敗任務平均花 $7.30，多數在第 20 步之後重複同一個錯誤 3 次以上。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>用 slide 的規則訂出四個上限（金額、model call、tool 時間、每步重試），寫出數字。</li>
-                    <li>寫出至少三條停止條件，說明停下時交出什麼。</li>
-                    <li>說明誰擁有這份設定、用什麼資料、多久檢視一次。</li>
+                    <li>用 slide 的規則訂出四個上限（金額、model call、tool 時間、每步重試），寫出數字。<span class="qh">提示：p.26 的規則是成功任務的 p95 × 2。金額、model call、tool 時間各代入一次；重試次數看 p.26 的示意值。</span></li>
+                    <li>寫出至少三條停止條件，說明停下時交出什麼。<span class="qh">提示：p.26 列了停止條件。再對照情境：同一個錯誤重複幾次就停？停下時，接手的人要知道哪 3 件事？</span></li>
+                    <li>說明誰擁有這份設定、用什麼資料、多久檢視一次。<span class="qh">提示：擁有者從 agent 維護團隊、平台團隊、財務挑一個。資料用 p.38 的 trace；頻率從每週、每個 sprint、換 model 時挑。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>Slide 的規則是成功任務 p95 的 2 倍。失敗任務的模式告訴你停止條件該怎麼寫：同一個錯誤重複幾次、幾步沒有新進展。停止不等於放棄，要交出摘要讓人接手。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">上限：金額 $＿＿、model call ＿＿ 次、tool 時間 ＿＿ 分鐘、每步重試 ＿＿ 次。</p>
+                  <p class="tpl">停止條件：＿＿、＿＿、＿＿。停下時交出摘要，寫明 ＿＿。</p>
+                  <p class="tpl">這份設定由 ＿＿ 擁有；每 ＿＿ 用 ＿＿ 重算一次上限。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
-                    <li>上限：金額 2 × $4.80 = $9.60，取 $10；model call 2 × 40 = 80 次；tool 時間 2 × 7.5 = 15 分鐘；每步重試 2 次。這正好是 p.27 的示意值。</li>
+                    <li>上限：金額 2 × $4.80 = $9.60，取 $10；model call 2 × 40 = 80 次；tool 時間 2 × 7.5 = 15 分鐘；每步重試 2 次。這正好是 p.26 的示意值。</li>
                     <li>停止條件：verifier 通過；10 步內沒有新的測試通過；同一個錯誤重複 3 次；碰到任一上限。停下時交出摘要：做了什麼、卡在哪裡、建議下一步。</li>
                     <li>效果估算：40 個失敗任務共 $292，佔總支出 $912 的 32%。在第 20 步左右停下，每個失敗任務約省一半，每月約省 $150。</li>
                     <li>擁有者：維護這個 agent 的團隊，設定放進版本控制。每個 sprint 用新的 trace 重算 p95；model 換版時也要重算。第 6 段示範怎麼把每次 run 的花費記進 trace。</li>
@@ -632,25 +888,27 @@
 
             <li class="dq" id="q5">
               <div class="qbody">
-                <p class="qtag">風險 · Speculative action 的取捨 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=37" target="_blank" rel="noopener">p.32、p.35、p.37</a></p>
+                <p class="qtag">風險 · Speculative action 的取捨 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=34" target="_blank" rel="noopener">p.29、p.32、p.34</a></p>
                 <p class="qtext">哪些動作可以先猜先做？估算 speculation 能省多少時間，再和另一個加速手段比較。</p>
                 <p class="qctx"><b>情境：</b>主 model 每一步平均思考 8 秒才發出 tool call。Tool 的組成與耗時：50% 讀檔或搜尋（1 秒）、20% 跑測試（90 秒）、10% 抓網頁（3 秒）、15% 寫檔（1 秒）、5% 寄通知（1 秒）。便宜的 model 能提前猜中 60% 的下一個 tool call。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>把五種動作分成「可以 speculate」與「不行」，說明判斷標準（副作用、可否撤銷、是否 idempotent）。</li>
-                    <li>估算 speculation 平均每一步省幾秒，佔一步總時間的比例。</li>
-                    <li>比較另一個手段：把測試時間減半。哪個省得多？你會怎麼量淨效果？</li>
+                    <li>把五種動作分成「可以 speculate」與「不行」，說明判斷標準（副作用、可否撤銷、是否 idempotent）。<span class="qh">提示：對每種動作問一句：猜錯時，能直接丟掉結果嗎？再對照 p.34 划算的兩個條件。</span></li>
+                    <li>估算 speculation 平均每一步省幾秒，佔一步總時間的比例。<span class="qh">提示：一步 = 8 + Σ 比例 × 秒數。猜中省下思考與 tool 較短的那段；可 speculate 的各算比例 × 0.6 × 該段，再加總。</span></li>
+                    <li>比較另一個手段：把測試時間減半。哪個省得多？你會怎麼量淨效果？<span class="qh">提示：測試減半，每步省「測試比例 × 減少的秒數」。量淨效果時記得 p.25：猜錯的 call 也花 token、也佔 tool。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>一步的時間是思考加 tool。Speculation 只能把 tool 的執行和思考重疊，所以每次猜中最多省下兩者中較短的那段。先算一步的平均時間，再算期望節省。再想 p.26：猜錯的 call 浪費 token，還和主流程搶 tool。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">可以 speculate：＿＿；不行：＿＿，因為猜錯時它們 ＿＿。</p>
+                  <p class="tpl">一步平均 ＿＿ 秒；speculation 每步約省 ＿＿ 秒，佔 ＿＿%。</p>
+                  <p class="tpl">測試減半每步省 ＿＿ 秒，所以（speculation／測試減半）省得多。我會在同一組任務上量 ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
-                    <li>可以 speculate：讀檔、搜尋、抓網頁（唯讀、可丟棄）。抓網頁要小心，有些網址有副作用。不行：寫檔（會改狀態，猜錯要還原）、寄通知（不可撤銷）。Idempotent 的寫入可以考慮，但要有 CAS 或快照保護（p.55、p.56）。</li>
+                    <li>可以 speculate：讀檔、搜尋、抓網頁（唯讀、可丟棄）。抓網頁要小心，有些網址有副作用。不行：寫檔（會改狀態，猜錯要還原）、寄通知（不可撤銷）。Idempotent 的寫入可以考慮，但要有 CAS 或快照保護（p.48、p.49）。</li>
                     <li>一步的平均時間：8 + 0.5 × 1 + 0.2 × 90 + 0.1 × 3 + 0.15 × 1 + 0.05 × 1 = 27 秒。測試佔 18 秒。</li>
                     <li>Speculation 對讀檔與測試：猜中時各省 1 秒（讀檔只要 1 秒）與 8 秒（測試比思考長）。期望節省 0.5 × 0.6 × 1 + 0.2 × 0.6 × 8 = 1.26 秒，約一步的 4.7%。</li>
-                    <li>測試時間減半省 0.2 × 45 = 9 秒，約 33%。這是 p.35 的重點：tool 常比 model 慢，先量 tool 時間。</li>
+                    <li>測試時間減半省 0.2 × 45 = 9 秒，約 33%。這是 p.32 的重點：tool 常比 model 慢，先量 tool 時間。</li>
                     <li>Speculation 的反向成本：每步約 0.7 × 0.4 = 0.28 次白跑的 call，多付 token；猜錯的測試還會佔住 CPU。淨效果要在同一組任務上量 p50、p95 完成時間與總花費。</li>
                   </ul>
                   <p><b>追問：</b>主 model 的思考時間變成 30 秒（例如 high effort）時，speculation 的價值怎麼變？什麼時候反而該減少思考？</p>
@@ -660,25 +918,27 @@
 
             <li class="dq" id="q6">
               <div class="qbody">
-                <p class="qtag">應用 · 替團隊選 harness 架構 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=44" target="_blank" rel="noopener">p.44–51</a></p>
+                <p class="qtag">應用 · 替團隊選 harness 架構 · <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=40" target="_blank" rel="noopener">p.40–45</a></p>
                 <p class="qtext">你們團隊要在半年內做出三個 agent。該用 monolithic、modular 還是 microkernel？給出路線與理由。</p>
                 <p class="qctx"><b>情境：</b>8 位工程師。三個 agent：PR review bot、工單分流、資料 pipeline 修復。三者都要跑程式，都要查共用的知識庫。資安要求：執行必須隔離在 container 裡。第一個 agent 要在 6 週內上線。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>為「第 6 週」與「第 6 個月」各選一種架構，說明邊界放在哪裡。</li>
-                    <li>列出要先共用的元件，以及用什麼介面或協定。</li>
-                    <li>指出你選的架構的反向成本（通訊、故障模式、除錯），以及怎麼緩解。</li>
+                    <li>為「第 6 週」與「第 6 個月」各選一種架構，說明邊界放在哪裡。<span class="qh">提示：對照 p.45 表的「典型用途」。第 6 週只有 1 個 agent，第 6 個月有 3 個。先用介面隔開的邊界，之後能換成服務嗎？</span></li>
+                    <li>列出要先共用的元件，以及用什麼介面或協定。<span class="qh">提示：從情境找三個 agent 都要的東西：跑程式、查知識庫。介面名稱可以借 p.40 的 Provider；協定想想 L2 學過哪一個。</span></li>
+                    <li>指出你選的架構的反向成本（通訊、故障模式、除錯），以及怎麼緩解。<span class="qh">提示：從 p.43 列的缺點挑一項。再想：每次 tool call 多一段網路來回，p.31 的哪個做法能縮短它？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>對照 p.51 的表：單一 agent 用 monolithic，multi-agent 基礎設施用 microkernel。三個 agent 共用 sandbox 與知識庫，但第一個 agent 時程緊。想想哪些邊界可以先用介面，之後再換成服務。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">第 6 週用 ＿＿，邊界放在 ＿＿；第 6 個月改成 ＿＿，把 ＿＿ 抽成共用服務。</p>
+                  <p class="tpl">先共用 ＿＿ 與 ＿＿，用 ＿＿ 介面或協定接上。</p>
+                  <p class="tpl">反向成本是 ＿＿（通訊／故障模式／除錯）；我用 ＿＿ 緩解。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>第 6 週：modular。一個 controller，SandboxProvider 與 MemoryProvider 用介面隔開。Sandbox 從第一天就用 container 實作。不選 microkernel：時程不夠，只有一個 agent 也用不到獨立擴展。</li>
                     <li>第 6 個月：把 sandbox 與知識庫抽成三個 agent 共用的外部服務，核心縮小成狀態、排程、安全。這是 microkernel 的方向。介面先定好，之後換成協定時不用大改。</li>
                     <li>先共用的元件：執行服務（配置 container、timeout、回收）、知識庫的檢索、tool 定義。Tool 用 MCP 這類標準協定（L2）。Memory 介面要有版本，避免互相蓋掉。</li>
-                    <li>反向成本：每次 tool call 多一段網路來回（p.47）；共用服務掛掉時三個 agent 一起受影響；log 散在多個服務。緩解：tool 與 model 放在一起（p.34）、每個 request 帶 trace id。</li>
+                    <li>反向成本：每次 tool call 多一段網路來回（p.43）；共用服務掛掉時三個 agent 一起受影響；log 散在多個服務。緩解：tool 與 model 放在一起（p.31）、每個 request 帶 trace id。</li>
                   </ul>
                   <p><b>追問：</b>資安要求改成「所有 agent 共用一份稽核 log」時，架構會怎麼變？哪一種架構最容易做到？</p>
                 </div></details>
@@ -696,7 +956,7 @@
           </details>
           <details>
             <summary>一步有 400K cache read、2K fresh input、2K output。用 1 : 10 : 50 算，哪一項最貴？該先優化什麼？</summary>
-            <div class="answer"><p>以 input token 為單位：cache read 400K，fresh 20K，output 100K。Cache read 最貴，所以先縮小 context（p.17），再縮短 output。</p></div>
+            <div class="answer"><p>以 input token 為單位：cache read 400K，fresh 20K，output 100K。Cache read 最貴，所以先縮小 context（p.16），再縮短 output。</p></div>
           </details>
           <details>
             <summary>plan 5 秒、worker A 20 秒、worker B 30 秒、merge 5 秒，A 與 B 平行。把 A 加速一倍，或把 B 縮短 10 秒，總時間各變多少？</summary>
@@ -714,7 +974,7 @@
         </header>
         <div class="exlist">
           <details class="ex">
-            <summary>寫一個 session 成本計算器<span>p.8、p.16</span></summary>
+            <summary>寫一個 session 成本計算器<span>p.7、p.15</span></summary>
             <div class="exbody">
               <p>用第 5 段 Q2 的模型：固定 prefix、每步新增的 fresh input、每步的 output。改參數就能回答「turn 加倍會怎樣」。</p>
               <figure class="file"><figcaption>cost.py</figcaption><pre><code>PRICE = {"cache": 0.30, "input": 3.00, "output": 15.00}   # USD per MTok, ratio 1:10:50
@@ -732,7 +992,7 @@ for steps in (40, 80):
             </div>
           </details>
           <details class="ex">
-            <summary>替每個任務設上限，並把結果記進 trace<span>p.27、p.42</span></summary>
+            <summary>替每個任務設上限，並把結果記進 trace<span>p.26、p.38</span></summary>
             <div class="exbody">
               <p>先把上限寫成設定檔。欄位名稱自訂，重點是四個上限與停止條件都有數字，而且來自 trace。</p>
               <figure class="file"><figcaption>budget.yaml</figcaption><pre><code>per_task:                 # 2x p95 of successful runs
@@ -753,7 +1013,7 @@ on_limit: handoff_with_summary</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>要求精簡的結構化輸出<span>p.19–20</span></summary>
+            <summary>要求精簡的結構化輸出<span>p.18–19</span></summary>
             <div class="exbody">
               <p>三層控制 output：prompt 講清楚、schema 限制欄位、API 的上限當保險。</p>
               <figure class="file"><figcaption>prompt（範例）</figcaption><pre><code>Answer in at most 80 words. Return only JSON:
@@ -778,50 +1038,69 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
             <summary>Assignment 3 概觀：三個指標就是本堂主題<span>8_assignment3.pdf</span></summary>
             <div class="exbody">
               <p>Assignment 3（MadsOpt）是一場 harness 競賽：26 個任務，分屬 3 種 container。評估離線，只連得到 <code>api.cs2680.com</code>。流程：dispatcher 把任務交給 agent → agent 產生 patch → 評估結果回到 agent，最多 5 個任務同時跑。有三種 model：Expert、Standard、Starter。</p>
-              <p>限制：每次 <code>evaluate()</code> 最多 35 分鐘，總共 4 小時；每天 $30，每次 run $10。26 個任務平均每題只有約 $0.38。三個指標：解出的任務數、每個解出任務的花費、每個解出任務的時間。花在沒解出任務上的錢與時間也會拉高後兩項，所以卡住的任務要早停（p.27）。</p>
+              <p>限制：每次 <code>evaluate()</code> 最多 35 分鐘，總共 4 小時；每天 $30，每次 run $10。26 個任務平均每題只有約 $0.38。三個指標：解出的任務數、每個解出任務的花費、每個解出任務的時間。花在沒解出任務上的錢與時間也會拉高後兩項，所以卡住的任務要早停（p.26）。</p>
               <p>評分：leaderboard 80 分、writeup 10 分、影片 10 分。名次 r 決定分數：任一次提交達到 baseline（16 題），得 <code>max(81 − r, 50)</code>；否則 81 − r。最低要求解出 7 題。先穩定解出 16 題，等於保住 50 分。只上傳 <code>src.zip</code>；dispatcher 與評分腳本不要改。</p>
             </div>
           </details>
         </div>
       </section>
 
-      <!-- ===================== 7 交作業 ===================== -->
+      <!-- ===================== 7 大家的討論 ===================== -->
       <section class="part" id="s-submit">
         <header class="part-head">
-          <p class="kicker">7 · 交作業</p>
-          <h2>上傳你的討論</h2>
-          <p class="lede">讀書會前，把你對進階題的回答貼在這裡。所有成員都看得到彼此的內容。重新送出會覆蓋你上一次的那一份。<a href="submissions.html">收作業總表</a>列出誰交了哪幾堂。</p>
+          <p class="kicker">7 · 大家的討論</p>
+          <h2>這堂的討論</h2>
+          <p class="lede">想法直接寫在第 5 段：基礎題下面留言，進階題下面寫想法。這裡看這堂有誰參與、每題有多少人寫了，也放跨題的補充和附件。<a href="submissions.html#l08">在討論總覽一次看全部 →</a></p>
         </header>
-        <form class="subform" id="sub-form" hidden>
-          <label class="field"><span>顯示名稱（選填）</span><input type="text" id="sub-nick" maxlength="40" autocomplete="nickname" placeholder="留空就用你的帳號名稱"></label>
-          <label class="field"><span>你的討論</span><textarea id="sub-text" rows="10" placeholder="Q1. &#10;Q2. &#10;…"></textarea></label>
+        <div class="talk-sum" id="talk-sum"><p class="talk-lead">載入中…</p></div>
+        <h3 class="subhead">參與的人 <span class="count" id="sub-count"></span></h3>
+        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
+        <h3 class="subhead">整體補充與附件 <span class="count">選填</span></h3>
+        <form class="subform" id="sub-form">
+          <label class="field"><span>跨題的想法、這堂整體的心得，或對別人想法的回應</span><textarea id="sub-text" rows="5" placeholder="例：這堂最想帶回團隊的一件事是…"></textarea></label>
           <div class="field" id="sub-filerow" hidden>
-            <label for="sub-file"><span>附件（選填：PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
+            <label for="sub-file"><span>附件（PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
             <input type="file" id="sub-file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.txt,.csv,.json">
             <ul class="attach" id="sub-attach"></ul>
           </div>
           <div class="copyrow">
-            <button type="submit" class="copybtn" id="sub-send">送出</button>
-            <button type="button" class="ghostbtn" id="sub-copy">複製成文字</button>
+            <button type="submit" class="copybtn" id="sub-send">儲存</button>
+            <button type="button" class="ghostbtn" id="sub-copy">複製我這堂的全部想法</button>
             <span class="copyhint" id="sub-status" role="status"></span>
           </div>
         </form>
-        <p class="sub-note" id="sub-note" role="status">連線中…</p>
-        <h3 class="subhead">已收到的討論 <span class="count" id="sub-count"></span></h3>
-        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
       </section>
 
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <ul class="reading">
-          <li><a href="https://cs2680.com/notes/cost-effective-agents.html" target="_blank" rel="noopener">課程筆記：Cost-effective agents</a></li>
-          <li><a href="https://claude.com/blog/reducing-cost-and-improving-performance-with-claude-platform" target="_blank" rel="noopener">Anthropic：Reducing cost and improving performance with Claude Platform</a></li>
-          <li><a href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noopener">RouteLLM：Learning to Route LLMs with Preference Data（2024）</a></li>
-          <li><a href="https://arxiv.org/abs/2604.05404" target="_blank" rel="noopener">Beyond Accuracy：Unveiling Inefficiency Patterns in Tool-Integrated Reasoning（2026）</a></li>
-          <li><a href="https://www.uber.com/us/en/blog/efficient-software-factory" target="_blank" rel="noopener">Uber：Running a Software Factory Efficiently at Uber Scale</a></li>
-          <li>本文價格與設定範例的依據：<a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">pricing</a>、<a href="https://platform.claude.com/docs/en/build-with-claude/batch-processing" target="_blank" rel="noopener">batch processing</a>、<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">CLI reference</a>、<a href="https://code.claude.com/docs/en/agent-sdk/agent-loop" target="_blank" rel="noopener">agent loop</a>、<a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">subagents</a> 官方文件</li>
-        </ul>
+        <p class="rg-intro">教授為這一講列了 4 篇（<a href="https://cs2680.com/readings/oct-07.html" target="_blank" rel="noopener">官方清單 10/07 ↗</a>），另外有一份把 40 多篇論文按「省什麼成本、引入什麼成本」分類的<a href="https://cs2680.com/notes/cost-effective-agents.html" target="_blank" rel="noopener">課程筆記</a>——找技巧時當地圖查。</p>
+        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
+        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 35 分鐘：Claude Platform（三個槓桿）＋ Uber（乘法成本拆解）。一篇講怎麼降、一篇講量產時降什麼。</p></div></div>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://claude.com/blog/reducing-cost-and-improving-performance-with-claude-platform" target="_blank" rel="noopener">Reducing cost and improving performance with Claude Platform</a><span class="rg-meta">Anthropic · 部落格 · 2026 · 約 15 分</span></div>
+          <p class="rg-s">三個槓桿：prefix 穩定讓 cache 生效、刪過時指令、按任務設 effort。成本與準確率不必互換。</p>
+          <p class="rg-g"><b>導讀</b>數字來自廠商：當「存在證明」，不當規劃基線。對照 slides 的成本公式，問每個槓桿動的是哪個因子。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noopener">RouteLLM: Learning to Route LLMs with Preference Data</a><span class="rg-meta">arXiv 2406.18665 · 論文 · 2024 · 挑段約 20 分</span></div>
+          <p class="rg-s">用偏好資料學會把請求分流到便宜或強的模型。（11/23 routing 那一講會再用到）</p>
+          <p class="rg-g"><b>導讀</b>它量的是單一請求的品質。Agent 裡便宜模型的早期錯誤會傳染到後面，要 end-to-end 再驗一次。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2604.05404" target="_blank" rel="noopener">Beyond Accuracy: Unveiling Inefficiency Patterns in Tool-Integrated Reasoning</a><span class="rg-meta">arXiv 2604.05404 · 論文 · 2026 · 挑段約 20 分</span></div>
+          <p class="rg-s">提出 Prefill Token Equivalents：把 tool call 的等待、臃腫的 tool 回應，都折算成硬體工作量。</p>
+          <p class="rg-g"><b>導讀</b>實驗只有一組（256 請求、DeepSeek-V3.2、8×H200）。帶走指標的想法，不帶走數字。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://www.uber.com/us/en/blog/efficient-software-factory" target="_blank" rel="noopener">Running a Software Factory Efficiently at Uber Scale</a><span class="rg-meta">Uber · 工程案例 · 2026 · 約 20 分</span></div>
+          <p class="rg-s">組織規模的量產證據。成本拆成 users × sessions × turns × requests × tokens × price 的乘法。</p>
+          <p class="rg-g"><b>導讀</b>用乘法拆解帶討論：你會先動哪個因子？cost per session 和 adoption 要分開看。</p>
+          </li>
+        </ol>
+        <p class="rg-fn">本文價格與設定範例的依據：<a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">pricing</a>、<a href="https://platform.claude.com/docs/en/build-with-claude/batch-processing" target="_blank" rel="noopener">batch processing</a>、<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">CLI reference</a>、<a href="https://code.claude.com/docs/en/agent-sdk/agent-loop" target="_blank" rel="noopener">agent loop</a>、<a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">subagents</a> 官方文件。</p>
+
         <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
       </section>
 
@@ -833,6 +1112,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     </div>
   </div>
 </main>
+</div>
 <script src="app.js"></script>
 <script src="submit.js"></script>
 </body>

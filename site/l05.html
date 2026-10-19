@@ -13,6 +13,7 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner gutter">
+    <button type="button" class="sn-open" aria-controls="sidenav" aria-expanded="false" title="開啟目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sn-where">目錄</span></button>
     <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
     <nav class="lecnav" aria-label="講次">
       <a href="l04.html" rel="prev">← L4</a>
@@ -20,17 +21,46 @@
       <a href="l06.html" rel="next">L6 →</a>
     </nav>
   </div>
+  <div class="readbar" aria-hidden="true"><i></i></div>
 </header>
 
-<main class="page gutter article" data-lecture="l05" data-format="article" data-pdf="5_agent_design_2.pdf" data-pages-total="49">
+<div class="shell">
+<aside class="sidenav" id="sidenav">
+<div class="sn-head"><span class="sn-title">目錄</span><button type="button" class="sn-close" aria-label="關閉目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+<nav class="sn-nav" aria-label="課程目錄">
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="index.html"><span class="sn-t">課程總覽</span></a></li>
+</ol>
+<p class="sn-label">Part I · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l05.html" aria-current="page"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-arch" data-spy data-short="架構"><span class="sn-n">1</span><span class="sn-t">架構</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">2</span><span class="sn-t">核心觀念</span><span class="sn-p">p.6–43</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1">拆之前先問：多一個 agent，換到什麼</a></li><li><a class="sn-sub" href="#i2">八種架構，是三張圖的不同組合</a></li><li><a class="sn-sub" href="#i3">子任務要寫成規格；拆得越細不一定越快</a></li><li><a class="sn-sub" href="#i4">訊息分兩層：欄位給 runtime，內容給 LLM</a></li><li><a class="sn-sub" href="#i5">溝通是分散式系統問題；協定只標準化溝通</a></li></ol></li><li><a class="sn-sec" href="#s-background" data-spy data-short="觀念補充"><span class="sn-n">3</span><span class="sn-t">觀念補充</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#t1">Idempotency key</a></li><li><a class="sn-sub" href="#t2">Delivery semantics</a></li><li><a class="sn-sub" href="#t3">Partial failure</a></li><li><a class="sn-sub" href="#t4">Pub/sub 與 request/response</a></li><li><a class="sn-sub" href="#t5">狀態機</a></li></ol></li><li><a class="sn-sec" href="#s-beyond" data-spy data-short="延伸思考"><span class="sn-n">4</span><span class="sn-t">延伸思考</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#x1">一個 agent 常常就夠了</a></li><li><a class="sn-sub" href="#x2">彙整節點是細節流失的地方</a></li><li><a class="sn-sub" href="#x3">Dynamic topology 難重現，也難除錯</a></li><li><a class="sn-sub" href="#x4">溝通的價格是 token 和 context</a></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">5</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">6</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#s-submit" data-spy data-short="討論"><span class="sn-n">7</span><span class="sn-t">大家的討論</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n"></span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent memory 與可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+</ol>
+<p class="sn-soon"><a href="index.html#later-h">Part II 從 10/19 開始，slides 公開後加入</a></p>
+<p class="sn-label">讀書會</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="submissions.html"><span class="sn-t">討論總覽</span></a></li>
+</ol>
+</nav>
+</aside>
+<div class="sn-scrim" hidden></div>
+<main class="page gutter article" data-lecture="l05" data-format="article" data-pdf="5_agent_design_2.pdf" data-pages-total="46">
   <header class="lecture-head">
     <p class="eyebrow">Lecture 05 · 2026-09-23 · Part I</p>
     <h1>Multi-agent 架構與溝通</h1>
     <p class="en-title">Agents design II: multi-agent architecture, coordination, and communication</p>
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/5_agent_design_2.pdf" target="_blank" rel="noopener">5_agent_design_2.pdf ↗</a></li>
-      <li><span class="k">頁數</span>49</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 20 分鐘</span></li>
+      <li><span class="k">頁數</span>46</li>
+      <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 30 分鐘</span></li>
     </ul>
   </header>
 
@@ -46,21 +76,6 @@
   </section>
 
   <div class="layout">
-    <nav class="toc" aria-label="本堂目錄">
-      <details open>
-        <summary>本堂目錄</summary>
-        <ol>
-          <li><a href="#s-arch">1 架構<span>全貌</span></a></li>
-          <li><a href="#s-ideas">2 核心觀念<span>p.7–47</span></a></li>
-          <li><a href="#s-background">3 觀念補充<span>背景</span></a></li>
-          <li><a href="#s-beyond">4 延伸思考<span>延伸</span></a></li>
-          <li><a href="#s-discuss">5 問題討論<span>基礎／進階</span></a></li>
-          <li><a href="#s-try">6 動手試試<span>範例</span></a></li>
-          <li><a href="#s-submit">7 交作業<span>上傳</span></a></li>
-          <li><a href="#wrap">延伸閱讀<span>—</span></a></li>
-        </ol>
-      </details>
-    </nav>
 
     <div class="content">
 
@@ -195,40 +210,40 @@
         </header>
         <div class="ideas">
           <div class="idea" id="i1">
-            <h3>拆之前先問：多一個 agent，換到什麼 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=7" target="_blank" rel="noopener">p.6–8</a></h3>
+            <h3>拆之前先問：多一個 agent，換到什麼 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=6" target="_blank" rel="noopener">p.5–7</a></h3>
             <div class="prose">
               <p>L2 到 L4 看的是一個 agent。多一個 agent，只有四種東西可以換到。Specialization：每個 agent 用不同的 model、prompt、tool。Isolation：讀網頁的 agent 沒有 shell。Parallelism：互不相依的子任務同時跑。Context management：worker 只拿到自己的子任務，supervisor 只收摘要。</p>
-              <p>每一項都有價格：多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.48 的第一條原則是：先問真的需要 multi-agent 嗎。p.8 的三張圖是描述架構的共同語言；p.10–17 每頁底部那一行就是答案。</p>
+              <p>每一項都有價格：多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是：先問真的需要 multi-agent 嗎。p.7 的三張圖是描述架構的共同語言；p.9–16 每頁底部那一行就是答案。</p>
             </div>
           </div>
           <div class="idea" id="i2">
-            <h3>八種架構，是三張圖的不同組合 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=9" target="_blank" rel="noopener">p.9–19</a></h3>
+            <h3>八種架構，是三張圖的不同組合 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=8" target="_blank" rel="noopener">p.8–18</a></h3>
             <div class="prose">
-              <p>p.19 把八種架構分成 centralized、decentralized、hybrid。中心化的四種好預測、好 debug，弱點都在中心：planner 瓶頸、每層摘要造成錯誤放大、錯誤往下游傳、不實的出價。去中心化的三種沒有單點，弱點變成一致性：狀態過期、groupthink、<code>O(n²)</code> 的訊息量。</p>
-              <p>弱點都能從線讀出來。Supervisor 的線全部匯到一點，所以它的 context 長得最快。Pipeline 沒有回頭的線，所以加一條 retry edge 勝過多加一個 agent。Committee 的兩個 grader 用同一個 model，兩票同意帶來的新資訊很少。真實系統是混合體（p.18）：Claude Code 的 agent teams 有 lead 派工、共享 task list、直接傳訊，三種都有。</p>
+              <p>p.18 把八種架構分成 centralized、decentralized、hybrid。中心化的四種好預測、好 debug，弱點都在中心：planner 瓶頸、每層摘要造成錯誤放大、錯誤往下游傳、不實的出價。去中心化的三種沒有單點，弱點變成一致性：狀態過期、groupthink、<code>O(n²)</code> 的訊息量。</p>
+              <p>弱點都能從線讀出來。Supervisor 的線全部匯到一點，所以它的 context 長得最快。Pipeline 沒有回頭的線，所以加一條 retry edge 勝過多加一個 agent。Committee 的兩個 grader 用同一個 model，兩票同意帶來的新資訊很少。真實系統是混合體（p.17）：Claude Code 的 agent teams 有 lead 派工、共享 task list、直接傳訊，三種都有。</p>
             </div>
           </div>
           <div class="idea" id="i3">
-            <h3>子任務要寫成規格；拆得越細不一定越快 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=20" target="_blank" rel="noopener">p.20–26</a></h3>
+            <h3>子任務要寫成規格；拆得越細不一定越快 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=19" target="_blank" rel="noopener">p.19–25</a></h3>
             <div class="prose">
-              <p>Worker 看不到 supervisor 的 context，規格沒寫的事它都不知道。所以 p.22 要求八個欄位：目標、輸入、邊界、tool 與權限、輸出 schema、完成條件、預算、相依關係。「Research storage systems」是差的規格；寫明年份、回傳欄位、排除項才是好規格。</p>
-              <p>拆多細，p.23 給了估算式：T_multi ≈ T_planning + T_critical_path + T_communication + T_merge。平行只縮短 critical path（最長那條相依鏈），其他三項隨子任務數量增加。Slide 的 20 個 lookup：不拆 100 秒，拆成 20 份 185 秒，4 份 77 秒。</p>
-              <p>動態拆解會在執行中生出新任務，所以要設上限：spawn 數量、預算、深度、終止條件。p.25–26 的六種拆錯方式：重疊、缺口、隱藏的相依、無法合併的輸出、失去全局 context、straggler。前四種靠規格預防，後兩種靠最後的通讀和 timeout。</p>
+              <p>Worker 看不到 supervisor 的 context，規格沒寫的事它都不知道。所以 p.21 要求八個欄位：目標、輸入、邊界、tool 與權限、輸出 schema、完成條件、預算、相依關係。「Research storage systems」是差的規格；寫明年份、回傳欄位、排除項才是好規格。</p>
+              <p>拆多細，p.22 給了估算式：T_multi ≈ T_planning + T_critical_path + T_communication + T_merge。平行只縮短 critical path（最長那條相依鏈），其他三項隨子任務數量增加。Slide 的 20 個 lookup：不拆 100 秒，拆成 20 份 185 秒，4 份 77 秒。</p>
+              <p>動態拆解會在執行中生出新任務，所以要設上限：spawn 數量、預算、深度、終止條件。p.24–25 的六種拆錯方式：重疊、缺口、隱藏的相依、無法合併的輸出、失去全局 context、straggler。前四種靠規格預防，後兩種靠最後的通讀和 timeout。</p>
             </div>
           </div>
           <div class="idea" id="i4">
-            <h3>訊息分兩層：欄位給 runtime，內容給 LLM <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=28" target="_blank" rel="noopener">p.27–35</a></h3>
+            <h3>訊息分兩層：欄位給 runtime，內容給 LLM <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=27" target="_blank" rel="noopener">p.26–32</a></h3>
             <div class="prose">
-              <p>溝通有四個維度（p.28）：topology、medium、format、channel，可以分開選。大型產出放檔案，只傳路徑。Broadcast 的一則訊息會進入 n 個 context，只有所有人都要知道時才用。</p>
-              <p>p.32 的 envelope 是核心。外層是 runtime 看得懂的欄位：id、task_id、from、to、type（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE 九種）。路由、重試、停止由 runtime 依欄位決定，不用問 LLM。Payload 才是自然語言：一份子任務規格，或一句 claim 加上 confidence 與 evidence。p.35 的法則因此是：依欄位路由，不依內文路由。</p>
+              <p>溝通有四個維度（p.27）：topology、medium、format、channel，可以分開選。大型產出放檔案，只傳路徑。Broadcast 的一則訊息會進入 n 個 context，只有所有人都要知道時才用。</p>
+              <p>p.31 的 envelope 是核心。外層是 runtime 看得懂的欄位：id、task_id、from、to、type（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE 九種）。路由、重試、停止由 runtime 依欄位決定，不用問 LLM。Payload 才是自然語言：一份子任務規格，或一句 claim 加上 confidence 與 evidence。p.32 的法則因此是：依欄位路由，不依內文路由。</p>
             </div>
           </div>
           <div class="idea" id="i5">
-            <h3>溝通是分散式系統問題；協定只標準化溝通 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=36" target="_blank" rel="noopener">p.36–47</a></h3>
+            <h3>溝通是分散式系統問題；協定只標準化溝通 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=33" target="_blank" rel="noopener">p.33–43</a></h3>
             <div class="prose">
-              <p>p.36 的例子：Agent A 請 Agent B「購買 8 台 GPU instance」，然後 timeout。從 A 這一側，三種情況看起來一樣：請求沒送到、B 買了但回覆遺失、B 還在處理。不重試可能一台都沒買；重試可能買 16 台。實務的答案是 at-least-once 加冪等：每次重試帶同一個 task_id，B 查到做過就回傳上次的結果。真的買了兩次，就走 compensation 釋放多出的 8 台。</p>
-              <p>p.37 列出繼承的六個分散式系統老問題，p.39 再加上黑盒子 LLM 帶來的：摘要丟細節、context 過期、信念衝突、沒人認領的 ownership、繞圈的 communication loop。對策多半是老辦法：每個 task 一個 owner，訊息帶跳數上限，log 用 task_id 串起來。</p>
-              <p>兩個協定分工明確（p.47）。A2A 連接 agent 與 agent，單位是一個有 ID、有狀態、能暫停的 task（p.43）；對方從 agent card 得知你會什麼。MCP 連接 agent 與服務，單位是一次 tool call。兩者都不負責 orchestration：要不要委派、怎麼拆，仍由 harness 決定。</p>
+              <p>p.33 的例子：Agent A 請 Agent B「購買 8 台 GPU instance」，然後 timeout。從 A 這一側，三種情況看起來一樣：請求沒送到、B 買了但回覆遺失、B 還在處理。不重試可能一台都沒買；重試可能買 16 台。實務的答案是 at-least-once 加冪等：每次重試帶同一個 task_id，B 查到做過就回傳上次的結果。真的買了兩次，就走 compensation 釋放多出的 8 台。</p>
+              <p>p.34 列出繼承的六個分散式系統老問題，p.36 再加上黑盒子 LLM 帶來的：摘要丟細節、context 過期、信念衝突、沒人認領的 ownership、繞圈的 communication loop。對策多半是老辦法：每個 task 一個 owner，訊息帶跳數上限，log 用 task_id 串起來。</p>
+              <p>兩個協定分工明確（p.43）。A2A 連接 agent 與 agent，單位是一個有 ID、有狀態、能暫停的 task（p.40）；對方從 agent card 得知你會什麼。MCP 連接 agent 與服務，單位是一次 tool call。兩者都不負責 orchestration：要不要委派、怎麼拆，仍由 harness 決定。</p>
             </div>
           </div>
         </div>
@@ -244,7 +259,7 @@
           <div id="t1">
             <dt>Idempotency key<small>重送的請求為什麼不會做兩次</small></dt>
             <dd>
-              <p>一個操作做一次和做很多次，結果相同，就叫冪等（idempotent）。「設 x = 5」冪等，「x 加 1」不冪等。「購買 8 台 instance」不冪等，所以要靠一把 key：呼叫端每次重試帶同一個 key，服務端用 key 查做過沒，做過就回傳上次的結果 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=36" target="_blank" rel="noopener">p.36</a>。Key 由呼叫端產生，服務端的紀錄要持久保存。</p>
+              <p>一個操作做一次和做很多次，結果相同，就叫冪等（idempotent）。「設 x = 5」冪等，「x 加 1」不冪等。「購買 8 台 instance」不冪等，所以要靠一把 key：呼叫端每次重試帶同一個 key，服務端用 key 查做過沒，做過就回傳上次的結果 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=33" target="_blank" rel="noopener">p.33</a>。Key 由呼叫端產生，服務端的紀錄要持久保存。</p>
             </dd>
           </div>
           <div id="t2">
@@ -256,19 +271,19 @@
           <div id="t3">
             <dt>Partial failure<small>分不出對方是慢，還是掛了</small></dt>
             <dd>
-              <p>單機程式要嘛全部在跑，要嘛全部停了。分散式系統裡，一部分正常、另一部分掛掉，而且你分不出來：沒有回覆，可能是 crash、斷網、或只是慢 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=37" target="_blank" rel="noopener">p.37</a>。LLM agent 的「慢」特別常見。所以 timeout 之後要有動作：查狀態、開備援、或用部分結果。</p>
+              <p>單機程式要嘛全部在跑，要嘛全部停了。分散式系統裡，一部分正常、另一部分掛掉，而且你分不出來：沒有回覆，可能是 crash、斷網、或只是慢 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=34" target="_blank" rel="noopener">p.34</a>。LLM agent 的「慢」特別常見。所以 timeout 之後要有動作：查狀態、開備援、或用部分結果。</p>
             </dd>
           </div>
           <div id="t4">
             <dt>Pub/sub 與 request/response<small>兩種 channel 的差別</small></dt>
             <dd>
-              <p>Request/response 是打電話：你發問，停下來等回答，等待時間算進 T_communication。Pub/sub 是訂閱頻道：發送者發到一個 topic，訂閱者各收一份，發送者不必知道誰在聽，也不等 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=30" target="_blank" rel="noopener">p.30</a>。新 agent 訂閱就能加入；代價是每個訂閱者的 context 都收到這則訊息。</p>
+              <p>Request/response 是打電話：你發問，停下來等回答，等待時間算進 T_communication。Pub/sub 是訂閱頻道：發送者發到一個 topic，訂閱者各收一份，發送者不必知道誰在聽，也不等 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=29" target="_blank" rel="noopener">p.29</a>。新 agent 訂閱就能加入；代價是每個訂閱者的 context 都收到這則訊息。</p>
             </dd>
           </div>
           <div id="t5">
             <dt>狀態機<small>task lifecycle 為什麼畫成那樣</small></dt>
             <dd>
-              <p>狀態機由有限的狀態和允許的轉換組成。A2A 的 task 有進行中（Submitted、Working）、中斷（Input required、Auth required）、終止（Completed、Failed、Rejected、Canceled）三組 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=43" target="_blank" rel="noopener">p.43</a>。終止狀態沒有出去的箭頭。好處：不合法的轉換由 runtime 擋下；呼叫端可以用 task_id 查狀態，timeout 之後不必盲目重送。</p>
+              <p>狀態機由有限的狀態和允許的轉換組成。A2A 的 task 有進行中（Submitted、Working）、中斷（Input required、Auth required）、終止（Completed、Failed、Rejected、Canceled）三組 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=40" target="_blank" rel="noopener">p.40</a>。終止狀態沒有出去的箭頭。好處：不合法的轉換由 runtime 擋下；呼叫端可以用 task_id 查狀態，timeout 之後不必盲目重送。</p>
             </dd>
           </div>
         </dl>
@@ -285,28 +300,28 @@
           <div class="idea" id="x1">
             <h3>一個 agent 常常就夠了</h3>
             <div class="prose">
-              <p>延伸閱讀的數字支持 p.48 的第一條原則。Towards a Science of Scaling Agent Systems 測了 260 種設定：和單一 agent 相比，表現從 +80.8%（可分解的財務推理）到 −70.0%（循序規劃）。單一 agent 已超過約 45% 準確度的任務，多加 agent 反而變差。Anthropic 說 multi-agent 系統的 token 約是聊天的 15 倍。</p>
+              <p>延伸閱讀的數字支持 p.44 的第一條原則。Towards a Science of Scaling Agent Systems 測了 260 種設定：和單一 agent 相比，表現從 +80.8%（可分解的財務推理）到 −70.0%（循序規劃）。單一 agent 已超過約 45% 準確度的任務，多加 agent 反而變差。Anthropic 說 multi-agent 系統的 token 約是聊天的 15 倍。</p>
               <p>Cognition 的立場更強：actions carry implicit decisions。兩個 agent 各做一半，隱含的決定會互相衝突。他們建議從單線程的 agent 開始。設計 review 的第一個問題：拿掉一個 agent，品質掉多少？</p>
             </div>
           </div>
           <div class="idea" id="x2">
             <h3>彙整節點是細節流失的地方</h3>
             <div class="prose">
-              <p>p.48 說找出資訊遺失點。遺失點很好找：每個把多份輸入變成一份輸出的節點。Supervisor 讀 8 份報告寫一份摘要，hierarchical 的每一層 lead 再摘要一次。每一層都丟細節，而且下游不知道丟了什麼。對策來自 slide：大型產出走檔案，訊息只帶路徑和 claim，claim 附 evidence。</p>
+              <p>p.44 說找出資訊遺失點。遺失點很好找：每個把多份輸入變成一份輸出的節點。Supervisor 讀 8 份報告寫一份摘要，hierarchical 的每一層 lead 再摘要一次。每一層都丟細節，而且下游不知道丟了什麼。對策來自 slide：大型產出走檔案，訊息只帶路徑和 claim，claim 附 evidence。</p>
               <p>彙整也有另一面。Scaling 論文量到：independent 系統把錯誤放大 17.2 倍，centralized 壓到 4.4 倍。有人在彙整，錯誤才有機會停下來。</p>
             </div>
           </div>
           <div class="idea" id="x3">
             <h3>Dynamic topology 難重現，也難除錯</h3>
             <div class="prose">
-              <p>p.17 說 dynamic topology 的失敗很難重現。原因有兩層：topology 由 LLM 在執行時決定，而 LLM 的輸出有隨機性。同一個 ticket 跑兩次，形狀可能不同。沒有全域時鐘，兩個 agent 的 log 誰先誰後也說不準。</p>
+              <p>p.16 說 dynamic topology 的失敗很難重現。原因有兩層：topology 由 LLM 在執行時決定，而 LLM 的輸出有隨機性。同一個 ticket 跑兩次，形狀可能不同。沒有全域時鐘，兩個 agent 的 log 誰先誰後也說不準。</p>
               <p>可行的做法是把 topology 當資料記下來：每個 envelope 都 log，用 task_id 串起來，至少能照同一個形狀重跑。L7 做 agent 評估時會再碰到這個問題。</p>
             </div>
           </div>
           <div class="idea" id="x4">
             <h3>溝通的價格是 token 和 context</h3>
             <div class="prose">
-              <p>LLM agent 的通訊成本多一項：每則訊息都進入某個 context，之後每一圈 loop 都重送。一則 2k token 的 broadcast 發給 10 個 agent，每個再跑 20 圈，就是 400k token 的 input。這是 p.48 說「密集的 mesh 很少是好的預設」的原因。L8 會算 agent 系統的成本結構。</p>
+              <p>LLM agent 的通訊成本多一項：每則訊息都進入某個 context，之後每一圈 loop 都重送。一則 2k token 的 broadcast 發給 10 個 agent，每個再跑 20 圈，就是 400k token 的 input。這是 p.44 說「密集的 mesh 很少是好的預設」的原因。L8 會算 agent 系統的成本結構。</p>
             </div>
           </div>
         </div>
@@ -317,14 +332,14 @@
         <header class="part-head">
           <p class="kicker">5 · 問題討論</p>
           <h2>讀書會討論題</h2>
-          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡。進階題在讀完文章後回答，讀書會前發給大家。</p>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡；每一題下面有留言串，卡住的地方隨手寫。進階題在讀完文章後回答；每一題下面就是討論區，寫下你的想法，也看看別人怎麼想。</p>
         </header>
         <div class="qtabs" role="tablist" aria-label="題目分組">
           <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
           <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
         </div>
         <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
-          <p class="qset-lede">看 slides 之前先讀一遍這 9 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案」對照。</p>
+          <p class="qset-lede">看 slides 之前先讀一遍這 5 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L5 基礎題（帶著問題看 slides）：Multi-agent 架構與溝通" data-slides="https://cs2680.com/slides/5_agent_design_2.pdf">複製基礎題</button>
             <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
@@ -332,98 +347,385 @@
           <ol class="qlist qlist-basic">
             <li class="bq" id="b1">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=7" target="_blank" rel="noopener">p.7–8</a> · 為什麼拆、三張圖</p>
-                <p class="qtext">把工作拆給多個 agent 的四個理由是什麼？描述一個 multi-agent 架構要回答哪三個問題，各對應哪一張圖？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>四個理由：specialization（不同的 model、prompt、tool）、isolation（不同的權限）、parallelism（互不相依的子任務同時跑）、context management（不把整條 trajectory 交給每個 agent）。</p>
-                  <p>三個問題：誰協調（control graph）、怎麼溝通（communication graph）、工作怎麼拆（task graph）。p.10–17 每頁底部的 Task / Control / Comms 那一行，就是這三張圖的答案。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=6" target="_blank" rel="noopener">p.6–7</a> · 為什麼拆、三張圖</p>
+                <p class="qtext">把工作拆給多個 agent 有哪四個理由？描述架構用的三張圖，各回答什麼問題？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>四個理由（p.6）：specialization，每個 agent 用不同的 model、prompt、tool；isolation，給不同的權限；parallelism，互不相依的子任務同時跑；context management，不必把整條 trajectory 交給每個 agent。三張圖（p.7）：control graph 回答誰協調，communication graph 回答 agent 怎麼溝通，task graph 回答工作怎麼拆。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>四個理由換到的東西不同。Specialization 讓每個角色有短而專一的 prompt，也能配不同的 model。Isolation 切割權限：讀網頁的 agent 沒有 shell，網頁裡夾帶的指令就碰不到危險的 tool。Context management 換到乾淨的 context：worker 只看到自己的子任務，supervisor 只收摘要。Parallelism 換到的是時間。</p>
+                  <p>只有 parallelism 和速度有關，其他三個改善品質、安全與 context。每一項都有價格：多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是先問：真的需要 multi-agent 嗎？</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>圖</th><th>回答的問題</th><th>常見的答案（p.7）</th></tr></thead>
+                    <tbody>
+                      <tr><td>Control graph</td><td>誰協調？誰能派工、停工</td><td>一個 supervisor、一層層的 hierarchy、沒有協調者；執行中可用 handoff 換人</td></tr>
+                      <tr><td>Communication graph</td><td>Agent 之間怎麼傳話</td><td>直接傳訊、broadcast、共享的工作區</td></tr>
+                      <tr><td>Task graph</td><td>工作怎麼拆、誰相依誰</td><td>Planner 事先拆、用出價認領、從局部規則浮現</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>三張圖是三個獨立的軸。同樣拆成三個子任務（task graph 相同），可以由 supervisor 派工，也可以讓 agent 從共享的 task list 自己認領（control graph 不同）。p.9–16 每頁底部那一行，就是該架構在三張圖上的答案。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>把「誰決定」和「訊息走哪條線」分開看，網路設計早就這樣做：路由器的 control plane 決定路徑，data plane 搬封包。Multi-agent 也一樣：agent team 的 lead 負責派工，teammate 之間卻能直接傳訊，訊息不經過 lead。</p>
+                  <p>Isolation 是資安的最小權限原則（least privilege）：每個元件只拿完成工作所需的權限。L2 講過 prompt injection：外部內容可能夾帶指令。讀不可信內容的 agent 和執行危險動作的 agent 分開，注入的指令就到不了危險的 tool。Context management 延伸自 L3 的 subagent：子任務在新的 context 跑，只交回摘要。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「拆成多個 agent，答案一定比較好。」四個理由都不會讓 model 變聰明。Parallelism 只換到時間，交接還會遺失資訊。延伸思考〈一個 agent 常常就夠了〉整理了反例：循序規劃的任務，拆開後大幅變差。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>四個理由：specialization、isolation、parallelism、context management；只有 parallelism 換到速度。</li>
+                    <li>多一個 agent → 多一次交接 → 多一個資訊遺失點與失敗點，所以先問要不要拆。</li>
+                    <li>任何架構都能用三張圖描述：誰協調（control）、怎麼傳話（communication）、怎麼拆（task）。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>第 1 段的<a href="#s-arch">架構圖</a>；核心觀念〈<a href="#i1">拆之前先問：多一個 agent，換到什麼</a>〉、〈<a href="#i2">八種架構，是三張圖的不同組合</a>〉；延伸思考〈<a href="#x1">一個 agent 常常就夠了</a>〉；L2〈<a href="l02.html#t4">Prompt injection</a>〉、L3〈<a href="l03.html#t2">Context 隔離與摘要</a>〉。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b2">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=10" target="_blank" rel="noopener">p.10–12</a> · 三種中心化架構</p>
-                <p class="qtext">Supervisor–worker 的瓶頸在哪裡？Hierarchical 的難處是什麼？Pipeline 最大的弱點是什麼，slide 給的教訓是什麼？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Supervisor 是瓶頸：它要讀每一份結果，context 長得最快。Hierarchical 的難處是在哪一層拆、每條邊界要傳多少 context；p.19 把它的弱點寫成錯誤放大。</p>
-                  <p>Pipeline 沒有回頭路，第 4 站不能要求第 1 站給更好的來源；但它最容易 debug。教訓：加一條 retry edge，勝過多加一個 agent。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=9" target="_blank" rel="noopener">p.9–18</a> · 八種架構的弱點</p>
+                <p class="qtext">八種架構分成哪三類？中心化和去中心化的弱點差在哪裡？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>p.18 的總表分成三類：centralized（supervisor–worker、hierarchical、pipeline/DAG、market）、decentralized（blackboard、committee、swarm）、hybrid（dynamic topology）。中心化的弱點是 planner 瓶頸、錯誤放大、錯誤往下傳、不實的出價：問題沿著控制的路徑集中或擴散。去中心化沒有控制者，弱點變成一致性與訊息量：狀態過期、groupthink、<code>O(n²)</code> 的訊息。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>中心化的四種都有一個點決定誰做什麼，所以好預測、好 debug。弱點也從這個點出發。Supervisor 要重讀每份結果，context 長得最快（p.9）。Hierarchical 每一層都摘要一次，下層的錯被往上放大。Pipeline 沒有回頭的路，後段不能要求前段重做，所以 p.11 說加一條 retry edge 勝過多加一個 agent。Market 的出價是 agent 自己報的，誇大能力的 agent 會得標（p.14）。</p>
+                  <p>去中心化拿掉協調者，沒有單點會卡住或掛掉，agent 也能隨時加入、離開（p.15）。代價是每個 agent 看到的狀態可能不同。Blackboard 要處理一致性、並行控制、來源、版本（p.12）。Committee 的失敗是沒有獨立性的同意：同一個 model、同一份 context，盲點也相同（p.13）。Swarm 的訊息量是 <code>O(n²)</code>，產品裡很少用（p.15）。</p>
+                  <p>Hybrid 只有 dynamic topology：工單升級時才加入 billing 和 log agent（p.16）。簡單工單維持便宜，代價是每次執行的形狀不同，失敗很難重現。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 292" role="img" aria-label="中心化與去中心化的失敗點。左半是中心化：四個 worker 的回報全部匯入 supervisor，所以 supervisor 是瓶頸也是單點；下方的 pipeline 從 OCR、擷取、比對到入帳，OCR 讀錯的金額順著流程一路寫進帳本。右半是去中心化：Agent A 把 v3 寫進共享狀態，Agent B 讀到 v3，Agent C 手上還是早先讀的 v2，依 v2 行動就是狀態過期；committee 的票不獨立，swarm 的線數是 n(n−1)/2。">
+                        <defs>
+                          <marker id="tk5-2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                          <marker id="tk5-2-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
+                          <marker id="tk5-2-ahf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-soft"/></marker>
+                        </defs>
+                        <rect x="8" y="8" width="306" height="276" rx="6" class="dg-box-soft"/>
+                        <text x="20" y="30" class="dg-tb">中心化：問題沿控制路徑走</text>
+                        <rect x="104" y="44" width="100" height="28" rx="4" class="dg-box-accent"/>
+                        <text x="154" y="63" text-anchor="middle" class="dg-tb">Supervisor</text>
+                        <text x="212" y="56" class="dg-ta">全部回報匯入</text>
+                        <text x="212" y="72" class="dg-ta">→ 瓶頸、單點</text>
+                        <line x1="54" y1="107" x2="128" y2="74" class="dg-line" marker-end="url(#tk5-2-ah)"/>
+                        <line x1="124" y1="107" x2="146" y2="74" class="dg-line" marker-end="url(#tk5-2-ah)"/>
+                        <line x1="194" y1="107" x2="164" y2="74" class="dg-line" marker-end="url(#tk5-2-ah)"/>
+                        <line x1="264" y1="107" x2="182" y2="74" class="dg-line" marker-end="url(#tk5-2-ah)"/>
+                        <rect x="26" y="108" width="56" height="24" rx="4" class="dg-box"/>
+                        <text x="54" y="125" text-anchor="middle" class="dg-t">W1</text>
+                        <rect x="96" y="108" width="56" height="24" rx="4" class="dg-box"/>
+                        <text x="124" y="125" text-anchor="middle" class="dg-t">W2</text>
+                        <rect x="166" y="108" width="56" height="24" rx="4" class="dg-box"/>
+                        <text x="194" y="125" text-anchor="middle" class="dg-t">W3</text>
+                        <rect x="236" y="108" width="56" height="24" rx="4" class="dg-box"/>
+                        <text x="264" y="125" text-anchor="middle" class="dg-t">W4</text>
+                        <text x="20" y="152" class="dg-ts">Supervisor 重讀每份結果，context 長得最快</text>
+                        <text x="20" y="180" class="dg-ts">Pipeline：上游的錯順著流程往下傳</text>
+                        <rect x="22" y="190" width="54" height="26" rx="4" class="dg-box-accent"/>
+                        <text x="49" y="208" text-anchor="middle" class="dg-t">OCR</text>
+                        <rect x="92" y="190" width="54" height="26" rx="4" class="dg-box"/>
+                        <text x="119" y="208" text-anchor="middle" class="dg-t">擷取</text>
+                        <rect x="162" y="190" width="54" height="26" rx="4" class="dg-box"/>
+                        <text x="189" y="208" text-anchor="middle" class="dg-t">比對</text>
+                        <rect x="232" y="190" width="54" height="26" rx="4" class="dg-box"/>
+                        <text x="259" y="208" text-anchor="middle" class="dg-t">入帳</text>
+                        <line x1="77" y1="203" x2="91" y2="203" class="dg-accent" marker-end="url(#tk5-2-ahs)"/>
+                        <line x1="147" y1="203" x2="161" y2="203" class="dg-accent" marker-end="url(#tk5-2-ahs)"/>
+                        <line x1="217" y1="203" x2="231" y2="203" class="dg-accent" marker-end="url(#tk5-2-ahs)"/>
+                        <text x="49" y="234" text-anchor="middle" class="dg-ts">金額讀錯</text>
+                        <text x="259" y="234" text-anchor="middle" class="dg-ta">錯帳</text>
+                        <text x="20" y="268" class="dg-ta">p.18：瓶頸、錯誤放大、錯誤下傳、不實出價</text>
+                        <rect x="326" y="8" width="306" height="276" rx="6" class="dg-box-soft"/>
+                        <text x="338" y="30" class="dg-tb">去中心化：問題變成一致性</text>
+                        <rect x="344" y="44" width="72" height="28" rx="4" class="dg-box"/>
+                        <text x="380" y="63" text-anchor="middle" class="dg-t">Agent A</text>
+                        <rect x="434" y="44" width="72" height="28" rx="4" class="dg-box"/>
+                        <text x="470" y="63" text-anchor="middle" class="dg-t">Agent B</text>
+                        <rect x="524" y="44" width="72" height="28" rx="4" class="dg-box"/>
+                        <text x="560" y="63" text-anchor="middle" class="dg-t">Agent C</text>
+                        <line x1="380" y1="73" x2="380" y2="109" class="dg-line" marker-end="url(#tk5-2-ah)"/>
+                        <text x="386" y="95" class="dg-ts">寫 v3</text>
+                        <line x1="470" y1="109" x2="470" y2="73" class="dg-line" marker-end="url(#tk5-2-ah)"/>
+                        <text x="476" y="95" class="dg-ts">讀 v3</text>
+                        <line x1="560" y1="109" x2="560" y2="73" class="dg-soft dg-dash" marker-end="url(#tk5-2-ahf)"/>
+                        <text x="566" y="95" class="dg-ts">早先讀 v2</text>
+                        <rect x="344" y="110" width="252" height="30" rx="4" class="dg-box-accent"/>
+                        <text x="470" y="130" text-anchor="middle" class="dg-tb">共享狀態：最新版是 v3</text>
+                        <text x="338" y="164" class="dg-ta">C 依 v2 行動 → 狀態過期</text>
+                        <text x="338" y="186" class="dg-ts">沒有單點會卡住，但每個 agent 看到的狀態不同</text>
+                        <text x="338" y="214" class="dg-ts">Committee：同一個 model 的票不獨立</text>
+                        <text x="338" y="238" class="dg-ts">Swarm：線數 n(n−1)/2，10 個就 45 條</text>
+                        <text x="338" y="268" class="dg-ta">p.18：狀態過期、groupthink、O(n²)</text>
+                      </svg>
+                    </div>
+                    <figcaption>左邊的問題有固定位置：中心卡住，或錯誤順著控制路徑往下游走。右邊沒有中心，問題分散在每個 agent 對狀態的認知裡，不會報錯，比較難發現。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>分散式系統把中心化的弱點叫 single point of failure（SPOF）。常見的補法是備援加 leader election：協調者掛了，選一個新的接手，Raft 這類共識演算法就在做這件事。前提是協調者的狀態能從 log 或 checkpoint 重建。Agent 系統的 supervisor 也一樣，狀態只在它的 context 裡，它一掛，整個任務就停。</p>
+                  <p>Groupthink 對應 ensemble 的基本條件：多數決只有在錯誤彼此獨立時才有效。兩個同 model 的 grader 錯誤高度相關，兩票同意帶來的新資訊很少。補法是換不同的 model 或評分角度，先各自作答再看彼此。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「去中心化沒有單點，所以比較可靠。」它只是把失敗換了形狀：從一個點卡住，變成每個 agent 看到不同的狀態。延伸閱讀的 Scaling 論文量到：independent 系統把錯誤放大 17.2 倍，centralized 是 4.4 倍。有人彙整，錯誤才有機會停下來。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>三類：中心化 4 種、去中心化 3 種、hybrid 1 種（dynamic topology）。</li>
+                    <li>中心化：問題沿控制路徑集中（瓶頸）或擴散（放大、下傳）→ 減輕中心的負擔，加一條回頭的線。</li>
+                    <li>去中心化：沒有單點，改付一致性與訊息量 → 狀態過期、groupthink、<code>O(n²)</code>。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>第 1 段的<a href="#s-arch">架構圖</a>；核心觀念〈<a href="#i2">八種架構，是三張圖的不同組合</a>〉；延伸思考〈<a href="#x2">彙整節點是細節流失的地方</a>〉、〈<a href="#x3">Dynamic topology 難重現，也難除錯</a>〉。進階題第 1 題用數字算 supervisor 在第幾輪撞到 context 上限，第 3 題練習選架構。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b3">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=13" target="_blank" rel="noopener">p.13–16</a> · 去中心化與競標</p>
-                <p class="qtext">Committee 的失敗模式是什麼？GPU job router 的例子裡誰得標，為什麼？Swarm 的通訊量怎麼成長？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Committee：意見一致不代表彼此獨立。同一個 model、同一份 context，就有同一個盲點。Market 的例子規定 5 秒內完成、出價最低者得標：T4 最便宜（$0.05）但要 10 秒，出局；A100（$0.20、3 秒）得標；H100（$0.40、1 秒）最快但較貴。</p>
-                  <p>Swarm 每對 agent 都相連，通訊量 <code>O(n²)</code>，衝突也難解決，產品中很少用。Blackboard 則靠共享狀態協調，難處是 consistency、concurrency、provenance、versioning、garbage collection。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=22" target="_blank" rel="noopener">p.22–23</a> · 粒度與拆解上限</p>
+                <p class="qtext">拆得太細，為什麼反而變慢？動態拆解為什麼一定要設上限？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>平行只縮短 T_critical_path；planning、communication、merge 都是額外成本，子任務越多，communication 越大。省下的循序時間小於這些成本，拆開就變慢，所以 p.22 把 20 個一行的 lookup 打包成 4 個子任務。動態拆解會在執行中生出新任務，worker 還能自己再委派，沒有上限就會遞迴爆炸。p.23 要求四種上限：spawn 數量、預算、深度、終止條件。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.22 的估算式是 T_multi ≈ T_planning ＋ T_critical_path ＋ T_communication ＋ T_merge。四項裡只有 T_critical_path 會因為平行而變短：它是最長那條相依鏈的時間。T_communication 是每個子任務的派工加讀回報，子任務越多，這一項越大。所以 p.22 說兩頭都不好：子任務太大，平行度太低；太小，overhead 吃掉省下的時間。</p>
+                  <p>下圖用本頁「動手試試」的假設數字：每個 lookup 5 秒，每個子任務的溝通 8 秒，planning 和 merge 各 10 秒。拆 4 份最低，77 秒。拆 20 份要 185 秒，比不拆的 100 秒還慢。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 288" role="img" aria-label="20 個 lookup 拆成 n 份時的總時間，堆疊長條圖。每根長條由下往上是固定的 planning 加 merge 20 秒、critical path、communication。n 等於 1、2、4、5、10、20 時，總時間依序是 128、86、77、80、110、185 秒。Critical path 隨 n 變短，communication 隨 n 變長。一條虛線標出一個 agent 依序做完的 100 秒。n 等於 4 時最低。">
+                        <line x1="56" y1="236" x2="56" y2="44" class="dg-soft"/>
+                        <line x1="56" y1="236" x2="424" y2="236" class="dg-soft"/>
+                        <text x="50" y="240" text-anchor="end" class="dg-tm">0</text>
+                        <text x="50" y="190" text-anchor="end" class="dg-tm">50</text>
+                        <text x="50" y="140" text-anchor="end" class="dg-tm">100</text>
+                        <text x="50" y="90" text-anchor="end" class="dg-tm">150</text>
+                        <text x="50" y="36" text-anchor="end" class="dg-ts">秒</text>
+                        <rect x="72" y="216" width="36" height="20" class="dg-box-soft"/>
+                        <rect x="72" y="116" width="36" height="100" class="dg-box-accent"/>
+                        <rect x="72" y="108" width="36" height="8" class="dg-box"/>
+                        <rect x="132" y="216" width="36" height="20" class="dg-box-soft"/>
+                        <rect x="132" y="166" width="36" height="50" class="dg-box-accent"/>
+                        <rect x="132" y="150" width="36" height="16" class="dg-box"/>
+                        <rect x="192" y="216" width="36" height="20" class="dg-box-soft"/>
+                        <rect x="192" y="191" width="36" height="25" class="dg-box-accent"/>
+                        <rect x="192" y="159" width="36" height="32" class="dg-box"/>
+                        <rect x="252" y="216" width="36" height="20" class="dg-box-soft"/>
+                        <rect x="252" y="196" width="36" height="20" class="dg-box-accent"/>
+                        <rect x="252" y="156" width="36" height="40" class="dg-box"/>
+                        <rect x="312" y="216" width="36" height="20" class="dg-box-soft"/>
+                        <rect x="312" y="206" width="36" height="10" class="dg-box-accent"/>
+                        <rect x="312" y="126" width="36" height="80" class="dg-box"/>
+                        <rect x="372" y="216" width="36" height="20" class="dg-box-soft"/>
+                        <rect x="372" y="211" width="36" height="5" class="dg-box-accent"/>
+                        <rect x="372" y="51" width="36" height="160" class="dg-box"/>
+                        <line x1="60" y1="136" x2="420" y2="136" class="dg-accent dg-dash"/>
+                        <text x="210" y="128" text-anchor="middle" class="dg-ta">一個 agent 依序做完：100 秒</text>
+                        <text x="50" y="256" text-anchor="end" class="dg-tm">n</text>
+                        <text x="90" y="256" text-anchor="middle" class="dg-t">1</text>
+                        <text x="150" y="256" text-anchor="middle" class="dg-t">2</text>
+                        <text x="210" y="256" text-anchor="middle" class="dg-t">4</text>
+                        <text x="270" y="256" text-anchor="middle" class="dg-t">5</text>
+                        <text x="330" y="256" text-anchor="middle" class="dg-t">10</text>
+                        <text x="390" y="256" text-anchor="middle" class="dg-t">20</text>
+                        <text x="50" y="276" text-anchor="end" class="dg-ts">總計</text>
+                        <text x="90" y="276" text-anchor="middle" class="dg-tm">128</text>
+                        <text x="150" y="276" text-anchor="middle" class="dg-tm">86</text>
+                        <text x="210" y="276" text-anchor="middle" class="dg-ta">77</text>
+                        <text x="270" y="276" text-anchor="middle" class="dg-tm">80</text>
+                        <text x="330" y="276" text-anchor="middle" class="dg-tm">110</text>
+                        <text x="390" y="276" text-anchor="middle" class="dg-tm">185</text>
+                        <rect x="446" y="44" width="14" height="12" class="dg-box"/>
+                        <text x="466" y="54" class="dg-tm">T_communication</text>
+                        <text x="466" y="70" class="dg-ts">每份 8 秒，隨 n 變長</text>
+                        <rect x="446" y="88" width="14" height="12" class="dg-box-accent"/>
+                        <text x="466" y="98" class="dg-tm">T_critical_path</text>
+                        <text x="466" y="114" class="dg-ts">最長一份：100 ÷ n 秒</text>
+                        <rect x="446" y="132" width="14" height="12" class="dg-box-soft"/>
+                        <text x="466" y="142" class="dg-tm">planning + merge</text>
+                        <text x="466" y="158" class="dg-ts">固定 10 ＋ 10 秒</text>
+                        <text x="446" y="196" class="dg-ta">n = 4 最低：77 秒</text>
+                        <text x="446" y="216" class="dg-ts">n = 20 比不拆慢 85 秒</text>
+                      </svg>
+                    </div>
+                    <figcaption>n 是子任務數。往右走，藍色的 critical path 變短，白色的 communication 變長；兩者相加有一個最低點。數字是假設，形狀才是重點。</figcaption>
+                  </figure>
+                  <p>p.23 把拆解分成四種：static 在執行前就知道；dynamic 依發現生出新任務；recursive 讓 worker 再委派；opportunistic 讓閒著的 agent 認領新任務。後三種的任務數在執行前未知，所以需要四種上限：spawn 數量、預算、深度、終止條件。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>最低點可以算。總時間裡會隨 n 變的部分是 100 ÷ n ＋ 8n。前項遞減，後項遞增，最低點在 n = √(100 ÷ 8) ≈ 3.5。整數裡 4 最好，和圖一致。L3 的 Amdahl's law 說不能平行的部分限制加速上限；這裡更糟，overhead 隨 n 成長，所以拆過頭會變慢。</p>
+                  <p>拆得越細，fan-out 越大，也越容易遇到 straggler。Critical path 取最慢的那一份。假設每份有 1% 機率變慢，fan-out 100 時，至少一份變慢的機率是 1 − 0.99<sup>100</sup> ≈ 63%。Google 的〈The Tail at Scale〉用這個算式說明 fan-out 讓尾端延遲變重要。這是 p.25 失敗 06 的機率面。</p>
+                  <div class="callout example"><span class="tag">例子</span><div><p>沒有深度上限時，假設每個 worker 再開 3 個 subagent。第 1 層 3 個，第 2 層 9 個，第 3 層 27 個，第 4 層 81 個，合計 120 個 agent。每個都有自己的 context 和 token 帳單。Spawn 數量限制每層的寬度，深度上限限制層數，預算限制總花費，終止條件決定何時停。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>平行只縮短 critical path；planning、communication、merge 是額外成本，communication 隨子任務數成長。</li>
+                    <li>總時間對子任務數有一個最低點 → 拆之前先算，太細比不拆還慢。</li>
+                    <li>動態、遞迴拆解的任務數事先未知 → 要設 spawn 數量、預算、深度、終止條件四種上限。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">子任務要寫成規格；拆得越細不一定越快</a>〉；第 6 段<a href="#s-try">動手試試</a>的 granularity.py；L3〈<a href="l03.html#x1">協調開銷決定平行加速的上限</a>〉。進階題第 2 題會求損益兩平點，並加入 straggler 再算一次。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b4">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=17" target="_blank" rel="noopener">p.17–19</a> · 動態拓樸與總表</p>
-                <p class="qtext">Dynamic topology 的優點和弱點各是什麼？總表把八種架構分成哪三類？Market 歸在哪一類？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>優點：容量隨難度增加，簡單的 ticket 保持便宜。弱點：每次執行的形狀都不同，失敗很難重現。p.18 說真實系統是混合體：hierarchy、shared memory、pipeline 混用，需要時再重新規劃。</p>
-                  <p>三類：centralized（supervisor–worker、hierarchical、pipeline、market）、decentralized（blackboard、committee、swarm）、hybrid（dynamic topology）。Market 歸在 centralized，因為結標的 auctioneer 只有一個。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=31" target="_blank" rel="noopener">p.31–33</a> · Envelope 與 idempotency</p>
+                <p class="qtext">Runtime 為什麼不用問 LLM 就能路由和停止？購買請求 timeout 後，靠哪個欄位避免買兩次？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>p.31 的 envelope 把控制和內容分開：外層的 id、task_id、from、to、type 給 runtime 讀，payload 才放給 LLM 讀的自然語言。Type 只有 9 種（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE），runtime 看欄位就能路由、重試、停止。購買請求靠 task_id（p.33）：重試時沿用同一個 task_id 當 idempotency key，B 認出這是同一個請求，就不會再買一次。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>Type 是封閉的 9 個值，runtime 可以直接照值分派。例如 CANCEL 就停掉該 task，ERROR 就重試或升級給人。這些判斷不經過 LLM，所以快、便宜、每次結果相同。p.32 把它寫成法則：依欄位路由，不依內文路由。反過來讓 LLM 讀內文決定路由，要多付一次 model 呼叫；同一句話也可能被讀成不同意思。p.30 的建議是兩者並用：claim、confidence、evidence 給 LLM 判斷，task_id、type、requires_response 給 runtime。</p>
+                  <p>p.33 的難處在 timeout。A 請 B「購買 8 台 GPU instance」，然後沒有回覆。從 A 這一側，三種情況看起來一樣：請求沒送到、B 買了但回覆遺失、B 還在處理。不重試，可能一台都沒買；重試，可能買 16 台。Slide 列的對策是 task_id 當 idempotency key，加上一條 compensation（rollback）路徑。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 436" role="img" aria-label="購買請求 timeout 後重試的時序圖。四條直線由左到右是 Agent A、Agent B、B 的持久紀錄、雲端 API。A 送出 DELEGATE，task_id 是 t-17，要買 8 台。B 先在紀錄寫入 working，再呼叫雲端 API 購買，拿到 order_id 後寫入 done。B 回給 A 的 REPORT 在途中遺失，A 等到 timeout，分不出三種情況。A 用同一個 task_id t-17 重試。B 查紀錄發現已經是 done，不再呼叫雲端 API，直接回傳同一個 order_id。底部對照：如果重試換了新的 task_id，B 查不到紀錄，會再買 8 台，共 16 台。">
+                        <defs>
+                          <marker id="tk5-4-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                          <marker id="tk5-4-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
+                          <marker id="tk5-4-ahf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-soft"/></marker>
+                        </defs>
+                        <rect x="46" y="10" width="100" height="30" rx="4" class="dg-box"/>
+                        <text x="96" y="30" text-anchor="middle" class="dg-tb">Agent A</text>
+                        <rect x="230" y="10" width="100" height="30" rx="4" class="dg-box"/>
+                        <text x="280" y="30" text-anchor="middle" class="dg-tb">Agent B</text>
+                        <rect x="370" y="10" width="120" height="30" rx="4" class="dg-box-accent"/>
+                        <text x="430" y="30" text-anchor="middle" class="dg-tb">B 的持久紀錄</text>
+                        <rect x="516" y="10" width="108" height="30" rx="4" class="dg-box"/>
+                        <text x="570" y="30" text-anchor="middle" class="dg-tb">雲端 API</text>
+                        <line x1="96" y1="40" x2="96" y2="384" class="dg-soft dg-dash"/>
+                        <line x1="280" y1="40" x2="280" y2="384" class="dg-soft dg-dash"/>
+                        <line x1="430" y1="40" x2="430" y2="384" class="dg-soft dg-dash"/>
+                        <line x1="570" y1="40" x2="570" y2="384" class="dg-soft dg-dash"/>
+                        <rect x="90" y="72" width="12" height="166" class="dg-frame"/>
+                        <text x="84" y="150" text-anchor="end" class="dg-ts">等回覆</text>
+                        <text x="84" y="166" text-anchor="end" class="dg-ts">到 timeout</text>
+                        <text x="188" y="62" text-anchor="middle" class="dg-ts">DELEGATE t-17：買 8 台</text>
+                        <line x1="103" y1="70" x2="279" y2="70" class="dg-line" marker-end="url(#tk5-4-ah)"/>
+                        <text x="355" y="92" text-anchor="middle" class="dg-ts">① 先寫 working</text>
+                        <line x1="280" y1="100" x2="429" y2="100" class="dg-line" marker-end="url(#tk5-4-ah)"/>
+                        <text x="500" y="122" text-anchor="middle" class="dg-ts">② 買 8 台，tag t-17</text>
+                        <line x1="280" y1="130" x2="569" y2="130" class="dg-line" marker-end="url(#tk5-4-ah)"/>
+                        <text x="500" y="152" text-anchor="middle" class="dg-tm">order_id</text>
+                        <line x1="570" y1="160" x2="281" y2="160" class="dg-soft dg-dash" marker-end="url(#tk5-4-ahf)"/>
+                        <text x="355" y="182" text-anchor="middle" class="dg-ts">③ 寫 done ＋ order_id</text>
+                        <line x1="280" y1="190" x2="429" y2="190" class="dg-line" marker-end="url(#tk5-4-ah)"/>
+                        <text x="225" y="214" text-anchor="middle" class="dg-ts">REPORT</text>
+                        <line x1="280" y1="222" x2="172" y2="222" class="dg-line"/>
+                        <line x1="157" y1="217" x2="167" y2="227" class="dg-accent"/>
+                        <line x1="157" y1="227" x2="167" y2="217" class="dg-accent"/>
+                        <text x="134" y="227" text-anchor="middle" class="dg-ta">遺失</text>
+                        <text x="110" y="258" class="dg-ta">timeout：A 分不出三種情況</text>
+                        <text x="188" y="282" text-anchor="middle" class="dg-ta">重試：同一個 t-17</text>
+                        <line x1="96" y1="290" x2="279" y2="290" class="dg-accent" marker-end="url(#tk5-4-ahs)"/>
+                        <text x="355" y="312" text-anchor="middle" class="dg-ts">④ 查 t-17</text>
+                        <line x1="280" y1="320" x2="429" y2="320" class="dg-line" marker-end="url(#tk5-4-ah)"/>
+                        <text x="355" y="342" text-anchor="middle" class="dg-ts">已是 done</text>
+                        <line x1="430" y1="350" x2="281" y2="350" class="dg-soft dg-dash" marker-end="url(#tk5-4-ahf)"/>
+                        <text x="500" y="342" text-anchor="middle" class="dg-ta">不再呼叫雲端 API</text>
+                        <text x="188" y="368" text-anchor="middle" class="dg-ta">回傳同一個 order_id</text>
+                        <line x1="280" y1="376" x2="97" y2="376" class="dg-accent" marker-end="url(#tk5-4-ahs)"/>
+                        <rect x="10" y="394" width="620" height="34" rx="4" class="dg-box-soft"/>
+                        <text x="320" y="416" text-anchor="middle" class="dg-t">對照：重試換了新的 task_id → B 查不到紀錄 → 再買 8 台，共 16 台</text>
+                      </svg>
+                    </div>
+                    <figcaption>四條直線是四個參與者，時間由上往下。關鍵是第 ① 步：B 在呼叫雲端 API 之前就寫下紀錄，重複的請求才查得到。</figcaption>
+                  </figure>
+                  <p>紀錄要持久保存，而且要在呼叫雲端 API 之前寫入。否則 B 在購買後、寫入前 crash，重啟後查不到紀錄，就會再買一次。重複請求來時，B 照紀錄的狀態回覆：working 回「處理中」，done 回傳原本的 order_id。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>網路只能保證兩種傳遞語意。At-most-once：不重試，最多送達一次，可能遺失。At-least-once：重試到收到確認，至少送達一次，可能重複。傳遞層做不到 exactly-once。實務上傳遞層做 at-least-once，接收端用冪等處理去除重複，合起來效果等於 exactly-once。</p>
+                  <p>付款與雲端 API 普遍這樣做。Stripe 的 API 讓呼叫端在 header 帶 Idempotency-Key；AWS EC2 的 RunInstances 有 ClientToken 參數，同一個 token 重送不會多開機器。共通點：key 由呼叫端產生，每個操作一把，重試時不換。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Timeout 代表 B 沒做，重送就好。」Timeout 只代表 A 沒收到回覆。B 可能已經做完，也可能還在做。重送要由 runtime 用原本的 envelope 送，不要讓 LLM 重寫一次請求：重寫的請求可能帶新的 task_id，B 就會當成新的購買。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>Envelope 分兩層：欄位給 runtime（路由、重試、停止），payload 給 LLM → 依欄位路由，不依內文。</li>
+                    <li>Timeout ≠ 沒做：沒送到、回覆遺失、還在做，從呼叫端看起來都一樣。</li>
+                    <li>At-least-once 重試 ＋ 同一個 task_id 當 idempotency key ＋ 先寫紀錄再動手 → 重試也只買一次。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">訊息分兩層：欄位給 runtime，內容給 LLM</a>〉、〈<a href="#i5">溝通是分散式系統問題</a>〉；觀念補充〈<a href="#t1">Idempotency key</a>〉、〈<a href="#t2">Delivery semantics</a>〉、〈<a href="#t3">Partial failure</a>〉；第 6 段<a href="#s-try">動手試試</a>的 runtime.py。進階題第 5 題會設計完整的重試與 compensation，第 6 題替自己的流程設計 envelope。</p>
                 </div></details>
               </div>
             </li>
             <li class="bq" id="b5">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=21" target="_blank" rel="noopener">p.21–23</a> · 拆解軸、規格、粒度</p>
-                <p class="qtext">可以沿哪六個軸拆任務？好的子任務規格要寫清楚哪八件事？T_multi 的估算式有哪四項，20 個 lookup 的例子怎麼拆？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>六個軸：data、expertise、stage、hypothesis、tool、authority。八件事：目標、輸入與 context、邊界與排除項、tool 與權限、輸出 schema、完成條件、預算與期限、相依關係。</p>
-                  <p>T_multi ≈ T_planning + T_critical_path + T_communication + T_merge。拆太細，排程與溝通的 overhead 會吃掉收益，所以 20 個一行就能查完的 lookup，要打包成 4 個子任務。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b6">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=24" target="_blank" rel="noopener">p.24–26</a> · 動態拆解與失敗</p>
-                <p class="qtext">動態、遞迴、機會式拆解為什麼一定要設上限，要設哪四種？六種常見的拆解失敗是什麼，straggler 的例子數字是多少？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>沒有上限時，每個 agent 都可能再開 subagent，委派會遞迴爆炸。四種上限：spawn 數量、預算、深度、終止條件。</p>
-                  <p>六種失敗：overlap（兩個 agent 摘要同一篇）、gap（2020–2023 加 2025–2026 漏掉 2024）、hidden dependency、unmergeable outputs（自由文字對上 JSON）、lost global context（每節都對、整份矛盾）、straggler（6 個 agent 約 20 秒完成，1 個花了 4 分鐘）。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b7">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=28" target="_blank" rel="noopener">p.28–32</a> · 溝通的維度與訊息格式</p>
-                <p class="qtext">溝通有哪四個維度？訊息 envelope 裡哪些欄位給 runtime 讀、哪些給 LLM 讀？Runtime 認得哪幾種 type？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>四個維度：topology（誰能和誰說話）、medium（訊息、shared memory、檔案）、format 與語意、channel（p2p、broadcast、pub–sub、shared state、request–response）。</p>
-                  <p>Envelope 外層是 id、task_id、from、to、type，給 runtime 路由、重試、停止用；payload 放自然語言的內容，給 LLM 讀。p.31 的結果訊息另有 claim、confidence、evidence、artifact。九種 type：DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b8">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=35" target="_blank" rel="noopener">p.35–36</a> · 經驗法則與 timeout</p>
-                <p class="qtext">溝通設計的四條經驗法則是什麼？A 請 B 買 8 台 GPU instance 後 timeout，有哪三種可能？Slide 給的三個對策是什麼？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>四條法則：照相依關係連線；一條連線只用一種媒介；只有所有人都要知道時才 broadcast；依欄位路由，不依內文路由。</p>
-                  <p>三種可能：請求沒送到、B 買了但回覆遺失、B 還在處理。不重試是 at-most-once，重試到 ACK 是 at-least-once，可能買 2 次。對策：用 task_id 當 idempotency key；準備 compensation 或 rollback；事先決定重複購買時誰付錢。</p>
-                </div></details>
-              </div>
-            </li>
-            <li class="bq" id="b9">
-              <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=41" target="_blank" rel="noopener">p.41–47</a> · A2A 與 MCP</p>
-                <p class="qtext">Agent card 放在哪裡、告訴呼叫者什麼？A2A task 有哪幾種狀態？MCP 和 A2A 的工作單位差在哪裡？</p>
-                <details><summary>參考答案</summary><div class="hint">
-                  <p>Card 在 <code>GET /.well-known/agent-card.json</code>，告訴呼叫者身分、skills、端點、capabilities（streaming、push）、security scheme。Task 的狀態：進行中（Submitted、Working）、中斷（Input required、Auth required）、終止（Completed、Failed、Rejected、Canceled）。</p>
-                  <p>MCP 連接 agent 與服務，單位是一次 tool call；A2A 連接 agent 與 agent，單位是一個長時間的 task，內部最好不透明。兩者可以疊：一個 A2A 遠端 agent 自己可能呼叫 20 個 MCP server。</p>
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=41" target="_blank" rel="noopener">p.41–43</a> · A2A 與 MCP</p>
+                <p class="qtext">A2A 只標準化溝通，哪些事仍留給 harness？MCP 和 A2A 的工作單位差在哪裡？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>A2A 不負責 orchestration（p.41）。要不要委派、怎麼拆、何時停止，仍由 harness 決定。MCP 連接 agent 與服務，工作單位是一次 tool call：一次呼叫，一個結果（p.42）。A2A 連接 agent 與 agent，工作單位是一個長時間的 task（p.43）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>A2A 標準化的是「和另一個 agent 合作」這一段。對方在 <code>/.well-known/agent-card.json</code> 公開 agent card，呼叫者從中得知對方的身分、skills、endpoint、能力和認證方式（p.38）。互動有三個抽象（p.39）：message 是一輪對話，task 是有 ID、有生命週期的工作，artifact 是 task 的產出。一則 message 開啟 task，後續的回覆加入同一個 task。</p>
+                  <p>Task 有狀態，所以能暫停（p.40）。缺資料時進入 Input required，缺授權時進入 Auth required，補齊後回到 Working。Task 可能跑很久，p.41 給三種追進度的方法：polling 適合短工作，streaming 適合互動式輸出，push notification（webhook）適合跑幾小時的工作。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 436" role="img" aria-label="同一個 agent 用兩種協定的工作單位對照。左邊是我的 agent，harness 在這裡決定要不要委派、怎麼拆、何時停止，兩個協定都不管這一層。上半是 MCP：agent 發出一次 tool call 給 MCP server，拿回一個結果就結束。下半是 A2A：agent 送 message 給遠端 agent，開啟 task-42。Task 從 Submitted 到 Working，遠端回傳進度更新；接著進入 Input required，反問出發日期；agent 回覆日期，加入同一個 task，回到 Working；最後 Completed，回傳行程 PDF 這個 artifact。遠端 agent 的內部狀態不公開，裡面可能再呼叫多個 MCP server。">
+                        <defs>
+                          <marker id="tk5-5-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                          <marker id="tk5-5-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
+                          <marker id="tk5-5-ahf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-soft"/></marker>
+                        </defs>
+                        <rect x="10" y="64" width="130" height="340" rx="6" class="dg-box-accent"/>
+                        <text x="75" y="88" text-anchor="middle" class="dg-tb">我的 agent</text>
+                        <text x="75" y="210" text-anchor="middle" class="dg-ta">Harness 決定</text>
+                        <text x="75" y="232" text-anchor="middle" class="dg-t">要不要委派</text>
+                        <text x="75" y="252" text-anchor="middle" class="dg-t">怎麼拆</text>
+                        <text x="75" y="272" text-anchor="middle" class="dg-t">何時停止</text>
+                        <text x="75" y="296" text-anchor="middle" class="dg-ts">兩個協定</text>
+                        <text x="75" y="312" text-anchor="middle" class="dg-ts">都不管這層</text>
+                        <text x="160" y="30" class="dg-tb">MCP：agent 與服務（p.42）</text>
+                        <text x="160" y="50" class="dg-ts">Host 決定開放哪些 tool，不是 model 決定</text>
+                        <text x="300" y="100" text-anchor="middle" class="dg-ts">tool call：一次呼叫，typed 參數</text>
+                        <line x1="141" y1="108" x2="469" y2="108" class="dg-line" marker-end="url(#tk5-5-ah)"/>
+                        <text x="300" y="128" text-anchor="middle" class="dg-ts">一個結果</text>
+                        <line x1="470" y1="136" x2="141" y2="136" class="dg-soft dg-dash" marker-end="url(#tk5-5-ahf)"/>
+                        <rect x="470" y="90" width="160" height="56" rx="4" class="dg-box"/>
+                        <text x="550" y="113" text-anchor="middle" class="dg-tb">MCP server</text>
+                        <text x="550" y="133" text-anchor="middle" class="dg-ts">檔案、資料庫、GitHub</text>
+                        <text x="160" y="170" class="dg-ta">工作單位：一次 tool call，呼叫完就結束</text>
+                        <line x1="150" y1="184" x2="630" y2="184" class="dg-soft dg-dash"/>
+                        <text x="160" y="204" class="dg-tb">A2A：agent 與 agent（p.37–41）</text>
+                        <rect x="400" y="212" width="230" height="192" rx="6" class="dg-box"/>
+                        <text x="515" y="232" text-anchor="middle" class="dg-tb">遠端 agent：task-42</text>
+                        <text x="275" y="242" text-anchor="middle" class="dg-ts">message：Book a flight to Boston</text>
+                        <line x1="141" y1="250" x2="409" y2="250" class="dg-line" marker-end="url(#tk5-5-ah)"/>
+                        <rect x="410" y="240" width="112" height="22" rx="4" class="dg-box-soft"/>
+                        <text x="466" y="255" text-anchor="middle" class="dg-tm">Submitted</text>
+                        <text x="275" y="276" text-anchor="middle" class="dg-ts">進度更新（streaming / polling）</text>
+                        <line x1="409" y1="284" x2="141" y2="284" class="dg-soft dg-dash" marker-end="url(#tk5-5-ahf)"/>
+                        <rect x="410" y="274" width="112" height="22" rx="4" class="dg-box-soft"/>
+                        <text x="466" y="289" text-anchor="middle" class="dg-tm">Working</text>
+                        <text x="275" y="310" text-anchor="middle" class="dg-ts">反問：哪一天出發？</text>
+                        <line x1="409" y1="318" x2="141" y2="318" class="dg-line" marker-end="url(#tk5-5-ah)"/>
+                        <rect x="410" y="308" width="112" height="22" rx="4" class="dg-frame"/>
+                        <text x="466" y="323" text-anchor="middle" class="dg-tm">Input required</text>
+                        <text x="275" y="344" text-anchor="middle" class="dg-ts">回覆日期：加入同一個 task</text>
+                        <line x1="141" y1="352" x2="409" y2="352" class="dg-line" marker-end="url(#tk5-5-ah)"/>
+                        <rect x="410" y="342" width="112" height="22" rx="4" class="dg-box-soft"/>
+                        <text x="466" y="357" text-anchor="middle" class="dg-tm">Working</text>
+                        <text x="275" y="378" text-anchor="middle" class="dg-ta">artifact：行程 PDF</text>
+                        <line x1="409" y1="386" x2="141" y2="386" class="dg-accent" marker-end="url(#tk5-5-ahs)"/>
+                        <rect x="410" y="376" width="112" height="22" rx="4" class="dg-box-accent"/>
+                        <text x="466" y="391" text-anchor="middle" class="dg-tm">Completed</text>
+                        <rect x="532" y="240" width="90" height="158" rx="4" class="dg-frame"/>
+                        <text x="577" y="260" text-anchor="middle" class="dg-ts">內部狀態</text>
+                        <text x="577" y="276" text-anchor="middle" class="dg-ts">不公開</text>
+                        <rect x="547" y="290" width="60" height="22" rx="4" class="dg-box-soft"/>
+                        <text x="577" y="305" text-anchor="middle" class="dg-tm">MCP</text>
+                        <rect x="547" y="320" width="60" height="22" rx="4" class="dg-box-soft"/>
+                        <text x="577" y="335" text-anchor="middle" class="dg-tm">MCP</text>
+                        <text x="577" y="362" text-anchor="middle" class="dg-tb">⋯</text>
+                        <text x="577" y="386" text-anchor="middle" class="dg-ts">可能再呼叫</text>
+                        <text x="160" y="426" class="dg-ta">工作單位：一個有 ID、有狀態、能暫停的 task</text>
+                      </svg>
+                    </div>
+                    <figcaption>上半一來一回就結束。下半的 task 會暫停、等補資料、再繼續；雙方靠 task ID 對上同一件工作。左邊的 harness 決策，兩個協定都不碰。</figcaption>
+                  </figure>
+                  <p>MCP 是 agent 的服務邊界（p.42）。它標準化 tools、resources、prompts 三種東西；一個 client 可以接多個 server，開放哪些 tool 由 host 決定。p.43 再補兩點。A2A 的遠端 agent 最好不公開內部狀態，它內部可能再呼叫多個 MCP server。類比上，MCP 像裝置或 API 介面，A2A 像 service 之間的 RPC。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>兩個協定都在解 L2 的 N×M 整合問題，只是層次不同。MCP 由 Anthropic 在 2024 年 11 月發表，解 agent 對工具的整合；A2A 由 Google 在 2025 年 4 月發表，解 agent 對 agent 的整合，之後交給 Linux Foundation 管理。</p>
+                  <p>A2A 的 task 是分散式系統常見的 long-running operation 模式：送出請求，先拿到一個 ID，之後用 ID 查狀態或等通知。HTTP 的 202 Accepted 加上狀態查詢 URL 是同一個想法。這也連回 B4：task 有 ID 和狀態，timeout 之後可以先查狀態，不必盲目重送。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「用了 A2A，multi-agent 系統就設計好了。」A2A 只管傳話：找到對方、開 task、追狀態、拿回產出。要不要委派、拆多細、誰協調、何時停，仍是本堂前半段的設計問題（p.41）。協定換不掉 B1 到 B3 的判斷。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>A2A 標準化溝通：發現（agent card）、task、狀態、artifact；orchestration 留給 harness。</li>
+                    <li>MCP：agent 對服務，一次 tool call，一個結果。A2A：agent 對 agent，一個有 ID、有狀態、能暫停的 task。</li>
+                    <li>兩者互補，不互相取代：遠端的 A2A agent 內部可能再呼叫多個 MCP server。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">溝通是分散式系統問題；協定只標準化溝通</a>〉；觀念補充〈<a href="#t5">狀態機</a>〉；第 6 段<a href="#s-try">動手試試</a>的 agent card；L2〈<a href="l02.html#t5">N×M 整合問題</a>〉。第 5 段「自我檢查」的第 3 題可以用來自測 MCP 和 A2A 的選擇。</p>
                 </div></details>
               </div>
             </li>
           </ol>
         </div>
         <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
-          <p class="qset-lede">這 6 題可以在讀書會前先發給大家回答。每題附情境、回答要點與相關 slide。「參考觀點與追問」給主持人用。</p>
+          <p class="qset-lede">這 6 題在讀書會前回答。每個回答要點下面有一行提示。不用每點都答，挑一點寫兩三句也可以。不知道怎麼開頭，就在討論區按「用範本開始寫」，照著填空。寫完按儲存，其他人的想法會自動展開。「參考觀點與追問」建議討論後再展開。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L5 進階題（讀書會討論）：Multi-agent 架構與溝通" data-slides="https://cs2680.com/slides/5_agent_design_2.pdf">複製進階題</button>
             <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
@@ -431,46 +733,50 @@
           <ol class="qlist">
             <li class="dq" id="q1">
               <div class="qbody">
-                <p class="qtag">概念 · Supervisor 瓶頸 · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=10" target="_blank" rel="noopener">p.10、p.19、p.48</a></p>
+                <p class="qtag">概念 · Supervisor 瓶頸 · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=9" target="_blank" rel="noopener">p.9、p.18、p.44</a></p>
                 <p class="qtext">解釋 supervisor–worker 架構裡，為什麼 supervisor 一定是第一個撞到 context 上限的節點。它會在第幾輪撞到？你會怎麼改？</p>
                 <p class="qctx"><b>情境：</b>一個 supervisor 帶 8 個 worker。Supervisor 的固定內容共 20k token，context window 200k。每一輪它派 8 個子任務，每個 worker 回傳約 6k token 的完整報告。任務預計跑 5 輪。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>用 communication graph 的線，說明為什麼 context 的壓力集中在 supervisor。</li>
-                    <li>估算每一輪結束時 supervisor 的 context 大小，指出哪一輪會超過 200k。</li>
-                    <li>提出兩種改法，各說明省下多少 context，以及付出什麼代價。</li>
+                    <li>用 communication graph 的線，說明為什麼 context 的壓力集中在 supervisor。<span class="qh">提示：p.9 的 comms 是星狀。數一數：一個 worker 連幾條線？supervisor 連幾條？每份回報進到誰的 context？</span></li>
+                    <li>估算每一輪結束時 supervisor 的 context 大小，指出哪一輪會超過 200k。<span class="qh">提示：第 r 輪結束時 ≈ 20k + r × 8 × 6k。從 r = 1 代到 5，逐輪和 200k 比。</span></li>
+                    <li>提出兩種改法，各說明省下多少 context，以及付出什麼代價。<span class="qh">提示：候選有 p.28 的檔案媒介（假設摘要約 500 token，加上路徑）和 p.10 的 hierarchy。代價先問：誰看不到細節？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>星狀 topology 的每一條線都有一端在 supervisor。先算一輪增加多少，再乘輪數。改法從 p.29 的媒介和 p.11 的 hierarchy 去想。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">每個 worker 只連 ＿＿ 條線，supervisor 連 ＿＿ 條，所以 8 份回報都進到 ＿＿ 的 context。</p>
+                  <p class="tpl">每輪增加 ＿＿k。第 ＿＿ 輪結束時約 ＿＿k，超過 200k。</p>
+                  <p class="tpl">改法一：＿＿，每輪只增加約 ＿＿k，代價是 ＿＿。改法二：＿＿，省下 ＿＿，代價是 ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>每輪新增 8 × 6k = 48k。第 1 輪結束 68k，第 2 輪 116k，第 3 輪 164k，第 4 輪 212k，超過 200k。第 4 輪就會 compaction，第 5 輪的決策依據的是摘要。</li>
                     <li>為什麼是 supervisor：星狀的 n 條線全部匯到中心。每個 worker 只收一條線，supervisor 收 n 條。</li>
-                    <li>改法一：worker 把完整報告寫進檔案，只回傳約 500 token 的摘要加路徑（p.29–31）。每輪只增加 4k，第 10 輪也只有 60k。代價：supervisor 看不到細節，要靠 evidence 判斷何時回去讀。</li>
-                    <li>改法二：改成 hierarchical（p.11），每個 lead 帶 4 個 worker，先彙整再往上報。代價：多一次摘要，就多一個資訊遺失點；下層摘要錯了會往上放大（p.19）。</li>
+                    <li>改法一：worker 把完整報告寫進檔案，只回傳約 500 token 的摘要加路徑（p.28–30）。每輪只增加 4k，第 10 輪也只有 60k。代價：supervisor 看不到細節，要靠 evidence 判斷何時回去讀。</li>
+                    <li>改法二：改成 hierarchical（p.10），每個 lead 帶 4 個 worker，先彙整再往上報。代價：多一次摘要，就多一個資訊遺失點；下層摘要錯了會往上放大（p.18）。</li>
                     <li>Anthropic 的 research system 用的就是改法一：subagent 把成果存到外部系統，只交回參照。</li>
                   </ul>
-                  <p><b>追問：</b>改法一之後，沒有任何一個 agent 讀過全部的細節。p.25 的失敗 05（每一節都對，整份卻矛盾）要由誰來擋？</p>
+                  <p><b>追問：</b>改法一之後，沒有任何一個 agent 讀過全部的細節。p.24 的失敗 05（每一節都對，整份卻矛盾）要由誰來擋？</p>
                 </div></details>
               </div>
             </li>
 
             <li class="dq" id="q2">
               <div class="qbody">
-                <p class="qtag">估算 · Granularity · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=23" target="_blank" rel="noopener">p.23、p.26</a></p>
-                <p class="qtext">用 p.23 的估算式，算出 4 個平行子任務什麼時候贏過 1 個 agent 依序做。有一個 straggler 時，答案怎麼變？</p>
+                <p class="qtag">估算 · Granularity · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=22" target="_blank" rel="noopener">p.22、p.25</a></p>
+                <p class="qtext">用 p.22 的估算式，算出 4 個平行子任務什麼時候贏過 1 個 agent 依序做。有一個 straggler 時，答案怎麼變？</p>
                 <p class="qctx"><b>情境：</b>一個任務可以拆成 4 個互不相依的部分，每部分要 W 分鐘；不拆，一個 agent 依序做完要 4W。拆開的話：T_planning 2 分鐘；每個子任務的派工加讀回報 0.5 分鐘；T_merge 3 分鐘。請算 W = 2 和 W = 6。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>寫出 T_multi 的完整算式，分別算出 W = 2 和 W = 6 的結果，和 4W 比較。</li>
-                    <li>解出讓 T_multi = 4W 的 W（損益兩平點），並說明它的意義。</li>
-                    <li>假設其中 1 個子任務慢了，花 s × W 分鐘。算出 s = 2 和 s = 3 時的 T_multi，以及損益兩平點怎麼變。</li>
+                    <li>寫出 T_multi 的完整算式，分別算出 W = 2 和 W = 6 的結果，和 4W 比較。<span class="qh">提示：代入 p.22：T_multi = 2 + W + 4 × 0.5 + 3。4 個子任務同時跑，critical path 只算一個 W。</span></li>
+                    <li>解出讓 T_multi = 4W 的 W（損益兩平點），並說明它的意義。<span class="qh">提示：把固定的 overhead 加成一個數 c，再解 c + W = 4W。再想：子任務比這個 W 短時，拆開划算嗎？</span></li>
+                    <li>假設其中 1 個子任務慢了，花 s × W 分鐘。算出 s = 2 和 s = 3 時的 T_multi，以及損益兩平點怎麼變。<span class="qh">提示：Critical path 是最慢的那一個，所以 W 換成 s × W。先代 W = 6，再解 c + s × W = 4W。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>平行只縮短 critical path：4 個子任務同時跑，critical path 就是最慢那一個。其他三項是固定的 overhead。先把 overhead 加總，再和省下的 3W 比。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">T_multi = ＿＿ + W。W = 2 時是 ＿＿ 對 4W 的 ＿＿；W = 6 時是 ＿＿ 對 ＿＿。</p>
+                  <p class="tpl">損益兩平點是 W = ＿＿ 分鐘。子任務比它短，拆開反而（快／慢）。</p>
+                  <p class="tpl">W = 6 時，s = 2 得 ＿＿，s = 3 得 ＿＿，不拆是 ＿＿。s = 2 的損益兩平點變成 W = ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
@@ -478,7 +784,7 @@
                     <li>W = 2：8 對 9，拆開反而慢 1 分鐘。W = 6：24 對 13，省 11 分鐘，約 46%。</li>
                     <li>損益兩平：7 + W = 4W，W = 7 / 3 ≈ 2.33 分鐘。子任務比這短就不值得拆。Slide 的 20 個 lookup 同理：每個省 5 秒卻付 8 秒 overhead。</li>
                     <li>Straggler：critical path 變成 s × W。W = 6 時，s = 2 得 7 + 12 = 19，仍贏 24；s = 3 得 7 + 18 = 25，輸給 24。一般式 <code>W = 7 / (4 − s)</code>：s = 2 時損益兩平點升到 3.5 分鐘，s = 4 時永遠不划算。</li>
-                    <li>對策（p.26 的失敗 06）：設 timeout，到時間就用部分結果；或像 MapReduce 一樣，為最慢的任務開一份備援。</li>
+                    <li>對策（p.25 的失敗 06）：設 timeout，到時間就用部分結果；或像 MapReduce 一樣，為最慢的任務開一份備援。</li>
                   </ul>
                   <p><b>追問：</b>T_communication 在 LLM 系統裡也是 token。把每份回報 6k token 算進去，成本面的損益兩平點在哪裡？T_merge 隨子任務數量成長時，公式要怎麼改？</p>
                 </div></details>
@@ -487,52 +793,56 @@
 
             <li class="dq" id="q3">
               <div class="qbody">
-                <p class="qtag">設計 · 選架構 · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=19" target="_blank" rel="noopener">p.10–19、p.21</a></p>
+                <p class="qtag">設計 · 選架構 · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=18" target="_blank" rel="noopener">p.9–18、p.20</a></p>
                 <p class="qtext">為下面三個任務各選一種架構。用三張圖（control、communication、task）說明你的選擇，並指出它的弱點和一個補救。</p>
                 <p class="qctx"><b>情境：</b>（a）review 一個改了 200 個檔案的 PR，要同時看 security 和 performance。（b）發票處理：OCR → 擷取欄位 → 比對採購單 → 核准 → 入帳，每天 2,000 張，錯一張就是錯帳。（c）寫一份 30 頁的技術研究報告，分 6 節，各節要一致、術語統一。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>每個任務：架構名稱，加上三張圖各一句（誰協調、誰和誰說話、沿哪個軸拆）。</li>
-                    <li>每個任務：p.19 總表上的弱點會怎麼出現，以及你加什麼補救。</li>
-                    <li>指出哪一個任務你會先試單一 agent 而不拆，說明理由。</li>
+                    <li>每個任務：架構名稱，加上三張圖各一句（誰協調、誰和誰說話、沿哪個軸拆）。<span class="qh">提示：先判斷結構：子任務互相獨立、順序固定，還是共同產出一份東西？再查 p.18 的「適合」欄。軸從 p.20 挑。</span></li>
+                    <li>每個任務：p.18 總表上的弱點會怎麼出現，以及你加什麼補救。<span class="qh">提示：把 p.18 的「弱點」欄套進情境：錯在哪裡、會傳到哪？補救可從 retry edge、統一 output schema、最後通讀裡挑。</span></li>
+                    <li>指出哪一個任務你會先試單一 agent 而不拆，說明理由。<span class="qh">提示：p.44 第一條原則是先問要不要拆。再想：哪個任務的各部分最需要彼此一致（對照 p.24–25 的失敗 05）？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>先看任務的結構：子任務獨立、順序固定、還是要共同產出一份東西？再對照 p.19：獨立用 supervisor–worker，順序固定用 pipeline，共同產出用 blackboard 或 hierarchy。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">（a）用 ＿＿：＿＿ 協調，＿＿ 和 ＿＿ 說話，沿 ＿＿ 軸拆。（b）用 ＿＿：＿＿。（c）用 ＿＿：＿＿。</p>
+                  <p class="tpl">弱點與補救：（a）＿＿，加 ＿＿；（b）＿＿，加 ＿＿；（c）＿＿，加 ＿＿。</p>
+                  <p class="tpl">我會先用單一 agent 做（＿＿），因為它的各部分要 ＿＿，拆開容易 ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
-                    <li>（a）Supervisor–worker。Task：先依 data 拆成 4 組各 50 個檔案，再依 expertise 拆成 security 與 performance，共 8 個 worker（p.21）。Control：一個 supervisor。Comms：星狀。弱點：supervisor 要讀 8 份清單，兩個角度會回報同一個問題。補救：同一個輸出 schema，合併前去重。</li>
+                    <li>（a）Supervisor–worker。Task：先依 data 拆成 4 組各 50 個檔案，再依 expertise 拆成 security 與 performance，共 8 個 worker（p.20）。Control：一個 supervisor。Comms：星狀。弱點：supervisor 要讀 8 份清單，兩個角度會回報同一個問題。補救：同一個輸出 schema，合併前去重。</li>
                     <li>（b）Pipeline / DAG。Task：依 stage 拆，設計時固定。Control：順序本身。Comms：站到站，每條邊界一個 typed contract。弱點：OCR 讀錯金額會流到入帳。補救：每個邊界驗證 schema；加一條從核准退回 OCR 的 retry edge；核准那站放人工。</li>
-                    <li>（c）Hierarchical 加 blackboard。Task：依 section 拆，planner 先把論點、術語表、大綱寫進共享檔案。Control：planner 派工，最後一個 agent 通讀全文。Comms：worker 讀共享檔案，寫自己那一節。弱點：失去全局 context（p.25 的 05）。</li>
+                    <li>（c）Hierarchical 加 blackboard。Task：依 section 拆，planner 先把論點、術語表、大綱寫進共享檔案。Control：planner 派工，最後一個 agent 通讀全文。Comms：worker 讀共享檔案，寫自己那一節。弱點：失去全局 context（p.24 的 05）。</li>
                     <li>先試單一 agent 的是（c）。Cognition 的論點正是這種任務：每一節都隱含決策，拆開就衝突。一個 agent 加 compaction 做得完 30 頁。</li>
                   </ul>
-                  <p><b>追問：</b>（a）的兩個角度意見衝突時，誰裁決？這會不會變成 p.14 的 committee？（b）哪一站最可能成為 straggler？</p>
+                  <p><b>追問：</b>（a）的兩個角度意見衝突時，誰裁決？這會不會變成 p.13 的 committee？（b）哪一站最可能成為 straggler？</p>
                 </div></details>
               </div>
             </li>
 
             <li class="dq" id="q4">
               <div class="qbody">
-                <p class="qtag">團隊實務 · 子任務規格 · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=22" target="_blank" rel="noopener">p.22、p.25–26</a></p>
-                <p class="qtext">把一句模糊的請求，改寫成 worker 不用猜就能做完的子任務規格。寫完後，對照 p.25–26 的六種失敗，檢查你的規格擋住了哪幾種。</p>
+                <p class="qtag">團隊實務 · 子任務規格 · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=21" target="_blank" rel="noopener">p.21、p.24–25</a></p>
+                <p class="qtext">把一句模糊的請求，改寫成 worker 不用猜就能做完的子任務規格。寫完後，對照 p.24–25 的六種失敗，檢查你的規格擋住了哪幾種。</p>
                 <p class="qctx"><b>情境：</b>你的主管說：「幫我看看我們的服務最近為什麼變慢。」你要把它交給幾個 agent 去查。可用的資料有 metrics dashboard、log 查詢系統、最近兩週的 deploy 紀錄。Agent 只能讀，不能改設定。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>照 p.22 的 8 個欄位，寫出至少一份完整的規格。</li>
-                    <li>說明你沿哪個軸拆（p.21），拆成幾個子任務，以及為什麼不是更多或更少。</li>
-                    <li>逐一對照六種失敗，指出規格的哪一行擋住哪一種。</li>
+                    <li>照 p.21 的 8 個欄位，寫出至少一份完整的規格。<span class="qh">提示：先把「變慢」改寫成可量測的句子：哪個 endpoint、哪個指標、哪段時間。這句就是目標；「只能讀」寫進 tool 與權限。</span></li>
+                    <li>說明你沿哪個軸拆（p.20），拆成幾個子任務，以及為什麼不是更多或更少。<span class="qh">提示：Debug 適合 hypothesis 軸：一個 worker 驗一個假設。三種資料各能驗哪個假設？太多、太少各撞到 p.24 哪種失敗？</span></li>
+                    <li>逐一對照六種失敗，指出規格的哪一行擋住哪一種。<span class="qh">提示：做一張對照表：左欄是 p.24–25 的失敗 01–06，右欄填規格的哪一行。例：04 無法合併對到輸出 schema。</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>先把「變慢」變成可量測的句子：哪個 endpoint、哪個指標、哪段時間。Debug 類任務適合 p.21 的 hypothesis 軸：每個 worker 驗證一個假設。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">目標：＿＿；輸入：＿＿；邊界：＿＿；權限：＿＿；輸出：＿＿；完成條件：＿＿；預算：＿＿；相依：＿＿。</p>
+                  <p class="tpl">我沿 ＿＿ 軸拆成 ＿＿ 個 worker，各驗一個假設：＿＿。再多會 ＿＿，再少會 ＿＿。</p>
+                  <p class="tpl">擋住各失敗的那一行：01 ＿＿、02 ＿＿、03 ＿＿、04 ＿＿、05 ＿＿、06 ＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>一份可用的規格。objective：找出 /search 的 p95 latency 在 10/01 到 10/08 之間上升的原因。inputs：dashboard、deploy 清單、事件時間線。boundaries：只讀 metrics 與 log，不碰其他 endpoint。tools：metrics 與 log 查詢（唯讀）。output：JSON {hypothesis, verdict: supported | ruled_out, evidence[], confidence}。done_when：verdict 有 evidence 支持。budget：25 次 tool call 或 15 分鐘。depends_on：none。</li>
                     <li>拆法：依 hypothesis 軸拆成 4 個 worker：cache 命中率下降、資料庫慢查詢、某次 deploy 引入、流量型態改變。假設互斥、各自在預算內可驗證；再多就重疊，再少就有缺口。</li>
                     <li>擋住的失敗。01 重疊：每個 worker 一個互斥的假設。02 缺口：另開一個「以上皆非」的 worker。03 隱藏的相依：deploy 清單由 planner 放進 inputs。04 無法合併：同一個 output schema。05 失去全局：merge 時一個 agent 通讀 4 份 verdict。06 straggler：budget。</li>
-                    <li>Anthropic 的 research system 給了反例：任務描述太短時，一個 subagent 查 2021 年的晶片危機，另外兩個重複查 2025 年的供應鏈。結論和 p.22 一樣：每個 subagent 需要目標、輸出格式、tool 指引、清楚的邊界。</li>
+                    <li>Anthropic 的 research system 給了反例：任務描述太短時，一個 subagent 查 2021 年的晶片危機，另外兩個重複查 2025 年的供應鏈。結論和 p.21 一樣：每個 subagent 需要目標、輸出格式、tool 指引、清楚的邊界。</li>
                   </ul>
                   <p><b>追問：</b>Worker 查完發現「服務沒有變慢，是監控指標的定義改了」。你的規格允許它回報「題目本身有錯」嗎？輸出 schema 要加什麼欄位？</p>
                 </div></details>
@@ -541,25 +851,27 @@
 
             <li class="dq" id="q5">
               <div class="qbody">
-                <p class="qtag">風險 · Idempotency 與 compensation · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=36" target="_blank" rel="noopener">p.36–37、p.43</a></p>
+                <p class="qtag">風險 · Idempotency 與 compensation · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=33" target="_blank" rel="noopener">p.33–34、p.40</a></p>
                 <p class="qtext">Agent A 請 Agent B 購買 8 台 GPU instance，60 秒後 timeout，沒有回覆。為這條路徑設計重試、idempotency 與 compensation，讓最壞情況可以接受。</p>
                 <p class="qctx"><b>情境：</b>每台 instance 每小時 4 美元。B 完成一次購買約需 30 到 90 秒。團隊規定：寧可暫時少買，不能多付錢超過一天。重試由 runtime 執行。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>選 at-most-once 或 at-least-once，說明各自最壞會發生什麼，以及你為什麼選它。</li>
-                    <li>寫出 B 要持久保存什麼，以及收到重複請求時，B 在「處理中」和「已完成」兩種狀態下各怎麼回覆。</li>
-                    <li>設計 compensation 路徑：真的買了 16 台時，誰發現、誰釋放、多久內釋放，以及這條路徑失敗時怎麼辦。</li>
+                    <li>選 at-most-once 或 at-least-once，說明各自最壞會發生什麼，以及你為什麼選它。<span class="qh">提示：Timeout 可能是沒送到、回覆丟了、還在做。不重試、一直重試，最壞各買幾台？多付一天 = 多買台數 × 4 × 24 美元。</span></li>
+                    <li>寫出 B 要持久保存什麼，以及收到重複請求時，B 在「處理中」和「已完成」兩種狀態下各怎麼回覆。<span class="qh">提示：key 用 task_id（p.33），存 state 和訂單編號。處理中時再買一次會怎樣？A 重送前也能先查 task 狀態（p.40）。</span></li>
+                    <li>設計 compensation 路徑：真的買了 16 台時，誰發現、誰釋放、多久內釋放，以及這條路徑失敗時怎麼辦。<span class="qh">提示：多買的機器怎麼認？例如打標籤。發現者從 A、B、定期對帳裡挑；期限看團隊規定。對帳也失敗，交給誰？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>先列出 timeout 的三種可能（沒送到、做了但回覆丟了、還在做），再問每個設計對三種情況各怎麼反應。A2A 的 task 有狀態可以查（p.43），A 可以先問再重送。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">不重試最壞買 ＿＿ 台；重試不加冪等最壞買 ＿＿ 台，一天多付 ＿＿ 美元。我選 ＿＿，因為 ＿＿。</p>
+                  <p class="tpl">B 以 ＿＿ 當 key，持久保存 ＿＿。重複請求來時，處理中回 ＿＿，已完成回 ＿＿。</p>
+                  <p class="tpl">＿＿ 每 ＿＿ 對帳一次，靠 ＿＿ 認出多買的 instance，由 ＿＿ 釋放。對帳失敗時，＿＿。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>選 at-least-once 加冪等。At-most-once 最壞是 0 台，任務失敗；at-least-once 沒有冪等最壞是 16 台。多出 8 台一天的成本是 8 × 4 × 24 = 768 美元，兩週就是 10,752 美元。加上 idempotency key 才能同時避免兩種最壞情況。</li>
                     <li>B 以 task_id 當 key，持久保存 {task_id, state: received | working | done | failed, order_id}。沒有紀錄：寫入 received，開始購買。working：回覆「處理中」，不再買。done：回傳原本的 order_id。紀錄要在呼叫雲端 API 之前寫入，否則 B 在購買後、寫入前 crash，重啟就會再買。</li>
-                    <li>A 的重試：timeout 60 秒短於 B 的最長處理時間 90 秒，所以第一次 timeout 很可能是「還在做」。A 先用 task_id 查狀態（A2A 的 GetTask），查不到才重送同一個 task_id，最多 3 次。LLM 自己重試可能換掉 task_id（p.36）。</li>
-                    <li>Compensation：購買時給 instance 打上 task_id 的標籤。每小時對帳一次，標籤下超過 8 台就釋放多出的；釋放操作也用 key，可以安全重試。對帳也失敗，就發 ERROR 給人，並照事先決定的規則認列誰付錢（p.36）。</li>
+                    <li>A 的重試：timeout 60 秒短於 B 的最長處理時間 90 秒，所以第一次 timeout 很可能是「還在做」。A 先用 task_id 查狀態（A2A 的 GetTask），查不到才重送同一個 task_id，最多 3 次。LLM 自己重試可能換掉 task_id（p.33）。</li>
+                    <li>Compensation：購買時給 instance 打上 task_id 的標籤。每小時對帳一次，標籤下超過 8 台就釋放多出的；釋放操作也用 key，可以安全重試。對帳也失敗，就發 ERROR 給人，並照事先決定的規則認列誰付錢（p.33）。</li>
                   </ul>
                   <p><b>追問：</b>B 存 idempotency 紀錄的資料庫自己掛了，B 該拒絕購買，還是先買再補紀錄？這兩個選擇分別對應 at-most-once 和 at-least-once 的哪一邊？</p>
                 </div></details>
@@ -568,25 +880,27 @@
 
             <li class="dq" id="q6">
               <div class="qbody">
-                <p class="qtag">應用 · 訊息 envelope · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=32" target="_blank" rel="noopener">p.31–32、p.35、p.39</a></p>
+                <p class="qtag">應用 · 訊息 envelope · <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=31" target="_blank" rel="noopener">p.30–31、p.32、p.36</a></p>
                 <p class="qtext">挑一個你們團隊有多個階段的流程，替它設計 agent 之間的訊息 envelope。決定哪些資訊放結構化欄位、哪些放自然語言，並說明 runtime 靠哪些欄位就能行動。</p>
                 <p class="qctx"><b>情境：</b>例如 bug 單處理：分類 → 重現 → 修正 → review → 發版。每個階段由一個 agent 負責，階段之間用訊息交接；流程可能中途取消、失敗、或要回頭補資料。選一個你熟悉的流程。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>寫出完整的 envelope JSON（至少 6 個欄位），標出哪些欄位由 runtime 讀、哪些由 LLM 讀。</li>
-                    <li>給出一條判斷規則：什麼資訊必須放結構化欄位，什麼可以放自然語言。用你的流程舉兩個例子。</li>
-                    <li>說明 runtime 收到 CANCEL 和 ERROR 時各做什麼（不經過 LLM），以及怎麼用 task_id 把各階段的 log 串成一條。</li>
+                    <li>寫出完整的 envelope JSON（至少 6 個欄位），標出哪些欄位由 runtime 讀、哪些由 LLM 讀。<span class="qh">提示：先抄 p.31 的 6 個欄位，再從 p.30 借 requires_response 等欄位。每個欄位標上 runtime 或 LLM。</span></li>
+                    <li>給出一條判斷規則：什麼資訊必須放結構化欄位，什麼可以放自然語言。用你的流程舉兩個例子。<span class="qh">提示：逐欄問：runtime 要靠它路由、重試、停止或去重嗎？例：bug 的嚴重度、根因猜測，各放哪裡？</span></li>
+                    <li>說明 runtime 收到 CANCEL 和 ERROR 時各做什麼（不經過 LLM），以及怎麼用 task_id 把各階段的 log 串成一條。<span class="qh">提示：CANCEL 要停誰、要不要轉給下游？ERROR 先看重試上限。串 log（p.36）時，還要哪個欄位指回上一站？</span></li>
                   </ul>
                 </div>
-                <details><summary>思考方向</summary><div class="hint">
-                  <p>從 p.32 的 envelope 和九種 type 出發。問每個欄位：runtime 要不要靠它做決定（路由、重試、停止、去重）？要，就放結構化欄位。再對照 p.39 的 communication loop 和 failure diagnosis。</p>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">Envelope 欄位：{＿＿}。Runtime 讀 ＿＿；LLM 讀 payload 裡的 ＿＿。</p>
+                  <p class="tpl">規則：runtime 要靠它 ＿＿ 的資訊放欄位，其餘放自然語言。例：＿＿ 放欄位，＿＿ 放 payload。</p>
+                  <p class="tpl">收到 CANCEL，runtime ＿＿；收到 ERROR，runtime ＿＿。Log 用 task_id 加 ＿＿ 串起來。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>一個可用的 envelope：{id, task_id, parent_id, from, to, type, hop, deadline, requires_response, payload}。前 9 個由 runtime 讀；payload 由 LLM 讀：{claim, evidence[], confidence, artifact}。</li>
                     <li>判斷規則：影響「誰收、要不要做、要不要停、算不算重複」的資訊放欄位；描述「做了什麼、為什麼、信心多高」的資訊放自然語言，並附 evidence。例子：「這張單是 P1」是欄位；「我認為是 race condition，因為 log 2391 顯示…」是 claim。</li>
                     <li>Runtime 收到 CANCEL：依 task_id 停止該階段的 agent，對下游轉送 CANCEL，不問 LLM。收到 ERROR：未達重試上限就依原 envelope 重送，達上限就升級給人。</li>
-                    <li>Hop 欄位防止 p.39 的 communication loop：每轉送一次減 1，歸零就丟棄，和 IP 的 TTL 一樣。每個 envelope 都 log，用 task_id 加 parent_id 重建整條鏈，這直接回答 p.39 的 failure diagnosis。大型產出走 artifact 欄位放路徑。</li>
+                    <li>Hop 欄位防止 p.36 的 communication loop：每轉送一次減 1，歸零就丟棄，和 IP 的 TTL 一樣。每個 envelope 都 log，用 task_id 加 parent_id 重建整條鏈，這直接回答 p.36 的 failure diagnosis。大型產出走 artifact 欄位放路徑。</li>
                   </ul>
                   <p><b>追問：</b>LLM 填了 type: COMPLETE，但沒有跑測試（L6 的 unverified success）。哪些欄位 runtime 應該驗證而不是相信？Envelope 的 schema 改版時，兩端的 agent 怎麼相容？</p>
                 </div></details>
@@ -600,7 +914,7 @@
         <div class="quiz">
           <details>
             <summary>兩個 grader 都給這篇作文 A，judge 就採用。這個設計有什麼問題？</summary>
-            <div class="answer"><p>兩個 grader 用同一個 model、讀同一份 context，錯誤高度相關，兩票同意帶來的新資訊很少。改用不同的 model 或評分角度，並讓它們先各自作答（p.14）。</p></div>
+            <div class="answer"><p>兩個 grader 用同一個 model、讀同一份 context，錯誤高度相關，兩票同意帶來的新資訊很少。改用不同的 model 或評分角度，並讓它們先各自作答（p.13）。</p></div>
           </details>
           <details>
             <summary>20 個 lookup，每個 5 秒；每個子任務的派工與回報要 8 秒。為什麼拆成 20 個子任務，比不拆還慢？</summary>
@@ -622,9 +936,9 @@
         </header>
         <div class="exlist">
           <details class="ex">
-            <summary>子任務規格範本，加上 granularity 的試算<span>p.22–24</span></summary>
+            <summary>子任務規格範本，加上 granularity 的試算<span>p.21–23</span></summary>
             <div class="exbody">
-              <p>欄位依 p.22，數字是假設的。貼進 DELEGATE 的 payload，或 subagent 的 prompt。p.24 的上限在 Claude Code 裡是 subagent 的 <code>maxTurns</code>，加上兩個環境變數：</p>
+              <p>欄位依 p.21，數字是假設的。貼進 DELEGATE 的 payload，或 subagent 的 prompt。p.23 的上限在 Claude Code 裡是 subagent 的 <code>maxTurns</code>，加上兩個環境變數：</p>
               <pre><code>export CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1    # 深度，預設 3 層
 export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5    # 同時數量，預設 20</code></pre>
               <figure class="file"><figcaption>subtask.yaml（簡化版）</figcaption><pre><code>objective:  Find storage-systems papers published in 2026
@@ -635,20 +949,20 @@ output:     JSON list of {title, date, contribution, eval_scale, url}
 done_when:  every item has a primary-source URL
 budget:     at most 30 tool calls or 10 minutes
 depends_on: none</code></pre></figure>
-              <p>拆之前先算一次。下面用 p.23 的公式算 slide 的 20 個 lookup。</p>
+              <p>拆之前先算一次。下面用 p.22 的公式算 slide 的 20 個 lookup。</p>
               <figure class="file"><figcaption>granularity.py</figcaption><pre><code>def t_multi(planning, critical_path, comm_each, n, merge):
     return planning + critical_path + comm_each * n + merge
 
-# p.23: 20 lookups x 5 s; 8 s dispatch+report per subtask
+# p.22: 20 lookups x 5 s; 8 s dispatch+report per subtask
 print(20 * 5)                       # 100  one agent
 print(t_multi(10, 5, 8, 20, 10))    # 185  20 subtasks
 print(t_multi(10, 25, 8, 4, 10))    # 77   4 subtasks</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>訊息 envelope、runtime 的 dispatch、冪等的接收端<span>p.32、p.36</span></summary>
+            <summary>訊息 envelope、runtime 的 dispatch、冪等的接收端<span>p.31、p.33</span></summary>
             <div class="exbody">
-              <p>Envelope 依 p.32；payload 放上一個範例的規格。Runtime 只看欄位就能行動。</p>
+              <p>Envelope 依 p.31；payload 放上一個範例的規格。Runtime 只看欄位就能行動。</p>
               <figure class="file"><figcaption>message.json</figcaption><pre><code>{
   "id": "msg-381",
   "task_id": "t-17",
@@ -660,7 +974,7 @@ print(t_multi(10, 25, 8, 4, 10))    # 77   4 subtasks</code></pre></figure>
   "payload": { "spec": "...subtask.yaml 的內容..." }
 }</code></pre></figure>
               <figure class="file"><figcaption>runtime.py（簡化版）</figcaption><pre><code>def on_message(msg):
-    if msg["hop"] == 0:                      # loop guard (p.39)
+    if msg["hop"] == 0:                      # loop guard (p.36)
         return send_error(msg, "hop limit")
     if msg["type"] == "CANCEL":
         stop_task(msg["task_id"])            # no LLM call
@@ -672,7 +986,7 @@ print(t_multi(10, 25, 8, 4, 10))    # 77   4 subtasks</code></pre></figure>
 completed = PersistentStore("purchases")     # survives restarts
 
 def purchase(msg):
-    key = msg["task_id"]                     # idempotency key (p.36)
+    key = msg["task_id"]                     # idempotency key (p.33)
     if key in completed:
         return completed[key]                # duplicate
     completed[key] = {"state": "working"}    # write BEFORE buying
@@ -683,7 +997,7 @@ def purchase(msg):
             </div>
           </details>
           <details class="ex">
-            <summary>最小的 A2A agent card<span>p.41</span></summary>
+            <summary>最小的 A2A agent card<span>p.38</span></summary>
             <div class="exbody">
               <p>每個 A2A server 在 <code>/.well-known/agent-card.json</code> 公開一張機器可讀的名片。欄位名稱依 A2A 1.0 規格，省略選填欄位。</p>
               <pre><code>curl https://travel.example.com/.well-known/agent-card.json</code></pre>
@@ -704,48 +1018,73 @@ def purchase(msg):
       "tags": ["travel", "booking"] }
   ]
 }</code></pre></figure>
-              <p>呼叫者從 card 得知：對方是誰、會什麼、去哪裡呼叫。Skills 是對方自己宣稱的，和 p.15 market 的出價一樣：card 說會訂機票，不保證訂得好。</p>
+              <p>呼叫者從 card 得知：對方是誰、會什麼、去哪裡呼叫。Skills 是對方自己宣稱的，和 p.14 market 的出價一樣：card 說會訂機票，不保證訂得好。</p>
             </div>
           </details>
         </div>
       </section>
 
-      <!-- ===================== 7 交作業 ===================== -->
+      <!-- ===================== 7 大家的討論 ===================== -->
       <section class="part" id="s-submit">
         <header class="part-head">
-          <p class="kicker">7 · 交作業</p>
-          <h2>上傳你的討論</h2>
-          <p class="lede">讀書會前，把你對進階題的回答貼在這裡。所有成員都看得到彼此的內容。重新送出會覆蓋你上一次的那一份。<a href="submissions.html">收作業總表</a>列出誰交了哪幾堂。</p>
+          <p class="kicker">7 · 大家的討論</p>
+          <h2>這堂的討論</h2>
+          <p class="lede">想法直接寫在第 5 段：基礎題下面留言，進階題下面寫想法。這裡看這堂有誰參與、每題有多少人寫了，也放跨題的補充和附件。<a href="submissions.html#l05">在討論總覽一次看全部 →</a></p>
         </header>
-        <form class="subform" id="sub-form" hidden>
-          <label class="field"><span>顯示名稱（選填）</span><input type="text" id="sub-nick" maxlength="40" autocomplete="nickname" placeholder="留空就用你的帳號名稱"></label>
-          <label class="field"><span>你的討論</span><textarea id="sub-text" rows="10" placeholder="Q1. &#10;Q2. &#10;…"></textarea></label>
+        <div class="talk-sum" id="talk-sum"><p class="talk-lead">載入中…</p></div>
+        <h3 class="subhead">參與的人 <span class="count" id="sub-count"></span></h3>
+        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
+        <h3 class="subhead">整體補充與附件 <span class="count">選填</span></h3>
+        <form class="subform" id="sub-form">
+          <label class="field"><span>跨題的想法、這堂整體的心得，或對別人想法的回應</span><textarea id="sub-text" rows="5" placeholder="例：這堂最想帶回團隊的一件事是…"></textarea></label>
           <div class="field" id="sub-filerow" hidden>
-            <label for="sub-file"><span>附件（選填：PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
+            <label for="sub-file"><span>附件（PDF、圖片、Markdown、txt、csv、json，20 MB 以內）</span></label>
             <input type="file" id="sub-file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.txt,.csv,.json">
             <ul class="attach" id="sub-attach"></ul>
           </div>
           <div class="copyrow">
-            <button type="submit" class="copybtn" id="sub-send">送出</button>
-            <button type="button" class="ghostbtn" id="sub-copy">複製成文字</button>
+            <button type="submit" class="copybtn" id="sub-send">儲存</button>
+            <button type="button" class="ghostbtn" id="sub-copy">複製我這堂的全部想法</button>
             <span class="copyhint" id="sub-status" role="status"></span>
           </div>
         </form>
-        <p class="sub-note" id="sub-note" role="status">連線中…</p>
-        <h3 class="subhead">已收到的討論 <span class="count" id="sub-count"></span></h3>
-        <ol class="sublist" id="sub-list"><li class="empty">載入中…</li></ol>
       </section>
 
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <ul class="reading">
-          <li><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">Anthropic：How we built our multi-agent research system</a></li>
-          <li><a href="https://arxiv.org/pdf/2512.08296" target="_blank" rel="noopener">Towards a Science of Scaling Agent Systems（arXiv 2512.08296）</a></li>
-          <li><a href="https://cognition.com/blog/dont-build-multi-agents" target="_blank" rel="noopener">Cognition：Don't Build Multi-Agents</a></li>
-          <li><a href="https://cs2680.com/readings/sep-23.html" target="_blank" rel="noopener">課程的更多閱讀（9/23）</a></li>
-          <li>本文範例的依據：Claude Code <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">subagents</a>、<a href="https://code.claude.com/docs/en/agent-teams" target="_blank" rel="noopener">agent teams</a> 官方文件；<a href="https://a2a-protocol.org/latest/specification/" target="_blank" rel="noopener">A2A 規格</a></li>
-        </ul>
+        <p class="rg-intro">教授為這一講列了 5 篇（<a href="https://cs2680.com/readings/sep-23.html" target="_blank" rel="noopener">官方清單 9/23 ↗</a>）：兩篇 2023 的框架論文、一正一反兩篇工程立場、一篇 2025 的對照實驗。剛好一人一篇。</p>
+        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
+        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 50 分鐘：Anthropic 與 Cognition 兩篇對讀，再看 Scaling 論文的結論節。一個說怎麼成功、一個說為什麼失敗、一個給對照數據。</p></div></div>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2308.08155" target="_blank" rel="noopener">AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation</a><span class="rg-meta">arXiv 2308.08155 · 論文 · 2023 · 挑段約 15 分</span></div>
+          <p class="rg-s">把「對話」當 multi-agent 的 programming model：group chat 與人類參與者都是一等公民。</p>
+          <p class="rg-g"><b>導讀</b>帶一個成本問題：多一個 agent，就多一份 context 與 token。什麼時候值得？</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2308.00352" target="_blank" rel="noopener">MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework</a><span class="rg-meta">arXiv 2308.00352 · 論文 · 2023 · 挑段約 15 分</span></div>
+          <p class="rg-s">用軟體團隊的角色分工，階段之間傳遞結構化 artifact。</p>
+          <p class="rg-g"><b>導讀</b>留下的主張是「明確 hand-off 讓 pipeline 好除錯」。提醒：部分成績來自 execution feedback，不是 multi-agent 本身。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">How we built our multi-agent research system</a><span class="rg-meta">Anthropic · 工程文章 · 2025 · 約 20 分</span></div>
+          <p class="rg-s">Lead agent 把平行搜尋委派給 worker，worker 只回摘要。Agent 約為 chat 的 4 倍 token，multi-agent 約 15 倍。</p>
+          <p class="rg-g"><b>導讀</b>聚焦兩個數字（4×、15×）與「什麼時候平行划算」：獨立、唯讀的子任務。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/pdf/2512.08296" target="_blank" rel="noopener">Towards a Science of Scaling Agent Systems</a><span class="rg-meta">arXiv 2512.08296 · 論文 · 2025 · 挑段約 25 分</span></div>
+          <p class="rg-s">260 種配置、六個 benchmark 的對照比較：可分解任務加分、序列任務扣分，錯誤放大依協調方式而異。</p>
+          <p class="rg-g"><b>導讀</b>結論依任務結構而定。問：slides 的八種架構，各對應哪一種任務結構？</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://cognition.com/blog/dont-build-multi-agents" target="_blank" rel="noopener">Don't Build Multi-Agents</a><span class="rg-meta">Cognition · 工程文章 · 2025 · 約 15 分</span></div>
+          <p class="rg-s">業界反方：平行 agent 會做出互相衝突的隱含決策，單一 context thread 更可靠。</p>
+          <p class="rg-g"><b>導讀</b>把它的每一個主張，拿去問上一篇的實驗：哪些被檢驗過、結果如何？</p>
+          </li>
+        </ol>
+        <p class="rg-fn">本文範例的依據：Claude Code <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">subagents</a>、<a href="https://code.claude.com/docs/en/agent-teams" target="_blank" rel="noopener">agent teams</a> 官方文件；<a href="https://a2a-protocol.org/latest/specification/" target="_blank" rel="noopener">A2A 規格</a>。</p>
+
         <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
       </section>
 
@@ -757,6 +1096,7 @@ def purchase(msg):
     </div>
   </div>
 </main>
+</div>
 <script src="app.js"></script>
 <script src="submit.js"></script>
 </body>

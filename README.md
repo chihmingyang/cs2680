@@ -25,6 +25,13 @@
    index.html 是主頁：artifact 發布時會自動在外面包一層 `<!doctype html>…<body>`，所以它從 `<title>` 開始，不要自己加 doctype。
    其他頁面以 files 發布，各自帶完整的 `<!doctype html>`。比對線上版和 repo 時，忽略 index.html 的這層外殼。
 
+## 頁碼與深入區塊（2026-10-19）
+
+- 頁碼一律用 PDF 檢視器的頁數。課程重新匯出 PDF 時頁碼會偏移；2026-10-19 已把八堂都對齊現行 PDF（對照表在 `tools/pagemap/`）。規則與流程在 STYLE_ARTICLE.md 第 10 節。
+- 講次頁的「閱讀」只算不展開時看得到的文字；另列「全部展開」的時間。首頁列表的分鐘數和「閱讀」一致。
+- 核心觀念下面可以加預設收合的「深入」區塊（`details.ex.deep`），補 slide 預設你懂的背景。範本是 L2 的 `#d1`–`#d12`；L3–L8 的補法在 STYLE_ARTICLE.md 第 11 節。
+- 線上版可能比 repo 新（例如介面調整直接發布到 artifact）。改頁面前先讀線上版，在它上面修改。
+
 ## 交作業（讀書會收作業）
 
 - 每一講最後一段「7 · 交作業」是表單：成員貼上對進階題的回答，可附檔；`site/submissions.html` 是收作業總表。
@@ -49,5 +56,5 @@
 - `site/`：發布的頁面（index、l01–l08、submissions、styles.css、app.js、submit.js）
 - `content/`：各堂的基礎題片段；l03-part2.html 是 L3 §5–6 的原稿
 - `archive/`：舊版逐頁導讀（lXX-cards.html），寫新文章時的事實來源
-- `tools/`：驗證與組裝腳本（見上）
+- `tools/`：驗證與組裝腳本（見上）；`fix_pages.py` 加 `tools/pagemap/lXX.json` 把舊頁碼換成現行 PDF 的頁碼（見 STYLE_ARTICLE.md 第 10 節）
 - `STYLE_ARTICLE.md`、`STYLE_BASIC.md`：給 agent 的撰寫規範；`STYLE.md` 是舊版，可忽略
