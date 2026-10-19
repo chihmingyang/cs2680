@@ -11,7 +11,14 @@ contains at least one CJK character.
 Rules inside a processed node:
   ASCII , ; : ? ! -> full-width when not followed by a space and not in
   digit:digit / digit,digit / "://" patterns.
-  ASCII ( ... ) pairs -> full-width pair.
+  ASCII ( ... ) pairs -> full-width pair, except function-call / math parentheses:
+  "(" glued to an identifier or operator (O(n²), k(k+1)/2, e^(−nε), works.any()),
+  "(" after "operator + space" (× (1 + 2), = (1/N)), empty "()", and ")" glued to a
+  superscript, letter, digit or "/" ((1 − ε)ⁿ). ASCII ":" between ASCII alphanumerics
+  stays (file:line, SQL:2011).
+  --diff prints every changed character in context instead of writing. Run it on new
+  fragments and review the diff; the published pages (L1-L8, 2026-10-19) contain
+  math and English that must stay ASCII, so do not run it blind on a whole page.
 """
 import re
 import sys
@@ -46,12 +53,19 @@ def convert(text):
             if ch == ":" and nxt == "/":
                 out.append(ch)
                 continue
+            if ch == ":" and prv.isascii() and prv.isalnum() and nxt.isascii() and nxt.isalnum():
+                out.append(ch)  # file:line, SQL:2011
+                continue
             out.append(FULL[ch])
         else:
             out.append(ch)
     s = "".join(out)
-    # parentheses pairs (no nesting inside a text node)
-    s = re.sub(r"\(([^()\n]*)\)", lambda m: "（" + m.group(1) + "）", s)
+    # parentheses pairs (no nesting inside a text node). Function-call and math
+    # parentheses stay ASCII: "(" glued to an identifier or operator (O(n²), k(k+1)/2,
+    # e^(−nε), √(100 ÷ 8), works.any()), empty "()", and ")" glued to a superscript,
+    # letter, digit or "/" ((1 − ε)ⁿ).
+    s = re.sub(r"(?<![A-Za-z0-9_^√)\]])(?<![×=+−*/÷] )\(([^()\n]+)\)(?![A-Za-z0-9ⁿ²³⁴/_])",
+               lambda m: "（" + m.group(1) + "）", s)
     return s
 
 
@@ -100,11 +114,20 @@ def process(html):
 def main():
     files = [a for a in sys.argv[1:] if not a.startswith("--")]
     dry = "--dry" in sys.argv
+    diff = "--diff" in sys.argv
     for f in files:
         p = Path(f)
         html = p.read_text(encoding="utf-8")
         new, changed = process(html)
-        if dry:
+        if diff:
+            import difflib
+            print(f"{p.name}: {changed} text nodes would change")
+            for a, b in zip(html.split("\n"), new.split("\n")):
+                if a != b:
+                    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b).get_opcodes():
+                        if tag != "equal":
+                            print(f"  {a[max(0, i1 - 20):i2 + 20]!r} -> {b[max(0, j1 - 20):j2 + 20]!r}")
+        elif dry:
             print(f"{p.name}: {changed} text nodes would change")
         else:
             p.write_text(new, encoding="utf-8")

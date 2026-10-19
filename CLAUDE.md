@@ -1,0 +1,9 @@
+# CS2680 讀書會站台
+
+動手前先讀 `guide/README.md` 和 `guide/WORKFLOW.md`。
+
+- 這個 repo（`main`）是唯一來源。站台在 `docs/`，push 後 GitHub Pages 自動更新：https://chihmingyang.github.io/cs2680/
+- 討論在 Issues，每一題一串。開串、寫連結、匯出討論都用 `tools/discuss.py`。
+- 這個環境不能用 GitHub GraphQL，也不能改 repo 設定；用 `gh api` 的 REST endpoint。
+- 舊的 claude.ai artifact 已停用，不要再發布到它。
+- 回覆 James：只列改了什麼、哪裡要他確認。他的閱讀時間有限。

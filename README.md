@@ -1,53 +1,30 @@
-# CS2680 觀念導讀 — 工作區
+# CS2680 觀念導讀
 
-發布位置：https://claude.ai/artifact/4rvCbHCpWxAgvro8s1sa6u（site/ 底下的檔案）
+Harvard CS2680 Modern AI Systems（Fall 2026，Juncheng Yang）讀書會的站台與討論區。
 
-## 新的一堂（例：L9）怎麼做
+**站台：https://chihmingyang.github.io/cs2680/**
 
-1. 確認 cs2680.com 已公開 slides（`https://cs2680.com/slides/<pdf>`）。
-2. 在 `tools/build_index.py` 的 `LECTURES` 加一列；在 `STYLE_ARTICLE.md` 第 9 節的表加一列。
-3. 請 Claude 依 `STYLE_ARTICLE.md` 寫 `site/lXX.html`（範本 `site/l02.html`），
-   再依 `STYLE_BASIC.md` 寫 `content/lXX-basic.html`，然後：
-   ```bash
-   python3 -I tools/punct.py site/lXX.html
-   python3 -I tools/check_article.py site/lXX.html --pages N --pdf FILE.pdf --fix-time
-   python3 -I tools/check_basic.py content/lXX-basic.html lXX
-   python3 -I tools/split_discuss.py site/lXX.html content/lXX-basic.html
-   python3 -I tools/add_anchors.py site/lXX.html
-   python3 -I tools/check_discuss.py site/lXX.html
-   python3 -I tools/shot_article.py site/lXX.html      # 看截圖
-   python3 -I tools/build_index.py && python3 -I tools/punct.py site/index.html
-   python3 -I tools/audit.py
-   ```
-4. 加上交作業段落：`python3 -I tools/add_submit.py site`（只動還沒有 `#s-submit` 的頁面）。
-   同時在 `site/submit.js` 的 `LECTURES` 和 `site/submissions.html` 的表頭加一欄。
-5. 發布：index.html 加上改動的 lXX.html，到上面的 artifact。發布時**不要**改 capabilities（省略就沿用）。
-   index.html 是主頁：artifact 發布時會自動在外面包一層 `<!doctype html>…<body>`，所以它從 `<title>` 開始，不要自己加 doctype。
-   其他頁面以 files 發布，各自帶完整的 `<!doctype html>`。比對線上版和 repo 時，忽略 index.html 的這層外殼。
+每一堂有一篇架構文章，搭配官方 slides 讀：基礎題帶著看 slides，進階題在讀書會討論，最後是教授指定 readings 的導讀。
 
-## 交作業（讀書會收作業）
+## 怎麼參加討論
 
-- 每一講最後一段「7 · 交作業」是表單：成員貼上對進階題的回答，可附檔；`site/submissions.html` 是收作業總表。
-- 邏輯在 `site/submit.js`。資料存在 artifact 的 db：collection `submissions`，每位成員一份 doc（id = user id），
-  欄位 `nick`、`updatedAt`，以及每一講一個欄位 `lXX = { text, files:[{id,name,type,size}], updatedAt }`。
-- Artifact 宣告的 capabilities（2026-10-16）：
-  ```json
-  {"db": {"rules": [{"path": "submissions", "read": "view", "write": "owner"},
-                    {"path": "submissions/{self}", "write": "interact"}]},
-   "user": {"scopes": ["profile"]},
-   "assets": {"upload": "interact"},
-   "downloads": {}}
-  ```
-  所有登入的人可讀；每個人只能寫自己的 doc；owner（主持人）可以改或刪任何人的。
-- 誰能送出：同一個 claude.ai 組織的成員（Contributor 以上），或用 email 邀請為 Editor 的外部成員
-  （外部 Editor 只在**沒有**開「任何有連結的人」時有寫入權）。只有 view 權限的人會看到唯讀提示，
-  可以用「複製成文字」把答案貼到群組。
-- 主持人整理：在總表按「下載全部討論（Markdown）」；或在 Claude Code 用 ArtifactData 讀 `submissions` collection。
+討論在這個 repo 的 [Issues](https://github.com/chihmingyang/cs2680/issues)。每一堂的每一題一串，另有一串綜合討論。站台上每一題下面都有「到 GitHub 討論這一題」的連結。
 
-## 目錄
+- 回答一題：在那一串最下面留一則。想補充，就編輯自己那一則。
+- 回應別人：按那一則右上角「⋯」裡的 Quote reply，或在留言裡寫 @對方的帳號。
+- 附件：把圖片或 PDF 直接拖進留言框。
+- 只看一堂：用 label 篩選，例如 [`L03`](https://github.com/chihmingyang/cs2680/issues?q=is%3Aissue%20label%3AL03)。`基礎題`、`進階題`、`綜合` 篩選題型。
+- 留言要有 GitHub 帳號；看討論不用。討論是公開的。
 
-- `site/`：發布的頁面（index、l01–l08、submissions、styles.css、app.js、submit.js）
-- `content/`：各堂的基礎題片段；l03-part2.html 是 L3 §5–6 的原稿
-- `archive/`：舊版逐頁導讀（lXX-cards.html），寫新文章時的事實來源
-- `tools/`：驗證與組裝腳本（見上）
-- `STYLE_ARTICLE.md`、`STYLE_BASIC.md`：給 agent 的撰寫規範；`STYLE.md` 是舊版，可忽略
+站台內容有錯，或想提建議：開一個新 issue，不用加 label。
+
+## Repo 結構
+
+| 路徑 | 內容 |
+|---|---|
+| `docs/` | 站台。GitHub Pages 從這裡發布。 |
+| `tools/` | 檢查與組裝腳本 |
+| `guide/` | 撰寫規範與維護流程（從 `guide/README.md` 開始讀） |
+| `slides/` | 每堂 slides 的逐頁筆記 |
+
+本站是 CS2680 slides 的學習筆記：用自己的話改寫並延伸說明。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。課程網站：[cs2680.com](https://cs2680.com)。

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Screenshot an article page once for a visual check.
 
-Usage: python3 -I shot_article.py site/lXX.html
-Writes /home/claude/cs2680/shots/<name>-arch-light.png, -arch-dark.png (every
-figure.diagram), -discuss.png (first discussion card, hints open) and
--phone.png; prints horizontal overflow at 1280px and 390px.
+Usage: python3 -I shot_article.py docs/lXX.html
+Writes shots/<name>-arch<i>-light.png and -dark.png (every figure.diagram outside the
+basic-question answers), -basic.png (first basic question, answer open), -discuss.png
+(first 進階 card, all details open) and -phone.png into the folder next to tools/;
+prints horizontal overflow at 1280px and 390px. Open each PNG with Read once.
 """
 import sys
 from pathlib import Path
@@ -20,10 +21,16 @@ with sync_playwright() as p:
         pg = b.new_page(viewport={"width": 1280, "height": 1000}, color_scheme=scheme)
         pg.route("**/fonts.googleapis.com/**", lambda r: r.abort())
         pg.goto(src.as_uri()); pg.wait_for_timeout(300)
-        for i, f in enumerate(pg.query_selector_all("figure.diagram"), 1):
+        for i, f in enumerate(pg.query_selector_all("#s-arch figure.diagram, #s-ideas figure.diagram"), 1):
             f.scroll_into_view_if_needed()
             path = out / f"{stem}-arch{i}-{scheme}.png"; f.screenshot(path=str(path)); paths.append(path)
         if scheme == "light":
+            bq = pg.query_selector(".bq")
+            if bq:
+                for s in bq.query_selector_all("summary"):
+                    s.click()
+                bq.scroll_into_view_if_needed(); pg.wait_for_timeout(150)
+                path = out / f"{stem}-basic.png"; bq.screenshot(path=str(path)); paths.append(path)
             tab = pg.query_selector("#tab-adv")
             if tab:
                 tab.click(); pg.wait_for_timeout(100)
@@ -41,6 +48,6 @@ with sync_playwright() as p:
     path = out / f"{stem}-phone.png"; ph.screenshot(path=str(path)); paths.append(path)
     mw = ph.evaluate("document.documentElement.scrollWidth")
     b.close()
-print(f"desktop scrollWidth={dw} (should be 1280); phone scrollWidth={mw} (should be 390)")
+print(f"desktop scrollWidth={dw} (must not exceed 1280); phone scrollWidth={mw} (must not exceed 390)")
 for x in paths:
     print(x)

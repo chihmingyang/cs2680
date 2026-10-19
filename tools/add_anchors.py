@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Give the ideas and terms of an article page stable anchors.
 
-Usage: python3 -I add_anchors.py site/l01.html [site/l02.html ...]
+Usage: python3 -I add_anchors.py docs/l01.html [docs/l02.html ...]
 
   section#s-ideas      div.idea      -> id="i1", "i2", ...
   section#s-beyond     div.idea      -> id="x1", "x2", ...

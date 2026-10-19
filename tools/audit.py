@@ -2,8 +2,9 @@
 """Final audit across all lecture pages (read-only).
 
 Checks per page:
-  - internal links: lXX.html / index.html targets exist; #anchors exist in the page
-  - every <svg> in a figure has role="img" and a non-empty aria-label
+  - internal links: lXX.html / index.html / l02-readings.html targets exist; #anchors exist
+    in the page; lXX.html#anchor targets exist in that page
+  - every <svg> that is not aria-hidden has role="img" and a non-empty aria-label
   - no literal colors inside svg (fill="#..", stroke="#..", style=...color)
   - marker ids unique across the whole site (avoid cross-page copy collisions)
   - render at 390px dark and 1280px light: no horizontal overflow, no page errors
@@ -12,9 +13,10 @@ import re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-SITE = Path(__file__).resolve().parent.parent / "site"
-pages = sorted(SITE.glob("l0*.html"))
+SITE = Path(__file__).resolve().parent.parent / "docs"
+pages = sorted(SITE.glob("l[0-9][0-9].html"))
 problems = []
+page_ids = {q.name: set(re.findall(r'\sid="([^"]+)"', q.read_text(encoding="utf-8"))) for q in SITE.glob("*.html")}
 marker_ids = {}
 
 for p in pages:
@@ -24,14 +26,19 @@ for p in pages:
         if href.startswith("#"):
             if href[1:] not in ids:
                 problems.append(f"{p.name}: anchor {href} has no target")
-        elif re.fullmatch(r"(l0\d|index|submissions)\.html", href):
-            if not (SITE / href).exists():
+        elif re.fullmatch(r"(l\d\d(?:-readings)?|index)\.html(#[\w-]+)?", href):
+            page, _, frag = href.partition("#")
+            if not (SITE / page).exists():
                 problems.append(f"{p.name}: link to missing {href}")
+            elif frag and frag not in page_ids.get(page, set()):
+                problems.append(f"{p.name}: {href} has no target in {page}")
         elif href.endswith(".css") or href.startswith("http"):
             pass
         else:
             problems.append(f"{p.name}: unexpected href {href}")
     for svg in re.findall(r"<svg\b[^>]*>", raw):
+        if 'aria-hidden="true"' in svg:
+            continue
         if 'role="img"' not in svg or not re.search(r'aria-label="[^"]{8,}"', svg):
             problems.append(f"{p.name}: svg without role/aria-label: {svg[:80]}")
     for body in re.findall(r"<svg\b.*?</svg>", raw, re.S):

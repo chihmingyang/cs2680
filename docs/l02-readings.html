@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}</style>
+<title>CS2680 Sep 9 課外閱讀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<style>
+/* Layout: one reading column under a slim sticky bar. Home = synthesis + indexed list; each reading = its own view, switched by #r1..#r10. */
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --ink:#18211E; --muted:#56635E; --rule:#D3DBD7;
+  --accent:#1E5F53; --accent-soft:#E0ECE8; --code-bg:#E9EEEC;
+  --font-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono","Noto Sans TC",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111816; --surface:#18211F; --ink:#E3EAE7; --muted:#99A7A1; --rule:#2B3633;
+    --accent:#7EC4B3; --accent-soft:#1C302C; --code-bg:#1C2624; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111816; --surface:#18211F; --ink:#E3EAE7; --muted:#99A7A1; --rule:#2B3633;
+  --accent:#7EC4B3; --accent-soft:#1C302C; --code-bg:#1C2624; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.8;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:46rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--rule)}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.brand{font-family:var(--font-mono);font-size:.8rem;letter-spacing:.05em;color:var(--ink);text-decoration:none;font-weight:500}
+.brand span{color:var(--muted)}
+.barnav{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
+.barnav a{text-decoration:none;padding:2px 6px;border:1px solid var(--rule);color:var(--ink)}
+.barnav a:hover{border-color:var(--accent);color:var(--accent)}
+
+main.wrap{padding-block:28px 64px}
+.view{display:flex;flex-direction:column;gap:28px}
+section.blk{display:flex;flex-direction:column;gap:12px}
+
+/* type */
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:clamp(1.55rem,4.6vw,2.05rem);line-height:1.3;font-weight:700}
+h1 .en{display:block;font-family:var(--font-body);font-weight:700;font-size:.62em;color:var(--muted);margin-top:6px;letter-spacing:0}
+h2{font-size:1.22rem;font-weight:700;line-height:1.4;padding-top:6px;border-top:1px solid var(--rule)}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:1.08rem}
+.oneliner{font-family:var(--font-display);font-size:1.18rem;line-height:1.65;font-weight:600;text-wrap:balance}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+ul.pts{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+ul.pts li{position:relative;padding-left:18px}
+ul.pts li::before{content:"";position:absolute;left:2px;top:.72em;width:6px;height:6px;background:var(--accent)}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--code-bg);padding:1px 5px}
+pre{margin:0;background:var(--code-bg);border:1px solid var(--rule);padding:12px 14px;overflow-x:auto;font-family:var(--font-mono);font-size:.8rem;line-height:1.65}
+pre code{background:none;padding:0;font-size:inherit}
+.cap{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);margin-bottom:-6px}
+
+/* header meta */
+.head{display:flex;flex-direction:column;gap:10px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.86rem;color:var(--muted)}
+.meta b{font-weight:500;color:var(--ink)}
+.src{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-size:.9rem;text-decoration:none;border:1px solid var(--accent);padding:4px 10px;color:var(--accent)}
+.src:hover{background:var(--accent-soft)}
+
+/* meter */
+.rec{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.meter{display:inline-flex;gap:3px}
+.meter i{width:9px;height:9px;border:1.5px solid var(--accent);display:inline-block}
+.meter[data-level="3"] i,.meter[data-level="2"] i:nth-child(-n+2),.meter[data-level="1"] i:first-child{background:var(--accent)}
+.rec .lvl{font-size:.82rem;font-weight:500;color:var(--ink)}
+
+/* home list */
+.group{display:flex;flex-direction:column}
+.ghead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding-bottom:6px;border-bottom:1.5px solid var(--ink)}
+.ghead h3{font-size:1.02rem}
+.ghead .eyebrow{text-transform:none}
+a.row{display:grid;grid-template-columns:2.6rem minmax(0,1fr) auto;gap:2px 14px;padding:14px 6px;border-bottom:1px solid var(--rule);text-decoration:none;color:inherit}
+a.row:hover{background:var(--accent-soft)}
+.row .num{font-family:var(--font-mono);font-size:1.05rem;color:var(--muted);grid-column:1;grid-row:1 / span 3;padding-top:1px}
+.row .t,.row .m,.row .s{grid-column:2}
+.row .t{font-weight:700;line-height:1.45}
+.row .m{font-size:.8rem;color:var(--muted)}
+.row .s{font-size:.92rem;line-height:1.65}
+.row .rec{grid-column:3;grid-row:1;align-self:start;flex-direction:column;align-items:flex-end;gap:2px}
+@media (max-width:560px){
+  a.row{grid-template-columns:2rem minmax(0,1fr)}
+  .row .num{grid-row:1 / span 4}
+  .row .rec{grid-column:2;grid-row:auto;flex-direction:row;align-items:center}
+}
+
+/* path */
+.path{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.step{background:var(--surface);border:1px solid var(--rule);padding:12px 14px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:inherit}
+.step:hover{border-color:var(--accent)}
+.step .k{font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
+.step .t{font-weight:700;line-height:1.4}
+.step .s{font-size:.86rem;color:var(--muted);line-height:1.6}
+@media (max-width:640px){.path{grid-template-columns:1fr}}
+
+/* threads */
+ol.threads{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px;counter-reset:th}
+ol.threads li{display:grid;grid-template-columns:1.8rem minmax(0,1fr);gap:0 8px;counter-increment:th}
+ol.threads li::before{content:counter(th);font-family:var(--font-mono);color:var(--accent);font-weight:500}
+ol.threads b{display:block}
+.refs{font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.refs a{text-decoration:none}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.86rem;line-height:1.6}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--rule)}
+th{font-size:.76rem;font-weight:500;color:var(--muted);letter-spacing:.03em;white-space:nowrap;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.minw{min-width:36rem}
+
+/* dl */
+dl.bg{margin:0;display:flex;flex-direction:column;gap:12px}
+dl.bg dt{font-weight:700}
+dl.bg dd{margin:2px 0 0}
+
+/* discussion */
+.disc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.disc > div{background:var(--surface);border:1px solid var(--rule);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.tag{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;color:var(--accent)}
+.disc ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+@media (max-width:640px){.disc{grid-template-columns:1fr}}
+
+/* links between readings */
+.xref{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.xref a{font-family:var(--font-mono);font-size:.82rem;text-decoration:none;margin-right:6px}
+
+/* tension */
+.tension{display:flex;flex-direction:column;gap:12px}
+.tension > div{border-top:1px dashed var(--rule);padding-top:10px}
+
+/* pager */
+.pager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.pager a{display:flex;flex-direction:column;gap:2px;border:1px solid var(--rule);padding:10px 12px;text-decoration:none;color:var(--ink);background:var(--surface)}
+.pager a:hover{border-color:var(--accent)}
+.pager a.next{text-align:right}
+.pager .k{font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
+.pager span:not(.k){font-size:.9rem;font-weight:500;line-height:1.4}
+.pager .ph{visibility:hidden}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.82rem;color:var(--muted)}
+footer.fn{font-size:.82rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#home">CS2680 <span>· Sep 9 課外閱讀</span></a>
+    <nav class="barnav" id="barnav" aria-label="閱讀導覽">10 篇</nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ HOME ============ -->
+<article class="view" id="home">
+  <div class="head">
+    <p class="eyebrow">Harvard CS2680 Modern AI Systems · Sep 9 · Agents use I</p>
+    <h1>How Claude Code Works：課外閱讀總整</h1>
+    <p class="lead">這一講把 agent 拆成一個簡單結構：LLM 加上 tools，在 loop 裡反覆執行。Harness 決定每一輪送什麼進 context window。十篇閱讀都在回答同一個問題：每一條資訊、每一條規則，應該放在哪裡、什麼時候付費、靠什麼來保證。</p>
+    <p class="muted small">課程把它們分成三組：先學會操作 loop（01–03），再看設定的 context 成本與強制力（04–08），最後看證據（09–10）。下一講 Sep 14 談 multi-agent。</p>
+  </div>
+
+  <section class="blk">
+    <h2>只有 70 分鐘：最短路徑</h2>
+    <p class="small muted">先建立心智模型，再學操作，最後用證據校正。三篇讀完，其他篇看本頁摘要就夠。</p>
+    <div class="path">
+      <a class="step" href="#r6"><span class="k">第 1 步 · 06 · 20 分</span><span class="t">How skills and MCPs actually work</span><span class="s">模型只看到一串訊息。MCP、skill、system prompt 分別放什麼。</span></a>
+      <a class="step" href="#r2"><span class="k">第 2 步 · 02 · 25 分</span><span class="t">Best practices for Claude Code</span><span class="s">Verification 與 context 兩個資源，每條建議都有可照做的指令。</span></a>
+      <a class="step" href="#r9"><span class="k">第 3 步 · 09 · 25 分</span><span class="t">Guardrails Beat Guidance</span><span class="s">規則真的有用嗎？用 5,000 多次實驗與對照組回答。</span></a>
+    </div>
+  </section>
+
+  <section class="blk">
+    <h2>十篇一覽</h2>
+    <div class="legend">
+      <span class="rec"><span class="meter" data-level="3"><i></i><i></i><i></i></span>必讀</span>
+      <span class="rec"><span class="meter" data-level="2"><i></i><i></i><i></i></span>推薦</span>
+      <span class="rec"><span class="meter" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span>
+      <span>時間為專注閱讀的估計</span>
+    </div>
+
+    <div class="group">
+      <div class="ghead"><h3>操作 loop</h3><span class="eyebrow">A first operating loop</span></div>
+      <a class="row" href="#r1">
+        <span class="num">01</span>
+        <span class="t">How I use LLMs</span>
+        <span class="rec"><span class="meter" data-level="1" aria-label="選讀"><i></i><i></i><i></i></span><span class="lvl">選讀</span></span>
+        <span class="m">Andrej Karpathy · 影片 · 2025 · 2 小時以上（挑章節約 35 分）</span>
+        <span class="s">用具體任務走一遍 LLM 產品的每個功能。對已天天用 LLM 的人，這是背景知識。</span>
+      </a>
+      <a class="row" href="#r2">
+        <span class="num">02</span>
+        <span class="t">Best practices for Claude Code</span>
+        <span class="rec"><span class="meter" data-level="3" aria-label="必讀"><i></i><i></i><i></i></span><span class="lvl">必讀</span></span>
+        <span class="m">Anthropic · 官方文件 · 約 25 分</span>
+        <span class="s">兩個稀缺資源：可執行的 verification 與 context。每條建議都附可照做的指令。</span>
+      </a>
+      <a class="row" href="#r3">
+        <span class="num">03</span>
+        <span class="t">Agentic Engineering Patterns</span>
+        <span class="rec"><span class="meter" data-level="2" aria-label="推薦"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span>
+        <span class="m">Simon Willison · 實務指南 · 2026 · 挑 6 章約 25 分</span>
+        <span class="s">Coding agent 技巧的共同詞彙。Testing 三章可以直接變成團隊規範。</span>
+      </a>
+    </div>
+
+    <div class="group">
+      <div class="ghead"><h3>設定、context 成本與強制力</h3><span class="eyebrow">Configuration, context cost, and enforcement</span></div>
+      <a class="row" href="#r4">
+        <span class="num">04</span>
+        <span class="t">Equipping agents for the real world with Agent Skills</span>
+        <span class="rec"><span class="meter" data-level="2" aria-label="推薦"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span>
+        <span class="m">Anthropic · 工程文章 · 2025 · 約 10 分</span>
+        <span class="s">三層 progressive disclosure：description 常駐，body 與附檔用到才載入。</span>
+      </a>
+      <a class="row" href="#r5">
+        <span class="num">05</span>
+        <span class="t">Code execution with MCP</span>
+        <span class="rec"><span class="meter" data-level="2" aria-label="推薦"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span>
+        <span class="m">Anthropic · 工程文章 · 2025 · 約 15 分</span>
+        <span class="s">把 tools 變成 code API。定義按需讀取，中間資料留在 sandbox，不經過模型。</span>
+      </a>
+      <a class="row" href="#r6">
+        <span class="num">06</span>
+        <span class="t">How skills and MCPs actually work</span>
+        <span class="rec"><span class="meter" data-level="3" aria-label="必讀"><i></i><i></i><i></i></span><span class="lvl">必讀</span></span>
+        <span class="m">Lawrence Jones · 部落格 · 2026 · 約 20 分 · Sep 16 也會用到</span>
+        <span class="s">一條指令該放 system prompt、skill，還是 tool 本身？本週最清楚的心智模型。</span>
+      </a>
+      <a class="row" href="#r7">
+        <span class="num">07</span>
+        <span class="t">Claude Code hooks reference</span>
+        <span class="rec"><span class="meter" data-level="1" aria-label="查閱"><i></i><i></i><i></i></span><span class="lvl">查閱</span></span>
+        <span class="m">Anthropic · 官方文件 · 查表約 15 分</span>
+        <span class="s">Guidance 與 enforcement 的分界：在動作執行前確定性地攔截。寫 hook 時再細讀。</span>
+      </a>
+      <a class="row" href="#r8">
+        <span class="num">08</span>
+        <span class="t">The Harness Is the Thing</span>
+        <span class="rec"><span class="meter" data-level="1" aria-label="選讀"><i></i><i></i><i></i></span><span class="lvl">選讀</span></span>
+        <span class="m">Scott Fryxell · 部落格 · 2026 · 約 10 分</span>
+        <span class="s">實務者自述：角色分離加模型路由。模型變成可替換的零件。</span>
+      </a>
+    </div>
+
+    <div class="group">
+      <div class="ghead"><h3>證據：harness 設定與成本</h3><span class="eyebrow">Evidence on harness configuration and cost</span></div>
+      <a class="row" href="#r9">
+        <span class="num">09</span>
+        <span class="t">Guardrails Beat Guidance</span>
+        <span class="rec"><span class="meter" data-level="3" aria-label="必讀"><i></i><i></i><i></i></span><span class="lvl">必讀</span></span>
+        <span class="m">Zhang et al. · 論文 · 2026 · 約 25 分</span>
+        <span class="s">隨機規則和專家規則一樣有效。單獨有益的規則都是「不要」，有害的都是「要」。</span>
+      </a>
+      <a class="row" href="#r10">
+        <span class="num">10</span>
+        <span class="t">The Scaffolding Matters More Than the Interface</span>
+        <span class="rec"><span class="meter" data-level="2" aria-label="推薦"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span>
+        <span class="m">Alier Forment et al. · 論文 · 2026 · 挑段落約 30 分</span>
+        <span class="s">成本主要由 scaffold 決定（差 20 倍）。MCP 與 CLI 的成本比不穩定。</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="blk">
+    <h2>五條主線</h2>
+    <p class="small muted">十篇看起來很散。把它們疊在一起，會看到這五個反覆出現的觀點。</p>
+    <ol class="threads">
+      <li><div><b>Context 是要付租金的資源。</b>每個常駐的 token，每一輪 model call 都要再付一次，也會分散模型的注意力。Skill 的三層載入、tool 定義按需讀取、/clear 與 subagent，都是在管理這筆租金。<br><span class="refs"><a href="#r2">02</a> <a href="#r4">04</a> <a href="#r5">05</a> <a href="#r6">06</a> <a href="#r10">10</a></span></div></li>
+      <li><div><b>Verification 決定 loop 何時停。</b>沒有可執行的檢查，「看起來完成」就是唯一的停止訊號。驗證要看環境的實際狀態，不能只看 agent 的自述。<br><span class="refs"><a href="#r2">02</a> <a href="#r3">03</a> <a href="#r10">10</a></span></div></li>
+      <li><div><b>Guidance 和 enforcement 是兩件事。</b>寫成文字的規則，模型會權衡，也可能推理繞過。Hook、permission rule、tool 的必填參數，模型無法爭論。<br><span class="refs"><a href="#r6">06</a> <a href="#r7">07</a> <a href="#r9">09</a></span></div></li>
+      <li><div><b>Harness 才是設計的對象。</b>同一個模型，換一個 scaffold，成本可以差 20 倍以上。模型越來越像可以替換的零件，角色、路由、scripts 才是你自己的資產。<br><span class="refs"><a href="#r8">08</a> <a href="#r10">10</a></span></div></li>
+      <li><div><b>證據有等級。</b>官方建議、個人經驗、受控實驗，可信度不同。沒有 no-rule 對照組和 ablation，就不能把功勞歸給某一條規則。<br><span class="refs"><a href="#r8">08</a> <a href="#r9">09</a> <a href="#r10">10</a></span></div></li>
+    </ol>
+  </section>
+
+  <section class="blk">
+    <h2>一條指令該放在哪裡</h2>
+    <p class="small muted">把 04–07 的內容合成一張表。由上往下，常駐成本降低，強制力在最後兩列最強。</p>
+    <div class="tbl">
+      <table class="minw">
+        <thead><tr><th>位置</th><th>何時進 context</th><th>每輪成本</th><th>模型怎麼對待</th><th>適合放什麼</th><th>篇</th></tr></thead>
+        <tbody>
+          <tr><td>System prompt / CLAUDE.md</td><td>每次 session 開始，常駐</td><td>全額（可被 cache）</td><td>高優先，傾向服從</td><td>每個任務都需要、Claude 猜不到的事：指令、慣例、範圍限制</td><td class="n"><a href="#r2">02</a> <a href="#r9">09</a></td></tr>
+          <tr><td>Skill 的 description</td><td>啟動時常駐</td><td>約 100 token / 個</td><td>用來判斷要不要載入</td><td>「什麼時候該用我」</td><td class="n"><a href="#r4">04</a> <a href="#r6">06</a></td></tr>
+          <tr><td>Skill 的 body 與附檔</td><td>判斷相關時才載入</td><td>用到才付</td><td>一般訊息，和任務一起權衡</td><td>有時才需要的程序、領域知識、scripts</td><td class="n"><a href="#r4">04</a> <a href="#r6">06</a></td></tr>
+          <tr><td>MCP tool 定義（全部送出）</td><td>每一輪全部重送</td><td>tool 數 × 輪數</td><td>能力清單</td><td>少量、常用的能力</td><td class="n"><a href="#r5">05</a> <a href="#r10">10</a></td></tr>
+          <tr><td>Tool 當 code API / tool search</td><td>需要時才讀定義</td><td>只付被選中的</td><td>能力清單</td><td>大量、偶爾才用的能力</td><td class="n"><a href="#r5">05</a> <a href="#r10">10</a></td></tr>
+          <tr><td>Tool 的必填參數</td><td>隨 tool 定義</td><td>很小</td><td>不提供就呼叫不了</td><td>不可妥協、但需要模型參與的規則</td><td class="n"><a href="#r6">06</a></td></tr>
+          <tr><td>Hook / permission rule</td><td>不進 context，由 harness 執行</td><td>0 token</td><td>模型無法爭論</td><td>絕對禁止的動作，或每次都必須發生的事</td><td class="n"><a href="#r7">07</a> <a href="#r2">02</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="blk">
+    <h2>篇與篇之間的張力</h2>
+    <div class="tension">
+      <div><b>CLAUDE.md 太長，規則會被忽略（02）。0 到 50 條規則，通過率不變（09）。</b><p>兩者不一定矛盾。官方文件關心的是某一條特定規則有沒有被遵守。論文量的是整體任務通過率，而且發現規則內容本身影響不大。先問：你在乎的指標是哪一個？</p></div>
+      <div><b>「把規則從 system prompt 移到 skill 就修好了」（06）與「前沿模型用量降 75%」（08）。</b><p>兩個都是單一團隊或個人的觀察。09 示範了為什麼需要 random 對照組和逐條 ablation，才能把改善歸因到某個設定。</p></div>
+      <div><b>按需載入省下 98.7%（05）。MCP 與 CLI 的成本比在 0.43× 到 29× 之間跳動（10）。</b><p>05 是一個機制示範，不是 benchmark。10 的實測方向一致：按需載入 schema 的 scaffold 便宜 3.1 倍，但只有一個樣本，有 confound。方向可以採用，數字不能直接拿來做預算。</p></div>
+    </div>
+  </section>
+
+  <section class="blk">
+    <h2>讀書會整體討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎 · 帶著問題去讀</span>
+        <ul>
+          <li>用自己的話說：agent loop 每一輪送給模型的東西，可以分成哪幾類？哪些是常駐的？</li>
+          <li>從十篇中挑一個你明天就能用的做法。它影響的是 context、verification，還是 enforcement？</li>
+        </ul>
+      </div>
+      <div><span class="tag">進階 · 讀書會討論</span>
+        <ul>
+          <li>如果 agent 部署在無法連外、需要稽核的客戶環境，上面「放在哪裡」那張表要怎麼調整？哪些規則必須從 guidance 升級成 enforcement？</li>
+          <li>09 和 10 都說：沒有好的對照組，結論就不可信。你團隊裡哪一個關於 agent 的信念，最需要用實驗驗證？</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="fn">來源：<a href="https://cs2680.com/readings/sep-09" target="_blank" rel="noopener">cs2680.com/readings/sep-09</a>。每篇原文連結在各篇頁首。整理日期 2026-10-19。</footer>
+</article>
+
+<!-- ============ 01 ============ -->
+<article class="view" id="r1" data-n="1" data-title="How I use LLMs" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 01 · A first operating loop</p>
+    <h1>How I use LLMs<span class="en">Andrej Karpathy</span></h1>
+    <div class="meta"><span><b>影片</b> · YouTube</span><span>2025-02-27</span><span>長度 2 小時以上</span><span class="rec"><span class="meter" data-level="1"><i></i><i></i><i></i></span><span class="lvl">選讀（新手必讀）</span></span></div>
+    <a class="src" href="https://www.youtube.com/watch?v=EWvNQjAaOHw" target="_blank" rel="noopener">看原影片 ↗</a>
+  </div>
+  <p class="oneliner">用具體任務，按使用者遇到的順序，走一遍 LLM 產品的每個功能：選模型、thinking、搜尋、檔案、寫程式、記憶。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>消費型 LLM 產品把很多能力放在同一個輸入框後面：模型選擇、推理控制、tools、檔案上傳、寫程式功能、持久指令。新使用者可以一直只用輸入框，不知道其他選項改變了什麼。介面不會告訴你一個任務需要哪個能力，也不會告訴你每個選擇的代價。選錯模型、少給 context、多叫一次 tool，品質會下降、延遲會增加，但畫面上不會出現任何錯誤。</p>
+    <p>Karpathy 用具體任務逐一示範這些選擇怎麼改變結果。課程要你從示範中看到另一件事：一個使用者任務，背後會產生多次 model call、多次 tool call，以及越來越長的 prompt。這三個量，就是整門課要量測的東西。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li>對話在底層是一串 token。開新對話，就是清空 context window。</li>
+      <li>要知道自己在用哪個模型、哪個價格層級。不同層級的模型能力不同。</li>
+      <li>Thinking model 適合需要推理的難題（數學、程式）。簡單問題用一般模型，比較快。</li>
+      <li>網路搜尋、deep research、Python interpreter 都是 tool：它們把外部結果放進 context。</li>
+      <li>上傳檔案，就是把文件內容放進 context window。</li>
+      <li>Cursor 段落示範了 coding agent 的雛形：模型直接改你的專案檔案。</li>
+      <li>Memory 與 custom instructions 是每次都帶進 prompt 的持久設定。這和後面 CLAUDE.md 是同一個概念。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>Token 與 tokenizer</dt><dd>模型處理的單位是 token，不是字也不是詞。中文一個字常常是一到兩個 token，依 tokenizer 而定。成本與 context 上限都用 token 計算。</dd>
+      <dt>Context window = 工作記憶</dt><dd>模型沒有跨請求的記憶。它只看得到這一次請求裡的 token。所以「記憶」功能，本質上就是自動把一段文字塞回 prompt。</dd>
+      <dt>一次請求 ≠ 一次 model call</dt><dd>產品啟用搜尋或程式執行時，背後是一個 loop：模型要求 tool → 系統執行 → 結果附加回對話 → 模型再被呼叫一次。每一次都重送整段歷史。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>如果你已經天天用 LLM，不需要全部看完。挑這幾段，用 1.25 倍速約 35 分鐘：</p>
+    <ul class="pts">
+      <li><code>02:54</code> ChatGPT interaction under the hood（token、context）</li>
+      <li><code>22:54</code> Thinking models and when to use them</li>
+      <li><code>1:14:02</code> Cursor: Composer, writing code</li>
+      <li><code>1:53:29</code> ChatGPT memory, custom instructions</li>
+    </ul>
+    <p class="small muted">更快的替代：<a href="#r6">06</a> 的 “LLM 101” 一節，用 5 分鐘講完同樣的底層機制。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r2">02</a>Claude Code 把 custom instructions 做成 CLAUDE.md，放在 repo 裡。</li>
+      <li><a href="#r6">06</a>用訊息角色（system / user / assistant）解釋同一套機制，更精簡。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>你最常交給 LLM 的一個任務，背後大約有幾次 model call、幾次 tool call？你怎麼知道？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>「介面不報錯，但品質默默變差」。這種 silent degradation，在你的產品裡要怎麼被觀測到？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 02 ============ -->
+<article class="view" id="r2" data-n="2" data-title="Best practices for Claude Code" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 02 · A first operating loop</p>
+    <h1>Best practices for Claude Code<span class="en">Anthropic 官方文件</span></h1>
+    <div class="meta"><span><b>官方文件</b></span><span>持續更新</span><span>約 25 分</span><span class="rec"><span class="meter" data-level="3"><i></i><i></i><i></i></span><span class="lvl">必讀</span></span></div>
+    <a class="src" href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">Claude Code 的使用手冊，同時也是一份 workload 說明書：每一個好習慣，都改變了 prompt 長度或 model call 的數量。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>Terminal coding agent 可以檢查 repo、改檔案、跑指令，一直做到它判斷任務完成。它的 context 裡累積了對話、讀過的檔案、指令輸出。大部分建議都來自一個限制：context window 很快就滿，而模型表現會隨之下降。</p>
+    <p>所以有兩個資源要明確管理。第一是 verification。給 agent 一個它能自己跑的檢查，例如測試、build 的 exit code、截圖比對。沒有檢查，「看起來完成」是它唯一的停止訊號，而你變成人工驗證迴圈。第二是 context。先 explore、再 plan、再 implement、最後 commit。給具體的 context，早點糾正方向，不相關的工作用 <code>/clear</code> 切開。需要大量讀檔的調查交給 subagent，只有在輸出能被檢查與合併時才平行。</p>
+    <p>課程要你把這份指南也當成 workload 描述。Verification 改變 run 何時停止。Context 管理改變 prompt 長度。Subagent 與平行 session 改變 model call 的數量與依賴結構。Assignment 1 會記錄這些效果。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>Verification 有四級強度：</b>在 prompt 裡要求跑測試 → <code>/goal</code> 條件（另一個 evaluator 每輪檢查）→ Stop hook（script 不過就不准結束）→ 獨立 subagent 嘗試反駁結果。要求 agent 貼出證據：執行的指令與輸出。</li>
+      <li><b>Explore → Plan → Implement → Commit：</b>按 <code>Shift+Tab</code> 進 plan mode（唯讀），或用 <code>claude --permission-mode plan</code> 啟動。<code>Ctrl+G</code> 在編輯器裡改計畫。能用一句話描述的 diff，跳過 plan。</li>
+      <li><b>具體 context：</b>指定檔案、情境、限制、可參考的既有程式。用 <code>@檔名</code> 引用檔案，或用 pipe 餵資料。</li>
+      <li><b>CLAUDE.md：</b>用 <code>/init</code> 產生初稿。每一行都問：刪掉會不會讓 Claude 出錯？不會就刪。檔案太長，重要規則會被淹沒。每次都必須發生的事，改用 hook。</li>
+      <li><b>Session 管理：</b><code>Esc</code> 中斷；<code>Esc Esc</code> 或 <code>/rewind</code> 回到 checkpoint；同一個問題糾正超過兩次，就 <code>/clear</code> 並重寫更好的 prompt；<code>/compact 保留 API 變更</code> 可指定壓縮重點。</li>
+      <li><b>Scale：</b><code>claude -p</code> 非互動模式可放進 CI；git worktree 讓多個 session 平行；Writer / Reviewer 兩個 session 互相檢查。</li>
+      <li><b>五種失敗模式：</b>什麼都塞的 session、反覆糾正、過胖的 CLAUDE.md、先信任後驗證、沒有邊界的探索。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">第一次在專案裡用 Claude Code：一個完整的流程</p>
+<pre><code>cd ~/repo/my-service
+claude                                   # 進入互動模式
+
+&gt; /init                                  # 產生 CLAUDE.md 初稿，之後再刪減
+  （按 Shift+Tab 切到 plan mode）
+&gt; 讀 src/auth/，說明 token refresh 的流程。不要改任何檔案。
+&gt; 我要加 Google OAuth。列出要改的檔案，寫一份計畫。
+  （按 Ctrl+G 修改計畫，再按 Shift+Tab 離開 plan mode）
+&gt; 照計畫實作。為 callback handler 寫測試，跑 pytest，修到全部通過。
+  貼出最後一次測試的完整輸出。
+&gt; 用清楚的 commit message commit，然後開 PR。
+&gt; /clear                                 # 換到下一個不相關的任務前</code></pre>
+    <p class="cap">一份精簡的 CLAUDE.md（只放 Claude 猜不到的事）</p>
+<pre><code># 指令
+- 全部測試：make test
+- 單一測試：pytest tests/test_auth.py::test_refresh -q
+- 改完一批程式後跑型別檢查：mypy src/
+
+# 範圍
+- 不要修改 migrations/ 底下的檔案
+- 不要新增套件相依；需要時先問
+- Branch 命名：feat/&lt;ticket&gt;-&lt;短描述&gt;</code></pre>
+    <p class="small muted">注意「範圍」三行都是「不要」型的限制。<a href="#r9">09</a> 的實驗發現，這類規則最有幫助。「不要改 migrations/」如果必須保證，改用 <a href="#r7">07</a> 的 hook。</p>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>長 context 讓品質下降</dt><dd>Context 越長，模型越容易忽略中間的指令。長 context 研究常稱這個現象為 lost in the middle。所以 <code>/clear</code> 不只省錢，也提升品質。</dd>
+      <dt>Prompt caching</dt><dd>每一輪都重送整段歷史。Provider 會快取相同的前綴，計價便宜很多。前綴一改（例如改了 CLAUDE.md、增減 MCP server），快取就失效。穩定的常駐內容，比常變的內容便宜。</dd>
+      <dt>Subagent ≈ 函式呼叫</dt><dd>Subagent 有自己的 context。它讀很多檔案，最後只回傳摘要。主 session 只付摘要的 token，像呼叫函式只拿回傳值。</dd>
+      <dt>Permission mode</dt><dd>Plan mode 是唯讀模式。Auto mode 由另一個 classifier 模型審查動作，只擋看起來有風險的操作。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>全文讀。最重要的段落：Give Claude a way to verify its work、Explore first、Write an effective CLAUDE.md（包含與排除的對照表）、Manage your session、Avoid common failure patterns。Automate and scale 可以略讀。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r3">03</a>Testing 三章是 verification 的具體做法。</li>
+      <li><a href="#r4">04</a>「有時才需要」的知識不該放 CLAUDE.md，應該做成 skill。</li>
+      <li><a href="#r7">07</a>Stop hook 是確定性的 verification gate。</li>
+      <li><a href="#r9">09</a>對「CLAUDE.md 怎麼寫」的實證檢驗。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>你最近交給 agent 的一個任務，它的「完成訊號」是什麼？是可執行的檢查，還是它自己說完成？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>Verification 從 prompt、<code>/goal</code>、Stop hook 到獨立 reviewer，強度遞增，設定成本也遞增。哪一類任務值得付到哪一級？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 03 ============ -->
+<article class="view" id="r3" data-n="3" data-title="Agentic Engineering Patterns" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 03 · A first operating loop</p>
+    <h1>Agentic Engineering Patterns<span class="en">Simon Willison</span></h1>
+    <div class="meta"><span><b>實務指南</b> · 持續更新</span><span>2026</span><span>挑 6 章約 25 分；全部約 1.5 小時</span><span class="rec"><span class="meter" data-level="2"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span></div>
+    <a class="src" href="https://simonwillison.net/guides/agentic-engineering-patterns/" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">一份持續更新的 coding agent 實務手冊。它把散落各處的技巧，整理成一套共同的詞彙。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>Coding agent 的實務知識散在產品文件、部落格和個人的 prompt 裡。同一招常常有不同名字，所以經驗很難在工具之間轉移。沒有共同詞彙，建議就很難比較，也很難對應到一次失敗：這個任務需要更小的 prompt、測試迴圈、checkpoint、subagent，還是換個介面？</p>
+    <p>Willison 把這些做法整理成可重用的 pattern：Git 是復原機制，subagent 處理有邊界的工作，red/green TDD，agent 執行的手動測試，code walkthrough，以及附註解的真實 prompt。他對 agent 的定義很短：在 loop 裡跑 tools 來達成目標。Coding agent 的關鍵能力，是能執行它寫的程式。</p>
+    <p>課程建議讀完 01、02 之後，把它當參考書，不必從頭讀到尾。它把每個使用習慣連到一個 harness 可以提供的控制機制。這是從本講「使用 agent」走到第 4 講「設計 agent」的橋樑。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>寫 code 變便宜了，好的 code 沒有。</b>好的 code 要能跑、你要確定它能跑、解對問題、處理錯誤、簡單、有測試、文件跟得上。</li>
+      <li><b>新習慣：</b>直覺說「不值得花時間做」的事，還是開一個 async agent session 試試。最壞的結果只是浪費一些 token。</li>
+      <li><b>Red/green TDD：</b>先寫測試，確認它失敗（red），再實作到通過（green）。「確認失敗」這一步，防止 agent 寫出本來就會通過的假測試。</li>
+      <li><b>First run the tests：</b>新 session 第一句就叫 agent 跑測試。它因此知道有測試、怎麼跑、專案多大，並進入測試的心態。</li>
+      <li><b>Agentic manual testing：</b>測試全過，不代表真的能用。叫 agent 用 <code>python -c</code>、<code>curl</code>、Playwright 實際操作。發現的問題，再用 red/green TDD 寫成永久測試。</li>
+      <li><b>Git：</b>commit、整理歷史、<code>git bisect</code> 找出引入 bug 的 commit、從 reflog 找回遺失的程式碼，都可以交給 agent。</li>
+      <li><b>Anti-pattern：</b>不要把自己沒 review 過的 agent code 丟給同事 review。PR 要小，要附證據：怎麼測的、截圖或錄影。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">可以直接打的 prompt</p>
+<pre><code># 新 session 的第一句
+First run the tests
+
+# 實作新功能
+寫一個從 markdown 字串抽出所有 header 的 Python 函式。Use red/green TDD.
+
+# 手動測試 API
+啟動 dev server，用 curl 探索新的 JSON API，列出你發現的問題。
+每個問題先寫成會失敗的測試，再修到通過。
+
+# 找 bug 的來源
+用 git bisect 找出是哪個 commit 讓「匯出 CSV 少一欄」這個 bug 出現。
+
+# 收尾
+把最後三個 commit 合併成一個，寫一個清楚的 commit message。</code></pre>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>Red → green → refactor</dt><dd>TDD 的迴圈來自 Kent Beck 與 Extreme Programming。對 agent 來說，red 階段的價值是證明測試真的在檢查新行為。</dd>
+      <dt>Test oracle problem</dt><dd>誰來判斷輸出是對的？Agent 同時寫測試和實作時，兩邊可能一起錯。所以要有人看測試，或讓一個沒看過實作過程的 reviewer 檢查。</dd>
+      <dt>git bisect</dt><dd>在 commit 歷史上做二分搜尋。1,000 個 commit 只要測約 10 次。過去難用的原因是要把 bug 寫成可執行的判斷，這一步現在可以交給 agent。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>讀這 6 章，約 25 分鐘：What is agentic engineering、Writing code is cheap now、Anti-patterns、Red/green TDD、First run the tests、Agentic manual testing。Using Git 和 Subagents 在需要時查。測試團隊可以把 Testing and QA 三章直接改寫成團隊的 agent 使用規範。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r2">02</a>官方的 verify 建議；本篇給出具體 prompt。</li>
+      <li><a href="#r10">10</a>論文用 repo 的實際狀態驗證完成度，不信 agent 自述。同一個精神。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>為什麼「先確認測試失敗」這一步，對 agent 特別重要？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>Agent 同時寫測試和實作，測試還能當 oracle 嗎？團隊要怎麼分工，才不會「自己出題、自己改考卷」？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 04 ============ -->
+<article class="view" id="r4" data-n="4" data-title="Equipping agents with Agent Skills" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 04 · Configuration, context cost, and enforcement</p>
+    <h1>Equipping agents for the real world with Agent Skills<span class="en">Anthropic Engineering</span></h1>
+    <div class="meta"><span><b>工程文章</b></span><span>2025-10-16（2025-12 成為開放標準）</span><span>約 10 分</span><span class="rec"><span class="meter" data-level="2"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span></div>
+    <a class="src" href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">Skill 是一個資料夾。它用三層 progressive disclosure，只在需要時把內容載入 context。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>CLAUDE.md 這類持久指令檔，會把整本操作手冊放進每一次 prompt，即使目前任務只需要其中一個程序。裝越多程序，使用者還沒開口，context 就被佔掉越多。Agent 需要足夠的資訊來發現相關能力，但不能每次呼叫都把所有能力全文載入。載入策略也要能打包 scripts 和參考資料，它們只在選中某個程序後才有用。</p>
+    <p>解法是三層載入。第一層：啟動時只載入每個 skill 的 <code>name</code> 和 <code>description</code>。第二層：模型判斷相關時，才讀整份 SKILL.md。第三層：SKILL.md 引用的其他檔案和 scripts，只在後續步驟需要時才打開或執行。</p>
+    <p>課程把它看成一個具體的 context admission policy。Description 是常駐成本；body 和 resources 用到才付。對照第 2 講的 context rent，逐條問：這條指令配得上哪一層？</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li>最小結構：一個資料夾加一份 SKILL.md。YAML frontmatter 必填 <code>name</code> 和 <code>description</code>。</li>
+      <li>Description 決定 skill 會不會被觸發。要寫清楚「什麼情況該用」。</li>
+      <li>確定性的工作交給 code。例如抽出 PDF 的表單欄位：直接跑 script，script 和 PDF 都不必進 context。</li>
+      <li>撰寫流程：先在代表性任務上觀察 agent 卡在哪裡，再針對缺口寫 skill。SKILL.md 太大就拆檔。觀察 Claude 實際怎麼用，再修改。</li>
+      <li>讓 Claude 自己把成功做法和常見錯誤寫回 skill。</li>
+      <li>安全：skill 包含指令和程式碼。惡意 skill 可以叫 agent 外洩資料。只裝可信來源，安裝前讀過每一個檔案。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">一個 skill 的資料夾（Claude Code 放在 .claude/skills/ 底下）</p>
+<pre><code>.claude/skills/release-notes/
+├── SKILL.md              # 第 1 層：frontmatter 常駐；第 2 層：body 用到才讀
+├── template.md           # 第 3 層：需要時才打開
+└── scripts/
+    └── collect_prs.sh    # 第 3 層：直接執行，內容不進 context</code></pre>
+    <p class="cap">SKILL.md</p>
+<pre><code>---
+name: release-notes
+description: 為一個版本整理 release notes。使用者提到 release notes、版本說明或 changelog 時使用。
+---
+# Release notes
+
+1. 執行 scripts/collect_prs.sh &lt;上一版 tag&gt;，取得合併過的 PR 清單。
+2. 依 feature、fix、breaking change 分類。
+3. 依 template.md 的格式輸出。
+
+- 不要列出純內部 refactor 的 PR。</code></pre>
+    <p class="small muted">在 Claude Code 裡，Claude 會依 description 自動載入；你也可以打 <code>/release-notes</code> 直接呼叫。</p>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>Progressive disclosure</dt><dd>原本是 UI 設計原則：先給最少的資訊，使用者需要時再展開。</dd>
+      <dt>系統課的類比：demand paging</dt><dd>Description 像 page table 的一筆 entry，常駐但很小。Body 像實際的 page，用到才載入。附檔像更外層的儲存。Context window 就是有限的實體記憶體。</dd>
+      <dt>常駐成本 × 輪數</dt><dd>每個常駐 token，每一次 model call 都要付。一個 50 輪的 session，100 token 的 description 就是 5,000 token。Prompt caching 會大幅打折，但它仍然佔用模型的注意力。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>全文讀。重點看三層的示意圖，以及 “Skills and the context window” 一節的四個步驟。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r6">06</a>從一個團隊的實務獨立得出同樣的三層；另外指出 skill 位在 system prompt 下層。</li>
+      <li><a href="#r5">05</a>把 MCP tools 也做成按需載入；文末把存下來的函式加上 SKILL.md，就成為 skill。</li>
+      <li><a href="#r9">09</a>論文把 skills 也算進「規則」家族來檢驗。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>拿團隊現有的一份長文件（runbook、SOP）。哪些內容該是 description、哪些是 body、哪些是附檔？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>Description 寫太寬會誤觸發，寫太窄會不觸發。你要怎麼量測一個 skill 的觸發準確度？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 05 ============ -->
+<article class="view" id="r5" data-n="5" data-title="Code execution with MCP" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 05 · Configuration, context cost, and enforcement</p>
+    <h1>Code execution with MCP<span class="en">Anthropic Engineering · Adam Jones、Conor Kelly</span></h1>
+    <div class="meta"><span><b>工程文章</b></span><span>2025-11-04</span><span>約 15 分</span><span class="rec"><span class="meter" data-level="2"><i></i><i></i><i></i></span><span class="lvl">推薦</span></span></div>
+    <a class="src" href="https://www.anthropic.com/engineering/code-execution-with-mcp" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">把 MCP tools 當成 code API，讓 agent 寫程式呼叫。Tool 定義按需讀取，中間資料留在執行環境。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>很多 MCP host 把每一個啟用的 tool 定義都放進 prompt，並把每一個中間結果經過對話傳回模型。於是 tool 清單和資料，與使用者的任務搶同一個 context。直接呼叫 tool 會在每次 model call 重送 schema。大型結果也被序列化、經過模型，即使一段普通程式就能過濾或合併它們。成本隨 tool 數量與 workflow 長度一起成長。</p>
+    <p>解法：把 MCP server 呈現成檔案系統裡的程式模組。Agent 用列目錄、讀檔的方式找到需要的 tool，再寫程式，在 sandbox 裡完成 loop、join、過濾和錯誤處理。只有被選中的定義和精簡後的結果進入 context。</p>
+    <p>文中範例把 tool 定義從 150,000 token 降到 2,000 token，減少 98.7%。課程提醒：這是一個示範機制的例子，不是在代表性任務分布上跑出來的 benchmark。它的意義是讓 context admission 變得可操作：選 tool 變成檢索，中間資料留在 prompt 外，幾個相依的 tool 操作之間不必再插入一次 model call。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>問題一：tool 定義塞爆 context。</b>連上千個 tool 時，模型讀到請求之前要先處理數十萬 token。</li>
+      <li><b>問題二：中間結果經過模型。</b>把會議逐字稿從 Google Drive 搬到 Salesforce，全文會經過模型兩次。2 小時的會議約多花 50,000 token，模型抄寫時也可能出錯。</li>
+      <li><b>好處 1：按需載入。</b>列目錄找 tool，或提供 <code>search_tools</code>，並可選擇只回傳名稱、加描述、或完整 schema。</li>
+      <li><b>好處 2：先過濾再回傳。</b>10,000 列的試算表，在程式裡過濾後只把 5 列印給模型看。</li>
+      <li><b>好處 3：控制流程在程式裡。</b>Loop、條件、重試由程式執行，不必每一步都等模型決定。</li>
+      <li><b>好處 4：隱私。</b>MCP client 可以把 PII 換成代號（例如 <code>[EMAIL_1]</code>），模型只看到代號，真值直接在系統之間流動。</li>
+      <li><b>好處 5：狀態與 skill。</b>中間結果可存檔，之後接著做。寫好的函式可以存下來重用，加上 SKILL.md 就是 skill。</li>
+      <li><b>代價：</b>執行 agent 寫的程式，需要安全的 sandbox、資源限制和監控。這是直接呼叫 tool 不需要的維運成本。Cloudflare 把同類做法稱為 “Code Mode”。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">MCP server 被呈現成這樣的檔案樹</p>
+<pre><code>servers/
+├── jira/
+│   ├── searchIssues.ts
+│   ├── addComment.ts
+│   └── index.ts
+└── slack/
+    ├── postMessage.ts
+    └── index.ts</code></pre>
+    <p class="cap">Agent 寫出、並在 sandbox 執行的程式（示意）</p>
+<pre><code>import * as jira from './servers/jira';
+import * as slack from './servers/slack';
+
+const issues = await jira.searchIssues({ jql: 'project = OPS AND status = Blocked' });
+const stale = issues.filter(i =&gt; daysSince(i.updated) &gt; 7);   // 過濾在程式裡做
+await slack.postMessage({
+  channel: '#ops',
+  text: `${stale.length} 張 ticket blocked 超過 7 天`,
+});
+console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一行回到模型</code></pre>
+    <p class="small muted">直接呼叫 tool 的版本：全部 issue 先進 context，模型讀完再自己挑，最後把文字再寫一次進 Slack 的參數。</p>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>MCP 的基本結構</dt><dd>Host 裡的 MCP client 連到 MCP server。Server 宣告它的 tools（也可以有 resources 和 prompts），傳輸格式是 JSON-RPC。模型不執行 tool；它只輸出「請呼叫 X，參數是 Y」，由 harness 執行。</dd>
+      <dt>為什麼結果一定經過模型</dt><dd>在直接呼叫模式下，tool 結果必須附加成一則訊息，模型才看得到並決定下一步。Code execution 打破這個限制：結果先落在程式的變數裡。</dd>
+      <dt>Tokenization vault</dt><dd>PII 代號化和支付業的 tokenization 相同：系統之間流動的是代號，真值只在受信任的邊界內還原。對政府、醫療、金融這類受監管環境，這是一個可以寫進架構的控制點。</dd>
+      <dt>減少輪數 = 減少等待</dt><dd>每多一輪 model call，就多一次 time-to-first-token 的等待。把 if 和 loop 交給程式，省下的是輪數。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>全文讀。程式碼掃過即可。重點是兩個問題與五個好處，以及最後關於 sandbox 代價的一段。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r4">04</a>同一個 progressive disclosure 原則，用在 tools 上。</li>
+      <li><a href="#r6">06</a>提到 tool search：schema 先不放 prompt，模型搜尋時才載入。</li>
+      <li><a href="#r10">10</a>實測：唯一按需載入 schema 的 scaffold（7 個 vs 44 個），成本低 3.1 倍，但有 confound。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>你的 agent 跑一次任務，多少 token 是 tool 定義、多少是 tool 結果？你量得到嗎？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>改成「agent 寫程式」之後，安全審查從「審 tool call」變成「審任意程式」。Sandbox 必須擋住哪些事？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 06 ============ -->
+<article class="view" id="r6" data-n="6" data-title="How skills and MCPs actually work" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 06 · Configuration, context cost, and enforcement</p>
+    <h1>How skills and MCPs actually work<span class="en">Lawrence Jones（incident.io）</span></h1>
+    <div class="meta"><span><b>部落格</b></span><span>2026-09-01</span><span>約 20 分</span><span>Sep 16 也會用到</span><span class="rec"><span class="meter" data-level="3"><i></i><i></i><i></i></span><span class="lvl">必讀</span></span></div>
+    <a class="src" href="https://blog.lawrencejones.dev/demystifying-skills-and-mcps" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">模型只看到一串訊息。MCP 往裡面加 tools，skill 往裡面加指令，plugin 把兩者打包。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>Skills 和 MCP server 裝進同一個 context window，模型都是以文字讀到它們，然後才做決定。所以設定 agent 時，一條指導有三個地方可以放：system prompt、skill，或 tool 本身。</p>
+    <p>這三個位置不能互換，差別也不只是措辭。System prompt 的優先權高於使用者訊息，寫在那裡的規則會被「服從」，而不是「權衡」。Tool description 每一輪都常駐，不論這一輪需不需要。用文字寫的要求，模型可以推理繞過。</p>
+    <p>作者的規則是：把 capability（能力）和 know-how（做法）分開，再各自放到讓模型正確對待它的位置。MCP 提供能力：一份合併進 prompt 的 tool 清單，和一般 HTTP API 差不多，OpenAPI 規格也能做到一樣的事。Skill 提供做法：以一般 thread 訊息的形式出現在 system prompt 下方，所以模型會把它和任務放在一起權衡。真正不能妥協的規則，兩邊都不放，而是做成 tool 的必填參數。模型必須提供的參數，它無法爭論。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>LLM 101：</b>訊息有 system、user、assistant 三種角色。模型是 stateless，所有狀態都在 thread 裡。Tool call 由 harness 執行，結果附加回 thread，再整段送回模型。</li>
+      <li><b>Agent 就是這個流程跑 loop。</b>Claude Code 給模型的 tools 很普通：Bash、Read、Write、Edit、Grep、WebFetch。</li>
+      <li><b>Bash tool 不一定真的跑 bash。</b>只要回傳的結果看起來像 bash 就夠了。incident.io 在 Go 裡實作了一個虛擬 shell。</li>
+      <li><b>成本：</b>一個 skill 的 description 約 100 token 常駐；body 有幾千 token，只在匹配時載入。這和 <a href="#r4">04</a> 的三層，是從不同團隊的實務獨立得出的同一結論。</li>
+      <li><b>放錯位置的代價：</b>「長時間範圍的查詢要拆小」寫在 system prompt 時，agent 拒絕使用者明確要求、而且安全的一週查詢。同一條規則改成 skill 後，請求正常完成。</li>
+      <li><b>幻覺的一個來源：</b>「為文件產生 3 到 5 個 tag」這種規則，遇到空文件時沒有合規的答案，模型只好捏造。作者認為他看到的前沿模型幻覺，多數來自這種「沒有出路」的 prompt。</li>
+      <li><b>不可妥協的保證放在 tool 層：</b>他們的 purge tool 沒有 dry run 或 confirm 參數就拒絕執行。</li>
+      <li><b>架構轉變：</b>他們把多個專用 agent（各自有 system prompt）合併成一個 agent 加多個 skills。一個 agent 看到全部 context，規劃更好。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">三個問題，決定一行設定該放哪裡</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>問題</th><th>答案 → 位置</th></tr></thead>
+        <tbody>
+          <tr><td>它必須每一輪都在嗎？</td><td>否 → skill（按需載入）</td></tr>
+          <tr><td>它應該被權衡，還是被服從？</td><td>權衡 → skill；服從 → system prompt</td></tr>
+          <tr><td>模型應該完全無法拒絕它嗎？</td><td>是 → tool 的必填參數，或 <a href="#r7">07</a> 的 hook</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">把「先 dry run」做成必填參數，而不是寫在 prompt 裡（示意）</p>
+<pre><code>{
+  "name": "purge_queue",
+  "description": "清空一個 subscription 的積壓訊息。",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "subscription": { "type": "string" },
+      "mode": { "type": "string", "enum": ["dry_run", "confirm"] }
+    },
+    "required": ["subscription", "mode"]
+  }
+}</code></pre>
+    <p class="small muted">Server 端再檢查：同一個 subscription 沒有先跑過 dry_run，就拒絕 confirm。規則落在程式裡，模型無法說服它。</p>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>Instruction hierarchy</dt><dd>模型被訓練成依 system、user、tool 結果的順序決定優先權。這是抵抗 prompt injection 的安全機制，也是本文說的「過度服從」的來源。</dd>
+      <dt>OpenAPI</dt><dd>HTTP API 的機器可讀描述。任何 OpenAPI 規格都能轉成一組 tool schema。所以 MCP 的新意在協定與生態，不在能力本身。</dd>
+      <dt>Plugin</dt><dd>一個資料夾加 <code>.claude-plugin/plugin.json</code>，裡面放 skills，也可以放 hooks、subagents、MCP 設定。概念類似 npm package。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>全文讀。最重要的一節是 “Skills replace system prompts”。如果時間很少，先讀這一節，再讀 “Skills are just instructions”。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r4">04</a>官方版的三層載入。</li>
+      <li><a href="#r7">07</a>Hook 是另一個「模型無法爭論」的位置。</li>
+      <li><a href="#r9">09</a>放錯位置的案例是單一觀察；09 示範怎麼用對照組驗證這類說法。</li>
+      <li><a href="#r1">01</a>本文的 LLM 101 是 Karpathy 影片底層機制的 5 分鐘版。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>從你的 CLAUDE.md 或任何 system prompt 挑三行，用上面三個問題決定它們該放哪裡。</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>把規則從 system prompt 移到 skill，模型就「可以權衡」。在受監管的環境裡，這是優點還是風險？哪些規則絕不能讓模型權衡？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 07 ============ -->
+<article class="view" id="r7" data-n="7" data-title="Claude Code hooks reference" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 07 · Configuration, context cost, and enforcement</p>
+    <h1>Claude Code hooks reference<span class="en">Anthropic 官方文件</span></h1>
+    <div class="meta"><span><b>參考文件</b></span><span>持續更新</span><span>查表約 15 分；全文超過 1 小時</span><span class="rec"><span class="meter" data-level="1"><i></i><i></i><i></i></span><span class="lvl">查閱（寫 hook 時必讀）</span></span></div>
+    <a class="src" href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">Hooks 在 Claude Code 生命週期的固定時間點執行你的程式。PreToolUse 可以在動作發生之前擋下它。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>Instruction file 和 skill，只有在模型注意到並遵守時才有效。有些要求不能依賴模型合作，例如禁止寫入受保護的目錄。在 prompt 裡重複「絕對不要」只會花 token，不會強制執行。Host 需要一個確定性的攔截點，在動作之前；也需要動作與 session 事件之後的可觀測訊號。</p>
+    <p>Hooks 讓你在 SessionStart、PreToolUse、PostToolUse、Stop 等事件註冊 handler。PreToolUse 的 command hook 可以檢查一個即將發生的 tool call，在 permission check 或執行之前擋下它。</p>
+    <p>課程說 hooks 劃出 guidance 與 enforcement 的界線。建議只讀 event table，不必讀每個 schema。目標是分類：哪些要求屬於 context，哪些屬於自動修復，哪些必須在執行前就被拒絕。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>三層結構：</b>event（何時）→ matcher（過濾，例如只看 <code>Bash</code> 或 <code>Edit|Write</code>）→ handler（做什麼）。</li>
+      <li><b>Handler 類型：</b>command（shell 指令）、http（POST 到 URL）、mcp_tool、prompt（請模型判斷）、agent（實驗中）。</li>
+      <li><b>設定位置：</b><code>~/.claude/settings.json</code>（個人，所有專案）、<code>.claude/settings.json</code>（專案，可 commit）、<code>.claude/settings.local.json</code>（專案，不 commit）、managed policy（組織管理員）、plugin、skill 與 subagent 的 frontmatter。</li>
+      <li><b>Exit code：</b><code>0</code> 成功；<code>2</code> 阻擋（PreToolUse 擋下 tool call，Stop 讓 Claude 繼續工作）；其他值（包括 <code>1</code>）只是非阻擋錯誤，動作照樣執行。</li>
+      <li><b>Fail-closed：</b>預設 hook 壞掉或逾時，動作照做。政策型 hook 要設 <code>"onFailure": "block"</code>。</li>
+      <li><b><code>if</code> 欄位是 best-effort 過濾。</b>需要硬性 allow / deny 時，用 permission 系統，不要只靠 hook。</li>
+      <li>用 <code>/hooks</code> 查看目前載入了哪些 hook、來自哪個設定檔。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>常用事件</h2>
+    <div class="tbl">
+      <table class="minw">
+        <thead><tr><th>Event</th><th>何時觸發</th><th>能阻擋嗎</th><th>典型用途</th></tr></thead>
+        <tbody>
+          <tr><td><code>SessionStart</code></td><td>Session 開始或 resume</td><td>否</td><td>注入目前 branch、未完成 issue 等 context</td></tr>
+          <tr><td><code>UserPromptSubmit</code></td><td>使用者送出 prompt，Claude 處理前</td><td>是</td><td>擋下含 secret 的 prompt；附加 context</td></tr>
+          <tr><td><code>PreToolUse</code></td><td>Tool 執行前</td><td>是</td><td>擋 <code>rm -rf</code>；擋寫入受保護目錄；改寫參數</td></tr>
+          <tr><td><code>PermissionRequest</code></td><td>需要權限決定時</td><td>用 JSON decision</td><td>自動允許安全指令</td></tr>
+          <tr><td><code>PostToolUse</code></td><td>Tool 成功之後</td><td>否（stderr 回饋給 Claude）</td><td>每次編輯後自動跑 formatter 或 lint</td></tr>
+          <tr><td><code>Stop</code></td><td>Claude 回應結束</td><td>是（讓它繼續）</td><td>測試沒過就不准結束</td></tr>
+          <tr><td><code>PreCompact</code></td><td>Context 壓縮之前</td><td>是</td><td>壓縮前備份 transcript</td></tr>
+          <tr><td><code>SessionEnd</code></td><td>Session 結束</td><td>否</td><td>清理、記錄</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">.claude/settings.json：保護 migrations/，並要求測試通過才結束</p>
+<pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-migrations.sh",
+            "args": [],
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "make test &gt;/dev/null 2&gt;&amp;1 || { echo '測試沒過，請修好再結束' &gt;&amp;2; exit 2; }"
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+    <p class="cap">.claude/hooks/protect-migrations.sh</p>
+<pre><code>#!/bin/bash
+# stdin 是 JSON，例如 {"tool_name":"Edit","tool_input":{"file_path":"..."}, ...}
+FILE=$(jq -r '.tool_input.file_path // empty')
+
+if [[ "$FILE" == *"/migrations/"* ]]; then
+  echo "migrations/ 由 DBA 管理，agent 不能修改" &gt;&amp;2
+  exit 2      # 擋下；stderr 會回給 Claude，讓它知道原因
+fi
+exit 0        # 不做決定，走正常的 permission 流程</code></pre>
+<pre><code>chmod +x .claude/hooks/protect-migrations.sh   # 必須可執行
+claude                                         # 進入後打 /hooks 確認已載入</code></pre>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>類比：Kubernetes admission controller</dt><dd>PreToolUse 像 validating / mutating admission webhook：可以拒絕，也可以用 <code>updatedInput</code> 改寫參數。PostToolUse 像 audit log。</dd>
+      <dt>Fail-open vs fail-closed</dt><dd>預設是 fail-open：hook 壞了，動作照做。安全政策通常要 fail-closed。路徑打錯的政策 hook 會一直沒跑，而且表面上看不出來。</dd>
+      <dt>Guidance vs enforcement</dt><dd>CLAUDE.md 裡的「不要」是 guidance。Hook 是 enforcement。<a href="#r9">09</a> 發現「不要」型規則有幫助，但有幫助不等於有保證。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>只讀這幾段：開頭的 event 表、“How a hook resolves” 的逐步範例、“Exit code output” 與 “Exit code 2 behavior per event” 表、“Block the action when a hook fails”。其他當字典查。想先上手，讀官方的 hooks guide（教學版）。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r2">02</a>「每次都必須發生的事改用 hook」；Stop hook 是確定性的 verification gate。</li>
+      <li><a href="#r6">06</a>必填參數是另一個模型無法爭論的位置。</li>
+      <li><a href="#r9">09</a>Guardrail 的文字版；hook 是它的確定性版本。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>列出團隊三條「agent 絕不能做」的規則。每一條該用 hook、permission rule，還是 sandbox？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>Exit code 1 不會阻擋。一個政策 hook 如果因為路徑打錯一直沒執行，你要怎麼發現？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 08 ============ -->
+<article class="view" id="r8" data-n="8" data-title="The Harness Is the Thing" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 08 · Configuration, context cost, and enforcement</p>
+    <h1>The Harness Is the Thing<span class="en">Scott Fryxell</span></h1>
+    <div class="meta"><span><b>部落格</b></span><span>2026-08-25</span><span>約 10 分</span><span class="rec"><span class="meter" data-level="1"><i></i><i></i><i></i></span><span class="lvl">選讀</span></span></div>
+    <a class="src" href="https://scott-fryxell.github.io/blog/the-harness-is-the-thing" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">模型正在變成可替換的零件。真正要設計的是 harness：角色、模型路由、scripts，以及跨 session 留下來的檔案。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>作者同時用幾個 terminal coding agent（Cursor、Claude，需要時再加 Pi）。他把形塑它們的設定放在任何單一產品之外：一份指令檔、skills、extensions、scripts、一個工作目錄，全部在一個 repo 裡，每個 agent 都載入同一份。本文把這一整圈結構，而不是 terminal 背後的模型，稱為 harness。換工具時，不必重寫設定。</p>
+    <p>他把一件工作拆成隔離的角色。Exploration 產出計畫；計畫變成明確的 DAG 任務清單；worker 一次實作一個節點；critic 精簡並質疑結果；promoter 對外溝通完成的工作。一個同時規劃、實作、自我批評的 prompt，會混淆自己的目標。每個角色配一個合適的模型：前沿模型留給規劃、第一個任務和 promotion，維護工作交給便宜模型。</p>
+    <p>他自述在最密集的情境下，前沿模型用量降低 75%，兩個每月 20 美元的訂閱就夠應付客戶與個人專案。課程提醒：這是一個開發者對自己專案的自述，不是受控量測；作者也承認，要確認哪些 harness 改動真的有效，還需要他尚未採用的實證方法。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li>三個工具共用同一份 <code>AGENTS.md</code> 和 skills，體驗一致，因此不依賴任何一家。</li>
+      <li>角色流程：explore → planner（DAG）→ worker → critic → promoter。Critic 常常把工作推回給 worker。</li>
+      <li>「Prewalk」：用前沿模型做規劃與第一個任務，pattern 確定後交給便宜模型。</li>
+      <li>可重複的工作寫成 script 放進 harness。之後執行多少次都不花 token。</li>
+      <li>所有產出放在 <code>artifacts/</code> 目錄，保持可稽核。</li>
+      <li>他發現 skill 寫得太細反而浪費 token，正在學著放鬆指示的細節。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">一個獨立於產品的 harness repo（依原文結構整理）</p>
+<pre><code>my-harness/
+├── AGENTS.md          # 所有 agent 共用的指令
+├── AGENTS.local.md
+├── skills/            # 依角色分組
+├── extensions/
+├── prompts/  plans/  bin/
+├── artifacts/         # 所有產出集中在這裡，方便稽核
+└── work/              # 實際專案的 repo 放這裡</code></pre>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>階段</th><th>做什麼</th><th>用哪種模型</th></tr></thead>
+        <tbody>
+          <tr><td>Explore / planner</td><td>探索，產出 DAG 計畫</td><td>前沿模型</td></tr>
+          <tr><td>Worker 的第一個節點</td><td>定下實作的 pattern</td><td>前沿模型</td></tr>
+          <tr><td>其餘 worker、critic、日常維護</td><td>照 pattern 實作、精簡、質疑</td><td>便宜模型為主</td></tr>
+          <tr><td>Promoter</td><td>對外溝通完成的工作</td><td>部分用前沿模型</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>Model routing / cascade</dt><dd>先用便宜模型，遇到難題才升級。這是降低推論成本的常見架構，和儲存系統的冷熱分層是同一個思路。</dd>
+      <dt>Planner–executor–critic</dt><dd>Agent 設計中常見的角色分離。好處是每個 prompt 只有一個目標。壞處是角色交接時會遺失 context，需要明確的交接物（計畫檔、DAG）。</dd>
+      <dt>AGENTS.md</dt><dd>跨工具的指令檔慣例。Claude Code 讀 CLAUDE.md，但可以在 CLAUDE.md 裡 import AGENTS.md，讓不同工具共用。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>全文約 10 分鐘。中段介紹作者自己產品的段落可以略過。重點看 “The cost advantage” 與 “Breaking down the harness”。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r9">09</a>課程刻意把兩篇對照：一個是實務者自述，一個是受控 ablation；兩者對「什麼算證據」看法不同。</li>
+      <li><a href="#r10">10</a>同樣發現 scaffold 比介面重要；27B 小模型在精簡 scaffold 下就能完成任務。</li>
+      <li><a href="#r2">02</a>Writer / Reviewer 兩個 session，是 critic 角色的簡化版。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>你的工作流程裡，哪一步真的需要前沿模型？哪些可以交給便宜或自架的模型？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>75% 的節省是自述。如果要驗證「角色分離加模型路由」真的有效，你會怎麼設計對照組、量哪些指標？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 09 ============ -->
+<article class="view" id="r9" data-n="9" data-title="Guardrails Beat Guidance" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 09 · Evidence on harness configuration and cost</p>
+    <h1>Guardrails Beat Guidance<span class="en">A Large-Scale Study of Rules, Skills, and Persistent Configuration for Coding Agents · Zhang et al.</span></h1>
+    <div class="meta"><span><b>論文</b> · arXiv 2604.11088</span><span>2026-04（v2 2026-05）</span><span>挑段落約 25 分</span><span class="rec"><span class="meter" data-level="3"><i></i><i></i><i></i></span><span class="lvl">必讀</span></span></div>
+    <a class="src" href="https://arxiv.org/abs/2604.11088" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">5,000 多次 Claude Code 實驗：隨機規則和專家規則一樣有效。單獨有益的規則都是「不要」，有害的都是「要」。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>Coding agent 會把 repo 規則、skills、持久設定當成 context 載入。團隊憑經驗寫這些檔案，但一條看起來合理的規則，並不能證明它造成了更好的結果。規則的內容、正負語氣、位置，以及「多了一段 context」這件事本身，全部混在一起。除非每一項都和無規則的對照組比較，否則觀察到的例子無法指出是哪條指令有幫助。</p>
+    <p>作者從 GitHub 收集 679 個規則檔，抽出 25,532 條規則。接著在 SWE-bench Verified 上跑超過 5,000 次 Claude Code（Claude Opus 4.6），變化 curated、random、shuffled、mismatched，以及逐條 ablation 等條件。</p>
+    <p>結果一：在 58 題的子集上，curated 和 random 規則都比無規則基準高 13.8 個百分點（50.0% → 63.8%）。結果二：逐條 ablation 中，有益的規則都是負面限制，有害的規則都是正面指令。課程提醒兩件事：random 對照組說明了為什麼沒做 ablation，就不該把功勞歸給某條規則；polarity 結果應視為強假說，不是普遍定律，因為實驗只用一個 harness、一個模型、一個 benchmark 子集。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>挑題方法：</b>500 題各跑 3 次基準。47% 永遠成功、27% 永遠失敗，沒有訊號。只保留成功 1 或 2 次的 58 題（discriminative tasks）。</li>
+      <li><b>Exp 1 有沒有用：</b>七種規則條件都比基準高 6.9–13.8 pp，但彼此之間沒有顯著差異。錯領域規則（React 規則用在 Python 題）58.6%，同領域 56.9%；打亂句子也差不多。作者解讀為 context priming：有結構、相關的指令，讓模型進入比較謹慎的模式。</li>
+      <li><b>Exp 2 數量：</b>規則從 0 到 50 條，通過率都在 59–67%，沒有「太多就崩潰」的臨界點。</li>
+      <li><b>Exp 3 類型：</b>tool / process 規則 63.8% 最高，architecture 規則 53.4% 最低。方向符合預測，但不顯著。</li>
+      <li><b>Exp 4a 逐條拿掉（18 條、35 題）：</b>3 條有益，全是「不要」；4 條有害，全是「要」（讀測試檔、照 code style、處理 edge case、保持相容）；其餘 11 條影響不大。</li>
+      <li><b>最強的一條：</b>「不要重構無關的程式碼」，拿掉後掉 20 pp（p = 0.016）。但它是唯一單獨顯著的，而且通不過嚴格的多重比較校正。</li>
+      <li><b>門檻敏感度：</b>以 3 或 5 pp 判定時，正負分界成立；7 pp 變弱；10 pp 消失。</li>
+      <li><b>整體韌性：</b>單獨看起來有害的規則，放進整組後傷害不會累積。作者稱之為 distortion averaging。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>具體範例</h2>
+    <p class="cap">Ablation 中有益的三條規則，寫成 CLAUDE.md</p>
+<pre><code># 範圍限制
+- 不要重構與這次 issue 無關的程式碼，也不要加不需要的功能
+- 不要新增套件相依，除非絕對必要
+- 不要修改與這次 issue 無關的檔案</code></pre>
+    <p class="cap">論文的作者建議（Box 1，限 Claude Code 類 agent 與 SWE-bench 類任務）</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>做</th><th>不要做</th></tr></thead>
+        <tbody>
+          <tr><td>寫負面限制（「不要 X」）</td><td>沒有檢驗就寫正面指令（「照 code style」「處理 edge case」）</td></tr>
+          <tr><td>放規則；隨機或錯領域的規則也有幫助</td><td>花大量時間雕琢措辭；有沒有放比怎麼寫更重要</td></tr>
+          <tr><td>最多 50 條規則都沒觀察到退化</td><td>只靠逐條單獨評估來挑規則；整組效應才是主角</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>SWE-bench Verified</dt><dd>從真實 GitHub issue 中，經人工確認可解的 500 題。Agent 要產生 patch，讓 repo 的測試通過。題目都是 Python bug fix，天生偏好「最小修改」。</dd>
+      <dt>Ablation</dt><dd>一次拿掉一個元件，看結果變多少。這是歸因的基本方法。</dd>
+      <dt>McNemar test</dt><dd>同一題在兩個條件下的成敗是成對資料。McNemar 只看「一邊過、一邊沒過」的題目。論文自己說明：58 題大約只能偵測 15 pp 左右的差異。</dd>
+      <dt>多重比較</dt><dd>測 18 條規則、門檻 p &lt; 0.05，純靠運氣也預期約 0.9 條「顯著」。Bonferroni 校正會把門檻降到約 0.0028。</dd>
+      <dt>PBRS（potential-based reward shaping）</dt><dd>Ng 等人 1999 年的 RL 結果：依狀態而定的輔助獎勵不改變最佳策略，與狀態無關的偏差可能扭曲它。作者只把它當比喻，並指出比喻在哪裡失效。</dd>
+      <dt>外部效度</dt><dd>SWE-bench 獎勵小 patch，所以「不要重構」自然有利。換成需要大幅修改的任務，結論可能不同。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>讀 Abstract、§1 的 Figure 1、§5 Experimental Setup（方法是最值得學的部分）、§6 每個 Finding 的粗體句、§7 的 Box 1 與 Limitations。§4 PBRS 可以略讀。附錄 A 的 18 條規則值得掃一眼。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r2">02</a>官方說 CLAUDE.md 太長會讓規則被忽略；本文說 50 條不降低通過率。兩者量的是不同東西。</li>
+      <li><a href="#r6">06</a>「移到 skill 就好了」是單一觀察；本文示範怎麼用對照組驗證。</li>
+      <li><a href="#r8">08</a>實務自述 vs 受控實驗。</li>
+      <li><a href="#r7">07</a>「不要」型規則最強的形式，是 hook。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>為什麼「隨機規則也有效」這個結果，讓「我們的 CLAUDE.md 讓 agent 變好」這句話變得很難證明？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>如果要在自己團隊的 repo 重做這個實驗，你會用什麼任務集？怎麼挑 discriminative tasks？怎麼控制每次重跑的變異？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+<!-- ============ 10 ============ -->
+<article class="view" id="r10" data-n="10" data-title="The Scaffolding Matters More Than the Interface" hidden>
+  <div class="head">
+    <p class="eyebrow">閱讀 10 · Evidence on harness configuration and cost</p>
+    <h1>The Scaffolding Matters More Than the Interface<span class="en">A Controlled Comparison of MCP and CLI Tool Use · Alier Forment, Casañ, García-Peñalvo, Pereira</span></h1>
+    <div class="meta"><span><b>論文</b> · arXiv 2608.08654</span><span>2026-08</span><span>挑段落約 30 分；全文 1 小時以上</span><span class="rec"><span class="meter" data-level="2"><i></i><i></i><i></i></span><span class="lvl">推薦（在乎自架小模型則必讀）</span></span></div>
+    <a class="src" href="https://arxiv.org/abs/2608.08654" target="_blank" rel="noopener">打開原文 ↗</a>
+  </div>
+  <p class="oneliner">同一個 GitHub 任務、7 個 scaffold、5 個模型：成本主要由 scaffold 決定，不是 MCP 或 CLI。</p>
+
+  <section class="blk"><h2>核心主張</h2>
+    <p>Agent 可以透過 MCP tools 操作 repo，也可以直接寫一般的命令列指令。很多比較把成本差異歸給介面，但同時也換了外圍的 harness。System prompt、tool 描述、重試行為、agent 有沒有真的走被指定的路徑，每一次都可能不同。所以沒有配對的比較，其實同時量了好幾個變數。</p>
+    <p>作者固定一個 6 步驟的軟體任務，在 7 個 agent scaffold、5 個模型上執行。在同時支援兩種介面的 scaffold 上，做 MCP 與 CLI 的配對。完成度用 repo 的實際狀態驗證，不相信 agent 的自我回報。</p>
+    <p>結果：scaffold 主導成本。13 組配對的 MCP / CLI 成本比，從 0.43× 到 29×；agent 也常常不用被指定的介面。課程要你留下的是方法要求：比較介面時，要驗證實際走的路徑，並固定 harness。證據只來自一個小任務，所以要記住的是「比例不穩定」，不是任何一個比例。</p>
+  </section>
+
+  <section class="blk"><h2>重點</h2>
+    <ul class="pts">
+      <li><b>任務：</b>找 issue → 開 branch → 套 patch → commit → 開 PR → 回報某目錄有幾個檔案。事後用 GitHub API 檢查 4 個條件。</li>
+      <li><b>Scaffold：</b>Claude Code、Codex、qwen-code、Hermes、opencode 支援 MCP；pi 和 Tau 沒有 MCP client，作為對照。</li>
+      <li><b>CLI arm（完全沒掛 MCP）：</b>pi 和 Claude Code 差 28 倍。Claude Code 的 27 個內建 tool schema，讓任務還沒開始就約 22,000 token。</li>
+      <li><b>小模型：</b>27B 本地模型在 Tau 下花 17,416 token，在 Codex 加 MCP 下花 2,418,828 token（108 次 tool call）。差 139 倍，兩者都完成任務。</li>
+      <li><b>MCP vs CLI：</b>13 組配對比 0.43×–29.06×，中位數 0.93，無法下結論。同一設定重跑的變異中位數 1.51×、最大 5.41×，所以小於約 2 倍的差異都分不出來。</li>
+      <li><b>失敗的成本：</b>兩邊失敗次數相同（各 19 次中 3 次）。但 MCP arm 有 12.9% 的錢花在沒完成的 run，CLI arm 只有 2.2%。失敗的 run 花的 token 約是成功 run 的 2 倍。</li>
+      <li><b>Schema 傳送方式：</b>Hermes 每次只送 7 個 schema（含一對 gateway tool，其餘定義按需取得），其他 scaffold 每次送 44 個。成本差 3.1 倍，但只有一個樣本，有 confound。</li>
+      <li><b>Agent 不照指定介面：</b>在沒有隔離的預實驗中，21 次 run 只有 6 次只用 MCP。改 prompt 沒用；把替代路徑的 credential 拿掉才有用。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>數據：各 scaffold 的成本（Table 1）</h2>
+    <p class="small muted">完成的 run 的 input token 中位數，跨 5 個模型與兩種介面。</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Scaffold</th><th>MCP client</th><th>完成</th><th>Input token</th><th>相對</th></tr></thead>
+        <tbody>
+          <tr><td>pi</td><td>無</td><td class="n">4/4</td><td class="n">14,660</td><td class="n">×1.0</td></tr>
+          <tr><td>Tau</td><td>無</td><td class="n">4/4</td><td class="n">16,459</td><td class="n">×1.1</td></tr>
+          <tr><td>Hermes</td><td>有</td><td class="n">7/8</td><td class="n">75,352</td><td class="n">×5.1</td></tr>
+          <tr><td>Codex</td><td>有</td><td class="n">6/8</td><td class="n">92,639</td><td class="n">×6.3</td></tr>
+          <tr><td>opencode</td><td>有</td><td class="n">7/8</td><td class="n">131,649</td><td class="n">×9.0</td></tr>
+          <tr><td>Claude Code</td><td>有</td><td class="n">5/6</td><td class="n">260,170</td><td class="n">×17.7</td></tr>
+          <tr><td>qwen-code</td><td>有</td><td class="n">7/8</td><td class="n">288,808</td><td class="n">×19.7</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Output token 在各 scaffold 間只差 1.7 倍（824–1,367），input 差 20 倍。差異來自每一輪帶了多少 context，不是生成了多少。</p>
+  </section>
+
+  <section class="blk"><h2>背景概念</h2>
+    <dl class="bg">
+      <dt>Scaffold = harness</dt><dd>把使用者請求送進模型、執行模型要求的動作、把結果送回去的那一層軟體。本文用 scaffold，其他篇用 harness，指的是同一件事。</dd>
+      <dt>Schema 成本乘上輪數</dt><dd>模型在請求之間不記得任何事，每次請求都要重送整個 tool 清單。成本約等於「輪數 × schema 數 × 每個 schema 的 token」。Prompt caching 會打折，但不會讓它消失。</dd>
+      <dt>配對設計與 confound</dt><dd>同一個 scaffold、同一個模型，只換介面，才是配對比較。跨 scaffold 比較時，其他所有差異都混在結果裡。</dd>
+      <dt>驗證環境狀態</dt><dd>就像測試要 assert 結果，而不是看 log 寫了 success。論文中一個 credential 設錯的 run，從成本、完成度、tool call 看起來都很正常，只有 agent 最後一句話透露了問題。</dd>
+      <dt>Resolution limit</dt><dd>同一設定重跑的變異，決定了實驗能分辨的最小效果。小於這個範圍的差異，不能當成結論。</dd>
+    </dl>
+  </section>
+
+  <section class="blk"><h2>對自架、地端部署的意義</h2>
+    <p>27B 模型在每一個 scaffold 下都能完成任務。限制它的是 scaffold 替它花了多少 token，不是模型能力。對 air-gapped、自架模型的團隊，選一個精簡、可控的 scaffold，可能比等待更大的模型更有效。作者的建議：開放式探索用通用 assistant；邊界清楚、會重複執行的任務，用團隊自己能改的小 scaffold。</p>
+  </section>
+
+  <section class="blk"><h2>怎麼讀</h2>
+    <p>Abstract → §2.1–2.2（任務與驗證）→ §3 的 Table 1、Table 2 → §4.1、§4.3、§4.4 → §6（小模型）→ §7（介面遵守）→ §9.1 的四個結論。§2.10 研究本身的 token 成本很有趣，可選讀。附錄可略。</p>
+  </section>
+
+  <section class="blk"><h2>跟其他篇的關係</h2>
+    <ul class="xref">
+      <li><a href="#r5">05</a>按需載入的機制；本文給出部分實測，但有 confound。</li>
+      <li><a href="#r8">08</a>Scaffold / harness 才是設計對象。</li>
+      <li><a href="#r9">09</a>同樣強調對照組、配對設計與統計力的限制。</li>
+      <li><a href="#r3">03</a>驗證要看實際結果，不看 agent 怎麼說。</li>
+    </ul>
+  </section>
+
+  <section class="blk"><h2>討論題</h2>
+    <div class="disc">
+      <div><span class="tag">基礎</span><ul><li>作者為什麼不相信 agent 回報「完成」？你的團隊評估 agent 時，「完成」的判準是什麼？</li></ul></div>
+      <div><span class="tag">進階</span><ul><li>客戶問你「工具該用 MCP 還是 CLI 接」。根據本文，在回答之前你會先量哪些東西？</li></ul></div>
+    </div>
+  </section>
+  <nav class="pager" data-pager></nav>
+</article>
+
+</main>
+
+<script>
+(function(){
+  var views = Array.prototype.slice.call(document.querySelectorAll('.view'));
+  var reads = views.filter(function(v){ return v.dataset.n; });
+  var total = reads.length;
+  var barnav = document.getElementById('barnav');
+
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+  reads.forEach(function(v, i){
+    var pager = v.querySelector('[data-pager]');
+    if (!pager) return;
+    var prev = reads[i-1], next = reads[i+1];
+    var html = '';
+    html += prev
+      ? '<a class="prev" href="#' + prev.id + '"><span class="k">← 上一篇 ' + pad(+prev.dataset.n) + '</span><span>' + prev.dataset.title + '</span></a>'
+      : '<a class="prev" href="#home"><span class="k">← 回總覽</span><span>課外閱讀總整</span></a>';
+    html += next
+      ? '<a class="next" href="#' + next.id + '"><span class="k">下一篇 ' + pad(+next.dataset.n) + ' →</span><span>' + next.dataset.title + '</span></a>'
+      : '<a class="next" href="#home"><span class="k">回總覽 →</span><span>課外閱讀總整</span></a>';
+    pager.innerHTML = html;
+  });
+
+  function show(){
+    var id = (location.hash || '').replace('#','') || 'home';
+    var target = document.getElementById(id);
+    if (!target || !target.classList.contains('view')) { id = 'home'; target = document.getElementById('home'); }
+    views.forEach(function(v){ v.hidden = (v.id !== id); });
+    if (target.dataset.n) {
+      var n = +target.dataset.n;
+      var prev = n > 1 ? '#r' + (n-1) : '#home';
+      var next = n < total ? '#r' + (n+1) : '#home';
+      barnav.innerHTML = '<a href="#home">總覽</a><a href="' + prev + '" aria-label="上一篇">←</a><span>' + pad(n) + ' / ' + total + '</span><a href="' + next + '" aria-label="下一篇">→</a>';
+    } else {
+      barnav.textContent = total + ' 篇';
+    }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', show);
+  show();
+})();
+</script>
+</body>
+</html>

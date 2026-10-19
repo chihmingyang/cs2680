@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L4 Context 管理與 tool 設計 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <button type="button" class="sn-open" aria-controls="sidenav" aria-expanded="false" title="開啟目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sn-where">目錄</span></button>
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l03.html" rel="prev">← L3</a>
+      <span class="here">L4 / 8</span>
+      <a href="l05.html" rel="next">L5 →</a>
+    </nav>
+  </div>
+  <div class="readbar" aria-hidden="true"><i></i></div>
+</header>
+
+<div class="shell">
+<aside class="sidenav" id="sidenav">
+<div class="sn-head"><span class="sn-title">目錄</span><button type="button" class="sn-close" aria-label="關閉目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+<nav class="sn-nav" aria-label="課程目錄">
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="index.html"><span class="sn-t">課程總覽</span></a></li>
+</ol>
+<p class="sn-label">Part I · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l04.html" aria-current="page"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-arch" data-spy data-short="架構"><span class="sn-n">1</span><span class="sn-t">架構</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">2</span><span class="sn-t">核心觀念</span><span class="sn-p">p.4–52</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1">ReAct：推理要有 observation 來檢查</a></li><li><a class="sn-sub" href="#i2">Tool 要為 model 設計：search、edit、shell 的取捨</a></li><li><a class="sn-sub" href="#i3">Prompt 技巧從簡單開始，夠用就停</a></li><li><a class="sn-sub" href="#i4">Context 是有限資源：錢、延遲、注意力</a></li><li><a class="sn-sub" href="#i5">四種策略有順序，harness 決定發揮多少</a></li></ol></li><li><a class="sn-sec" href="#s-background" data-spy data-short="觀念補充"><span class="sn-n">3</span><span class="sn-t">觀念補充</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#t1">Embedding 與 semantic search</a></li><li><a class="sn-sub" href="#t2">Language Server Protocol</a></li><li><a class="sn-sub" href="#t3">Unified diff</a></li><li><a class="sn-sub" href="#t4">AST</a></li><li><a class="sn-sub" href="#t5">Temperature 與取樣</a></li><li><a class="sn-sub" href="#t6">Lost in the middle</a></li></ol></li><li><a class="sn-sec" href="#s-beyond" data-spy data-short="延伸思考"><span class="sn-n">4</span><span class="sn-t">延伸思考</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#x1">Tool 設計就是 context 設計：agent-computer interface</a></li><li><a class="sn-sub" href="#x2">評估時要固定 harness</a></li><li><a class="sn-sub" href="#x3">Prompt 的招式會過期，原則不會</a></li><li><a class="sn-sub" href="#x4">無損與有損的排序，就是成本的排序</a></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">5</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">6</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#s-submit" data-spy data-short="討論"><span class="sn-n">7</span><span class="sn-t">大家的討論</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n"></span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent memory 與可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+</ol>
+<p class="sn-soon"><a href="index.html#later-h">Part II 從 10/19 開始，slides 公開後加入</a></p>
+<p class="sn-label">讀書會</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="https://github.com/chihmingyang/cs2680/issues" target="_blank" rel="noopener"><span class="sn-t">GitHub 討論 ↗</span></a></li>
+</ol>
+</nav>
+</aside>
+<div class="sn-scrim" hidden></div>
+<main class="page gutter article" data-lecture="l04" data-format="article" data-pdf="4_agent_design_1.pdf" data-pages-total="56">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 04 · 2026-09-16 · Part I</p>
+    <h1>Context 管理與 tool 設計</h1>
+    <p class="en-title">Agents design I: context management and tool design</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/4_agent_design_1.pdf" target="_blank" rel="noopener">4_agent_design_1.pdf ↗</a></li>
+      <li><span class="k">頁數</span>56</li>
+      <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">L2 從使用者的角度看 agent。這堂換成設計者的角度：loop 怎麼寫、給 model 哪些 tool、每一步讓 model 看到什麼。主線是一句話：model 只決定下一步，其他都是 harness 的工作。</p>
+    <ul class="core">
+      <li><span><b>Loop 很短，難在周邊。</b>ReAct loop 寫成程式只有二十幾行。表現取決於 harness 的四項工作：組 context、寫 tool、驗證執行、管理結果。</span></li>
+      <li><span><b>Tool 的輸出就是 context。</b>Tool 要少而正交、輸出精簡、錯誤要能教。只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。</span></li>
+      <li><span><b>Context 是有限資源。</b>越長越貴、越慢、越不準。依序用 admission、offloading、transformation；compaction 有損且不可逆，留到最後。</span></li>
+    </ul>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+  </section>
+
+  <div class="layout">
+
+    <div class="content">
+
+      <!-- ===================== 1 架構 ===================== -->
+      <section class="part" id="s-arch">
+        <header class="part-head">
+          <p class="kicker">1 · 架構</p>
+          <h2>一個 loop，四項設計工作</h2>
+        </header>
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 700 386" role="img" aria-label="Agent loop 流程圖：使用者請求放進 messages，交給 model。Model 給出最終回答就結束；發出 tool call 就由 harness 執行，結果附上 tool_call_id 放回 context，再交給 model。四個編號標出 harness 設計者的工作：組出 context、寫 tool 定義、驗證並執行、整理結果與管理 context。">
+              <defs>
+                <marker id="l4c-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+                <marker id="l4c-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/>
+                </marker>
+              </defs>
+
+              <rect x="112" y="12" width="478" height="292" rx="6" class="dg-frame"/>
+              <text x="122" y="296" class="dg-tm">loop · 最多 MAX_STEPS 圈</text>
+
+              <rect x="10" y="40" width="92" height="44" rx="4" class="dg-box"/>
+              <text x="56" y="67" text-anchor="middle" class="dg-t">使用者請求</text>
+
+              <rect x="262" y="40" width="176" height="44" rx="4" class="dg-box-accent"/>
+              <text x="350" y="58" text-anchor="middle" class="dg-tb">Model</text>
+              <text x="350" y="75" text-anchor="middle" class="dg-ts">決定下一步</text>
+
+              <rect x="600" y="40" width="90" height="44" rx="4" class="dg-box"/>
+              <text x="645" y="67" text-anchor="middle" class="dg-t">回傳答案</text>
+
+              <rect x="124" y="226" width="170" height="44" rx="4" class="dg-box"/>
+              <text x="209" y="253" text-anchor="middle" class="dg-t">回傳 tool 結果</text>
+
+              <rect x="406" y="226" width="170" height="44" rx="4" class="dg-box"/>
+              <text x="491" y="253" text-anchor="middle" class="dg-t">執行 tool</text>
+
+              <line x1="102" y1="62" x2="260" y2="62" class="dg-line" marker-end="url(#l4c-ah)"/>
+              <text x="170" y="54" text-anchor="middle" class="dg-ts">放進 messages</text>
+
+              <line x1="438" y1="62" x2="598" y2="62" class="dg-line" marker-end="url(#l4c-ah)"/>
+              <text x="512" y="54" text-anchor="middle" class="dg-ts">最終回答</text>
+
+              <line x1="424" y1="84" x2="424" y2="224" class="dg-accent" marker-end="url(#l4c-ahs)"/>
+              <text x="434" y="170" class="dg-ta">tool call</text>
+
+              <line x1="406" y1="248" x2="296" y2="248" class="dg-line" marker-end="url(#l4c-ah)"/>
+              <text x="351" y="240" text-anchor="middle" class="dg-ts">stdout、錯誤</text>
+
+              <line x1="276" y1="226" x2="276" y2="86" class="dg-line" marker-end="url(#l4c-ah)"/>
+              <text x="266" y="164" text-anchor="end" class="dg-ts">結果加回 messages</text>
+              <text x="266" y="180" text-anchor="end" class="dg-ts">（附上 tool_call_id）</text>
+
+              <circle cx="232" cy="62" r="10" class="dg-box-accent"/>
+              <text x="232" y="66" text-anchor="middle" class="dg-ta">1</text>
+              <circle cx="424" cy="122" r="10" class="dg-box-accent"/>
+              <text x="424" y="126" text-anchor="middle" class="dg-ta">2</text>
+              <circle cx="560" cy="210" r="10" class="dg-box-accent"/>
+              <text x="560" y="214" text-anchor="middle" class="dg-ta">3</text>
+              <circle cx="142" cy="210" r="10" class="dg-box-accent"/>
+              <text x="142" y="214" text-anchor="middle" class="dg-ta">4</text>
+
+              <text x="10" y="328" class="dg-tm">harness 設計者的四項工作</text>
+              <circle cx="20" cy="348" r="9" class="dg-box-accent"/>
+              <text x="20" y="352" text-anchor="middle" class="dg-ta">1</text>
+              <text x="36" y="352" class="dg-t">組出 context</text>
+              <circle cx="370" cy="348" r="9" class="dg-box-accent"/>
+              <text x="370" y="352" text-anchor="middle" class="dg-ta">2</text>
+              <text x="386" y="352" class="dg-t">寫 tool 定義</text>
+              <circle cx="20" cy="372" r="9" class="dg-box-accent"/>
+              <text x="20" y="376" text-anchor="middle" class="dg-ta">3</text>
+              <text x="36" y="376" class="dg-t">驗證參數、檢查權限、執行</text>
+              <circle cx="370" cy="372" r="9" class="dg-box-accent"/>
+              <text x="370" y="376" text-anchor="middle" class="dg-ta">4</text>
+              <text x="386" y="376" class="dg-t">整理結果、管理 context</text>
+            </svg>
+          </div>
+          <figcaption>依 p.5–6 重畫。藍色箭頭是 model 唯一的決定：給答案，或發出 tool call。執行 tool、回傳結果、加回 messages 都由 harness 完成。編號是 slide 標出的四項設計者工作；編號的位置是本文的整理。</figcaption>
+        </figure>
+
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 740 322" role="img" aria-label="四種 context 管理策略各在哪裡動作。進來的內容（tool 結果、檔案、schema）先經過 admission 把關，才進入 context window。Offloading 把內容寫到外部儲存，只留 handle，要用再讀回。Transformation 在 window 裡刪掉舊的或重複的 tool 結果。Compaction 把舊歷史換成 LLM 摘要。Window 的開頭是 system prompt 與 tool 定義，不能動；結尾是最近幾輪，保持完整。">
+              <defs>
+                <marker id="l4d-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                </marker>
+              </defs>
+
+              <!-- source -->
+              <rect x="10" y="118" width="124" height="64" rx="4" class="dg-box"/>
+              <text x="72" y="142" text-anchor="middle" class="dg-tb">進來的內容</text>
+              <text x="72" y="164" text-anchor="middle" class="dg-ts">tool 結果、檔案、schema</text>
+
+              <!-- admission -->
+              <rect x="166" y="110" width="124" height="80" rx="4" class="dg-box-accent"/>
+              <text x="228" y="134" text-anchor="middle" class="dg-ta">1 Admission</text>
+              <text x="228" y="152" text-anchor="middle" class="dg-t">在門口把關</text>
+              <text x="228" y="168" text-anchor="middle" class="dg-ts">shaping、截斷</text>
+              <text x="228" y="182" text-anchor="middle" class="dg-ts">交給 subagent</text>
+
+              <line x1="134" y1="150" x2="164" y2="150" class="dg-line" marker-end="url(#l4d-ah)"/>
+              <line x1="290" y1="150" x2="320" y2="150" class="dg-line" marker-end="url(#l4d-ah)"/>
+              <text x="305" y="140" text-anchor="middle" class="dg-ts">過關</text>
+
+              <!-- window -->
+              <rect x="322" y="14" width="232" height="296" rx="6" class="dg-frame"/>
+              <text x="334" y="34" class="dg-tb">Context window</text>
+
+              <rect x="334" y="44" width="208" height="44" rx="4" class="dg-box-soft"/>
+              <text x="438" y="62" text-anchor="middle" class="dg-t">開頭：system prompt、tool 定義</text>
+              <text x="438" y="79" text-anchor="middle" class="dg-ts">不能動；prefix cache 靠它</text>
+
+              <rect x="334" y="100" width="208" height="78" rx="4" class="dg-box"/>
+              <text x="438" y="122" text-anchor="middle" class="dg-ta">3 Transformation</text>
+              <text x="438" y="142" text-anchor="middle" class="dg-t">舊的 tool 結果 → [已移除]</text>
+              <text x="438" y="162" text-anchor="middle" class="dg-ts">不做摘要，可重新執行拿回</text>
+
+              <rect x="334" y="190" width="208" height="60" rx="4" class="dg-box"/>
+              <text x="438" y="210" text-anchor="middle" class="dg-ta">4 Compaction</text>
+              <text x="438" y="228" text-anchor="middle" class="dg-t">舊歷史 → LLM 摘要</text>
+              <text x="438" y="243" text-anchor="middle" class="dg-ts">有損、不可逆</text>
+
+              <rect x="334" y="262" width="208" height="40" rx="4" class="dg-box-soft"/>
+              <text x="438" y="280" text-anchor="middle" class="dg-t">結尾：最近幾輪</text>
+              <text x="438" y="295" text-anchor="middle" class="dg-ts">保持完整</text>
+
+              <!-- offloading -->
+              <rect x="618" y="110" width="112" height="80" rx="4" class="dg-box-accent"/>
+              <text x="674" y="134" text-anchor="middle" class="dg-ta">2 Offloading</text>
+              <text x="674" y="152" text-anchor="middle" class="dg-t">外部儲存</text>
+              <text x="674" y="168" text-anchor="middle" class="dg-ts">磁碟、tool 索引</text>
+              <text x="674" y="182" text-anchor="middle" class="dg-ts">memory、TODO.md</text>
+
+              <line x1="554" y1="136" x2="616" y2="136" class="dg-line" marker-end="url(#l4d-ah)"/>
+              <text x="585" y="128" text-anchor="middle" class="dg-ts">寫出去</text>
+              <line x1="616" y1="170" x2="556" y2="170" class="dg-line dg-dash" marker-end="url(#l4d-ah)"/>
+              <text x="585" y="186" text-anchor="middle" class="dg-ts">要用再讀</text>
+            </svg>
+          </div>
+          <figcaption>依 p.45–49 整理：四種策略各在哪裡動作。1、2 在內容進 window 之前動作，無損；3、4 處理已在 window 裡的內容，越往後越難找回。</figcaption>
+        </figure>
+        <div class="prose">
+          <p>第一張圖的重點：model 每一圈只做一個決定，其他四件事都在 model 之外。所以同一個 model 放進不同的 harness，表現會差很多。第二張圖把第 4 項工作拆開：context 有一個入口、一個外部儲存、一個會變長的中段，四種策略各守一個位置。</p>
+        </div>
+      </section>
+
+      <!-- ===================== 2 核心觀念 ===================== -->
+      <section class="part" id="s-ideas">
+        <header class="part-head">
+          <p class="kicker">2 · 核心觀念</p>
+          <h2>五個觀念串起整堂課</h2>
+        </header>
+        <div class="ideas">
+          <div class="idea" id="i1">
+            <h3>ReAct：推理要有 observation 來檢查 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=4" target="_blank" rel="noopener">p.4–7</a></h3>
+            <div class="prose">
+              <p>ReAct 讓 model 輪流做三件事：Thought、Action、Observation。只推理，沒有東西檢查推理，小錯誤會累積成自信的幻覺。只行動，背後沒有計畫，會重複同樣的動作。Observation 把真實的結果放回 context，修正想法。</p>
+              <p>寫成程式，Action 是 tool call，Observation 是 tool 結果，loop 只有二十幾行（第 6 段）。Model 每一圈只做一個決定：給出最終回答，或發出 tool call。其他事情都在 model 之外：組出 context、寫 tool 定義、驗證並執行、整理結果。</p>
+            </div>
+          </div>
+          <div class="idea" id="i2">
+            <h3>Tool 要為 model 設計：search、edit、shell 的取捨 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=8" target="_blank" rel="noopener">p.8–26</a></h3>
+            <div class="prose">
+              <p>Agent 看不到整個 repo，要靠 tool 找程式碼。Grep 不用建索引，但只比對字面：搜「timeout」找不到 <code>deadline</code>。Embedding 索引依意思找，repo map 依結構找，代價是索引要同步。LSP 能跟著 import 與別名走，代價是每種語言一個常駐 server。</p>
+              <p>改程式碼有四種方式，在 token 成本與穩健度之間取捨。整檔重寫每次都套得上，但輸出和檔案大小成正比，長檔會 drift。Unified diff 精簡，但 context 行過期就套不上。Search/replace 靠內容定位，輸出只和改動成正比；anchor 不唯一就失敗。AST 編輯構造上就合法，但只能做工具提供的操作。</p>
+              <p>Shell 是最強也最危險的 tool：能串接、碰得到網路與檔案系統，blast radius 等於 shell 本身。只給 shell 就好嗎？SWE-agent 的數據說不夠：只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。顯示整個檔案、保留完整歷史，都比預設差。所以 tool 設計的五條原則，都在管輸出怎麼進 context：少且正交、專用、省 token、錯誤要能教、預設冪等。</p>
+            </div>
+          </div>
+          <div class="idea" id="i3">
+            <h3>Prompt 技巧從簡單開始，夠用就停 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=28" target="_blank" rel="noopener">p.28–40</a></h3>
+            <div class="prose">
+              <p>八種技巧分三層。先用簡單的：zero-shot、few-shot、role。需要時加推理：chain-of-thought、tree-of-thought、self-consistency。最後才設計成系統：prompt chaining、meta prompting。每往下一層，token 與呼叫次數都增加，所以從上往下試。</p>
+              <p>每一種技巧都有「該換下一種」的訊號：規則講不清楚，加範例；任務有多個步驟，要 model 寫出步驟；答錯代價高，就取樣多次再投票。</p>
+              <p>這些建議有保存期限。新 model 在訓練時已經學會其中幾招；要 reasoning model「think step by step」沒有必要，有時反而有害。四條原則不會過期：從簡單開始、分段、具體精簡、大任務拆小。</p>
+            </div>
+          </div>
+          <div class="idea" id="i4">
+            <h3>Context 是有限資源：錢、延遲、注意力 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=41" target="_blank" rel="noopener">p.41–44</a></h3>
+            <div class="prose">
+              <p>Karpathy 的定義：context engineering 是「為下一步放進剛好需要的資訊」。重點在「下一步」：harness 每圈都要重新決定放什麼、拿掉什麼。Context 有三種成本。錢：每一步都重送整個 window。延遲：prompt 越長，prefill 越久，decode 也變慢。注意力：window 越滿，model 越難找回資訊。</p>
+              <p>兩組研究量化了注意力的成本。Context rot：輸入越長，準確率越低。Lost in the middle：答案放在 20 份文件的第 1 份，準確率 76%；第 10 份掉到 55%；第 20 份回到 71%。Agent 的 context 中間，正好是舊的 tool 結果。</p>
+            </div>
+          </div>
+          <div class="idea" id="i5">
+            <h3>四種策略有順序，harness 決定發揮多少 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=45" target="_blank" rel="noopener">p.45–52</a></h3>
+            <div class="prose">
+              <p>四種策略有先後順序。Admission 在門口把關：原始 DOM 48,000 token，擷取後只剩 900，答案相同。Offloading 讓內容留在外面但拿得到：60 個 tool schema 要 42,000 token，改成索引加 3 個只要 3,100。Transformation 刪掉過期或重複的舊內容：96,000 變 24,000。Compaction 用 LLM 寫摘要，有損、不可逆，排最後。</p>
+              <p>Breunig 把 context 的失敗分成五種：poisoning、distraction、confusion、clash、drift。叫得出名字，修法就很明顯：poisoning 刪掉那段，distraction 用 masking，confusion 用 admission，clash 用 dedup，drift 把目標重新放回。</p>
+              <p>最後的實驗把整堂收攏：model 不變，只改 harness。SWE-bench Verified 從 43 題變 72 題（1.7×），SWE-bench Pro 從 31 題變 72 題（2.3×）。改良的 harness 做的就是這堂的內容：壓縮舊輸出、保留最近的 observation、偵測停滯。注意：Verified 用 20,480 token 的小 window，window 越小，context 管理的影響越大。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 3 觀念補充 ===================== -->
+      <section class="part" id="s-background">
+        <header class="part-head">
+          <p class="kicker">3 · 觀念補充</p>
+          <h2>Slide 預設你已經懂的背景</h2>
+        </header>
+        <dl class="terms">
+          <div id="t1">
+            <dt>Embedding 與 semantic search<small>p.11 的「依意思找」怎麼運作</small></dt>
+            <dd>
+              <p>Embedding model 把一段文字轉成一個向量。意思相近的文字，向量的距離也近。建索引時把程式切成片段，每段算一個向量；查詢時把問題轉成向量，取最近的幾段。所以搜「rate-limit」找得到 <code>throttle.ts</code>。</p>
+              <p>代價：檔案一改，向量就要重算；索引沒跟上就回傳舊程式碼 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=11" target="_blank" rel="noopener">p.11</a>。</p>
+            </dd>
+          </div>
+          <div id="t2">
+            <dt>Language Server Protocol<small>編輯器與編譯器之間的標準協定</small></dt>
+            <dd>
+              <p>LSP 是編輯器與語言分析工具之間的 JSON-RPC 協定。「go to definition」就是送一個 <code>textDocument/definition</code> 請求給 language server。Server 解析過整個專案，知道每個 symbol 的定義、引用與型別。</p>
+              <p>對 agent，LSP 把「grep 再讀 5 個候選檔」換成一次查詢 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=13" target="_blank" rel="noopener">p.13</a>。它和 MCP 同一個思路：N × M 變成 N + M（L2）。</p>
+            </dd>
+          </div>
+          <div id="t3">
+            <dt>Unified diff<small>讀懂 p.18 的 patch</small></dt>
+            <dd>
+              <p>一份 patch 由 file header 與多個 hunk 組成。Hunk header <code>@@ -41,3 +41,3 @@</code> 說：舊檔從第 41 行起 3 行，新檔同樣。空格開頭的行是 context 行，用來定位；<code>-</code> 刪除，<code>+</code> 新增。</p>
+              <p><code>git apply</code> 依 context 行在附近搜尋，行號偏移了還能套。Context 行對不上就失敗，而且預設全有或全無：一個 hunk 失敗，整份都不套用。第 6 段有實測。</p>
+            </dd>
+          </div>
+          <div id="t4">
+            <dt>AST<small>p.20 的結構化編輯站在哪裡</small></dt>
+            <dd>
+              <p>Parser 把原始碼轉成一棵樹：函式節點底下有參數節點、本體節點。結構化編輯工具修改這棵樹，再印回文字，所以結果一定能 parse。</p>
+              <p>限制：每種語言一套 parser；model 只能做工具定義好的操作，例如改名、加參數。「改寫這段折扣邏輯」沒有對應的操作。</p>
+            </dd>
+          </div>
+          <div id="t5">
+            <dt>Temperature 與取樣<small>self-consistency 為什麼要 T 大於 0</small></dt>
+            <dd>
+              <p>Model 每一步產生一個機率分布，再從中取樣一個 token。Temperature 控制分布的平或尖：T = 0 永遠選最高機率的 token；T 越大，低機率的 token 越常中選。</p>
+              <p>Self-consistency 要的是「不同的推理路徑得到相同答案」<a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=35" target="_blank" rel="noopener">p.35</a>，所以必須用 T 大於 0。T = 0 的 5 票一致沒有資訊，因為那 5 次走的是同一條路。</p>
+            </dd>
+          </div>
+          <div id="t6">
+            <dt>Lost in the middle<small>p.43 的 U 形曲線</small></dt>
+            <dd>
+              <p>實驗把含答案的文件放在 20 份文件中的不同位置，量回答的準確率。結果呈 U 形：第 1 份 76%，第 10 份 55%，第 20 份 71%。原因還沒有定論。</p>
+              <p>對設計的意義：關鍵指示放開頭或結尾。中間的舊 tool 結果，是 model 最看不到、也最先該清掉的。</p>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ===================== 4 延伸思考 ===================== -->
+      <section class="part" id="s-beyond">
+        <header class="part-head">
+          <p class="kicker">4 · 延伸思考</p>
+          <h2>超出 slide 的推論</h2>
+        </header>
+        <p class="note-own">這一段是本文的延伸，不是 slide 的內容。</p>
+        <div class="ideas">
+          <div class="idea" id="x1">
+            <h3>Tool 設計就是 context 設計：agent-computer interface</h3>
+            <div class="prose">
+              <p>SWE-agent 論文把 agent 與電腦之間的介面叫 agent-computer interface（ACI）。IDE 為人設計：語法高亮、滑鼠、彈出視窗。Model 需要的介面不同：一次看 100 行，錯誤訊息要能讀。</p>
+              <p>p.26 的表就是證據：顯示整個檔案 12.7%，保留完整歷史 15.0%，都低於預設的 18.0%。所以設計 tool 時先問：這個輸出進 context 之後，model 的下一步會更好還是更差？</p>
+            </div>
+          </div>
+          <div class="idea" id="x2">
+            <h3>評估時要固定 harness</h3>
+            <div class="prose">
+              <p>p.52 說，同一個 model 換 harness，解題數差一倍。反過來看：兩個 model 放進不同的 harness 比較，差異可能來自 harness。排行榜多數不區分這件事。要比較 model，就固定 harness；要比較 harness，就固定 model 與 benchmark，還要寫明 window 大小。L7 會把這件事變成方法。</p>
+            </div>
+          </div>
+          <div class="idea" id="x3">
+            <h3>Prompt 的招式會過期，原則不會</h3>
+            <div class="prose">
+              <p>一招有效，是因為它補了 model 當時的弱點。弱點補上了，這招就失效，有時反而干擾。所以 prompt 裡的每一招都該有 eval 證明有用；換 model 時，一次拿掉一招，看分數。四條原則（簡單、分段、具體、拆小）針對的是溝通本身，和 model 的世代無關。</p>
+            </div>
+          </div>
+          <div class="idea" id="x4">
+            <h3>無損與有損的排序，就是成本的排序</h3>
+            <div class="prose">
+              <p>Admission 和 offloading 在內容進 window 之前動作。資訊還在外面，隨時拿得到，所以無損。Transformation 刪的是 window 裡的內容，但大多可以重新執行 tool 拿回：對目前的任務無損，對之後的引用有損。Compaction 由 model 決定留什麼，原文沒有 handle 可以拿回，所以不可逆。</p>
+              <p>這個排序也是成本排序：前三種不用呼叫 model，compaction 要先讀完整段歷史。L8 會算它的隱藏成本：丟掉的檔案要重讀，cache 也會重寫。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 5 問題討論 ===================== -->
+      <section class="part" id="s-discuss">
+        <header class="part-head">
+          <p class="kicker">5 · 問題討論</p>
+          <h2>讀書會討論題</h2>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡；卡住的地方，按題目下面的連結，到那一題的 GitHub 討論串隨手寫。進階題在讀完文章後回答；每一題也有一串 GitHub 討論，寫下你的想法，也看看別人怎麼想。</p>
+        </header>
+        <div class="qtabs" role="tablist" aria-label="題目分組">
+          <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
+          <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
+        </div>
+        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
+          <p class="qset-lede">看 slides 之前先讀一遍這 5 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。卡住的地方，按題目下面的「到 GitHub 討論這一題」留言。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L4 基礎題（帶著問題看 slides）：Context 管理與 tool 設計" data-slides="https://cs2680.com/slides/4_agent_design_1.pdf">複製基礎題</button>
+            <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
+          </div>
+          <ol class="qlist qlist-basic">
+            <li class="bq" id="b1">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=4" target="_blank" rel="noopener">p.4–6</a> · ReAct 與設計者工作</p>
+                <p class="qtext">只推理和只行動的 model 各會出什麼問題？Slide 標出 harness 設計者的哪四項工作？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>只推理：沒有東西檢查推理，小錯誤累積成自信的幻覺。只行動：tool call 背後沒有計畫，model 一直重複同樣的動作（p.4）。四項工作（p.6）：組出 context；寫 tool 定義；驗證請求、檢查權限，再執行；整理結果、管理 context。第 4 項是可選的。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>ReAct 讓兩種做法交錯（p.4）。Thought 決定下一個 action；action 的 observation 再修正下一個 thought。推理給行動方向，observation 給推理一個外部的檢查點。Loop 一直跑，直到 observation 回答了問題，或停止規則結束這次執行。</p>
+                  <p>寫成程式，loop 很短（p.5）。Model 每一圈只做一個決定：給最終回答，或發出 tool call。Harness 驗證參數、執行 tool，把結果當成 tool message 加回 messages。超過 MAX_STEPS 就丟出錯誤，卡住的 loop 會明確失敗，不會一直跑。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 322" role="img" aria-label="三種做法的比較。左欄只推理：Thought 1 有一個小錯，Thought 2 沿用，Thought 3 放大，最終答案語氣很有把握；沒有東西檢查推理，結果是自信的幻覺。中欄只行動：Action grep foo 得到 0 筆，下一個 Action 還是同一個 grep foo，還是 0 筆；沒有計畫，結果是重複同樣的動作。右欄 ReAct：Thought 決定下一步，Action 發出 tool call，由 harness 執行，得到 Observation 真實的 tool 結果，再回到 Thought 修正；問題解答了才給最終回答。">
+                        <defs>
+                          <marker id="tk4-1-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                          <marker id="tk4-1-ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
+                        </defs>
+                        <text x="100" y="24" text-anchor="middle" class="dg-tb">只推理（reason only）</text>
+                        <text x="310" y="24" text-anchor="middle" class="dg-tb">只行動（act only）</text>
+                        <text x="520" y="24" text-anchor="middle" class="dg-tb">ReAct（交錯）</text>
+                        <line x1="205" y1="12" x2="205" y2="312" class="dg-soft dg-dash"/>
+                        <line x1="415" y1="12" x2="415" y2="312" class="dg-soft dg-dash"/>
+                        <rect x="20" y="38" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="100" y="55" text-anchor="middle" class="dg-tb">Thought 1</text>
+                        <text x="100" y="71" text-anchor="middle" class="dg-ts">有一個小錯</text>
+                        <line x1="100" y1="78" x2="100" y2="98" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="20" y="100" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="100" y="117" text-anchor="middle" class="dg-tb">Thought 2</text>
+                        <text x="100" y="133" text-anchor="middle" class="dg-ts">沿用這個錯</text>
+                        <line x1="100" y1="140" x2="100" y2="160" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="20" y="162" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="100" y="179" text-anchor="middle" class="dg-tb">Thought 3</text>
+                        <text x="100" y="195" text-anchor="middle" class="dg-ts">錯誤繼續放大</text>
+                        <line x1="100" y1="202" x2="100" y2="222" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="20" y="224" width="160" height="40" rx="4" class="dg-box-soft"/>
+                        <text x="100" y="241" text-anchor="middle" class="dg-tb">最終答案</text>
+                        <text x="100" y="257" text-anchor="middle" class="dg-ts">語氣很有把握</text>
+                        <text x="100" y="290" text-anchor="middle" class="dg-ta">沒有東西檢查推理</text>
+                        <text x="100" y="308" text-anchor="middle" class="dg-ta">→ 自信的幻覺</text>
+                        <rect x="230" y="38" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="310" y="55" text-anchor="middle" class="dg-tb">Action</text>
+                        <text x="310" y="71" text-anchor="middle" class="dg-ts">grep foo</text>
+                        <line x1="310" y1="78" x2="310" y2="98" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="230" y="100" width="160" height="40" rx="4" class="dg-box-soft"/>
+                        <text x="310" y="117" text-anchor="middle" class="dg-tb">Observation</text>
+                        <text x="310" y="133" text-anchor="middle" class="dg-ts">0 筆結果</text>
+                        <line x1="310" y1="140" x2="310" y2="160" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="230" y="162" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="310" y="179" text-anchor="middle" class="dg-tb">Action</text>
+                        <text x="310" y="195" text-anchor="middle" class="dg-ts">grep foo（同一個）</text>
+                        <line x1="310" y1="202" x2="310" y2="222" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="230" y="224" width="160" height="40" rx="4" class="dg-box-soft"/>
+                        <text x="310" y="241" text-anchor="middle" class="dg-tb">Observation</text>
+                        <text x="310" y="257" text-anchor="middle" class="dg-ts">還是 0 筆</text>
+                        <text x="310" y="290" text-anchor="middle" class="dg-ta">沒有計畫</text>
+                        <text x="310" y="308" text-anchor="middle" class="dg-ta">→ 重複同樣的動作</text>
+                        <rect x="440" y="38" width="160" height="40" rx="4" class="dg-box-accent"/>
+                        <text x="520" y="55" text-anchor="middle" class="dg-tb">Thought</text>
+                        <text x="520" y="71" text-anchor="middle" class="dg-ts">決定下一步</text>
+                        <line x1="520" y1="78" x2="520" y2="98" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <rect x="440" y="100" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="520" y="117" text-anchor="middle" class="dg-tb">Action</text>
+                        <text x="520" y="133" text-anchor="middle" class="dg-ts">發出 tool call</text>
+                        <line x1="520" y1="140" x2="520" y2="160" class="dg-accent" marker-end="url(#tk4-1-ahs)"/>
+                        <text x="508" y="154" text-anchor="end" class="dg-ts">harness 執行</text>
+                        <rect x="440" y="162" width="160" height="40" rx="4" class="dg-box"/>
+                        <text x="520" y="179" text-anchor="middle" class="dg-tb">Observation</text>
+                        <text x="520" y="195" text-anchor="middle" class="dg-ts">真實的 tool 結果</text>
+                        <path d="M600,182 H616 V58 H602" class="dg-accent" marker-end="url(#tk4-1-ahs)"/>
+                        <line x1="520" y1="202" x2="520" y2="222" class="dg-line" marker-end="url(#tk4-1-ah)"/>
+                        <text x="508" y="216" text-anchor="end" class="dg-ts">問題已解答</text>
+                        <rect x="440" y="224" width="160" height="40" rx="4" class="dg-box-soft"/>
+                        <text x="520" y="249" text-anchor="middle" class="dg-tb">最終回答</text>
+                        <text x="520" y="290" text-anchor="middle" class="dg-ta">observation 修正 thought</text>
+                        <text x="520" y="308" text-anchor="middle" class="dg-ta">→ 錯誤及早被抓到</text>
+                      </svg>
+                    </div>
+                    <figcaption>依 p.4 重畫，方框裡的例子是本文自擬。藍色是 ReAct 的修正迴路：harness 執行 tool call，observation 回到下一個 thought。左、中兩欄都少了這條迴路的一半。</figcaption>
+                  </figure>
+                  <p>四項工作都在 model 之外（p.6）。前三項是 loop 能跑的最低需求：沒有 context，model 不知道任務；沒有 tool 定義，model 不知道能做什麼；沒有驗證，錯誤的參數會直接執行。第 4 項可選，因為原始結果直接加回去，loop 也能跑。但結果越堆越多，context 就變貴、變慢、變不準，這是 p.41 之後的主題。p.7 把同樣的分工畫成三個元件：model 加 loop、tool 與 guardrail、state（context 與 memory）。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>ReAct 出自 Yao 等人 2022 年的論文（p.4 引用的 arXiv 2210.03629），實驗用問答與互動環境（ALFWorld、WebShop）。當時 model 用純文字寫出 Thought 與 Action。Harness 解析 Action 那一行、執行，再把 Observation 接在後面。現在的 API 有原生的 tool calling：model 輸出結構化的 tool call，harness 回傳附 tool_call_id 的結果。格式變了，loop 沒有變。</p>
+                  <p>ReAct 每一步都 loop，但它不是唯一的做法。p.55 的選讀列出另外三種：Reflexion 失敗之後才 loop（嘗試、評估、反省、重試）；plan-and-execute 偏離計畫才重新規劃；tree search 一次展開多條分支，留下最好的。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Model 會自己 think，就不需要 observation。」Thinking 再長，也還是 p.4 的「只推理」：它看不到 repo 裡真正的程式碼，也跑不了測試。能抓到錯誤的，是來自 model 外面的 observation。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>只推理 → 沒有檢查 → 自信的幻覺；只行動 → 沒有計畫 → 重複動作。ReAct 讓兩者互相修正。</li>
+                    <li>Model 每一圈只決定一件事：給最終回答，或發出 tool call。</li>
+                    <li>四項工作都在 harness：組 context、寫 tool 定義、驗證並執行、管理結果。第 4 項可選，卻是後半堂的主題。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>第 1 段〈<a href="#s-arch">架構</a>〉的 loop 圖、核心觀念〈<a href="#i1">ReAct：推理要有 observation 來檢查</a>〉、第 6 段〈<a href="#s-try">動手試試</a>〉的 loop 骨架。第 4 項工作在基礎題<a href="#b4">第 4 題</a>展開。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/38" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b2">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=26" target="_blank" rel="noopener">p.26</a> · Shell 與專用介面</p>
+                <p class="qtext">只給 shell 和完整的 SWE-agent 介面，解題率各多少？哪兩個「多給資訊」的設定比完整介面差？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>p.26 的數據（GPT-4）：只給 shell 解出 11.0%，完整的 SWE-agent 介面解出 18.0%。兩個「多給資訊」的設定：full-file view（開檔時顯示整個檔案）12.7%，full interaction history（保留完整的互動歷史）15.0%。兩個都低於完整介面的 18.0%。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>只給 shell 的想法很合理。Shell 是最強的 tool（p.22）：能串接指令，碰得到檔案系統與網路，blast radius 就是 shell 本身。專用 tool 做得到的事，shell 幾乎都做得到。但 p.26 的答案是不夠：能力相同，介面不同，解題率從 11.0% 變成 18.0%，約 1.6 倍（18.0 ÷ 11.0 ≈ 1.64）。同頁還有一列：沒有專用 editor 的設定只有 10.3%。</p>
+                  <p>差別在 tool 的輸出怎麼進 context。Shell 的輸出不是為 model 整理的：一個 grep 就回 12 個檔案、37 筆結果（p.10）；指令失敗時，錯誤訊息常常只說錯了，不說下一步。p.25 的五條原則都在處理這件事：tool 少而正交、專用、輸出省 token、錯誤要能教、預設冪等。</p>
+                  <p>「多給資訊反而變差」更反直覺。Full-file view 每次開檔都放進整個檔案，比預設少 5.3 個百分點（18.0 − 12.7）。Full interaction history 留下每一步的舊輸出，少 3.0 個百分點（18.0 − 15.0）。兩者都讓 context 變長。p.42–43 說，window 越滿，model 越難找回資訊。所以 tool 的輸出會佔用 context 預算，不是免費的。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 640 264" role="img" aria-label="長條圖，p.27 的 SWE-agent 介面消融實驗，model 是 GPT-4。完整 SWE-agent 介面 18.0%，是基準線。多給資訊的兩組：保留完整互動歷史 15.0%，比完整介面少 3.0 個百分點；開檔顯示整個檔案 12.7%，少 5.3。少了專用 tool 的兩組：只給 shell 11.0%，少 7.0；沒有專用 editor 10.3%，少 7.7。">
+                        <text x="10" y="18" class="dg-tm">SWE-agent 介面消融實驗 · GPT-4 · p.26</text>
+                        <line x1="236" y1="28" x2="236" y2="234" class="dg-line"/>
+                        <line x1="578" y1="28" x2="578" y2="234" class="dg-soft dg-dash"/>
+                        <text x="224" y="50" text-anchor="end" class="dg-tb">完整 SWE-agent 介面</text>
+                        <rect x="236" y="34" width="342" height="22" class="dg-box-accent"/>
+                        <text x="586" y="50" class="dg-tb">18.0%</text>
+                        <text x="10" y="80" class="dg-ta">多給資訊，反而變差</text>
+                        <text x="224" y="106" text-anchor="end" class="dg-t">保留完整互動歷史</text>
+                        <rect x="236" y="90" width="285" height="22" class="dg-box-soft"/>
+                        <rect x="521" y="90" width="57" height="22" class="dg-frame"/>
+                        <text x="549.5" y="105" text-anchor="middle" class="dg-ts">−3.0</text>
+                        <text x="586" y="106" class="dg-tb">15.0%</text>
+                        <text x="224" y="136" text-anchor="end" class="dg-t">開檔顯示整個檔案</text>
+                        <rect x="236" y="120" width="241.3" height="22" class="dg-box-soft"/>
+                        <rect x="477.3" y="120" width="100.7" height="22" class="dg-frame"/>
+                        <text x="527.6" y="135" text-anchor="middle" class="dg-ts">−5.3</text>
+                        <text x="586" y="136" class="dg-tb">12.7%</text>
+                        <text x="10" y="166" class="dg-ta">少了為 model 設計的 tool</text>
+                        <text x="224" y="192" text-anchor="end" class="dg-t">只給 shell</text>
+                        <rect x="236" y="176" width="209" height="22" class="dg-box-soft"/>
+                        <rect x="445" y="176" width="133" height="22" class="dg-frame"/>
+                        <text x="511.5" y="191" text-anchor="middle" class="dg-ts">−7.0</text>
+                        <text x="586" y="192" class="dg-tb">11.0%</text>
+                        <text x="224" y="222" text-anchor="end" class="dg-t">沒有專用 editor</text>
+                        <rect x="236" y="206" width="195.7" height="22" class="dg-box-soft"/>
+                        <rect x="431.7" y="206" width="146.3" height="22" class="dg-frame"/>
+                        <text x="504.8" y="221" text-anchor="middle" class="dg-ts">−7.7</text>
+                        <text x="586" y="222" class="dg-tb">10.3%</text>
+                        <text x="236" y="254" text-anchor="middle" class="dg-ts">0</text>
+                        <rect x="300" y="244" width="22" height="12" class="dg-frame"/>
+                        <text x="330" y="254" class="dg-ts">虛線框：和完整介面相差的百分點</text>
+                      </svg>
+                    </div>
+                    <figcaption>依 p.26 的數字重畫，分組是本文的整理。上面兩列多給了資訊，下面兩列少了專用的 tool，結果都比完整介面差。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>數字出自 SWE-agent 論文（Yang 等人，2024）。論文把 agent 與電腦之間的介面叫 agent-computer interface（ACI）。預設的 ACI 有幾個設計：viewer 一次顯示 100 行，附行號；edit 改完先跑 linter，語法錯就拒絕並說明原因；搜尋回傳摘要過的結果；歷史只留最近 5 個 observation 的全文，更早的各縮成一行。p.26 的兩個「多給」設定，就是把 viewer 與歷史改回不設限。</p>
+                  <p>p.26 的答案也依 model 而定。這頁是 GPT-4 的數據，slide 要你在 assignment 自己驗證。延伸閱讀裡 Schmid 的文章主張：新 model 對 bash 訓練充分，一個 shell tool 就夠；那是沒有量化的觀察。兩種看法可以並存：就算只給 shell，輸出的長度與錯誤訊息仍要由 harness 處理（p.23）。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「給 model 越多資訊，它答得越好。」p.26 的兩列是反例：整個檔案與完整歷史都低於預設。資訊有用，但它佔掉的注意力也是成本。該問的是：這段輸出能不能幫 model 決定下一步？</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>能力相同，介面不同：只給 shell 11.0%，為 model 設計的介面 18.0%（GPT-4）。</li>
+                    <li>多給不一定好：整個檔案 12.7%、完整歷史 15.0%，都低於 18.0% → tool 的輸出就是 context。</li>
+                    <li>設計 tool 時先問：這個輸出進 context 之後，model 的下一步會更好還是更差？</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i2">Tool 要為 model 設計</a>〉、延伸思考〈<a href="#x1">Tool 設計就是 context 設計</a>〉、第 6 段〈<a href="#s-try">不好與好的 tool 定義</a>〉。進階題第 3 題會用 p.25 的原則設計一組 tool。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/39" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b3">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=38" target="_blank" rel="noopener">p.38–40</a> · Prompt 技巧三層</p>
+                <p class="qtext">八種 prompt 技巧分成哪三層？換 model 時，slide 要你怎麼處理 prompt？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>p.38 的三層：先用簡單的（zero-shot、few-shot、role/persona）；加入推理（chain-of-thought、tree-of-thought、self-consistency）；設計成系統（prompt chaining、meta prompting）。p.40：prompt 的建議依 model 而異，換 model 就要重新調整。p.39 說有些技巧已經過時，是哪些要你在 assignment 自己找出來。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>三層的順序就是成本的順序。第一層只改 prompt 的寫法，每件工作呼叫 model 一次。第二層要 model 寫出推理，輸出變長；self-consistency 還要取樣多次再投票，p.35 取樣 5 次，成本約 5 倍。第三層把工作拆成多段，每段各呼叫一次；或讓 model 依測試結果改寫 prompt。所以從上往下試，夠用就停。</p>
+                  <p>p.30–37 為每一招附了例子和「該換下一招」的訊號：</p>
+                  <div class="table-wrap"><table class="wide">
+                    <thead><tr><th>層</th><th>技巧</th><th>Slide 的例子</th><th>什麼時候用</th></tr></thead>
+                    <tbody>
+                      <tr><td rowspan="3">先用簡單的</td><td>Zero-shot</td><td>只給指令，工單分成 billing、bug、feature、other（p.30）</td><td>常見任務；有說不清的規則就加範例</td></tr>
+                      <tr><td>Few-shot</td><td>附範例，例如「asdfgh → other」（p.31）</td><td>輸出形式特殊；需要步驟就換 CoT</td></tr>
+                      <tr><td>Role / persona</td><td>資深 SRE 為主管審 postmortem，最多 5 點（p.32）</td><td>語氣、判斷、讀者很重要</td></tr>
+                      <tr><td rowspan="3">加入推理</td><td>Chain-of-thought</td><td>3 × 4 = 12，5 × 2 = 10，12 + 10 = 22（p.33）</td><td>任務有步驟；有多條路就換 ToT</td></tr>
+                      <tr><td>Tree-of-thought</td><td>提 3 個方案、各自評分，展開 C 與 B，剪掉 A（p.34）</td><td>有幾條路要比較</td></tr>
+                      <tr><td>Self-consistency</td><td>T = 0.7 取樣 5 次；一致度至少 0.8（4/5）才作答，3/5 交給人（p.35）</td><td>答錯的代價高</td></tr>
+                      <tr><td rowspan="2">設計成系統</td><td>Prompt chaining</td><td>擷取 → 驗證並補 vendor_id → 草擬回信；只重跑失敗的那段（p.36）</td><td>工作能拆成有 schema 的段</td></tr>
+                      <tr><td>Meta prompting</td><td>把 prompt 和答錯的測試案例交給 model，請它改寫（p.37）</td><td>已經有一組測試案例</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>p.40 也給了四條不分 model 的原則：從簡單開始，需要時才加 context；分段（context、指示、tool、輸出規格）；具體且精簡；大任務拆成小任務。p.28 把這一段放進更大的脈絡：prompt engineering 只是第一個階段，後面依序是 context、harness、goal engineering。Prompt 只是 harness 組出的 context 的一部分。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>技巧為什麼會過期？一招有效，是因為它補了 model 當時的弱點。現在的 reasoning model 在訓練時就學會先推理再回答。對它說「think step by step」是重複的指示，有些 model 的官方文件直接建議不要再寫。其他哪些過期，照 p.39 的要求，在 assignment 裡量。</p>
+                  <p>Self-consistency 要 temperature 大於 0。T = 0 時 5 次取樣幾乎走同一條路，一致也沒有資訊。p.35 用 T = 0.7，讓每次的推理路徑不同。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「越後面的技巧越強，直接用 self-consistency 最保險。」後面的技巧不是更好，是更貴。工單分類用 zero-shot 就夠時，取樣 5 次只是付 5 倍的錢。先用簡單的，答不好再往下一層。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>三層：先用簡單的 → 加入推理 → 設計成系統。越往下，token 和呼叫次數越多。</li>
+                    <li>每一招都有換下一招的訊號：規則說不清加範例，有步驟寫出推理，答錯很貴才投票。</li>
+                    <li>招式依 model 而定，換 model 就重新調整；四條原則不會過期。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">Prompt 技巧從簡單開始，夠用就停</a>〉、觀念補充〈<a href="#t5">Temperature 與取樣</a>〉、延伸思考〈<a href="#x3">Prompt 的招式會過期，原則不會</a>〉。進階題第 6 題會為三個場景選技巧並估成本。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/40" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b4">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=42" target="_blank" rel="noopener">p.42–49</a> · Context 成本與策略</p>
+                <p class="qtext">Context 有哪三種成本？四種管理策略為什麼把 compaction 排在最後？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>p.42 的三種成本：錢（每一步重送整個 window）、延遲（prompt 越長，prefill 與 decode 越久）、注意力（window 越滿，越難找回資訊）。p.45 的順序從預防、無損排到有損、不可逆：admission、offloading、transformation、compaction。Compaction 用 LLM 摘要舊歷史，細節會遺失，原文也拿不回來，所以 p.49 稱它為最後手段。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>三種成本都跟著 window 的長度變大。錢：每一步都重送整個 window，所以 context 裡多一段內容，之後每一步都要再付一次（p.42）。延遲：prefill 要處理整段 prompt，decode 每一步也要讀更長的 KV cache。注意力：p.43 有兩組數據。Context rot：輸入越長，準確率越低。Lost in the middle：答案放在 20 份文件的第 1 份，準確率 76%；第 10 份 55%；第 20 份 71%。所以 window 還沒滿，品質就開始下降。</p>
+                  <p>四種策略的排序，看原文還拿不拿得回來（p.45–49）。Admission 在門口把關：原始 DOM 48,000 token，擷取後 900，答案相同。Offloading 把內容放在外面，只留索引或 handle：60 個 tool schema 從 42,000 token 變成 3,100，60 個都還拿得到。Transformation 刪掉 window 裡過期或重複的內容：96,000 變 24,000，沒有做任何摘要。前三種都不用呼叫 model，丟掉的東西也大多找得回。</p>
+                  <p>Compaction 不同。LLM 讀完整段歷史，決定留什麼，再寫成摘要。哪些細節不見了，事前無法確定；原文沒有 handle，事後也拿不回來。所以 p.49 要求先預留輸出的空間、保留 system prefix，摘要之後再把關鍵事實放回去。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 680 262" role="img" aria-label="四種 context 管理策略，依 p.48 的順序從左到右，由預防、無損排到有損、不可逆。Admission 在門口把關，內容進 window 之前動作，例子是原始 DOM 48,000 token 擷取後剩 900，少 98%，答案相同；原文沒進 window，可以再取；不用呼叫 LLM。Offloading 放在外面要用再讀，進 window 之前動作，例子是 60 個 tool schema 從 42,000 token 變成索引加 3 個共 3,100，少 93%；用 handle 讀回；不用呼叫 LLM。Transformation 刪掉舊的或重複的內容，作用在已在 window 裡的內容，例子是 96,000 變 24,000，少 75%，沒有做任何摘要；大多重跑 tool 拿得回；不用呼叫 LLM。Compaction 由 LLM 寫摘要，作用在已在 window 裡的內容，細節由 LLM 決定去留；原文拿不回；要呼叫 LLM。">
+                        <defs>
+                          <marker id="tk4-4-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
+                        </defs>
+                        <text x="92" y="20" class="dg-ta">預防、無損</text>
+                        <line x1="164" y1="16" x2="580" y2="16" class="dg-line" marker-end="url(#tk4-4-ah)"/>
+                        <text x="668" y="20" text-anchor="end" class="dg-ta">有損、不可逆</text>
+                        <text x="10" y="62" class="dg-ts">作法</text>
+                        <rect x="92" y="32" width="138" height="46" rx="4" class="dg-box"/>
+                        <text x="161" y="51" text-anchor="middle" class="dg-tb">1 Admission</text>
+                        <text x="161" y="69" text-anchor="middle" class="dg-ts">在門口把關</text>
+                        <rect x="238" y="32" width="138" height="46" rx="4" class="dg-box"/>
+                        <text x="307" y="51" text-anchor="middle" class="dg-tb">2 Offloading</text>
+                        <text x="307" y="69" text-anchor="middle" class="dg-ts">放在外面，要用再讀</text>
+                        <rect x="384" y="32" width="138" height="46" rx="4" class="dg-box"/>
+                        <text x="453" y="51" text-anchor="middle" class="dg-tb">3 Transformation</text>
+                        <text x="453" y="69" text-anchor="middle" class="dg-ts">刪掉舊的、重複的</text>
+                        <rect x="530" y="32" width="138" height="46" rx="4" class="dg-box-accent"/>
+                        <text x="599" y="51" text-anchor="middle" class="dg-tb">4 Compaction</text>
+                        <text x="599" y="69" text-anchor="middle" class="dg-ts">LLM 寫摘要</text>
+                        <line x1="10" y1="88" x2="668" y2="88" class="dg-soft"/>
+                        <text x="10" y="108" class="dg-ts">何時動作</text>
+                        <text x="161" y="108" text-anchor="middle" class="dg-t">進 window 之前</text>
+                        <text x="307" y="108" text-anchor="middle" class="dg-t">進 window 之前</text>
+                        <text x="453" y="108" text-anchor="middle" class="dg-t">已在 window 裡</text>
+                        <text x="599" y="108" text-anchor="middle" class="dg-t">已在 window 裡</text>
+                        <line x1="10" y1="120" x2="668" y2="120" class="dg-soft"/>
+                        <text x="10" y="160" class="dg-ts">例子</text>
+                        <text x="161" y="142" text-anchor="middle" class="dg-tb">48,000 → 900</text>
+                        <text x="161" y="160" text-anchor="middle" class="dg-ts">原始 DOM → 擷取</text>
+                        <text x="161" y="178" text-anchor="middle" class="dg-ts">−98%，答案相同</text>
+                        <text x="307" y="142" text-anchor="middle" class="dg-tb">42,000 → 3,100</text>
+                        <text x="307" y="160" text-anchor="middle" class="dg-ts">60 個 tool schema</text>
+                        <text x="307" y="178" text-anchor="middle" class="dg-ts">→ 索引 + 3 個，−93%</text>
+                        <text x="453" y="142" text-anchor="middle" class="dg-tb">96,000 → 24,000</text>
+                        <text x="453" y="160" text-anchor="middle" class="dg-ts">−75%</text>
+                        <text x="453" y="178" text-anchor="middle" class="dg-ts">沒有做任何摘要</text>
+                        <text x="599" y="142" text-anchor="middle" class="dg-tb">舊歷史 → 摘要</text>
+                        <text x="599" y="160" text-anchor="middle" class="dg-ts">細節由 LLM 決定去留</text>
+                        <text x="599" y="178" text-anchor="middle" class="dg-ts">slide 沒有給數字</text>
+                        <line x1="10" y1="190" x2="668" y2="190" class="dg-soft"/>
+                        <text x="10" y="212" class="dg-ts">原文拿得回嗎</text>
+                        <text x="161" y="212" text-anchor="middle" class="dg-ts">沒進 window，可再取</text>
+                        <text x="307" y="212" text-anchor="middle" class="dg-ts">用 handle 讀回</text>
+                        <text x="453" y="212" text-anchor="middle" class="dg-ts">大多重跑 tool 拿得回</text>
+                        <text x="599" y="212" text-anchor="middle" class="dg-ta">拿不回</text>
+                        <line x1="10" y1="224" x2="668" y2="224" class="dg-soft"/>
+                        <text x="10" y="246" class="dg-ts">要呼叫 LLM</text>
+                        <text x="161" y="246" text-anchor="middle" class="dg-t">不用</text>
+                        <text x="307" y="246" text-anchor="middle" class="dg-t">不用</text>
+                        <text x="453" y="246" text-anchor="middle" class="dg-t">不用</text>
+                        <text x="599" y="246" text-anchor="middle" class="dg-ta">要，先讀完整段歷史</text>
+                      </svg>
+                    </div>
+                    <figcaption>依 p.45–49 整理，數字是 slide 的例子（單位 token）。由左往右，原文越來越難找回；只有最右邊要呼叫 LLM。</figcaption>
+                  </figure>
+                  <p class="tk-h">背景補充</p>
+                  <p>錢的成本會隨步數平方成長。假設每一步加 3,000 token 到 context，第 k 步要送 3,000 × k token；30 步的 input 合計 3,000 × (1 + 2 + … + 30) = 3,000 × 465 = 1,395,000 token。Prefix cache 能降低重送開頭的價格，但只對沒變過的開頭有效。這也是 p.49 要保留 system prefix 的一個理由：開頭被改寫，cache 就要重建。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Window 有 200K token，還沒滿就不用管。」p.43 的數據說，品質在 window 滿之前就開始下降；錢和延遲也是每一步都在付。Context 管理要從第一步開始，不是快滿了才做。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>三種成本：錢、延遲、注意力。都隨 window 變長而增加，注意力在 window 滿之前就開始下降。</li>
+                    <li>排序看原文拿不拿得回：admission → offloading → transformation → compaction。</li>
+                    <li>Compaction 要呼叫 LLM，有損又不可逆 → 前三種都不夠時才用。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">Context 是有限資源</a>〉、〈<a href="#i5">四種策略有順序</a>〉、觀念補充〈<a href="#t6">Lost in the middle</a>〉、延伸思考〈<a href="#x4">無損與有損的排序</a>〉。進階題第 1、2 題會用數字和情境再走一次；L8〈<a href="l08.html#t1">為什麼 turn 數是平方</a>〉會算成本。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/41" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b5">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=52" target="_blank" rel="noopener">p.52</a> · Model × Harness</p>
+                <p class="qtext">只換 harness，兩個 benchmark 的解題數各變多少？Slide 從中得出什麼結論？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Model 不變，只改 harness：SWE-bench Verified 從 43/169 變成 72/169，約 1.7 倍；SWE-bench Pro 從 31/316 變成 72/316，約 2.3 倍（p.52）。結論：有些看似 model 能力不足的失敗，原因在 context 與 control loop。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>p.51 先給一個公式：agent = model × harness。Model 的能力決定上限，harness 決定實際發揮多少。用乘號，是因為兩邊任何一邊很低，乘積就很低。p.52 固定 model，只改 harness，量到的就是 harness 那一項。</p>
+                  <p>把題數換成解題率比較好讀：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>Benchmark</th><th class="num">基本 harness</th><th class="num">改良 harness</th><th class="num">倍數</th></tr></thead>
+                    <tbody>
+                      <tr><td>SWE-bench Verified</td><td class="num">43 / 169 ≈ 25.4%</td><td class="num">72 / 169 ≈ 42.6%</td><td class="num">72 ÷ 43 ≈ 1.7</td></tr>
+                      <tr><td>SWE-bench Pro</td><td class="num">31 / 316 ≈ 9.8%</td><td class="num">72 / 316 ≈ 22.8%</td><td class="num">72 ÷ 31 ≈ 2.3</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>Slide 的標題寫「2×」，是兩個倍數的概略說法。Pro 的起點較低，倍數也較大。</p>
+                  <p>改良的 harness 改了四件事（p.52），都是這堂課的內容。前兩件是 context 管理：harness 壓縮舊的 tool 輸出，讓最近的 observation 保持可見。這對應基礎題第 4 題的四種策略。後兩件是 control loop：偵測重複與停滯，卡住時介入。p.4 說只行動的 model 會重複同樣的動作；偵測這件事，是 harness 的工作，不是 model 的。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>SWE-bench 從真實 GitHub repo 的 issue 出題。Agent 產生 patch，再用 repo 的測試判定解了沒有。Verified 是人工確認過「題目描述清楚、測試合理」的子集；Pro 是 2025 年發布的較難版本，題目常要改多個檔案。169 與 316 是這個實驗用的題數。本文第 2 段另外提到，Verified 用 20,480 token 的小 window；window 越小，context 管理的影響越大。</p>
+                  <p>這個結果改變了讀排行榜的方式。兩個 model 放在不同的 harness 裡比較，分數差距可能來自 harness。要比 model，就固定 harness；要比 harness，就固定 model 與 benchmark。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Agent 解不出來，換一個更大的 model 就好。」p.52 的 model 沒換，解題數就變成原來的 1.7–2.3 倍。先讀失敗的 trajectory：agent 是不是一直重複同一個動作？Context 是不是塞滿舊的輸出？這兩種是 harness 的問題，換 model 不一定修得好。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>Agent = model × harness：model 決定上限，harness 決定發揮多少。</li>
+                    <li>只改 harness：Verified 43 → 72（約 1.7×），Pro 31 → 72（約 2.3×）。</li>
+                    <li>改的是 context 管理與 control loop → 失敗時先查這兩項，再怪 model。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">四種策略有順序，harness 決定發揮多少</a>〉、延伸思考〈<a href="#x2">評估時要固定 harness</a>〉、L2〈<a href="l02.html#x1">產品差異在 harness，不只在 model</a>〉。L7 會把評估變成方法。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/42" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
+          <p class="qset-lede">這 6 題在讀書會前回答。每個回答要點下面有一行提示。不用每點都答，挑一點寫兩三句也可以。不知道怎麼開頭，就展開「作答範本」，照著填空。寫好後按「到 GitHub 討論這一題」，留在那一題的討論串；建議先寫自己的，再看別人的。「參考觀點與追問」建議討論後再展開。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L4 進階題（讀書會討論）：Context 管理與 tool 設計" data-slides="https://cs2680.com/slides/4_agent_design_1.pdf">複製進階題</button>
+            <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
+          </div>
+          <ol class="qlist">
+            <li class="dq" id="q1">
+              <div class="qbody">
+                <p class="qtag">概念 · Observation masking · <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=48" target="_blank" rel="noopener">p.48</a></p>
+                <p class="qtext">解釋 observation masking 為什麼對目前的任務幾乎無損，卻可能讓之後的步驟出錯。哪些 tool 結果不該 mask？</p>
+                <p class="qctx"><b>情境：</b>Harness 的規則是「超過 5 步的 tool 結果，換成一行佔位文字」。Agent 第 3 步 Read 了 <code>src/tax.ts</code>（1,240 行），第 6 步修改 <code>applyTax</code>，第 9 步測試通過。第 20 步，使用者問：「applyTax 原本的進位邏輯怎麼寫？」</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>說明第 3 步的讀檔結果在第 9 步之後變成什麼，以及 model 的決定保存在哪裡。<span class="qh">提示：看 p.48 的示意：舊結果換成哪一行字？再想：masking 刪掉的是 tool 結果，還是 model 自己的回覆？</span></li>
+                    <li>指出第 20 步 agent 能做什麼、拿不回什麼。<span class="qh">提示：第 20 步重新 Read，拿到的是修改前還是修改後的版本？Git 裡還找得到舊版嗎？前提是什麼？</span></li>
+                    <li>提出一條規則：哪一類 tool 結果不該 mask，或 mask 之前要先做什麼。<span class="qh">提示：比較兩類結果：重跑一次就拿得回的，和只拿得到一次的。後者 mask 之前，可以套 p.47 的哪一招？</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">第 9 步之後，第 3 步的結果只剩 ＿＿；model 的決定還留在 ＿＿ 裡，所以第 9 步不受影響。</p>
+                  <p class="tpl">第 20 步 agent 可以 ＿＿，但拿到的是（修改前／修改後）的版本；原文只能從 ＿＿ 拿回。</p>
+                  <p class="tpl">規則：＿＿ 這類結果不直接 mask；mask 之前先 ＿＿，佔位文字放 ＿＿。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/43" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>第 3 步的 1,240 行在第 9 步之後變成「[舊輸出已移除；需要時請再 Read]」。Model 第 6 步的決定寫在它自己的回覆與 Edit 的參數裡，這些沒有刪，所以第 9 步不需要原文。</li>
+                    <li>第 20 步要引用原本的寫法。重新 Read 拿到的是改過的版本；原文只存在第 3 步的輸出裡，已經刪掉。能救的是 <code>git show HEAD:src/tax.ts</code>，前提是修改前有 commit。</li>
+                    <li>這就是「對目前任務無損、對之後引用有損」。損失的條件：來源在 masking 之後改變了，例如檔案已修改、網頁已更新。</li>
+                    <li>不該直接 mask 的例子：只能取得一次的輸出（20 分鐘的測試 log、一次性的 API 回應）、使用者貼進來的資料。做法是 mask 前先 offload：寫到檔案，佔位文字放路徑。</li>
+                  </ul>
+                  <p><b>追問：</b>如果 masking 的對象是使用者的原始任務描述，會發生 p.50 的哪一種失敗？你的 harness 怎麼保證它永遠留在 context 裡？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q2">
+              <div class="qbody">
+                <p class="qtag">估算 · 編輯方式與 context 策略的 token · <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=17" target="_blank" rel="noopener">p.17–21、p.46–48</a></p>
+                <p class="qtext">估算三種編輯方式各要輸出多少 token，再算出 slide 三個 context 策略例子各省下多少。哪一個差距最意外？</p>
+                <p class="qctx"><b>情境：</b>一個 1,200 行的檔案，每行約 10 token。要改 4 行，分散在 2 個地方，每處連續 2 行。三種方式：整檔重寫；search/replace，anchor 多帶 1 行上下文；unified diff，每個 hunk 前後各 3 行 context。Slide 的三個例子：admission 48,000 → 900、offloading 42,000 → 3,100、transformation 96,000 → 24,000。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>寫出三種編輯方式的算式與結果，以及彼此的倍數。<span class="qh">提示：整檔 = 1,200 × 10。每處 SEARCH、REPLACE 各 3 行；hunk 3 + 2 + 2 + 3 行。共 2 處，另加標記。</span></li>
+                    <li>算出三個策略例子各省下多少 token 與百分比。<span class="qh">提示：省下 = 前 − 後，百分比 = 省下 ÷ 前。再比較：百分比最高的一組，省下的絕對 token 數也最多嗎？</span></li>
+                    <li>用 output 速度每秒 50 token 比較等待時間，並指出哪一種有「改壞沒要改的行」的風險。<span class="qh">提示：等待秒數 = output token ÷ 50。風險看 p.17：哪一種要把沒改的行也重新寫一遍？</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">整檔重寫 ＿＿ token，search/replace ＿＿，diff ＿＿；整檔重寫是後兩者的 ＿＿ 倍與 ＿＿ 倍。</p>
+                  <p class="tpl">Admission 省 ＿＿（＿＿%），offloading 省 ＿＿（＿＿%），transformation 省 ＿＿（＿＿%）。</p>
+                  <p class="tpl">整檔重寫、search/replace、diff 各要等 ＿＿、＿＿、＿＿ 秒；＿＿ 要重抄沒改的行，有改壞的風險。</p>
+                  <p class="tpl">最意外的是 ＿＿：比百分比，它排第 ＿＿；比省下的 token 數，它排第 ＿＿。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/44" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>整檔重寫：1,200 × 10 = 12,000。</li>
+                    <li>Search/replace：每個區塊 SEARCH 3 行加 REPLACE 3 行，6 × 10 = 60，加標記約 15，共 75；2 個區塊 150 token。整檔重寫是它的 80 倍。</li>
+                    <li>Unified diff：每個 hunk 3 + 2 + 2 + 3 = 10 行，100 token，加 header 約 10，共 110；2 個 hunk 加 file header 20，共 240 token。整檔重寫是它的 50 倍。</li>
+                    <li>三個策略：admission 省 47,100 token（98.1%）；offloading 省 38,900（92.6%）；transformation 省 72,000（75.0%）。百分比最高的 admission，絕對數字卻最小，因為它只處理單一 tool 的輸出。</li>
+                    <li>等待時間：12,000 ÷ 50 = 240 秒；150 ÷ 50 = 3 秒；240 ÷ 50 = 4.8 秒。整檔重寫還有 drift 風險：1,196 行要重抄。每行抄錯的機率 0.1%，全部抄對的機率是 0.999 的 1,196 次方，約 30%。</li>
+                  </ul>
+                  <p><b>追問：</b>如果 agent 每一步都重讀這個檔案，20 步要多少 input token？改成只讀 2 處各 40 行，省多少？（240,000 對 16,000，省 93%。）</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q3">
+              <div class="qbody">
+                <p class="qtag">設計 · 客服 agent 的 tool 介面 · <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=23" target="_blank" rel="noopener">p.23–25</a></p>
+                <p class="qtext">為一個電商客服 agent 設計 tool 介面。它要查訂單、查客戶、辦退款、改收件地址。你會給它哪些 tool？錯誤訊息和重試怎麼設計？</p>
+                <p class="qctx"><b>情境：</b>資料在 PostgreSQL，有 <code>orders</code>、<code>customers</code>、<code>refunds</code>、<code>addresses</code> 四張表。第一版提案只有一個 tool：<code>run_sql(query)</code>。Tool 經過 API gateway，timeout 大約每 200 次發生 1 次。退款一旦執行就無法撤回。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>列出 tool 清單（名稱、參數、回傳欄位），並說明為什麼不用 <code>run_sql</code>。<span class="qh">提示：每項需求至少一個 tool，照 p.25 的 search_orders 寫：參數有型別與上限。run_sql 的問題看同頁對照。</span></li>
+                    <li>為「客戶給的是 email 不是 ID」和「訂單不在可退款狀態」各寫一段錯誤訊息，要能教 model 下一步。<span class="qh">提示：照 p.25 的好範例寫：先說哪裡錯，再說下一步。下一步可以是先呼叫哪個 tool，或哪些狀態才能退款。</span></li>
+                    <li>說明退款 tool 怎麼做到冪等：timeout 後 agent 重試，為什麼不會退兩次。<span class="qh">提示：想想 idempotency key：agent 每次退款多傳一個 key。同一筆重試時，server 看到同一個 key 該怎麼做？</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">Tool 清單（名稱、參數、回傳）：讀取 ＿＿；寫入 ＿＿。不用 run_sql，因為 model 要先知道 ＿＿，又能 ＿＿。</p>
+                  <p class="tpl">Email 的錯誤：「＿＿ 是 email，請先呼叫 ＿＿ 拿 ID」；狀態的錯誤：「訂單是 ＿＿，只有 ＿＿ 可以退款」。</p>
+                  <p class="tpl">退款 tool 要求一個 ＿＿；server 第一次收到就 ＿＿，同一個 key 再來就 ＿＿，所以不會退兩次。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/45" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>讀取類：<code>find_customer(email | phone)</code>；<code>search_orders(customer_id, status?, limit ≤ 50)</code>；<code>get_order(order_id)</code>。寫入類：<code>refund_order(order_id, reason, idempotency_key)</code>；<code>update_address(order_id, address)</code>。五個 tool，每個只做一件事。</li>
+                    <li>不用 <code>run_sql</code> 的理由：model 要先知道 schema；它什麼都能做，包括 <code>DELETE</code>；輸出沒有上限，一個 <code>SELECT *</code> 就塞滿 context；錯誤訊息是資料庫的，不是給 model 的指引。</li>
+                    <li>錯誤訊息：<code>customer_id 'jane@example.com' is an email. Call find_customer(email=...) first, then pass the ID like 'C-10293'.</code>；<code>order O-5512 is 'shipped'. Refund is allowed only for 'delivered' or 'cancelled'.</code></li>
+                    <li>冪等：<code>refund_order</code> 要求一個 idempotency_key，例如 order_id 加這次對話的 ID。Server 第一次收到就執行並記錄；同一個 key 再來，直接回傳上次的結果，所以重試是安全的。<code>update_address</code> 用「設成這個值」，也是冪等。</li>
+                  </ul>
+                  <p><b>追問：</b>如果有人要求「agent 要能回答任何資料問題」，你會加回 <code>run_sql</code> 嗎？有沒有折衷，例如唯讀 replica、白名單查詢？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q4">
+              <div class="qbody">
+                <p class="qtag">團隊實務 · 大型 monorepo 的編輯策略 · <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=21" target="_blank" rel="noopener">p.13、p.17–21</a></p>
+                <p class="qtext">為一個大型 monorepo 的團隊選一組 agent 編輯策略，並說服團隊接受。你的選擇在什麼情況下會失敗？</p>
+                <p class="qctx"><b>情境：</b>monorepo 有 40,000 個檔案、3 種語言。Commit 時 formatter 自動跑。30 位工程師同時用 agent 開 PR，每個 PR 都要人 review。本季有一個大任務：把 <code>charge()</code> 改名成 <code>capture()</code>，7 個檔案 42 個呼叫點，其中幾處用別名 import。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>為「一般修改」和「跨檔案改名」各選一種方式，說明理由。<span class="qh">提示：一般修改從 p.21 的四種方式挑。改名看 p.13：用別名 import 的呼叫點，grep 找得到嗎？</span></li>
+                    <li>指出 formatter 會讓哪一種方式失敗，以及你怎麼處理。<span class="qh">提示：看 p.18–19 的失敗原因：formatter 改檔後，哪一種的行號或 anchor 會過期？再想何時重讀、何時跑 formatter。</span></li>
+                    <li>說明 reviewer 看到什麼格式，以及它為什麼可以和 agent 內部用的格式不同。<span class="qh">提示：分開「agent 怎麼套用修改」和「reviewer 怎麼看修改」。PR 上的 diff 是誰產生的？</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">一般修改用 ＿＿，因為 ＿＿；跨檔案改名用 ＿＿，因為它認得 ＿＿。</p>
+                  <p class="tpl">Formatter 會讓 ＿＿ 的行號或 anchor 過期；處理：＿＿（每次 edit 後重讀／最後才跑 formatter）。</p>
+                  <p class="tpl">Reviewer 看的是 ＿＿ 產生的 diff，所以 agent 內部用 ＿＿ 也不影響 review。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/46" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>一般修改用 search/replace：輸出只和改動成正比，靠內容定位，anchor 不唯一就報錯。Claude Code 的 Edit 就是這種設計。</li>
+                    <li>跨檔案改名用 LSP 的 <code>textDocument/rename</code> 或 AST 工具：它知道 <code>import { charge as c }</code> 的 <code>c</code> 就是 <code>charge</code>，grep 會漏掉。42 個呼叫點用 LSP 只要一次 call。</li>
+                    <li>Formatter 的問題：每次 edit 後都跑 formatter，下一個 anchor 可能已經過期。做法：edit 後重新 Read；或把 formatter 放到最後一步統一執行（L2 的 PostToolUse hook）。Unified diff 在這裡最脆弱：行號與 context 行都依讀檔當時的版本，而且全有或全無。</li>
+                    <li>Reviewer 看的是 git 產生的 PR diff。所以 agent 內部用 search/replace 或 AST，reviewer 一樣看到乾淨的 diff。會失敗的情況：每種語言的 language server 要各自常駐；40,000 個檔案的索引要一直同步。先在一個子目錄試，量 edit 的失敗率。</li>
+                  </ul>
+                  <p><b>追問：</b>如果有人的 agent 設成整檔重寫，PR 的 diff 會長什麼樣？你會用 hook 或 CI 擋下來嗎？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q5">
+              <div class="qbody">
+                <p class="qtag">風險 · 診斷 context 失敗 · <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=50" target="_blank" rel="noopener">p.46–50</a></p>
+                <p class="qtext">下面三個症狀各屬於哪一種 context 失敗（poisoning、distraction、confusion、clash、drift）？每一個各提出一個 harness 層的修法。</p>
+                <p class="qctx"><b>情境：</b>（a）任務是「修好結帳的 bug」。Agent 第 8 步看到 lint 警告，之後 25 步都在修 lint，結帳的 bug 沒有碰。（b）Agent 第 5 步把一個不存在的函式 <code>parseAmountSafe()</code> 寫進筆記檔，之後三次都呼叫它，每次失敗就換參數再試。（c）Agent 讀了 <code>config.yaml</code> 四次；第 2 次與第 4 次之間，使用者改過 timeout。Agent 最後用的是第 2 次讀到的舊值。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>每個症狀寫出失敗類型與判斷依據。<span class="qh">提示：對照 p.50 的症狀欄。先問：壞資訊是 model 自己產生的、目標埋在歷史裡，還是新舊版本同時存在？</span></li>
+                    <li>每個症狀提出一個修法，標明它屬於四種策略中的哪一種，或者都不屬於。<span class="qh">提示：修法要對準壞資訊的入口。候選：寫入前先驗證、只留最新一次讀取、目標寫進檔案定期放回。再對照 p.46–49 歸類。</span></li>
+                    <li>指出哪一個症狀用 compaction 會更糟，並說明原因。<span class="qh">提示：Compaction 由 LLM 決定摘要留什麼。把三個症狀各寫成一句摘要，看哪一句會把錯的東西固定下來。</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">（a）是 ＿＿，（b）是 ＿＿，（c）是 ＿＿；判斷依據依序是 ＿＿、＿＿、＿＿。</p>
+                  <p class="tpl">修法：（a）＿＿（屬於 ＿＿），（b）＿＿（屬於 ＿＿），（c）＿＿（屬於 ＿＿）。</p>
+                  <p class="tpl">Compaction 會讓 ＿＿ 更糟，因為摘要可能把 ＿＿ 當成事實寫進去。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/47" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>（a）drift：真正的目標埋在歷史中間，agent 換成相近的子目標。修法：把原始任務寫進 <code>TODO.md</code>，harness 每 10 步重新放進 context 結尾（offloading 加定期注入）。也可以設停止規則：連續 N 步沒碰相關檔案，就暫停回報。</li>
+                    <li>（b）poisoning：幻覺進了筆記，之後當成事實引用。修法：寫入筆記前先驗證，例如 grep 確認函式存在；發現後直接刪掉那段。這算 transformation，但觸發條件是驗證，不是步數。</li>
+                    <li>（c）clash：同一個檔案的四個版本都在 context，model 用了舊的。修法：deduplication，每個檔案只留最新一次的讀取結果（transformation）。</li>
+                    <li>Compaction 會讓（b）更糟：摘要可能把「parseAmountSafe 存在」寫進去，幻覺就固化了。（a）也可能更糟：摘要寫成「正在修 lint」，原始目標消失。所以 p.49 說 compaction 後要重新放入關鍵事實。</li>
+                  </ul>
+                  <p><b>追問：</b>distraction 與 confusion 沒有出現在情境裡。各寫一個你看過的症狀，以及對應的策略。</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q6">
+              <div class="qbody">
+                <p class="qtag">應用 · 選 prompt 技巧 · <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=38" target="_blank" rel="noopener">p.30–38、p.39</a></p>
+                <p class="qtext">為三個場景各選一種 prompt 技巧，說明理由、估算成本，並說明換成 reasoning model 時你會改什麼。</p>
+                <p class="qctx"><b>情境：</b>（a）每天 300 張客服工單，分成 billing、bug、feature、other 四類，輸出要能直接 parse；有幾條說不清的規則，例如「亂打的字歸 other」。（b）判斷發票是否重複，答案只有 yes/no，判錯會多付一筆錢；每天 80 張。（c）處理供應商 email：擷取 vendor、amount、date，補上 vendor_id，再草擬回信；每段輸出都有 schema。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>每個場景選一種技巧，寫出為什麼不選更簡單的。<span class="qh">提示：照 p.38 由上往下問：zero-shot 夠嗎？規則講不清楚才加範例；答錯很貴才投票；能拆段才用 chaining。</span></li>
+                    <li>估算每天的 model 呼叫次數，和最簡單的做法比較。<span class="qh">提示：每天次數 = 件數 × 每件呼叫次數。取樣投票每件 5 次（p.35），chaining 每件 = 段數；（c）的件數自己假設。</span></li>
+                    <li>說明換 model 之後，你怎麼確認每一招還有用。<span class="qh">提示：看 p.37：沒有一組固定的測試，能確認「沒弄壞」嗎？再想：一次該拿掉幾個技巧，才分得出是哪一招有用？</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">（a）選 ＿＿，更簡單的 ＿＿ 不夠，因為 ＿＿；（b）選 ＿＿，因為 ＿＿；（c）選 ＿＿，因為 ＿＿。</p>
+                  <p class="tpl">每天呼叫次數：（a）＿＿ 次，（b）＿＿ 次，（c）＿＿ 次；全用 zero-shot 是 ＿＿ 次。</p>
+                  <p class="tpl">換 model 後，我用 ＿＿ 當固定的 eval，一次拿掉 ＿＿ 個技巧，比較 ＿＿。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/48" target="_blank" rel="noopener">到 GitHub 討論這一題 ↗</a></p>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>（a）few-shot：zero-shot 已經能列出標籤和格式，但「亂打的字歸 other」這類 tacit rule，用一個 <code>asdfgh → other</code> 的範例比文字清楚。範例要涵蓋四個標籤。成本：300 次呼叫，和 zero-shot 相同。</li>
+                    <li>（b）self-consistency：取樣 5 次、temperature 0.7、多數決；一致度低於 0.8 就交給人。答錯代價高，5 倍成本划得來：80 × 5 = 400 次呼叫，zero-shot 只要 80 次。</li>
+                    <li>（c）prompt chaining：三段各一個 prompt，每段輸出用 schema 驗證，不合格只重跑那一段。成本：每封 3 次，80 封 240 次，加重跑約 250 次。</li>
+                    <li>換成 reasoning model：（a）與（c）不用改。（b）先測單次 zero-shot 的準確率，再決定要不要保留 5 次取樣。確認的方法只有一種：一組固定的 eval 案例（p.37），每個技巧一次拿掉一個，比較分數。</li>
+                  </ul>
+                  <p><b>追問：</b>（a）的四個標籤如果變成 12 個，few-shot 的範例要多少個？Context 成本和準確率怎麼取捨？</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <textarea class="copybox" id="copy-fallback" rows="8" readonly hidden aria-label="討論題文字，可手動複製"></textarea>
+
+        <h3 class="subhead">自我檢查</h3>
+        <div class="quiz">
+          <details>
+            <summary>你的 agent 執行 tool 時拋出例外，整個程式就中止。依 p.5 的骨架，該怎麼改？</summary>
+            <div class="answer"><p>捕捉例外，把錯誤訊息當成 tool 結果，附上 <code>tool_call_id</code> 放回 messages。Model 讀到錯誤，下一圈就能修正。</p></div>
+          </details>
+          <details>
+            <summary>Agent 用 unified diff 連續修改同一個檔案，第二份 patch 常套不上。為什麼？怎麼改善？</summary>
+            <div class="answer"><p>第二份 patch 的行號與 context 行，依第一次修改前的內容寫成，已經過期。改善：每次修改後重新讀檔；或改用 search/replace，它靠內容定位。</p></div>
+          </details>
+          <details>
+            <summary>你用 temperature 0 做 self-consistency，5 次取樣都答 yes。這代表 model 很有把握嗎？</summary>
+            <div class="answer"><p>不代表。Temperature 0 時，model 每次都選機率最高的 token，5 次結果本來就幾乎相同。要用大於 0 的 temperature，讓每次走不同的推理路徑，一致度才有意義。</p></div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 6 動手試試 ===================== -->
+      <section class="part" id="s-try">
+        <header class="part-head">
+          <p class="kicker">6 · 動手試試</p>
+          <h2>照著做一次</h2>
+          <p class="lede">範例不綁定任何 SDK，可以直接改成你的程式。點開才會展開。</p>
+        </header>
+        <div class="exlist">
+          <details class="ex">
+            <summary>Agent loop 的骨架<span>p.5–6</span></summary>
+            <div class="exbody">
+              <p>編號的註解就是 harness 設計者的四項工作。</p>
+              <figure class="file"><figcaption>agent.py（依 slide 的 pseudocode 改寫）</figcaption><pre><code>MAX_STEPS = 30
+
+def run_agent(task: str, tools: dict) -&gt; str:
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": task},
+    ]
+    schemas = [t.schema for t in tools.values()]   # 2. 送給 model 的 tool 定義
+    for _ in range(MAX_STEPS):
+        reply = call_model(messages, schemas)      # 1. 組出 context
+        messages.append(reply.message)
+        if not reply.tool_calls:                   # 沒有 tool call = 最終回答
+            return reply.text
+        for call in reply.tool_calls:
+            try:
+                tool = tools[call.name]
+                args = tool.validate(call.arguments)   # 3. model 的輸出不可信
+                result = tool.run(**args)
+            except Exception as err:               # 錯誤也回給 model
+                result = {"error": str(err)}
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.id,
+                "content": serialize(result),      # 4. shaping、截斷
+            })
+    raise RuntimeError(f"Agent stopped: hit MAX_STEPS={MAX_STEPS}")</code></pre></figure>
+              <p><code>messages</code> 每一圈都整份送給 model。<code>validate</code> 檢查 JSON、型別，以及路徑是否在 repo 外面。<code>MAX_STEPS</code> 讓卡住的 loop 明確失敗。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>Search/replace 與 unified diff，實際套一次<span>p.18–19</span></summary>
+            <div class="exbody">
+              <p>Search/replace 的輸入（Aider 的格式，簡化）。Tool 要求 SEARCH 段在檔案裡剛好出現一次。</p>
+              <figure class="file"><figcaption>SEARCH/REPLACE 區塊</figcaption><pre><code>src/api.ts
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH
+const b = {
+  retries = 3,
+=======
+const b = {
+  retries = 5,
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</code></pre></figure>
+              <p>檔案裡有兩處 <code>retries = 3,</code>。只給這一行當 anchor，tool 要回「appears 2 times」；多帶一行 <code>const b = {</code>，就只改第二處。再套一次，要回「not found, read again」。</p>
+              <p>Unified diff 的行為用 git 驗證。先做一份 patch，再改檔案，看 <code>git apply</code> 怎麼說：</p>
+              <figure class="file"><figcaption>terminal</figcaption><pre><code>$ git diff -U1 &gt; patch.diff      # maxRetries = 3 改成 5
+$ git checkout client.ts
+
+# 1. 檔案最上面插 5 行
+$ git apply --check -v patch.diff
+Hunk #1 succeeded at 46 (offset 5 lines).
+
+# 2. formatter 改了 context 行
+$ git apply --check patch.diff
+error: patch failed: client.ts:41
+$ patch --dry-run -p1 &lt; patch.diff   # GNU patch 容許 fuzz
+Hunk #1 succeeded at 41 with fuzz 1.
+
+# 3. 兩個 hunk，一個過期：預設全有或全無，兩個都不套
+$ git apply two.diff
+error: patch failed: client.ts:41</code></pre></figure>
+              <p>結論和 p.18 一樣：行號偏移還能救，context 行變了就失敗。Agent 用 diff，每次修改後要重新讀檔。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>不好與好的 tool 定義<span>p.25</span></summary>
+            <div class="exbody">
+              <figure class="file"><figcaption>不好：通用的 run_sql（JSON Schema；外層欄位名稱依 SDK 而定）</figcaption><pre><code>{
+  "name": "run_sql",
+  "description": "Run SQL on the production database.",
+  "input_schema": {
+    "type": "object",
+    "properties": {"query": {"type": "string"}},
+    "required": ["query"]
+  }
+}</code></pre></figure>
+              <figure class="file"><figcaption>好：專用的 search_orders</figcaption><pre><code>{
+  "name": "search_orders",
+  "description": "List one customer's orders, newest first. Use for order status, refund or shipping questions.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "customer_id": {"type": "string", "description": "Customer ID, e.g. C-10293"},
+      "status": {"type": "string", "enum": ["open", "shipped", "refunded"]},
+      "limit": {"type": "integer", "default": 10, "maximum": 50}
+    },
+    "required": ["customer_id"]
+  }
+}</code></pre></figure>
+              <p>差在哪：<code>run_sql</code> 要 model 先知道 table 和欄位，而且什麼都能做。<code>search_orders</code> 只能讀一位客戶的訂單，參數有型別與上限，輸出最多 50 筆。錯誤訊息的寫法見 Q3。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 7 大家的討論 ===================== -->
+      <section class="part" id="s-submit">
+        <header class="part-head">
+          <p class="kicker">7 · 大家的討論</p>
+          <h2>這堂的討論</h2>
+          <p class="lede">討論放在 GitHub Issues，每一題一串。第 5 段每一題下面有「到 GitHub 討論這一題」的連結。跨題的想法、這堂整體的心得和附件，寫在這堂的綜合討論串。</p>
+        </header>
+        <div class="copyrow gh-row">
+          <a class="copybtn" href="https://github.com/chihmingyang/cs2680/issues/49" target="_blank" rel="noopener">這堂的綜合討論 ↗</a>
+          <a class="ghostbtn" href="https://github.com/chihmingyang/cs2680/issues?q=is%3Aissue%20label%3AL04" target="_blank" rel="noopener">這堂全部的討論串 ↗</a>
+        </div>
+        <ul class="limits gh-how">
+          <li>留言要先登入 GitHub。看討論不用登入。</li>
+          <li>回答一題：在討論串最下面留一則。回應別人：按那一則「⋯」裡的 Quote reply，或寫 @對方的帳號。</li>
+          <li>附件：把圖片或 PDF 直接拖進留言框。</li>
+          <li>討論是公開的：任何人都看得到內容和你的 GitHub 帳號。</li>
+        </ul>
+      </section>
+
+      <!-- ===================== 延伸閱讀 ===================== -->
+      <section class="wrap" id="wrap" aria-label="延伸閱讀">
+        <h2>延伸閱讀</h2>
+        <p class="rg-intro">教授為這一講列了 15 篇，是全課程最長的一份清單（<a href="https://cs2680.com/readings/sep-16.html" target="_blank" rel="noopener">官方清單 9/16 ↗</a>）。三組對應 slides 的三條主線：agent loop、context、tool。不必全讀；分工時一組一到兩人。「必讀」的 3 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
+        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
+        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 75 分鐘：ReAct（只讀方法與圖 1）→ Effective Context Engineering → Writing Effective Tools。一條主線各拿一篇。</p></div></div>
+        <h3 class="rg-h">Agent 的基本型 <small>What an agent is</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a><span class="rg-meta">arXiv 2210.03629 · 論文 · 2022 · 挑段約 20 分</span></div>
+          <p class="rg-s">Agent loop 的源頭論文：reasoning 與 acting 交錯，成為後來所有 agent 的基本迴圈。</p>
+          <p class="rg-g"><b>導讀</b>讀 §2 方法與圖 1 即可；實驗在 ALFWorld 與 WebShop。問：slides 的 agent loop 和 ReAct 差在哪裡？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>把「想」寫成一種不改變環境的 action，和真正的 action 交錯，model 就能用 observation 修正推理。結論：只推理會幻覺，只行動會迷失，交錯讓兩種錯都變少。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.4–7 的 Thought、Action、Observation 三步來自這篇，〈<a href="#i1">ReAct：推理要有 observation 來檢查</a>〉已經講了機制。差別在實作：論文只靠 few-shot prompt 驅動 frozen 的 PaLM-540B，slides 的 loop 則由 harness 執行 tool call 再放回 context。論文的錯誤分析也呼應〈<a href="#i2">Tool 要為 model 設計</a>〉：23% 的失敗來自 search 回傳沒有用的內容。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Thought 是一種不改變環境的 action。</b>論文把 action space 擴成 A ∪ L，L 是語言空間。Thought 不產生 observation，只更新 context，給下一步用。</li>
+              <li><b>Thought 的密度依任務調整。</b>HotpotQA 與 FEVER 讓 thought、action、observation 嚴格輪流。ALFWorld 與 WebShop 只在關鍵處放 thought，何時想由 model 自己決定。</li>
+              <li><b>知識任務上，ReAct 單獨用不一定贏 CoT。</b>HotpotQA 的 EM：CoT 29.4，ReAct 27.4，Act 25.7。FEVER 準確率：ReAct 60.9%，CoT 56.3%。兩者接力最好：ReAct→CoT-SC 在 HotpotQA 到 35.1，CoT-SC→ReAct 在 FEVER 到 64.6%。</li>
+              <li><b>ReAct 換掉了錯誤的種類。</b>作者人工分析 HotpotQA 各 100 條軌跡。CoT 的失敗有 56% 是幻覺，ReAct 是 0%。但 ReAct 的推理錯誤佔 47%，CoT 只有 16%；另有 23% 的失敗來自 search 回傳沒用的內容。</li>
+              <li><b>決策任務上差距更大。</b>ALFWorld 134 個未見過的場景：ReAct 最佳 prompt 的成功率 71%，Act 45%，BUTLER 37%。WebShop：ReAct 成功率 40.0%，Act 30.1%，IL+RL 28.7%。Act 常常無法拆解目標，或忘記目前的狀態。</li>
+              <li><b>小 model 靠 finetune 補上。</b>作者用 3,000 條 ReAct 自己產生的正確軌跡 finetune PaLM-8B 與 62B。Finetune 後的 62B 超過 540B 的所有 prompting 方法。只用 prompt 時，小 model 的 ReAct 反而最差。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§1 Introduction 與 §5 Related Work，slides p.4–7 已涵蓋動機。§3.1 的資料集與 baseline 設定。附錄的完整 prompt。</li>
+              <li><b>值得看原文：</b>Figure 1 把同一題用 4 種方法並排，是全文最好的一張圖。Table 2 的錯誤分析只有原文有。Appendix A.3 的 Figure 5：人只改 2 句 thought，軌跡從失敗變成功。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 Figure 1、Table 1–3、Figure 5 約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「ReAct 在每個任務都勝過 CoT」不對。HotpotQA 上 ReAct 單獨用的 EM 低於 CoT，原因是交錯的格式限制了推理的彈性。論文的主張是互補：內部知識與外部檢索各有強項，接力使用才是最佳。</p></div></div>
+          </div></details>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents</a><span class="rg-meta">Anthropic · 工程文章 · 2024 · 約 20 分</span></div>
+          <p class="rg-s">把固定 workflow 與 agent 分開，給出可組合的 pattern。原則：量到有效，才加複雜度。</p>
+          <p class="rg-g"><b>導讀</b>帶大家對照：你們手上的系統是 workflow 還是 agent？已經用了哪些 pattern？</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://tej.as/blog/what-is-an-agent-harness" target="_blank" rel="noopener">What Is an Agent Harness?</a><span class="rg-meta">Tejas Kumar · 部落格 · 2026 · 約 15 分</span></div>
+          <p class="rg-s">給 harness 一個六件組件的定義。關鍵檢驗：harness 要驗證完成，不能信模型自述。</p>
+          <p class="rg-g"><b>導讀</b>範例用的是 GPT-3.5 Turbo：看觀念，不看數字。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://agentpatterns.ai/" target="_blank" rel="noopener">Agent Patterns</a><span class="rg-meta">agentpatterns.ai · 參考站</span></div>
+          <p class="rg-s">Pattern 與 anti-pattern 的目錄。寫法刻意讓 agent 能直接載入當 context。</p>
+          <p class="rg-g"><b>導讀</b>先看 anti-patterns；之後當字典查。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://lilianweng.github.io/posts/2023-06-23-agent" target="_blank" rel="noopener">LLM Powered Autonomous Agents</a><span class="rg-meta">Lilian Weng · 綜述 · 2023 · 約 25 分</span></div>
+          <p class="rg-s">2023 年的經典綜述：planning、memory、tool use 三分法，詞彙沿用至今。</p>
+          <p class="rg-g"><b>導讀</b>它是詞彙表，不是新系統。讀目錄與各節定義即可。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://openai.com/business/guides-and-resources/a-practical-guide-to-building-ai-agents" target="_blank" rel="noopener">A Practical Guide to Building Agents</a><span class="rg-meta">OpenAI · 指南 · 2025 · 約 20 分</span></div>
+          <p class="rg-s">另一家的官方指南。最有用的一節：什麼時候不要用 agent。</p>
+          <p class="rg-g"><b>導讀</b>和 Anthropic（上一篇）、Cognition（L5）的立場並排比較。</p>
+          </li>
+        </ol>
+        <h3 class="rg-h">Context 管理 <small>Context management</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener">Effective Context Engineering for AI Agents</a><span class="rg-meta">Anthropic · 工程文章 · 2025 · 約 20 分</span></div>
+          <p class="rg-s">四招：compaction、外部筆記、subagent、just-in-time 檢索。slides 的四種策略直接對應。</p>
+          <p class="rg-g"><b>導讀</b>每一招問兩件事：它省了什麼？它丟了什麼？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Context 是有限的注意力預算，每一步都要重新決定放什麼。原則只有一條：用最少的高訊號 token，把想要的結果機率拉到最高。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.41–44 的「context 是有限資源」與 context rot 來自這篇，見〈<a href="#i4">Context 是有限資源</a>〉。文中長任務的三招（compaction、筆記、subagent）對應 slides p.45–52 的四種策略，見〈<a href="#i5">四種策略有順序</a>〉。差異：這篇沒有 slides 的 admission 與 transformation 的無損／有損排序，也沒有給數字；slides 把它補成一個有順序的框架。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Context engineering 是每一步都要做的挑選。</b>Prompt engineering 寫一次指令。Context engineering 管理推論當下的全部 token：system prompt、tool、歷史、外部資料。Agent 跑在 loop 裡，每圈都要重新挑。</li>
+              <li><b>注意力有預算，越長越稀。</b>Transformer 的每個 token 都看所有 token，n 個 token 有 n² 個配對。訓練資料多是短序列，長 context 的位置精度靠內插。所以退化是漸進的，沒有一條突然失效的門檻。</li>
+              <li><b>System prompt 要在對的高度。</b>一端是寫死的 if-else 規則，脆弱。另一端是模糊的高層指引，model 要猜。做法：先用最小 prompt 跑最好的 model，依失敗案例再加指令與範例。</li>
+              <li><b>Tool 集合要小而不重疊。</b>工程師說不出該用哪個 tool，agent 也說不出。範例用少量、多樣、典型的案例，不要堆邊角規則。</li>
+              <li><b>Just-in-time 檢索：只留 handle，用到再讀。</b>Agent 保留檔案路徑、查詢、連結，用 tool 在執行時載入。Claude Code 混合兩種：CLAUDE.md 開頭就載入，其他檔案用 glob、grep 現找。代價是速度較慢，而且要有好的 tool。</li>
+              <li><b>長任務三招，各適合一種情境。</b>Compaction 讓 model 摘要歷史，Claude Code 保留架構決定與未解的 bug，附上最近讀過的 5 個檔案；先求 recall，再修 precision。筆記寫到 context 外面，Pokémon agent 用它記 1,234 步的進度。Subagent 在乾淨的 context 探索，用掉數萬 token，只回傳 1,000–2,000 token 的摘要。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>開頭兩節 Context engineering vs. prompt engineering 與 Why context engineering matters，slides p.41–44 已講完。Conclusion 只重複原則。</li>
+              <li><b>值得看原文：</b>The anatomy of effective context 的「right altitude」兩種失敗，slides 沒有。Long-horizon tasks 一節的 Pokémon 筆記截圖，和結尾「三招各適合什麼任務」的對照段落。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 anatomy 與 long-horizon 兩節約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「用 1M 的 context window 就不用管 context 了」不對。文章說大 window 解決不了 context 污染與相關性的問題，注意力退化是漸進的。Window 越大，越需要決定什麼不該進去。</p></div></div>
+          </div></details>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://sourcegraph.com/blog/context-engineering" target="_blank" rel="noopener">Context Engineering: A Practical Guide for AI Agents</a><span class="rg-meta">Sourcegraph · 部落格 · 2026 · 約 15 分</span></div>
+          <p class="rg-s">把 context 當一筆有生命週期的預算：檢索範圍、壓縮、subagent 隔離。</p>
+          <p class="rg-g"><b>導讀</b>和上一篇對讀，找出兩家重疊與分歧的建議。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2606.10209" target="_blank" rel="noopener">Less Context, Better Agents</a><span class="rg-meta">arXiv 2606.10209 · 論文 · 2026 · 挑段約 20 分</span></div>
+          <p class="rg-s">修剪 context 不只省成本，還可能提高成功率。</p>
+          <p class="rg-g"><b>導讀</b>證據來自 50 題的旅館報帳 benchmark。結論要在自己的 workload 上重量一次。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Lost in the Middle: How Language Models Use Long Contexts</a><span class="rg-meta">arXiv 2307.03172 · 論文 · 2023 · 挑段約 15 分</span></div>
+          <p class="rg-s">經典結果：正確率隨證據位置呈 U 形，放中間最差。</p>
+          <p class="rg-g"><b>導讀</b>記得圖 1 就夠。討論：檢索回來的內容，該照什麼順序放進 prompt？</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2606.29718" target="_blank" rel="noopener">Diagnosing and Mitigating Context Rot</a><span class="rg-meta">arXiv 2606.29718 · 論文 · 2026 · 挑段約 20 分</span></div>
+          <p class="rg-s">Context 還沒滿，品質就先壞。淘汰要由答案品質觸發，不能只看容量。</p>
+          <p class="rg-g"><b>導讀</b>和 L6 的「錯誤會累積」連起來講。</p>
+          </li>
+        </ol>
+        <h3 class="rg-h">Tool 設計 <small>Tool design</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener">Writing Effective Tools for Agents, with Agents</a><span class="rg-meta">Anthropic · 工程文章 · 2025 · 約 20 分</span></div>
+          <p class="rg-s">Tool 的描述與輸出都是介面的一部分；tool 定義每一輪都佔 context。</p>
+          <p class="rg-g"><b>導讀</b>現場拿你們的一個 tool（或 MCP tool），用文中的原則審一遍。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Tool 是確定性程式與不確定的 agent 之間的契約，要為 agent 設計，而非把 API 包一層。做法：先建 eval，再讓 agent 自己看軌跡改 tool。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.8–26 的 tool 設計五條原則多數出自這篇，見〈<a href="#i2">Tool 要為 model 設計</a>〉。延伸思考〈<a href="#x1">Tool 設計就是 context 設計</a>〉問的「這個輸出進 context 之後會更好嗎」，就是本文 returning meaningful context 一節的主張。Slides 沒講的部分：怎麼用 eval 與 agent 來迭代 tool。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Tool 不是 function。</b>Function 同樣輸入給同樣輸出。Agent 同樣的起點可能走不同的路：呼叫 tool、憑記憶回答、或先反問。所以 tool 要考慮 agent 會怎麼誤用。</li>
+              <li><b>先建 eval，量的不只是正確率。</b>用真實資料產生數十組任務，每組有可驗證的答案。同時記錄 runtime、tool call 次數、token 用量、tool 錯誤。重複的呼叫暗示分頁或上限要調；反覆的參數錯誤暗示描述不清。</li>
+              <li><b>讓 agent 改 tool。</b>把 eval 的軌跡貼給 Claude Code，讓它找出問題並一次改一批 tool。作者說內部 Slack 與 Asana 的 tool 經這樣迭代後，held-out 測試的表現超過專家手寫版。</li>
+              <li><b>Tool 要少、要合併步驟。</b>list_contacts 把整份名單塞進 context，search_contacts 只回需要的。schedule_event 一次完成查空檔加排程，取代兩個 tool。命名加前綴分組，例如 asana_search；前綴或後綴對 eval 有可量的差異，依自己的 eval 選。</li>
+              <li><b>回傳的內容是給 model 讀的。</b>回 name、file_type 這類有語意的欄位，少回 uuid 與 mime_type。把 UUID 換成名稱或序號，能明顯減少幻覺。給一個 response_format 參數：Slack 的例子裡 detailed 是 206 token，concise 是 72 token。</li>
+              <li><b>輸出要省，錯誤要教。</b>用分頁、過濾、截斷，Claude Code 預設把 tool 回應限在 25,000 token。截斷時提示 agent 改用多次小範圍的搜尋。錯誤訊息要說怎麼修，不要只回 code 或 traceback。</li>
+              <li><b>Tool 描述是 prompt 的一部分。</b>像寫給新人一樣說明查詢格式與術語。參數名要無歧義：用 user_id，不要用 user。作者說只修描述，就讓 Claude Sonnet 3.5 在 SWE-bench Verified 上大幅減少錯誤。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>What is a tool? 與 Building a prototype 兩節是鋪陳。Looking ahead 是結語。</li>
+              <li><b>值得看原文：</b>Returning meaningful context 的 Slack 兩段回應範例，可以直接對照 token 數。Optimizing tool responses 的三個錯誤訊息範例（無用、截斷、有用）。Running an evaluation 的強弱任務範例。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 evaluation 與 principles 兩節約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「每個 API endpoint 包一個 tool，agent 自己會選」不對。文章說這是最常見的錯誤：tool 越多，重疊越多，agent 越分不清。Tool 定義每一輪都佔 context，數量本身就是成本。</p></div></div>
+          </div></details>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.philschmid.de/superhuman-bash" target="_blank" rel="noopener">How Foundational Models Became Superhuman in Bash</a><span class="rg-meta">Philipp Schmid · 部落格 · 2026 · 約 10 分</span></div>
+          <p class="rg-s">主張用一個 shell tool 取代很多原子 tool：模型對 bash 的訓練太充分了。</p>
+          <p class="rg-g"><b>導讀</b>這是未量化的實務觀察。問：哪些東西（例如截圖）仍然需要專用管道？</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">Toolformer: Language Models Can Teach Themselves to Use Tools</a><span class="rg-meta">arXiv 2302.04761 · 論文 · 2023 · 挑段約 15 分</span></div>
+          <p class="rg-s">模型用自己標註的資料學會呼叫工具；呼叫格式成為模型契約的一部分。</p>
+          <p class="rg-g"><b>導讀</b>當歷史脈絡讀：tool use 是「學出來的」，不只是 prompt 出來的。</p>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://blog.lawrencejones.dev/demystifying-skills-and-mcps" target="_blank" rel="noopener">How Skills and MCPs Actually Work</a><span class="rg-meta">Lawrence Jones · 部落格 · 2026 · 約 20 分 · L2 已列過</span></div>
+          <p class="rg-s">L2 的必讀，這一講再次指定：single agent、按需 skills、虛擬檔案系統 tools。</p>
+          <p class="rg-g"><b>導讀</b>L2 讀過的話，這次只重看「三個問題」那張表，套用到每一條設定。</p>
+          </li>
+        </ol>
+        <p class="rg-fn">補充資料的出處：<a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">SWE-agent 論文</a>（p.26）、<a href="https://arxiv.org/abs/2608.26218" target="_blank" rel="noopener">Same Model, Different Harness</a>（p.52）、Claude Code 官方文件 <a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noopener">mcp</a>（Edit tool 與 MCP 輸出的描述）。</p>
+
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與下一堂">
+        <a class="prev" href="l03.html"><span>← 上一堂 L3</span>用多個 agent 放大產能</a>
+        <a class="next" href="l05.html"><span>下一堂 L5 →</span>Multi-agent 架構與溝通</a>
+      </nav>
+      <p class="fineprint">本文整理自 CS2680 L4 的 slides，加上觀念補充與延伸思考；延伸思考是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的描述依據 2026 年 10 月的官方文件。</p>
+    </div>
+  </div>
+</main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

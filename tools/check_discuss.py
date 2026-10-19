@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
-"""Structural check of an article page's six sections, focused on §5 (discussion).
+"""Structural check of a lecture page's sections, focused on §5 (discussion).
 
-Usage: python3 -I check_discuss.py site/l01.html [...]
-Prints a short report and PROBLEMS / OK per page.
+Usage: python3 -I check_discuss.py docs/l01.html [...]
+Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-19:
+  基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
+    div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
+    A「常見誤解」callout is expected (warning only).
+  進階題 li.dq: 6, each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
+    details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
+  Every li.bq / li.dq has p.gh-talk linking to its GitHub issue, and §7 #s-submit links to the
+    綜合 issue (both written by tools/discuss.py).
+  §7 #s-submit and the reading list ol.rg in #wrap exist.
 """
 import re
 import sys
@@ -10,6 +18,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 TYPES = ["概念", "估算", "分析", "設計", "團隊實務", "風險", "取捨", "應用"]
+ISSUE = "https://github.com/chihmingyang/cs2680/issues/"
 FORBID = [r"password", r"密碼", r"passwd", r"帳號.{0,6}密", r"login.{0,10}pass"]
 
 
@@ -88,6 +97,7 @@ def check(path):
     p.feed(text)
     root = p.root
     probs = []
+    warns = []
     rep = []
     main = root.find("main")
     lec = main[0].attrs.get("data-lecture") if main else "?"
@@ -152,8 +162,8 @@ def check(path):
             probs.append("no copy-fallback textarea")
         bqs = d.find("li", "bq")
         rep.append(f"bq={len(bqs)}")
-        if not 6 <= len(bqs) <= 9:
-            probs.append(f"{len(bqs)} basic questions")
+        if not 3 <= len(bqs) <= 5:
+            probs.append(f"{len(bqs)} basic questions (want 3-5)")
         for k, q in enumerate(bqs, 1):
             if q.attrs.get("id") != f"b{k}":
                 probs.append(f"b{k}: id {q.attrs.get('id')}")
@@ -164,10 +174,30 @@ def check(path):
                 probs.append(f"b{k}: no qtext")
             dets = q.find("details")
             sums = [x.find("summary")[0].txt().strip() if x.find("summary") else "" for x in dets]
-            if sums != ["參考答案"]:
+            if sums != ["參考答案與重點複習"]:
                 probs.append(f"b{k}: details {sums}")
-            elif not dets[0].find("div", "hint"):
-                probs.append(f"b{k}: no hint div")
+            else:
+                tk = dets[0].find("div", "takeaway")
+                if not tk:
+                    probs.append(f"b{k}: no div.hint.takeaway")
+                else:
+                    tk = tk[0]
+                    heads = [x.txt().strip() for x in tk.find("p", "tk-h")]
+                    if not tk.find("div", "tk-ans"):
+                        probs.append(f"b{k}: no div.tk-ans")
+                    for h in ("重點拆解", "背景補充"):
+                        if h not in heads:
+                            probs.append(f"b{k}: no tk-h {h}")
+                    keys = tk.find("div", "tk-keys")
+                    if not keys or len(keys[0].find("li")) != 3:
+                        probs.append(f"b{k}: tk-keys needs 3 points")
+                    if not tk.find("p", "tk-rel"):
+                        probs.append(f"b{k}: no p.tk-rel")
+                    if "常見誤解" not in tk.txt():
+                        warns.append(f"b{k}: no 常見誤解 callout")
+            gh = q.find("p", "gh-talk")
+            if not gh or not any((x.attrs.get("href") or "").startswith(ISSUE) for x in gh[0].find("a")):
+                probs.append(f"b{k}: no GitHub issue link (run tools/discuss.py)")
             if q.find("p", "qctx") or q.find("div", "qcover"):
                 probs.append(f"b{k}: basic question must not have qctx/qcover")
         qs = d.find("li", "dq")
@@ -193,21 +223,27 @@ def check(path):
             cov = q.find("div", "qcover")
             if not cov or len(cov[0].find("li")) != 3:
                 probs.append(f"q{k}: qcover li != 3")
+            elif len([li for li in cov[0].find("li") if li.find("span", "qh")]) != 3:
+                probs.append(f"q{k}: every qcover point needs span.qh 提示")
+            gh = q.find("p", "gh-talk")
+            if not gh or not any((x.attrs.get("href") or "").startswith(ISSUE) for x in gh[0].find("a")):
+                probs.append(f"q{k}: no GitHub issue link (run tools/discuss.py)")
             dets = q.find("details")
             sums = [x.find("summary")[0].txt().strip() if x.find("summary") else "" for x in dets]
-            if sums != ["思考方向", "參考觀點與追問"]:
+            if sums != ["作答範本", "參考觀點與追問"]:
                 probs.append(f"q{k}: details {sums}")
             else:
+                if "qstart" not in dets[0].cls():
+                    probs.append(f"q{k}: 作答範本 must be details.qstart")
+                if len(dets[0].find("p", "tpl")) < 2:
+                    probs.append(f"q{k}: 作答範本 needs >= 2 p.tpl")
                 ref = dets[1]
                 lis = ref.find("li")
-                follow = [pp for pp in ref.find("p") if pp.txt().startswith("追問")]
-                hint = dets[0].find("div", "hint")
+                follow = [pp for pp in ref.txt().split("\n") if "追問" in pp]
                 if not 4 <= len(lis) <= 6:
                     probs.append(f"q{k}: reference points {len(lis)}")
                 if not follow:
                     probs.append(f"q{k}: no 追問")
-                if not hint:
-                    probs.append(f"q{k}: no hint div")
             rep_len = len(q.txt())
             rep.append(f"q{k}:{tagt.split('·')[0].strip()}({rep_len})")
         if len(kinds) < 5:
@@ -224,6 +260,14 @@ def check(path):
         for e in ex:
             if e.attrs.get("open") is not None:
                 probs.append("an example is open by default")
+    sub = sec("s-submit")
+    if not sub:
+        probs.append("no §7 #s-submit")
+    elif not any((x.attrs.get("href") or "").startswith(ISSUE) for x in sub.find("a")):
+        probs.append("§7 #s-submit has no link to the 綜合 issue (run tools/discuss.py)")
+    w = sec("wrap") or (root.find(id="wrap") or [None])[0]
+    if not w or not w.find("ol", "rg"):
+        probs.append("no ol.rg reading list in #wrap")
     if root.find(cls="proto"):
         probs.append(".proto banner present")
     if root.find(id="gist-toggle"):
@@ -232,6 +276,8 @@ def check(path):
         if re.search(pat, text, re.I):
             probs.append(f"forbidden pattern {pat}")
     print(f"== {Path(path).name}: " + " ".join(rep))
+    for x in warns:
+        print("  warn:", x)
     if probs:
         print("PROBLEMS:")
         for x in probs:
