@@ -127,7 +127,7 @@ Cover (no footer). Title: "Modern AI Systems: Agents and System Optimizations". 
 
 === Page 20 ===
 (footer 21) Other logistics: computing. "Read the computing page on the website". Four resources:
-- Claude Code API access (endpoint shown on the slide: api.cs2680.com).
+- Claude Code API access. The slide also shows a standalone, unlabeled line "api.cs2680.com" (most likely the API endpoint; the slide does not say).
 - GitHub: private repo, shared with staff.
 - Class HPC: everyone with Canvas access is already on the system; SLURM-based; RTX 6000 PRO Blackwell GPUs; course work only.
 - AWS: sign up and fill in the Google Form before Friday; terminate or turn off your instance when not in use.
