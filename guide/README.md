@@ -7,6 +7,7 @@
 - 讀書會站台「CS2680 觀念導讀」：https://chihmingyang.github.io/cs2680/
 - 課程：Harvard CS2680 Modern AI Systems: Agents and System Optimizations（Fall 2026，Juncheng Yang）。課程沒有錄影，讀書會讀 slides。
 - 每一堂有：一篇架構文章、最多 5 題基礎題（附重點複習）、6 題進階題（附提示與作答範本）、延伸閱讀導讀（必讀的每一篇附摘要）。
+- Part I 的建議閱讀順序是 L2 → L4 → L3 → L5（2026-10-21 定）：L2、L3 會先用到 L4 才解釋的 context 代價、subagent。順序寫在首頁「怎麼讀」和 L2、L4 頁尾的 `.pager-note`。講次編號、檔名、issue label 不跟著改。
 - 成員的討論在這個 repo 的 Issues：每一堂一串，只放基礎題（2026-10-21 起；之前每一題一串，太散）。每人一則留言，`### Q1`…`### Q5` 當小標。進階題不上 GitHub，留在頁面給讀書會當天討論。
 
 ## 東西放在哪裡
