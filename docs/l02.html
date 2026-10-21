@@ -58,8 +58,8 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/2_agent_use_1.pdf" target="_blank" rel="noopener">2_agent_use_1.pdf ↗</a></li>
       <li><span class="k">頁數</span>53</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 14 分鐘</span></li>
-      <li><span class="k">深入</span><span class="deep-time">約 10 分鐘</span>，選讀</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
+      <li><span class="k">深入</span><span class="deep-time">約 9 分鐘</span>，選讀</li>
       <li><span class="k">全部展開</span><span class="full-time">約 45 分鐘</span></li>
     </ul>
   </header>
@@ -190,6 +190,7 @@
             <div class="prose">
               <p>你打一個 prompt，Claude Code 會跑很多圈 loop。每一圈，harness 把整個 context 送給 model。Model 提議一個動作，例如跑 <code>pytest</code>。Harness 檢查權限，在你的電腦上執行，再把結果放回 context。Model 不再提議動作時，這一輪才結束。</p>
               <p>這個結構有兩個後果。第一，成本和延遲隨圈數增加，因為每一圈都重送整個 context。第二，context 一直變大，快滿時就要 compaction，把舊的過程摘要起來。摘要會丟掉細節，所以重要的規則不能只靠對話記住。</p>
+              <p>每個動作執行前，harness 先查權限 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=11" target="_blank" rel="noopener">p.11</a>。權限由一份規則清單加一個模式組成。規則依 deny → ask → allow 的順序比對 tool 名稱和參數。沒有規則符合時，由模式決定：每步都問（default）、自動同意編輯（acceptEdits）、只讀不改（plan）、交給另一個 classifier model 審查（auto）、全部放行（bypassPermissions）。</p>
             </div>
             <div class="exlist deeplist">
               <details class="ex deep" id="d1">
@@ -268,6 +269,7 @@
             <div class="prose">
               <p>Model 沒有狀態。它不記得上一個 session，也不記得上一圈 loop。Agent 看起來記得事情，是因為 harness 每次都把相關文字放進 context。</p>
               <p>Claude Code 有兩套持久記憶。CLAUDE.md 是你寫的規則：怎麼跑測試、哪些事不准做、推不出來的專案事實。Auto memory 是 Claude 自己寫的筆記：你的偏好、你給過的糾正。兩者都在 session 開始時載入。</p>
+              <p>檔案放在兩個層級 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=18" target="_blank" rel="noopener">p.18–25</a>。<code>~/.claude/</code> 是個人層：CLAUDE.md 寫你的偏好，auto memory 也在這裡，MEMORY.md 是索引，每次只載入前 200 行。Repo 根目錄是專案層：CLAUDE.md 寫團隊規則，進 git；<code>CLAUDE.local.md</code> 寫你在這個專案的個人規則，不進 git。各層的 CLAUDE.md 全部串接進 context，不互相覆蓋。</p>
               <p>記憶有成本。每一行常駐內容，之後每一圈 loop 都要再送一次。過期的記憶比沒有記憶更糟，因為它會誤導 agent。所以 slide 建議把記憶當程式碼管理：review、刪減、放進版本控制。</p>
             </div>
             <div class="exlist deeplist">
@@ -366,7 +368,10 @@ User wants targeted runs (pytest -x &lt;dir&gt;), not the full suite. Reason: fu
             <h3>四種擴充機制，各管一件事 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=28" target="_blank" rel="noopener">p.28–42</a></h3>
             <div class="prose">
               <p>內建的 tool（Read、Search、Edit、Shell 等）讓 agent 能動手。要擴充能力，有四種機制：skill 教 agent 怎麼做一件事；MCP 讓 agent 碰得到外部系統；hook 在特定事件發生時執行程式；plugin 把前三者打包，讓別人一個指令就能安裝。</p>
+              <p>每一種的實體都很小。Skill 是一個 SKILL.md：description 寫「做什麼、什麼時候用」，model 依它決定要不要載入全文 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=33" target="_blank" rel="noopener">p.33–35</a>。MCP（Model Context Protocol）server 是一個程式，把外部系統包成 tool；對 model 來說，它和 Read、Bash 沒有差別 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=36" target="_blank" rel="noopener">p.36–37</a>。Hook 是掛在事件上的指令，事件有 SessionStart、UserPromptSubmit、PreToolUse、PostToolUse、Stop；PreToolUse 的 hook 用 exit code 2 結束，就擋下這個動作 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=38" target="_blank" rel="noopener">p.38</a>。Plugin 是一個目錄，把 skill、hook、MCP 設定打包，給好幾個 repo 共用 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=39" target="_blank" rel="noopener">p.39</a>。</p>
+              <p>另一個常用的零件是 subagent <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=28" target="_blank" rel="noopener">p.28</a>：主 agent 把一個任務交給新的 context window 去跑，結束只拿回一段摘要，搜尋結果和 log 留在外面。L3 會用它組成多 agent 的流程。</p>
               <p>最重要的差別：skill 和 MCP 都要等 model 決定使用，hook 不用。Model 的判斷是機率性的，hook 是確定性的。所以「一定要發生」或「一定不能發生」的事，要交給 hook 或權限設定，不要只寫在 CLAUDE.md。</p>
+              <p>選哪一種，slide 的設計練習給了順序 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=42" target="_blank" rel="noopener">p.42</a>：必須強制的事，用 hook 或權限；要碰外部系統，用 MCP；要分享給別人，用 plugin；每次都要知道的事，寫進 CLAUDE.md；其他程序與知識，做成 skill。</p>
             </div>
             <div class="exlist deeplist">
               <details class="ex deep" id="d7">
@@ -473,21 +478,14 @@ claude mcp add --env AIRTABLE_API_KEY=xxx --transport stdio airtable -- npx -y a
                 </div>
               </details>
               <details class="ex deep" id="d12">
-                <summary>深入｜什麼時候需要 plugin，四種機制怎麼選<span>p.39、p.42</span></summary>
+                <summary>深入｜什麼時候需要 plugin<span>p.39、p.42</span></summary>
                 <div class="exbody prose">
                   <ul>
                     <li>同一個 repo 的團隊：把 <code>.claude/</code> 和 CLAUDE.md commit 進 repo 就夠了。</li>
                     <li>好幾個 repo 要共用同一套 skill、hook、MCP 設定：這時才需要 plugin。</li>
                   </ul>
                   <p>安裝指令和 namespace 的例子，見基礎題第 5 題。另外兩個細節：plugin 的 hook 設定放在 <code>hooks/hooks.json</code>;<code>.claude-plugin/plugin.json</code> 是選用的 metadata。</p>
-                  <p>p.42 設計練習的判斷順序：</p>
-                  <ol>
-                    <li>必須強制的事：用 hook 或權限。</li>
-                    <li>要碰外部系統：用 MCP。</li>
-                    <li>要分享給別人：用 plugin。</li>
-                    <li>每次都要知道的事：寫進 CLAUDE.md。</li>
-                    <li>其他程序與知識：做成 skill。</li>
-                  </ol>
+                  <p>p.42 設計練習的判斷順序寫在上面的正文最後一段。</p>
                 </div>
               </details>
             </div>
