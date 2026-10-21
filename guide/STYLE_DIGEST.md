@@ -1,8 +1,8 @@
-# 必讀摘要撰寫規範（v1.1）
+# 延伸閱讀摘要撰寫規範（v1.2）
 
-更新：2026-10-19（v1.1：路徑改成 `docs/`）。對照的是 L2–L8 的 18 段摘要（L1 沒有必讀）。
+更新：2026-10-21（v1.2：「推薦」也附摘要；新增 `tools/insert_digest.py`）。對照的是 L1–L8 的 42 段摘要。
 
-延伸閱讀裡標「必讀」的每一篇，`li` 的最後加一段摘要 `details.rg-dg`。目的：成員時間有限，讀摘要（約 3 分鐘）就能掌握這篇的主張與數字；要看原文時，知道哪幾節值得看、哪些段落 slides 已經講過可以跳過。「推薦」「選讀」「查閱」不加摘要。
+延伸閱讀裡標「必讀」（`data-level="3"`）與「推薦」（`data-level="2"`）的每一篇，`li` 的最後加一段摘要 `details.rg-dg`。目的：成員時間有限，讀摘要（約 3 分鐘）就能掌握這篇的主張與數字；要看原文時，知道哪幾節值得看、哪些段落 slides 已經講過可以跳過。「選讀」「查閱」（`data-level="1"`）不加摘要。同一篇在兩堂都列到（例：L2 與 L4 的 How skills and MCPs actually work），兩頁各一段：重點可以沿用，「跟這堂課的關係」要各自寫。
 
 ## 素材
 
@@ -39,7 +39,7 @@
 - 長度 450–800 字（中文字 + 英文詞）。論文偏上限，部落格偏下限。
 - 不寫討論題（頁面另有討論題）。
 - 片段的 `details` 預設收合，所以不算進 read-time；會算進 full-time。
-- `p.rg-intro` 的結尾加一句：「必讀」的 N 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。
+- `p.rg-intro` 的結尾有一句：「必讀」與「推薦」的 N 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。`insert_digest.py` 會依頁面裡的摘要數量重寫這一句。
 
 ## 語言
 
@@ -50,6 +50,5 @@
 1. 一篇一個片段檔：`notes/digests/lXX-rN.html`（N 是這篇在延伸閱讀裡的序號）。開頭一行 `<!-- source: <url> | read: yes/partial/no | note: … -->`。
 2. 可以把不同講次交給幾個 subagent 平行寫；每個 subagent 先讀這份規範和那堂的頁面。
 3. `python3 -I tools/punct.py notes/digests/*.html --diff`，看過再不帶 `--diff` 跑。
-4. 用 script 依 `a.rg-t` 的網址（arXiv 比對 id，abs／pdf 都算）找到 `li`，把片段插在 `</li>` 之前。
-5. 驗證每個錨點存在、頁碼不超過 `data-pages-total`（跨堂引用要寫「L5 p.36」這種形式）。
-6. 跑 B4 的檢查；`check_article.py --fix-time` 會更新 full-time。
+4. `python3 -I tools/insert_digest.py docs/lXX.html notes/digests/lXX-r*.html`：依 `a.rg-t` 的網址（arXiv 比對 id，abs／pdf／html 都算）找到 `li`，把片段插在 `</li>` 之前（該 `li` 已有摘要就換掉，可重跑），重寫 `rg-intro` 的篇數，再驗證每個錨點存在、頁碼不超過 `data-pages-total`（跨堂引用要寫「L5 p.36」這種形式）、每段有「別誤讀」、長度 450–800。`--check` 只驗證不插入。
+5. 跑 B4 的檢查；`check_article.py --fix-time` 會更新 full-time。

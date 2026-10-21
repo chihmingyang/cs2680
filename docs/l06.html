@@ -59,7 +59,7 @@
       <li><span class="k">頁數</span>31</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 35 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
     </ul>
   </header>
 
@@ -949,7 +949,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <p class="rg-intro">教授為這一講列了 6 篇（<a href="https://cs2680.com/readings/sep-28.html" target="_blank" rel="noopener">官方清單 9/28 ↗</a>）：兩篇講記憶怎麼做，四篇講 agent 怎麼失敗。「必讀」的 2 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
+        <p class="rg-intro">教授為這一講列了 6 篇（<a href="https://cs2680.com/readings/sep-28.html" target="_blank" rel="noopener">官方清單 9/28 ↗</a>）：兩篇講記憶怎麼做，四篇講 agent 怎麼失敗。「必讀」與「推薦」的 4 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
         <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
         <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 50 分鐘：MemGPT（看記憶階層的架構圖）＋ Why Do Multi-Agent LLM Systems Fail?（看 14 種失敗模式那張表）。</p></div></div>
         <h3 class="rg-h">State 與記憶 <small>State management and agent memory</small></h3>
@@ -993,6 +993,28 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2509.25370" target="_blank" rel="noopener">Where LLM Agents Fail and How They can Learn From Failures</a><span class="rg-meta">arXiv 2509.25370 · 論文 · 2025 · 挑段約 20 分</span></div>
           <p class="rg-s">把失敗追到 root-cause 的那一步，再把修正餵回下一次嘗試。</p>
           <p class="rg-g"><b>導讀</b>重點是 step-level 標註：要歸因，先要有每一步的紀錄。連到 L7 的 tracing。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>這篇提出 AgentErrorTaxonomy（5 個模組、17 種錯誤）、AgentErrorBench（200 條逐步標註的失敗 trajectory）和 AgentDebug。AgentDebug 找出最早的關鍵錯誤，給回饋後從那一步重跑；ALFWorld 上成功率最高從 60% 升到 84%。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.30 說除錯要先找第一個出錯的步驟，見〈<a href="#i5">失敗有 5 個來源</a>〉；這篇把它定義成 critical error，並做成 benchmark。分法不同：slides 依來源分 5 層，這篇依 agent 內部的模組分 5 個，規格層在這篇沒有對應。Memory 模組的 3 種錯誤對應 p.18 的 retrieval miss 與 memory hallucination，見〈<a href="#i3">遺忘、有效時間、來源</a>〉。它的 error propagation 分析是 p.22 錯誤相乘的實例，見〈<a href="#i4">錯誤會相乘</a>〉；這種分析要有每一步的紀錄，呼應〈<a href="#x4">「還沒有最佳實踐」</a>〉。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>錯誤依 agent 的模組分類：5 個模組、17 種。</b>Memory 3 種：摘要過度簡化、假記憶、檢索失敗。Reflection 4 種：進度誤判、結果誤讀、歸因錯誤、幻覺。Planning 3 種：忽略限制、不可能的動作、低效計畫。Action 3 種：計畫與動作脫節、格式錯誤、參數錯誤。System 4 種：步數用盡、tool 錯誤、LLM 限制、環境錯誤。分類來自 3 個環境超過 500 條失敗 trajectory 的人工分析。</li>
+              <li><b>Critical error 是最早的那一步：修好它，任務就會成功。</b>標註員只找最小的 root-cause 集合，不標每個表面錯誤。Benchmark 有 200 條：ALFWorld 100、WebShop 50、GAIA 50。10 位研究生逐步標註，Cohen's κ = 0.55。</li>
+              <li><b>關鍵錯誤多在中段，planning 模組最多。</b>第 6–10 步最多（48 條）。依模組看，planning 78、reflection 39、memory 38、action 22、system 22。作者的解讀：memory 與 reflection 的錯誤最會往後傳，記錯一件事，後面的計畫就整個歪掉。</li>
+              <li><b>AgentDebug 分 3 階段。</b>先用 taxonomy 逐步標錯誤；再用 counterfactual 推理找最早的關鍵錯誤；最後產生附錯誤類型與修正建議的回饋，從那一步重跑，最多 5 次。重跑不從頭開始，省下前段的計算。</li>
+              <li><b>找關鍵錯誤：step accuracy 45.0%，全對 24.3%。</b>Debugger 用 GPT-4.1。最強的基線 Direct Prompting 是 28.0% 與 0.3%。全對要同時答對步數、模組、錯誤類型。GAIA 最高：58.0% 與 38.0%。</li>
+              <li><b>重跑後 ALFWorld 成功率大幅上升，弱 model 升最多。</b>5 次嘗試後，GPT-4o-mini 從 21% 到 55%，Qwen3-8B 從 48% 到 74%，Qwen3-Next-80B 從 60% 到 84%。摘要的「最多 26% 相對提升」是和 Self-Refine、Best-of-N 比，嘗試預算按總 token 用量對齊。</li>
+              <li><b>Debugger 要夠強。</b>換 Llama-3.3-70B、GPT-4o-mini 或 Qwen3-Next-80B 當 debugger，step accuracy 都在 16% 以下；GPT-4.1 是 42%。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>Section 1 的 cascading failure 動機（slides p.22 已講）；Section 3.1；Section 6 Related Work；附錄 A.5 的 prompt 全文。</li>
+              <li><b>值得看原文：</b>附錄 Table 2 的 17 種錯誤定義；Figure 3 的錯誤分布；Figure 7a 的 5 次嘗試累積曲線；附錄 A.3 的 ALFWorld 案例，看回饋實際長什麼樣。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「AgentDebug 把準確度提高 24%，所以任務成功率也提高 24%。」摘要的 24% 與 17% 是偵測關鍵錯誤的百分點差（全對 24.3% 對 0.3%），和任務成功率無關。而且全對只有 24.3%，人工標註的 κ 也只有 0.55。這套方法的價值在從關鍵那一步重跑的流程；偵測本身還不可靠。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2503.13657" target="_blank" rel="noopener">Why Do Multi-Agent LLM Systems Fail?</a><span class="rg-meta">arXiv 2503.13657 · 論文 · 2025 · 挑段約 25 分</span></div>
@@ -1025,6 +1047,28 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2607.05775" target="_blank" rel="noopener">Beyond the Leaderboard</a><span class="rg-meta">arXiv 2607.05775 · 論文 · 2026 · 挑段約 20 分</span></div>
           <p class="rg-s">27 篇研究的統合，整理成六類失敗。失敗隨任務長度複利；多加 scaffolding 不一定有救。</p>
           <p class="rg-g"><b>導讀</b>把「scaffolding 不一定有救」當警語帶進討論。它也批評排行榜（含 SWE-bench），接到 L7。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Oxford 的 3 位作者統合 2023–2026 年的 27 篇研究（19 個 benchmark），歸納出 6 類失敗。結論：失敗隨任務長度非線性複利，子技能強不等於任務會成功，多加 scaffolding 不一定有幫助，排行榜分數有一部分來自測量錯誤。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.22 說真實的 run 比 0.95ⁿ 更差，見〈<a href="#i4">錯誤會相乘</a>〉與〈<a href="#t4">獨立假設</a>〉；這篇 7.1 節同意：實測的下降比固定每步錯誤率更快，因為 agent 走錯後不會回頭。p.24 的 5 層依來源分，這篇的 6 類依症狀分，見〈<a href="#i5">失敗有 5 個來源</a>〉；這篇的 tool 類是 agent 叫錯 tool 或給錯參數，依 slides 屬 p.27 的 model 層。長任務退化的瓶頸是 context 的管理，接到〈<a href="#x1">Memory 和任務搶同一個 context</a>〉；測量效度接 L7，也呼應〈<a href="#x2">Memory 要像任何元件一樣做 eval</a>〉。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>這是文獻統合，不是實驗。</b>入選條件：有量化的錯誤分析、有人工標註的 taxonomy，或檢驗過 benchmark 的效度；只報分數的不收。作者把 60 多個錯誤類別合併成 6 群。</li>
+              <li><b>6 類失敗。</b>Tool 呼叫與參數錯誤；多限制同時滿足；長任務隨 context 累積退化；multi-agent 協調；安全與資安；測量效度。Table 2 把 16 組 benchmark 的數字排在一起。</li>
+              <li><b>規劃類：TravelPlanner 上 GPT-4 只有 0.6%。</b>每個限制單獨都能滿足，一起就失敗。推理 model（o1-preview）約 10%；加形式化 verifier 與 critic 的最佳配置約 65%。</li>
+              <li><b>長任務類：下降不是線性的。</b>METR 的資料：人類 4 分鐘內的任務，agent 接近 100%；4 小時以上的低於 10%。長 context 的 web agent 從 40–50% 掉到 10% 以下，而資訊仍在 context 裡；主因是忘了目標、陷入重複迴圈。</li>
+              <li><b>安全類：沒有專門防禦，就要假設會中 prompt injection。</b>InjecAgent 上用 ReAct 的 GPT-4 約 24% 中招，強化攻擊約 47%，部分開源 model 超過 80%。</li>
+              <li><b>測量效度：修正 benchmark 後分數會掉。</b>SWE-bench 上一個 SWE-agent 設定排除解答外洩與弱測試後，從約 12.5% 掉到約 4%。UTBoost 補強測試後，排名有 25–41% 改變。HAL 的 21,000 多次 rollout 顯示，提高 reasoning effort 多半降低準確度。</li>
+              <li><b>有進步的 3 處：單輪 tool 選擇、短 web 導航、範圍明確的 coding。</b>WebArena 從約 14% 升到 61.7%（人類約 78%）；SWE-bench Verified 從 2024 年約 20% 升到 2026 年 50–60% 以上。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>Section 2 Background；Section 3 的檢索流程；Section 4.4 的 multi-agent，MAST 的摘要已涵蓋；Section 8.3 給政策制定者的建議。</li>
+              <li><b>值得看原文：</b>Table 2，一頁看完 16 組數字與出處；Section 4.6 對 SWE-bench 與 HAL 的討論；Section 8.2 給實務者的 4 條建議：參數錯就修 schema、長任務就管 context、multi-agent 就收緊規格與驗證、接外部內容就假設有 injection。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Table 2 的數字可以互比，看出 agent 整體進步了多少。」每一列來自不同論文與設定，作者沒有重跑；表內也有矛盾：WebVoyager 在 Table 2 是 57–90%，在 5.2 節是 85–90%。這篇的價值是結構性的主張：失敗怎麼複利、子技能為何不組合。拿單一數字當論據前，回原始論文查設定。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2502.08235" target="_blank" rel="noopener">The Danger of Overthinking</a><span class="rg-meta">arXiv 2502.08235 · 論文 · 2025 · 挑段約 15 分</span></div>

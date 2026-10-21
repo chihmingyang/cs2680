@@ -58,7 +58,7 @@
       <li><span class="k">頁數</span>50</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 14 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 30 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 35 分鐘</span></li>
     </ul>
   </header>
 
@@ -1067,7 +1067,7 @@ P(60 steps all succeed at 99% each): 54.7%</code></pre>
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <p class="rg-intro">這一講沒有官方 readings 清單。slides 直接引了兩篇；課程網站（<a href="https://cs2680.com" target="_blank" rel="noopener">cs2680.com</a>）另列四本背景教材，基礎不足時當查閱來源。</p>
+        <p class="rg-intro">這一講沒有官方 readings 清單。slides 直接引了兩篇；課程網站（<a href="https://cs2680.com" target="_blank" rel="noopener">cs2680.com</a>）另列四本背景教材，基礎不足時當查閱來源。「推薦」的 1 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
         <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
         <ol class="rg">
           <li>
@@ -1079,6 +1079,27 @@ P(60 steps all succeed at 99% each): 54.7%</code></pre>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/" target="_blank" rel="noopener">Defeating Nondeterminism in LLM Inference</a><span class="rg-meta">Thinking Machines · 部落格 · 2025 · 約 15 分</span></div>
           <p class="rg-s">p.31 的延伸：同一個 prompt 跑兩次，結果為什麼不同。原因在 batch size 與浮點運算順序。</p>
           <p class="rg-g"><b>導讀</b>對照第 3 段「浮點數的不確定性」。問大家：這對「可重現的 eval」意味著什麼？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>temperature 0 仍得到不同輸出，主因是 kernel 缺少 batch invariance：你的請求和多少別人的請求一起算，reduction 順序就跟著變。作者改寫三個 kernel，1000 次 completion 從 80 種變成 1 種，代價是時間變成 1.6 到 2.1 倍。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>〈<a href="#i2">AI workload 打破傳統系統的五個假設</a>〉（p.30–34）說同一個 prompt 可能得到不同輸出，這篇是那一條的全文版。Slides p.31 把 batch size 與 warp scheduling 並列為 runtime 層的來源；這篇說 concurrency 無關，batch size 才是主因，這點和 p.31 的 takeaway「approximate computing 可以接受」方向不同：作者認為可重現做得到，也值得做。〈<a href="#t2">浮點數沒有結合律</a>〉寫了機制，〈<a href="#x2">不確定性改變團隊測試</a>〉說 temperature 0 不保證可重現；這篇補上修法與數字。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>常見的「concurrency + 浮點數」解釋不成立。</b>這個說法把加總順序的變化歸給 GPU thread 的完成順序與 atomic add。作者指出 LLM 的 forward pass 通常一個 atomic add 都沒有。同一個 matmul 用同樣資料重跑，結果 bitwise 相同。</li>
+              <li><b>真正的原因是 kernel 不具 batch invariance。</b>同一個請求在 batch 1 和 batch 32 裡算，kernel 換切法，reduction 順序跟著變。Batch size 由伺服器當下的負載決定，使用者看不到。所以系統整體是確定的，從單一使用者看卻是隨機的。</li>
+              <li><b>三個有 reduction 的 kernel 要改，原則是切法不隨 batch size 變。</b>RMSNorm：每個 batch element 固定交給一個 core，小 batch 時寧可讓 core 閒置。Matmul：所有形狀用同一組 kernel 設定，不用 Split-K，約比 cuBLAS 慢 20%。Attention：先更新 KV cache 與 page table 再進 kernel；沿 KV 切塊時固定每塊大小（例如 256），塊數隨 KV 長度變。</li>
+              <li><b>數字：80 種變 1 種。</b>Qwen3-235B-A22B-Instruct-2507，prompt 是「Tell me about Richard Feynman」，temperature 0，1000 次各 1000 token，原本有 80 種不同的 completion，最常見的出現 78 次。前 102 個 token 全部相同，第 103 個開始分歧：992 次寫 Queens, New York，8 次寫 New York City。改用 batch-invariant kernel 後，1000 次完全相同。</li>
+              <li><b>效能代價：時間 1.6 到 2.1 倍。</b>單張 GPU 跑 Qwen-3-8B，1000 條序列，每條輸出 90 到 110 token。vLLM 預設 26 秒；未優化的 deterministic 版 55 秒；改良 attention kernel 後 42 秒。</li>
+              <li><b>副產品：真正的 on-policy RL。</b>Sampler 與 trainer 數值不一致時，on-policy RL 會悄悄變成 off-policy。Bigmath 上的實驗：不做 importance weighting，reward 中途崩潰；做了之後 KL 約 0.001。兩端 bitwise 一致時，KL 一直是 0。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>「The original sin: floating-point non-associativity」一節，slides p.31 與本頁第 3 段已經講過。「Implementation」只說用 vLLM 的 FlexAttention backend 加 <code>torch.Library</code> 換 kernel。</li>
+              <li><b>值得看原文：</b>「Batch invariance and determinism」一節，解釋每個 kernel 都確定、endpoint 仍不確定的原因。「Batch-invariant attention」的 fixed split size 圖：KV 長度 1000 切成 256、256、256、232。「True on-policy RL」的三條 KL 曲線。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「浮點數不可結合，所以 GPU 上的 LLM 本來就不可能可重現。」作者反對這種放棄。單一 kernel 重跑的結果 bitwise 相同；會變的只有 batch size 帶來的 reduction 順序，固定它就可重現。但這只在你控制 serving stack 時成立；第三方 API 的 batch 你管不到。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank" rel="noopener">Operating Systems: Three Easy Pieces</a><span class="rg-meta">Arpaci-Dusseau · 免費教科書</span></div>

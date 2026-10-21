@@ -60,7 +60,7 @@
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
       <li><span class="k">深入</span><span class="deep-time">約 11 分鐘</span>，選讀</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 45 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 55 分鐘</span></li>
     </ul>
   </header>
 
@@ -1316,7 +1316,7 @@ claude --permission-mode plan          # 你核准計畫之前，不會改檔</c
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <p class="rg-intro">教授為這一講列了 10 篇（<a href="https://cs2680.com/readings/sep-09.html" target="_blank" rel="noopener">官方清單 9/09 ↗</a>）。每篇下面是一句定位與導讀切入點；分工時一人認領一篇，用「導讀」那一行開場。「必讀」的 3 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。這一講另有一份<a href="l02-readings.html">逐篇詳細導讀</a>：含核心主張、背景概念與逐篇討論題，導讀人準備時用。</p>
+        <p class="rg-intro">教授為這一講列了 10 篇（<a href="https://cs2680.com/readings/sep-09.html" target="_blank" rel="noopener">官方清單 9/09 ↗</a>）。每篇下面是一句定位與導讀切入點；分工時一人認領一篇，用「導讀」那一行開場。「必讀」與「推薦」的 7 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。這一講另有一份<a href="l02-readings.html">逐篇詳細導讀</a>：含核心主張、背景概念與逐篇討論題，導讀人準備時用。</p>
         <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
         <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 70 分鐘：06 → 02 → 09。先建立心智模型，再學操作，最後用證據校正。其他篇看定位句即可。</p></div></div>
         <h3 class="rg-h">操作 loop <small>A first operating loop</small></h3>
@@ -1357,6 +1357,28 @@ claude --permission-mode plan          # 你核准計畫之前，不會改檔</c
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://simonwillison.net/guides/agentic-engineering-patterns/" target="_blank" rel="noopener">Agentic Engineering Patterns</a><span class="rg-meta">Simon Willison · 實務指南 · 2026 · 挑 6 章約 25 分</span></div>
           <p class="rg-s">把散落各處的 coding agent 技巧整理成共同詞彙。Testing 三章可以直接改寫成團隊規範。</p>
           <p class="rg-g"><b>導讀</b>介紹 red/green TDD 與 agentic manual testing。問：agent 同時寫測試和實作，測試還能當 oracle 嗎？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>把散落各處的 coding agent 技巧整理成有名字的 pattern，持續更新。對這堂課最有用的是 Testing and QA 三章：先寫測試並確認它失敗、新 session 先跑測試、叫 agent 親手操作程式。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>How coding agents work 一章講 harness、stateless、token caching、tool call，就是 slides p.6–13 與〈<a href="#i1">一個 prompt，很多圈 loop</a>〉；token caching 對應觀念補充〈<a href="#t1">Prefix cache</a>〉。Subagents 一章對應 p.28 與〈<a href="#i3">四種擴充機制，各管一件事</a>〉提到的 subagent。作者說基本的 loop 幾十行就能寫，好用的 agent 要多很多工，這呼應延伸思考〈<a href="#x1">產品差異在 harness</a>〉。Testing 三章 slides 沒講；它們補的是 agent 寫完程式之後，你怎麼知道程式能跑。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>寫 code 變便宜了，好的 code 沒有。</b>好的 code 要能跑、有證據證明能跑、解對問題、處理錯誤、夠簡單、有測試、文件跟得上。這些責任仍在開 agent 的人身上。</li>
+              <li><b>Coding agent 就是 harness 包著 LLM，加上 tool，跑 loop。</b>LLM 沒有狀態，harness 每一輪重送整段對話，input 成本隨對話變長。Agent 不改早先的內容，prefix cache 才會命中。</li>
+              <li><b>Red/green TDD：先寫測試，先看它失敗，再實作到通過。</b>「確認失敗」這一步防止 agent 寫出本來就會通過的測試；那種測試沒有檢查任何新行為。Prompt 只要寫 Use red/green TDD，model 就懂。</li>
+              <li><b>新 session 第一句：First run the tests。</b>Agent 因此知道有測試、怎麼跑、專案多大。它改完程式之後，更可能自己再跑一次。</li>
+              <li><b>測試全過不等於能用。</b>Server 可能一啟動就當掉，UI 元件可能沒畫出來。叫 agent 用 <code>python -c</code> 試 edge case、開 dev server 用 <code>curl</code> 探索 API、用 Playwright 開真的瀏覽器並看截圖。找到的問題再用 red/green TDD 變成永久測試。</li>
+              <li><b>要 agent 留證據。</b>作者的 Showboat 工具用 <code>exec</code> 記錄實際執行的指令和輸出。Agent 因此難以把「希望發生的事」寫成結果。</li>
+              <li><b>Anti-pattern：不要把自己沒 review 過的 agent code 丟給同事。</b>第一輪 review 是你的責任。PR 要小、寫清楚目標、附手動測試紀錄或截圖。PR 描述也要自己先讀過。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>How coding agents work 整章，slides p.6–13 已經講過。Principles 裡的 Hoard things 與 Better code 兩章是作者的個人觀點。Understanding code、Annotated prompts、Appendix 和這堂無關。</li>
+              <li><b>值得看原文：</b>Testing and QA 三章全文，每章只有一兩頁。Agentic manual testing 裡的 Rodney prompt 與它的三個小技巧，以及 Showboat 的 <code>note</code>、<code>exec</code>、<code>image</code> 三個指令。Anti-patterns 裡「好的 agentic PR」的四個條件。Using Git 與 Subagents 需要時再查。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「叫 agent 用 TDD，測試就能當 oracle。」Agent 同時寫測試和實作，兩邊可能一起錯。Red 階段只保證測試檢查了新行為，不保證它檢查對了。所以作者把手動測試和人的 review 放在 TDD 旁邊，三件事都要做。</p></div></div>
+          </div></details>
           </li>
         </ol>
         <h3 class="rg-h">設定、context 成本與強制力 <small>Configuration, context cost, and enforcement</small></h3>
@@ -1365,11 +1387,55 @@ claude --permission-mode plan          # 你核准計畫之前，不會改檔</c
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" target="_blank" rel="noopener">Equipping agents for the real world with Agent Skills</a><span class="rg-meta">Anthropic · 工程文章 · 2025 · 約 10 分</span></div>
           <p class="rg-s">Skill 是一個資料夾。三層 progressive disclosure：description 常駐，body 與附檔用到才載入。</p>
           <p class="rg-g"><b>導讀</b>現場拿一份團隊 runbook 來拆：哪些內容該是 description、哪些是 body、哪些是附檔？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Skill 是一個資料夾，裡面一份 SKILL.md，可以再放參考檔和 script。它用三層 progressive disclosure：常駐的只有 name 和 description，body 和附檔用到才載入，所以一個 skill 能帶的內容幾乎沒有上限。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇是 slides p.33–35 的原始出處，見〈<a href="#i3">四種擴充機制，各管一件事</a>〉。三層載入就是觀念補充〈<a href="#t3">漸進載入</a>〉。它和〈<a href="#i2">Agent 的記憶</a>〉形成對照：CLAUDE.md 每個 session 整份載入，skill 只付 description 的租金。一個差異：文章說 skill 的 metadata 預載在 system prompt；本頁第一個「深入」說 Claude Code 把它放在第一則 user message。對 model 來說，兩者都是常駐文字。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>最小的 skill 是一個目錄加一份 SKILL.md。</b>檔案開頭是 YAML frontmatter，必填 <code>name</code> 和 <code>description</code>。Agent 啟動時只預載每個 skill 的這兩個欄位，model 靠它們判斷這個 skill 和目前任務有沒有關係。</li>
+              <li><b>三層載入。</b>第一層是 frontmatter，啟動時載入。第二層是 SKILL.md 的 body，model 判斷相關時才整份讀。第三層是 SKILL.md 連到的其他檔案，需要時才打開。文章的 PDF skill 把填表單的說明放在 <code>forms.md</code>，只有填表單時才讀它。</li>
+              <li><b>載入靠的是一般的檔案工具。</b>文章的四步示意：context 一開始只有 system prompt、skill metadata 和使用者訊息。Claude 用 Bash 讀 <code>pdf/SKILL.md</code>，再讀 <code>forms.md</code>，最後帶著說明完成任務。所以有檔案系統的 agent，skill 能帶的內容幾乎無上限。</li>
+              <li><b>確定性的工作交給 script。</b>排序這類事用程式跑，比用 token 生成便宜，結果也可重複。PDF skill 附一支 Python script 抽出表單欄位；Claude 直接執行它，script 和 PDF 都不必進 context。</li>
+              <li><b>寫 skill 的方法：先量，再補。</b>先在代表性任務上跑 agent，找出它卡住的地方，再針對缺口寫 skill。SKILL.md 太大就拆檔。Script 要寫清楚是給 Claude 執行還是給它讀。盯著 <code>name</code> 和 <code>description</code>，它們決定觸發。</li>
+              <li><b>讓 Claude 參與迭代。</b>請它把成功的做法和常見錯誤寫回 skill，走偏時請它自我檢討。</li>
+              <li><b>Skill 是指令加程式，所以也是攻擊面。</b>惡意 skill 可以叫 agent 外洩資料。只裝可信來源；來源不明的，安裝前讀過每個檔案，特別是相依套件、圖片、script，以及任何對外連線。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>開頭的 onboarding 比喻；The future of Skills 只是產品路線。</li>
+              <li><b>值得看原文：</b>The anatomy of a skill 的三層示意圖，與 Skills and the context window 的四步圖，一眼看懂 context 什麼時候多了什麼。Developing and evaluating skills 的四條建議，寫團隊 skill 時可以直接當 checklist。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 10 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Skill 不佔 context，所以多裝幾個沒關係。」每個 skill 的 name 和 description 都常駐，每一圈都重送；description 寫得像，model 還會選錯 skill。Body 載入之後也留在 context 裡。Progressive disclosure 省的是沒用到的那部分，不是全部。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.anthropic.com/engineering/code-execution-with-mcp" target="_blank" rel="noopener">Code execution with MCP</a><span class="rg-meta">Anthropic · 工程文章 · 2025 · 約 15 分</span></div>
           <p class="rg-s">把 MCP tools 變成 code API。定義按需讀取，中間資料留在 sandbox，不經過模型。</p>
           <p class="rg-g"><b>導讀</b>講兩個問題（定義塞爆 context、結果經過模型）與五個好處。提醒：98.7% 是機制示範，不是 benchmark。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>MCP tool 接得越多，tool 定義和中間結果就吃掉越多 context。解法是把 MCP server 呈現成程式模組，讓 agent 寫程式去呼叫。定義用到才讀，資料在 sandbox 裡處理完才回到 model。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇談 slides p.36–37 與〈<a href="#i3">四種擴充機制，各管一件事</a>〉的 MCP 在規模變大之後的成本。它的解法就是觀念補充〈<a href="#t3">漸進載入</a>〉用在 tool 定義上。本頁第一個「深入」提到 Claude Code 的 MCP schema 用 ToolSearch 才載入，是同一個想法的產品版本。中間結果不經過 model，也呼應〈<a href="#i1">一個 prompt，很多圈 loop</a>〉：每一圈都重送整個 context，進來的東西越少越好。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>問題一：tool 定義塞爆 context。</b>多數 MCP client 把所有 tool 定義一開始就放進 context。接上千個 tool 時，model 讀到使用者的請求之前，先要處理數十萬 token。</li>
+              <li><b>問題二：中間結果經過 model。</b>把會議逐字稿從 Google Drive 搬到 Salesforce，逐字稿先進 context，model 再把它整份抄進第二個 tool call 的參數。2 小時的會議約多花 50,000 token；文件太大會超過 context，抄寫也可能出錯。</li>
+              <li><b>做法：MCP server 變成目錄，tool 變成檔案。</b>一個 server 一個資料夾，一個 tool 一個 <code>.ts</code> 檔，每個檔案是一個有型別的函式。Agent 先列 <code>./servers/</code> 目錄，再只讀用得到的那幾個檔案，然後寫程式呼叫。文章的例子從 150,000 token 降到 2,000 token，減少 98.7%。</li>
+              <li><b>資料留在 sandbox。</b>10,000 列的試算表在程式裡過濾，只 log 筆數和前 5 列給 model。Loop、條件、重試也在程式裡跑；例如每 5 秒輪詢 Slack 等部署完成，不必每一步都回到 agent loop。</li>
+              <li><b>隱私可以變成確定性的規則。</b>MCP client 可以把 PII 換成 <code>[EMAIL_1]</code> 這類代號，model 只看到代號；資料送到下一個 tool 時，client 再換回真值。真實資料從 Google Sheets 流到 Salesforce，不經過 model。</li>
+              <li><b>狀態與 skill。</b>中間結果可以存成檔案，下次接著用。寫好的函式存到 <code>./skills/</code> 就能重用；加一份 SKILL.md，它就是上一篇說的 skill。</li>
+              <li><b>代價是 sandbox。</b>執行 agent 寫的程式，需要隔離、資源上限和監控。這是直接呼叫 tool 不必付的維運成本。Cloudflare 把同類做法叫 Code Mode。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>開頭兩段 MCP 的背景，slides p.36–37 與選讀頁已經講過。</li>
+              <li><b>值得看原文：</b>Intermediate tool results consume additional tokens 的逐字稿例子，前後兩種寫法並排。Code execution with MCP improves context efficiency 的目錄樹與 <code>getDocument.ts</code>。Privacy-preserving operations 的代號化例子。Summary 之前關於 sandbox 代價的那一段。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Code execution 讓 MCP 省 98.7% 的 token。」這個數字來自一個示範情境，不是在代表性任務上跑出來的 benchmark。它省的是 tool 定義那一塊；對話、推理、程式碼本身的 token 還在。省多少取決於你接了多少 tool、資料多大、任務多長；接 3 個 tool 的 agent 幾乎沒差。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://blog.lawrencejones.dev/demystifying-skills-and-mcps" target="_blank" rel="noopener">How skills and MCPs actually work</a><span class="rg-meta">Lawrence Jones · 部落格 · 2026 · 約 20 分 · L4 也會用到</span></div>
@@ -1442,6 +1508,28 @@ claude --permission-mode plan          # 你核准計畫之前，不會改檔</c
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2608.08654" target="_blank" rel="noopener">The Scaffolding Matters More Than the Interface</a><span class="rg-meta">arXiv 2608.08654 · 論文 · 2026 · 挑段約 30 分</span></div>
           <p class="rg-s">同一個模型換 scaffold，成本可以差 20 倍。MCP 與 CLI 的成本比不穩定。</p>
           <p class="rg-g"><b>導讀</b>帶走「成本比不穩定」這個結論，不帶走任何單一數字；證據只來自一個小任務。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>同一個 GitHub 任務、7 個 scaffold、5 個 model：成本主要由 scaffold 決定。沒有 MCP client 的兩個 scaffold 比有 MCP 的五個便宜 5.0 到 28 倍；同一個 scaffold 內換 MCP 或 CLI，成本比從 0.43 倍到 29 倍，分不出勝負。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇把 slides p.6–13 的「每一圈重送整個 context」變成帳單，見〈<a href="#i1">一個 prompt，很多圈 loop</a>〉。Tool schema 每一輪都重送，成本等於 schema 數乘上輪數。它也是〈<a href="#i3">四種擴充機制，各管一件事</a>〉裡 MCP 的成本實測。本頁第一個「深入」說 Claude Code 延後載入 MCP schema，理由就在這裡。延伸思考〈<a href="#x1">產品差異在 harness</a>〉在這篇有直接的證據：model 固定，換 scaffold 就差 20 倍。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>設計：一個任務、兩個 arm、用 repo 狀態驗收。</b>任務 6 步：找 issue、開 branch、套 patch、commit、開 PR、回報某目錄的檔案數。完成與否用 GitHub API 查 4 個條件，不信 agent 自述。MCP arm 接官方 GitHub MCP server（44 個 tool），並拿掉 shell 的 credential；CLI arm 不接 MCP，只給 <code>gh</code>。</li>
+              <li><b>Scaffold 主導成本。</b>Table 1 完成 run 的 input token 中位數：pi 14,660、Tau 16,459、Hermes 75,352、Codex 92,639、opencode 131,649、Claude Code 260,170、qwen-code 288,808。Output token 只差 1.7 倍（824–1,367）；差的是每一輪帶了多少 context。</li>
+              <li><b>只看 CLI arm，差距更大。</b>pi 14,660 對 Claude Code 410,797，差 28 倍。作者指出 Claude Code 有 27 個內建 tool，任務開始前就約 22,000 token。</li>
+              <li><b>MCP 對 CLI 的成本比不穩定。</b>13 組配對比從 0.43 倍到 29.06 倍，中位數 0.93。同一設定重跑，變異中位數 1.51 倍、最大 5.41 倍；小於約 2 倍的差異分不出來。兩邊各 19 次 run 都失敗 3 次，但 MCP arm 有 12.9% 的錢花在沒完成的 run，CLI arm 只有 2.2%。</li>
+              <li><b>小 model 也完成，代價看 scaffold。</b>27B 本地 model 在 Tau 用 17,416 token，在 Codex 加 MCP 用 2,418,828 token、108 次 tool call，差 139 倍。每個 scaffold 下它都做完了任務。</li>
+              <li><b>Schema 送法是候選機制，但只有一個樣本。</b>Hermes 每次只送 7 個 schema，含一對「列出 tool」與「呼叫 tool」的 gateway tool，其餘 42 個按需取得，中位數 70,836 token。其他四個每次送 44 個，中位數 216,986，差 3.1 倍。作者明說這和 Hermes 的所有其他差異混在一起。</li>
+              <li><b>Agent 不照指定的介面走。</b>預實驗 21 次 run 只有 6 次只用 MCP，4 次直接打 GitHub 的 HTTP API。加 prompt 沒用，拿掉替代路徑的 credential 才有用。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§1.1 兩種 tool 存取機制，slides p.36–37 已經講過。§2.6–2.7 量測工具的修正與建置。§5 各 model 的成本。附錄。</li>
+              <li><b>值得看原文：</b>§2.1–2.2 任務與驗證條件；Table 1、Table 2 兩張表；§4.1 的 Table 3 配對比；§4.4 的 Table 6 失敗成本；§7 介面遵守；§8.1 重跑變異；§9.1 四條結論。§2.10 揭露這份研究本身花了 16.6 億 input token，可選讀。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 30 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「這篇證明 CLI 比 MCP 便宜」或「Claude Code 比 pi 貴 28 倍」。兩句都不對。配對比的中位數是 0.93，MCP 與 CLI 分不出高下；28 倍比的是兩群設計不同的 scaffold，不是 MCP 這一個功能。證據只來自一個 6 步的 GitHub 任務，GitHub 又有成熟的 CLI；hosted model 多數只跑一次。帶走的是「比例不穩定、要固定 harness 再比」，不是任何一個數字。</p></div></div>
+          </div></details>
           </li>
         </ol>
         <p class="rg-fn">本文範例的依據：<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">memory</a>、<a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener">hooks</a>、<a href="https://code.claude.com/docs/en/skills" target="_blank" rel="noopener">skills</a>、<a href="https://code.claude.com/docs/en/permission-modes" target="_blank" rel="noopener">permission modes</a> 官方文件。</p>

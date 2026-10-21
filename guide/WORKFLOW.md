@@ -127,7 +127,7 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
 5. 對改過的講次頁跑 B4 的檢查，再跑 `audit.py`。
 6. 發布（D）。
 
-延伸閱讀的必讀摘要（`details.rg-dg`）怎麼寫、怎麼插入，見 `guide/STYLE_DIGEST.md`。
+延伸閱讀的摘要（`details.rg-dg`，必讀與推薦都有）怎麼寫、怎麼插入，見 `guide/STYLE_DIGEST.md`。
 
 ---
 
