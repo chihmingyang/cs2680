@@ -8,12 +8,12 @@ Harvard CS2680 Modern AI Systems（Fall 2026，Juncheng Yang）讀書會的站�
 
 ## 怎麼參加討論
 
-討論在這個 repo 的 [Issues](https://github.com/chihmingyang/cs2680/issues)。每一堂的每一題一串，另有一串綜合討論。站台上每一題下面都有「到 GitHub 討論這一題」的連結。
+討論在這個 repo 的 [Issues](https://github.com/chihmingyang/cs2680/issues)。每一堂一串，只放基礎題。每人留一則，用 `### Q1` … `### Q5` 當小標。進階題留在站台，讀書會當天討論。站台上每一題基礎題下面都有連到那堂討論串的連結。
 
 - 回答一題：在那一串最下面留一則。想補充，就編輯自己那一則。
 - 回應別人：按那一則右上角「⋯」裡的 Quote reply，或在留言裡寫 @對方的帳號。
 - 附件：把圖片或 PDF 直接拖進留言框。
-- 只看一堂：用 label 篩選，例如 [`L03`](https://github.com/chihmingyang/cs2680/issues?q=is%3Aissue%20label%3AL03)。`基礎題`、`進階題`、`綜合` 篩選題型。
+- 只看一堂：用 label 篩選，例如 [`L03`](https://github.com/chihmingyang/cs2680/issues?q=is%3Aissue%20label%3AL03)。
 - 留言要有 GitHub 帳號；看討論不用。討論是公開的。
 
 站台內容有錯，或想提建議：開一個新 issue，不用加 label。

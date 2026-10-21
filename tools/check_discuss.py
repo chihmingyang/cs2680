@@ -2,14 +2,14 @@
 """Structural check of a lecture page's sections, focused on §5 (discussion).
 
 Usage: python3 -I check_discuss.py docs/l01.html [...]
-Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-19:
+Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-21:
   基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
     div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
     A「常見誤解」callout is expected (warning only).
   進階題 li.dq: 6, each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
     details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
-  Every li.bq / li.dq has p.gh-talk linking to its GitHub issue, and §7 #s-submit links to the
-    綜合 issue (both written by tools/discuss.py).
+  Every li.bq has p.gh-talk linking to the lecture's GitHub issue; li.dq has none (進階題 stay
+    on the page); §7 #s-submit links to that issue (all written by tools/discuss.py).
   §7 #s-submit and the reading list ol.rg in #wrap exist.
 """
 import re
@@ -225,9 +225,8 @@ def check(path):
                 probs.append(f"q{k}: qcover li != 3")
             elif len([li for li in cov[0].find("li") if li.find("span", "qh")]) != 3:
                 probs.append(f"q{k}: every qcover point needs span.qh 提示")
-            gh = q.find("p", "gh-talk")
-            if not gh or not any((x.attrs.get("href") or "").startswith(ISSUE) for x in gh[0].find("a")):
-                probs.append(f"q{k}: no GitHub issue link (run tools/discuss.py)")
+            if q.find("p", "gh-talk"):
+                probs.append(f"q{k}: 進階題 must not link to GitHub (run tools/discuss.py)")
             dets = q.find("details")
             sums = [x.find("summary")[0].txt().strip() if x.find("summary") else "" for x in dets]
             if sums != ["作答範本", "參考觀點與追問"]:
@@ -264,7 +263,7 @@ def check(path):
     if not sub:
         probs.append("no §7 #s-submit")
     elif not any((x.attrs.get("href") or "").startswith(ISSUE) for x in sub.find("a")):
-        probs.append("§7 #s-submit has no link to the 綜合 issue (run tools/discuss.py)")
+        probs.append("§7 #s-submit has no link to the lecture issue (run tools/discuss.py)")
     w = sec("wrap") or (root.find(id="wrap") or [None])[0]
     if not w or not w.find("ol", "rg"):
         probs.append("no ol.rg reading list in #wrap")

@@ -58,7 +58,7 @@
 </li>
 ```
 
-每一題下面的「到 GitHub 討論這一題」連結（`p.gh-talk`）由 `tools/discuss.py` 寫入，不要自己寫。
+每一題下面的「到 GitHub 回答這一題（Qn）」連結（`p.gh-talk`）由 `tools/discuss.py` 寫入，不要自己寫。連結指到該堂的 issue（每堂一串）。
 
 ## 分頁外框（照抄範本，改講次與標題）
 

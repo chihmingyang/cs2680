@@ -1,13 +1,13 @@
 # CS2680 讀書會站台：維護說明
 
-更新：2026-10-19（搬到 GitHub）。
+更新：2026-10-21（討論改為每堂一串）。
 
 ## 這個 repo 管什麼
 
 - 讀書會站台「CS2680 觀念導讀」：https://chihmingyang.github.io/cs2680/
 - 課程：Harvard CS2680 Modern AI Systems: Agents and System Optimizations（Fall 2026，Juncheng Yang）。課程沒有錄影，讀書會讀 slides。
 - 每一堂有：一篇架構文章、最多 5 題基礎題（附重點複習）、6 題進階題（附提示與作答範本）、延伸閱讀導讀（必讀的每一篇附摘要）。
-- 成員的討論在這個 repo 的 Issues：每一題一串，每堂另有一串綜合討論。
+- 成員的討論在這個 repo 的 Issues：每一堂一串，只放基礎題（2026-10-21 起；之前每一題一串，太散）。每人一則留言，`### Q1`…`### Q5` 當小標。進階題不上 GitHub，留在頁面給讀書會當天討論。
 
 ## 東西放在哪裡
 
@@ -18,7 +18,7 @@
 | 工作流程 | `guide/WORKFLOW.md` | 開工、新講次、修改、發布、讀討論。 |
 | 腳本 | `tools/` | 8 支 `.py`，用法寫在每個檔案開頭。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
-| 成員的討論 | repo 的 Issues（labels `L01`…、`基礎題`、`進階題`、`綜合`） | `tools/discuss.py --digest lXX` 匯出成 Markdown。 |
+| 成員的討論 | repo 的 Issues（每堂一串，label `L01`…） | `tools/discuss.py --digest lXX` 依題號匯出成 Markdown。 |
 | L2 readings 的逐篇導讀 | `docs/l02-readings.html` | 只有 L2 有，10 篇全寫；l02.html 的延伸閱讀連到它。其他講次用頁內的必讀摘要。 |
 
 已停用（2026-10-19）：
@@ -33,10 +33,10 @@
 |---|---|
 | `punct.py` | 中文標點正規化（全形標點、中英文間空格）。`--diff` 先看會改什麼；數學式與英文片語的 ASCII 括號、冒號會保留。只對新片段跑，不要對頁面盲跑。 |
 | `check_article.py` | 全頁結構、slide 頁碼連結、STE 句長、閱讀時間（`--fix-time` 寫回三個時間）。 |
-| `check_discuss.py` | 第 5 段：基礎題 3–5 題與重點複習結構、進階題 6 題與提示／範本；每一題的 GitHub issue 連結；第 7 段的綜合討論連結。 |
+| `check_discuss.py` | 第 5 段：基礎題 3–5 題與重點複習結構、進階題 6 題與提示／範本；基礎題連到該堂 issue、進階題不連；第 7 段連到該堂 issue。 |
 | `add_anchors.py` | 核心觀念、觀念補充、延伸思考加上 `i1`、`t1`、`x1` 錨點，並列出標題。 |
 | `add_lecture.py` | 新講次接到全站：目錄、講次數、上一堂連結、首頁列表。 |
-| `discuss.py` | 每一題開一個 issue、把連結寫進頁面、重建第 7 段；`--sync-body` 同步題目；`--digest` 匯出討論。 |
+| `discuss.py` | 每一堂開一個 issue（內文是基礎題＋回覆範本）、把連結寫進每題基礎題、重建第 7 段；`--sync-body` 同步題目；`--digest` 匯出討論。 |
 | `audit.py` | 全站連結、SVG 無障礙屬性、marker id 重複、390px 與 1280px 版面、JS 錯誤。 |
 | `shot_article.py` | 截圖：架構圖（亮／暗）、第一題基礎題、第一題進階題、手機版。 |
 
