@@ -71,7 +71,7 @@
       <li><span><b>上線看 pass^k，不看 pass@k。</b>單次成功率 0.8 的 agent，pass@4 是 0.998，pass^4 只有 0.41。客戶只給你一次機會。</span></li>
       <li><span><b>每個 benchmark 只量一種動作空間。</b>選和你的 agent 動作空間相同的 benchmark，再確認它還沒飽和。比較真實 agent 時用 Pareto frontier，同時看能力、成本、速度。</span></li>
     </ul>
-    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 5 段的進階題。</p>
   </section>
 
   <div class="layout">
@@ -272,7 +272,7 @@
           <div class="idea" id="i1">
             <h3>評估的對象，從預測文字變成完成互動任務 <a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=6" target="_blank" rel="noopener">p.6–9</a></h3>
             <div class="prose">
-              <p>Slide 把評估目標排成五層：預測文字、答對問題、得到偏好、寫出能跑的程式、完成互動任務。越往下，grader 越需要「執行」。前兩層比對文字就夠；最後一層要先架好網站或資料庫，跑完再檢查狀態。所以 agent 評估本身是一個系統工程問題。</p>
+              <p>L6 說 agent 常常沒驗證就宣布完成，所以要從外面驗證。Slide 先回顧評估目標怎麼演進，排成五層：預測文字、答對問題、得到偏好、寫出能跑的程式、完成互動任務。越往下，grader 越需要「執行」。前兩層比對文字就夠；最後一層要先架好網站或資料庫，跑完再檢查狀態。所以 agent 評估本身是一個系統工程問題。</p>
               <p>Slide 也分兩個層級。Component-level 看內部的單一能力，回答「為什麼失敗」。End-to-end 只看成功率、成本、latency，回答「能不能用」。兩種都要有，像 unit test 和 integration test。</p>
             </div>
           </div>
@@ -307,7 +307,7 @@
           <div class="idea" id="i4">
             <h3>評估很難：leakage 走整個 stack，單一 turn 獎勵亂猜，一次執行只是雜訊 <a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=25" target="_blank" rel="noopener">p.25–31</a></h3>
             <div class="prose">
-              <p>Leakage 不只發生在訓練。表現 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment），每個輸入都能帶進答案。Web search 搜到已 merge 的 PR；sandbox 的 git 歷史露出修正；memory 記住上一輪的答案；開發者反覆看失敗案例調 prompt。所以「model 沒用測試集訓練」不足以證明分數乾淨。</p>
+              <p>Leakage 不只發生在訓練。表現 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment），scaffold 就是 harness，每個輸入都能帶進答案。Web search 搜到已 merge 的 PR；sandbox 的 git 歷史露出修正；memory 記住上一輪的答案；開發者反覆看失敗案例調 prompt。所以「model 沒用測試集訓練」不足以證明分數乾淨。</p>
               <p>多數 benchmark 只給一個完整指令，中間沒有使用者，這會獎勵「有自信地猜」。Agent 問釐清問題要多花步數，卻拿不到分數。多輪評估因此要測 clarification、recovery、memory 三件事。</p>
               <p>還有三個挑戰。非確定性：只跑一次的分數大多是雜訊。副作用：過程中刪檔、寄信，分數不會扣。評分方式：只看結果會放過不安全的執行，比對 trajectory 會判錯其他正確的做法。</p>
             </div>

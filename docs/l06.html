@@ -71,7 +71,7 @@
       <li><span><b>檢索不能只看語意。</b>還要看 scope、重要性、有效時間、來源。遺忘和寫入一樣是正式操作。</span></li>
       <li><span><b>錯誤會相乘。</b>每步成功率 95%，50 步全對只剩約 8%。失敗要先找來源層，再在那一層修。</span></li>
     </ul>
-    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 5 段的進階題。</p>
   </section>
 
   <div class="layout">
@@ -206,14 +206,14 @@
           <div class="idea" id="i1">
             <h3>Memory 是兩層，加上一串 policy 決策 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=5" target="_blank" rel="noopener">p.5–10、p.17</a></h3>
             <div class="prose">
-              <p>Model 沒有狀態。Agent 看起來記得事情，是因為 harness 把 store 裡的文字放進 context。所以 memory 的每個設計問題都在問同一件事：什麼時候，把什麼，從哪一層搬到哪一層。Slide 把它拆成 7 個問題（p.6）。</p>
-              <p>每個問題都是取捨。每次互動都寫，recall 最高，雜訊也最多；只在使用者要求時寫，precision 最高，但漏很多（p.7）。摘要丟掉「以前用 vLLM」；結構化狀態存不進 schema 沒有的欄位；graph 能表達隨時間的變化（p.8）。p.17 的 checklist 把六站排成一列，每一站都要有明確、可量測的規則。</p>
+              <p>Model 沒有狀態。Agent 看起來記得事情，是因為 harness 把 store 裡的文字放進 context。所以 memory 的每個設計問題都在問同一件事：什麼時候，把什麼，從哪一層搬到哪一層。Slide 把它拆成 7 個問題（p.6）：誰擁有這條記憶、值得記嗎、存成什麼形式、放在哪種 backend、這個任務需要它嗎、能歸納出什麼教訓、還成立嗎。</p>
+              <p>每個問題都是取捨。寫入的時機：每次互動都寫，recall 最高，雜訊也最多；只在使用者要求時寫，precision 最高，但漏很多（p.7）。存成什麼形式（p.8）：原始事件最完整，但很大；摘要精簡，但丟掉「以前用 vLLM」；結構化狀態好查，但存不進 schema 沒有的欄位；knowledge graph 能表達隨時間的變化。p.17 的 checklist 把六站排成一列，每一站都要有明確、可量測的規則。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>檢索不能只看語意相似 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=11" target="_blank" rel="noopener">p.11</a></h3>
             <div class="prose">
-              <p>問題：使用者問「現在用哪個 serving engine？」，「用 vLLM」和「用 SGLang」兩筆的相似度幾乎一樣。語意分不出哪一筆是現在的事實。</p>
+              <p>Store 裡的東西要經過檢索才回到 context，所以檢索的規則最重要。先看一個問題：使用者問「現在用哪個 serving engine？」，「用 vLLM」和「用 SGLang」兩筆的相似度幾乎一樣。語意分不出哪一筆是現在的事實。</p>
               <p>Slide 列出另外 4 個訊號。Scope：同一個使用者、專案或任務。Importance：漏掉它和放進來的代價。Validity：此刻仍然成立。Provenance：來源、信心、證據。</p>
               <p>用法不同。Scope 和 validity 要寫成硬過濾條件；只當排序分數時，別人的記憶仍可能進入 top-k，這就是 p.18 的 isolation failure。Importance 和 provenance 適合調整排序，或做成不看 query 的常駐規則。</p>
             </div>
@@ -228,7 +228,7 @@
           <div class="idea" id="i4">
             <h3>錯誤會相乘 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=22" target="_blank" rel="noopener">p.22</a></h3>
             <div class="prose">
-              <p>一個 run 要每一步都對才算成功。每步成功率 95%，n 步全對的機率是 0.95ⁿ：5 步 77%，10 步 60%，20 步 36%，50 步 8%。約 13 次才有 1 次全對。</p>
+              <p>後半換題目：就算 model 看到了對的東西，任務還是常做不完。原因是一個 run 要每一步都對才算成功。每步成功率 95%，n 步全對的機率是 0.95ⁿ：5 步 77%，10 步 60%，20 步 36%，50 步 8%。約 13 次才有 1 次全對。</p>
               <p>這個算法假設每步獨立。真實的 run 更差：第 3 步讀錯檔案，第 4 步就改錯地方，第 5 步再為錯的修改補洞。反過來算，要讓 50 步有 90% 全對，每步要 99.79%。所以三件事要同時做：減少步數、讓每步更可靠、在中途驗證並存 checkpoint。</p>
             </div>
           </div>

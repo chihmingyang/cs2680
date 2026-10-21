@@ -59,7 +59,7 @@
       <li><span class="k">頁數</span>46</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 35 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
     </ul>
   </header>
 
@@ -71,7 +71,7 @@
       <li><span><b>先問要不要拆。</b>拆開換到分工、隔離、平行、context 管理；代價是溝通、合併、除錯。一個 agent 常常就夠了。</span></li>
       <li><span><b>溝通是分散式系統問題。</b>Timeout 之後，你不知道對方做了沒。重試時用 task_id 當 idempotency key，才不會做兩次。</span></li>
     </ul>
-    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 5 段的進階題。</p>
   </section>
 
   <div class="layout">
@@ -212,13 +212,15 @@
             <h3>拆之前先問：多一個 agent，換到什麼 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=6" target="_blank" rel="noopener">p.5–7</a></h3>
             <div class="prose">
               <p>L2 到 L4 看的是一個 agent。多一個 agent，只有四種東西可以換到。Specialization：每個 agent 用不同的 model、prompt、tool。Isolation：讀網頁的 agent 沒有 shell。Parallelism：互不相依的子任務同時跑。Context management：worker 只拿到自己的子任務，supervisor 只收摘要。</p>
-              <p>每一項都有價格：多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是：先問真的需要 multi-agent 嗎。p.7 的三張圖是描述架構的共同語言；p.9–16 每頁底部那一行就是答案。</p>
+              <p>每一項都有價格：多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是：先問真的需要 multi-agent 嗎。</p>
+              <p>決定要拆之後，slide 用三張圖描述任何架構（p.7）：control graph 寫誰協調，communication graph 寫誰和誰說話，task graph 寫工作怎麼拆。之後每一種架構，都用這三張圖標出自己的答案（p.9–16）。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>八種架構，是三張圖的不同組合 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=8" target="_blank" rel="noopener">p.8–18</a></h3>
             <div class="prose">
-              <p>p.18 把八種架構分成 centralized、decentralized、hybrid。中心化的四種好預測、好 debug，弱點都在中心：planner 瓶頸、每層摘要造成錯誤放大、錯誤往下游傳、不實的出價。去中心化的三種沒有單點，弱點變成一致性：狀態過期、groupthink、<code>O(n²)</code> 的訊息量。</p>
+              <p>p.18 把八種架構分成 centralized、decentralized、hybrid。中心化的四種：supervisor–worker（一個 agent 規劃、派工、整合）、hierarchical（supervisor 再管 supervisor）、pipeline（固定階段，一站傳一站）、market（agent 對任務出價，最便宜的得標）。去中心化的三種：blackboard（透過共享狀態協調，例如一個 git repo）、committee（各自回答，再由裁判或投票裁決）、swarm（同儕直接協商，沒有協調者）。混合的一種是 dynamic topology：執行中增減或改接 agent。</p>
+              <p>中心化的四種好預測、好 debug，弱點都在中心：planner 瓶頸、每層摘要造成錯誤放大、錯誤往下游傳、market 的不實出價。去中心化的三種沒有單點，弱點變成一致性：狀態過期、groupthink、<code>O(n²)</code> 的訊息量。</p>
               <p>弱點都能從線讀出來。Supervisor 的線全部匯到一點，所以它的 context 長得最快。Pipeline 沒有回頭的線，所以加一條 retry edge 勝過多加一個 agent。Committee 的兩個 grader 用同一個 model，兩票同意帶來的新資訊很少。真實系統是混合體（p.17）：Claude Code 的 agent teams 有 lead 派工、共享 task list、直接傳訊，三種都有。</p>
             </div>
           </div>
@@ -226,14 +228,14 @@
             <h3>子任務要寫成規格；拆得越細不一定越快 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=19" target="_blank" rel="noopener">p.19–25</a></h3>
             <div class="prose">
               <p>Worker 看不到 supervisor 的 context，規格沒寫的事它都不知道。所以 p.21 要求八個欄位：目標、輸入、邊界、tool 與權限、輸出 schema、完成條件、預算、相依關係。「Research storage systems」是差的規格；寫明年份、回傳欄位、排除項才是好規格。</p>
-              <p>拆多細，p.22 給了估算式：T_multi ≈ T_planning + T_critical_path + T_communication + T_merge。平行只縮短 critical path（最長那條相依鏈），其他三項隨子任務數量增加。Slide 的 20 個 lookup：不拆 100 秒，拆成 20 份 185 秒，4 份 77 秒。</p>
-              <p>動態拆解會在執行中生出新任務，所以要設上限：spawn 數量、預算、深度、終止條件。p.24–25 的六種拆錯方式：重疊、缺口、隱藏的相依、無法合併的輸出、失去全局 context、straggler。前四種靠規格預防，後兩種靠最後的通讀和 timeout。</p>
+              <p>拆多細，p.22 給了估算式：T_multi ≈ T_planning + T_critical_path + T_communication + T_merge。平行只縮短 critical path（最長那條相依鏈），其他三項隨子任務數量增加。用 slide 的 20 個 lookup 例子估算（每個 lookup 5 秒，每個子任務多 8 秒派工與回報，規劃與合併各 10 秒）：不拆 100 秒，拆成 20 份 185 秒，4 份 77 秒。</p>
+              <p>動態拆解會在執行中生出新任務，所以要設上限：spawn 數量、預算、深度、終止條件。p.24–25 的六種拆錯方式：重疊、缺口、隱藏的相依、無法合併的輸出、失去全局 context、straggler（一份特別慢的子任務拖住全部）。前四種靠規格預防，後兩種靠最後的通讀和 timeout。</p>
             </div>
           </div>
           <div class="idea" id="i4">
             <h3>訊息分兩層：欄位給 runtime，內容給 LLM <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=27" target="_blank" rel="noopener">p.26–32</a></h3>
             <div class="prose">
-              <p>溝通有四個維度（p.27）：topology、medium、format、channel，可以分開選。大型產出放檔案，只傳路徑。Broadcast 的一則訊息會進入 n 個 context，只有所有人都要知道時才用。</p>
+              <p>拆好了，agent 之間要傳話。溝通有四個維度（p.27）：topology（誰能和誰說）、medium（訊息、共享記憶體或檔案）、format（自然語言或結構化）、channel（點對點、broadcast、pub/sub 或 request/response），可以分開選。大型產出放檔案，只傳路徑。Broadcast 的一則訊息會進入 n 個 context，只有所有人都要知道時才用。</p>
               <p>p.31 的 envelope 是核心。外層是 runtime 看得懂的欄位：id、task_id、from、to、type（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE 九種）。路由、重試、停止由 runtime 依欄位決定，不用問 LLM。Payload 才是自然語言：一份子任務規格，或一句 claim 加上 confidence 與 evidence。p.32 的法則因此是：依欄位路由，不依內文路由。</p>
             </div>
           </div>
@@ -241,8 +243,8 @@
             <h3>溝通是分散式系統問題；協定只標準化溝通 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=33" target="_blank" rel="noopener">p.33–43</a></h3>
             <div class="prose">
               <p>p.33 的例子：Agent A 請 Agent B「購買 8 台 GPU instance」，然後 timeout。從 A 這一側，三種情況看起來一樣：請求沒送到、B 買了但回覆遺失、B 還在處理。不重試可能一台都沒買；重試可能買 16 台。實務的答案是 at-least-once 加冪等：每次重試帶同一個 task_id，B 查到做過就回傳上次的結果。真的買了兩次，就走 compensation 釋放多出的 8 台。</p>
-              <p>p.34 列出繼承的六個分散式系統老問題，p.36 再加上黑盒子 LLM 帶來的：摘要丟細節、context 過期、信念衝突、沒人認領的 ownership、繞圈的 communication loop。對策多半是老辦法：每個 task 一個 owner，訊息帶跳數上限，log 用 task_id 串起來。</p>
-              <p>兩個協定分工明確（p.43）。A2A 連接 agent 與 agent，單位是一個有 ID、有狀態、能暫停的 task（p.40）；對方從 agent card 得知你會什麼。MCP 連接 agent 與服務，單位是一次 tool call。兩者都不負責 orchestration：要不要委派、怎麼拆，仍由 harness 決定。</p>
+              <p>p.34 列出繼承的六個分散式系統老問題：partial failure、並行與不確定性、副本的一致性、沒有全域時鐘、不可靠的網路、分散的 log 難除錯。p.36 再加上黑盒子 LLM 帶來的：摘要丟細節、context 過期、信念衝突、沒人認領的 ownership、繞圈的 communication loop。對策多半是老辦法：每個 task 一個 owner，訊息帶跳數上限，log 用 task_id 串起來。</p>
+              <p>最後是兩個協定，分工明確（p.43）。A2A（agent-to-agent protocol）連接 agent 與 agent，單位是一個有 ID、有狀態、能暫停的 task（p.40）；對方從 agent card 得知你會什麼。MCP 連接 agent 與服務，單位是一次 tool call。兩者都不負責 orchestration：要不要委派、怎麼拆，仍由 harness 決定。</p>
             </div>
           </div>
         </div>

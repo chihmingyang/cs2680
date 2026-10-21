@@ -71,7 +71,7 @@
       <li><span><b>Tool 的輸出就是 context。</b>Tool 要少而正交、輸出精簡、錯誤要能教。只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。</span></li>
       <li><span><b>Context 是有限資源。</b>越長越貴、越慢、越不準。依序用 admission、offloading、transformation；compaction 有損且不可逆，留到最後。</span></li>
     </ul>
-    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 5 段的進階題。</p>
   </section>
 
   <div class="layout">
@@ -242,15 +242,15 @@
           <div class="idea" id="i2">
             <h3>Tool 要為 model 設計：search、edit、shell 的取捨 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=8" target="_blank" rel="noopener">p.8–26</a></h3>
             <div class="prose">
-              <p>Agent 看不到整個 repo，要靠 tool 找程式碼。Grep 不用建索引，但只比對字面：搜「timeout」找不到 <code>deadline</code>。Embedding 索引依意思找，repo map 依結構找，代價是索引要同步。LSP 能跟著 import 與別名走，代價是每種語言一個常駐 server。</p>
-              <p>改程式碼有四種方式，在 token 成本與穩健度之間取捨。整檔重寫每次都套得上，但輸出和檔案大小成正比，長檔會 drift。Unified diff 精簡，但 context 行過期就套不上。Search/replace 靠內容定位，輸出只和改動成正比；anchor 不唯一就失敗。AST 編輯構造上就合法，但只能做工具提供的操作。</p>
-              <p>Shell 是最強也最危險的 tool：能串接、碰得到網路與檔案系統，blast radius 等於 shell 本身。只給 shell 就好嗎？SWE-agent 的數據說不夠：只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。顯示整個檔案、保留完整歷史，都比預設差。所以 tool 設計的五條原則，都在管輸出怎麼進 context：少且正交、專用、省 token、錯誤要能教、預設冪等。</p>
+              <p>Agent 看不到整個 repo，要靠 tool 找程式碼。Grep 不用建索引，但只比對字面：搜「timeout」找不到 <code>deadline</code>。Embedding 索引依意思找；repo map（檔案樹加上排序過的 symbol 清單）依結構找。兩者查得快，代價是索引要同步。LSP 能跟著 import 與別名走，代價是每種語言一個常駐 server。</p>
+              <p>改程式碼有四種方式，在 token 成本與穩健度之間取捨。整檔重寫每次都套得上，但輸出和檔案大小成正比，長檔會 drift（model 重寫時漸漸偏離原文）。Unified diff 精簡，但 context 行過期就套不上。Search/replace 靠內容定位，輸出只和改動成正比；anchor 不唯一就失敗。AST 編輯構造上就合法，但只能做工具提供的操作。</p>
+              <p>Shell 是最強也最危險的 tool：能串接、碰得到網路與檔案系統，blast radius 等於 shell 本身。只給 shell 就好嗎？SWE-agent（一個早期的 coding agent 研究）的實驗說不夠：只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。顯示整個檔案（12.7%）、保留完整的互動歷史（15.0%），都比為 model 設計的介面差。所以 tool 設計的五條原則，都在管輸出怎麼進 context：少且正交、專用、省 token、錯誤要能教、預設冪等。</p>
             </div>
           </div>
           <div class="idea" id="i3">
             <h3>Prompt 技巧從簡單開始，夠用就停 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=28" target="_blank" rel="noopener">p.28–40</a></h3>
             <div class="prose">
-              <p>八種技巧分三層。先用簡單的：zero-shot、few-shot、role。需要時加推理：chain-of-thought、tree-of-thought、self-consistency。最後才設計成系統：prompt chaining、meta prompting。每往下一層，token 與呼叫次數都增加，所以從上往下試。</p>
+              <p>Tool 定了，接著是怎麼對 model 說話。Slide 列了八種 prompt 技巧，分三層。先用簡單的：zero-shot、few-shot、role。需要時加推理：chain-of-thought、tree-of-thought、self-consistency。最後才設計成系統：prompt chaining、meta prompting。每往下一層，token 與呼叫次數都增加，所以從上往下試。</p>
               <p>每一種技巧都有「該換下一種」的訊號：規則講不清楚，加範例；任務有多個步驟，要 model 寫出步驟；答錯代價高，就取樣多次再投票。</p>
               <p>這些建議有保存期限。新 model 在訓練時已經學會其中幾招；要 reasoning model「think step by step」沒有必要，有時反而有害。四條原則不會過期：從簡單開始、分段、具體精簡、大任務拆小。</p>
             </div>
@@ -258,16 +258,17 @@
           <div class="idea" id="i4">
             <h3>Context 是有限資源：錢、延遲、注意力 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=41" target="_blank" rel="noopener">p.41–44</a></h3>
             <div class="prose">
-              <p>Karpathy 的定義：context engineering 是「為下一步放進剛好需要的資訊」。重點在「下一步」：harness 每圈都要重新決定放什麼、拿掉什麼。Context 有三種成本。錢：每一步都重送整個 window。延遲：prompt 越長，prefill 越久，decode 也變慢。注意力：window 越滿，model 越難找回資訊。</p>
+              <p>Prompt 只是 context 的一小部分，tool 定義、檔案內容、tool 結果都在裡面。Karpathy 把管理這整塊叫 context engineering：「為下一步放進剛好需要的資訊」。重點在「下一步」：harness 每圈都要重新決定放什麼、拿掉什麼。Context 有三種成本。錢：每一步都重送整個 window。延遲：prompt 越長，prefill 越久，decode 也變慢。注意力：window 越滿，model 越難找回資訊。</p>
               <p>兩組研究量化了注意力的成本。Context rot：輸入越長，準確率越低。Lost in the middle：答案放在 20 份文件的第 1 份，準確率 76%；第 10 份掉到 55%；第 20 份回到 71%。Agent 的 context 中間，正好是舊的 tool 結果。</p>
             </div>
           </div>
           <div class="idea" id="i5">
             <h3>四種策略有順序，harness 決定發揮多少 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=45" target="_blank" rel="noopener">p.45–52</a></h3>
             <div class="prose">
-              <p>四種策略有先後順序。Admission 在門口把關：原始 DOM 48,000 token，擷取後只剩 900，答案相同。Offloading 讓內容留在外面但拿得到：60 個 tool schema 要 42,000 token，改成索引加 3 個只要 3,100。Transformation 刪掉過期或重複的舊內容：96,000 變 24,000。Compaction 用 LLM 寫摘要，有損、不可逆，排最後。</p>
-              <p>Breunig 把 context 的失敗分成五種：poisoning、distraction、confusion、clash、drift。叫得出名字，修法就很明顯：poisoning 刪掉那段，distraction 用 masking，confusion 用 admission，clash 用 dedup，drift 把目標重新放回。</p>
-              <p>最後的實驗把整堂收攏：model 不變，只改 harness。SWE-bench Verified 從 43 題變 72 題（1.7×），SWE-bench Pro 從 31 題變 72 題（2.3×）。改良的 harness 做的就是這堂的內容：壓縮舊輸出、保留最近的 observation、偵測停滯。注意：Verified 用 20,480 token 的小 window，window 越小，context 管理的影響越大。</p>
+              <p>知道 context 有成本，下一步是管理它。Slide 給四種策略，有先後順序。Admission 在內容進 window 之前把關，只放需要的部分：原始 DOM 48,000 token，擷取後只剩 900，答案相同。Offloading 讓內容留在外面，需要時才載入：60 個 tool schema 要 42,000 token，改成索引加 3 個只要 3,100。</p>
+              <p>Transformation 刪掉 window 裡過期或重複的舊內容，例如只留每個物件的最新狀態、遮掉 N 步以前的 tool 結果：96,000 變 24,000，沒有做任何摘要。Compaction 用 LLM 寫摘要，有損、不可逆，排最後。</p>
+              <p>Breunig 把 context 的失敗分成五種：poisoning、distraction、confusion、clash、drift。叫得出名字，修法就很明顯：poisoning 刪掉那段，distraction 遮掉舊的 tool 結果（masking），confusion 用 admission 擋掉無關的 tool 和文件，clash 用 dedup 只留最新狀態，drift 把目標重新放回。</p>
+              <p>最後一個實驗（Lewis，2026）把整堂收攏：model 不變，只改 harness。SWE-bench Verified 從 43 題變 72 題（1.7×），SWE-bench Pro 從 31 題變 72 題（2.3×）。改良的 harness 做的就是這堂的內容：壓縮舊輸出、保留最近的 observation、偵測停滯。注意：Verified 用 20,480 token 的小 window，window 越小，context 管理的影響越大。</p>
             </div>
           </div>
         </div>

@@ -71,7 +71,7 @@
       <li><span><b>每種擴展方式都有代價。</b>平行要你 merge，subagent 的摘要會丟細節，agent team 的 token 隨人數成長。只要結果，用 subagent；需要討論，才用 team。</span></li>
       <li><span><b>Agent 不確定，周邊系統要可靠。</b>寫可驗證的終點、跑測試、讓自主程度配合風險。<code>/goal</code> 能自己停下來，靠的是一個可以檢查的終點。</span></li>
     </ul>
-    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 5 段的進階題。</p>
+    <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 5 段的進階題。</p>
   </section>
 
   <div class="layout">
@@ -249,7 +249,7 @@
           <figcaption>藍框是持有計畫的角色。一般箭頭是派工或認領，藍色箭頭是交回的結果，藍色虛線是 teammate 之間的訊息。A 到 D 同時用更多 agent；E 讓一個 agent 做更久。</figcaption>
         </figure>
         <div class="prose">
-          <p>看這張圖，先找藍框：誰持有計畫。從 A 到 D，計畫依序放在你腦中、主 agent、lead 與共用清單、script 裡。每個 worker 都有自己的 context；差別在結果怎麼交回，以及交回給誰。E 是 slide 的第三個軸：時間，由停止條件決定 agent 什麼時候結束。</p>
+          <p>看這張圖，先找藍框：誰持有計畫。從 A 到 D，計畫依序在你腦中（A 手動平行）、主 agent（B subagent）、lead 與共用清單（C agent team）、script 裡（D workflow）。每個 worker 都有自己的 context；差別在結果怎麼交回，以及交回給誰。E 是 slide 的第三個軸：時間，由停止條件決定 agent 什麼時候結束。</p>
         </div>
       </section>
 
@@ -263,25 +263,25 @@
           <div class="idea" id="i1">
             <h3>Model 不變，換一套 workflow，結果就不同 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=5" target="_blank" rel="noopener">p.5–14</a></h3>
             <div class="prose">
-              <p>Superpowers 沒有換 model，也沒有加新的 tool。它用 9 個 skill 把開發拆成階段：釐清需求、核准設計、寫計畫、測試驅動實作、review、收尾。每個 skill 寫明人工核准的關卡，以及下一個要載入的 skill <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=9" target="_blank" rel="noopener">p.9–10</a>。流程就這樣自己往下接，agent 先問清楚再動手。</p>
+              <p>第一個案例是 Superpowers，一個規範軟體開發流程的 Claude Code plugin。它沒有換 model，也沒有加新的 tool。它用 9 個 skill 把開發拆成階段：釐清需求、核准設計、寫計畫、測試驅動實作、review、收尾。每個 skill 寫明人工核准的關卡，以及下一個要載入的 skill <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=9" target="_blank" rel="noopener">p.9–10</a>。流程就這樣自己往下接，agent 先問清楚再動手。</p>
               <p>只有 skill 還不夠。Model 依 description 自己決定要不要載入 skill，它可能沒查就直接寫 code。所以 Superpowers 加了 SessionStart hook：每個 session 開始時，把「怎麼選 skill」的規則放進 context <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=11" target="_blank" rel="noopener">p.11</a>。Matcher 包含 <code>startup|clear|compact</code>，所以 /clear 和 compaction 之後，規則會再放入一次。</p>
-              <p>這延續 L2 的分工。Hook 保證規則一定在 context 裡；要載入哪個 skill，仍由 model 判斷。確定的部分交給程式，需要判斷的部分留給 model。</p>
+              <p>這延續 L2 的分工。Hook 保證規則一定在 context 裡；要載入哪個 skill，仍由 model 判斷。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>Token 要雙向壓縮，輸入方向只有 proxy 管得到 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=15" target="_blank" rel="noopener">p.15–25</a></h3>
             <div class="prose">
-              <p>Log、diff、tool 輸出會塞滿 context。每一圈 loop 都重送整個 context，所以一份 786 行的測試 log，之後每一圈都要再付一次 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=16" target="_blank" rel="noopener">p.16</a>。Caveman 從兩個方向壓縮：response skill 讓 model 寫得短，本機 proxy 讓 model 讀得少。</p>
-              <p>輸出方向容易做。Skill 規定保留指令、路徑、數字和否定詞，刪掉客套與贅字；slide 的數字是 output token 少 65% <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=17" target="_blank" rel="noopener">p.17</a>。輸入的量更大：C compiler 案例的 input token，約是 output 的 14 倍。</p>
+              <p>第二個案例是 Caveman，一個專門省 token 的 plugin。它要解決的問題：log、diff、tool 輸出會塞滿 context。每一圈 loop 都重送整個 context，所以一份 786 行的測試 log，之後每一圈都要再付一次 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=16" target="_blank" rel="noopener">p.16</a>。Caveman 從兩個方向壓縮：一個規定回答風格的 skill 讓 model 寫得短，一個本機 proxy 讓 model 讀得少。</p>
+              <p>輸出方向容易做。Skill 規定保留指令、路徑、數字和否定詞，刪掉客套與贅字；slide 的數字是 output token 少 65% <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=17" target="_blank" rel="noopener">p.17</a>。輸入的量更大：後面會講的 C compiler 案例，input token 是 output 的 14 倍（2B 對 140M）<a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=47" target="_blank" rel="noopener">p.47</a>。</p>
               <p>輸入方向要改寫每一個送給 model 的 request。Hook 只能改單一 tool 的輸入或輸出；MCP 只在 agent 呼叫時執行，也改不了 context <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=24" target="_blank" rel="noopener">p.24</a>。Proxy 位在 agent 和 model provider 之間，每個 request 都經過它。原文也沒有丟掉，agent 需要細節時，用 MCP 的 <code>caveman_retrieve</code> 取回。</p>
             </div>
           </div>
           <div class="idea" id="i3">
             <h3>三個擴展軸，各買到一樣東西，也各有代價 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=26" target="_blank" rel="noopener">p.26–43</a></h3>
             <div class="prose">
-              <p>Slide 把擴展分成三個軸 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=27" target="_blank" rel="noopener">p.27</a>。第一個是平行：每個任務一個 session，各在自己的 git worktree。它買到 throughput，答案不會更好，每件事仍是一個 agent 的水準。Worktree 只隔離檔案；port、資料庫和最後的 merge，仍要你處理。</p>
+              <p>兩個案例都是一個 agent。要做更多事，slide 把擴展分成三個軸 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=27" target="_blank" rel="noopener">p.27</a>：平行、subagent、時間。前兩個同時用更多 agent，第三個讓一個 agent 做更久，留到下一節。第一個是平行：每個任務一個 session，各在自己的 git worktree（第 3 段有說明）。它買到 throughput，答案不會更好，每件事仍是一個 agent 的水準。Worktree 只隔離檔案；port、資料庫和最後的 merge，仍要你處理。</p>
               <p>第二個是 subagent：子任務在新的 context window 執行，只交回摘要。搜尋結果和 log 留在 subagent，主對話只多一段摘要 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=31" target="_blank" rel="noopener">p.31</a>。代價是摘要會丟細節，subagent 也要從零收集 context。所以需要頻繁來回討論的工作，slide 建議留在主對話 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=37" target="_blank" rel="noopener">p.37</a>。</p>
-              <p>Agent team 和 workflow 組合這些軸。Team 的 teammate 可以直接互傳訊息；每個 teammate 都是完整的 Claude Code session，token 用量隨人數線性成長 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=41" target="_blank" rel="noopener">p.41</a>。Workflow 讓 script 持有計畫，中間結果存在 script 變數，不進主 context <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=43" target="_blank" rel="noopener">p.43</a>。選擇規則：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。</p>
+              <p>Agent team 和 dynamic workflow 組合這些軸。Agent team 是好幾個 Claude Code session 一起工作：一個 lead 派工，teammate 從共用的任務清單認領，也可以直接互傳訊息；每個 teammate 都是完整的 session，token 用量隨人數線性成長 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=41" target="_blank" rel="noopener">p.41</a>。Dynamic workflow 是一支 script，在背景調度很多 subagent：計畫在 script 裡，中間結果存在 script 變數，不進主 context <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=43" target="_blank" rel="noopener">p.43</a>。選擇規則：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。</p>
             </div>
           </div>
           <div class="idea" id="i4">
@@ -289,13 +289,14 @@
             <div class="prose">
               <p>第三個軸是時間：讓一個 agent 做更久。<code>/goal</code> 給一個條件，Claude 一直做到條件成立。每一輪結束，另一個小而快的 model 讀對話，判斷條件是否成立。做事的 model 不能自己宣布完成。</p>
               <p>所以條件要能從對話裡證明。「npm run lint exits with zero errors」可以檢查，因為 lint 的輸出就在對話裡。「refactor the code」無法檢查，因為沒有一個輸出能證明重構完成。<code>/loop</code> 用時間觸發：依固定間隔重跑同一個 prompt，直到你取消，或 7 天後過期 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=45" target="_blank" rel="noopener">p.45</a>。</p>
-              <p>C compiler 案例是更長的版本：16 個 agent、約 2,000 個 session、約兩週 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=47" target="_blank" rel="noopener">p.47</a>。每個新 session 先讀進度文件找回 context，再用自動化測試判斷進度 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=48" target="_blank" rel="noopener">p.48</a>。狀態放在檔案和測試裡，不靠 model 記住。</p>
+              <p>Anthropic 的 C compiler 案例是更長的版本：16 個 agent 用約兩週、約 2,000 個 session，寫出一個能編譯 Linux kernel 的 C compiler <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=47" target="_blank" rel="noopener">p.47</a>。沒有 manager agent，也沒有聊天頻道，agent 靠 git 協調。每個新 session 先讀進度文件找回 context，再用自動化測試判斷進度 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=48" target="_blank" rel="noopener">p.48</a>。狀態放在檔案和測試裡，不靠 model 記住。</p>
             </div>
           </div>
           <div class="idea" id="i5">
             <h3>Programming 3.0：接受不確定性，讓周邊系統可靠 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=51" target="_blank" rel="noopener">p.51–59</a></h3>
             <div class="prose">
-              <p>講者的 Programming 3.0 指：人用自然語言說目標，agent 寫程式碼 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=52" target="_blank" rel="noopener">p.52</a>。每一代都在人和硬體之間多加一層；產能變高，不確定性也變高。Compiler 是確定的，agent 不是。</p>
+              <p>前面都在講怎麼用更多 agent。最後一節退一步問：這種寫程式的方式，和以前差在哪裡。講者的 Programming 3.0 指：人用自然語言說目標，agent 寫程式碼 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=52" target="_blank" rel="noopener">p.52</a>。對照前兩代：1.0 是人直接寫機器指令，2.0 是人寫程式語言、compiler 翻成機器指令。</p>
+              <p>每一代都在人和硬體之間多加一層；產能變高，不確定性也變高。Compiler 是確定的，agent 不是。</p>
               <p>Slide 指出，不確定性早就存在 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=55" target="_blank" rel="noopener">p.55</a>。硬體差異、並行、相依套件漂移，都會讓同一份原始碼產生不同結果。2.0 的對策可以沿用：固定介面、讓操作可重複、測試。</p>
               <p>新的不確定性集中在產生程式的階段：自然語言、檢索、model 生成、agent 與 tool 的迴圈 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=57" target="_blank" rel="noopener">p.57</a>。程式產生後，經過 commit、review、測試，執行時通常是確定的。所以結論原則是：讓 agent 周圍的系統可靠，自主程度配合風險 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=59" target="_blank" rel="noopener">p.59</a>。前面的 hook、可驗證的終點、測試，都是這個系統的零件。</p>
             </div>
