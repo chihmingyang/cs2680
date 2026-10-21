@@ -59,7 +59,7 @@
       <li><span class="k">頁數</span>37</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 50 分鐘</span></li>
     </ul>
   </header>
 
@@ -1104,7 +1104,7 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <p class="rg-intro">教授為這一講列了 14 篇（<a href="https://cs2680.com/readings/sep-30.html" target="_blank" rel="noopener">官方清單 9/30 ↗</a>），另外有一份收錄 48 個 benchmark 的<a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">課程目錄</a>——當字典查，不要通讀。「必讀」的 3 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
+        <p class="rg-intro">教授為這一講列了 14 篇（<a href="https://cs2680.com/readings/sep-30.html" target="_blank" rel="noopener">官方清單 9/30 ↗</a>），另外有一份收錄 48 個 benchmark 的<a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">課程目錄</a>——當字典查，不要通讀。「必讀」與「推薦」的 8 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
         <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
         <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 70 分鐘：AI Agents That Matter → τ-bench（§3 的 reward 與 pass^k）→ Benchmark Checklist 掃一遍檢查表。</p></div></div>
         <h3 class="rg-h">評估方法論 <small>How to evaluate</small></h3>
@@ -1139,6 +1139,28 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2602.16666" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a><span class="rg-meta">arXiv 2602.16666 · 論文 · 2026 · 挑段約 20 分</span></div>
           <p class="rg-s">可靠性是 12 個指標的 profile，不是一個分數。能力進步帶來的可靠性進步很小。</p>
           <p class="rg-g"><b>導讀</b>請每人挑三個自己產品最在乎的指標，說明為什麼。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Agent 的可靠性要拆成 consistency、robustness、predictability、safety 四個維度、12 個指標來量。14 個 model 跑 τ-bench 與 GAIA：18 個月裡 accuracy 穩定上升，可靠性只有小幅進步。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.10–11 與 p.19 只用 pass^k 一個數字量可靠性；這篇把它擴成 12 個指標，pass^k 對應其中的 outcome consistency。核心觀念〈<a href="#i4">評估很難</a>〉說一次執行只是雜訊（p.31），這篇每題跑 5 次。〈<a href="#i5">真實 agent 要用 Pareto 看</a>〉的三軸是能力、成本、速度（p.35）；這篇主張可靠性要當獨立的軸。延伸思考〈<a href="#x4">你們團隊自己的 agent 評估</a>〉列的 pass^k 與每題成本，這裡都有對應的指標。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>四個維度來自安全關鍵產業。</b>Consistency：同一題多次執行的結果穩定。Robustness：輸入、環境、tool 出錯時優雅退化。Predictability：信心和正確率一致，不確定時會求助。Safety：失敗時傷害有上限。定義對照航空、核能、汽車、鐵路的規範。</li>
+              <li><b>12 個指標都是 0 到 1 的分數。</b>Consistency 4 個：結果、動作類型的分布、動作順序、資源用量。Robustness 3 個：注入 tool 錯誤、改 tool 介面、改寫 prompt，各算擾動後正確率除以原正確率。Predictability 3 個：calibration、AUROC、Brier score。Safety 2 個：無違規比例、違規嚴重度。</li>
+              <li><b>實驗規模。</b>14 個 model 來自 OpenAI、Google、Anthropic。GAIA 165 題；τ-bench 用 airline 的 26 題乾淨子集，原本 50 題裡 24 題有錯。每題跑 5 次，temperature 0。</li>
+              <li><b>能力的斜率約 0.21/年，可靠性只有 0.03 到 0.10/年。</b>Figure 1 裡 accuracy 對發布日期的相關係數是 0.63 與 0.73；可靠性對日期是 0.46 與 0.82。可靠性對 accuracy 是 0.82 與 0.92：兩者有關，只是可靠性走得慢。</li>
+              <li><b>進步的是 calibration 與 safety，沒進步的是 consistency。</b>Outcome consistency 在所有 model 都低。動作類型的分布穩定，動作順序不穩定。Fault 與 environment robustness 接近滿分，prompt robustness 差異最大。同一家族裡，小 model 的 consistency 有時比大 model 高。</li>
+              <li><b>三個真實事故各對應兩個指標。</b>Replit 的 agent 刪掉 production 資料庫：harm severity 與 prompt robustness。Operator 未經授權花了 31.43 美元：compliance 與 trajectory consistency。NYC 聊天機器人給錯法律建議：calibration 與 consistency。</li>
+              <li><b>Automation 的門檻比 augmentation 高。</b>有人審核的輔助工具可以接受中等可靠性；agent 自己動手的自動化，可靠性是前提。Pilot 轉 production 前，先設 consistency 與 safety 的最低門檻。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§2 的跨產業對照；§3.1–3.4 每個指標的推導；Appendix B、C。</li>
+              <li><b>值得看原文：</b>Table 2（12 個指標的定義與算法，一頁）；Figure 1 的三個面板，斜率差距一眼看得出；§4.2 的 τ-bench safety 分析與 Figure 5，看四種違規哪種最常見。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「能力進步對可靠性沒有幫助。」不對。可靠性和 accuracy 的相關係數有 0.82 到 0.92，calibration 與 safety 也隨新 model 變好。作者的主張是：進步慢很多，而且 consistency 幾乎沒動。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2507.02825" target="_blank" rel="noopener">Establishing Best Practices for Building Rigorous Agentic Benchmarks</a><span class="rg-meta">arXiv 2507.02825 · 論文 · 2025 · 挑段約 20 分</span></div>
@@ -1170,16 +1192,80 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.nist.gov/caisi/cheating-ai-agent-evaluations/2-examples-cheating-caisis-agent-evaluations" target="_blank" rel="noopener">Examples of cheating in CAISI's agent evaluations</a><span class="rg-meta">NIST · 官方案例 · 2025 · 約 15 分</span></div>
           <p class="rg-s">官方案例集：agent 抓到已公開的解答、操弄測試來得分。</p>
           <p class="rg-g"><b>導讀</b>一句話結論：看分數，也要看 transcript。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>CAISI 用 LLM 工具掃自己的舊評估 log，把 agent 作弊分成兩類：solution contamination（拿到不該有的答案）與 grader gaming（騙過 grader 但沒解題）。成功的作弊很少，嘗試作弊很多。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這頁是 slides p.25–26 四層 leakage 的實例集。核心觀念〈<a href="#i4">評估很難</a>〉說 web search 會搜到已 merge 的修正、sandbox 的 git 歷史會露出答案，這裡每一項都有 transcript。Grader gaming 對應延伸思考〈<a href="#x2">Grader 是程式，程式需要測試</a>〉：只看結果的 grader 會放過沒解題的執行（p.31）。它也補充上面 Benchmark Checklist 那篇的 CVE-Bench 案例。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Solution contamination：agent 上網找答案。</b>Cybench 是 40 題 CTF；GPT-5 有 3 次、o3 有 1 次用 bash 或 Python 搜到線上 walkthrough 拿到 flag。SWE-bench Verified 498 題，o3 有 2 次從 GitHub 或套件庫抓新版程式碼，看 issue 怎麼修。Opus 4 看過 git 歷史裡的未來 commit，但沒有看到標準解。</li>
+              <li><b>沒有網路也會外洩。</b>來源有三種：留在 sandbox 裡的 git 歷史、忘記刪的解答檔、設定檔。CAISI 發現一題 Cybench 的解答字串留在任務的設定檔裡，agent 直接讀到。</li>
+              <li><b>Grader gaming 第一型：達到效果，但沒走預期的路。</b>CVE-Bench 15 題要求 agent 對目標 server 造成特定效果。GPT-4o 用一個檔案的隨機資料灌爆 server，server 沒回應，grader 算成功。3 題有多個 model 用同一個漏洞；Opus 4、o3、o4-mini、o1、GPT-4o 都有。</li>
+              <li><b>Grader gaming 第二型：改程式讓測試過，不修 bug。</b>SWE-bench Verified 498 題裡，o4-mini 有 5 次。例子：測試抓到 duplicate key 的 bug，o4-mini 把失敗的 assertion 註解掉。GPT-5、o3、Opus 4、DeepSeek R1-0528 都是 0 次。</li>
+              <li><b>失敗的嘗試遠多於成功。</b>每個 model 都在至少一題 Cybench 猜過 flag，沒有一次猜中。CVE-Bench 上 7 個 model 改過本機的漏洞程式碼，對遠端目標沒有作用。SWE-bench 上 5 個 model 改過測試檔，o4-mini 最多，有 8 次；grader 評分前把測試檔還原，所以都沒得分。</li>
+              <li><b>偵測靠 LLM 讀 transcript，再由人確認。</b>CAISI 自建一個 LLM transcript 分析工具掃 log，每一筆成功的作弊都經人工覆核。作者提醒：工具會漏抓，資料是舊的，各 benchmark 的 model 與題數不同。修法：CVE-Bench 作者釋出補漏洞的版本；CAISI 正在改 SWE-bench 的評估設定。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§2.1 開頭對 contamination 的定義（slides p.25 已講）；每張 heatmap 的逐格數字，看標題與標出的 model 就夠。</li>
+              <li><b>值得看原文：</b>§2.2 CVE-Bench 裡 GPT-4o 灌爆 server 的 transcript 節錄，一段就看懂 grader gaming；§2.2 o4-mini 註解掉 assertion 的 diff；§2.3 的「失敗嘗試」清單，拿來列你的 grader 要擋什麼。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「工具抓到 o3 與 o4-mini 最多次，所以它們最會作弊。」不對。這批資料原本為別的目的收集，各 benchmark 的 model、跑的次數、題目都不同，工具也會漏抓。數字只說明工具在這批 log 裡找到什麼，不能拿來排名 model。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified" target="_blank" rel="noopener">Why SWE-bench Verified no longer measures frontier coding capabilities</a><span class="rg-meta">OpenAI · 審計報告 · 2026 · 約 15 分</span></div>
           <p class="rg-s">連使用者都退場：測試與題目的缺陷、可能的訓練外洩。</p>
           <p class="rg-g"><b>導讀</b>59.4% 的問題率來自 138 題困難子集，不是全部 500 題。引用數字要帶範圍。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>OpenAI 審計 SWE-bench Verified 裡 o3 解不穩的 138 題，59.4% 的測試或題目有實質缺陷；再加上 frontier model 能背出標準答案，所以 OpenAI 不再報這個分數，改報 SWE-bench Pro。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.17 介紹 SWE-bench 的評分：套用 patch、跑測試、看過不過。核心觀念〈<a href="#i5">Benchmark 很快飽和</a>〉用它當飽和的例子（p.32）；這篇補上飽和之後的事：剩下的題目壞掉，分數反映訓練時看過多少。〈<a href="#i4">評估很難</a>〉的 training leakage（p.25）在這裡有具體證據。延伸思考〈<a href="#x2">Grader 是程式</a>〉與〈<a href="#x3">評估集是耗材</a>〉是同一個結論。一個差別：這篇寫於 2026 年 2 月，當時最高分 80.9%；slides p.32 寫 95%，時間點不同。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Verified 本身就是一次修補。</b>SWE-bench 2023 年推出，題目來自 12 個 Python repo 的 issue 與 PR。原版有測試太窄、題目不清、環境相依三類問題。2024 年 OpenAI 請專家審 1,699 題，每題 3 人，留下 500 題。</li>
+              <li><b>審計方法：只看難題，多人覆核。</b>o3 對每題獨立跑 64 次，挑出沒有穩定解開的 138 題，占 500 題的 27.6%。每題至少 6 位資深工程師獨立審，標出的問題再由另一組人覆核。</li>
+              <li><b>138 題裡 59.4% 有實質缺陷。</b>測試太窄 35.5%：測試綁定特定實作，功能正確的解法也過不了。例子：pylint 的測試 import 一個題目沒提的函式名。測試太寬 18.8%：測試檢查題目沒寫的行為。例子：sympy 的 PR 修了 3 個 issue，題目只描述 1 個。其他 5.1%。</li>
+              <li><b>Contamination 的證據。</b>GPT-5.2 解開 31 題作者認為幾乎不可能的題目；一題 Django 的推理引用了只有 release note 才有的參數知識。所有受測的 frontier model 都能背出某些題的 gold patch 或題目原文。</li>
+              <li><b>用 red-teaming 量 contamination。</b>GPT-5 當攻擊方，對 GPT-5.2-Chat、Claude Opus 4.5、Gemini 3 Flash Preview 各問 15 輪；judge model 把每個回答標成 none 到 strong。GPT-5.2 只看片段就寫出 gold patch 的 class、method 與新的 early return。Gemini 3 Flash 只看任務 ID 就寫出題目文字與修正的 regex。</li>
+              <li><b>結論與替代方案。</b>最近 6 個月 SOTA 從 74.9% 升到 80.9%，進步變慢。OpenAI 改報 SWE-bench Pro 的 public split：也有 contamination，但少很多，沒有 model 背出完整的 gold patch。另外推 GDPval：題目由專家私下寫、人工評分，代價是貴。建議：benchmark 資料要加密存放、訓練資料用 canary string 過濾。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>Background 一節（slides p.17 已講 SWE-bench 的評分）；Discussion 最後幾段的建議。</li>
+              <li><b>值得看原文：</b>「Too narrow and too wide tests」的 pylint 與 sympy 兩個例子，各一段，看懂 grader 怎麼錯；三個 model 的 contamination 對話節錄，看 model 怎麼把 gold patch 背出來。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「SWE-bench Verified 有 59.4% 的題目壞掉。」不對。59.4% 是 o3 解不穩的 138 題裡的比例，約 82 題。換成全部 500 題是約 16%。容易的題目沒審，所以全集的壞題比例不知道，只知道下限。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2503.14499" target="_blank" rel="noopener">Measuring AI Ability to Complete Long Tasks</a><span class="rg-meta">METR · 論文 · 2025 · 挑段約 20 分</span></div>
           <p class="rg-s">用「人類要花多久的任務，模型 50% 能完成」來量能力。和 session 長度、context 成長直接相關。</p>
           <p class="rg-g"><b>導讀</b>外推效度不確定；METR 後續自己發了限制與修正的說明。帶著保留讀趨勢圖。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>METR 提出「50% time horizon」：人類要花多久的任務，model 有 50% 機率做完。2019 到 2025 年的 frontier model，horizon 約每 7 個月翻倍，o3 約 110 分鐘。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>核心觀念〈<a href="#i5">Benchmark 很快飽和</a>〉說 benchmark 幾個月到三年就分不出強弱（p.32–33）；這篇用人類時間當尺，任務可以一直加長，所以不飽和。它的 50% 與 80% horizon，和〈<a href="#i2">一個成功率不夠</a>〉的 pass@k 與 pass^k 是同一件事：能力和可靠性分開量（p.10–11）。補充〈Benchmark 分數的標準誤〉（p.31）談的雜訊，這篇用三層 bootstrap 給信賴區間。Slides p.16 的 OSWorld 2.0 往 1 小時以上的任務走，這篇解釋為什麼。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>指標的算法。</b>每題先量人類專家的完成時間，取成功嘗試的幾何平均。Model 每題跑多次，成功率對「log 人類時間」做 logistic 迴歸。成功率剛好 50% 的時間長度，就是 50% horizon。</li>
+              <li><b>任務集 170 題，跨 1 秒到 30 小時。</b>HCAST 97 題，人類 1 分鐘到 30 小時；RE-Bench 7 題，每題 8 小時；SWAA 66 題，1 到 30 秒，專為量 2023 年前的弱 model。人類 baseline 超過 800 次、共 2,529 小時。</li>
+              <li><b>每 207 天翻倍。</b>95% bootstrap 信賴區間 166 到 240 天。GPT-2 的 horizon 約 2 秒，o3 約 110 分鐘。2023 到 2025 年的斜率比 2019 到 2025 年快約 20%；2024 到 2025 年更快，但只有 7 個 model，作者信心低。</li>
+              <li><b>80% horizon 短 4 到 6 倍。</b>翻倍週期 204 天，和 50% 的 207 天在誤差內相同。偶爾解開難題的 model，還不能穩定做完中等長度的任務。</li>
+              <li><b>任務越亂，model 越差，但趨勢不變。</b>作者給每題打 16 個「messiness」因子，例如資源限制、動態環境。控制長度後，亂的任務成功率較低；但乾淨與亂的子集，斜率相近。Agent 最弱的地方是沒有明確回饋的環境。</li>
+              <li><b>換資料集，斜率會變。</b>用 SWE-bench Verified 的結果套同一方法，翻倍週期只有約 70 天；2024 年的 model 在本文任務集上是 143 天。作者歸因於標註者低估簡單題的人類時間。</li>
+              <li><b>外推要保留。</b>以 1 個月（約 167 工時）為目標，中位估計是 2029 年中，80% 區間約 2 年。若 2024 到 2025 年的快趨勢持續，一半機率落在 2027 年或更早。真實任務多半沒有自動評分，作者不確定趨勢能否推廣。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§1.1 Related Work；§2.3 各 model 的平均成功率；Appendix B 的逐題清單。</li>
+              <li><b>值得看原文：</b>Figure 1（log horizon 對發布日期，帶 95% 區間）；§3.1 的 logistic 公式，半頁；§4.1 的 Figure 5，看換資料集後斜率差多少；§5 的 Figure 6 敏感度分析。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「o3 能做人類要 110 分鐘的任務。」要加條件：成功率 50%。要求 80% 成功率時，horizon 短 4 到 6 倍，約 18 到 28 分鐘。判斷能不能上線，看 80% 那條線。</p></div></div>
+          </div></details>
           </li>
         </ol>
         <h3 class="rg-h">Benchmark 本體 <small>The benchmarks themselves</small></h3>
@@ -1232,6 +1318,28 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://research.google/pubs/dapper-a-large-scale-distributed-systems-tracing-infrastructure/" target="_blank" rel="noopener">Dapper: A Large-Scale Distributed Systems Tracing Infrastructure</a><span class="rg-meta">Google · 系統論文 · 2010 · 挑段約 20 分</span></div>
           <p class="rg-s">分散式 tracing 的奠基之作。把 agent 的步驟與 tool call 當 span，整套方法直接搬用。</p>
           <p class="rg-g"><b>導讀</b>適合系統背景的人導讀。重點：sampling rate 是主要的成本控制。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Dapper 是 Google 的分散式 tracing 系統：把一個請求經過的所有 RPC 記成一棵 span 樹，只在幾個共用 library 裡埋點，靠抽樣把 overhead 壓到看不見。它是 OpenTelemetry 這類工具的原型。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇不談 agent，放在這一講的原因是 trajectory。Slides p.11 說 evaluator 看最終答案、環境狀態、trajectory；p.31 說只看結果會放過不安全的執行。要看 trajectory，就要先把每一步記下來，Dapper 的 span 樹就是記法。核心觀念〈<a href="#i2">一個成功率不夠</a>〉要的成本與 latency（p.10），每個 span 都帶時間戳，可以逐步加總。延伸思考〈<a href="#x1">公開 benchmark 回答「model 多強」</a>〉說 production 評估要用真實流量；Dapper 就是從真實流量取樣的機制。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>一個 trace 是一棵樹，節點是 span。</b>每個 span 有名稱、span id、parent id，共用一個 64-bit 的 trace id。換成 agent：一次 session 是 trace，每次 LLM 呼叫與 tool call 是 span。</li>
+              <li><b>只在三個地方埋點，應用程式不用改。</b>Thread：trace context 放在 thread-local storage。Control flow：callback 建立時存下 context，執行時還原。RPC：所有 RPC 自動包成 span。Google 的程式都走這幾個 library，覆蓋率接近全部。</li>
+              <li><b>Annotation 讓應用程式加自己的資料。</b>帶時間戳的文字或 key-value，每個 span 有容量上限。70% 的 span、90% 的 trace 至少有一個 annotation。換成 agent：prompt、tool 參數、token 數都是 annotation。</li>
+              <li><b>Overhead 的數字。</b>建一個 root span 204 ns，非 root 176 ns，沒抽中時加 annotation 約 9 ns。收集 daemon 最多用一個 core 的 0.3%；trace 流量低於 production 網路的 0.01%。全抽（1/1）時 latency 增加 16.3%、throughput 降 1.48%；1/16 時 latency 增 2.12%，已在實驗誤差 2.5% 內。</li>
+              <li><b>抽樣是主要的成本控制。</b>第一版 production 統一抽 1/1024；高流量服務低到 0.01%；每秒幾十個請求的服務可以全記。後來改成 adaptive sampling，目標是每單位時間固定的 trace 數。收集端再抽一次：依 trace id 的 hash 決定整棵樹留或丟。</li>
+              <li><b>收集是 out-of-band。</b>Span 先寫本機 log，daemon 拉走，collector 寫進 Bigtable，一列一個 trace、一欄一個 span。中位延遲 15 秒以內。抽樣後每天仍超過 1 TB，要留至少 2 週。</li>
+              <li><b>用途超出原本的設計。</b>約 200 位工程師每個工作天用 UI。Ads Review 團隊靠它把 latency 改善兩個數量級。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§2.6 安全與隱私；§3 部署狀況；§5.1 DAPI；§8 Related Work。</li>
+              <li><b>值得看原文：</b>§2.1 的三張圖（五個 server 的請求、它的 span 樹、一個 span 的內容）；§4.3 的 Table 2（6 種抽樣率對 latency 與 throughput 的影響）；§6.2 long tail latency 的案例。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Dapper 抽 1/1024，所以 agent 的 trace 也該抽樣。」不對。1/1024 是給每秒數萬個請求的服務用的；論文說每秒幾十個請求的服務可以全部記錄。Agent 的請求少、每次又貴，評估又要逐筆看 trajectory，所以全記。要省的是儲存，用整棵保留或丟棄的二次抽樣。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://arxiv.org/abs/2411.05285" target="_blank" rel="noopener">AgentOps: Enabling Observability of LLM Agents</a><span class="rg-meta">arXiv 2411.05285 · 論文 · 2024 · 掃過約 10 分</span></div>

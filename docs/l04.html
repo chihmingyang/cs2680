@@ -58,8 +58,8 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/4_agent_design_1.pdf" target="_blank" rel="noopener">4_agent_design_1.pdf ↗</a></li>
       <li><span class="k">頁數</span>56</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 20 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 55 分鐘</span></li>
     </ul>
   </header>
 
@@ -1028,7 +1028,7 @@ error: patch failed: client.ts:41</code></pre></figure>
       <!-- ===================== 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
         <h2>延伸閱讀</h2>
-        <p class="rg-intro">教授為這一講列了 15 篇，是全課程最長的一份清單（<a href="https://cs2680.com/readings/sep-16.html" target="_blank" rel="noopener">官方清單 9/16 ↗</a>）。三組對應 slides 的三條主線：agent loop、context、tool。不必全讀；分工時一組一到兩人。「必讀」的 3 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
+        <p class="rg-intro">教授為這一講列了 15 篇，是全課程最長的一份清單（<a href="https://cs2680.com/readings/sep-16.html" target="_blank" rel="noopener">官方清單 9/16 ↗</a>）。三組對應 slides 的三條主線：agent loop、context、tool。不必全讀；分工時一組一到兩人。「必讀」與「推薦」的 10 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
         <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
         <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 75 分鐘：ReAct（只讀方法與圖 1）→ Effective Context Engineering → Writing Effective Tools。一條主線各拿一篇。</p></div></div>
         <h3 class="rg-h">Agent 的基本型 <small>What an agent is</small></h3>
@@ -1063,11 +1063,54 @@ error: patch failed: client.ts:41</code></pre></figure>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents</a><span class="rg-meta">Anthropic · 工程文章 · 2024 · 約 20 分</span></div>
           <p class="rg-s">把固定 workflow 與 agent 分開，給出可組合的 pattern。原則：量到有效，才加複雜度。</p>
           <p class="rg-g"><b>導讀</b>帶大家對照：你們手上的系統是 workflow 還是 agent？已經用了哪些 pattern？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Agent 系統分兩類：workflow 由程式碼決定路徑，agent 由 model 自己決定。先從單一 LLM call 開始，量到不夠才加 pattern，最後才用 agent。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.36 的 prompt chaining 是這篇的第一個 workflow pattern，見〈<a href="#i3">Prompt 技巧從簡單開始</a>〉；這篇把它和另外 4 種 pattern 排成一個光譜。p.5–6 的 agent loop 對應文中的 autonomous agent：model 在 loop 裡用 tool，每一步從環境拿 ground truth，見〈<a href="#i1">ReAct：推理要有 observation 來檢查</a>〉。Appendix 2 的 agent-computer interface 是 p.25 五條原則的出處之一，見〈<a href="#x1">Tool 設計就是 context 設計</a>〉。差異：slides 從 loop 講起，這篇先問要不要 agent，loop 放最後。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Workflow 與 agent 的分界是誰決定路徑。</b>Workflow：LLM 與 tool 走程式碼預先寫好的路徑，可預測、一致。Agent：LLM 自己決定流程與 tool 用法，有彈性，代價是延遲、成本與錯誤累積。</li>
+              <li><b>基本單位是 augmented LLM。</b>一個 LLM 加 retrieval、tool、memory。Model 自己產生查詢、選 tool、決定留什麼。設計重點是把介面寫清楚，MCP 是一種做法。</li>
+              <li><b>五種 workflow pattern，各有適用條件。</b>Prompt chaining：任務能切成固定子步驟，中間可加程式檢查。Routing：先分類再分流，簡單問題給小 model，難的給大 model。Parallelization：拆段同時跑（sectioning），或同一題跑多次投票（voting）。Orchestrator-workers：子任務無法事先列出，由一個 LLM 動態拆解再彙整，例如跨多檔的程式修改。Evaluator-optimizer：一個產生、一個評分，來回迭代，例如文學翻譯。</li>
+              <li><b>Agent 的實作通常很簡單。</b>LLM 在 loop 裡用 tool，依環境回饋決定下一步。每一步要從環境拿到 ground truth：tool 結果、程式執行結果。要有停止條件，例如最大迭代次數。用在步驟數無法預測的開放任務。</li>
+              <li><b>三條原則：簡單、透明、ACI。</b>設計保持簡單；把規劃步驟明白顯示出來；tool 的文件與測試要像 HCI 一樣投入。</li>
+              <li><b>Tool 格式要順著 model 的習慣。</b>Diff 要在寫新程式碼之前先算好 hunk header 的行數；JSON 裡的程式碼要跳脫換行與引號。給 model 思考的 token，用網路上常見的格式，避免計數與跳脫。SWE-bench 的案例：agent 離開根目錄後相對路徑常出錯，改成要求絕對路徑後就不再錯。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>When and how to use frameworks 一節；Appendix 1 的 customer support 案例。Autonomous agents 一節的 loop 描述，slides p.5–6 已講。</li>
+              <li><b>值得看原文：</b>每個 workflow pattern 的示意圖，5 張並排看最清楚。Appendix 2 的 tool 格式討論與絕對路徑案例，slides 沒有。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 5 個 pattern 的圖與 Appendix 2 約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「要做 agent 就該用 orchestrator-workers 這類架構」不對。文章的主張相反：多數應用只要優化單一 LLM call 加 retrieval 與範例就夠；每加一層複雜度都要用 eval 證明有效。Pattern 是零件，不是目標。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://tej.as/blog/what-is-an-agent-harness" target="_blank" rel="noopener">What Is an Agent Harness?</a><span class="rg-meta">Tejas Kumar · 部落格 · 2026 · 約 15 分</span></div>
           <p class="rg-s">給 harness 一個六件組件的定義。關鍵檢驗：harness 要驗證完成，不能信模型自述。</p>
           <p class="rg-g"><b>導讀</b>範例用的是 GPT-3.5 Turbo：看觀念，不看數字。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Harness 是 model 外面那一層，用它把一個你控制不了的 model 固定在你控制得了的環境裡。結論：可靠性來自 code 裡的限制與驗證，不來自更用力的 prompt。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.6 把 harness 設計者的工作標在 loop 上，p.52 說 Agent = Model × Harness，這篇給 harness 一個六件組件的定義，見〈<a href="#i1">ReAct：推理要有 observation 來檢查</a>〉與〈<a href="#i5">四種策略有順序</a>〉。Demo 的 model 與 prompt 全程不變，只改 harness，和 p.53 的實驗同一個方法，見〈<a href="#x2">評估時要固定 harness</a>〉。差異：slides 的四項工作沒有單獨列出「驗證完成」，這篇把它當第六個組件。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Harness 不等於 agent loop。</b>Loop 只是 harness 的一部分：呼叫 model、跑 tool、把結果接回去。Harness 還包含 loop 外面的重試、限制與檢查。作者不用「除了 model 以外都算」的減法定義，改用功能定義：把 model 固定在環境裡。</li>
+              <li><b>六個組件。</b>Tool registry（agent 能做的動作）、model、context management（決定 model 看到什麼、處理溢出）、guardrails（code 裡的硬限制）、agent loop、verify step（檢查任務真的完成）。</li>
+              <li><b>沒有驗證，agent 會謊報成功。</b>Demo 用 GPT-3.5 Turbo 上 Hacker News 投票。Branch 0 只有一個 <code>while (true)</code> loop，撞到登入頁沒投票，仍回報完成。原因：code 裡沒有任何東西檢查結果。</li>
+              <li><b>Guardrails 放在 code，model 碰不到。</b>Branch 1 加迭代上限（repo 預設 15，台上用 6）與訊息上限 50，超過就停。Context trimmer 只留 system prompt、任務與最近幾則訊息；作者說它太簡陋，不能上 production。</li>
+              <li><b>驗證要用確定性的 code。</b>Branch 3 在每次 run 之後讀 tool call 的軌跡，檢查有沒有確認過投票的點擊，或有沒有撞到登入頁。外面再包一層最多 3 次的重試。驗證失敗時，用失敗原因取代 model 自己宣稱的答案。Agent 從此誠實回報失敗。</li>
+              <li><b>Harness 可以代替 model 處理它不該碰的事。</b>Branch 4 在每一圈之前檢查瀏覽器 URL，遇到登入頁就用環境變數裡的帳密登入，再告訴 model 已登入。Model 從頭到尾看不到帳密。6 圈後投票成功，prompt 沒改過一個字。</li>
+              <li><b>Harness engineering 是 context engineering 的上層。</b>作者把 context engineering 當 harness 的一個組件。他預期下一步是 dynamic harness：agent 先為這個任務產生專屬的檢查，再動手。這是展望，還沒有實作。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>Why Agents Need a Harness 的兩個比喻；OpenRAG 一段是產品介紹；FAQ 只重複前文。</li>
+              <li><b>值得看原文：</b>The 6 Parts of an Agent Harness 的清單；Build an Agent Harness From Scratch 的 5 個 branch，每個只加一件事，結尾的 What Changed 表格把結果並排。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑六個組件與 5 個 branch 約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「換一個更強的 model，就不用做驗證」不對。文章的 demo 刻意用舊 model，證明可靠性來自 harness；FAQ 也說更好的 model 不會拿掉驗證的需要。反過來，好的 harness 能讓便宜或舊的 model 把事做完。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://agentpatterns.ai/" target="_blank" rel="noopener">Agent Patterns</a><span class="rg-meta">agentpatterns.ai · 參考站</span></div>
@@ -1117,16 +1160,82 @@ error: patch failed: client.ts:41</code></pre></figure>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://sourcegraph.com/blog/context-engineering" target="_blank" rel="noopener">Context Engineering: A Practical Guide for AI Agents</a><span class="rg-meta">Sourcegraph · 部落格 · 2026 · 約 15 分</span></div>
           <p class="rg-s">把 context 當一筆有生命週期的預算：檢索範圍、壓縮、subagent 隔離。</p>
           <p class="rg-g"><b>導讀</b>和上一篇對讀，找出兩家重疊與分歧的建議。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Context engineering 是設計 model 每一次推論看到的全部內容，重點在 retrieval 與淘汰，不在措辭。結論：agent 失敗時先查 window 裡有沒有答案；作者的 benchmark 裡多數時候沒有。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇的四個 pillar（instructions、retrieval、memory、tools）對應 slides p.44 的 context 組成，見〈<a href="#i4">Context 是有限資源</a>〉。長任務三招（compaction、筆記、subagent）和 p.45–50 的四種策略重疊，見〈<a href="#i5">四種策略有順序</a>〉。它也用 Breunig 的 poisoning、distraction、confusion、clash 四種失敗，和 p.51 一樣。搜尋 tool 的部分對應 p.10–14：grep 什麼時候夠用、什麼時候要索引，見〈<a href="#i2">Tool 要為 model 設計</a>〉。差異：這篇的證據來自大型 codebase，主張依 codebase 大小選 tool。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Agent 失敗常常是找不到，不是不會。</b>開場案例：agent 拿到約 1.4M 行 Go、22,000 個檔案的 repo，花 6,000 秒到處找，什麼都沒產出，得 0 分。它懂 Kubernetes，但不知道該看哪裡。</li>
+              <li><b>Context 包含你忘了算的東西。</b>一開始就載入的全部 tool schema、已經回來的 tool 結果、從沒淘汰的無關 chunk。改善來自 caching、淘汰、排序這類系統工作。文中提到 Claude Code 預設先載入 MCP tool 名稱，用到才抓完整 schema。</li>
+              <li><b>Retrieval 決定品質上限。</b>無關的 context 會讓答案變差，不是中性。Naive RAG 在 codebase 上會壞：chunking 把函式和呼叫點切開；<code>handler.go</code>、<code>__init__.py</code> 這類常見檔名讓相似度搜尋混進測試與 mock。做法：有結構的地方用 compiler 等級的查詢，其他地方才用語意搜尋。</li>
+              <li><b>Tool 要花三種 token。</b>定義、輸出、以及重疊的 tool 增加的決策負擔。延後載入 schema 只省第一種。</li>
+              <li><b>長任務三招。</b>Compaction：摘要後開新 window，摘要要保留任務、看過的檔案路徑、決定與理由、失敗過的做法。筆記：agent 把學到的寫到 window 外，需要時讀回。Subagent：coordinator 持有計畫，subagent 在乾淨的 window 做事，回傳蒸餾過的結果；代價是 subagent retrieval 失敗時仍會回傳自信的摘要。</li>
+              <li><b>Benchmark：code intelligence tool 的效果看 codebase 大小。</b>CodeScaleBench 370 題、40 多個 repo。加上 Sourcegraph MCP：file recall 0.127 → 0.277，precision@5 0.140 → 0.478，每題成本約 $0.73 → $0.51。40 萬行以下，加 tool 反而略差（reward −0.080），因為 grep 就夠；40 萬到 200 萬行，+0.259。</li>
+              <li><b>給了 tool 不代表 agent 會用。</b>Benchmark 裡關鍵字搜尋 4,813 次，自然語言搜尋 587 次；602 次 run 裡 Deep Search 只用了 6 次。Prompt 要說清楚何時用哪個 tool，作者稱這為 intent engineering。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>What Is Context Engineering 與 vs. Prompt Engineering 兩節，slides p.41–44 已講。Tools and Frameworks 的六層表與結尾的產品介紹。</li>
+              <li><b>值得看原文：</b>Long-Horizon Agent Tasks 裡的 compaction prompt 範例；Enterprise Codebase Scale 的 naive RAG 失敗原因；Benchmark Results 的規模效應那段，兩個 reward delta 的對照。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 long-horizon、codebase scale、benchmark 三節約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「codebase 越大越該加 code intelligence tool」只對了一半。文章說分布比大小重要：40M 行的 monorepo 若答案集中在一個目錄，grep 就夠；2M 行分散在 4 個服務反而難。而且 40 萬行以下加 tool 是負效果。要在自己的任務上量。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2606.10209" target="_blank" rel="noopener">Less Context, Better Agents</a><span class="rg-meta">arXiv 2606.10209 · 論文 · 2026 · 挑段約 20 分</span></div>
           <p class="rg-s">修剪 context 不只省成本，還可能提高成功率。</p>
           <p class="rg-g"><b>導讀</b>證據來自 50 題的旅館報帳 benchmark。結論要在自己的 workload 上重量一次。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>在一個 ERP 報帳任務上，只留最近 5 組 tool call，完成率從 71.0% 升到 79.0%，token 少 63.9%；再把淘汰的部分摘要回來，升到 91.6%。結論：舊的 tool 結果不只多餘，還會誤導。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇是 slides p.49 observation masking 與 p.50 rolling summary 的實驗版，見〈<a href="#i5">四種策略有順序</a>〉。它量到的「舊 tool 結果會誤導」就是 p.51 的 clash：新舊表單狀態都在 window 裡，agent 引用到舊的。p.42 說 context 有錢、延遲、注意力三種成本，這篇三種都量了。它和 p.53 的 Lewis 實驗同一個結論：model 不變，只改 context 管理，完成率就不同，見〈<a href="#x2">評估時要固定 harness</a>〉。差異：slides 把 compaction 排在最後，這篇的最佳配置是修剪加摘要一起用。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>任務與設定。</b>GPT-5 透過 21 個 MCP tool 操作 Microsoft Dynamics 365，把旅館收據拆成明細，直到未分配金額剛好 $0.00。50 題，每題 4–23 個明細（中位數 8），每個 tool 回應 500–3,000 token。另有一個 GPT-4.1 扮演使用者，回答 agent 的追問。每個配置跑 5 次取平均，結果從表單狀態讀回，不信 agent 自述。</li>
+              <li><b>全歷史最貴，也不是最準。</b>C2 保留全部對話：完成率 71.0%，每題平均 1,481K token，5 次 run 共 14.56 小時。</li>
+              <li><b>只留最近 5 組 tool call，更準也更省。</b>C3 淘汰更早的 tool call 與回應，不做摘要：79.0%，535.3K token，5.39 小時。作者的解釋：全歷史裡有過期的表單快照，agent 會引用到舊的。Stale-state 錯誤從 34 次降到 6 次（250 次 task-run 合計）。</li>
+              <li><b>修剪會丟掉任務全貌，摘要補回來。</b>C3 看不到累計餘額，提早結束的失敗從 9 次升到 18 次。C4 把最近淘汰的 3 組摘要成一則訊息插回原位：91.6%，token 只多 3.4%，提早結束降到 3 次。未完成總數 73 → 53 → 21。</li>
+              <li><b>參數不敏感，N=5、W=3 之後就平了。</b>N=3 得 74.0%，N=10 得 80.0%；W=1 得 86.4%，W=5 得 92.0%，全歷史摘要也是 92.0% 但 token 較多。</li>
+              <li><b>換類別與換 model 方向一致。</b>Travel 30 題與 Meals 32 題，C2 → C4 各升約 19–21 個百分點，token 少 60–63%。Claude Sonnet 4.5 不需要使用者 model：全歷史 88.0%，修剪 92.0%，修剪加摘要 94.5%。</li>
+              <li><b>作者自己劃的範圍。</b>證據只涵蓋單一 session、表單驅動的 ERP 任務；沒有假設檢定；C2 與 C3 的 95% 信賴區間略有重疊。Sonnet 的修剪配置 token 較少但時間反而較長，論文沒有解釋。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§1 Background 與 §2 Related Work；§4.1 的 C1 只是說明為什麼需要使用者 model；§6.5 Responsible AI。</li>
+              <li><b>值得看原文：</b>§3.4 的 Algorithm 1，淘汰與摘要的規則只有這裡寫清楚。Table 5 失敗模式的三欄對照。附錄 F 的案例：agent 引用第一個快照，重複加了 $180 的 Room 明細。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 Algorithm 1、Table 2、Table 5、附錄 F 約 20 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「只留最近 N 步就好，不用摘要」不對。修剪單獨用時，提早結束的失敗翻倍，因為 agent 看不到整體進度。論文的最佳配置是修剪加一則短摘要；摘要負責任務全貌，修剪負責去掉過期狀態。兩者修的是不同的錯。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Lost in the Middle: How Language Models Use Long Contexts</a><span class="rg-meta">arXiv 2307.03172 · 論文 · 2023 · 挑段約 15 分</span></div>
           <p class="rg-s">經典結果：正確率隨證據位置呈 U 形，放中間最差。</p>
           <p class="rg-g"><b>導讀</b>記得圖 1 就夠。討論：檢索回來的內容，該照什麼順序放進 prompt？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 15 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>把答案所在的文件放在 context 的不同位置，準確率呈 U 形：開頭最好、結尾次之、中間最差。結論：model 不會均勻使用長 context，window 加大也不會改善。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>Slides p.43 右圖的 U 形曲線來自這篇，見〈<a href="#i4">Context 是有限資源</a>〉與觀念補充〈<a href="#t6">Lost in the middle</a>〉。本摘要的數字取自論文附錄 20 份文件的表，和 slides 標的 5 個值略有出入，趨勢相同。Slides 由此推出的設計原則「中間的舊 tool 結果最該清掉」對應 p.49 的 observation masking，見〈<a href="#i5">四種策略有順序</a>〉。論文沒講 agent，它的任務是 QA 與 key-value 查詢；把結論套到 agent 的 context 是 slides 的推論。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>實驗設計：只移動答案的位置，其他不變。</b>NaturalQuestions-Open 的 2,655 題，每題給 k 份 Wikipedia 段落（每份至多 100 token），1 份含答案，其餘 k−1 份是 Contriever 找來的干擾文件。k 取 10、20、30，答案文件輪流放在每個位置。Greedy decoding，輸出含任一正確答案就算對。</li>
+              <li><b>6 個 model，含 3 組加長 context 版本。</b>MPT-30B-Instruct（8K）、LongChat-13B（16K）、GPT-3.5-Turbo（4K 與 16K）、Claude-1.3（8K 與 100K）。</li>
+              <li><b>U 形，而且中間可以比不給文件還差。</b>GPT-3.5-Turbo 在 20 份文件時：第 1 份 75.8%，第 5 份 57.2%，第 10 份 53.8%，第 15 份 55.4%，第 20 份 63.2%。它的 closed-book 是 56.1%，oracle（只給答案那一份）是 88.3%。20 與 30 份時，最差的位置低於 closed-book。30 份時 16K 版本第 1 份 73.4%，第 15 份 50.9%，第 30 份 63.7%。</li>
+              <li><b>加長 window 沒有幫助。</b>輸入同時放得進 4K 與 16K 的 GPT-3.5-Turbo 時，兩者的曲線幾乎相同；Claude-1.3 的 8K 與 100K 也一樣。</li>
+              <li><b>Key-value 查詢去掉語言後，中間仍最差。</b>輸入是 JSON，key 與 value 都是隨機 UUID，75、140、300 組各 500 題。Claude-1.3 幾乎全對；其他 model 在 140 與 300 組時明顯掉，掉在中間。LongChat-13B 在 key 放開頭時常改成寫程式去查，不直接回答。</li>
+              <li><b>三個可能的原因。</b>架構：encoder-decoder 的 Flan-UL2 在訓練長度 2,048 token 內，最好與最差只差 1.9 個百分點，超過才出現 U 形。Query 位置：把問題放在資料前後各一次，key-value 任務各 model 都近乎全對，不放時最差 45.6%；對多文件 QA 沒什麼幫助。Instruction tuning：MPT-30B 有沒有 tuning 都是 U 形，差距從約 10 降到約 4 個百分點。</li>
+              <li><b>多給文件，reader 很快飽和。</b>Open-domain QA 案例：retriever 的 recall 隨文件數上升，但超過 20 份之後 GPT-3.5-Turbo 只多約 1.5 個百分點，Claude-1.3 約 1 個百分點。作者建議把相關文件重排到前面，或截斷排名清單。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>§1 Introduction，slides p.43 已講結論。§2.1 的資料建構細節。§6 Related Work。</li>
+              <li><b>值得看原文：</b>Figure 1 一張圖就是全文。§3 的 key-value 實驗，證明問題不在語言理解。§4.1 的 Flan-UL2 對照，是「架構可能有關」的唯一證據。§5 的 recall 與 accuracy 兩條曲線並排。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑 Figure 1、§3、§4.1、§5 約 15 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「這是 2023 年舊 model 的問題，新 model 已經沒有」要小心。論文附錄的 GPT-4 在 20 份文件時絕對準確率最高，但仍是 U 形；加長 context 的版本和原版曲線一樣。論文測的是 model 用 context 的方式，不是 window 大小。要確認新 model 沒有這個問題，得用同樣的位置實驗量一次。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2606.29718" target="_blank" rel="noopener">Diagnosing and Mitigating Context Rot</a><span class="rg-meta">arXiv 2606.29718 · 論文 · 2026 · 挑段約 20 分</span></div>
@@ -1167,6 +1276,28 @@ error: patch failed: client.ts:41</code></pre></figure>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://www.philschmid.de/superhuman-bash" target="_blank" rel="noopener">How Foundational Models Became Superhuman in Bash</a><span class="rg-meta">Philipp Schmid · 部落格 · 2026 · 約 10 分</span></div>
           <p class="rg-s">主張用一個 shell tool 取代很多原子 tool：模型對 bash 的訓練太充分了。</p>
           <p class="rg-g"><b>導讀</b>這是未量化的實務觀察。問：哪些東西（例如截圖）仍然需要專用管道？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>作者把自己的 harness 砍到只剩 <code>bash</code> 和一個看圖的 tool，任務完成率和原來差不多。結論：model 寫 shell 已經夠強，原子 tool 提供的保護可以搬進 harness。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>這篇直接回答 slides p.26 的問題「只給 shell 可以嗎」，答案和 SWE-agent 的 11.0% 對 18.0% 相反，見〈<a href="#i2">Tool 要為 model 設計</a>〉。兩者不矛盾：p.26 的實驗用 GPT-4 時代的 model，這篇是 2026 年的觀察。p.22–23 的 shell 風險這篇都承認，解法是把 p.23 的五項考量做進 harness。它的 log 範例是 p.47 admission 的實作：中間資料留在環境裡，只有摘要進 context，見〈<a href="#x1">Tool 設計就是 context 設計</a>〉。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>「Superhuman」的意思很窄。</b>Model 能在幾秒內把 <code>git</code>、<code>rg</code>、<code>jq</code>、Python、暫存檔串成一次性的程式。Bash 在這裡是路由層，重活交給 Python、Git、SQLite 或專案的 CLI。</li>
+              <li><b>範例 1：跨 4 個檔案改名，一次套用。</b>Python heredoc 先數每個舊字串出現的次數，數目不對就不寫入。再一次改完 4 個檔，接著跑 <code>ruff</code>、<code>pyright</code>、<code>pytest</code>、<code>git diff --check</code>。失敗的結果留在 working tree，下一圈再修。</li>
+              <li><b>範例 2：用 <code>git bisect run</code> 找 flaky 測試的起點。</b>在暫存目錄開 detached worktree，不動目前的 checkout。每個 commit 跑 5 個 seed，失敗少於 3 次才算 good。</li>
+              <li><b>範例 3：log 太大進不了 context，就在環境裡算。</b>Python 串流讀 gzip 的 JSONL log，每批 10,000 列灌進暫存 SQLite，用 SQL 算前 5 個失敗 endpoint 的錯誤類別與 P95。回到 model 的只有 5 筆 JSON。</li>
+              <li><b>原子 tool 的保護搬進 harness。</b>作者以前主張不讓 agent 用 <code>cat</code>、<code>sed</code>，因為會灌滿 context、錯誤不透明、引號出錯會弄壞檔案。現在 harness 負責：截斷大輸出並提示怎麼縮小範圍、回報 exit status 與時間、在 model 外面強制路徑與網路規則、讓長程序在背景跑。</li>
+              <li><b>仍然需要專用 tool 的地方。</b>多模態輸入：shell 能截圖，但像素要經另一個管道進 model。瀏覽器控制：一個 tool 能導航、點擊、等頁面穩定、回傳截圖，用 bash 要拆成好幾步。服務整合可以用 MCP，或用 CLI 讓 schema 不進 prompt。</li>
+              <li><b>作者的建議。</b>刪掉 micro-tool，先試 bash。用 subagent 當 execution firewall，把雜亂的探索關在外面。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>What "superhuman in Bash" means 的定義；Bitter Lesson 那段。</li>
+              <li><b>值得看原文：</b>三個範例的完整 script，尤其範例 1 的「先數再寫」與範例 2 的 bisect wrapper。Why atomic tools were right 一節列出 harness 要接手的四件事。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；挑三個範例與 atomic tools 一節約 10 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「只給 bash 就好，tool 設計不重要」不對。作者砍掉的是 model 面對的 tool 數量，截斷、診斷、隔離、背景程序這些工作沒有消失，全部搬進 harness。而且他的對照實驗沒有公開數字，只說「差不多或更好」，是一個人的觀察，不是 benchmark。</p></div></div>
+          </div></details>
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">Toolformer: Language Models Can Teach Themselves to Use Tools</a><span class="rg-meta">arXiv 2302.04761 · 論文 · 2023 · 挑段約 15 分</span></div>
@@ -1177,6 +1308,28 @@ error: patch failed: client.ts:41</code></pre></figure>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://blog.lawrencejones.dev/demystifying-skills-and-mcps" target="_blank" rel="noopener">How Skills and MCPs Actually Work</a><span class="rg-meta">Lawrence Jones · 部落格 · 2026 · 約 20 分 · L2 已列過</span></div>
           <p class="rg-s">L2 的必讀，這一講再次指定：single agent、按需 skills、虛擬檔案系統 tools。</p>
           <p class="rg-g"><b>導讀</b>L2 讀過的話，這次只重看「三個問題」那張表，套用到每一條設定。</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Model 只看到一串訊息。MCP 往裡面加 tool 清單，skill 往裡面加指令，plugin 把兩者打包。一條規則放在 system prompt、skill 或 tool 裡，model 對待它的方式不同。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>L2 把這篇當擴充機制的說明書，這堂換成 tool 設計者的角度讀。文中 Bash tool 不一定真的跑 bash，incident.io 用 Go 寫一個虛擬 shell，這是 p.22–23 shell tool 的 isolation 做法，見〈<a href="#i2">Tool 要為 model 設計</a>〉。Skill 只有 name 與 description 常駐 context，body 用到才載入，就是 p.48 offloading 的 progressive disclosure，見〈<a href="#i4">Context 是有限資源</a>〉與〈<a href="#i5">四種策略有順序</a>〉。Purge tool 用必填參數擋住誤刪，是 p.25「tool 要為 model 設計」的一個實例：不能妥協的保證做進介面，不靠 prompt，見〈<a href="#x1">Tool 設計就是 context 設計</a>〉。差異：slides 講 tool 的輸出怎麼進 context，這篇講規則放在哪一層，model 才會照做。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>Model 沒有狀態，所有狀態都在訊息串裡。</b>訊息分 system、user、assistant 三種角色。Model 不執行 tool；它提出 tool call，harness 執行後把結果接回訊息串，再整串送回。Agent 就是這個流程跑 loop，直到 model 不再要求 tool。</li>
+              <li><b>Coding agent 的 tool 很普通。</b>Claude Code 給 model 的有 Bash、Read、Write、Edit、Grep、WebFetch。Bash tool 不一定真的跑 bash；incident.io 用 Go 寫了一個虛擬 shell，回傳看起來像 bash 的結果就夠了。</li>
+              <li><b>MCP 是一個列出 tool 的 server，和 HTTP API 幾乎一樣。</b>Agent 連上時抓 tool 清單，合併進 prompt。incident.io 因此也支援任何有 OpenAPI 規格的 HTTP API，用同一種方式提供給 agent。</li>
+              <li><b>Skill 是一個資料夾，裡面是 SKILL.md 與參考檔。</b>常駐 context 的只有 name 與 description，約 100 token。Body 有幾千 token，用到才載入。這叫 progressive disclosure。</li>
+              <li><b>規則放在 system prompt，model 服從；放在 skill，model 權衡。</b>案例：system prompt 寫「長時間範圍的查詢要拆小」。使用者明確要求一週的 error log，agent 拒絕。同一條規則改成 skill 後，請求正常完成。</li>
+              <li><b>沒有出路的 prompt 會逼出幻覺。</b>「為文件產生 3 到 5 個 tag」碰到空文件，model 只能捏造無關的 tag。作者認為他看到的前沿 model 幻覺，多數來自這種 prompt。</li>
+              <li><b>不能妥協的保證放在 tool 層。</b>Purge tool 要求 <code>dry_run</code> 或 <code>confirm</code> 其中一個參數，兩者都沒有就拒絕執行。Model 無法用推理繞過必填參數。incident.io 也把多個專用 agent 合併成一個 agent 加多個 skill，因為單一 agent 看到完整 context，規劃更好。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>LLM 101 與 Agents are a loop，slides p.4–7 已經講過。Plugins bundle skills 只有一段。L2 讀過的人，MCP 與 skill 兩節也可以跳。</li>
+              <li><b>值得看原文：</b>Skills are just instructions 裡的 token 成本圖；Skills replace system prompts 整節，含時間範圍查詢案例、tag 幻覺案例、purge tool 的參數設計。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 12 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「把規則移到 skill，agent 就更聽話。」方向相反。移到 skill 的規則，model 會拿它和使用者的要求一起權衡，所以更有彈性，也更可能不照做。絕對不能違反的事，要做成 tool 的必填參數或 hook。</p></div></div>
+          </div></details>
           </li>
         </ol>
         <p class="rg-fn">補充資料的出處：<a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">SWE-agent 論文</a>（p.26）、<a href="https://arxiv.org/abs/2608.26218" target="_blank" rel="noopener">Same Model, Different Harness</a>（p.52）、Claude Code 官方文件 <a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noopener">mcp</a>（Edit tool 與 MCP 輸出的描述）。</p>
