@@ -59,7 +59,7 @@
       <li><span class="k">頁數</span>53</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 15 分鐘</span></li>
-      <li><span class="k">深入</span><span class="deep-time">約 9 分鐘</span>，選讀</li>
+      <li><span class="k">深入</span><span class="deep-time">約 11 分鐘</span>，選讀</li>
       <li><span class="k">全部展開</span><span class="full-time">約 45 分鐘</span></li>
     </ul>
   </header>
@@ -188,7 +188,7 @@
           <div class="idea" id="i1">
             <h3>一個 prompt，很多圈 loop <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=6" target="_blank" rel="noopener">p.6–13</a></h3>
             <div class="prose">
-              <p>你打一個 prompt，Claude Code 會跑很多圈 loop。每一圈，harness 把整個 context 送給 model。Model 提議一個動作，例如跑 <code>pytest</code>。Harness 檢查權限，在你的電腦上執行，再把結果放回 context。Model 不再提議動作時，這一輪才結束。</p>
+              <p>你打一個 prompt，Claude Code 會跑很多圈 loop。每一圈，harness 把整個 context 送給 model。Model 提議一個動作，例如跑 <code>pytest</code>。Harness 檢查權限，在你的電腦上執行，再把結果放回 context。Model 不再提議動作時，這一輪才結束。每一圈送出的 request 只有三個欄位：system prompt、tools、messages；CLAUDE.md 和記憶都放在 messages 的第一則。精確的版面，和 OpenAI、Gemini 的 API 怎麼對照，見下面第一個「深入」。</p>
               <p>這個結構有兩個後果。第一，成本和延遲隨圈數增加，因為每一圈都重送整個 context。第二，context 一直變大，快滿時就要 compaction，把舊的過程摘要起來。摘要會丟掉細節，所以重要的規則不能只靠對話記住。</p>
               <p>每個動作執行前，harness 先查權限 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=11" target="_blank" rel="noopener">p.11</a>。權限由一份規則清單加一個模式組成。規則依 deny → ask → allow 的順序比對 tool 名稱和參數。沒有規則符合時，由模式決定：每步都問（default）、自動同意編輯（acceptEdits）、只讀不改（plan）、交給另一個 classifier model 審查（auto）、全部放行（bypassPermissions）。</p>
             </div>
@@ -196,20 +196,45 @@
               <details class="ex deep" id="d1">
                 <summary>深入｜一次 model 呼叫，實際送出什麼<span>p.6–10</span></summary>
                 <div class="exbody prose">
-                  <p>Slides 說「model 提議，harness 執行」，但沒有給你看資料長什麼樣子。看懂這個例子，整堂課大部分的機制就通了。Harness 每一圈送給 model 一個 request，大致如下。</p>
-                  <figure class="file"><figcaption>示意：一次 request（簡化過，不是 Claude Code 的原始格式）</figcaption><pre><code>{
-  "system": "You are Claude Code…（系統指令、環境資訊）",
-  "tools": [
-    {"name": "Bash", "description": "Run a shell command", "input_schema": {"command": "string"}},
-    {"name": "Read", "description": "Read a file", "input_schema": {"file_path": "string"}},
-    {"name": "mcp__github__create_issue", "description": "…", "input_schema": {"…": "…"}}
+                  <p>Slides 說「model 提議，harness 執行」，但沒有給你看資料長什麼樣子。看懂這個例子，整堂課大部分的機制就通了。Harness 每一圈送給 model 一個 request，只有三個欄位：<code>system</code>、<code>tools</code>、<code>messages</code>。CLAUDE.md、記憶、skill 清單都不是獨立欄位，它們是 harness 放進 <code>messages</code> 第一則 user message 的文字。</p>
+                  <figure class="file"><figcaption>示意：一次 request（Claude Messages API 的欄位；內容簡化，不是 Claude Code 的原始格式）</figcaption><pre><code>{
+  "system": "You are Claude Code…（系統指令、環境資訊、output style）",   ← system prompt，整段 session 不變
+
+  "tools": [                                                            ← tool 定義，session 開始就全部在
+    {"name": "Bash", "description": "Run a shell command",
+     "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}}},
+    {"name": "Read", "description": "Read a file", "input_schema": {…}},
+    {"name": "Skill", "description": "Load a skill by name", "input_schema": {…}},   ← skill 透過這個 tool 載入
+    {"name": "ToolSearch", "description": "Load deferred tool schemas", "input_schema": {…}}
+    // MCP tool 預設不在這裡：只有名稱出現在 context，完整 schema 用 ToolSearch 才載入
   ],
+
   "messages": [
-    {"role": "user", "content": "（CLAUDE.md 的內容）… 修好 tests/test_auth.py"},
-    {"role": "assistant", "content": [{"type": "tool_use", "name": "Bash", "input": {"command": "pytest -x"}}]},
-    {"role": "user", "content": [{"type": "tool_result", "content": "3 failed … test_auth.py:52"}]}
+    {"role": "user", "content":                                          ← 第 1 則：harness 塞的「記憶」
+      "&lt;system-reminder&gt;（CLAUDE.md 全文）（MEMORY.md 前 200 行）
+       （skill 清單：每個 skill 的 name + description）&lt;/system-reminder&gt;
+       修好 tests/test_auth.py"},                                         ← 你打的 prompt 接在同一則後面
+    {"role": "assistant", "content": [                                   ← 第 2 則起：一圈一組 [role, message]
+      {"type": "tool_use", "id": "toolu_01", "name": "Bash", "input": {"command": "pytest -x"}}]},
+    {"role": "user", "content": [
+      {"type": "tool_result", "tool_use_id": "toolu_01", "content": "3 failed … test_auth.py:52"}]},
+    {"role": "assistant", "content": [
+      {"type": "tool_use", "id": "toolu_02", "name": "Read", "input": {"file_path": "tests/test_auth.py"}}]},
+    {"role": "user", "content": [
+      {"type": "tool_result", "tool_use_id": "toolu_02", "content": "…檔案內容…"}]}
   ]
 }</code></pre></figure>
+                  <p>三個欄位各自的來源與命運：</p>
+                  <div class="table-wrap"><table class="wide">
+                    <thead><tr><th>欄位</th><th>放什麼</th><th>誰放的、什麼時候</th><th>Compaction 之後</th></tr></thead>
+                    <tbody>
+                      <tr><td><code>system</code></td><td>Claude Code 的系統指令、環境資訊、output style、<code>--append-system-prompt</code> 的文字</td><td>Harness，session 開始</td><td>不在 messages 裡，不受影響</td></tr>
+                      <tr><td><code>tools</code></td><td>內建 tool 的完整定義（含 <code>Skill</code>、<code>Agent</code>、<code>ToolSearch</code>）；MCP tool 只有名稱，schema 延後載入</td><td>Harness，session 開始；MCP schema 在 model 呼叫 ToolSearch 時</td><td>不受影響</td></tr>
+                      <tr><td><code>messages[0]</code></td><td>CLAUDE.md（各層串接）、MEMORY.md 前 200 行、skill 的 name + description，再接你的 prompt</td><td>Harness，session 開始；以 user message 送出</td><td>摘要掉，harness 從磁碟重讀再放回</td></tr>
+                      <tr><td><code>messages[1…]</code></td><td>一圈一組：assistant 的 <code>tool_use</code>、user 的 <code>tool_result</code>；中途載入的 skill 全文、檔案內容、有 <code>paths</code> 的 rule 也在這裡</td><td>Model 提議，harness 執行後接上</td><td>摘要掉；用過的 skill 全文和最近 5 個檔案重放</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>官方文件明說 CLAUDE.md 以 user message 送出，不屬於 system prompt。對 model 來說，它和你打的 prompt 是同一種東西，所以只算建議；要強制，用 hook 或權限。</p>
                   <p>Model 的回覆只有兩種：</p>
                   <ul>
                     <li>一個 <code>tool_use</code>（<code>stop_reason: "tool_use"</code>）。Harness 執行它，把 <code>tool_result</code> 接在 <code>messages</code> 最後，再送一次。</li>
@@ -224,6 +249,19 @@
                     <li><b>Prefix cache 有效的原因：</b>每圈 request 的前段完全相同，只有最後面是新的。</li>
                     <li><b>p.14 的經典 agent 圖：</b>LLM 是 model。Memory 是 <code>system</code>、<code>messages</code> 和記憶檔。Tools 是 <code>tools</code>。Observation 是 <code>tool_result</code>。</li>
                   </ul>
+                  <p>其他家的 API 長得不一樣，但結構相同：一段系統指令、一份 tool 清單、一串輪流的訊息，model 的 tool call 和 harness 的結果各有固定格式。寫自己的 harness（L4 第 6 段）時，只要換這幾個欄位名稱。</p>
+                  <div class="table-wrap"><table class="wide">
+                    <thead><tr><th></th><th>Claude Messages API</th><th>OpenAI Responses API</th><th>OpenAI Chat Completions</th><th>Gemini generateContent</th></tr></thead>
+                    <tbody>
+                      <tr><td>系統指令</td><td><code>system</code> 欄位</td><td><code>instructions</code> 欄位</td><td><code>messages</code> 裡 <code>role: "system"</code>（新 model 叫 <code>developer</code>）</td><td><code>systemInstruction</code> 欄位</td></tr>
+                      <tr><td>Tool 定義</td><td><code>tools: [{name, description, input_schema}]</code></td><td><code>tools: [{type: "function", name, description, parameters}]</code></td><td><code>tools: [{type: "function", function: {name, description, parameters}}]</code></td><td><code>tools: [{functionDeclarations: [{name, description, parameters}]}]</code></td></tr>
+                      <tr><td>對話</td><td><code>messages</code>，role 是 <code>user</code> / <code>assistant</code></td><td><code>input</code>，一串 item</td><td><code>messages</code>，role 是 <code>system</code> / <code>user</code> / <code>assistant</code> / <code>tool</code></td><td><code>contents</code>，role 是 <code>user</code> / <code>model</code></td></tr>
+                      <tr><td>Model 的 tool call</td><td>assistant 的 <code>tool_use</code> block：<code>id, name, input</code>（物件）</td><td>output item <code>function_call</code>：<code>call_id, name, arguments</code>（JSON 字串）</td><td>assistant 的 <code>tool_calls[]</code>：<code>id, function.name, function.arguments</code>（JSON 字串）</td><td>model 的 part <code>functionCall</code>：<code>id, name, args</code></td></tr>
+                      <tr><td>Tool 結果</td><td>user 的 <code>tool_result</code> block：<code>tool_use_id, content</code></td><td>input item <code>function_call_output</code>：<code>call_id, output</code></td><td><code>role: "tool"</code> 的訊息：<code>tool_call_id, content</code></td><td>user 的 part <code>functionResponse</code>：<code>id, name, response</code></td></tr>
+                      <tr><td>Loop 結束的訊號</td><td><code>stop_reason: "end_turn"</code></td><td>output 裡沒有 <code>function_call</code></td><td><code>finish_reason: "stop"</code></td><td>回覆裡沒有 <code>functionCall</code></td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>兩個差別值得記住。第一，Claude 和 Gemini 把 tool 結果放在 user 這一方，OpenAI 給它獨立的 role 或 item；對 model 來說都是「環境回來的觀察」。第二，OpenAI 的 <code>arguments</code> 是 JSON 字串，要自己 parse；Claude 的 <code>input</code> 已經是物件。L4 第 6 段的 <code>agent.py</code> 用 <code>call.name</code>、<code>call.arguments</code> 抽象掉這些差別。欄位名稱依 2026 年 10 月的各家官方文件；Gemini 另有較新的 Interactions API，這裡列的是 generateContent。</p>
                 </div>
               </details>
               <details class="ex deep" id="d2">
@@ -270,6 +308,34 @@
               <p>Model 沒有狀態。它不記得上一個 session，也不記得上一圈 loop。Agent 看起來記得事情，是因為 harness 每次都把相關文字放進 context。</p>
               <p>Claude Code 有兩套持久記憶。CLAUDE.md 是你寫的規則：怎麼跑測試、哪些事不准做、推不出來的專案事實。Auto memory 是 Claude 自己寫的筆記：你的偏好、你給過的糾正。兩者都在 session 開始時載入。</p>
               <p>檔案放在兩個層級 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=18" target="_blank" rel="noopener">p.18–25</a>。<code>~/.claude/</code> 是個人層：CLAUDE.md 寫你的偏好，auto memory 也在這裡，MEMORY.md 是索引，每次只載入前 200 行。Repo 根目錄是專案層：CLAUDE.md 寫團隊規則，進 git；<code>CLAUDE.local.md</code> 寫你在這個專案的個人規則，不進 git。各層的 CLAUDE.md 全部串接進 context，不互相覆蓋。</p>
+              <p>CLAUDE.md 是一份 Markdown，寫給 model 看。一份夠用的樣子如下，只放三類：指令、硬規則、推不出來的事實。完整版和 <code>.claude/rules/</code> 的寫法見第 6 段。</p>
+              <figure class="file"><figcaption>CLAUDE.md（repo 根目錄，進 git）</figcaption><pre><code># billing-service
+
+## Commands
+- Test: `pytest -x tests/`
+- Lint: `ruff check . --fix`
+
+## Hard rules
+- Never commit to `main`. Open a PR.
+- Do not edit files under `gen/`. Run `make proto` instead.
+
+## Facts you cannot infer
+- Money is an integer in cents. Never use float.</code></pre></figure>
+              <p>每一層還有一個 settings.json。它放的不是規則，是設定：權限規則（allow / ask / deny）、模式、hooks、model、環境變數。<code>~/.claude/settings.json</code> 是你的；<code>.claude/settings.json</code> 是團隊的，進 git；<code>.claude/settings.local.json</code> 是你在這個專案的，不進 git。和 CLAUDE.md 不同，settings 有優先順序：local 蓋過專案，專案蓋過個人；只有 allow 這類清單會合併。</p>
+              <figure class="file"><figcaption>.claude/settings.json（團隊共用，進 git）</figcaption><pre><code>{
+  "permissions": {
+    "allow": ["Bash(npm run *)"],
+    "ask":   ["Bash(git push *)"],
+    "deny":  ["Read(./.env)", "Read(./secrets/**)"]
+  },
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{ "type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-rm.sh" }]
+    }]
+  },
+  "env": { "NODE_ENV": "test" }
+}</code></pre></figure>
               <p>記憶有成本。每一行常駐內容，之後每一圈 loop 都要再送一次。過期的記憶比沒有記憶更糟，因為它會誤導 agent。所以 slide 建議把記憶當程式碼管理：review、刪減、放進版本控制。</p>
             </div>
             <div class="exlist deeplist">
