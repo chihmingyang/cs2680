@@ -1109,25 +1109,25 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>用 Chatbot Arena 的人類偏好資料訓練 router，逐題決定送強 model 或弱 model。MT Bench 上達到 GPT-4 95% 的品質時，GPT-4 的呼叫次數只有 random router 的 1/3.66；換成別的 model 對，不用重訓也有效。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.22 的「開始前選」就是這篇，p.24 把它列在 choose up front 那一行；見〈<a href="#i4">單價可以差 100 倍</a>〉與觀念補充〈<a href="#t3">Routing 的三種時機</a>〉。這篇算成本時，GPT-4 每百萬 token $24.7，Mixtral $0.24，正好差約 100 倍。它只量單一請求的品質；slides p.22 與 p.25 說便宜 model 的一個壞計畫會多出很多步，這篇沒有量。節省多少看任務分布：同一套方法在 MT Bench 省 3.66×，在 MMLU 只省 1.41×，這是延伸思考〈<a href="#x2">淨節省只能在同一組任務上量</a>〉的另一個例子。</p>
+            <p>Slides p.22 的「開始前選」就是這篇，p.24 也列了它。見〈<a href="#i4">單價可以差 100 倍</a>〉與觀念補充〈<a href="#t3">Routing 的三種時機</a>〉。這篇算成本時，GPT-4 每百萬 token $24.7，Mixtral $0.24，正好差約 100 倍。它只量單一請求的品質；slides p.22 與 p.25 說便宜 model 的一個壞計畫會多出很多步，這篇沒有量。節省多少看任務分布：同一套方法在 MT Bench 省 3.66×，在 MMLU 只省 1.41×。這呼應延伸思考〈<a href="#x2">淨節省只能在同一組任務上量</a>〉。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
-              <li><b>Router 只做一件事：估這題強 model 會贏的機率。</b>機率低於門檻 α 就送弱 model。調 α 就在成本與品質之間移動，一個 router 可以畫出整條曲線。</li>
-              <li><b>資料來自 Chatbot Arena 的 80K 場對戰。</b>依排行榜分數把 64 個 model 分成 10 層，前 2 層算強、第 3 層算弱。去掉短於 16 字元的 prompt 後剩約 65K 組比較，留 5K 驗證。</li>
+              <li><b>Router 只做一件事：估這題強 model 會贏的機率。</b>機率低於門檻 α 就送弱 model。調 α 就在成本與品質之間移動。</li>
+              <li><b>資料來自 Chatbot Arena 的 80K 場對戰。</b>依排行榜分數把 64 個 model 分成 10 層，前 2 層算強、第 3 層算弱。清理後剩約 65K 組比較，留 5K 驗證。</li>
               <li><b>四種 router。</b>SW ranking 用 embedding 相似度加權 Bradley-Terry，不用訓練。Matrix factorization 學 model 與 query 的 embedding，BERT classifier 微調 BERT-base，causal LLM 微調 Llama 3 8B。最貴的 SW ranking 每百萬請求 $39.26，不到 GPT-4 生成成本的 0.4%。</li>
               <li><b>指標是 CPT 與 APGR。</b>PGR 是 router 補回的強弱差距比例。CPT(x%) 是達到 x% PGR 時，要送強 model 的最低比例。APGR 是 PGR 對成本曲線下的面積。</li>
               <li><b>只用 Arena 資料，MT Bench 有效，MMLU 與 GSM8K 無效。</b>Model 對是 GPT-4 與 Mixtral 8x7B。MT Bench 上 matrix factorization 的 CPT(50%) 是 25.32%，random 是 49.03%。MMLU 與 GSM8K 上四種 router 都接近或輸給 random，因為 Arena 的問題和這兩個 benchmark 不像。</li>
-              <li><b>資料增強後三個 benchmark 都贏。</b><code>D_gold</code> 是約 1,500 題 MMLU 驗證集，<code>D_judge</code> 是約 120K 筆由 GPT-4 判定的比較，花約 $700。增強後 MT Bench 的 CPT(50%) 降到 13.40%、CPT(80%) 31.31%。MMLU 約 35%，GSM8K 的 causal LLM 是 33.64%。</li>
+              <li><b>資料增強後三個 benchmark 都贏。</b><code>D_gold</code> 是約 1,500 題 MMLU 驗證集，<code>D_judge</code> 是約 120K 筆由 GPT-4 判定的比較，花約 $700。增強後 MT Bench 的 CPT(50%) 降到 13.40%、CPT(80%) 31.31%。MMLU 最好約 35%，GSM8K 的 causal LLM 是 33.64%。</li>
               <li><b>成本數字：MT Bench 3.66×、MMLU 1.41×、GSM8K 1.49×。</b>這是 CPT(50%) 時 random router 與最佳 router 的 GPT-4 呼叫比。對應的品質是 GPT-4 的 95%、92%、87%（例如 MT Bench 8.8 分對 9.3 分）。CPT(80%) 時是 2.49×、1.14×、1.27×。</li>
-              <li><b>換 model 對不用重訓。</b>Claude 3 Opus 對 Sonnet、Llama 3.1 70B 對 8B，MT Bench 上 SW ranking 的 CPT(50%) 是 23.27% 與 21.18%，random 約 48–50%。和商用 router Martian、Unify AI 比，同品質下 GPT-4 呼叫最多少 40%。</li>
+              <li><b>換 model 對不用重訓。</b>Claude 3 Opus 對 Sonnet、Llama 3.1 70B 對 8B，MT Bench 上最佳 router 的 CPT(50%) 是 23.27% 與 21.18%，random 約 48–50%。和商用 router Martian、Unify AI 比，同品質下 GPT-4 呼叫最多少 40%。</li>
             </ol>
             <p class="tk-h">原文怎麼讀</p>
             <ul>
-              <li><b>可以跳過：</b>Section 2 Related Work；Section 4.2 四種 router 的公式，上面的一句說明夠用；Section 5.3 的資料相似度分析。</li>
+              <li><b>可以跳過：</b>Section 2 Related Work；Section 4.2 的 router 公式；Section 5.3。</li>
               <li><b>值得看原文：</b>Figure 1 右圖，看 PGR、CPT、APGR 怎麼從一條曲線讀出來。Table 1–3 的三組數字，對照有無增強的差距。Table 6 的成本比與 Table 7 的 router 開銷。</li>
               <li><b>時間：</b>只讀摘要約 3 分；挑 Figure 1、Table 1–3、Table 6 約 20 分。</li>
             </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「RouteLLM 比只用 GPT-4 省 3.66 倍」不對。Table 6 的比值相對 random router 算：同樣達到 50% PGR，random 送 49% 給 GPT-4，最佳 router 只送 13%。品質也只有 GPT-4 的 95%，而且只在 MT Bench；MMLU 與 GSM8K 只有 1.4× 到 1.5×。多步的 agent 任務裡，一題答錯會影響後面，這篇沒有量。</p></div></div>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「RouteLLM 比只用 GPT-4 省 3.66 倍」不對。Table 6 的比值相對 random router 算：同樣達到 50% PGR，random 送 49% 給 GPT-4，最佳 router 只送 13%。品質也只有 GPT-4 的 95%，而且只在 MT Bench；MMLU 與 GSM8K 只有 1.4× 到 1.5×。</p></div></div>
           </div></details>
           </li>
           <li>
@@ -1137,24 +1137,24 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Token 數量不等於硬體成本。這篇提出 PTE（Prefill Token Equivalents），把每一輪重算的 context 和 decode 時讀 KV cache 的開銷，折算成 prefill token 的數量。用它量 13 個 model、5 個 benchmark，找出 4 種 tool 使用的低效模式，每種讓成本多 1.77× 到 2.42×。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.13–15 說每一步重讀整個 context 是成本大宗，見〈<a href="#i1">成本是一串乘數</a>〉；PTE 的第一項就是每輪重讀的 context。差別在假設：slides 的 Claude Code 資料有 97.6% 是 cache read，這篇假設 tool call 的停頓讓 KV cache 失效，每輪全部重算。PTE 的第二項量「留在 context 裡的 tool 回應，之後每個 decode step 都再讀一次」，是 p.16 的道理，見〈<a href="#i3">每一步少送一點</a>〉。p.32 說 tool 可能比 model 慢，要先量 tool 時間；這篇只量 model 的生成時間，tool 執行與網路時間刻意排除，見〈<a href="#i5">完成時間看 critical path</a>〉。Prefill 與 decode 的瓶頸不同，背景在 L1 p.30。</p>
+            <p>Slides p.13–15 說每一步重讀整個 context 是成本大宗，見〈<a href="#i1">成本是一串乘數</a>〉。PTE 的第一項就是每輪重讀的 context。差別在假設：slides 的資料有 97.6% 是 cache read，這篇假設 tool call 的停頓讓 KV cache 失效，每輪全部重算。PTE 的第二項量留在 context 裡的 tool 回應，之後每個 decode step 都再讀一次，是 p.16 的道理，見〈<a href="#i3">每一步少送一點</a>〉。p.32 說 tool 可能比 model 慢，要先量 tool 時間，見〈<a href="#i5">完成時間看 critical path</a>〉；這篇刻意排除 tool 執行與網路時間。Prefill 與 decode 的背景在 L1 p.30。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
-              <li><b>PTE 把 decode 的記憶體開銷換算成 prefill token。</b>公式是 <code>PTE = Σ (D_prefill_i + γ · L_seq_i · D_decode_i)</code>，對 k 輪求和。<code>D_prefill_i</code> 是第 i 輪的全部 context，<code>L_seq_i</code> 是 decode 前的序列長度，<code>D_decode_i</code> 是這一輪生成的 token。γ 由 model 的 KV cache 大小與 GPU 的算力頻寬比算出，H100 是 756.5 FLOPs/Byte。</li>
-              <li><b>γ 很小，但乘上長 context 就不小。</b>Qwen2.5-7B 的 γ 是 0.00329，DeepSeek-V3.1 用 MLA，只有 0.00068。Context 到幾萬 token 時，每個 decode token 的成本就接近幾十到上百個 prefill token。所以每一步的 PTE 隨 context 成長，token 數反而集中在第一步。</li>
-              <li><b>PTE 和實際延遲的相關係數 0.93，token 數只有 0.63。</b>驗證設定是 DeepSeek-V3.2、vLLM、8×H200、256 個請求同時送、100 條 trajectory。用 API 價格加權 input 與 output 的指標，相關係數 0.68 到 0.76。換 4 種 GPU，model 排名的 Spearman 都高於 0.95。</li>
+              <li><b>PTE 把 decode 的記憶體開銷換算成 prefill token。</b>公式是 <code>PTE = Σ (D_prefill_i + γ · L_seq_i · D_decode_i)</code>。<code>D_prefill_i</code> 是第 i 輪的全部 context，<code>D_decode_i</code> 是這一輪生成的 token。γ 由 model 的 KV cache 大小與 GPU 的算力頻寬比算出，H100 是 756.5 FLOPs/Byte。</li>
+              <li><b>γ 很小，但乘上長 context 就不小。</b>Qwen2.5-7B 的 γ 是 0.00329，DeepSeek-V3.1 只有 0.00068。每一步的 PTE 隨 context 成長，token 數反而集中在第一步。</li>
+              <li><b>PTE 和實際延遲的相關係數 0.93，token 數只有 0.63。</b>設定是 DeepSeek-V3.2、vLLM、8×H200、256 個請求同時送。用 API 價格加權的指標是 0.68 到 0.76。換 GPU，model 排名的 Spearman 都高於 0.95。</li>
               <li><b>準確率相近的 model，PTE 可以差 10 倍以上。</b>AIME24 上多個 model 約 70%，PTE 從幾千到 292,724（DeepSeek-V3.1-Terminus）。</li>
-              <li><b>4 種低效模式，各有偵測規則與成本倍數。</b>Confirmatory tool usage：答案先出現、再呼叫 Python 確認，Qwen3-235B-Instruct 在 MATH500 有 81% 的 trajectory 這樣做，PTE 1.77×。Tool-mixing：一條 trajectory 同時用搜尋與 Python，DeepSeek-V3.1-Terminus 在 WebInstruct 有 59%，平均 6.84 次 tool call，PTE 2.42×。Lack of tool priors：tool 回傳空值或錯誤，例如忘了 <code>print</code>，Qwen2.5-72B 在 AIME24 有 33%，PTE 2.15×。Tool format collapse：tool 改名或參數形狀改變就出錯，Tongyi-DeepResearch 在 SimpleQA 100% 失敗，準確率 4.8%。</li>
-              <li><b>答錯的 trajectory 比答對的 PTE 高。</b>5 個 benchmark 都如此，控制題目難度後仍成立（偏相關 −0.040，p = 0.002）。作者只說相關，不說因果。</li>
-              <li><b>這篇沒有提出解法。</b>貢獻是指標、框架與診斷。作者建議 agent 基礎設施解決 tool call 造成的 KV cache 失效，但沒有實驗。Limitations 承認 PTE 不含 API 延遲，γ 也忽略 serving 系統的最佳化。</li>
+              <li><b>4 種低效模式，各有偵測規則與成本倍數。</b>Confirmatory tool usage：答案先出現、再呼叫 Python 確認，Qwen3-235B-Instruct 在 MATH500 有 81% 這樣做，PTE 1.77×。Tool-mixing：同一條 trajectory 混用搜尋與 Python，DeepSeek-V3.1-Terminus 在 WebInstruct 有 59%，PTE 2.42×。Lack of tool priors：tool 回傳空值或錯誤，例如忘了 <code>print</code>，Qwen2.5-72B 在 AIME24 有 33%，PTE 2.15×。Tool format collapse：tool 改名就出錯，Tongyi-DeepResearch 在 SimpleQA 100% 失敗，準確率 4.8%。</li>
+              <li><b>答錯的 trajectory 比答對的 PTE 高。</b>5 個 benchmark 都如此，控制題目難度後仍成立。作者只說相關，不說因果。</li>
+              <li><b>這篇沒有提出解法。</b>貢獻是指標與診斷。作者建議 agent 基礎設施解決 tool call 造成的 KV cache 失效，但沒有實驗。Limitations 承認 PTE 不含 API 延遲。</li>
             </ol>
             <p class="tk-h">原文怎麼讀</p>
             <ul>
-              <li><b>可以跳過：</b>Section 2 Related Work；Section 3.1 的 prefill 與 decode 背景，L1 已講；Appendix A 的 γ 推導細節；Appendix B.4 的 prompt 全文。</li>
-              <li><b>值得看原文：</b>Figure 1 的 KV cache 失效示意；Table 1 的 13 個 model 的 γ；Figure 4 的準確率對 PTE 散布圖；Table 7 的四種模式一覽；Appendix D 的 4 個案例，看每種模式的 trajectory 長什麼樣。</li>
+              <li><b>可以跳過：</b>Section 2 Related Work；Section 3.1，L1 已講；Appendix A 的 γ 推導；Appendix B.4 的 prompt 全文。</li>
+              <li><b>值得看原文：</b>Figure 1 的 KV cache 失效示意。Figure 4 的準確率對 PTE 散布圖。Table 7 的模式表。Appendix D 的 4 個案例。</li>
               <li><b>時間：</b>只讀摘要約 3 分；挑 Section 3.2、Figure 4、Table 7、Appendix D 約 20 分。</li>
             </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「PTE 量的是整個 agent 的延遲」不對。它只算 transformer 的計算量，tool 執行與網路等待排除在外，256 個請求的延遲驗證也只量 model 生成時間。它還假設每次 tool call 之後 context 全部重算；有 prefix cache 的服務不會這麼貴。帶走的是「context 變長後每個 decode token 都更貴」這個觀念，不是 PTE 的絕對值。</p></div></div>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「PTE 量的是整個 agent 的延遲」不對。它只算 transformer 的計算量，tool 執行與網路等待排除在外。它還假設每次 tool call 之後 context 全部重算；有 prefix cache 的服務不會這麼貴。帶走的是「context 變長後每個 decode token 都更貴」這個觀念，不是 PTE 的絕對值。</p></div></div>
           </div></details>
           </li>
           <li>
