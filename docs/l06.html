@@ -402,7 +402,7 @@
                   <p class="tk-h">背景補充</p>
                   <p>這兩層對應 L1 的 OS 類比：context window 像 RAM，memory store 像 disk。CPU 只能直接讀 RAM，disk 上的資料要先載入。MemGPT（2023）把這個類比做成系統：model 自己用 function call 在兩層之間搬資料，像 OS 的 paging。RAG 也是同一個結構：知識放在外部索引，查詢時才取回、放進 prompt。</p>
                   <p>寫入的雜訊有兩個成本。第一，取回的每一筆都佔 context，而且每一圈 loop 都要重送。第二，雜訊越多，真正相關的那一筆越難排進 top-k。所以寫入 policy 也決定了之後檢索的品質。</p>
-                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Context window 夠大，就不需要 memory。」Context window 只活在這一個 session，session 結束就清空。而且 context 越長，越貴、越慢，model 也越難找到中間的資訊（<a href="l04.html#t5">L4 的 lost in the middle</a>）。大 window 解決單次任務的容量，不解決跨 session 的保存。</p></div></div>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Context window 夠大，就不需要 memory。」Context window 只活在這一個 session，session 結束就清空。而且 context 越長，越貴、越慢，model 也越難找到中間的資訊（<a href="l04.html#t6">L4 的 lost in the middle</a>）。大 window 解決單次任務的容量，不解決跨 session 的保存。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
                     <li>Model 只看得到 context；store 的內容要經過檢索 → 放進 context，才會影響回答。</li>
                     <li>「Store 裡有」不等於「model 知道」；中間的檢索可能失敗，這就是 retrieval miss。</li>
