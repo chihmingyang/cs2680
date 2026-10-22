@@ -57,8 +57,8 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/1_intro.pdf" target="_blank" rel="noopener">1_intro.pdf ↗</a></li>
       <li><span class="k">頁數</span>50</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 14 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 35 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 12 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 30 分鐘</span></li>
     </ul>
   </header>
 
@@ -372,7 +372,7 @@
         <header class="part-head">
           <p class="kicker">5 · 問題討論</p>
           <h2>讀書會討論題</h2>
-          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡；卡住的地方，按題目下面的連結，到那一題的 GitHub 討論串隨手寫。進階題在讀完文章後回答；每一題也有一串 GitHub 討論，寫下你的想法，也看看別人怎麼想。</p>
+          <p class="lede">分兩組。基礎題在看 slides 之前讀，帶著問題看，答案都在 slides 裡；卡住的地方，按題目下面的連結，到這堂的 GitHub 討論串隨手寫。進階題讀完文章後先想一想，讀書會當天一起討論。</p>
         </header>
         <div class="qtabs" role="tablist" aria-label="題目分組">
           <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題看 slides</span></button>
@@ -454,7 +454,7 @@
                     <li>Decode：每個 token 都重讀權重與 KV cache → 頻寬是瓶頸 → 影響 TPOT。</li>
                     <li>輸出長度事先未知，所以執行時間和記憶體用量都無法預估，scheduling 因此變難。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t1">Prefill 與 decode</a>〉、〈<a href="#t3">KV cache</a>〉。進階題第 1、2 題用數字再算一次。Part II 的 serving 基礎（10/19–10/21）會正式展開。</p>
+                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t1">Prefill 與 decode</a>〉、〈<a href="#t3">KV cache</a>〉。進階題第 1 題用數字再算一次。Part II 的 serving 基礎（10/19–10/21）會正式展開。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/98" target="_blank" rel="noopener">到 GitHub 回答這一題（Q1）↗</a></p>
               </div>
@@ -541,13 +541,13 @@
                   <p class="tk-h">背景補充</p>
                   <p>為什麼是第 7 位？FP32 的有效位數約等於 7 位十進位數字。GPU 通常用 FP32 累加 BF16 的乘積，所以第 7 位附近的差異，正好是捨入誤差的大小。</p>
                   <p>四類來源裡，batch size 對使用者影響最大。Thinking Machines 2025 年的文章指出：同樣的輸入、同樣的 batch 重跑，GPU 的結果通常逐 bit 相同。真正的變數是伺服器負載：別人的請求多寡決定 batch size，kernel 再依矩陣形狀選切法。例如 batch 小時，kernel 把加總的維度切開，讓更多核心分工（split-K）。他們用 Qwen3-235B 在 temperature 0 跑 1,000 次，得到 80 種輸出；前 102 個 token 全部相同，第 103 個開始分岔。改用不受 batch size 影響（batch-invariant）的 kernel 後，1,000 次完全相同，代價是變慢。</p>
-                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Temperature 0，輸出就固定。」Temperature 0 只固定選法：每一步選最高分。它不固定分數本身。分數由 GPU 算出，會隨 batch size 改變。要可重現，伺服器要用 batch-invariant 的 kernel；做不到時，測試的寫法就要改（進階題第 4 題）。</p></div></div>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Temperature 0，輸出就固定。」Temperature 0 只固定選法：每一步選最高分。它不固定分數本身。分數由 GPU 算出，會隨 batch size 改變。要可重現，伺服器要用 batch-invariant 的 kernel；做不到時，測試的寫法就要改（進階題第 3 題）。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
                     <li>浮點數每次運算都捨入 → 加總順序一變，總和的最後幾位就變。</li>
                     <li>Batch size 一變 → kernel 換切法 → 加總順序改變。Batch size 由伺服器負載決定，使用者控制不了。</li>
                     <li>前兩名 logit 很接近時，一點誤差就換掉 token → 之後的 context 全部不同 → 整段輸出分岔。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t2">浮點數沒有結合律</a>〉、延伸思考〈<a href="#x2">不確定性改變團隊測試 LLM 功能的方式</a>〉、<a href="#s-try">動手試試</a>的 fp_order.py、<a href="#wrap">延伸閱讀</a>的 Thinking Machines 文章。進階題第 4 題把這一點帶到 CI 測試上。</p>
+                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t2">浮點數沒有結合律</a>〉、延伸思考〈<a href="#x2">不確定性改變團隊測試 LLM 功能的方式</a>〉、<a href="#s-try">動手試試</a>的 fp_order.py、<a href="#wrap">延伸閱讀</a>的 Thinking Machines 文章。進階題第 3 題把這一點帶到 CI 測試上。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/98" target="_blank" rel="noopener">到 GitHub 回答這一題（Q2）↗</a></p>
               </div>
@@ -624,7 +624,7 @@
                     <li>叢集故障間隔 ≈ MTBF ÷ GPU 數：50,000 ÷ 16,384 ≈ 3 小時。</li>
                     <li>單張 GPU 很少壞，大叢集卻一直在壞 → 系統要把故障當常態設計：checkpoint、快速重啟。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t3">KV cache</a>〉、〈<a href="#t4">MTBF 與叢集故障</a>〉、〈<a href="#t5">平行化的切法</a>〉；延伸思考〈<a href="#x3">長時間的 agent run 需要可靠性工程</a>〉；<a href="#s-try">動手試試</a>的 fleet.py。「每張獨立故障」這個假設，見 <a href="l06.html#t4">L6 獨立假設</a>。進階題第 5 題把故障帶到 agent run 的復原設計。</p>
+                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t3">KV cache</a>〉、〈<a href="#t4">MTBF 與叢集故障</a>〉、〈<a href="#t5">平行化的切法</a>〉；延伸思考〈<a href="#x3">長時間的 agent run 需要可靠性工程</a>〉；<a href="#s-try">動手試試</a>的 fleet.py。「每張獨立故障」這個假設，見 <a href="l06.html#t4">L6 獨立假設</a>。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/98" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
@@ -701,7 +701,7 @@
                     <li>Harness 像 OS：管 context、執行 tool call、做權限與隔離，因為 LLM 出錯是常態。</li>
                     <li>傳統 serving 一個請求一次 inference；agent 是一條相依的鏈 → 延遲、狀態、失敗都沿著鏈累積。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">Agent 是一種新的電腦，也是一個系統問題</a>〉、<a href="#s-arch">第 1 段</a>的第二張圖；<a href="l02.html#i1">L2 一個 prompt，很多圈 loop</a>、<a href="l02.html#x1">L2 產品差異在 harness</a>、<a href="l04.html#x2">L4 評估時要固定 harness</a>、<a href="l08.html#t4">L8 Critical path</a>。進階題第 2 題會算 batching 讓一條長鏈多花多少時間。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">Agent 是一種新的電腦，也是一個系統問題</a>〉、<a href="#s-arch">第 1 段</a>的第二張圖；<a href="l02.html#i1">L2 一個 prompt，很多圈 loop</a>、<a href="l02.html#x1">L2 產品差異在 harness</a>、<a href="l04.html#x2">L4 評估時要固定 harness</a>、<a href="l08.html#t4">L8 Critical path</a>。進階題第 1 題會算 batching 讓一條長鏈多花多少時間。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/98" target="_blank" rel="noopener">到 GitHub 回答這一題（Q4）↗</a></p>
               </div>
@@ -737,7 +737,7 @@
                     <li>TTFT、TPOT、tool-call latency、GPU 使用率各量一個元件 → 有用，但看不到整個任務。</li>
                     <li>改看任務指標：成功率、端到端延遲、每個任務的 token 數、每個成功任務的花費與耗能。要算得出來，trace 要能把請求歸到同一個任務（p.43）。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">目標：在限制下讓任務成功</a>〉、延伸思考〈<a href="#x1">Tokens/sec 會把 agent 的優化帶錯方向</a>〉；<a href="l07.html#i2">L7 一個成功率不夠</a>、<a href="l08.html#i1">L8 成本是一串乘數</a>。進階題第 3 題請你替 coding agent 設計這組指標；第 6 題用 p.44 第 9 題練習量測。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">目標：在限制下讓任務成功</a>〉、延伸思考〈<a href="#x1">Tokens/sec 會把 agent 的優化帶錯方向</a>〉；<a href="l07.html#i2">L7 一個成功率不夠</a>、<a href="l08.html#i1">L8 成本是一串乘數</a>。進階題第 2 題請你替 coding agent 設計這組指標。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/98" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>
@@ -745,43 +745,13 @@
           </ol>
         </div>
         <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
-          <p class="qset-lede">這 6 題在讀書會前回答。每個回答要點下面有一行提示。不用每點都答，挑一點寫兩三句也可以。不知道怎麼開頭，就展開「作答範本」，照著填空。寫好後按「到 GitHub 討論這一題」，留在那一題的討論串；建議先寫自己的，再看別人的。「參考觀點與追問」建議討論後再展開。</p>
+          <p class="qset-lede">這 3 題留到讀書會當天一起討論，不用先寫在 GitHub。讀完文章後，先挑一題想一想。每個回答要點下面有一行提示。不用每點都答，挑一點想清楚就可以。不知道怎麼開頭，就展開「作答範本」，照著填空。「參考觀點與追問」建議討論後再展開。</p>
           <div class="copyrow">
             <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L1 進階題（讀書會討論）：課程總覽與 AI 系統" data-slides="https://cs2680.com/slides/1_intro.pdf">複製進階題</button>
             <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
           </div>
           <ol class="qlist">
             <li class="dq" id="q1">
-              <div class="qbody">
-                <p class="qtag">概念 · Decode 與 batching · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=30" target="_blank" rel="noopener">p.30</a></p>
-                <p class="qtext">為什麼 decode 受記憶體頻寬限制，prefill 卻受算力限制？Batching 改變了哪一部分，哪一部分沒變？</p>
-                <p class="qctx"><b>情境：</b>一個 8B 參數的 model 用 BF16 存，權重 16 GB。一個請求的 prompt 有 2,000 個 token，要生成 500 個 token。Serving 系統可以一次跑 1 個請求，或把 32 個請求併成一個 batch。</p>
-                <div class="qcover"><b>回答時請涵蓋</b>
-                  <ul>
-                    <li>分別估算 prefill 與 decode 每讀 1 byte 的權重，大約做幾次運算。<span class="qh">提示：1 個參數 2 byte，每個 token 做 2 次運算。Prefill 讀 1 次給 2,000 個 token，decode 給 1 個。</span></li>
-                    <li>說明 batch 從 1 變成 32 時，哪些記憶體讀取可以分攤，哪些不行。<span class="qh">提示：把讀取分成兩種：權重（所有請求共用）和 KV cache（每個請求一份）。</span></li>
-                    <li>指出 batch 一直加大時，會先撞到哪兩種限制。<span class="qh">提示：一種是「放不下」，一種是「算不完」。各對應 GPU 的哪個規格？</span></li>
-                  </ul>
-                </div>
-                <details class="qstart"><summary>作答範本</summary><div class="hint">
-                  <p class="tpl">Prefill 每讀 1 byte 約做 ＿＿ 次運算，decode（batch 1）約 ＿＿ 次；decode 受（算力／頻寬）限制。</p>
-                  <p class="tpl">Batch 變成 32 後，＿＿ 只讀一次、大家共用；＿＿ 每個請求還是要各讀一次。</p>
-                  <p class="tpl">Batch 一直加大，會先撞到 ＿＿，再來是 ＿＿。</p>
-                </div></details>
-                <details><summary>參考觀點與追問</summary><div class="hint">
-                  <ul>
-                    <li>Prefill：每個權重讀 1 次，用在 2,000 個 token 上，約 2,000 FLOPs/byte。這遠高於 GPU 的算力 ÷ 頻寬（H100 約 295），所以受算力限制。</li>
-                    <li>Decode（batch 1）：每一步讀完 16 GB，只算 1 個 token，約 1 FLOP/byte。GPU 大部分時間在等資料。</li>
-                    <li>Batch 32：權重讀一次，32 個請求共用，強度約變成 32 FLOPs/byte。只看權重，throughput 接近 32 倍。</li>
-                    <li>不能分攤的：每個請求的 KV cache 要各自讀。Context 越長，KV 的讀取越佔比重，batching 的好處越小。</li>
-                    <li>兩種限制：KV cache 先塞滿記憶體容量；或強度超過 GPU 的比值，變成受算力限制。在那之前，每一步也因為 KV 的讀取變慢（p.44 第 1 題）。</li>
-                  </ul>
-                  <p><b>追問：</b>Decode 為什麼不能像 prefill 一樣一次算很多個 token？哪一種技術試著突破這一點？（提示：課表 10/28 的 speculative decoding。）</p>
-                </div></details>
-              </div>
-            </li>
-
-            <li class="dq" id="q2">
               <div class="qbody">
                 <p class="qtag">估算 · Decode 的速度上限 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=30" target="_blank" rel="noopener">p.30、p.32</a></p>
                 <p class="qtext">估算單一請求 decode 的速度上限。Batch 變成 32 時，每個請求和整張 GPU 的速度各變成多少？</p>
@@ -810,7 +780,7 @@
               </div>
             </li>
 
-            <li class="dq" id="q3">
+            <li class="dq" id="q2">
               <div class="qbody">
                 <p class="qtag">設計 · Agent 服務的指標 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=41" target="_blank" rel="noopener">p.41、p.43</a></p>
                 <p class="qtext">替一個內部的 coding agent 服務設計一組指標，並說明為什麼 tokens/sec 不該當主要指標。</p>
@@ -840,7 +810,7 @@
               </div>
             </li>
 
-            <li class="dq" id="q4">
+            <li class="dq" id="q3">
               <div class="qbody">
                 <p class="qtag">團隊實務 · 不確定性與測試 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=31" target="_blank" rel="noopener">p.31</a></p>
                 <p class="qtext">Temperature 0 也不保證輸出可重現。團隊要怎麼替 LLM 功能寫測試，才能在 CI 裡穩定地抓到退步？</p>
@@ -866,67 +836,6 @@
                     <li>上線前改看 pass^k（L7）：k 次都成功才算過。對 agent 更重要：一個 token 不同，可能換掉整個 tool call。</li>
                   </ul>
                   <p><b>追問：</b>每個案例跑 20 次，CI 的成本和時間都變成 20 倍。哪些檢查放在每個 PR，哪些放到每晚？Provider 換了 model 版本，你怎麼第一時間知道？</p>
-                </div></details>
-              </div>
-            </li>
-
-            <li class="dq" id="q5">
-              <div class="qbody">
-                <p class="qtag">風險 · 長 run 的復原 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=42" target="_blank" rel="noopener">p.34、p.42、p.44</a></p>
-                <p class="qtext">一個 30 分鐘的 agent run 在第 25 分鐘失敗。設計一套 checkpoint 與復原機制，並說明它的代價。</p>
-                <p class="qctx"><b>情境：</b>Agent 在做一次資料庫 migration：讀 schema、改程式、跑測試、在 staging 資料庫執行 SQL、開 PR。全程約 60 步，每步平均 30 秒。第 25 分鐘時，serving 的一張 GPU 故障，進行中的 inference 中斷。當時 context 約 120K token；SQL 已經執行，PR 還沒開。</p>
-                <div class="qcover"><b>回答時請涵蓋</b>
-                  <ul>
-                    <li>列出 checkpoint 要存哪些狀態，以及在哪些時間點存。<span class="qh">提示：分三種狀態：trajectory、工作目錄、外部系統的副作用。時間點想：哪一種動作做完後，最怕丟掉紀錄？</span></li>
-                    <li>分別寫出三種失敗的復原方式：inference 中斷、tool 失敗、model 走錯方向。<span class="qh">提示：每一種都問兩件事：從哪一步重做？重做會不會重複副作用？例如 SQL 執行兩次會怎樣？</span></li>
-                    <li>估算有、沒有 checkpoint 時各要重做多少工作，並指出 checkpoint 本身的代價。<span class="qh">提示：沒存，損失已跑的時間；每步都存，損失 ≤ 1 步 + 一次 120K 的 prefill。代價想：存哪、多等多久？</span></li>
-                  </ul>
-                </div>
-                <details class="qstart"><summary>作答範本</summary><div class="hint">
-                  <p class="tpl">Checkpoint 存 ＿＿、＿＿ 和 ＿＿，在每次 ＿＿ 之後存。</p>
-                  <p class="tpl">Inference 中斷時 ＿＿；tool 失敗時 ＿＿；model 走錯方向時 ＿＿。</p>
-                  <p class="tpl">沒有 checkpoint 要重做約 ＿＿；每步都存，最多重做 ＿＿。代價是 ＿＿。</p>
-                </div></details>
-                <details><summary>參考觀點與追問</summary><div class="hint">
-                  <ul>
-                    <li>存什麼：完整的 trajectory；工作目錄的狀態，例如每步一個 git commit；副作用的紀錄，例如 migration 版本、PR 編號。</li>
-                    <li>什麼時候存：每個 tool 結果回來之後。有副作用的動作，執行前先記「打算做」，執行後再記「做完了」，像資料庫的 write-ahead log。</li>
-                    <li>Inference 中斷：換一台 replica，用 trajectory 重建 context，重做那一步。代價是重新 prefill 120K token；KV cache 若存在 CPU 記憶體或 SSD，可以直接載回（p.44 第 3 題）。</li>
-                    <li>Tool 失敗：有上限的重試，加上 backoff。SQL 要冪等：先查 migration 版本，執行過就跳過（L4）。Model 走錯方向：回到上一個驗證過的 checkpoint 重新規劃（L6），只重做最後一步不夠。</li>
-                    <li>估算：沒有 checkpoint 就從頭重來，損失 25 分鐘，token 也要重付。每步存 checkpoint，最多損失 1 步（約 30 秒）加一次 120K token 的 prefill。代價是儲存空間、每步多一點延遲，以及復原程式本身的 bug。</li>
-                  </ul>
-                  <p><b>追問：</b>如果 migration 跑在正式環境的資料庫，你的設計要改哪裡？Trajectory 裡有 secret 時，checkpoint 要怎麼存？</p>
-                </div></details>
-              </div>
-            </li>
-
-            <li class="dq" id="q6">
-              <div class="qbody">
-                <p class="qtag">應用 · 課程的 9 個問題 · <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=44" target="_blank" rel="noopener">p.44</a></p>
-                <p class="qtext">從 p.44 的 9 個問題挑一題，套到你們團隊的系統或流程上。你會怎麼量它？</p>
-                <p class="qctx"><b>情境：</b>例如你們用 agent 處理 bug 單、寫測試、產生報告，或你們在 serve 一個內部的 model。選一個你熟悉的情境。</p>
-                <div class="qcover"><b>回答時請涵蓋</b>
-                  <ul>
-                    <li>把問題改寫成你們團隊的版本，並寫出要量的 1–2 個數字。<span class="qh">提示：套用句型：在什麼限制下，比較哪兩種做法，看哪個數字。不知道選哪題，就選第 9 題。</span></li>
-                    <li>說明資料從哪裡來：log、trace、帳單，還是要新增量測點。<span class="qh">提示：先列手上已有的資料，例如 API 帳單的 usage、CI log。算你的數字還缺哪個欄位？那就是新的量測點。</span></li>
-                    <li>設計一個最小的實驗：比較哪兩種做法、跑多少次、怎麼判定結果。<span class="qh">提示：用 20–50 個過去的真實案例當題目，兩種做法各跑幾次。差距要大過誤差才算數，見第 4 題。</span></li>
-                  </ul>
-                </div>
-                <details class="qstart"><summary>作答範本</summary><div class="hint">
-                  <p class="tpl">我選第 ＿＿ 題，在我們團隊是：＿＿。要量的數字是 ＿＿。</p>
-                  <p class="tpl">資料來自 ＿＿；還缺 ＿＿，要在 ＿＿ 加一個量測點。</p>
-                  <p class="tpl">用 ＿＿ 個過去的案例，比較 ＿＿ 和 ＿＿，各跑 ＿＿ 次；差距大於 ＿＿ 才下結論。</p>
-                </div></details>
-                <details><summary>參考觀點與追問</summary><div class="hint">
-                  <p>以第 9 題「怎麼優化每個成功任務的成本」為例：</p>
-                  <ul>
-                    <li>改寫：我們的 bug 修復 agent，每修好一個 bug 花多少錢？換較小的 model 會更省嗎？</li>
-                    <li>數字：每個成功任務的成本，等於一週的 API 花費 ÷ 合併的修復 PR 數。另外看成功率與每個任務的 step 數。</li>
-                    <li>資料來源：API 回傳的 usage 欄位，依任務 ID 加總；成功與否看 PR 的狀態。沒有任務 ID 就先補上。</li>
-                    <li>實驗：取 50 個過去的 bug，兩種設定各跑 3 次，比較成功率與每個成功任務的成本。差距小於誤差時不下結論（見第 4 題）。</li>
-                    <li>同一個實驗也回答第 2 題：大 model 每次較貴，但少繞路、成功率高時，每個成功任務反而便宜（p.41）。</li>
-                  </ul>
-                  <p><b>追問：</b>你挑的這一題，答案會不會隨著 model 更新而改變？多久要重新量一次？</p>
                 </div></details>
               </div>
             </li>

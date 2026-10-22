@@ -2,12 +2,13 @@
 """Structural check of a lecture page's sections, focused on §5 (discussion).
 
 Usage: python3 -I check_discuss.py docs/l01.html [...]
-Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-21:
+Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
   基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
     div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
     A「常見誤解」callout is expected (warning only).
   觀念補充 terms: 4-6 is a suggestion (warning only, 2026-10-22).
-  進階題 li.dq: 6, each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
+  進階題 li.dq: at most 3 (2026-10-22; was 6), each a different type (the qtag label before「·」),
+    each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
     details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
   Every li.bq has p.gh-talk linking to the lecture's GitHub issue; li.dq has none (進階題 stay
     on the page); §7 #s-submit links to that issue (all written by tools/discuss.py).
@@ -203,15 +204,16 @@ def check(path):
                 probs.append(f"b{k}: basic question must not have qctx/qcover")
         qs = d.find("li", "dq")
         rep.append(f"dq={len(qs)}")
-        if len(qs) != 6:
-            probs.append(f"{len(qs)} discussion questions")
-        kinds = set()
+        if not 1 <= len(qs) <= 3:
+            probs.append(f"{len(qs)} discussion questions (want at most 3)")
+        labels = []
         for k, q in enumerate(qs, 1):
             tag = q.find("p", "qtag")
             tagt = tag[0].txt() if tag else ""
-            for ty in TYPES:
-                if ty in tagt.split("·")[0]:
-                    kinds.add(ty)
+            label = tagt.split("·")[0].strip()
+            if not any(ty in label for ty in TYPES):
+                probs.append(f"q{k}: unknown question type {label!r}")
+            labels.append(label)
             if q.attrs.get("id") != f"q{k}":
                 probs.append(f"q{k}: id {q.attrs.get('id')}")
             if not tag or not tag[0].find("a", "ref"):
@@ -246,8 +248,8 @@ def check(path):
                     probs.append(f"q{k}: no 追問")
             rep_len = len(q.txt())
             rep.append(f"q{k}:{tagt.split('·')[0].strip()}({rep_len})")
-        if len(kinds) < 5:
-            probs.append(f"only {len(kinds)} question kinds: {sorted(kinds)}")
+        if len(set(labels)) != len(labels):
+            probs.append(f"進階題 types repeat: {labels}")
         quiz = d.find("div", "quiz")
         if not quiz or len(quiz[0].find("details")) != 3:
             probs.append("self-check quiz != 3")

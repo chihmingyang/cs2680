@@ -1,6 +1,6 @@
-# CS2680 架構文章撰寫規範（v3.3）
+# CS2680 架構文章撰寫規範（v3.5）
 
-更新：2026-10-22（v3.4：觀念補充的條數與閱讀時間上限改為建議，見第 4、7 節）。2026-10-21（v3.3：文章要讓沒看 slides 的人也讀得懂，見第 1 節；閱讀時間上限 16 → 30 分鐘，見第 7 節）。2026-10-19（v3.2：站台搬到 `docs/`；討論改用 GitHub Issues，連結由 `tools/discuss.py` 寫入）。對照的是 L1–L8 的實際格式。第 5 段的基礎題另見 `STYLE_BASIC.md`。
+更新：2026-10-22（v3.5：進階題每堂最多 3 題，見第 4 節第 5 段）。2026-10-22（v3.4：觀念補充的條數與閱讀時間上限改為建議，見第 4、7 節）。2026-10-21（v3.3：文章要讓沒看 slides 的人也讀得懂，見第 1 節；閱讀時間上限 16 → 30 分鐘，見第 7 節）。2026-10-19（v3.2：站台搬到 `docs/`；討論改用 GitHub Issues，連結由 `tools/discuss.py` 寫入）。對照的是 L1–L8 的實際格式。第 5 段的基礎題另見 `STYLE_BASIC.md`。
 
 你負責把 Harvard CS2680 的一堂課寫成一篇「架構文章」：`/home/claude/cs2680/docs/lXX.html`。
 **範本是 `docs/l02.html`。先完整讀一遍：結構、class、語氣、密度都照它做。**
@@ -68,9 +68,12 @@
 - `div.qtabs`：兩個 `button.qtab`（`#tab-basic`「基礎」、`#tab-adv`「進階」）。
 - `div.qset#qset-basic`：基礎題，見 `STYLE_BASIC.md`。
 - `div.qset#qset-adv[hidden]`：進階題。
-  - `p.qset-lede` 照 l02 的文字（「這 6 題在讀書會前回答。每個回答要點下面有一行提示……」）。
+  - `p.qset-lede` 照 l02 的文字（「這 3 題留到讀書會當天一起討論，不用先寫在 GitHub……」）。
   - `div.copyrow`：`button.copybtn[data-copy="adv"]`，`data-title="CS2680 LX 進階題（讀書會討論）：<中文標題>"`、`data-slides="<PDF 網址>"`，加 `span.copyhint`。
-  - `ol.qlist` 內 **6 題** `li.dq#q1…#q6`。題型混合，至少五種：概念、估算/分析、設計、團隊實務、風險/取捨、應用。
+  - `ol.qlist` 內**最多 3 題** `li.dq#q1…#q3`（2026-10-22 定，之前 6 題）。
+  - 3 題的題型不重複（`qtag` 第一段：概念、估算、分析、設計、團隊實務、風險、取捨、應用）。
+  - 挑題的優先順序：一題算數字或分析資料（估算／分析）、一題設計、一題帶回自己團隊（團隊實務／風險／應用）。
+  - 3 題對到這堂不同段落的 slides。不要和基礎題、動手試試重複；概念題通常和基礎題重疊，優先刪。
 - 每題 `li.dq` > `div.qbody`：
   - `p.qtag`：題型 · 主題 · `a.ref`。
   - `p.qtext`：一個清楚的問題，可以有兩個小問。
@@ -79,7 +82,7 @@
   - `details.qstart`「作答範本」> `div.hint`：**3 句** `p.tpl` 填空句，空格用「＿＿」，對應三個回答要點。
   - `details`「參考觀點與追問」> `div.hint`：4–6 點 `ul`，加 `<p><b>追問：</b>…</p>` 1–2 個延伸問題。估算題寫出完整算式與結果。
 - 不要寫「思考方向」區塊（已由 `qh` 提示和作答範本取代）。
-- 每一題的「到 GitHub 討論這一題」連結（`p.gh-talk`）由 `tools/discuss.py` 寫入，不要自己寫。它也把題目、情境、回答要點和作答範本放進 issue 內文，所以這幾段要能獨立讀懂。
+- 進階題不上 GitHub，不寫 `p.gh-talk`（`check_discuss.py` 會擋）。讀書會當天大家直接看頁面，所以題目、情境、回答要點和作答範本要能獨立讀懂。
 - `textarea#copy-fallback.copybox[hidden]`：照 l02。
 - `h3.subhead`「自我檢查」+ `div.quiz`：3 題有標準答案的題目（`details` > `summary` + `div.answer`）。
 
