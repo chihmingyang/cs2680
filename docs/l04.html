@@ -247,9 +247,79 @@
               <p><b>Search：先 grep，名字猜不到再換。</b>Agent 看不到整個 repo，只能靠 tool 找程式碼，slide 給了四種找法。Grep（一個 shell 指令，見觀念補充〈<a href="#t9">Shell、grep 與 glob</a>〉）不用建索引，所以永遠反映 repo 的現況；但它只比對字面，搜「timeout」找不到 <code>deadline</code>，而且每搜一次就花掉一圈、佔掉一段 context。Embedding 索引依意思找，repo map（檔案樹加上排序過的 symbol 清單）依結構找，兩者查詢時都很快，代價是索引要跟著程式碼一起同步。</p>
               <p>第三種是 extrinsic signal，也就是程式碼以外的證據：stack trace、失敗的測試、git 歷史。有這種訊號時它最準，例如一份 crash report 直接指到 <code>tax.ts</code> 的某一行，一次搜尋都不用；但它只在有人回報問題時才存在。第四種是 LSP，它直接問 compiler 的索引，所以能跟著 import、別名、overload 走，代價是每種語言要一個常駐 server，冷啟動也慢。</p>
               <p>Slide 對順序的建議是：先用 grep，名字猜不到了再換索引或 LSP。這個順序來自兩種成本的型態不同：grep 每查一次就付一次，索引與 LSP 則是先付一筆建置與同步的固定成本，之後每次查詢幾乎免費。所以 repo 小、任務短的時候 grep 划算；repo 大、任務長，固定成本才攤得掉（Claude Code 為什麼選 grep，見深入 d3；LSP 的索引怎麼建，見深入 d4）。</p>
-              <p><b>Edit：四種方式，失敗要看得見。</b>找到程式碼之後，下一步是改它。Slide p.21 把四種改法放在兩個軸上比較：token 成本，與穩健度（改動是否落在想要的位置）。整檔重寫沒有 patch 語法可以寫錯，所以每次都套得上；但輸出和檔案大小成正比，長檔還會 drift，也就是 model 重寫時漸漸偏離原文。Unified diff 精簡，人和 CI 都看得懂；但只要 context 行過期，hunk 就套不上。</p>
-              <p>Search/replace 靠一段原文字串定位，所以輸出只和改動的大小成正比；但 anchor 不唯一、已經過期或空白對不上，就會失敗。AST 編輯直接改語法樹，結果一定合法，改一個函式簽名能連 18 個呼叫端一起改；代價是每種語言一套工具，能做的操作也有限。</p>
-              <p>實務上 search/replace 成了預設，Aider 的 SEARCH/REPLACE block、Claude Code 的 Edit tool 都是這一型。原因在於它失敗的方式：anchor 找不到時 tool 會回錯誤，model 重讀檔案再試一次就好。整檔重寫的失敗卻很安靜，程式碼漸漸變樣，沒有任何東西報錯。所以選 edit tool 時，失敗看不看得見，和成功率一樣重要。</p>
+              <p><b>Edit：四種方式，失敗要看得見。</b>找到程式碼之後，下一步是改它。四種改法的分工相同：model 輸出一段文字，tool 把它套進檔案；差別在 model 輸出的是什麼。Slide p.21 用兩個軸比較它們：token 成本，也就是 model 要輸出多少字；穩健度，也就是改動會不會落在想要的位置。下面每一種先講做法，再講代價，最後看為什麼其中一種成了預設。</p>
+              <p>整檔重寫最直接：model 把整個檔案重新產生一次，tool 直接覆蓋舊檔。因為沒有 patch 語法可以寫錯，所以每次都套得上。代價是輸出和檔案大小成正比：在 120 行的 <code>client.ts</code> 改 4 行，model 也要重打 120 行。長檔還會 drift：重打那 116 行沒要改的程式碼時，model 會漸漸偏離原文，例如少一行註解、換一個變數名。這種改動 tool 不會報錯，要有人逐行比對 diff 才看得出來。</p>
+              <p>Unified diff 讓 model 只輸出一份 patch，再交給另一個 tool 套用，例如 <code>git apply</code>。一份 patch 由幾個 hunk 組成，一個 hunk 就是一處修改：header <code>@@ -41,3 +41,3 @@</code> 說它落在第 41 行附近，底下是幾行沒改的 context 行，和以 <code>-</code>、<code>+</code> 開頭的刪除與新增行。所以它很精簡，改兩個檔案只要 6 行，而且人和 CI 本來就讀這種格式。代價來自 context 行：tool 靠它們定位，所以行號偏移了還能套；但 model 讀檔之後檔案又變了，context 行就過期，hunk 套不上。常見的原因是 formatter 重排過那幾行，或前一次修改動到了附近。Git 還預設全有或全無，一個 hunk 失敗，整份 patch 都不套用（第 6 段有實測；格式見觀念補充〈<a href="#t3">Unified diff</a>〉）。</p>
+              <p>Search/replace 讓 model 輸出一段原文字串當 anchor，加上要換成的新字串；tool 在檔案裡找到 anchor，原地換掉。因為 anchor 只要幾行就能定位，所以輸出只和改動的大小成正比，和檔案多長無關。它只有一個失敗條件：tool 必須在檔案裡剛好找到一次 anchor。找到兩次，tool 不知道要改哪一處；找到零次，多半是檔案在 model 讀過之後變了，或是空白、tab 對不上。</p>
+              <p>AST 編輯讓 model 只點名一個操作，例如 <code>rename</code>、<code>add_param</code>，tool 修改語法樹再印回文字（觀念補充〈<a href="#t4">AST</a>〉）。因為改的是樹，結果一定能 parse；而且一個操作能連動所有相關位置，替 <code>fetchUser()</code> 加一個 <code>timeout</code> 參數，tool 會連 18 個呼叫端一起改。代價是每種語言要一套工具，能做的操作也只有工具定義好的那幾種，「改寫這段折扣邏輯」就沒有對應的操作。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 720 270" role="img" aria-label="四種 edit 方式的對照表，每一列是一種方式：model 輸出什麼、tool 做什麼、失敗時看不看得見。整檔重寫：model 輸出整個檔案，tool 覆蓋舊檔；失敗很安靜，沒改的行會 drift 而且不報錯。Unified diff：model 輸出 patch，git apply 依 context 行定位；context 行過期時 hunk 套不上，會報錯。Search/replace：model 輸出 anchor 與新字串，tool 要剛好找到一次再原地換掉；找到 0 次或 2 次就報錯。AST 編輯：model 點名一個操作，tool 改語法樹再印回文字；不會套錯，但只能做工具定義好的操作。">
+                    <text x="10" y="16" class="dg-tm">方式</text>
+                    <text x="156" y="16" class="dg-tm">model 輸出什麼</text>
+                    <text x="324" y="16" class="dg-tm">tool 做什麼</text>
+                    <text x="520" y="16" class="dg-tm">失敗時看得見嗎</text>
+
+                    <!-- row 1: whole-file rewrite -->
+                    <rect x="10" y="28" width="136" height="52" rx="4" class="dg-box-soft"/>
+                    <text x="18" y="49" class="dg-tb">整檔重寫</text>
+                    <text x="18" y="67" class="dg-ts">輸出 ∝ 檔案大小</text>
+                    <rect x="156" y="28" width="158" height="52" rx="4" class="dg-box"/>
+                    <text x="164" y="49" class="dg-t">整個檔案</text>
+                    <text x="164" y="67" class="dg-ts">改 4 行也重打 120 行</text>
+                    <rect x="324" y="28" width="186" height="52" rx="4" class="dg-box"/>
+                    <text x="332" y="49" class="dg-t">覆蓋舊檔</text>
+                    <text x="332" y="67" class="dg-ts">沒有語法可以寫錯</text>
+                    <rect x="520" y="28" width="190" height="52" rx="4" class="dg-box-soft"/>
+                    <text x="528" y="49" class="dg-tb">安靜</text>
+                    <text x="528" y="67" class="dg-ts">沒改的行 drift，不報錯</text>
+
+                    <!-- row 2: unified diff -->
+                    <rect x="10" y="88" width="136" height="52" rx="4" class="dg-box-soft"/>
+                    <text x="18" y="109" class="dg-tb">Unified diff</text>
+                    <text x="18" y="127" class="dg-ts">輸出 ∝ 改動 + context</text>
+                    <rect x="156" y="88" width="158" height="52" rx="4" class="dg-box"/>
+                    <text x="164" y="109" class="dg-t">一份 patch</text>
+                    <text x="164" y="127" class="dg-ts">hunk ×2，共 6 行</text>
+                    <rect x="324" y="88" width="186" height="52" rx="4" class="dg-box"/>
+                    <text x="332" y="109" class="dg-t">git apply 依 context 行定位</text>
+                    <text x="332" y="127" class="dg-ts">行號偏移了仍可套</text>
+                    <rect x="520" y="88" width="190" height="52" rx="4" class="dg-box-accent"/>
+                    <text x="528" y="109" class="dg-ta">報錯</text>
+                    <text x="528" y="127" class="dg-ts">context 行過期，hunk 套不上</text>
+
+                    <!-- row 3: search/replace -->
+                    <rect x="10" y="148" width="136" height="52" rx="4" class="dg-box-accent"/>
+                    <text x="18" y="169" class="dg-tb">Search/replace</text>
+                    <text x="18" y="187" class="dg-ts">輸出 ∝ 改動</text>
+                    <rect x="156" y="148" width="158" height="52" rx="4" class="dg-box"/>
+                    <text x="164" y="169" class="dg-t">anchor + 新字串</text>
+                    <text x="164" y="187" class="dg-ts">retries = 3 → 5</text>
+                    <rect x="324" y="148" width="186" height="52" rx="4" class="dg-box"/>
+                    <text x="332" y="169" class="dg-t">找到 anchor，原地換掉</text>
+                    <text x="332" y="187" class="dg-ts">要剛好找到 1 次</text>
+                    <rect x="520" y="148" width="190" height="52" rx="4" class="dg-box-accent"/>
+                    <text x="528" y="169" class="dg-ta">報錯</text>
+                    <text x="528" y="187" class="dg-ts">找到 0 次或 2 次</text>
+
+                    <!-- row 4: AST edit -->
+                    <rect x="10" y="208" width="136" height="52" rx="4" class="dg-box-soft"/>
+                    <text x="18" y="229" class="dg-tb">AST 編輯</text>
+                    <text x="18" y="247" class="dg-ts">輸出：一個操作名</text>
+                    <rect x="156" y="208" width="158" height="52" rx="4" class="dg-box"/>
+                    <text x="164" y="229" class="dg-t">操作 + symbol</text>
+                    <text x="164" y="247" class="dg-ts">add_param(fetchUser)</text>
+                    <rect x="324" y="208" width="186" height="52" rx="4" class="dg-box"/>
+                    <text x="332" y="229" class="dg-t">改語法樹，印回文字</text>
+                    <text x="332" y="247" class="dg-ts">連 18 個呼叫端一起改</text>
+                    <rect x="520" y="208" width="190" height="52" rx="4" class="dg-box"/>
+                    <text x="528" y="229" class="dg-tb">不會套錯</text>
+                    <text x="528" y="247" class="dg-ts">但只能做工具定義的操作</text>
+                  </svg>
+                </div>
+                <figcaption>依 p.17–21 整理，欄位是本文的分法。藍框的 search/replace 是 Aider 與 Claude Code 的預設；右欄是重點：失敗時 tool 會不會報錯。</figcaption>
+              </figure>
+              <p>把四種放在一起看，實務上 search/replace 成了預設，Aider 的 SEARCH/REPLACE block、Claude Code 的 Edit tool 都是這一型。第一個原因是成本：它的輸出只和改動成正比，失敗條件又只有「anchor 剛好出現一次」這一件事。更重要的原因是它失敗的方式。Anchor 找不到時，tool 會回一則錯誤，model 下一圈重讀檔案、再試一次就好，失敗只花一圈。整檔重寫的失敗卻很安靜：程式碼漸漸變樣，tool 照樣回成功，要等測試壞掉或 review 時才會發現。所以選 edit tool 時，失敗看不看得見，和成功率一樣重要。</p>
               <p><b>Execution：shell 最強，也最需要 harness 看著。</b>Shell 一次呼叫就能串接、過濾、迴圈、重試，碰得到檔案系統、網路與套件管理員，而且產生的檔案與 process 在呼叫結束後還在。也就是說，shell 能做的事 agent 都能做，blast radius 等於 shell 本身。因此 slide 列了五個執行上的考量：失敗訊號要讓 model 能據以行動、輸出要夠但不能多、長程序要能放背景、重試要有預算、執行環境要隔離。Shell 自己不做這五件事，所以它們全部落在 harness 身上（深入 d1 有每一項的做法）。</p>
               <p>除了這三類，slide 還點名五種常見的 tool，每一種都補上 model 缺的一樣東西。Browser 把畫面截圖回傳，model 才看得到 render 的結果。Memory 與筆記把發現寫進檔案，計畫才撐得過 compaction。問使用者的理由是：一個便宜的問題，勝過一個自信的錯 patch。Subagent 把探索關在外面，回來的是一份清單，不是 40 次讀檔的結果；web search 則排最後，先讀裝好的原始碼，再查網路。</p>
               <p><b>五條原則，管的是同一件事。</b>選項這麼多，p.25 用五條原則收斂，而它們管的都是同一件事：tool 的定義與輸出怎麼進 context。第一條是少且正交，因為功能重疊的 tool 會讓 model 猶豫，而且每一個 tool 定義每一圈都要佔 context。第二條是專用：<code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 則把這些全推給 model 去猜。第三條是輸出省 token，用截斷、分頁、摘要，因為輸出的每一個字都會進下一圈的 prompt。</p>
