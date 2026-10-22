@@ -59,8 +59,8 @@
       <li><span class="k">頁數</span>56</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 25 分鐘</span></li>
-      <li><span class="k">深入</span><span class="deep-time">約 6 分鐘</span>，選讀</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 60 分鐘</span></li>
+      <li><span class="k">深入</span><span class="deep-time">約 7 分鐘</span>，選讀</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 65 分鐘</span></li>
     </ul>
   </header>
 
@@ -246,7 +246,39 @@
               <p>Loop 定了之後，model 每一圈能做的只有一件事：選一個 tool、填好參數。所以 tool 決定了 model 能看到什麼、能改什麼：search tool 是它看 repo 的眼睛，edit tool 和 shell 是它動手的手。Slide 把 tool 分成四類：search/read、edit/write、execution、其他。每一類都有幾種做法，每一種做法都有代價，下面依序看設計者要怎麼選。</p>
               <p><b>Search：先 grep，名字猜不到再換。</b>Agent 看不到整個 repo，只能靠 tool 找程式碼，slide 給了四種找法。Grep（一個 shell 指令，見觀念補充〈<a href="#t9">Shell、grep 與 glob</a>〉）不用建索引，所以永遠反映 repo 的現況；但它只比對字面，搜「timeout」找不到 <code>deadline</code>，而且每搜一次就花掉一圈、佔掉一段 context。Embedding 索引依意思找，repo map（檔案樹加上排序過的 symbol 清單）依結構找，兩者查詢時都很快，代價是索引要跟著程式碼一起同步。</p>
               <p>第三種是 extrinsic signal，也就是程式碼以外的證據：stack trace、失敗的測試、git 歷史。有這種訊號時它最準，例如一份 crash report 直接指到 <code>tax.ts</code> 的某一行，一次搜尋都不用；但它只在有人回報問題時才存在。第四種是 LSP，它直接問 compiler 的索引，所以能跟著 import、別名、overload 走，代價是每種語言要一個常駐 server，冷啟動也慢。</p>
-              <p>Slide 對順序的建議是：先用 grep，名字猜不到了再換索引或 LSP。這個順序來自兩種成本的型態不同：grep 每查一次就付一次，索引與 LSP 則是先付一筆建置與同步的固定成本，之後每次查詢幾乎免費。所以 repo 小、任務短的時候 grep 划算；repo 大、任務長，固定成本才攤得掉（Claude Code 為什麼選 grep，見深入 d3；LSP 的索引怎麼建，見深入 d4）。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 700 300" role="img" aria-label="兩種搜尋成本的型態，橫軸是查詢次數，縱軸是累積成本。Grep 的線從原點出發，每查一次付一次，所以一直往上。索引與 LSP 的線從一筆固定的建置與同步成本開始，之後幾乎持平。兩條線在中間交叉，交叉點標為攤平點：左邊 repo 小、任務短，grep 划算；右邊 repo 大、任務長，索引與 LSP 划算。">
+                    <defs>
+                      <marker id="l4e-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" class="dg-fill-soft"/>
+                      </marker>
+                    </defs>
+                    <line x1="90" y1="260" x2="664" y2="260" class="dg-soft" marker-end="url(#l4e-ah)"/>
+                    <line x1="90" y1="260" x2="90" y2="30" class="dg-soft" marker-end="url(#l4e-ah)"/>
+                    <text x="660" y="280" text-anchor="end" class="dg-ts">查詢次數</text>
+                    <text x="98" y="26" class="dg-ts">累積成本（圈數、context、時間）</text>
+
+                    <line x1="90" y1="260" x2="620" y2="60" class="dg-line"/>
+                    <text x="600" y="40" text-anchor="end" class="dg-tb">grep：每查一次付一次</text>
+
+                    <line x1="90" y1="170" x2="620" y2="133" class="dg-accent"/>
+                    <line x1="84" y1="170" x2="96" y2="170" class="dg-accent"/>
+                    <text x="80" y="174" text-anchor="end" class="dg-ta">建置 + 同步</text>
+                    <text x="612" y="156" text-anchor="end" class="dg-ta">索引／LSP：先付固定成本</text>
+                    <text x="612" y="172" text-anchor="end" class="dg-ts">之後每次查詢幾乎免費</text>
+
+                    <line x1="383" y1="150" x2="383" y2="260" class="dg-soft dg-dash"/>
+                    <circle cx="383" cy="150" r="4" class="dg-fill-ink"/>
+                    <text x="383" y="280" text-anchor="middle" class="dg-ts">攤平點</text>
+
+                    <text x="236" y="242" text-anchor="middle" class="dg-ts">repo 小、任務短：grep 划算</text>
+                    <text x="522" y="242" text-anchor="middle" class="dg-ts">repo 大、任務長：索引／LSP 划算</text>
+                  </svg>
+                </div>
+                <figcaption>本文的整理，不是 slide 的圖。Grep 每查一次就花一圈與一段 context；索引與 LSP 先付一筆建置與同步的成本，之後每次查詢幾乎免費。查詢次數少，grep 便宜；查詢次數多，固定成本才攤得掉。</figcaption>
+              </figure>
+              <p>Slide 對順序的建議是：先用 grep，名字猜不到了再換索引或 LSP。這個順序來自兩種成本的型態不同（上圖）：grep 每查一次就付一次，索引與 LSP 則是先付一筆建置與同步的固定成本，之後每次查詢幾乎免費。所以 repo 小、任務短的時候 grep 划算；repo 大、任務長，固定成本才攤得掉（Claude Code 為什麼選 grep，見深入 d3；LSP 的索引怎麼建，見深入 d4）。</p>
               <p><b>Edit：四種方式，失敗要看得見。</b>找到程式碼之後，下一步是改它。四種改法的分工相同：model 輸出一段文字，tool 把它套進檔案；差別在 model 輸出的是什麼。Slide p.21 用兩個軸比較它們：token 成本，也就是 model 要輸出多少字；穩健度，也就是改動會不會落在想要的位置。下面每一種先講做法，再講代價，最後看為什麼其中一種成了預設。</p>
               <p>整檔重寫最直接：model 把整個檔案重新產生一次，tool 直接覆蓋舊檔。因為沒有 patch 語法可以寫錯，所以每次都套得上。代價是輸出和檔案大小成正比：在 120 行的 <code>client.ts</code> 改 4 行，model 也要重打 120 行。長檔還會 drift：重打那 116 行沒要改的程式碼時，model 會漸漸偏離原文，例如少一行註解、換一個變數名。這種改動 tool 不會報錯，要有人逐行比對 diff 才看得出來。</p>
               <p>Unified diff 讓 model 只輸出一份 patch，再交給另一個 tool 套用，例如 <code>git apply</code>。一份 patch 由幾個 hunk 組成，一個 hunk 就是一處修改：header <code>@@ -41,3 +41,3 @@</code> 說它落在第 41 行附近，底下是幾行沒改的 context 行，和以 <code>-</code>、<code>+</code> 開頭的刪除與新增行。所以它很精簡，改兩個檔案只要 6 行，而且人和 CI 本來就讀這種格式。代價來自 context 行：tool 靠它們定位，所以行號偏移了還能套；但 model 讀檔之後檔案又變了，context 行就過期，hunk 套不上。常見的原因是 formatter 重排過那幾行，或前一次修改動到了附近。Git 還預設全有或全無，一個 hunk 失敗，整份 patch 都不套用（第 6 段有實測；格式見觀念補充〈<a href="#t3">Unified diff</a>〉）。</p>
@@ -358,6 +390,72 @@ ValueError: bad id"}
   If you only have a name, call find_customer(name) first."}</code></pre></figure>
                   <p>第三種的寫法有固定的三段：錯在哪、正確的樣子、下一步做什麼。延伸閱讀的 Anthropic 文章說，只改 tool 的描述，就讓 Claude Sonnet 3.5 在 SWE-bench Verified 上大幅減少錯誤；錯誤訊息和描述一樣，都是 model 讀得到的文字。換個角度看，錯誤訊息是 tool 唯一能對 model 說話的機會，所以要拿來教。</p>
                   <p><b>預設冪等。</b>冪等的意思是同一個呼叫做兩次，結果和做一次相同。讀檔、查詢、把一個值設成 5，都冪等；轉帳、送 email、在清單尾端加一筆，都不冪等。Agent loop 一定會重試，因為 timeout、網路錯誤、model 以為上一次沒成功，都會讓它再呼叫一次。所以 <code>create_refund(order_id, amount)</code> 這種 tool 很危險，重試一次就退兩次款。改法是加一個 idempotency key，變成 <code>create_refund(order_id, amount, request_id)</code>：harness 看到相同的 <code>request_id</code>，就回上一次的結果，不再執行。</p>
+                  <figure class="diagram">
+                    <div class="scroll">
+                      <svg viewBox="0 0 720 310" role="img" aria-label="兩個並排的時序圖，都是 harness 呼叫 create_refund 退款 50，tool 做了退款，但回覆逾時沒有回到 harness，harness 於是重試一次。左圖沒有 idempotency key：第二次呼叫 tool 又退款 50，結果退了兩次。右圖帶著 request_id r-9：第二次呼叫時 tool 看到 r-9 已經做過，直接回上一次的結果，不再執行，結果只退一次。">
+                        <defs>
+                          <marker id="l4f-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                          </marker>
+                        </defs>
+
+                        <!-- left: no idempotency key -->
+                        <text x="180" y="18" text-anchor="middle" class="dg-tb">沒有 idempotency key</text>
+                        <line x1="70" y1="56" x2="70" y2="272" class="dg-soft dg-dash"/>
+                        <line x1="290" y1="56" x2="290" y2="272" class="dg-soft dg-dash"/>
+                        <rect x="30" y="28" width="80" height="28" rx="4" class="dg-box"/>
+                        <text x="70" y="46" text-anchor="middle" class="dg-t">Harness</text>
+                        <rect x="240" y="28" width="100" height="28" rx="4" class="dg-box"/>
+                        <text x="290" y="46" text-anchor="middle" class="dg-tm">create_refund</text>
+
+                        <line x1="70" y1="88" x2="288" y2="88" class="dg-line" marker-end="url(#l4f-ah)"/>
+                        <text x="180" y="80" text-anchor="middle" class="dg-ts">① create_refund(o-17, 50)</text>
+                        <rect x="250" y="98" width="80" height="22" rx="4" class="dg-box-accent"/>
+                        <text x="290" y="113" text-anchor="middle" class="dg-ta">退款 50</text>
+
+                        <line x1="290" y1="150" x2="190" y2="150" class="dg-line dg-dash"/>
+                        <text x="176" y="155" text-anchor="middle" class="dg-tb">✕</text>
+                        <text x="240" y="142" text-anchor="middle" class="dg-ts">回覆逾時，harness 沒收到</text>
+
+                        <line x1="70" y1="200" x2="288" y2="200" class="dg-line" marker-end="url(#l4f-ah)"/>
+                        <text x="180" y="192" text-anchor="middle" class="dg-ts">② 重試，同一個呼叫</text>
+                        <rect x="250" y="210" width="80" height="22" rx="4" class="dg-box-accent"/>
+                        <text x="290" y="225" text-anchor="middle" class="dg-ta">又退款 50</text>
+
+                        <line x1="290" y1="256" x2="72" y2="256" class="dg-line dg-dash" marker-end="url(#l4f-ah)"/>
+                        <text x="180" y="248" text-anchor="middle" class="dg-ts">ok</text>
+                        <text x="180" y="296" text-anchor="middle" class="dg-tb">結果：退了兩次</text>
+
+                        <!-- right: with request_id -->
+                        <text x="540" y="18" text-anchor="middle" class="dg-ta">有 request_id</text>
+                        <line x1="430" y1="56" x2="430" y2="272" class="dg-soft dg-dash"/>
+                        <line x1="650" y1="56" x2="650" y2="272" class="dg-soft dg-dash"/>
+                        <rect x="390" y="28" width="80" height="28" rx="4" class="dg-box"/>
+                        <text x="430" y="46" text-anchor="middle" class="dg-t">Harness</text>
+                        <rect x="600" y="28" width="100" height="28" rx="4" class="dg-box"/>
+                        <text x="650" y="46" text-anchor="middle" class="dg-tm">create_refund</text>
+
+                        <line x1="430" y1="88" x2="648" y2="88" class="dg-line" marker-end="url(#l4f-ah)"/>
+                        <text x="540" y="80" text-anchor="middle" class="dg-ts">① create_refund(o-17, 50, r-9)</text>
+                        <rect x="595" y="98" width="110" height="22" rx="4" class="dg-box-accent"/>
+                        <text x="650" y="113" text-anchor="middle" class="dg-ta">退款 50，記下 r-9</text>
+
+                        <line x1="650" y1="150" x2="550" y2="150" class="dg-line dg-dash"/>
+                        <text x="536" y="155" text-anchor="middle" class="dg-tb">✕</text>
+                        <text x="600" y="142" text-anchor="middle" class="dg-ts">回覆逾時，harness 沒收到</text>
+
+                        <line x1="430" y1="200" x2="648" y2="200" class="dg-line" marker-end="url(#l4f-ah)"/>
+                        <text x="540" y="192" text-anchor="middle" class="dg-ts">② 重試，同一個 request_id</text>
+                        <rect x="585" y="210" width="130" height="22" rx="4" class="dg-box"/>
+                        <text x="650" y="225" text-anchor="middle" class="dg-t">r-9 做過，回上次結果</text>
+
+                        <line x1="650" y1="256" x2="432" y2="256" class="dg-line dg-dash" marker-end="url(#l4f-ah)"/>
+                        <text x="540" y="248" text-anchor="middle" class="dg-ts">ok（上次的結果）</text>
+                        <text x="540" y="296" text-anchor="middle" class="dg-ta">結果：退一次</text>
+                      </svg>
+                    </div>
+                    <figcaption>同一個退款呼叫，回覆逾時後 harness 重試一次。左：沒有 idempotency key，tool 退了兩次。右：相同的 <code>request_id</code> 讓 tool 回上一次的結果，不再執行。</figcaption>
+                  </figure>
                   <p>有些操作做不到冪等，例如送出 email、發 PR，這時要把 tool 標成不可重試，讓 harness 遇到失敗時停下來問人。這裡也是 p.23 第 4 項（預算）和第 5 條原則接在一起的地方：重試是 harness 的行為，所以 tool 要先告訴 harness 自己能不能重試。</p>
                 </div>
               </details>
@@ -403,6 +501,42 @@ ValueError: bad id"}
             <div class="prose">
               <p>前面講的 tool 與 prompt，最後都會變成 context 的一部分；prompt 只佔其中一小塊，tool 定義、檔案內容、tool 結果也都在裡面。Karpathy 把管理這一整塊叫 context engineering，定義是「為下一步放進剛好需要的資訊」。重點在「下一步」：任務一直在推進，所以 harness 每一圈都要重新決定放什麼、拿掉什麼。</p>
               <p>這件事重要，是因為 context 有三種成本。第一是錢，每一步都要重送整個 window。第二是延遲，prompt 越長，prefill 越久，decode 也會變慢。第三是注意力，window 越滿，model 越難從裡面找回資訊。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 640 260" role="img" aria-label="折線圖：含答案的文件放在 20 份文件中的第幾份，對回答準確率。第 1 份 76%，第 5 份 61%，第 10 份 55%，第 15 份 59%，第 20 份 71%。曲線呈 U 形，中間最低。中段加了一個虛線框，註記 agent 的舊 tool 結果通常堆在這一段。">
+                    <line x1="70" y1="210" x2="610" y2="210" class="dg-soft"/>
+                    <line x1="70" y1="210" x2="70" y2="24" class="dg-soft"/>
+                    <text x="62" y="214" text-anchor="end" class="dg-ts">40%</text>
+                    <text x="62" y="169" text-anchor="end" class="dg-ts">50%</text>
+                    <text x="62" y="124" text-anchor="end" class="dg-ts">60%</text>
+                    <text x="62" y="79" text-anchor="end" class="dg-ts">70%</text>
+                    <text x="62" y="34" text-anchor="end" class="dg-ts">80%</text>
+
+                    <rect x="160" y="30" width="322" height="180" rx="4" class="dg-frame"/>
+                    <text x="321" y="200" text-anchor="middle" class="dg-ts">agent 的舊 tool 結果通常堆在這一段</text>
+
+                    <polyline points="70,48 181.6,115.5 321,142.5 460.5,124.5 600,70.5" class="dg-accent"/>
+                    <circle cx="70" cy="48" r="5" class="dg-fill-accent"/>
+                    <circle cx="181.6" cy="115.5" r="5" class="dg-fill-accent"/>
+                    <circle cx="321" cy="142.5" r="5" class="dg-fill-accent"/>
+                    <circle cx="460.5" cy="124.5" r="5" class="dg-fill-accent"/>
+                    <circle cx="600" cy="70.5" r="5" class="dg-fill-accent"/>
+                    <text x="78" y="44" class="dg-tb">76%</text>
+                    <text x="181.6" y="106" text-anchor="middle" class="dg-tb">61%</text>
+                    <text x="321" y="162" text-anchor="middle" class="dg-tb">55%</text>
+                    <text x="460.5" y="115" text-anchor="middle" class="dg-tb">59%</text>
+                    <text x="594" y="64" text-anchor="end" class="dg-tb">71%</text>
+
+                    <text x="70" y="230" text-anchor="middle" class="dg-ts">第 1 份</text>
+                    <text x="181.6" y="230" text-anchor="middle" class="dg-ts">第 5 份</text>
+                    <text x="321" y="230" text-anchor="middle" class="dg-ts">第 10 份</text>
+                    <text x="460.5" y="230" text-anchor="middle" class="dg-ts">第 15 份</text>
+                    <text x="600" y="230" text-anchor="middle" class="dg-ts">第 20 份</text>
+                    <text x="335" y="250" text-anchor="middle" class="dg-ts">含答案的文件放在第幾份（共 20 份）</text>
+                  </svg>
+                </div>
+                <figcaption>依 p.43 右圖的 5 個數字重畫（Liu 等人，Lost in the Middle）：答案放在中間，準確率最低。虛線框是本文的註記：agent 的 context 中段正好堆著舊的 tool 結果。</figcaption>
+              </figure>
               <p>注意力的成本有兩組研究量化過。Context rot 發現輸入越長，準確率越低。Lost in the middle 把答案放在 20 份文件的不同位置：放第 1 份，準確率 76%；放第 10 份掉到 55%；放第 20 份又回到 71%。對 agent 來說這很關鍵，因為 context 的中間正好堆著舊的 tool 結果。</p>
             </div>
           </div>
@@ -412,7 +546,51 @@ ValueError: bad id"}
               <p>既然 context 有成本，下一步就是管理它。Slide 給了四種策略，而且有先後順序。Admission 在內容進 window 之前把關，只放需要的部分：原始 DOM 有 48,000 token，擷取後只剩 900，答案卻相同。Offloading 讓內容留在外面，需要時才載入：60 個 tool schema 要 42,000 token，改成索引加 3 個 schema 只要 3,100。</p>
               <p>前兩種擋在門口，後兩種處理已經進了 window 的內容。Transformation 刪掉過期或重複的舊內容，例如每個物件只留最新狀態、遮掉 N 步以前的 tool 結果，96,000 token 就變成 24,000，過程中沒有做任何摘要。Compaction 則用 LLM 把舊歷史寫成摘要，有損又不可逆，所以排在最後。</p>
               <p>策略之外，還要知道 context 會怎麼壞。Breunig 把失敗分成五種：poisoning、distraction、confusion、clash、drift。叫得出名字之後，修法就很明顯。Poisoning 就刪掉那段；distraction 就遮掉舊的 tool 結果（masking）；confusion 就用 admission 擋掉無關的 tool 和文件；clash 就用 dedup 只留最新狀態；drift 就把目標重新放回 context。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>失敗</th><th>怎麼發生</th><th>修法</th><th>對應的策略</th></tr></thead>
+                <tbody>
+                  <tr><td>Poisoning</td><td>一個幻覺進了 window，後來 model 把它當成事實引用</td><td>刪掉那一段</td><td>Transformation</td></tr>
+                  <tr><td>Distraction</td><td>歷史越堆越長，agent 開始模仿自己過去的動作</td><td>遮掉 N 步以前的 tool 結果（masking）</td><td>Transformation</td></tr>
+                  <tr><td>Confusion</td><td>無關的 tool 或文件把答案帶偏</td><td>只放這一步需要的 tool 與文件</td><td>Admission、offloading</td></tr>
+                  <tr><td>Clash</td><td>新資訊和舊資訊矛盾，兩者都留在 window</td><td>Dedup，每個物件只留最新狀態</td><td>Transformation</td></tr>
+                  <tr><td>Drift</td><td>真正的目標埋在歷史裡，model 改追附近的子目標</td><td>把目標重新放回 context</td><td>Compaction 之後 re-inject；memory</td></tr>
+                </tbody>
+              </table></div>
+              <p>前三欄依 p.51 整理，最右欄是本文的對應：每一種修法都是四種策略之一，所以叫得出失敗的名字，就知道該用哪一招。</p>
               <p>最後一個實驗（Lewis，2026）把整堂收攏起來：model 不變，只改 harness。結果 SWE-bench Verified 從 43 題變 72 題（1.7×），SWE-bench Pro 從 31 題變 72 題（2.3×）。改良的 harness 做的正是這堂的內容：壓縮舊輸出、保留最近的 observation、偵測停滯。要注意 Verified 用的是 20,480 token 的小 window，而 window 越小，context 管理的影響就越大。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 640 240" role="img" aria-label="長條圖：同一個 model 放進基本 harness 與改良 harness，各解出幾題。SWE-bench Verified：基本 43 題，改良 72 題，共 169 題，約 1.7 倍。SWE-bench Pro：基本 31 題，改良 72 題，共 316 題，約 2.3 倍。">
+                    <rect x="74" y="12" width="12" height="12" rx="2" class="dg-fill-soft"/>
+                    <text x="92" y="23" class="dg-ts">基本 harness</text>
+                    <rect x="180" y="12" width="12" height="12" rx="2" class="dg-fill-accent"/>
+                    <text x="198" y="23" class="dg-ts">改良 harness（model 不變）</text>
+
+                    <line x1="70" y1="200" x2="590" y2="200" class="dg-soft"/>
+                    <line x1="70" y1="200" x2="70" y2="36" class="dg-soft"/>
+                    <text x="62" y="204" text-anchor="end" class="dg-ts">0</text>
+                    <text x="62" y="164" text-anchor="end" class="dg-ts">20</text>
+                    <text x="62" y="124" text-anchor="end" class="dg-ts">40</text>
+                    <text x="62" y="84" text-anchor="end" class="dg-ts">60</text>
+                    <text x="62" y="44" text-anchor="end" class="dg-ts">80 題</text>
+
+                    <rect x="150" y="114" width="64" height="86" class="dg-fill-soft"/>
+                    <text x="182" y="108" text-anchor="middle" class="dg-t">43 / 169</text>
+                    <rect x="226" y="56" width="64" height="144" class="dg-fill-accent"/>
+                    <text x="258" y="50" text-anchor="middle" class="dg-t">72 / 169</text>
+                    <text x="258" y="34" text-anchor="middle" class="dg-ta">1.7×</text>
+                    <text x="220" y="222" text-anchor="middle" class="dg-tb">SWE-bench Verified</text>
+
+                    <rect x="390" y="138" width="64" height="62" class="dg-fill-soft"/>
+                    <text x="422" y="132" text-anchor="middle" class="dg-t">31 / 316</text>
+                    <rect x="466" y="56" width="64" height="144" class="dg-fill-accent"/>
+                    <text x="498" y="50" text-anchor="middle" class="dg-t">72 / 316</text>
+                    <text x="498" y="34" text-anchor="middle" class="dg-ta">2.3×</text>
+                    <text x="460" y="222" text-anchor="middle" class="dg-tb">SWE-bench Pro</text>
+                  </svg>
+                </div>
+                <figcaption>依 p.53 的表重畫（Lewis，2026）：model 不變，只改 harness，解題數。改良的項目是壓縮舊的 tool 輸出、保留最近的 observation、偵測重複與停滯。Verified 用 20,480 token 的小 window，所以 context 管理的影響更明顯。</figcaption>
+              </figure>
             </div>
           </div>
         </div>
@@ -444,6 +622,14 @@ ValueError: bad id"}
             <dd>
               <p>一份 patch 由 file header 與多個 hunk 組成。Hunk header <code>@@ -41,3 +41,3 @@</code> 說：舊檔從第 41 行起 3 行，新檔同樣。空格開頭的行是 context 行，用來定位；<code>-</code> 刪除，<code>+</code> 新增。</p>
               <p><code>git apply</code> 依 context 行在附近搜尋，行號偏移了還能套。Context 行對不上就失敗，而且預設全有或全無：一個 hunk 失敗，整份都不套用。第 6 段有實測。</p>
+              <figure class="file"><figcaption>第 6 段那份 patch（git diff -U1），逐行標出</figcaption><pre><code>--- a/client.ts          ← file header：改哪個檔案
++++ b/client.ts
+@@ -41,3 +41,3 @@        ← hunk header：舊檔第 41 行起 3 行，新檔同樣
+ const opts = {          ← context 行（開頭一個空格）：沒改，用來定位
+-  maxRetries: 3,        ← 刪除
++  maxRetries: 5,        ← 新增
+ };                      ← context 行</code></pre></figure>
+              <p>Model 讀檔之後，只要這 2 行 context 行變了，例如 formatter 把 <code>{</code> 換行，<code>git apply</code> 就找不到位置。</p>
             </dd>
           </div>
           <div id="t4">
