@@ -6,6 +6,7 @@ Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-21:
   基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
     div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
     A「常見誤解」callout is expected (warning only).
+  觀念補充 terms: 4-6 is a suggestion (warning only, 2026-10-22).
   進階題 li.dq: 6, each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
     details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
   Every li.bq has p.gh-talk linking to the lecture's GitHub issue; li.dq has none (進階題 stay
@@ -127,7 +128,7 @@ def check(path):
         dts = bg.find("dt")
         rep.append(f"terms={len(dts)}")
         if not 4 <= len(dts) <= 6:
-            probs.append(f"terms={len(dts)}")
+            warns.append(f"terms={len(dts)} (suggested 4-6)")
     by = sec("s-beyond")
     if by:
         items = by.find("div", "idea")
