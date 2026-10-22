@@ -155,7 +155,7 @@ def main():
     ap.add_argument("--pages", type=int, required=True)
     ap.add_argument("--pdf", required=True)
     ap.add_argument("--fix-time", action="store_true")
-    ap.add_argument("--long", type=int, default=50)
+    ap.add_argument("--long", type=int, default=70)  # 2026-10-22: 推理段落放寬到 70 字（STYLE_ARTICLE 第 5 節）
     args = ap.parse_args()
     path = Path(args.path)
     html = path.read_text(encoding="utf-8")

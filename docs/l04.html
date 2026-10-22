@@ -66,11 +66,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">L2 從使用者的角度看 agent。這堂換成設計者的角度：loop 怎麼寫、給 model 哪些 tool、每一步讓 model 看到什麼。主線是一句話：model 只決定下一步，其他都是 harness 的工作。</p>
+    <p class="thesis">L2 從使用者的角度看 agent，這堂換成設計者的角度，問三件事：loop 怎麼寫、給 model 哪些 tool、每一步讓 model 看到什麼。三件事背後是同一句話：model 每一圈只決定下一步，其他的事都由 harness 負責，所以 harness 寫得好不好，直接決定 agent 的表現。</p>
     <ul class="core">
-      <li><span><b>Loop 很短，難在周邊。</b>ReAct loop 寫成程式只有二十幾行。表現取決於 harness 的四項工作：組 context、寫 tool、驗證執行、管理結果。</span></li>
-      <li><span><b>Tool 的輸出就是 context。</b>Tool 決定 model 能看到什麼、能改什麼：search 先 grep，edit 選失敗看得見的，shell 要 harness 看著。五條原則管定義與輸出怎麼進 context。只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。</span></li>
-      <li><span><b>Context 是有限資源。</b>越長越貴、越慢、越不準。依序用 admission、offloading、transformation；compaction 有損且不可逆，留到最後。</span></li>
+      <li><span><b>Loop 很短，難在周邊。</b>ReAct loop 寫成程式只有二十幾行，所以 agent 的表現取決於 loop 周邊的四項 harness 工作：組 context、寫 tool、驗證並執行、管理結果。</span></li>
+      <li><span><b>Tool 的輸出就是 context。</b>Tool 決定 model 能看到什麼、能改什麼，而它輸出的每一個字都會進下一圈的 prompt。所以 tool 要少而專用、輸出精簡、錯誤要能教：同樣用 GPT-4，只給 shell 解出 11.0%，換成為 model 設計的介面解出 18.0%。</span></li>
+      <li><span><b>Context 是有限資源。</b>Context 越長，就越貴、越慢、越不準，所以要依成本由低到高管理它：先用 admission、offloading、transformation，有損又不可逆的 compaction 留到最後。</span></li>
     </ul>
     <p class="readhow">建議順序：先讀第 5 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 5 段的進階題。</p>
   </section>
@@ -222,7 +222,7 @@
           <figcaption>依 p.45–49 整理：四種策略各在哪裡動作。1、2 在內容進 window 之前動作，無損；3、4 處理已在 window 裡的內容，越往後越難找回。</figcaption>
         </figure>
         <div class="prose">
-          <p>第一張圖的重點：model 每一圈只做一個決定，其他四件事都在 model 之外。所以同一個 model 放進不同的 harness，表現會差很多。第二張圖把第 4 項工作拆開：context 有一個入口、一個外部儲存、一個會變長的中段，四種策略各守一個位置。</p>
+          <p>第一張圖的重點是：model 每一圈只做一個決定，其他四件事都在 model 之外。因為這四件事由 harness 負責，同一個 model 放進不同的 harness，表現會差很多。第二張圖把第 4 項工作（管理 context）拆開來看：context 有一個入口、一個外部儲存、一個會越來越長的中段，四種策略各守一個位置。</p>
         </div>
       </section>
 
@@ -236,42 +236,43 @@
           <div class="idea" id="i1">
             <h3>ReAct：推理要有 observation 來檢查 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=4" target="_blank" rel="noopener">p.4–7</a></h3>
             <div class="prose">
-              <p>ReAct 讓 model 輪流做三件事：Thought、Action、Observation。只推理，沒有東西檢查推理，小錯誤會累積成自信的幻覺。只行動，背後沒有計畫，會重複同樣的動作。Observation 把真實的結果放回 context，修正想法。</p>
-              <p>寫成程式，Action 是 tool call，Observation 是 tool 結果，loop 只有二十幾行（第 6 段）。Model 每一圈只做一個決定：給出最終回答，或發出 tool call。其他事情都在 model 之外：組出 context、寫 tool 定義、驗證並執行、整理結果。</p>
+              <p>ReAct 讓 model 輪流做三件事：Thought、Action、Observation。它要解決的是兩種極端各自的問題。只推理不行動，就沒有東西檢查推理，小錯誤會一路累積成自信的幻覺；只行動不推理，tool call 背後沒有計畫，model 會一直重複同樣的動作。Observation 把真實的結果放回 context，下一個 Thought 就能依據它修正想法。</p>
+              <p>寫成程式時，Action 就是 tool call，Observation 就是 tool 結果，整個 loop 只有二十幾行（第 6 段）。這個 loop 裡，model 每一圈只做一個決定：給出最終回答，或發出 tool call。其他事情都在 model 之外，由 harness 完成：組出 context、寫 tool 定義、驗證並執行、整理結果。這表示 agent 做得多好，有很大一部分取決於這四件事做得多好，後面四個觀念就是逐一展開它們。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>Tool 要為 model 設計：search、edit、shell 的取捨 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=8" target="_blank" rel="noopener">p.8–26</a></h3>
             <div class="prose">
-              <p>Loop 定了，model 每一圈只做一件事：選一個 tool，填參數。所以 tool 決定 model 能看到什麼、能改什麼。Model 看 repo 的眼睛是 search tool，動手的手是 edit tool 和 shell。Slide 把 tool 分四類：search/read、edit/write、execution、其他。每一類都有幾種做法，每一種做法都有代價，設計者要選。</p>
-              <p><b>Search：先 grep，名字猜不到再換。</b>Agent 看不到整個 repo，要靠 tool 找程式碼。Slide 給四種找法。Grep 不用建索引，永遠反映 repo 現況；但它只比對字面，搜「timeout」找不到 <code>deadline</code>，而且每搜一次就花一圈、佔一段 context。Embedding 索引依意思找，repo map（檔案樹加上排序過的 symbol 清單）依結構找；兩者查得快，代價是索引要跟著程式碼同步。</p>
-              <p>Extrinsic signal 是程式碼以外的證據：stack trace、失敗的測試、git 歷史。有這種訊號時它最準：一份 crash report 直接指到 <code>tax.ts</code> 的某一行，一次搜尋都不用。但它只在有人回報問題時存在。LSP 問 compiler 的索引，能跟著 import、別名、overload 走；代價是每種語言一個常駐 server，冷啟動慢。</p>
-              <p>四種找法的順序，slide 一句話定：先用 grep，名字猜不到了再用索引或 LSP。理由是成本的型態不同。Grep 的成本每次查詢都付，但不用維護。索引與 LSP 的成本在建置與同步，查詢時幾乎免費。Repo 小、任務短，grep 便宜；repo 大、任務長，固定成本才划算。</p>
-              <p><b>Edit：四種方式，失敗要看得見。</b>找到了，接著是怎麼改。四種方式在 token 成本與穩健度之間取捨，slide p.21 把它們畫在兩個軸上。整檔重寫沒有 patch 語法，每次都套得上；但輸出和檔案大小成正比，長檔還會 drift（model 重寫時漸漸偏離原文）。Unified diff 精簡，人和 CI 都看得懂；但 context 行過期，hunk 就套不上。</p>
-              <p>Search/replace 靠內容定位，輸出只和改動成正比；anchor 不唯一、過期或空白對不上就失敗。AST 編輯構造上就合法，改一個函式簽名能連 18 個呼叫端一起改；但每種語言一套工具，能做的操作有限。實務上 search/replace 成了預設：Aider 的 SEARCH/REPLACE block、Claude Code 的 Edit tool 都是這一型。原因是它的失敗很乾淨：anchor 找不到，tool 回錯誤，model 重讀檔案再試一次。整檔重寫的失敗很安靜：程式碼漸漸變樣，沒有人報錯。選 edit tool 時，失敗能不能偵測，和成功率一樣重要。</p>
-              <p><b>Execution：shell 最強，也最需要 harness 看著。</b>Shell 一次呼叫能串接、過濾、迴圈、重試；碰得到檔案系統、網路、套件管理員；檔案與 process 在呼叫結束後還在。Blast radius 等於 shell 本身。所以 slide 列了五個執行上的考量：失敗訊號要能行動、輸出要夠但不能多、長程序要能放背景、要有重試預算、要隔離。這五件事 shell 自己都不做，全部是 harness 的工作（深入 d1 有每一項的做法）。</p>
-              <p>Slide 還點名五種常見的 tool。Browser 把畫面截圖回傳，model 才看得到 render 的結果。Memory 與筆記把發現寫進檔案，計畫才撐得過 compaction。問使用者：一個便宜的問題，勝過一個自信的錯 patch。Subagent 把探索關在外面，回來的是一份清單，不是 40 次讀檔。Web search 排最後：先讀裝好的原始碼，再查網路。</p>
-              <p><b>五條原則，管的是同一件事。</b>選項這麼多，怎麼設計？p.25 的五條原則都在管 tool 的定義與輸出怎麼進 context。少且正交：功能重疊的 tool 讓 model 猶豫，而且每個 tool 定義每一圈都佔 context。專用：<code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 把這些全推給 model 猜。輸出省 token：截斷、分頁、摘要，因為每一個字都會進下一圈的 prompt。</p>
-              <p>錯誤要能教：錯誤訊息是 model 唯一的回饋，「invalid argument」給不了下一步，「customer_id 的格式應為 C-10293」才給得了。預設冪等：agent loop 會重試，不冪等的 tool 重試一次就多扣一次款（深入 d2 有例子）。五條裡面，前兩條管定義，後三條管輸出；定義每圈都付，輸出每次呼叫付。</p>
-              <p><b>證據：介面不同，解題率差 1.6 倍。</b>只給 shell 就好嗎？SWE-agent（一個早期的 coding agent 研究）用 GPT-4 做消融實驗：只給 shell 解出 11.0%，為 model 設計的介面解出 18.0%。更反直覺的是兩個「多給」的設定：顯示整個檔案 12.7%，保留完整的互動歷史 15.0%，都比 18.0% 差。資訊多了，model 找下一步的能力反而弱。這個結果依 model 而定，slide 要你在 assignment 用新 model 重跑；但「tool 的輸出就是 context」這個結論不會改。</p>
+              <p>Loop 定了之後，model 每一圈能做的只有一件事：選一個 tool、填好參數。所以 tool 決定了 model 能看到什麼、能改什麼：search tool 是它看 repo 的眼睛，edit tool 和 shell 是它動手的手。Slide 把 tool 分成四類：search/read、edit/write、execution、其他。每一類都有幾種做法，每一種做法都有代價，下面依序看設計者要怎麼選。</p>
+              <p><b>Search：先 grep，名字猜不到再換。</b>Agent 看不到整個 repo，只能靠 tool 找程式碼，slide 給了四種找法。Grep 不用建索引，所以永遠反映 repo 的現況；但它只比對字面，搜「timeout」找不到 <code>deadline</code>，而且每搜一次就花掉一圈、佔掉一段 context。Embedding 索引依意思找，repo map（檔案樹加上排序過的 symbol 清單）依結構找，兩者查詢時都很快，代價是索引要跟著程式碼一起同步。</p>
+              <p>第三種是 extrinsic signal，也就是程式碼以外的證據：stack trace、失敗的測試、git 歷史。有這種訊號時它最準，例如一份 crash report 直接指到 <code>tax.ts</code> 的某一行，一次搜尋都不用；但它只在有人回報問題時才存在。第四種是 LSP，它直接問 compiler 的索引，所以能跟著 import、別名、overload 走，代價是每種語言要一個常駐 server，冷啟動也慢。</p>
+              <p>Slide 對順序的建議是：先用 grep，名字猜不到了再換索引或 LSP。這個順序來自兩種成本的型態不同：grep 每查一次就付一次，索引與 LSP 則是先付一筆建置與同步的固定成本，之後每次查詢幾乎免費。所以 repo 小、任務短的時候 grep 划算；repo 大、任務長，固定成本才攤得掉。</p>
+              <p><b>Edit：四種方式，失敗要看得見。</b>找到程式碼之後，下一步是改它。Slide p.21 把四種改法放在兩個軸上比較：token 成本，與穩健度（改動是否落在想要的位置）。整檔重寫沒有 patch 語法可以寫錯，所以每次都套得上；但輸出和檔案大小成正比，長檔還會 drift，也就是 model 重寫時漸漸偏離原文。Unified diff 精簡，人和 CI 都看得懂；但只要 context 行過期，hunk 就套不上。</p>
+              <p>Search/replace 靠一段原文字串定位，所以輸出只和改動的大小成正比；但 anchor 不唯一、已經過期或空白對不上，就會失敗。AST 編輯直接改語法樹，結果一定合法，改一個函式簽名能連 18 個呼叫端一起改；代價是每種語言一套工具，能做的操作也有限。</p>
+              <p>實務上 search/replace 成了預設，Aider 的 SEARCH/REPLACE block、Claude Code 的 Edit tool 都是這一型。原因在於它失敗的方式：anchor 找不到時 tool 會回錯誤，model 重讀檔案再試一次就好。整檔重寫的失敗卻很安靜，程式碼漸漸變樣，沒有任何東西報錯。所以選 edit tool 時，失敗看不看得見，和成功率一樣重要。</p>
+              <p><b>Execution：shell 最強，也最需要 harness 看著。</b>Shell 一次呼叫就能串接、過濾、迴圈、重試，碰得到檔案系統、網路與套件管理員，而且產生的檔案與 process 在呼叫結束後還在。也就是說，shell 能做的事 agent 都能做，blast radius 等於 shell 本身。因此 slide 列了五個執行上的考量：失敗訊號要讓 model 能據以行動、輸出要夠但不能多、長程序要能放背景、重試要有預算、執行環境要隔離。Shell 自己不做這五件事，所以它們全部落在 harness 身上（深入 d1 有每一項的做法）。</p>
+              <p>除了這三類，slide 還點名五種常見的 tool，每一種都補上 model 缺的一樣東西。Browser 把畫面截圖回傳，model 才看得到 render 的結果。Memory 與筆記把發現寫進檔案，計畫才撐得過 compaction。問使用者的理由是：一個便宜的問題，勝過一個自信的錯 patch。Subagent 把探索關在外面，回來的是一份清單，不是 40 次讀檔的結果；web search 則排最後，先讀裝好的原始碼，再查網路。</p>
+              <p><b>五條原則，管的是同一件事。</b>選項這麼多，p.25 用五條原則收斂，而它們管的都是同一件事：tool 的定義與輸出怎麼進 context。第一條是少且正交，因為功能重疊的 tool 會讓 model 猶豫，而且每一個 tool 定義每一圈都要佔 context。第二條是專用：<code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 則把這些全推給 model 去猜。第三條是輸出省 token，用截斷、分頁、摘要，因為輸出的每一個字都會進下一圈的 prompt。</p>
+              <p>第四條是錯誤要能教。錯誤訊息是 model 唯一的回饋，「invalid argument」給不了下一步，「customer_id 的格式應為 C-10293」才給得了。第五條是預設冪等，因為 agent loop 會重試，不冪等的 tool 重試一次就可能多扣一次款（深入 d2 有例子）。把五條放在一起看，前兩條管定義，每一圈都付；後三條管輸出，每次呼叫才付。</p>
+              <p><b>證據：介面不同，解題率差 1.6 倍。</b>那只給 shell 行不行？SWE-agent（一個早期的 coding agent 研究）用 GPT-4 做了消融實驗：只給 shell 解出 11.0%，換成為 model 設計的介面解出 18.0%。更反直覺的是兩個「多給資訊」的設定：顯示整個檔案只有 12.7%，保留完整的互動歷史只有 15.0%，都比 18.0% 差。這表示資訊多了，model 找出下一步的能力反而變弱。這個數字會隨 model 改變，所以 slide 要你在 assignment 用新 model 重跑；但「tool 的輸出就是 context」這個結論不會因此改變。</p>
             </div>
             <div class="exlist deeplist">
               <details class="ex deep" id="d1">
                 <summary>深入｜p.23 的五個執行考量，harness 各怎麼做<span>p.22–23</span></summary>
                 <div class="exbody prose">
-                  <p>Slide 只列了五個名詞。這裡給每一項一個最小的做法，都是 harness 在 shell 外面做的事，shell 本身不會變。</p>
-                  <p><b>1 失敗訊號（failure signal）。</b>Shell 的失敗是一個 exit code。Model 要的是「錯在哪、下一步做什麼」。Harness 把 exit code、stderr 的最後幾行、執行時間包成一則 tool result。Exit code 非 0 時，在前面加一行 <code>Command failed (exit 1)</code>，model 才不會把錯誤當成輸出讀過去。</p>
-                  <p><b>2 輸出（output）。</b>一個 <code>pytest</code> 可以印 3,000 行。Harness 設上限，例如 200 行或 25,000 token；超過就保留頭尾，中間換成一行 <code>[... 2,600 lines omitted; rerun with -q or grep to narrow ...]</code>。這一行是 admission（p.47）的最小版本：先過濾，再進 context。截斷時要告訴 model 怎麼縮小範圍，否則它只會重跑同一個指令。</p>
-                  <p><b>3 時間（duration）。</b>一個 build 可能跑 10 分鐘。Tool 要有 timeout 參數，也要能把 process 放到背景：立刻回一個 id，之後用另一個 tool 查進度。沒有這個設計，model 只能等，或者在 timeout 時把一個成功的 build 當失敗。</p>
-                  <p><b>4 預算（budgets）。</b>同一個測試失敗三次，再試第四次的期望值很低。Harness 數 retry 次數與花掉的 token，超過就把控制權交回使用者（p.24 的 asking the user）。預算寫在 harness，不寫在 prompt：prompt 裡的「最多試三次」model 不一定守。</p>
-                  <p><b>5 隔離（isolation）。</b>決定程式在哪裡跑、碰得到什麼：container 或 VM、唯讀的路徑、允許的網路白名單、不給的環境變數。這一項的做法是靠作業系統擋，不靠 model 自律。延伸閱讀裡 incident.io 用 Go 寫的虛擬 shell，是把隔離做到最深的例子。</p>
-                  <p>五項排在一起有一個共同點：每一項都把一些原本「交給 model 判斷」的事，改成「harness 保證」。這是 Schmid（延伸閱讀）主張「只給 bash」的前提。他砍掉的是 model 面對的 tool 數量；這五項工作沒有消失，全部搬進 harness。</p>
+                  <p>Slide 只列了五個名詞，這裡給每一項一個最小的做法。它們都是 harness 在 shell 外面做的事，shell 本身完全不用改。</p>
+                  <p><b>1 失敗訊號（failure signal）。</b>Shell 失敗時只給一個 exit code，但 model 需要知道錯在哪、下一步做什麼。所以 harness 要把 exit code、stderr 的最後幾行和執行時間包成一則 tool result。Exit code 不是 0 時，還要在最前面加一行 <code>Command failed (exit 1)</code>，否則 model 可能把錯誤訊息當成正常輸出讀過去。</p>
+                  <p><b>2 輸出（output）。</b>一次 <code>pytest</code> 可以印 3,000 行，全部放進 context 太貴，也會蓋掉重點。因此 harness 要設上限，例如 200 行或 25,000 token，超過就保留頭尾，中間換成一行 <code>[... 2,600 lines omitted; rerun with -q or grep to narrow ...]</code>。這一行就是 admission（p.47）的最小版本：先過濾，再進 context。截斷時要告訴 model 怎麼縮小範圍，否則它只會重跑同一個指令。</p>
+                  <p><b>3 時間（duration）。</b>一個 build 可能跑 10 分鐘，所以 tool 要有 timeout 參數，也要能把 process 放到背景：先立刻回一個 id，之後再用另一個 tool 查進度。少了這個設計，model 只能乾等，或是在 timeout 時把一個還在跑、最後會成功的 build 當成失敗。</p>
+                  <p><b>4 預算（budgets）。</b>同一個測試已經失敗三次，再試第四次成功的機會很低。所以 harness 要數 retry 次數與花掉的 token，超過預算就把控制權交回使用者（p.24 的 asking the user）。預算要寫在 harness，不能只寫在 prompt，因為 prompt 裡的「最多試三次」model 不一定會守。</p>
+                  <p><b>5 隔離（isolation）。</b>這一項決定程式在哪裡跑、碰得到什麼：container 或 VM、唯讀的路徑、網路白名單、不給的環境變數。它靠作業系統擋，不靠 model 自律，因為 prompt 擋不住一個寫錯的指令。延伸閱讀裡 incident.io 用 Go 寫的虛擬 shell，是把隔離做到最深的例子。</p>
+                  <p>把五項排在一起，可以看到一個共同點：每一項都把原本「交給 model 判斷」的事，改成「由 harness 保證」。這也是 Schmid（延伸閱讀）主張「只給 bash」的前提：他砍掉的是 model 面對的 tool 數量，這五項工作沒有消失，全部搬進了 harness。</p>
                 </div>
               </details>
               <details class="ex deep" id="d2">
                 <summary>深入｜錯誤要能教、預設冪等：兩條原則各一個例子<span>p.25</span></summary>
                 <div class="exbody prose">
-                  <p><b>錯誤要能教。</b>同一個錯誤，三種回法。第一種只說錯了，model 只能猜。第二種給 traceback，model 要讀 40 行才找到原因，而且這 40 行會留在 context。第三種說怎麼修，model 下一圈就能動。</p>
+                  <p><b>錯誤要能教。</b>同一個錯誤可以有三種回法，差別在 model 下一圈能不能直接動手。第一種只說錯了，model 只能猜。第二種給完整 traceback，model 要讀 40 行才找到原因，而且這 40 行會一直留在 context。第三種直接說怎麼修，model 下一圈就能照做。</p>
                   <figure class="file"><figcaption>同一個 search_orders 呼叫失敗，三種 tool result</figcaption><pre><code># 1 沒有用
 {"error": "invalid argument"}
 
@@ -285,9 +286,9 @@ ValueError: bad id"}
 {"error": "customer_id '10293' is not valid.
   Expected the form C-10293 (prefix C-, then digits).
   If you only have a name, call find_customer(name) first."}</code></pre></figure>
-                  <p>第三種的寫法有固定的三段：錯在哪、正確的樣子、下一步。延伸閱讀的 Anthropic 文章說，只改 tool 的描述，就讓 Claude Sonnet 3.5 在 SWE-bench Verified 上大幅減少錯誤；錯誤訊息是同一類東西。錯誤訊息是 tool 唯一能說話的機會，要拿來教。</p>
-                  <p><b>預設冪等。</b>冪等的意思：同一個呼叫做兩次，結果和做一次相同。讀檔、查詢、把一個值設成 5，都冪等；轉帳、送 email、在清單尾端加一筆，都不冪等。Agent loop 會重試：timeout、網路錯誤、model 覺得上一次沒成功，都會再呼叫一次。<code>create_refund(order_id, amount)</code> 不冪等：重試一次就退兩次款。改法是加一個 idempotency key：<code>create_refund(order_id, amount, request_id)</code>，harness 看到相同的 <code>request_id</code> 就回上一次的結果，不再執行。</p>
-                  <p>做不到冪等的操作（送出 email、發 PR），就把它標成不可重試，harness 看到失敗時停下來問人，不自動重試。這是 p.23 第 4 項（預算）和第 5 條原則接在一起的地方：重試是 harness 的行為，所以 tool 要先告訴 harness 自己能不能重試。</p>
+                  <p>第三種的寫法有固定的三段：錯在哪、正確的樣子、下一步做什麼。延伸閱讀的 Anthropic 文章說，只改 tool 的描述，就讓 Claude Sonnet 3.5 在 SWE-bench Verified 上大幅減少錯誤；錯誤訊息和描述一樣，都是 model 讀得到的文字。換個角度看，錯誤訊息是 tool 唯一能對 model 說話的機會，所以要拿來教。</p>
+                  <p><b>預設冪等。</b>冪等的意思是同一個呼叫做兩次，結果和做一次相同。讀檔、查詢、把一個值設成 5，都冪等；轉帳、送 email、在清單尾端加一筆，都不冪等。Agent loop 一定會重試，因為 timeout、網路錯誤、model 以為上一次沒成功，都會讓它再呼叫一次。所以 <code>create_refund(order_id, amount)</code> 這種 tool 很危險，重試一次就退兩次款。改法是加一個 idempotency key，變成 <code>create_refund(order_id, amount, request_id)</code>：harness 看到相同的 <code>request_id</code>，就回上一次的結果，不再執行。</p>
+                  <p>有些操作做不到冪等，例如送出 email、發 PR，這時要把 tool 標成不可重試，讓 harness 遇到失敗時停下來問人。這裡也是 p.23 第 4 項（預算）和第 5 條原則接在一起的地方：重試是 harness 的行為，所以 tool 要先告訴 harness 自己能不能重試。</p>
                 </div>
               </details>
             </div>
@@ -295,25 +296,26 @@ ValueError: bad id"}
           <div class="idea" id="i3">
             <h3>Prompt 技巧從簡單開始，夠用就停 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=28" target="_blank" rel="noopener">p.28–40</a></h3>
             <div class="prose">
-              <p>Tool 定了，接著是怎麼對 model 說話。Slide 列了八種 prompt 技巧，分三層。先用簡單的：zero-shot、few-shot、role。需要時加推理：chain-of-thought、tree-of-thought、self-consistency。最後才設計成系統：prompt chaining、meta prompting。每往下一層，token 與呼叫次數都增加，所以從上往下試。</p>
-              <p>每一種技巧都有「該換下一種」的訊號：規則講不清楚，加範例；任務有多個步驟，要 model 寫出步驟；答錯代價高，就取樣多次再投票。</p>
-              <p>這些建議有保存期限。新 model 在訓練時已經學會其中幾招；要 reasoning model「think step by step」沒有必要，有時反而有害。四條原則不會過期：從簡單開始、分段、具體精簡、大任務拆小。</p>
+              <p>Tool 定了，接下來是怎麼對 model 說話。Slide 列了八種 prompt 技巧，依成本分成三層：先用簡單的 zero-shot、few-shot、role；需要推理時再加 chain-of-thought、tree-of-thought、self-consistency；最後才把它設計成系統，用 prompt chaining、meta prompting。因為每往下一層，token 與呼叫次數都會增加，所以要從上往下試，夠用就停。</p>
+              <p>怎麼知道該往下一層？每一種技巧都有對應的訊號：規則講不清楚，就加範例；任務有多個步驟，就要 model 先寫出步驟；答錯的代價高，就取樣多次再投票。</p>
+              <p>這些建議也有保存期限，因為新 model 在訓練時已經學會其中幾招。例如要 reasoning model「think step by step」已經沒有必要，有時反而有害。不會過期的是四條原則：從簡單開始、分段、具體精簡、大任務拆小。</p>
             </div>
           </div>
           <div class="idea" id="i4">
             <h3>Context 是有限資源：錢、延遲、注意力 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=41" target="_blank" rel="noopener">p.41–44</a></h3>
             <div class="prose">
-              <p>Prompt 只是 context 的一小部分，tool 定義、檔案內容、tool 結果都在裡面。Karpathy 把管理這整塊叫 context engineering：「為下一步放進剛好需要的資訊」。重點在「下一步」：harness 每圈都要重新決定放什麼、拿掉什麼。Context 有三種成本。錢：每一步都重送整個 window。延遲：prompt 越長，prefill 越久，decode 也變慢。注意力：window 越滿，model 越難找回資訊。</p>
-              <p>兩組研究量化了注意力的成本。Context rot：輸入越長，準確率越低。Lost in the middle：答案放在 20 份文件的第 1 份，準確率 76%；第 10 份掉到 55%；第 20 份回到 71%。Agent 的 context 中間，正好是舊的 tool 結果。</p>
+              <p>前面講的 tool 與 prompt，最後都會變成 context 的一部分；prompt 只佔其中一小塊，tool 定義、檔案內容、tool 結果也都在裡面。Karpathy 把管理這一整塊叫 context engineering，定義是「為下一步放進剛好需要的資訊」。重點在「下一步」：任務一直在推進，所以 harness 每一圈都要重新決定放什麼、拿掉什麼。</p>
+              <p>這件事重要，是因為 context 有三種成本。第一是錢，每一步都要重送整個 window。第二是延遲，prompt 越長，prefill 越久，decode 也會變慢。第三是注意力，window 越滿，model 越難從裡面找回資訊。</p>
+              <p>注意力的成本有兩組研究量化過。Context rot 發現輸入越長，準確率越低。Lost in the middle 把答案放在 20 份文件的不同位置：放第 1 份，準確率 76%；放第 10 份掉到 55%；放第 20 份又回到 71%。對 agent 來說這很關鍵，因為 context 的中間正好堆著舊的 tool 結果。</p>
             </div>
           </div>
           <div class="idea" id="i5">
             <h3>四種策略有順序，harness 決定發揮多少 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=45" target="_blank" rel="noopener">p.45–52</a></h3>
             <div class="prose">
-              <p>知道 context 有成本，下一步是管理它。Slide 給四種策略，有先後順序。Admission 在內容進 window 之前把關，只放需要的部分：原始 DOM 48,000 token，擷取後只剩 900，答案相同。Offloading 讓內容留在外面，需要時才載入：60 個 tool schema 要 42,000 token，改成索引加 3 個只要 3,100。</p>
-              <p>Transformation 刪掉 window 裡過期或重複的舊內容，例如只留每個物件的最新狀態、遮掉 N 步以前的 tool 結果：96,000 變 24,000，沒有做任何摘要。Compaction 用 LLM 寫摘要，有損、不可逆，排最後。</p>
-              <p>Breunig 把 context 的失敗分成五種：poisoning、distraction、confusion、clash、drift。叫得出名字，修法就很明顯：poisoning 刪掉那段，distraction 遮掉舊的 tool 結果（masking），confusion 用 admission 擋掉無關的 tool 和文件，clash 用 dedup 只留最新狀態，drift 把目標重新放回。</p>
-              <p>最後一個實驗（Lewis，2026）把整堂收攏：model 不變，只改 harness。SWE-bench Verified 從 43 題變 72 題（1.7×），SWE-bench Pro 從 31 題變 72 題（2.3×）。改良的 harness 做的就是這堂的內容：壓縮舊輸出、保留最近的 observation、偵測停滯。注意：Verified 用 20,480 token 的小 window，window 越小，context 管理的影響越大。</p>
+              <p>既然 context 有成本，下一步就是管理它。Slide 給了四種策略，而且有先後順序。Admission 在內容進 window 之前把關，只放需要的部分：原始 DOM 有 48,000 token，擷取後只剩 900，答案卻相同。Offloading 讓內容留在外面，需要時才載入：60 個 tool schema 要 42,000 token，改成索引加 3 個 schema 只要 3,100。</p>
+              <p>前兩種擋在門口，後兩種處理已經進了 window 的內容。Transformation 刪掉過期或重複的舊內容，例如每個物件只留最新狀態、遮掉 N 步以前的 tool 結果，96,000 token 就變成 24,000，過程中沒有做任何摘要。Compaction 則用 LLM 把舊歷史寫成摘要，有損又不可逆，所以排在最後。</p>
+              <p>策略之外，還要知道 context 會怎麼壞。Breunig 把失敗分成五種：poisoning、distraction、confusion、clash、drift。叫得出名字之後，修法就很明顯。Poisoning 就刪掉那段；distraction 就遮掉舊的 tool 結果（masking）；confusion 就用 admission 擋掉無關的 tool 和文件；clash 就用 dedup 只留最新狀態；drift 就把目標重新放回 context。</p>
+              <p>最後一個實驗（Lewis，2026）把整堂收攏起來：model 不變，只改 harness。結果 SWE-bench Verified 從 43 題變 72 題（1.7×），SWE-bench Pro 從 31 題變 72 題（2.3×）。改良的 harness 做的正是這堂的內容：壓縮舊輸出、保留最近的 observation、偵測停滯。要注意 Verified 用的是 20,480 token 的小 window，而 window 越小，context 管理的影響就越大。</p>
             </div>
           </div>
         </div>
@@ -389,29 +391,29 @@ ValueError: bad id"}
           <div class="idea" id="x1">
             <h3>Tool 設計就是 context 設計：agent-computer interface</h3>
             <div class="prose">
-              <p>SWE-agent 論文把 agent 與電腦之間的介面叫 agent-computer interface（ACI）。IDE 為人設計：語法高亮、滑鼠、彈出視窗，人用眼睛掃、用滑鼠跳。Model 沒有這些：它一次讀一段文字，讀完就要決定下一步，而且讀過的每一行都留在 context 裡。所以 model 需要的介面不同：一次看 100 行、附行號，錯誤訊息要能讀，搜尋結果要先摘要。</p>
-              <p>p.26 的表就是證據：顯示整個檔案 12.7%，保留完整歷史 15.0%，都低於預設的 18.0%。這個結果可以用 p.42–43 解釋：context 越滿，model 越難找回資訊。所以設計 tool 時先問：這個輸出進 context 之後，model 的下一步會更好還是更差？</p>
-              <p>把這個問題往前推一步，tool 設計有兩個預算。Tool 定義每一圈都送，數量與描述長度是固定成本；60 個 tool 的 schema 要 42,000 token（p.48）。Tool 輸出每次呼叫才進來，是變動成本，而且會留到 compaction 為止。p.25 的五條原則，前兩條（少且正交、專用）省固定成本，後三條（省 token、錯誤要能教、冪等）省變動成本。一個 tool 好不好，看它在這兩個預算上各花多少，換回 model 多少正確的下一步。</p>
-              <p>還有一個檢驗：如果一個人只能透過這個 tool 看 repo，他做得到這個任務嗎？只給他 grep 的 37 筆結果、沒有檔案樹，他也會迷路。這個檢驗不嚴謹，但常常比直覺準：model 缺的多半是人也缺的東西，差別只是人會抱怨，model 會自信地猜。</p>
+              <p>SWE-agent 論文把 agent 與電腦之間的介面叫 agent-computer interface（ACI），用來和人用的介面對照。IDE 為人設計，有語法高亮、滑鼠、彈出視窗，人可以用眼睛掃、用滑鼠跳。Model 沒有這些能力：它一次讀一段文字，讀完就要決定下一步，而且讀過的每一行都會留在 context 裡。所以 model 需要不同的介面：一次看 100 行並附行號，錯誤訊息要能讀懂，搜尋結果要先摘要。</p>
+              <p>p.26 的數據就是證據：顯示整個檔案 12.7%，保留完整歷史 15.0%，都低於預設的 18.0%。這個結果可以用 p.42–43 解釋，因為 context 越滿，model 越難找回資訊。所以設計 tool 時，第一個問題應該是：這個輸出進了 context 之後，model 的下一步會更好還是更差？</p>
+              <p>把這個問題再往前推一步，會發現 tool 設計有兩個預算。Tool 定義每一圈都要送，所以數量與描述長度是固定成本，60 個 tool 的 schema 就要 42,000 token（p.48）。Tool 輸出則是每次呼叫才進來，屬於變動成本，而且會一直留到 compaction 為止。p.25 的五條原則剛好分成兩組：前兩條（少且正交、專用）省固定成本，後三條（省 token、錯誤要能教、冪等）省變動成本。因此評估一個 tool，要看它在兩個預算上各花多少，又換回 model 多少正確的下一步。</p>
+              <p>另一個簡單的檢驗是：如果一個人只能透過這個 tool 看 repo，他做得到這個任務嗎？只給他 grep 的 37 筆結果、沒有檔案樹，人也會迷路。這個檢驗不嚴謹，但常常比直覺準，因為 model 缺的多半是人也缺的東西；差別在於人會抱怨，model 會自信地猜。</p>
             </div>
           </div>
           <div class="idea" id="x2">
             <h3>評估時要固定 harness</h3>
             <div class="prose">
-              <p>p.52 說，同一個 model 換 harness，解題數差一倍。反過來看：兩個 model 放進不同的 harness 比較，差異可能來自 harness。排行榜多數不區分這件事。要比較 model，就固定 harness；要比較 harness，就固定 model 與 benchmark，還要寫明 window 大小。L7 會把這件事變成方法。</p>
+              <p>p.52 說，同一個 model 換一個 harness，解題數可以差一倍。反過來推，兩個 model 放進不同的 harness 比較時，差異可能來自 harness，而多數排行榜沒有區分這一點。所以要比較 model，就固定 harness；要比較 harness，就固定 model 與 benchmark，並寫明 window 大小。L7 會把這件事變成評估方法。</p>
             </div>
           </div>
           <div class="idea" id="x3">
             <h3>Prompt 的招式會過期，原則不會</h3>
             <div class="prose">
-              <p>一招有效，是因為它補了 model 當時的弱點。弱點補上了，這招就失效，有時反而干擾。所以 prompt 裡的每一招都該有 eval 證明有用；換 model 時，一次拿掉一招，看分數。四條原則（簡單、分段、具體、拆小）針對的是溝通本身，和 model 的世代無關。</p>
+              <p>一招 prompt 技巧有效，是因為它補了 model 當時的弱點。等新 model 在訓練時把弱點補上，這招就失效，有時還會干擾。所以 prompt 裡的每一招都該有 eval 證明它有用，換 model 時也要一次拿掉一招，看分數有沒有掉。四條原則（簡單、分段、具體、拆小）則不同，它們針對的是溝通本身，和 model 的世代無關。</p>
             </div>
           </div>
           <div class="idea" id="x4">
             <h3>無損與有損的排序，就是成本的排序</h3>
             <div class="prose">
-              <p>Admission 和 offloading 在內容進 window 之前動作。資訊還在外面，隨時拿得到，所以無損。Transformation 刪的是 window 裡的內容，但大多可以重新執行 tool 拿回：對目前的任務無損，對之後的引用有損。Compaction 由 model 決定留什麼，原文沒有 handle 可以拿回，所以不可逆。</p>
-              <p>這個排序也是成本排序：前三種不用呼叫 model，compaction 要先讀完整段歷史。L8 會算它的隱藏成本：丟掉的檔案要重讀，cache 也會重寫。</p>
+              <p>四種策略的順序，可以從資訊還拿不拿得回來去理解。Admission 和 offloading 在內容進 window 之前動作，資訊還在外面，隨時拿得到，所以無損。Transformation 刪的是 window 裡的內容，但大多可以重新執行 tool 拿回，因此對目前的任務無損，對之後的引用則有損。Compaction 由 model 決定留什麼，原文沒有 handle 可以拿回，所以不可逆。</p>
+              <p>這個排序同時也是成本的排序：前三種不用呼叫 model，compaction 卻要先讓 model 讀完整段歷史。L8 還會算它的隱藏成本：丟掉的檔案要重讀，cache 也要重寫。</p>
             </div>
           </div>
         </div>
