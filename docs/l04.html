@@ -59,7 +59,7 @@
       <li><span class="k">頁數</span>56</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
-      <li><span class="k">全部展開</span><span class="full-time">約 70 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 75 分鐘</span></li>
     </ul>
   </header>
 
@@ -236,8 +236,76 @@
           <div class="idea" id="i1">
             <h3>ReAct：推理要有 observation 來檢查 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=4" target="_blank" rel="noopener">p.4–7</a></h3>
             <div class="prose">
-              <p><b>一個 model 單獨能做什麼。</b>先從最簡單的情況開始：一個語言模型，沒有任何 tool。你送一段文字給它，它接著產生一段文字，然後就結束。它送出去和收回來的文字都以 token 計量，token 是 model 處理文字的最小單位，英文大約 4 個字母是 1 個 token，中文一個字常常是 1 到 2 個 token。一次送進 model 的全部文字叫 context，它的長度上限叫 context window，常見的大小是 200K token。這樣的 model 可以推理，也可以寫程式碼，但它碰不到你的電腦：它看不到 repo 裡的檔案，也跑不了測試。所以它給的程式碼只能靠猜，猜錯了也沒有東西告訴它。</p>
-              <p><b>ReAct 把推理和行動接成一個圈。</b>ReAct 是 2022 年的一篇論文（Yao 等人，arXiv 2210.03629），名字來自 Reason 和 Act。它讓 model 輪流做三件事：Thought、Action、Observation。Thought 是 model 寫下「我知道什麼、還缺什麼、下一步做什麼」；Action 是 model 發出一個結構化的請求，請外界替它做一件事，例如搜尋一個字串；Observation 是外界把真實的結果放回 context。拿「修 login 的 timeout」當例子：Thought「先找程式碼裡哪裡設 timeout」，Action「搜尋 timeout」，Observation「37 筆結果，在 12 個檔案裡」，下一個 Thought 就能依據這 37 筆縮小範圍。</p>
+              <p><b>一個 model 單獨能做什麼。</b>先從最簡單的情況開始：一個語言模型，沒有任何 tool。你送一段文字給它，它接著產生一段文字，然後就結束。它送出去和收回來的文字都以 token 計量，token 是 model 處理文字的最小單位，英文大約 4 個字母是 1 個 token，中文一個字常常是 1 到 2 個 token。一次送進 model 的全部文字叫 context，它的長度上限叫 context window，常見的大小是 200K token。</p>
+              <p>這樣的 model 可以推理，也可以寫程式碼，但它碰不到你的電腦：它看不到 repo 裡的檔案，也跑不了測試。所以它給的程式碼只能靠猜，猜錯了也沒有東西告訴它。下圖左邊就是這個狀態；右邊是這堂課要做出來的東西，model 外面多了一層 harness，harness 替它碰電腦。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 700 250" role="img" aria-label="兩個並排的方塊圖。左邊是一個 model 單獨：文字進、文字出，底下是 repo、測試、終端機，中間一道虛線隔開，標示 model 碰不到。右邊是 agent：一個 harness 框住 model 和一組 tool，tool 連到 repo、測試、終端機；model 只和 harness 交換文字，harness 替它執行 tool。">
+                    <defs>
+                      <marker id="l4g-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                      </marker>
+                    </defs>
+                    <!-- left -->
+                    <text x="160" y="20" text-anchor="middle" class="dg-tb">一個 model 單獨</text>
+                    <rect x="20" y="62" width="70" height="34" rx="4" class="dg-box"/>
+                    <text x="55" y="83" text-anchor="middle" class="dg-t">文字</text>
+                    <rect x="120" y="50" width="90" height="58" rx="4" class="dg-box-accent"/>
+                    <text x="165" y="76" text-anchor="middle" class="dg-tb">Model</text>
+                    <text x="165" y="94" text-anchor="middle" class="dg-ts">讀文字，寫文字</text>
+                    <rect x="240" y="62" width="70" height="34" rx="4" class="dg-box"/>
+                    <text x="275" y="83" text-anchor="middle" class="dg-t">文字</text>
+                    <line x1="90" y1="79" x2="118" y2="79" class="dg-line" marker-end="url(#l4g-ah)"/>
+                    <line x1="210" y1="79" x2="238" y2="79" class="dg-line" marker-end="url(#l4g-ah)"/>
+                    <line x1="20" y1="140" x2="310" y2="140" class="dg-soft dg-dash"/>
+                    <text x="165" y="132" text-anchor="middle" class="dg-ts">碰不到</text>
+                    <rect x="30" y="160" width="80" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="70" y="181" text-anchor="middle" class="dg-t">repo</text>
+                    <rect x="125" y="160" width="80" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="165" y="181" text-anchor="middle" class="dg-t">測試</text>
+                    <rect x="220" y="160" width="80" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="260" y="181" text-anchor="middle" class="dg-t">終端機</text>
+                    <text x="165" y="226" text-anchor="middle" class="dg-ts">程式碼只能靠猜，猜錯了沒有東西告訴它</text>
+
+                    <!-- divider -->
+                    <line x1="350" y1="14" x2="350" y2="236" class="dg-soft"/>
+
+                    <!-- right -->
+                    <text x="525" y="20" text-anchor="middle" class="dg-tb">Agent = model + harness + tool</text>
+                    <rect x="380" y="34" width="300" height="118" rx="6" class="dg-frame"/>
+                    <text x="392" y="50" class="dg-tm">harness</text>
+                    <rect x="392" y="62" width="100" height="58" rx="4" class="dg-box-accent"/>
+                    <text x="442" y="88" text-anchor="middle" class="dg-tb">Model</text>
+                    <text x="442" y="106" text-anchor="middle" class="dg-ts">只決定下一步</text>
+                    <rect x="568" y="62" width="100" height="58" rx="4" class="dg-box"/>
+                    <text x="618" y="88" text-anchor="middle" class="dg-tb">Tool</text>
+                    <text x="618" y="106" text-anchor="middle" class="dg-ts">grep、edit、shell</text>
+                    <line x1="492" y1="80" x2="566" y2="80" class="dg-line" marker-end="url(#l4g-ah)"/>
+                    <text x="529" y="72" text-anchor="middle" class="dg-ts">tool call</text>
+                    <line x1="566" y1="102" x2="494" y2="102" class="dg-line" marker-end="url(#l4g-ah)"/>
+                    <text x="529" y="118" text-anchor="middle" class="dg-ts">結果</text>
+                    <line x1="618" y1="120" x2="618" y2="158" class="dg-line" marker-end="url(#l4g-ah)"/>
+                    <rect x="390" y="160" width="80" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="430" y="181" text-anchor="middle" class="dg-t">repo</text>
+                    <rect x="485" y="160" width="80" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="525" y="181" text-anchor="middle" class="dg-t">測試</text>
+                    <rect x="580" y="160" width="80" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="620" y="181" text-anchor="middle" class="dg-t">終端機</text>
+                    <text x="525" y="226" text-anchor="middle" class="dg-ts">harness 執行 tool，把真實結果放回 context</text>
+                  </svg>
+                </div>
+                <figcaption>本文的整理。左：model 只會讀文字、寫文字。右：harness 把 model 的 tool call 變成真的動作，再把結果以文字送回；model 自己從頭到尾只看到文字。</figcaption>
+              </figure>
+              <p><b>ReAct 把推理和行動接成一個圈。</b>ReAct 是 2022 年的一篇論文（Yao 等人，arXiv 2210.03629），名字來自 Reason 和 Act。它讓 model 輪流做三件事：Thought、Action、Observation。Thought 是 model 寫下「我知道什麼、還缺什麼、下一步做什麼」；Action 是 model 發出一個結構化的請求，請外界替它做一件事，例如搜尋一個字串；Observation 是外界把真實的結果放回 context。拿「修 login 的 timeout」當例子：</p>
+              <figure class="file"><figcaption>一圈 ReAct，model 看到的文字</figcaption><pre><code>Thought: 先找程式碼裡哪裡設 timeout。
+Action: grep -rn "timeout" src/
+Observation: 37 筆結果，在 12 個檔案裡（省略）
+Thought: 太多了，login 相關的應該在 auth/ 底下，縮小範圍。
+Action: glob src/**/auth/*.ts
+Observation: src/auth/retry.ts, src/auth/session.ts
+Thought: 先讀 retry.ts。
+Action: read src/auth/retry.ts
+...</code></pre></figure>
               <p>ReAct 要解決的是兩種極端各自的問題。只推理不行動，就沒有東西檢查推理，小錯誤會一路累積成自信的幻覺。只行動不推理，每一個動作背後都沒有計畫，model 會一直重複同樣的動作，例如同一個搜尋失敗了再搜一次。ReAct 的 Thought 替 Action 定方向，Observation 又回頭修正 Thought，兩個方向接在一起才成立。這個圈一直轉，直到 Observation 足以回答問題，或是觸發停止規則，例如圈數到了上限。</p>
               <figure class="diagram">
                     <div class="scroll">
@@ -309,30 +377,158 @@
                     <figcaption>依 p.4 重畫，方框裡的例子是本文自擬。藍色是 ReAct 的修正迴路：harness 執行 tool call，observation 回到下一個 thought。左、中兩欄都少了這條迴路的一半。</figcaption>
                   </figure>
               <p>今天的 reasoning model 會先想很久再回答，但這仍然只是 Thought 變長，沒有 Action 和 Observation。想得再久，它還是看不到 repo 裡的程式碼，也跑不了測試，所以 agent 仍然要靠 observation 檢查推理。Reasoning model 的訓練方式和開關方式，見觀念補充〈<a href="#t8">Reasoning model</a>〉。</p>
-              <p><b>寫成程式，就是一個 loop。</b>把 ReAct 寫成程式，Action 就是 tool call，Observation 就是 tool 結果。Tool call 的長相很固定：model 輸出一小段 JSON，寫明要呼叫哪個 tool、參數是什麼，例如 <code>{"name": "grep", "input": {"pattern": "timeout", "path": "src/"}}</code>。它只是一段文字，model 自己不會執行它；執行的是 harness。整個 loop 寫成程式只有二十幾行，第 6 段有可以照打的版本，這裡先用文字走一遍：</p>
+              <p><b>寫成程式，就是一個 loop。</b>把 ReAct 寫成程式，Action 就是 tool call，Observation 就是 tool 結果。Tool call 的長相很固定：model 輸出一小段 JSON，寫明要呼叫哪個 tool、參數是什麼。它只是一段文字，model 自己不會執行它；執行的是 harness，harness 做完再把結果包成一則訊息送回去：</p>
+              <figure class="file"><figcaption>一次 tool call 來回，messages 裡多出的兩則</figcaption><pre><code>// model 的回覆裡夾著一個 tool call
+{"role": "assistant",
+ "content": [{"type": "tool_use", "id": "call_01",
+              "name": "grep",
+              "input": {"pattern": "timeout", "path": "src/"}}]}
+
+// harness 執行後加回 messages 的 tool 結果
+{"role": "user",
+ "content": [{"type": "tool_result", "tool_use_id": "call_01",
+              "content": "src/auth/retry.ts:12: const RETRY_MS = 500 // timeout\n... 36 more lines"}]}</code></pre></figure>
+              <p>整個 loop 寫成程式只有二十幾行，第 6 段有可以照打的版本，這裡先用文字走一遍：</p>
               <ol>
                 <li>把 system prompt（例如「用 tool 解決任務」）和使用者的請求放進一個 messages 清單。</li>
                 <li>把 messages 和 tool 定義一起送給 model。</li>
                 <li>Model 回覆。回覆裡沒有 tool call，就是最終回答，loop 結束。</li>
-                <li>回覆裡有 tool call，就逐一處理：驗證參數、執行 tool、把結果包成一則 tool 訊息，附上 tool_call_id，加回 messages。</li>
+                <li>回覆裡有 tool call，就逐一處理：驗證參數、執行 tool、把結果包成一則 tool 訊息，附上 <code>tool_use_id</code>，加回 messages。</li>
                 <li>回到第 2 步。圈數超過 MAX_STEPS 就停下來報錯。</li>
               </ol>
               <p>在這個 loop 裡，model 每一圈只做一個決定：給出最終回答，或發出 tool call。其他事情都在 model 之外，由 harness 完成。Slide p.6 把 harness 設計者的工作標在 loop 上，一共四項：組出 context（第 1、2 步放進去的東西）、寫 tool 定義（第 2 步一起送的東西）、驗證並執行（第 4 步）、整理結果並管理 context（第 4 步加回去之前）。這表示 agent 做得多好，有很大一部分取決於這四件事做得多好。後面四個觀念就是逐一展開它們：i2 講 tool，i3 講怎麼對 model 說話，i4 和 i5 講 context。</p>
-              <p><b>三個零件共用一個 context window。</b>Slide p.7 把一個 coding agent 拆成三個零件，它們要一起設計，因為它們爭的是同一塊 context。第一個是 model 加 loop，就是上面那二十幾行。第二個是 tool 加 guardrail：tool 決定 agent 能做什麼，guardrail 決定它能不能做。一個只會輸出文字的 model 刪不了你的 repo，拿到 shell 的 model 刪得掉。所以風險來自 action，guardrail 也跟著 tool 走：權限（哪些 tool 可以自動執行）、sandbox（程式在隔離的環境裡跑）、人工核准（危險的動作先問人）。</p>
-              <p>第三個零件是 state，它分成兩塊。Context 是這一次 request 裡 model 看到的全部，request 結束它就消失；下一圈 harness 會重新組一份，通常是把上一份加上新結果。Memory 存在 context 外面，例如硬碟上的檔案，所以跨圈、跨 session 都還在；harness 把它讀進 context 之後，model 才看得到。Claude Code 的 <code>CLAUDE.md</code> 就是 memory：它存在 repo 裡，每個 session 開始時載入 context，所以它只是 context 的一小段。L6 會專門講 memory；這堂先管 context。</p>
+              <p><b>三個零件共用一個 context window。</b>Slide p.7 把一個 coding agent 拆成三個零件，它們要一起設計，因為它們爭的是同一塊 context。</p>
+              <ul>
+                <li><b>Model 加 loop。</b>就是上面那二十幾行。</li>
+                <li><b>Tool 加 guardrail。</b>Tool 決定 agent 能做什麼，guardrail 決定它能不能做。一個只會輸出文字的 model 刪不了你的 repo，拿到 shell 的 model 刪得掉。所以風險來自 action，guardrail 也跟著 tool 走：權限（哪些 tool 可以自動執行）、sandbox（程式在隔離的環境裡跑）、人工核准（危險的動作先問人）。</li>
+                <li><b>State，分成 context 和 memory。</b>Context 是這一次 request 裡 model 看到的全部，request 結束它就消失；下一圈 harness 會重新組一份，通常是把上一份加上新結果。Memory 存在 context 外面，例如硬碟上的檔案，所以跨圈、跨 session 都還在；harness 把它讀進 context 之後，model 才看得到。Claude Code 的 <code>CLAUDE.md</code> 就是 memory：它存在 repo 裡，每個 session 開始時載入 context，所以它只是 context 的一小段。L6 會專門講 memory；這堂先管 context。</li>
+              </ul>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>Tool 要為 model 設計：search、edit、shell 的取捨 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=8" target="_blank" rel="noopener">p.8–26</a></h3>
             <div class="prose">
               <p>Loop 定了之後，model 每一圈能做的只有一件事：選一個 tool、填好參數。所以 tool 決定了 model 能看到什麼、能改什麼：search tool 是它看 repo 的眼睛，edit tool 和 shell 是它動手的手。Slide 把 tool 分成四類：search/read、edit/write、execution、其他。每一類都有幾種做法，每一種做法都有代價。下面先看 model 眼中的 tool 長什麼樣，再依序看設計者要怎麼選。</p>
-              <p><b>Model 眼中的 tool 只有三個欄位。</b>一個 tool 對 model 來說是三段文字：<code>name</code>、<code>description</code>、<code>input_schema</code>。Harness 把所有 tool 的這三段放進每一次 request，model 讀完後回一段 JSON，寫明 tool 名稱和參數。Model 沒有看到 tool 的程式碼，也沒有看到執行結果以外的任何東西。所以 <code>description</code> 就是一段 prompt，要寫什麼時候用、參數的格式、常見的誤用；<code>input_schema</code> 用 JSON Schema 寫參數的型別和限制，例如 <code>enum</code>、<code>required</code>，model 填錯會在執行前擋下。第 6 段有一組可以對照的定義。接下來看的每一種 tool，都是這三段文字加上 harness 裡的一段程式。</p>
-              <p><b>Search：先 grep，名字猜不到再換。</b>Agent 看不到整個 repo，只能靠 tool 找程式碼。Slide 給了四種找法，第一種就是 shell 指令。Shell 是終端機裡解讀指令的程式，例如 bash、zsh；你在終端機打的每一行都是一個 shell 指令。<code>grep</code> 搜尋文字，<code>ls</code> 列出目錄，<code>cat</code> 讀檔；<code>grep -rn "timeout" src/</code> 會掃過 <code>src/</code> 底下的所有檔案，印出每一行含有 timeout 的程式碼，附上檔名與行號。它只回傳符合的那幾行，不回傳整個檔案，例如 p.10 的例子回了 12 個檔案裡的 37 行。Glob 是另一種比對，它比對檔名，用 <code>*</code> 和 <code>**</code> 當萬用字元：<code>src/**/auth/*.ts</code> 找出所有 <code>auth</code> 目錄底下的 <code>.ts</code> 檔。Claude Code 的 Grep 和 Glob 兩個 tool 就是這兩個指令包成 tool。</p>
-              <p>Slide p.10 的例子是「修 login 的 timeout」：先 grep「timeout」得到 37 筆，再用 glob 縮到 <code>auth/retry.ts</code> 一個檔案，讀它，把 <code>RETRY_MS = 500</code> 改掉。Grep 和 glob 不用建索引，所以永遠反映 repo 的現況；代價有兩個。第一，它們只比對字面，搜「timeout」找不到叫 <code>deadline</code> 的同一件事。第二，每搜一次就花掉一圈、佔掉一段 context，上面的例子就用了三圈。</p>
-              <p>第二種是 semantic search，依意思找。它靠 embedding：一個 embedding model 把一段文字轉成一串數字，也就是一個向量，常見的長度是幾百到幾千個數字。意思相近的文字，向量在空間裡的距離也近，所以「rate-limit」和一段叫 <code>throttle</code> 的程式碼會靠在一起。建索引時把程式碼切成 chunk，每段算一個向量，存進一個能依距離查詢的資料庫，叫 vector database；查詢時把問題也轉成向量，取距離最近的幾段。向量一多，逐一比對太慢，所以通常用 HNSW 這類近似索引，犧牲一點準確換速度。你可能在 RAG 裡看過同一套東西，semantic search 就是 RAG 的檢索那一步。Slide 的例子是問「where do we rate-limit?」，第一次查詢就回 <code>throttle.ts</code>，grep 做不到。同一頁還有 structural search，例如 Aider 的 repo map：它不依意思，依結構找，把檔案樹和每個檔案裡排序過的 class、函式簽名列成一份大綱，讓 model 先看大綱再決定讀哪個檔。兩者查詢時都很快，代價是索引要跟著程式碼一起同步，檔案一改向量就要重算，索引沒跟上就會回傳舊程式碼。</p>
+              <p><b>Model 眼中的 tool 只有三個欄位。</b>一個 tool 對 model 來說是三段文字：<code>name</code>、<code>description</code>、<code>input_schema</code>。Harness 把所有 tool 的這三段放進每一次 request，model 讀完後回一段 JSON，寫明 tool 名稱和參數。Model 沒有看到 tool 的程式碼，也沒有看到執行結果以外的任何東西。</p>
+              <figure class="file"><figcaption>一個 tool 定義，model 看到的全部</figcaption><pre><code>{
+  "name": "grep",
+  "description": "Search file contents with a regular expression.
+    Returns matching lines as path:line:text, at most 100 lines.
+    Use glob to narrow by file name first when the repo is large.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "pattern": {"type": "string"},
+      "path":    {"type": "string", "description": "directory to search"}
+    },
+    "required": ["pattern"]
+  }
+}</code></pre></figure>
+              <p>所以 <code>description</code> 就是一段 prompt，要寫什麼時候用、參數的格式、常見的誤用；<code>input_schema</code> 用 JSON Schema 寫參數的型別和限制，例如 <code>enum</code>、<code>required</code>，model 填錯會在執行前擋下。第 6 段有一組可以對照的定義。接下來看的每一種 tool，都是這三段文字加上 harness 裡的一段程式。</p>
+              <p><b>Search：先 grep，名字猜不到再換。</b>Agent 看不到整個 repo，只能靠 tool 找程式碼。Slide 給了四種找法，第一種就是 shell 指令。Shell 是終端機裡解讀指令的程式，例如 bash、zsh；你在終端機打的每一行都是一個 shell 指令。<code>grep</code> 搜尋文字，<code>ls</code> 列出目錄，<code>cat</code> 讀檔。Glob 是另一種比對，它比對檔名，用 <code>*</code> 和 <code>**</code> 當萬用字元。Claude Code 的 Grep 和 Glob 兩個 tool 就是這兩個指令包成 tool。Slide p.10 的例子是「修 login 的 timeout」，三步：</p>
+              <figure class="file"><figcaption>用 grep 和 glob 找程式碼（p.10 的例子，輸出是本文補的）</figcaption><pre><code>$ grep -rn "timeout" src/          # -r 遞迴找子目錄，-n 附行號
+src/auth/retry.ts:12:const RETRY_MS = 500; // timeout before retry
+src/auth/session.ts:40:  if (elapsed &gt; timeout) {
+src/api/client.ts:88:    connect ETIMEDOUT
+... 共 37 行，12 個檔案；只回符合的行，不回整個檔案
+
+$ glob "src/**/auth/*.ts"          # ** 比對任意層目錄，* 比對檔名
+src/auth/retry.ts
+src/auth/session.ts
+
+$ read src/auth/retry.ts           # 讀一個檔案，再把 RETRY_MS = 500 改掉</code></pre></figure>
+              <p>Grep 和 glob 不用建索引，所以永遠反映 repo 的現況；代價有兩個。第一，它們只比對字面，搜「timeout」找不到叫 <code>deadline</code> 的同一件事。第二，每搜一次就花掉一圈、佔掉一段 context，上面的例子就用了三圈。</p>
+              <p>第二種是 semantic search，依意思找。它靠 embedding：一個 embedding model 把一段文字轉成一串數字，也就是一個向量，常見的長度是幾百到幾千個數字。意思相近的文字，向量在空間裡的距離也近，所以「rate-limit」和一段叫 <code>throttle</code> 的程式碼會靠在一起。建索引時把程式碼切成 chunk，每段算一個向量，存進一個能依距離查詢的資料庫，叫 vector database；查詢時把問題也轉成向量，取距離最近的幾段。向量一多，逐一比對太慢，所以通常用 HNSW 這類近似索引，犧牲一點準確換速度。你可能在 RAG 裡看過同一套東西，semantic search 就是 RAG 的檢索那一步。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 700 250" role="img" aria-label="Semantic search 的兩個階段。上半是建索引：repo 裡的檔案切成 chunk，每個 chunk 經過 embedding model 變成一個向量，存進 vector database。下半是查詢：問題「where do we rate-limit?」經過同一個 embedding model 變成向量，到 vector database 找距離最近的幾個向量，回傳對應的 chunk，例如 throttle.ts。旁邊註記：檔案一改，對應的向量要重算。">
+                    <defs>
+                      <marker id="l4h-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                      </marker>
+                    </defs>
+                    <text x="12" y="22" class="dg-tm">建索引（事先做一次，之後要同步）</text>
+                    <rect x="12" y="34" width="110" height="52" rx="4" class="dg-box"/>
+                    <text x="67" y="56" text-anchor="middle" class="dg-t">repo 的檔案</text>
+                    <text x="67" y="74" text-anchor="middle" class="dg-ts">切成 chunk</text>
+                    <rect x="170" y="34" width="130" height="52" rx="4" class="dg-box-accent"/>
+                    <text x="235" y="56" text-anchor="middle" class="dg-tb">Embedding model</text>
+                    <text x="235" y="74" text-anchor="middle" class="dg-ts">文字 → 向量</text>
+                    <rect x="348" y="34" width="110" height="52" rx="4" class="dg-box"/>
+                    <text x="403" y="56" text-anchor="middle" class="dg-t">[0.12, -0.8, …]</text>
+                    <text x="403" y="74" text-anchor="middle" class="dg-ts">每個 chunk 一個</text>
+                    <rect x="506" y="34" width="180" height="52" rx="4" class="dg-box-soft"/>
+                    <text x="596" y="56" text-anchor="middle" class="dg-tb">Vector database</text>
+                    <text x="596" y="74" text-anchor="middle" class="dg-ts">依距離查詢（HNSW 索引）</text>
+                    <line x1="122" y1="60" x2="168" y2="60" class="dg-line" marker-end="url(#l4h-ah)"/>
+                    <line x1="300" y1="60" x2="346" y2="60" class="dg-line" marker-end="url(#l4h-ah)"/>
+                    <line x1="458" y1="60" x2="504" y2="60" class="dg-line" marker-end="url(#l4h-ah)"/>
+                    <text x="67" y="108" text-anchor="middle" class="dg-ts">檔案一改，向量要重算</text>
+
+                    <text x="12" y="150" class="dg-tm">查詢（每次問都做）</text>
+                    <rect x="12" y="162" width="110" height="52" rx="4" class="dg-box"/>
+                    <text x="67" y="184" text-anchor="middle" class="dg-t">where do we</text>
+                    <text x="67" y="200" text-anchor="middle" class="dg-t">rate-limit?</text>
+                    <rect x="170" y="162" width="130" height="52" rx="4" class="dg-box-accent"/>
+                    <text x="235" y="184" text-anchor="middle" class="dg-tb">Embedding model</text>
+                    <text x="235" y="202" text-anchor="middle" class="dg-ts">同一個 model</text>
+                    <rect x="348" y="162" width="110" height="52" rx="4" class="dg-box"/>
+                    <text x="403" y="184" text-anchor="middle" class="dg-t">[0.10, -0.7, …]</text>
+                    <text x="403" y="202" text-anchor="middle" class="dg-ts">問題的向量</text>
+                    <line x1="122" y1="188" x2="168" y2="188" class="dg-line" marker-end="url(#l4h-ah)"/>
+                    <line x1="300" y1="188" x2="346" y2="188" class="dg-line" marker-end="url(#l4h-ah)"/>
+                    <line x1="458" y1="188" x2="596" y2="88" class="dg-line" marker-end="url(#l4h-ah)"/>
+                    <text x="540" y="146" text-anchor="middle" class="dg-ts">找最近的幾個向量</text>
+                    <rect x="506" y="162" width="180" height="52" rx="4" class="dg-box-accent"/>
+                    <text x="596" y="184" text-anchor="middle" class="dg-ta">throttle.ts 的那一段</text>
+                    <text x="596" y="202" text-anchor="middle" class="dg-ts">字面沒有 rate-limit，意思有</text>
+                    <line x1="596" y1="88" x2="596" y2="160" class="dg-accent" marker-end="url(#l4h-ah)"/>
+                  </svg>
+                </div>
+                <figcaption>本文的整理。上排事先做一次，把每段程式碼變成向量存起來；下排每次查詢做，把問題變成向量，找最近的。「rate-limit」和「throttle」字面不同，向量卻靠在一起，這是 grep 做不到的；代價是上排要跟著程式碼一直重做。</figcaption>
+              </figure>
+              <p>Slide 的例子是問「where do we rate-limit?」，第一次查詢就回 <code>throttle.ts</code>，grep 做不到。同一頁還有 structural search，例如 Aider 的 repo map：它不依意思，依結構找，把檔案樹和每個檔案裡排序過的 class、函式簽名列成一份大綱，讓 model 先看大綱再決定讀哪個檔。兩者查詢時都很快，代價是索引要跟著程式碼一起同步，檔案一改向量就要重算，索引沒跟上就會回傳舊程式碼。</p>
+              <figure class="file"><figcaption>Aider 的 repo map，model 看到的大綱（p.11 的例子）</figcaption><pre><code>aider/coders/base_coder.py:
+│class Coder:
+│    def apply_updates(self):
+⋮
+aider/commands.py:
+│class Commands:
+⋮</code></pre></figure>
               <p>第三種是 extrinsic signal，也就是程式碼以外的證據：stack trace、失敗的測試、git 歷史。有這種訊號時它最準。Slide 的例子是一份 checkout 的 crash report：stack trace 指到 <code>cart.ts:88</code>，順著 3 層 frame 往下讀到 <code>tax.ts</code> 的 <code>applyTax</code> 在四捨五入出錯，修掉，跑 <code>pytest tests/tax.py</code> 變綠，一次搜尋都不用。但它只在有人回報問題時才存在；寫新功能時沒有 stack trace 可以看。</p>
-              <p>第四種是 LSP，Language Server Protocol。它來自編輯器：VS Code 按下「go to definition」能跳到函式的定義，靠的是背景跑著一個 language server，它事先解析過整個專案，知道每個 symbol 的定義、引用和型別。LSP 是編輯器和 language server 之間的標準協定，用 JSON-RPC 傳請求，例如 <code>textDocument/definition</code>。Agent 用它不需要開 IDE：harness 在背景跑一個 language server，再把查詢包成 tool。它和 grep 的差別是懂 symbol：grep 搜 <code>charge</code> 會連註解、字串、別的同名函式一起找到；寫了 <code>import { charge as pay }</code> 之後呼叫 <code>pay()</code> 的地方，它反而漏掉。Language server 知道哪一個 <code>charge</code> 才是這個函式，所以 slide 的例子把 <code>charge()</code> 改名成 <code>capture()</code> 時，一次 <code>textDocument/references</code> 就找到 7 個檔案裡的 42 個呼叫點，連別名也改得到，最後再做一次型別檢查確認沒有漏。代價是每種語言要一個常駐的 server，冷啟動也慢。</p>
-              <p>Language server 做的是 compiler 的前半段：它不產出執行檔，只建一份索引。建索引大致分五步：讀專案設定（例如 <code>tsconfig.json</code>）決定哪些檔案屬於這個專案；parse，把每個檔案轉成語法樹；建 symbol table，記下每個函式、class、變數宣告在哪裡，再把每個使用處順著 import 連回它的宣告；推型別；建反向索引，從一個 symbol 對到所有用到它的位置。之後改一個檔案，它只重新處理那個檔案和受影響的部分。所以 cold start 只在兩種情況下要緊：任務很短，例如一次 30 秒的修改，大 repo 建索引卻要幾分鐘；或是 agent 每個 session 都開新的 container，每次都要從零建。長的 session 裡，這筆成本會攤掉。它的限制是只能回答 symbol 的問題，「我們在哪裡做 rate limit」這種問題它答不了，要交給 semantic search 或 grep。</p>
+              <p>第四種是 LSP，Language Server Protocol。它來自編輯器：VS Code 按下「go to definition」能跳到函式的定義，靠的是背景跑著一個 language server，它事先解析過整個專案，知道每個 symbol 的定義、引用和型別。LSP 是編輯器和 language server 之間的標準協定，用 JSON-RPC 傳請求。Agent 用它不需要開 IDE：harness 在背景跑一個 language server，再把查詢包成 tool。Slide 的例子是把 <code>charge()</code> 改名成 <code>capture()</code>：</p>
+              <figure class="file"><figcaption>用 LSP 改名（p.13 的例子），harness 送給 language server 的請求</figcaption><pre><code>// 1 找所有呼叫點：7 個檔案、42 處，連 import { charge as pay } 的 pay() 也算
+{"method": "textDocument/references",
+ "params": {"textDocument": {"uri": "file:///src/payments.ts"},
+            "position": {"line": 18, "character": 16}}}
+
+// 2 改名：server 回一份 WorkspaceEdit，列出每個檔案要改的位置
+{"method": "textDocument/rename",
+ "params": {"textDocument": {"uri": "file:///src/payments.ts"},
+            "position": {"line": 18, "character": 16},
+            "newName": "capture"}}
+
+// 3 型別檢查：沒有 unresolved symbol，表示沒漏</code></pre></figure>
+              <p>它和 grep 的差別是懂 symbol：grep 搜 <code>charge</code> 會連註解、字串、別的同名函式一起找到；寫了 <code>import { charge as pay }</code> 之後呼叫 <code>pay()</code> 的地方，它反而漏掉。Language server 知道哪一個 <code>charge</code> 才是這個函式，所以一次查詢就找齊 42 個呼叫點，連別名也改得到。代價是每種語言要一個常駐的 server，冷啟動也慢。</p>
+              <p>Language server 做的是 compiler 的前半段：它不產出執行檔，只建一份索引。建索引大致分五步：</p>
+              <ol>
+                <li>讀專案設定（例如 <code>tsconfig.json</code>），決定哪些檔案屬於這個專案。</li>
+                <li>Parse：把每個檔案轉成語法樹（下面 edit 一節會講 AST）。</li>
+                <li>建 symbol table：記下每個函式、class、變數宣告在哪裡，再把每個使用處順著 import 連回它的宣告。</li>
+                <li>推型別：算出每個表達式的型別。</li>
+                <li>建反向索引：從一個 symbol 對到所有用到它的位置。</li>
+              </ol>
+              <p>之後改一個檔案，它只重新處理那個檔案和受影響的部分。所以 cold start 只在兩種情況下要緊：任務很短，例如一次 30 秒的修改，大 repo 建索引卻要幾分鐘；或是 agent 每個 session 都開新的 container，每次都要從零建。長的 session 裡，這筆成本會攤掉。它的限制是只能回答 symbol 的問題，「我們在哪裡做 rate limit」這種問題它答不了，要交給 semantic search 或 grep。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>找法</th><th>靠什麼找</th><th>最適合</th><th>主要代價</th></tr></thead>
+                <tbody>
+                  <tr><td>glob / grep</td><td>檔名與字面</td><td>名字知道或猜得到</td><td>每搜一次花一圈、佔 context</td></tr>
+                  <tr><td>Semantic index</td><td>chunk 的意思（向量）</td><td>字面對不上程式碼的問法</td><td>建索引，而且要一直同步</td></tr>
+                  <tr><td>Extrinsic signal</td><td>stack trace、失敗的測試、git 歷史</td><td>有人回報了問題</td><td>只在部分任務存在</td></tr>
+                  <tr><td>Language server</td><td>compiler 的 symbol 圖</td><td>改動要跟著 reference 走</td><td>每種語言一個常駐 server，冷啟動慢</td></tr>
+                </tbody>
+              </table></div>
+              <p>依 p.14 整理。四種找法放在一起，slide 的建議是：先用 grep，名字猜不到了再換索引或 LSP。這個順序來自兩種成本的型態不同（下圖）：grep 每查一次就付一次，索引與 LSP 則是先付一筆建置與同步的固定成本，之後每次查詢幾乎免費。所以 repo 小、任務短的時候 grep 划算；repo 大、任務長，固定成本才攤得掉。</p>
               <figure class="diagram">
                 <div class="scroll">
                   <svg viewBox="0 0 700 300" role="img" aria-label="兩種搜尋成本的型態，橫軸是查詢次數，縱軸是累積成本。Grep 的線從原點出發，每查一次付一次，所以一直往上。索引與 LSP 的線從一筆固定的建置與同步成本開始，之後幾乎持平。兩條線在中間交叉，交叉點標為攤平點：左邊 repo 小、任務短，grep 划算；右邊 repo 大、任務長，索引與 LSP 划算。">
@@ -365,7 +561,6 @@
                 </div>
                 <figcaption>本文的整理，不是 slide 的圖。Grep 每查一次就花一圈與一段 context；索引與 LSP 先付一筆建置與同步的成本，之後每次查詢幾乎免費。查詢次數少，grep 便宜；查詢次數多，固定成本才攤得掉。</figcaption>
               </figure>
-              <p>四種找法放在一起，slide p.14 的建議是：先用 grep，名字猜不到了再換索引或 LSP。這個順序來自兩種成本的型態不同（上圖）：grep 每查一次就付一次，索引與 LSP 則是先付一筆建置與同步的固定成本，之後每次查詢幾乎免費。所以 repo 小、任務短的時候 grep 划算；repo 大、任務長，固定成本才攤得掉。</p>
               <p>Claude Code 選的就是 grep，而且是試過索引之後才選的。Claude Code 的開發負責人 Boris Cherny 在 2025 年公開分享過，早期版本用 RAG 索引整個 codebase，也試過幾種變體；最後在內部的評估裡，由 model 自己反覆用 glob、grep 找的 agentic search 明顯勝出（<a href="https://officechai.com/ai/claude-researcher-explains-how-agentic-search-performed-better-than-rag-for-code-generation/" target="_blank" rel="noopener">報導</a>）。他提的理由有兩個：索引會和程式碼脫節，而且把程式碼的索引存在別處，有安全與責任的風險。本文再補兩個理由。第一，程式碼裡的名字是精確的字串，寫錯一個字就是另一個 symbol，所以字面比對在程式碼上很有效；semantic search 的強項反而是一般文章，因為人會用不同的字講同一件事。第二，agent 會反覆搜尋：一次 grep 沒中，model 就換一個字，或順著 import 往下找，多步的 grep 補上了字面比對的盲點。換來的代價就是 p.10 說的多花幾圈、多佔 context。</p>
               <p><b>Edit：四種方式，失敗要看得見。</b>找到程式碼之後，下一步是改它。四種改法的分工相同：model 輸出一段文字，tool 把它套進檔案；差別在 model 輸出的是什麼。Slide p.21 用兩個軸比較它們：token 成本，也就是 model 要輸出多少字；穩健度，也就是改動會不會落在想要的位置。下面每一種先講做法，再講代價，最後看為什麼其中一種成了預設。</p>
               <p>整檔重寫最直接：model 把整個檔案重新產生一次，tool 直接覆蓋舊檔。因為沒有 patch 語法可以寫錯，所以每次都套得上。代價是輸出和檔案大小成正比：在 120 行的 <code>client.ts</code> 改 4 行，model 也要重打 120 行。長檔還會 drift：重打那 116 行沒要改的程式碼時，model 會漸漸偏離原文，例如少一行註解、換一個變數名。這種改動 tool 不會報錯，要有人逐行比對 diff 才看得出來。</p>
@@ -378,7 +573,15 @@
 +  maxRetries: 5,        ← 新增
  };                      ← context 行</code></pre></figure>
               <p>所以它很精簡，改兩個檔案只要 6 行。代價來自 context 行：<code>git apply</code> 靠它們在附近搜尋定位，所以行號偏移了還能套；但 model 讀檔之後檔案又變了，context 行就過期，hunk 套不上。常見的原因是 formatter 重排過那幾行，例如把 <code>{</code> 換行，或前一次修改動到了附近。Git 還預設全有或全無，一個 hunk 失敗，整份 patch 都不套用（第 6 段有實測）。</p>
-              <p>Search/replace 讓 model 輸出一段原文字串當 anchor，加上要換成的新字串；tool 在檔案裡找到 anchor，原地換掉。因為 anchor 只要幾行就能定位，所以輸出只和改動的大小成正比，和檔案多長無關。它只有一個失敗條件：tool 必須在檔案裡剛好找到一次 anchor。找到兩次，tool 不知道要改哪一處；找到零次，多半是檔案在 model 讀過之後變了，或是空白、tab 對不上。Slide 的例子先用 <code>grep -n "retries = 3"</code> 確認只有一處，再一次呼叫換成 5，最後讀回那一段確認其他地方沒動。</p>
+              <p>Search/replace 讓 model 輸出一段原文字串當 anchor，加上要換成的新字串；tool 在檔案裡找到 anchor，原地換掉。Claude Code 的 Edit tool 就是這一型：</p>
+              <figure class="file"><figcaption>Search/replace 的一次 tool call（Claude Code Edit tool 的參數）</figcaption><pre><code>{"name": "Edit",
+ "input": {"file_path": "src/auth/retry.ts",
+           "old_string": "const RETRY_MS = 500;",      ← anchor：原文，要剛好出現一次
+           "new_string": "const RETRY_MS = 2000;"}}    ← 換成什麼
+
+// 成功：tool 回「已更新」
+// 失敗：tool 回「old_string 找到 0 次（或 2 次），請重讀檔案」→ model 下一圈重讀再試</code></pre></figure>
+              <p>因為 anchor 只要幾行就能定位，所以輸出只和改動的大小成正比，和檔案多長無關。它只有一個失敗條件：tool 必須在檔案裡剛好找到一次 anchor。找到兩次，tool 不知道要改哪一處；找到零次，多半是檔案在 model 讀過之後變了，或是空白、tab 對不上。Slide 的例子先用 <code>grep -n "retries = 3"</code> 確認只有一處，再一次呼叫換成 5，最後讀回那一段確認其他地方沒動。</p>
               <p>AST 編輯站在最高一層。AST 是 abstract syntax tree，parser 把原始碼轉成的一棵樹：函式節點底下有參數節點、本體節點。AST 編輯讓 model 只點名一個操作，例如 <code>rename</code>、<code>add_param</code>，tool 修改這棵樹再印回文字。因為改的是樹，結果一定能 parse，也不受排版影響；而且一個操作能連動所有相關位置，替 <code>fetchUser()</code> 加一個 <code>timeout</code> 參數，tool 會連 18 個呼叫端一起改。代價是每種語言要一套工具，能做的操作也只有工具定義好的那幾種，「改寫這段折扣邏輯」就沒有對應的操作。</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -448,12 +651,41 @@
                 <figcaption>依 p.17–21 整理，欄位是本文的分法。藍框的 search/replace 是 Aider 與 Claude Code 的預設；右欄是重點：失敗時 tool 會不會報錯。</figcaption>
               </figure>
               <p>把四種放在一起看，實務上 search/replace 成了預設，Aider 的 SEARCH/REPLACE block、Claude Code 的 Edit tool 都是這一型。第一個原因是成本：它的輸出只和改動成正比，失敗條件又只有「anchor 剛好出現一次」這一件事。更重要的原因是它失敗的方式。Anchor 找不到時，tool 會回一則錯誤，model 下一圈重讀檔案、再試一次就好，失敗只花一圈。整檔重寫的失敗卻很安靜：程式碼漸漸變樣，tool 照樣回成功，要等測試壞掉或 review 時才會發現。所以選 edit tool 時，失敗看不看得見，和成功率一樣重要。</p>
-              <p><b>Execution：shell 最強，也最需要 harness 看著。</b>第三類 tool 是執行，而它幾乎就是一個 shell。Shell 一次呼叫就能串接、過濾、迴圈、重試，碰得到檔案系統、網路與套件管理員，而且產生的檔案與 process 在呼叫結束後還在。也就是說，shell 能做的事 agent 都能做，blast radius 等於 shell 本身。因此 slide 列了五個執行上的考量，而 shell 自己不做這五件事，它們全部落在 harness 身上。下面每一項給一個最小的做法。</p>
-              <p>第一是失敗訊號。Shell 失敗時只給一個 exit code，但 model 需要知道錯在哪、下一步做什麼。所以 harness 要把 exit code、stderr 的最後幾行和執行時間包成一則 tool result；exit code 不是 0 時，還要在最前面加一行 <code>Command failed (exit 1)</code>，否則 model 可能把錯誤訊息當成正常輸出讀過去。第二是輸出量。一次 <code>pytest</code> 可以印 3,000 行，全部放進 context 太貴，也會蓋掉重點。因此 harness 要設上限，例如 200 行，超過就保留頭尾，中間換成一行 <code>[... 2,600 lines omitted; rerun with -q or grep to narrow ...]</code>。截斷時要告訴 model 怎麼縮小範圍，否則它只會重跑同一個指令。</p>
-              <p>第三是時間。一個 build 可能跑 10 分鐘，所以 tool 要有 timeout 參數，也要能把 process 放到背景：先立刻回一個 id，之後再用另一個 tool 查進度。少了這個設計，model 只能乾等，或是在 timeout 時把一個還在跑、最後會成功的 build 當成失敗。第四是預算。同一個測試已經失敗三次，再試第四次成功的機會很低。所以 harness 要數 retry 次數與花掉的 token，超過預算就把控制權交回使用者。預算要寫在 harness，不能只寫在 prompt，因為 prompt 裡的「最多試三次」model 不一定會守。第五是隔離：程式在哪裡跑、碰得到什麼，用 container 或 VM、唯讀的路徑、網路白名單、不給的環境變數來限制。它靠作業系統擋，不靠 model 自律，因為 prompt 擋不住一個寫錯的指令。</p>
-              <p>把五項排在一起，可以看到一個共同點：每一項都把原本「交給 model 判斷」的事，改成「由 harness 保證」。這也是延伸閱讀裡 Schmid 主張「只給 bash」的前提：他砍掉的是 model 面對的 tool 數量，這五項工作沒有消失，全部搬進了 harness。那既然 shell 都做得到，agent 為什麼還要專用的 read、edit tool？第一是輸出：read tool 可以限制行數、附上行號，<code>cat</code> 會把整個檔案倒進 context。第二是安全：唯讀的 tool 可以自動放行，shell 指令要先檢查，因為它可能是 <code>rm</code>。第三是錯誤：edit tool 會回「anchor 找不到，請重讀檔案」，<code>sed</code> 對不到時什麼也不說。</p>
-              <p><b>其他五種常見的 tool。</b>除了這三類，slide p.24 還點名五種常見的 tool，每一種都補上 model 缺的一樣東西。Browser 把畫面截圖回傳，model 才看得到 render 的結果。Memory 與筆記把發現寫進檔案，計畫才撐得過 compaction（i5 會講 compaction 是什麼）。問使用者的理由是：一個便宜的問題，勝過一個自信的錯 patch。Subagent 是另一個有自己 context 的 agent，主 agent 把探索交給它，回來的是一份清單，不是 40 次讀檔的結果（L3 專講 subagent）。Web search 則排最後，先讀裝好的原始碼，再查網路。</p>
-              <p><b>五條原則，管的是同一件事。</b>選項這麼多，p.25 用五條原則收斂，而它們管的都是同一件事：tool 的定義與輸出怎麼進 context。第一條是少且正交，因為功能重疊的 tool 會讓 model 猶豫，而且每一個 tool 定義每一圈都要佔 context。第二條是專用：<code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 則把這些全推給 model 去猜。第三條是輸出省 token，用截斷、分頁、摘要，因為輸出的每一個字都會進下一圈的 prompt。第四條是錯誤要能教，第五條是預設冪等；這兩條各給一個例子。</p>
+              <p><b>Execution：shell 最強，也最需要 harness 看著。</b>第三類 tool 是執行，而它幾乎就是一個 shell。Shell 一次呼叫就能串接、過濾、迴圈、重試，碰得到檔案系統、網路與套件管理員，而且產生的檔案與 process 在呼叫結束後還在。也就是說，shell 能做的事 agent 都能做，blast radius 等於 shell 本身。因此 slide 列了五個執行上的考量，而 shell 自己不做這五件事，它們全部落在 harness 身上。下面每一項給一個最小的做法：</p>
+              <ol>
+                <li><b>失敗訊號。</b>Shell 失敗時只給一個 exit code，但 model 需要知道錯在哪、下一步做什麼。所以 harness 要把 exit code、stderr 的最後幾行和執行時間包成一則 tool result；exit code 不是 0 時，還要在最前面加一行 <code>Command failed (exit 1)</code>，否則 model 可能把錯誤訊息當成正常輸出讀過去。</li>
+                <li><b>輸出量。</b>一次 <code>pytest</code> 可以印 3,000 行，全部放進 context 太貴，也會蓋掉重點。因此 harness 要設上限，例如 200 行，超過就保留頭尾，中間換成一行說明。截斷時要告訴 model 怎麼縮小範圍，否則它只會重跑同一個指令。</li>
+                <li><b>時間。</b>一個 build 可能跑 10 分鐘，所以 tool 要有 timeout 參數，也要能把 process 放到背景：先立刻回一個 id，之後再用另一個 tool 查進度。少了這個設計，model 只能乾等，或是在 timeout 時把一個還在跑、最後會成功的 build 當成失敗。</li>
+                <li><b>預算。</b>同一個測試已經失敗三次，再試第四次成功的機會很低。所以 harness 要數 retry 次數與花掉的 token，超過預算就把控制權交回使用者。預算要寫在 harness，不能只寫在 prompt，因為 prompt 裡的「最多試三次」model 不一定會守。</li>
+                <li><b>隔離。</b>程式在哪裡跑、碰得到什麼，用 container 或 VM、唯讀的路徑、網路白名單、不給的環境變數來限制。它靠作業系統擋，不靠 model 自律，因為 prompt 擋不住一個寫錯的指令。</li>
+              </ol>
+              <figure class="file"><figcaption>前兩項做出來的樣子：harness 回給 model 的 shell tool result</figcaption><pre><code>Command failed (exit 1) after 42.3s          ← 1 失敗訊號：exit code 放最前面
+$ pytest tests/
+============ test session starts ============
+collected 214 items
+tests/api/test_client.py::test_retries_on_5xx FAILED
+[... 2,600 lines omitted; rerun with -q or grep to narrow ...]   ← 2 輸出量：保留頭尾，說怎麼縮小
+E   ConnectionError: connect ETIMEDOUT 10.0.3.8:443
+E   at client.ts:88
+=== 3 failed, 211 passed in 41.9s ===</code></pre></figure>
+              <p>把五項排在一起，可以看到一個共同點：每一項都把原本「交給 model 判斷」的事，改成「由 harness 保證」。這也是延伸閱讀裡 Schmid 主張「只給 bash」的前提：他砍掉的是 model 面對的 tool 數量，這五項工作沒有消失，全部搬進了 harness。</p>
+              <p>那既然 shell 都做得到，agent 為什麼還要專用的 read、edit tool？第一是輸出：read tool 可以限制行數、附上行號，<code>cat</code> 會把整個檔案倒進 context。第二是安全：唯讀的 tool 可以自動放行，shell 指令要先檢查，因為它可能是 <code>rm</code>。第三是錯誤：edit tool 會回「anchor 找不到，請重讀檔案」，<code>sed</code> 對不到時什麼也不說。</p>
+              <p><b>其他五種常見的 tool。</b>除了這三類，slide p.24 還點名五種常見的 tool，每一種都補上 model 缺的一樣東西：</p>
+              <ul>
+                <li><b>Browser。</b>把畫面截圖回傳，model 才看得到 render 的結果。</li>
+                <li><b>Memory 與筆記。</b>把發現寫進檔案，計畫才撐得過 compaction（i5 會講 compaction 是什麼）。</li>
+                <li><b>問使用者。</b>一個便宜的問題，勝過一個自信的錯 patch。</li>
+                <li><b>Subagent。</b>另一個有自己 context 的 agent。主 agent 把探索交給它，回來的是一份清單，不是 40 次讀檔的結果（L3 專講 subagent）。</li>
+                <li><b>Web search。</b>排最後：先讀裝好的原始碼，再查網路。</li>
+              </ul>
+              <p><b>五條原則，管的是同一件事。</b>選項這麼多，p.25 用五條原則收斂，而它們管的都是同一件事：tool 的定義與輸出怎麼進 context。</p>
+              <ol>
+                <li><b>少且正交。</b>功能重疊的 tool 會讓 model 猶豫，而且每一個 tool 定義每一圈都要佔 context。</li>
+                <li><b>專用。</b><code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 則把這些全推給 model 去猜。</li>
+                <li><b>輸出省 token。</b>用截斷、分頁、摘要，因為輸出的每一個字都會進下一圈的 prompt。</li>
+                <li><b>錯誤要能教。</b>下面有例子。</li>
+                <li><b>預設冪等。</b>下面有例子。</li>
+              </ol>
               <p>錯誤要能教，是因為錯誤訊息是 model 唯一的回饋。同一個錯誤可以有三種回法，差別在 model 下一圈能不能直接動手：</p>
               <figure class="file"><figcaption>同一個 search_orders 呼叫失敗，三種 tool result</figcaption><pre><code># 1 沒有用：model 只能猜
 {"error": "invalid argument"}
@@ -581,20 +813,172 @@ ValueError: bad id"}
           <div class="idea" id="i3">
             <h3>Prompt 技巧從簡單開始，夠用就停 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=28" target="_blank" rel="noopener">p.28–40</a></h3>
             <div class="prose">
-              <p>Tool 定了，接下來是怎麼對 model 說話。Slide p.28 先用一條時間軸擺好位置：2023 到 2024 年大家談 prompt engineering，問的是「怎麼下指令」，講的是措辭、範例、輸出格式。2025 到 2026 年談 context engineering，問的是「讓 model 看到什麼」，講的是檢索、memory、歷史、compaction。2026 年開始談 harness engineering，問的是「agent 怎麼運作」，講的是 loop、tool、sandbox、重試、停止。再往後是 goal engineering，問的是「什麼算成功」。講者說列出這些名詞是為了讓你認得它們，不代表背書；但這條軸也說明了這堂課的順序：prompt 只是 context 的一小塊，而 context 又只是 harness 的一部分。</p>
-              <p><b>八種技巧，三層成本。</b>Slide p.29–37 列了八種 prompt 技巧，每一種配一個例子。它們依成本分成三層，從上往下試，夠用就停，因為每往下一層，token 與呼叫次數都會增加。第一層只改指令。Zero-shot 是只給指令，不給範例：「把客服工單分成 billing、bug、feature、other 四類，只回 JSON」，送進「Crashes when I export a PDF.」就回 <code>{"label": "bug"}</code>。任務常見、規則講得清楚，就用它。Few-shot 在指令後面附幾個做好的例子：「Charged twice this month. → billing」「asdfgh → other」，規則用講的講不清、用看的一看就懂，就用它。Role 和 persona 給 model 一個身分和讀者：「你是資深 SRE，替主管讀這份 postmortem，只標證據缺口，不猜原因，最多五點」，語氣或判斷標準重要時用它。</p>
-              <p>第二層讓 model 推理。Chain-of-thought 要 model 先寫出步驟再給答案：「每週 3 個功能做 4 週，再每週 5 個做 2 週，總共幾個」，model 先寫 3 × 4 = 12、5 × 2 = 10、12 + 10 = 22，最後一行 <code>ANSWER: 22</code>。任務真的有步驟、錯誤來自跳步時用它。Tree-of-thought 讓 model 先列幾條路，各打分數，再只往好的那條走：三個降低 checkout 延遲的做法，各打 impact 和 effort 的分數，展開分數最好的 C 和 B，放棄 A。有好幾條路而且打分很便宜時用它。Self-consistency 則是同一個 prompt 取樣好幾次，再投票：「這張發票是重複的嗎」問 5 次，得到 yes、yes、no、yes、yes，4 比 5 過門檻就接受，3 比 5 就交給人。</p>
-              <p>Self-consistency 有一個前提：temperature 要大於 0。Model 每產生一個 token，都是先算出一個機率分布，再從中取樣。Temperature 控制這個分布的平或尖：T = 0 永遠選機率最高的 token，所以每次都走同一條路；T 越大，低機率的 token 越常中選，走的路就越不一樣。Self-consistency 要的是「不同的推理路徑得到相同答案」，所以 slide 的例子用 T = 0.7；T = 0 的 5 票一致沒有資訊，因為那 5 次是同一條路。答錯的代價高、而且只有一個正確答案時用它。</p>
-              <p>第三層把 prompt 設計成系統。Prompt chaining 把一件工作拆成幾次呼叫，一次只做一件事：第一次從 email 裡抽出 {vendor, amount, date}，第二次驗證並補上 vendor_id，第三次寫回信。每一段的輸出都有固定格式可以檢查，哪一段不合格式就只重跑那一段。Meta prompting 讓 model 替你改 prompt：給它現在的 prompt、10 個測試案例和失敗的那 3 個，要它改出一版修好這 3 個又不弄壞另外 7 個的 prompt；slide 的例子從 8 比 10 改到 10 比 10。它的前提是你有一組可以打分的測試案例，而且你在調的就是 prompt 本身。</p>
-              <p><b>怎麼選，怎麼知道該往下一層。</b>Slide p.38 的選法是一條路：zero-shot 當基準；輸出格式特別或規則說不清，加 few-shot；語氣或判斷重要，加 role。任務有多個步驟，上 chain-of-thought；有幾條路值得打分，上 tree-of-thought；要投票，上 self-consistency。工作能拆成可驗證的階段，上 chaining；prompt 本身就是要交付的東西，上 meta prompting。每一步都有一個訊號告訴你該往下走，沒有訊號就停在原地。</p>
-              <p><b>招式會過期，原則不會。</b>Slide p.39 說其中幾招已經過期，要你在 assignment 自己找出是哪幾招。原因是新 model 在訓練時已經學會了：例如對 reasoning model 說「think step by step」已經沒有必要，有時反而有害。所以 slide p.40 給的是四條不會過期的原則：從簡單開始再迭代、把 prompt 分成 context、指令、tool、輸出格式幾個區塊、具體精簡（花俏的措辭換不到東西）、大任務拆成小任務。最後一句是：prompt 的建議和 model 綁在一起，換 model 就要重調。</p>
+              <p>Tool 定了，接下來是怎麼對 model 說話。Slide p.28 先用一條時間軸擺好位置：</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 700 170" role="img" aria-label="一條由左到右的時間軸，四個階段。2023 到 2024 年 prompt engineering，問怎麼下指令，講措辭、範例、輸出格式。2025 到 2026 年 context engineering，問讓 model 看到什麼，講檢索、memory、歷史、compaction。2026 年 harness engineering，問 agent 怎麼運作，講 loop、tool、sandbox、重試、停止。之後是 goal engineering，問什麼算成功，講目標、標準、限制、取捨。四個階段的範圍一個包著一個，越右邊越大。">
+                    <defs>
+                      <marker id="l4i-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" class="dg-fill-soft"/>
+                      </marker>
+                    </defs>
+                    <line x1="12" y1="150" x2="690" y2="150" class="dg-soft" marker-end="url(#l4i-ah)"/>
+                    <rect x="12" y="20" width="156" height="110" rx="4" class="dg-box"/>
+                    <text x="90" y="40" text-anchor="middle" class="dg-tm">2023–2024</text>
+                    <text x="90" y="60" text-anchor="middle" class="dg-tb">Prompt engineering</text>
+                    <text x="90" y="80" text-anchor="middle" class="dg-ta">怎麼下指令？</text>
+                    <text x="90" y="100" text-anchor="middle" class="dg-ts">措辭、範例</text>
+                    <text x="90" y="116" text-anchor="middle" class="dg-ts">輸出格式</text>
+                    <rect x="186" y="20" width="156" height="110" rx="4" class="dg-box"/>
+                    <text x="264" y="40" text-anchor="middle" class="dg-tm">2025–2026</text>
+                    <text x="264" y="60" text-anchor="middle" class="dg-tb">Context engineering</text>
+                    <text x="264" y="80" text-anchor="middle" class="dg-ta">讓 model 看到什麼？</text>
+                    <text x="264" y="100" text-anchor="middle" class="dg-ts">檢索、memory</text>
+                    <text x="264" y="116" text-anchor="middle" class="dg-ts">歷史、compaction</text>
+                    <rect x="360" y="20" width="156" height="110" rx="4" class="dg-box-accent"/>
+                    <text x="438" y="40" text-anchor="middle" class="dg-tm">2026</text>
+                    <text x="438" y="60" text-anchor="middle" class="dg-tb">Harness engineering</text>
+                    <text x="438" y="80" text-anchor="middle" class="dg-ta">Agent 怎麼運作？</text>
+                    <text x="438" y="100" text-anchor="middle" class="dg-ts">loop、tool、sandbox</text>
+                    <text x="438" y="116" text-anchor="middle" class="dg-ts">重試、停止</text>
+                    <rect x="534" y="20" width="156" height="110" rx="4" class="dg-box-soft"/>
+                    <text x="612" y="40" text-anchor="middle" class="dg-tm">Now → Next</text>
+                    <text x="612" y="60" text-anchor="middle" class="dg-tb">Goal engineering</text>
+                    <text x="612" y="80" text-anchor="middle" class="dg-ta">什麼算成功？</text>
+                    <text x="612" y="100" text-anchor="middle" class="dg-ts">目標、標準</text>
+                    <text x="612" y="116" text-anchor="middle" class="dg-ts">限制、取捨</text>
+                  </svg>
+                </div>
+                <figcaption>依 p.28 重畫。藍框是這堂課的位置：prompt 只是 context 的一小塊，context 又只是 harness 的一部分。講者說列出這些名詞是為了讓你認得它們，不代表背書。</figcaption>
+              </figure>
+              <p><b>八種技巧，三層成本。</b>Slide p.29–37 列了八種 prompt 技巧，每一種配一個例子。它們依成本分成三層，從上往下試，夠用就停，因為每往下一層，token 與呼叫次數都會增加。</p>
+              <p>第一層只改指令。Zero-shot 是只給指令，不給範例；few-shot 在指令後面附幾個做好的例子；role 和 persona 給 model 一個身分和讀者。三者用同一個例子看：</p>
+              <figure class="file"><figcaption>第一層的三種寫法（p.30–32 的例子）</figcaption><pre><code># Zero-shot：只有指令。任務常見、規則講得清楚，就用它
+You are a support triage assistant. Classify the ticket as
+billing, bug, feature, or other. Reply with JSON only: {"label": ...}.
+Use "other" if unclear.
+Ticket: "Crashes when I export a PDF."
+→ {"label": "bug"}
+
+# Few-shot：指令加例子。規則用講的講不清、用看的一看就懂，就用它
+Charged twice this month.      → billing
+Can you add dark mode?         → feature
+asdfgh                         → other
+Crashes when I export a PDF.   → ?
+
+# Role / persona：給身分和讀者。語氣或判斷標準重要時用它
+You are a senior SRE reviewing a postmortem for an executive audience.
+Flag evidence gaps, never speculate, be direct, at most five bullets.
+→ "The timeline omits the 04:12 alert ack. That is an evidence gap, not a cause."</code></pre></figure>
+              <p>第二層讓 model 推理。Chain-of-thought 要 model 先寫出步驟再給答案，任務真的有步驟、錯誤來自跳步時用它。Tree-of-thought 讓 model 先列幾條路，各打分數，再只往好的那條走，有好幾條路而且打分很便宜時用它。Self-consistency 則是同一個 prompt 取樣好幾次，再投票，答錯的代價高、而且只有一個正確答案時用它。</p>
+              <figure class="file"><figcaption>第二層的三種寫法（p.33–35 的例子）</figcaption><pre><code># Chain-of-thought：先寫步驟，最後一行才是答案
+Q: 3 features/week for 4 weeks, then 5/week for 2 weeks. Total?
+3 × 4 = 12
+5 × 2 = 10
+12 + 10 = 22
+ANSWER: 22
+
+# Tree-of-thought：列幾條路、打分、只展開好的
+Propose 3 ways to cut checkout latency; score impact and effort 1–5.
+A cache warm-up          impact 3, effort 2
+B drop 3rd-party script  impact 5, effort 4
+C lazy-load assets       impact 4, effort 1
+→ expand C, then B; prune A
+
+# Self-consistency：同一題問 5 次（T = 0.7），投票
+"Is this invoice a duplicate?" × 5 → yes, yes, no, yes, yes
+4/5 = 0.8 ≥ 門檻 → accept；3/5 → route to a human</code></pre></figure>
+              <p>Self-consistency 有一個前提：temperature 要大於 0。Model 每產生一個 token，都是先算出一個機率分布，再從中取樣。Temperature 控制這個分布的平或尖：T = 0 永遠選機率最高的 token，所以每次都走同一條路；T 越大，低機率的 token 越常中選，走的路就越不一樣。Self-consistency 要的是「不同的推理路徑得到相同答案」，所以 slide 的例子用 T = 0.7；T = 0 的 5 票一致沒有資訊，因為那 5 次是同一條路。</p>
+              <p>第三層把 prompt 設計成系統。Prompt chaining 把一件工作拆成幾次呼叫，一次只做一件事：第一次從 email 裡抽出 <code>{vendor, amount, date}</code>，第二次驗證並補上 <code>vendor_id</code>，第三次寫回信。每一段的輸出都有固定格式可以檢查，哪一段不合格式就只重跑那一段。Meta prompting 讓 model 替你改 prompt：給它現在的 prompt、10 個測試案例和失敗的那 3 個，要它改出一版修好這 3 個又不弄壞另外 7 個的 prompt；slide 的例子從 8 比 10 改到 10 比 10。它的前提是你有一組可以打分的測試案例，而且你在調的就是 prompt 本身。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 700 250" role="img" aria-label="三層的階梯圖，由上往下成本增加。第一層只改指令：zero-shot、few-shot、role 與 persona。第二層讓 model 推理：chain-of-thought、tree-of-thought、self-consistency。第三層設計成系統：prompt chaining、meta prompting。每層之間有一個往下的箭頭，標出該往下一層的訊號：規則講不清就加範例；任務有步驟就要 model 寫步驟；工作能拆成可驗證的階段就拆成 chain。右側標示 token 與呼叫次數往下增加。">
+                    <defs>
+                      <marker id="l4j-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/>
+                      </marker>
+                    </defs>
+                    <rect x="12" y="14" width="560" height="56" rx="4" class="dg-box-accent"/>
+                    <text x="24" y="36" class="dg-tb">1 只改指令</text>
+                    <text x="24" y="56" class="dg-ts">從這裡開始，夠用就停</text>
+                    <rect x="200" y="24" width="110" height="36" rx="4" class="dg-box"/>
+                    <text x="255" y="46" text-anchor="middle" class="dg-t">zero-shot</text>
+                    <rect x="322" y="24" width="110" height="36" rx="4" class="dg-box"/>
+                    <text x="377" y="46" text-anchor="middle" class="dg-t">few-shot</text>
+                    <rect x="444" y="24" width="116" height="36" rx="4" class="dg-box"/>
+                    <text x="502" y="46" text-anchor="middle" class="dg-t">role / persona</text>
+
+                    <line x1="110" y1="70" x2="110" y2="100" class="dg-line" marker-end="url(#l4j-ah)"/>
+                    <text x="122" y="90" class="dg-ts">訊號：規則講不清 → 加範例；任務有步驟 → 要 model 先寫步驟</text>
+
+                    <rect x="12" y="102" width="560" height="56" rx="4" class="dg-box"/>
+                    <text x="24" y="124" class="dg-tb">2 讓 model 推理</text>
+                    <text x="24" y="144" class="dg-ts">多幾倍的 token 或呼叫</text>
+                    <rect x="200" y="112" width="110" height="36" rx="4" class="dg-box-soft"/>
+                    <text x="255" y="134" text-anchor="middle" class="dg-t">chain-of-thought</text>
+                    <rect x="322" y="112" width="110" height="36" rx="4" class="dg-box-soft"/>
+                    <text x="377" y="134" text-anchor="middle" class="dg-t">tree-of-thought</text>
+                    <rect x="444" y="112" width="116" height="36" rx="4" class="dg-box-soft"/>
+                    <text x="502" y="134" text-anchor="middle" class="dg-t">self-consistency</text>
+
+                    <line x1="110" y1="158" x2="110" y2="188" class="dg-line" marker-end="url(#l4j-ah)"/>
+                    <text x="122" y="178" class="dg-ts">訊號：工作能拆成可驗證的階段；prompt 本身就是要交付的東西</text>
+
+                    <rect x="12" y="190" width="560" height="50" rx="4" class="dg-box"/>
+                    <text x="24" y="212" class="dg-tb">3 設計成系統</text>
+                    <text x="24" y="230" class="dg-ts">多次呼叫、要有 eval</text>
+                    <rect x="200" y="198" width="140" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="270" y="219" text-anchor="middle" class="dg-t">prompt chaining</text>
+                    <rect x="352" y="198" width="140" height="34" rx="4" class="dg-box-soft"/>
+                    <text x="422" y="219" text-anchor="middle" class="dg-t">meta prompting</text>
+
+                    <line x1="620" y1="20" x2="620" y2="236" class="dg-soft" marker-end="url(#l4j-ah)"/>
+                    <text x="634" y="120" class="dg-ts">token、</text>
+                    <text x="634" y="136" class="dg-ts">呼叫次數</text>
+                    <text x="634" y="152" class="dg-ts">增加</text>
+                  </svg>
+                </div>
+                <figcaption>依 p.38 整理。從第 1 層開始；每一層之間的文字是該往下走的訊號，沒有訊號就停在原地。</figcaption>
+              </figure>
+              <p><b>招式會過期，原則不會。</b>Slide p.39 說其中幾招已經過期，要你在 assignment 自己找出是哪幾招。原因是新 model 在訓練時已經學會了：例如對 reasoning model 說「think step by step」已經沒有必要，有時反而有害。所以 slide p.40 給的是四條不會過期的原則：從簡單開始再迭代；把 prompt 分成 context、指令、tool、輸出格式幾個區塊；具體精簡，花俏的措辭換不到東西；大任務拆成小任務。最後一句是：prompt 的建議和 model 綁在一起，換 model 就要重調。</p>
             </div>
           </div>
           <div class="idea" id="i4">
             <h3>Context 是有限資源：錢、延遲、注意力 <a class="ref" href="https://cs2680.com/slides/4_agent_design_1.pdf#page=41" target="_blank" rel="noopener">p.41–44</a></h3>
             <div class="prose">
               <p>前面講的 tool 與 prompt，最後都會變成 context 的一部分；prompt 只佔其中一小塊，tool 定義、檔案內容、tool 結果也都在裡面。Karpathy 在 2025 年把管理這一整塊叫 context engineering，定義是「為下一步放進剛好需要的資訊」。重點在「下一步」：任務一直在推進，所以 harness 每一圈都要重新決定放什麼、拿掉什麼。</p>
-              <p><b>Context window 裡有什麼。</b>Slide p.44 把一次 agent 的 request 拆開：system prompt、tool 定義、檢索來的內容、對話歷史（使用者的訊息、model 的回覆、每一個 tool 結果）、專案環境（例如 <code>CLAUDE.md</code>、目錄結構）。它給了一組示意的大小：有的區塊約 2K token，有的 6K、8K、25K，而對話歷史是 80K 以上，而且每一圈都在長。所以 window 裡最大、長得最快的一塊是歷史，裡面多數是舊的 tool 結果。</p>
+              <p><b>Context window 裡有什麼。</b>Slide p.44 把一次 agent 的 request 拆開，下圖是它的樣子：</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 700 270" role="img" aria-label="一個直立的 context window，由上到下疊著五塊：system prompt、tool 定義、專案環境（CLAUDE.md、目錄結構）、檢索來的內容、對話歷史。前四塊都薄，加起來約幾千到幾萬 token；最底下的對話歷史最厚，標示 80K 以上而且每圈都在長，裡面是使用者訊息、model 回覆和一個接一個的 tool 結果。右側三個註記：開頭不能動，prefix cache 靠它；中段是舊的 tool 結果，最先該清；結尾是最近幾輪，保持完整。">
+                    <rect x="200" y="12" width="300" height="246" rx="6" class="dg-frame"/>
+                    <text x="212" y="30" class="dg-tb">Context window（一次 request）</text>
+                    <rect x="212" y="40" width="276" height="22" rx="3" class="dg-box-soft"/>
+                    <text x="350" y="55" text-anchor="middle" class="dg-t">system prompt　約 2K</text>
+                    <rect x="212" y="66" width="276" height="26" rx="3" class="dg-box-soft"/>
+                    <text x="350" y="83" text-anchor="middle" class="dg-t">tool 定義　約 6K（每個 tool 三段文字）</text>
+                    <rect x="212" y="96" width="276" height="22" rx="3" class="dg-box-soft"/>
+                    <text x="350" y="111" text-anchor="middle" class="dg-t">專案環境　CLAUDE.md、目錄結構</text>
+                    <rect x="212" y="122" width="276" height="30" rx="3" class="dg-box"/>
+                    <text x="350" y="141" text-anchor="middle" class="dg-t">檢索來的內容　約 25K</text>
+                    <rect x="212" y="156" width="276" height="94" rx="3" class="dg-box-accent"/>
+                    <text x="350" y="176" text-anchor="middle" class="dg-tb">對話歷史　80K+，每圈都在長</text>
+                    <text x="350" y="196" text-anchor="middle" class="dg-ts">使用者訊息、model 回覆</text>
+                    <text x="350" y="212" text-anchor="middle" class="dg-ts">tool 結果、tool 結果、tool 結果……</text>
+                    <text x="350" y="236" text-anchor="middle" class="dg-ts">最近幾輪在最底下</text>
+
+                    <text x="190" y="52" text-anchor="end" class="dg-ts">開頭：不能動</text>
+                    <text x="190" y="68" text-anchor="end" class="dg-ts">prefix cache 靠它（L2）</text>
+                    <text x="190" y="196" text-anchor="end" class="dg-ts">中段：舊的 tool 結果</text>
+                    <text x="190" y="212" text-anchor="end" class="dg-ts">最先該清掉</text>
+                    <text x="510" y="52" class="dg-ts">每一圈都重送整份</text>
+                    <text x="510" y="68" class="dg-ts">所以每一塊每圈都付錢</text>
+                    <text x="510" y="232" class="dg-ts">結尾：最近幾輪</text>
+                    <text x="510" y="248" class="dg-ts">保持完整</text>
+                  </svg>
+                </div>
+                <figcaption>依 p.44 重畫；slide 的 token 數是示意，哪個數字對哪一塊是本文依常見的比例配的。重點是最底下那塊：歷史最大、長得最快，裡面多數是舊的 tool 結果。</figcaption>
+              </figure>
               <p><b>三種成本。</b>這件事重要，是因為 context 有三種成本。第一是錢：model 沒有記憶，每一圈 harness 都要把整個 window 重送一次，所以一份 8,000 token 的 tool 結果進了 context，之後每一圈都要再付一次。第二是延遲。Model 處理一次 request 分兩個階段：prefill 先把整個 prompt 讀一遍，decode 再一個 token 一個 token 地產生回答。Prompt 越長，prefill 越久；而 decode 每產生一個 token 都要回頭看整個 context，所以也會變慢。第三是注意力：window 越滿，model 越難從裡面找回資訊。</p>
               <p><b>注意力的成本，兩組實驗量過。</b>第一組是 Chroma 的 Context Rot（2025）：同一個問題，輸入越長，準確率越低，有干擾內容時掉得更快。第二組是 Liu 等人的 Lost in the Middle（TACL 2024）：把含答案的文件放在 20 份文件中的不同位置，放第 1 份，準確率 76%；放第 10 份掉到 55%；放第 20 份又回到 71%，曲線呈 U 形。原因還沒有定論，但設計上的意義很清楚：關鍵的指示放開頭或結尾；中間是 model 最看不到的位置。</p>
               <figure class="diagram">
@@ -698,11 +1082,39 @@ ValueError: bad id"}
                     </div>
                     <figcaption>依 p.45–49 整理，數字是 slide 的例子（單位 token）。由左往右，原文越來越難找回；只有最右邊要呼叫 LLM。</figcaption>
                   </figure>
-              <p><b>Admission：在門口把關。</b>Admission 的意思是只放需要的部分進 window。做法有四個：檢索時查窄一點，只拿欄位，不拿整份文件；tool 輸出先整形，例如抓網頁時丟掉整個 DOM，只留擷取出來的內容；整形不了的才截斷；真的很大的原始資料交給一個 subagent，它自己的 context 去消化，主 agent 只拿結論。Slide 的例子是一份原始 DOM 有 48,000 token，擷取成價格和標題只剩 900 token，少了 98%，答案卻相同。i2 講的 tool 輸出截斷，就是 admission 的最小版本。</p>
-              <p><b>Offloading：放在外面，要用再讀。</b>Offloading 讓內容留在 window 外面，只留一個 handle，需要時才載入。做法有五個：tool 定義漸進載入，一開始只放索引，用到哪個 tool 才載入它的 schema；tool 輸出先存到外面，只回一個 handle；任務清單寫在硬碟上，例如一個 <code>TODO.md</code>；長期 memory 寫成檔案，window 裡只放一份小索引。Slide 的例子是 60 個 tool 的 schema 常駐要 42,000 token，改成索引加 3 個 schema 只要 3,100 token，少了 93%，而 60 個 tool 仍然都用得到。Anthropic 的 Claude API 在 2025 年底推出的 tool search tool，做的就是這件事。</p>
-              <p><b>Transformation：刪掉舊的或重複的。</b>前兩種擋在門口，後兩種處理已經進了 window 的內容。Transformation 刪掉過期或重複的舊內容，但不做摘要。做法有三個：dedup，同一個物件只留最新的狀態，例如一個檔案讀了三次只留最後一次；observation masking，把 N 步以前的 tool 結果換成一行「[已移除]」；sliding window，只留開頭和最近幾輪。Slide 的例子是把每個結果都留著要 96,000 token，只留最新狀態就剩 24,000，少了 75%，過程中沒有做任何摘要。刪掉的內容大多可以重跑 tool 拿回，所以它對目前的任務幾乎無損。</p>
+              <p><b>Admission：在門口把關。</b>Admission 的意思是只放需要的部分進 window。做法有四個：</p>
+              <ul>
+                <li>檢索時查窄一點，只拿欄位，不拿整份文件。</li>
+                <li>Tool 輸出先整形，例如抓網頁時丟掉整個 DOM，只留擷取出來的內容。</li>
+                <li>整形不了的才截斷。</li>
+                <li>真的很大的原始資料交給一個 subagent，用它自己的 context 去消化，主 agent 只拿結論。</li>
+              </ul>
+              <p>Slide 的例子是一份原始 DOM 有 48,000 token，擷取成價格和標題只剩 900 token，少了 98%，答案卻相同。i2 講的 tool 輸出截斷，就是 admission 的最小版本。</p>
+              <p><b>Offloading：放在外面，要用再讀。</b>Offloading 讓內容留在 window 外面，只留一個 handle，需要時才載入。做法有五個：</p>
+              <ul>
+                <li>Tool 定義漸進載入：一開始只放索引，用到哪個 tool 才載入它的 schema。</li>
+                <li>Tool search：把 tool 清單做成可以搜尋的索引，model 先搜再載入。</li>
+                <li>Tool 輸出先存到外面，只回一個 handle。</li>
+                <li>任務清單寫在硬碟上，例如一個 <code>TODO.md</code>。</li>
+                <li>長期 memory 寫成檔案，window 裡只放一份小索引。</li>
+              </ul>
+              <figure class="file"><figcaption>Tool 定義漸進載入：window 裡只有索引，用到才載入一個</figcaption><pre><code># 常駐在 context 裡的，只有一份索引（60 個 tool，約 600 token）
+Available tools (call tool_search to load one):
+  jira.create_issue, jira.search, slack.post, gh.open_pr, gh.list_runs, ...
+
+# model 要用時先搜，harness 才把那一個 tool 的完整 schema 放進 context
+{"name": "tool_search", "input": {"query": "open a pull request"}}
+→ loaded: gh.open_pr {name, description, input_schema}   # 約 1,000 token</code></pre></figure>
+              <p>Slide 的例子是 60 個 tool 的 schema 常駐要 42,000 token，改成索引加 3 個 schema 只要 3,100 token，少了 93%，而 60 個 tool 仍然都用得到。Anthropic 的 Claude API 在 2025 年底推出的 tool search tool，做的就是這件事。</p>
+              <p><b>Transformation：刪掉舊的或重複的。</b>前兩種擋在門口，後兩種處理已經進了 window 的內容。Transformation 刪掉過期或重複的舊內容，但不做摘要。做法有三個：</p>
+              <ul>
+                <li>Dedup：同一個物件只留最新的狀態，例如一個檔案讀了三次只留最後一次。</li>
+                <li>Observation masking：把 N 步以前的 tool 結果換成一行「[已移除]」。</li>
+                <li>Sliding window：只留開頭和最近幾輪。</li>
+              </ul>
+              <p>Slide 的例子是把每個結果都留著要 96,000 token，只留最新狀態就剩 24,000，少了 75%，過程中沒有做任何摘要。刪掉的內容大多可以重跑 tool 拿回，所以它對目前的任務幾乎無損。</p>
               <p><b>Compaction：LLM 當最後手段。</b>Compaction 是用 LLM 把舊歷史寫成一段摘要，換掉原文。做法有兩種：rolling summary 邊走邊把舊的 tool 結果摘要掉；full summary 等 window 快滿時把整段歷史重寫一次。Claude Code 的 <code>/compact</code> 和自動 compaction 就是後者。它有損又不可逆，因為留什麼由 model 決定，原文沒有 handle 可以拿回，所以排在最後。Slide 給了三個提醒：要預留輸出的空間，不能等到完全滿；system prompt 和 tool 定義那一段要保持原樣，因為 prefix cache 靠它（L2）；摘要之後要把關鍵的事實重新放回去，例如目前的目標。Auto memory 是它的配套：關鍵事實寫到 window 外面的檔案，就不怕摘要漏掉。</p>
-              <p><b>Context 會怎麼壞：五種失敗。</b>策略之外，還要知道 context 會怎麼壞。Breunig 在 2025 年把失敗分成五種：poisoning 是一個幻覺進了 window，後來 model 把它當成事實引用；distraction 是歷史越堆越長，agent 開始模仿自己過去的動作；confusion 是無關的 tool 或文件把答案帶偏；clash 是新資訊和舊資訊矛盾，兩者都留在 window；drift 是真正的目標埋在歷史裡，model 改追附近的子目標。叫得出名字之後，修法就很明顯，而且每一種修法都是四種策略之一。</p>
+              <p><b>Context 會怎麼壞：五種失敗。</b>策略之外，還要知道 context 會怎麼壞。Breunig 在 2025 年把失敗分成五種，叫得出名字之後，修法就很明顯，而且每一種修法都是四種策略之一：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>怎麼發生</th><th>修法</th><th>對應的策略</th></tr></thead>
                 <tbody>

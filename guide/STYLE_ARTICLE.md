@@ -1,6 +1,6 @@
-# CS2680 架構文章撰寫規範（v4.0）
+# CS2680 架構文章撰寫規範（v4.1）
 
-更新：2026-10-25（v4.0：文章要能不看 slides 從頭讀到尾，名詞在第一次出現的地方講清楚，深入區塊併回主線，觀念補充改成查閱詞條；見第 1、4 節。L3、L4 是第一批改寫的範例）。2026-10-23（v3.8：核心觀念的 prose 裡可以放比較圖或表格，見第 4 節第 2 段）。2026-10-22（v3.7：ASD-STE100 依段落分兩檔，推理段落放寬到約 60–70%，見第 5 節）。2026-10-22（v3.6：取消閱讀時間的限制，見第 7 節）。2026-10-22（v3.5：進階題每堂最多 3 題，見第 4 節第 5 段）。2026-10-22（v3.4：觀念補充的條數與閱讀時間上限改為建議，見第 4、7 節）。2026-10-21（v3.3：文章要讓沒看 slides 的人也讀得懂，見第 1 節；閱讀時間上限 16 → 30 分鐘，見第 7 節）。2026-10-19（v3.2：站台搬到 `docs/`；討論改用 GitHub Issues，連結由 `tools/discuss.py` 寫入）。對照的是 L1–L8 的實際格式。第 5 段的基礎題另見 `STYLE_BASIC.md`。
+更新：2026-10-26（v4.1：指令、設定檔、對話一律用 code snippet；每章至少一張圖或表；清單用 ul/ol；見第 4 節第 2 段與新的第 6b 節）。2026-10-25（v4.0：文章要能不看 slides 從頭讀到尾，名詞在第一次出現的地方講清楚，深入區塊併回主線，觀念補充改成查閱詞條；見第 1、4 節。L3、L4 是第一批改寫的範例）。2026-10-23（v3.8：核心觀念的 prose 裡可以放比較圖或表格，見第 4 節第 2 段）。2026-10-22（v3.7：ASD-STE100 依段落分兩檔，推理段落放寬到約 60–70%，見第 5 節）。2026-10-22（v3.6：取消閱讀時間的限制，見第 7 節）。2026-10-22（v3.5：進階題每堂最多 3 題，見第 4 節第 5 段）。2026-10-22（v3.4：觀念補充的條數與閱讀時間上限改為建議，見第 4、7 節）。2026-10-21（v3.3：文章要讓沒看 slides 的人也讀得懂，見第 1 節；閱讀時間上限 16 → 30 分鐘，見第 7 節）。2026-10-19（v3.2：站台搬到 `docs/`；討論改用 GitHub Issues，連結由 `tools/discuss.py` 寫入）。對照的是 L1–L8 的實際格式。第 5 段的基礎題另見 `STYLE_BASIC.md`。
 
 你負責把 Harvard CS2680 的一堂課寫成一篇「架構文章」：`/home/claude/cs2680/docs/lXX.html`。
 **範本是 `docs/l02.html`。先完整讀一遍：結構、class、語氣、密度都照它做。**
@@ -53,7 +53,9 @@
 - 3–6 個 `div.idea#iN`（2026-10-25 從 3–5 放寬；`check_discuss.py` 已改）。`h3`（觀念句）內放 `a.ref`（slide 頁碼範圍）。
 - 每章是一段連貫的教學，長度由內容決定（L4 的 i2 有 20 多段）。章內用 `<b>粗體小標。</b>` 開頭的段落分節，依「問題 → 名詞解釋 → 機制 → 例子 → 代價 → 證據」的順序走。可以放 `ol`、`figure.file`（指令、設定檔、程式碼，逐行標註）、`figure.diagram`、`div.table-wrap`。
 - 名詞第一次出現就解釋（第 1 節）。解釋的順序是由淺入深：先講讀者熟的（shell 指令、git），再講建在上面的（worktree、LSP）。
-- 寫因果，不要條列 slide。
+- 寫因果，不要條列 slide。但 slide 上的「N 個理由」「N 種做法」「N 個步驟」要用 `ul`／`ol` 列出，每一條是 `<b>名稱。</b>` 加一兩句解釋；不要把五個項目塞進一段散文（2026-10-26，L3、L4 的 ol/ul 是範例）。
+- **指令、設定檔、程式碼、對話，一律放 code snippet**（2026-10-26 定，見第 6b 節）。`grep -rn "timeout" src/`、`hooks.json`、`/goal "…"`、一段 JSON-RPC 請求，都不能只用 `<code>` 夾在句子裡帶過；要用 `figure.file` 完整寫出來，附輸出與逐行註解。
+- **每章至少一張圖或一張表**（2026-10-26 定）。Slide 上的流程圖、分層圖、比較表、長條圖都重畫成 `figure.diagram` 或 `div.table-wrap`；本文自己整理的也可以畫，figcaption 寫明「本文的整理」。L3 有 11 張、L4 有 15 張（2026-10-26）。
 - 「深入」區塊（`details.ex.deep#dN`）：**預設不用**（2026-10-25）。原本放在深入裡的內容（Claude Code 為什麼選 grep、LSP 怎麼建索引、五個執行考量各怎麼做）都是讀者想問的，應該併回主線。只有和主線無關、純粹補充的細節才收合。
 - 選用：一個觀念要比較好幾種做法、或有一組數字時，可以在 `div.prose` 裡放一張 `figure.diagram` 或一個 `div.table-wrap` 表格（格式同第 6 節；`shot_article.py` 會一起截圖，收合的深入區塊裡的也會）。每個粗體小標最多一張，放在它說明的那段前後；slide 沒給的部分在 figcaption 寫明「本文的整理」。例子是 L4（2026-10-23）：i2 的 search 成本曲線與 edit 四種方式對照表、i4 的 lost in the middle 折線、i5 的 Breunig 表與 Lewis 長條圖、d2 的冪等時序圖。
 
@@ -151,6 +153,18 @@
 - 只用 styles.css 的 class：`dg-box`、`dg-box-soft`、`dg-box-accent`、`dg-frame`、`dg-line`、`dg-soft`、`dg-dash`、`dg-accent`、`dg-fill-ink`、`dg-fill-accent`、`dg-fill-soft`、`dg-t`、`dg-tb`、`dg-ts`、`dg-tm`、`dg-ta`。不寫死顏色，svg 內不放 `<style>`。
 - marker id 加前綴，全站不能重複：文章本文用 `lNc-`（L9 → `l9c-ah`），基礎題答案用 `tkN-<題號>-`（L9 第 2 題 → `tk9-2-ah`）。
 - 箭頭要有標籤。文字 11–13px。viewBox 寬 600–760。數據圖照比例畫，標籤寫實際數值。
+
+## 6b. Code snippet（`figure.file`）
+
+2026-10-26 定（James：「grep 指令或是 glob 指令難道不能用 code snippet 嗎」）。
+
+- 格式：`<figure class="file"><figcaption>標題（頁碼或「本文補的」）</figcaption><pre><code>…</code></pre></figure>`。放在它說明的那段前後。
+- 什麼要放：shell 指令（附 `$` 提示字元和範例輸出）、設定檔（`hooks.json`、`SKILL.md`、MCP 設定）、tool call 與 tool result 的 JSON、prompt 範例、對話範例（`>` 開頭）、patch、程式碼。`<code>` 只用在句子裡提到一個名字或一小段參數。
+- 逐行註解：用 `← 說明` 放在行尾，或 `#`／`//` 的註解行。對齊用空格，不用 tab。讀者是沒用過這個工具的人，所以每個 flag、每個欄位第一次出現都要註。
+- 輸出要寫：指令後面接它印出來的東西（可以省略，用 `… 共 37 行` 標明）。Slide 沒給輸出時自己補，figcaption 寫「輸出是本文補的」。
+- 跳脫：`<`、`>`、`&` 寫成 `&lt;`、`&gt;`、`&amp;`。
+- 維持 ASCII 標點（`punct.py` 會跳過 `pre`／`code`）。
+- 範例：L4 i2 的 grep/glob 三步、tool 定義、Edit tool call、shell tool result；L3 i1 的 `hooks.json`、`session-start`；L3 i4 的 `/goal`、git lock file。
 
 ## 7. 長度
 
