@@ -137,8 +137,7 @@ def here_block(m):
     parts += [
         sec("s-discuss", str(k), "問題討論") + "</li>",
         sec("s-try", str(k + 1), "動手試試") + "</li>",
-        sec("s-submit", str(k + 2), "大家的討論", short="討論") + "</li>",
-        sec("wrap", "", "延伸閱讀") + "</li>",
+        sec("wrap", str(k + 2), "延伸閱讀") + "</li>",  # 2026-10-27: 大家的討論 merged into 問題討論; 延伸閱讀 numbered
     ]
     return (f'<li class="sn-lec is-here"><a class="sn-row" href="{m["key"]}.html" aria-current="page">'
             f'<span class="sn-no">L{m["no"]}</span><span class="sn-t">{H.escape(m["title"], quote=False)}</span>'

@@ -91,7 +91,7 @@ python3 -I tools/discuss.py docs/l09.html         # 開 issue，把連結寫進�
 
 `add_lecture.py` 會改：每一頁的目錄、`LX / N`、L8 的下一堂連結、首頁「已公開的講次」、首頁「還沒有 slides 的講次」。
 
-`discuss.py` 會：替這堂開一個 issue（label `L09`；內文是基礎題 Q1–Q5、每題的參考答案與 slide 連結、回覆範本）；在每題基礎題下面寫「到 GitHub 回答這一題（Qn）」連結，進階題不寫；重建第 6 段。跑第二次不會重開。
+`discuss.py` 會：替這堂開一個 issue（label `L09`；內文是基礎題 Q1–Q5、每題的參考答案與 slide 連結、回覆範本）；在每題基礎題下面寫「到 GitHub 回答這一題（Qn）」連結，進階題不寫；重建第 4 段末尾的「到 GitHub 寫你的答案」區塊。跑第二次不會重開。
 
 手動補兩件事：
 

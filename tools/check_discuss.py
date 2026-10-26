@@ -12,8 +12,9 @@ Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
     each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
     details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
   Every li.bq has p.gh-talk linking to the lecture's GitHub issue; li.dq has none (進階題 stay
-    on the page); §7 #s-submit links to that issue (all written by tools/discuss.py).
-  #s-submit (§6) and the reading list ol.rg in #wrap exist. #s-beyond is optional (gone since 2026-10-26).
+    on the page); #s-submit links to that issue (all written by tools/discuss.py).
+  div.submit#s-submit at the end of #s-discuss (2026-10-27) and the reading list ol.rg in #wrap (§6) exist.
+  #s-beyond is optional (gone since 2026-10-26).
 """
 import re
 import sys
@@ -263,11 +264,11 @@ def check(path):
         for e in ex:
             if e.attrs.get("open") is not None:
                 probs.append("an example is open by default")
-    sub = sec("s-submit")
+    sub = (root.find(id="s-submit") or [None])[0]  # div.submit inside #s-discuss since 2026-10-27
     if not sub:
-        probs.append("no §7 #s-submit")
+        probs.append("no #s-submit (GitHub block at the end of #s-discuss)")
     elif not any((x.attrs.get("href") or "").startswith(ISSUE) for x in sub.find("a")):
-        probs.append("§7 #s-submit has no link to the lecture issue (run tools/discuss.py)")
+        probs.append("#s-submit has no link to the lecture issue (run tools/discuss.py)")
     w = sec("wrap") or (root.find(id="wrap") or [None])[0]
     if not w or not w.find("ol", "rg"):
         probs.append("no ol.rg reading list in #wrap")

@@ -15,7 +15,7 @@ Model (2026-10-21):
   - The issue is found by the marker at the end of its body (<!-- cs2680:l03:lesson -->), so
     running this twice opens nothing new. Titles can be edited on GitHub freely.
   - On the page: every li.bq gets p.gh-talk linking to the lecture's issue; li.dq gets none;
-    section 7 (#s-submit) is rebuilt with the issue link. Idempotent.
+    the GitHub block div.submit#s-submit at the end of #s-discuss is rebuilt with the issue link. Idempotent.
   - --digest splits each comment on its「### Qn」headings and prints the answers question by
     question; text without a heading goes under「其他」.
 
@@ -160,7 +160,7 @@ def thread_body(lec):
     lines = [f"**CS2680 L{lec['no']} · {lec['title']}** · 基礎題 {n} 題", "",
              f"看 slides 前先看這 {n} 題，帶著問題去讀。看完後**每人在下面留一則**，用 `### Q1` … `### Q{n}` 當小標，"
              "一題一段。要補充就編輯自己那一則。建議先寫自己的，再看別人的。", "",
-             f"進階題不在這裡。它們在[站台第 {5 if lec.get('has_beyond', True) else 4} 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
+             f"進階題不在這裡。它們在[站台第 4 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
     for q in lec["basic"]:
         lines += [f"### Q{q['n']} · {q['topic']}", "", "> " + q["text"].replace("\n", "\n> "), ""]
         bits = [f"[參考答案]({page}#{q['id']})"]
@@ -182,25 +182,22 @@ def talk_p(url, n):
 
 
 def submit_section(lec, url):
+    """The GitHub block at the end of #s-discuss (2026-10-27: merged into 問題討論; was its own §7/§6)."""
     n = len(lec["basic"])
-    k = 5 if lec.get("has_beyond", True) else 4  # 2026-10-26: pages without 延伸思考 number 問題討論 as 第 4 段
-    return f"""<section class="part" id="s-submit">
-        <header class="part-head">
-          <p class="kicker">{k + 2} · 大家的討論</p>
-          <h2>這堂的討論</h2>
-          <p class="lede">這堂一串，放在 GitHub Issues。看完 slides 後，把第 {k} 段的 {n} 題基礎題寫成一則留言，用 Q1 到 Q{n} 當小標。進階題不用先寫，讀書會當天一起討論。</p>
-        </header>
-        <div class="copyrow gh-row">
-          <a class="copybtn" href="{url}" {EXT}>到這堂的討論串 ↗</a>
-          <a class="ghostbtn" href="{ISSUES_URL}" {EXT}>全部講次的討論串 ↗</a>
-        </div>
-        <ul class="limits gh-how">
-          <li>留言要先登入 GitHub。看討論不用登入。</li>
-          <li>一人一則：討論串裡有回覆範本，複製後填上 Q1 到 Q{n}。要補充就編輯自己那一則。</li>
-          <li>回應別人：按那一則「⋯」裡的 Quote reply，或寫 @對方的帳號。附件直接拖進留言框。</li>
-          <li>討論是公開的：任何人都看得到內容和你的 GitHub 帳號。</li>
-        </ul>
-      </section>"""
+    return f"""<div class="submit" id="s-submit">
+          <h3 class="subhead">到 GitHub 寫你的答案</h3>
+          <p class="lede">這堂一串，放在 GitHub Issues。看完 slides 後，把上面的 {n} 題基礎題寫成一則留言，用 Q1 到 Q{n} 當小標。進階題不用先寫，讀書會當天一起討論。</p>
+          <div class="copyrow gh-row">
+            <a class="copybtn" href="{url}" {EXT}>到這堂的討論串 ↗</a>
+            <a class="ghostbtn" href="{ISSUES_URL}" {EXT}>全部講次的討論串 ↗</a>
+          </div>
+          <ul class="limits gh-how">
+            <li>留言要先登入 GitHub。看討論不用登入。</li>
+            <li>一人一則：討論串裡有回覆範本，複製後填上 Q1 到 Q{n}。要補充就編輯自己那一則。</li>
+            <li>回應別人：按那一則「⋯」裡的 Quote reply，或寫 @對方的帳號。附件直接拖進留言框。</li>
+            <li>討論是公開的：任何人都看得到內容和你的 GitHub 帳號。</li>
+          </ul>
+        </div>"""
 
 
 def write_links(lec, url):
@@ -218,10 +215,10 @@ def write_links(lec, url):
                 pad = indent.group(1) if indent else ""
                 new = new[:j].rstrip() + "\n" + pad + "  " + link + "\n" + pad + new[j:]
             s = s[:m.start()] + new + s[m.start() + len(blk):]
-    s, n = re.subn(r'<section class="part" id="s-submit">.*?</section>',
+    s, n = re.subn(r'<div class="submit" id="s-submit">.*?</ul>\s*</div>',
                    lambda _: submit_section(lec, url), s, count=1, flags=re.S)
     if n != 1:
-        raise SystemExit(f"{path.name}: no section#s-submit")
+        raise SystemExit(f"{path.name}: no div.submit#s-submit inside #s-discuss")
     if s != s0:
         path.write_text(s, encoding="utf-8")
         return True
