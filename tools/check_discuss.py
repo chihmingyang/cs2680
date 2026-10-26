@@ -6,8 +6,9 @@ Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
   基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
     div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
     A「常見誤解」callout is expected (warning only).
-  核心觀念 ideas: 3-6 (2026-10-25; was 3-5).
-  觀念補充 terms: 4-6 is a suggestion (warning only, 2026-10-22).
+  核心觀念 ideas: 3-8 (2026-10-27; was 3-6).
+  觀念補充 terms: 4-6 is a suggestion (warning only, 2026-10-22); the section is optional
+    since 2026-10-27 (L4 merged it into the chapters as details.note).
   進階題 li.dq: at most 3 (2026-10-22; was 6), each a different type (the qtag label before「·」),
     each with qctx「情境：」, qcover of 3 li each carrying span.qh (提示),
     details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
@@ -122,7 +123,7 @@ def check(path):
         items = ideas.find("div", "idea")
         refs = [it for it in items if it.find("a", "ref")]
         rep.append(f"ideas={len(items)}")
-        if not 3 <= len(items) <= 6:  # 2026-10-25: 核心觀念放寬到 6 章（STYLE_ARTICLE v4.0）
+        if not 3 <= len(items) <= 8:  # 2026-10-25: 放寬到 6 章（v4.0）；2026-10-27: 8 章（v5.0，L4 拆成 7 章）
             probs.append(f"s-ideas has {len(items)} ideas")
         if len(refs) != len(items):
             probs.append("an idea lacks a.ref")

@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-10-21（討論改為每堂一串、只放基礎題）。
+更新：2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 
@@ -78,6 +78,19 @@ python3 -I tools/shot_article.py docs/l09.html
 ```
 
 - `check_article.py` 要印出 `OK`。`LONG` 句子拆短；`被` 改成主動。`warn` 可以不改，但要看一次。
+- v5.0 版面（有 `nav.map`）的頁面，閱讀地圖裡每章的分鐘數這樣算（和 `check_article.py` 同一條公式；`notes/` 是暫存）：
+  ```bash
+  python3 -I - <<'EOF'
+  import re, sys; sys.path.insert(0, 'tools'); import check_article as ca
+  s = open('docs/l04.html', encoding='utf-8').read()
+  seg = s[s.index('id="s-ideas"'):s.index('id="s-discuss"')]
+  ids = re.findall(r'<div class="idea" id="(i\d)">', seg)
+  pos = [seg.index(f'<div class="idea" id="{i}">') for i in ids] + [len(seg)]
+  for k, i in enumerate(ids):
+      v = ca.Vis(); v.feed('<main>' + seg[pos[k]:pos[k + 1]] + '</main>')
+      print(i, -(-v.b['read-time'] // 400), '分')   # 填進 span.map-m
+  EOF
+  ```
 - `check_discuss.py` 在 B5 跑完 `discuss.py` 之前，會回報每一題基礎題 `no GitHub issue link`。其他問題要先修好。
 - 用 Read 看每一張截圖一次：文字重疊、超出框、箭頭沒接好、手機版跑版。發現問題修一次。
 

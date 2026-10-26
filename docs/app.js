@@ -220,7 +220,15 @@
       var subLinks = item.querySelectorAll('.sn-sub');
       for (var k = 0; k < subLinks.length; k++) {
         var subTarget = document.getElementById(subLinks[k].getAttribute('href').slice(1));
-        if (subTarget) subs.push({ link: subLinks[k], el: subTarget });
+        if (!subTarget) continue;
+        /* third level (L4 layout): the chapter's own sub-sections, shown only while the chapter is in view */
+        var sub2 = [];
+        var sub2Links = subLinks[k].parentNode.querySelectorAll('.sn-sub2');
+        for (var k2 = 0; k2 < sub2Links.length; k2++) {
+          var t2 = document.getElementById(sub2Links[k2].getAttribute('href').slice(1));
+          if (t2) sub2.push({ link: sub2Links[k2], el: t2 });
+        }
+        subs.push({ link: subLinks[k], li: subLinks[k].parentNode, el: subTarget, subs: sub2 });
       }
       spy.push({ link: secLinks[s], li: item, el: target, subs: subs });
     }
@@ -269,6 +277,7 @@
 
   var lastActive = -2;
   var lastSub = null;
+  var lastSub2 = null;
   var ticking = false;
   var lastY = 0;
   var goingUp = false;
@@ -301,20 +310,35 @@
         if (isShown(list[j].el) && list[j].el.getBoundingClientRect().top <= line) sub = list[j];
       }
     }
+    var sub2 = null;
+    if (sub && sub.subs) {
+      for (var j2 = 0; j2 < sub.subs.length; j2++) {
+        if (isShown(sub.subs[j2].el) && sub.subs[j2].el.getBoundingClientRect().top <= line) sub2 = sub.subs[j2];
+      }
+    }
     notePlace(p, active, sub, line);
-    if (active === lastActive && sub === lastSub) return;
+    if (active === lastActive && sub === lastSub && sub2 === lastSub2) return;
     for (var n = 0; n < spy.length; n++) {
       spy[n].li.classList.toggle('is-active', n === active);
       spy[n].li.classList.toggle('is-past', n < active);
       if (n === active) spy[n].link.setAttribute('aria-current', 'location');
       else spy[n].link.removeAttribute('aria-current');
     }
-    if (lastSub && lastSub !== sub) lastSub.link.classList.remove('is-active');
-    if (sub) sub.link.classList.add('is-active');
+    if (lastSub && lastSub !== sub) {
+      lastSub.link.classList.remove('is-active');
+      if (lastSub.li) lastSub.li.classList.remove('is-active');
+    }
+    if (sub) {
+      sub.link.classList.add('is-active');
+      if (sub.li) sub.li.classList.add('is-active');
+    }
+    if (lastSub2 && lastSub2 !== sub2) lastSub2.link.classList.remove('is-active');
+    if (sub2) sub2.link.classList.add('is-active');
     lastActive = active;
     lastSub = sub;
+    lastSub2 = sub2;
     if (whereEl) whereEl.textContent = active >= 0 ? (spy[active].link.getAttribute('data-short') || '目錄') : '目錄';
-    keepInView(sub ? sub.link : (active >= 0 ? spy[active].link : null));
+    keepInView(sub2 ? sub2.link : (sub ? sub.link : (active >= 0 ? spy[active].link : null)));
   }
   function requestSpy() {
     if (ticking) return;
@@ -462,6 +486,44 @@
     window.addEventListener('hashchange', revealHash);
     revealHash();
   }
+
+  /* 名詞註: a dotted term (a.tm) opens its note; a link into any closed <details>
+     (#t8 from another page, #x3 from the index) opens it so the target is visible */
+  function openDetailsFor(el) {
+    var opened = false;
+    for (var d = el; d && d !== document.body; d = d.parentNode) {
+      if (d.tagName === 'DETAILS' && !d.open) { d.open = true; opened = true; }
+    }
+    return opened;
+  }
+  function revealTarget(id) {
+    var el = id && document.getElementById(id);
+    if (!el) return;
+    if (openDetailsFor(el)) {
+      /* the browser scrolled before the content existed; scroll again now that it does */
+      el.scrollIntoView();
+    }
+    if (el.classList && el.classList.contains('gloss')) {
+      el.classList.add('is-lit');
+      setTimeout(function () { el.classList.remove('is-lit'); }, 2500);
+    }
+  }
+  document.addEventListener('click', function (event) {
+    var a = event.target.closest ? event.target.closest('a.tm') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (href.charAt(0) !== '#') return;
+    var note = document.getElementById(href.slice(1));
+    if (!note) return;
+    event.preventDefault();
+    openDetailsFor(note);
+    note.scrollIntoView({ block: 'nearest' });
+    note.classList.add('is-lit');
+    setTimeout(function () { note.classList.remove('is-lit'); }, 2500);
+    if (history.replaceState) history.replaceState(null, '', href);
+  });
+  window.addEventListener('hashchange', function () { revealTarget(location.hash.slice(1)); });
+  if (location.hash) revealTarget(location.hash.slice(1));
 
   /* 複製題目: one button per set; copies question, context and answer checklist only */
   var copyBtns = document.querySelectorAll('.copybtn');

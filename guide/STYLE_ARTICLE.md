@@ -1,6 +1,6 @@
-# CS2680 架構文章撰寫規範（v4.5）
+# CS2680 架構文章撰寫規範（v5.0）
 
-更新：2026-10-27（v4.5：「大家的討論」併入第 4 段問題討論的末尾（`div.submit#s-submit`）；延伸閱讀編為第 6 段。全站段落：1 架構、2 核心觀念、3 觀念補充、4 問題討論、5 動手試試、6 延伸閱讀）。2026-10-26（v4.4：全站取消「延伸思考」段，L1–L8 都改完；段落固定為 1 架構、2 核心觀念、3 觀念補充、4 問題討論、5 動手試試、6 大家的討論、延伸閱讀；10-27 再併掉大家的討論）。2026-10-26（v4.3：取消獨立的「延伸思考」段，推論改放在對應章節末尾的「本文延伸」收合區塊，後面的段落編號往前移；slide 留給 assignment 的問題（哪幾招 prompt 過期）直接給本文的判斷；context window 的清單只畫一次、畫完整；見第 3、4 節）。2026-10-26（v4.2：一章太長就拆章；平行的做法用「找法 1：」「改法 2：」編號小標；章首一句地圖；見第 4 節第 2 段）。2026-10-26（v4.1：指令、設定檔、對話一律用 code snippet；每章至少一張圖或表；清單用 ul/ol；見第 4 節第 2 段與新的第 6b 節）。2026-10-25（v4.0：文章要能不看 slides 從頭讀到尾，名詞在第一次出現的地方講清楚，深入區塊併回主線，觀念補充改成查閱詞條；見第 1、4 節。L3、L4 是第一批改寫的範例）。2026-10-23（v3.8：核心觀念的 prose 裡可以放比較圖或表格，見第 4 節第 2 段）。2026-10-22（v3.7：ASD-STE100 依段落分兩檔，推理段落放寬到約 60–70%，見第 5 節）。2026-10-22（v3.6：取消閱讀時間的限制，見第 7 節）。2026-10-22（v3.5：進階題每堂最多 3 題，見第 4 節第 5 段）。2026-10-22（v3.4：觀念補充的條數與閱讀時間上限改為建議，見第 4、7 節）。2026-10-21（v3.3：文章要讓沒看 slides 的人也讀得懂，見第 1 節；閱讀時間上限 16 → 30 分鐘，見第 7 節）。2026-10-19（v3.2：站台搬到 `docs/`；討論改用 GitHub Issues，連結由 `tools/discuss.py` 寫入）。對照的是 L1–L8 的實際格式。第 4 段的基礎題另見 `STYLE_BASIC.md`。
+更新：2026-10-27（v5.0：**觀念補充併入核心觀念**，先在 L4 做。詞條改成正文裡的收合註 `details.gloss`（名詞／前情／背景），正文裡的名詞用 `a.tm` 連過去，點名詞就展開；核心觀念的章編號 2.1、2.2…，分成 A／B／C 三組，段首放一張閱讀地圖 `nav.map`；章內的粗體小標加 `id="iN-k"`，目錄多一層；一章超過約 4,000 字就拆（L4 的 Edit 與 execution 拆成 2.3、2.4，共 7 章，上限放寬到 8）。頁面因此只剩 5 段：1 架構、2 核心觀念、3 問題討論、4 動手試試、5 延伸閱讀；其他講次仍是 6 段，等 James 確認後再逐頁改。見第 3、4 節）。2026-10-27（v4.5：「大家的討論」併入第 4 段問題討論的末尾（`div.submit#s-submit`）；延伸閱讀編為第 6 段。全站段落：1 架構、2 核心觀念、3 觀念補充、4 問題討論、5 動手試試、6 延伸閱讀）。2026-10-26（v4.4：全站取消「延伸思考」段，L1–L8 都改完；段落固定為 1 架構、2 核心觀念、3 觀念補充、4 問題討論、5 動手試試、6 大家的討論、延伸閱讀；10-27 再併掉大家的討論）。2026-10-26（v4.3：取消獨立的「延伸思考」段，推論改放在對應章節末尾的「本文延伸」收合區塊，後面的段落編號往前移；slide 留給 assignment 的問題（哪幾招 prompt 過期）直接給本文的判斷；context window 的清單只畫一次、畫完整；見第 3、4 節）。2026-10-26（v4.2：一章太長就拆章；平行的做法用「找法 1：」「改法 2：」編號小標；章首一句地圖；見第 4 節第 2 段）。2026-10-26（v4.1：指令、設定檔、對話一律用 code snippet；每章至少一張圖或表；清單用 ul/ol；見第 4 節第 2 段與新的第 6b 節）。2026-10-25（v4.0：文章要能不看 slides 從頭讀到尾，名詞在第一次出現的地方講清楚，深入區塊併回主線，觀念補充改成查閱詞條；見第 1、4 節。L3、L4 是第一批改寫的範例）。2026-10-23（v3.8：核心觀念的 prose 裡可以放比較圖或表格，見第 4 節第 2 段）。2026-10-22（v3.7：ASD-STE100 依段落分兩檔，推理段落放寬到約 60–70%，見第 5 節）。2026-10-22（v3.6：取消閱讀時間的限制，見第 7 節）。2026-10-22（v3.5：進階題每堂最多 3 題，見第 4 節第 5 段）。2026-10-22（v3.4：觀念補充的條數與閱讀時間上限改為建議，見第 4、7 節）。2026-10-21（v3.3：文章要讓沒看 slides 的人也讀得懂，見第 1 節；閱讀時間上限 16 → 30 分鐘，見第 7 節）。2026-10-19（v3.2：站台搬到 `docs/`；討論改用 GitHub Issues，連結由 `tools/discuss.py` 寫入）。對照的是 L1–L8 的實際格式。第 4 段的基礎題另見 `STYLE_BASIC.md`。
 
 你負責把 Harvard CS2680 的一堂課寫成一篇「架構文章」：`/home/claude/cs2680/docs/lXX.html`。
 **範本是 `docs/l02.html`。先完整讀一遍：結構、class、語氣、密度都照它做。**
@@ -37,9 +37,9 @@
 5. `header.lecture-head`：
    - `p.eyebrow`：`Lecture 09 · 2026-10-19 · Part II`（腳本從這行讀日期和 Part）。
    - `h1` 中文標題、`p.en-title` 英文原標題。
-   - `ul.meta`：Slides 連結、頁數、頁碼（「PDF 檢視器的頁數」）、閱讀 `span.read-time`、（有深入區塊時才有）深入 `span.deep-time`、全部展開 `span.full-time`。時間由 `check_article.py --fix-time` 填；頁面沒有深入區塊時，刪掉深入那一個 `li`。
+   - `ul.meta`：Slides 連結、頁數、頁碼（「PDF 檢視器的頁數」）、閱讀 `span.read-time`、收合區塊 `span.deep-time`（v5.0 的頁面寫「註與延伸」，含 `details.gloss` 與本文延伸；舊頁面寫「深入」或「本文延伸」）、全部展開 `span.full-time`。時間由 `check_article.py --fix-time` 填。
 6. `section.tldr`「先看這裡」（`h2#tldr-h`）：`.thesis` 3–4 句、`ul.core` 3 條（`<b>粗體重點。</b>` + 1–2 句）、`.readhow` 讀法，照 l04 的句型：「這篇可以不看 slides 從頭讀到尾：每個名詞在第一次出現的地方就有解釋，由淺入深，頁碼只是出處。想對照 slides，就在讀到頁碼時打開那幾頁；想先帶著問題讀，就先看第 4 段的基礎題。」
-7. `div.layout` > `div.content`：六個段落（第 4 節），延伸閱讀是第 6 段。
+7. `div.layout` > `div.content`：v5.0 的頁面（L4）五個段落：1 架構、2 核心觀念、3 問題討論、4 動手試試、5 延伸閱讀。還沒改的頁面（L1–L3、L5–L8）六個段落，第 3 段是觀念補充，延伸閱讀是第 6 段。工具依頁面有沒有 `#s-background` 決定段號。
 8. `nav.pager`、`p.fineprint`（照 l02 的句型改成這一堂）、`<script src="app.js">`。
 
 ## 4. 段落
@@ -50,8 +50,20 @@
 - `div.prose`：「讀圖重點」2–4 句。
 
 ### 2 核心觀念 `section.part#s-ideas` ← 文章的主體
-- 3–6 個 `div.idea#iN`（2026-10-25 從 3–5 放寬；`check_discuss.py` 已改）。`h3`（觀念句）內放 `a.ref`（slide 頁碼範圍）。
-- 每章是一段連貫的教學，長度由內容決定，但一章超過約 10 分鐘（4,000 字）就拆成兩章（2026-10-26：L4 原本的 i2 拆成 i2 search、i3 edit 與 execution）。拆章會改 `#iN` 錨點，要同步 index 的 chip 和別頁連過來的連結（`grep -o 'l04.html#i[0-9]' docs/*.html`）。
+- 3–8 個 `div.idea#iN`（2026-10-27 放寬到 8；`check_discuss.py` 已改）。`h3` 內放 `a.ref`（slide 頁碼範圍）。
+- **章名（v5.0）**：「主題：這章的結論」，主題在前（Agent loop、Search tool、Edit tool、Prompt、Context 的成本、Context 管理），冒號後一句結論。`h3` 開頭放章號 `<span class="idea-no">2.3</span>`。正文引用別章一律寫章號（「2.6 會解釋原因」「見 2.4 的註」），不要寫 `i5`、「下一個觀念」。
+- **分組與地圖（v5.0）**：章依內容分成 2–3 組，組名寫在 `div.ideas` 裡的 `p.idea-group#g-a`（「A · Loop：agent 的最小單位」），放在該組第一章前面。`header.part-head` 加一句 `p.lede` 說三組各講什麼；header 後面放 `nav.map`：每組一個 `p.map-g`，每章一列 `a.map-row[href="#iN"]`（`span.map-no` 章號、`span.map-t` 主題 + `<small>` 結論、`span.map-m` 頁碼與分鐘）。分鐘用 `check_article.py` 的公式（400 單位／分鐘）算該章收合時的字數，寫法見 WORKFLOW B4。
+- **章內小標加 id（v5.0）**：結構性的粗體小標（找法 1–4、改法 1–4、四種策略、五種失敗…）寫成 `<p id="i2-3"><b>找法 1：…。</b>…`，sidenav 的第三層 `ol.sn-sub2s > li > a.sn-sub2` 連到它們，只在該章在畫面上時顯示。每章 4–9 個。
+- **名詞註 `details.gloss`（v5.0，取代觀念補充）**：少見的名詞、別堂講過的東西、超出 slide 的背景，放在它第一次出現的那段正文後面，收合：
+  ```html
+  <details class="gloss" id="n-rag">
+    <summary><span class="gloss-k">名詞</span><span class="gloss-t">RAG、vector database、HNSW：semantic search 背後的三個名字</span></summary>
+    <div class="gloss-body prose"><p>…2–4 句，每句新資訊…</p></div>
+  </details>
+  ```
+  `gloss-k` 三種：**名詞**（軟體工程師不一定知道的名詞：JSON Schema、PageRank、exit code、container、SWE-bench）、**前情**（別堂講過、這堂要用的：prefix cache、MCP）、**背景**（和主線無關、slide 沒講的：reasoning model、prompt injection）。正文裡的那個名詞寫成 `<a class="tm" href="#n-rag">RAG</a>`（虛線底線），`app.js` 會在點擊時打開註並捲過去；從別頁連進任何收合區塊也會自動打開。主線的名詞（token、LSP、AST、hunk、冪等）仍在正文裡用一整段講清楚，不收進註；一句就能講完的（CI、formatter、DOM、handle、blast radius）直接在正文括號裡講。
+- 舊的 `#tN` 錨點（index、L2、L5、L6 連過來）要保留：放在對應正文段落開頭的 `<span class="anchor" id="t6"></span>`，或直接當 `details.gloss` 的 id（L4 的 `#t8`、`#t11`）。
+- 每章是一段連貫的教學，長度由內容決定，但一章超過約 10 分鐘（4,000 字）就拆成兩章（2026-10-26：L4 原本的 i2 拆成 search、edit 與 execution；2026-10-27：edit 與 execution 再拆成 2.3、2.4）。拆章會改 `#iN` 錨點，要同步 index 的 chip、別頁連過來的連結（`grep -o 'l04.html#i[0-9]' docs/*.html`）、本頁基礎題與延伸閱讀裡的 `tk-rel` 連結（2026-10-27 發現 L4 這些連結在上次拆章後沒更新，依連結文字對回正確的章）。
 - 章首一句地圖：「這一章先看 A，再把 B 逐一講清楚；下一章講 C」。
 - 一章裡平行的好幾種做法，粗體小標用編號：「找法 1：grep 與 glob，依字面找。」「改法 3：search/replace。」每一種的段落順序一致：做法 → 例子（snippet）→ 代價。好幾種做法共用同一個例子（L4 的 edit 四種都改 `RETRY_MS = 500`）。
 - 名詞第一次出現就解釋，而且從讀者用過的東西講起（LSP 從 VS Code 的 F12 講起；AST 從「compiler 處理前先讀成樹」講起；search/replace 從 Ctrl+H 講起）。Slide 的術語（anchor）要翻成工具實際的欄位名（`old_string`）。章內用 `<b>粗體小標。</b>` 開頭的段落分節，依「問題 → 名詞解釋 → 機制 → 例子 → 代價 → 證據」的順序走。可以放 `ol`、`figure.file`（指令、設定檔、程式碼，逐行標註）、`figure.diagram`、`div.table-wrap`。
@@ -64,19 +76,19 @@
 - 「深入」區塊（`details.ex.deep#dN`）：**預設不用**（2026-10-25）。原本放在深入裡的內容（Claude Code 為什麼選 grep、LSP 怎麼建索引、五個執行考量各怎麼做）都是讀者想問的，應該併回主線。只有和主線無關、純粹補充的細節才收合。
 - 選用：一個觀念要比較好幾種做法、或有一組數字時，可以在 `div.prose` 裡放一張 `figure.diagram` 或一個 `div.table-wrap` 表格（格式同第 6 節；`shot_article.py` 會一起截圖，收合的深入區塊裡的也會）。每個粗體小標最多一張，放在它說明的那段前後；slide 沒給的部分在 figcaption 寫明「本文的整理」。例子是 L4（2026-10-23）：i2 的 search 成本曲線與 edit 四種方式對照表、i4 的 lost in the middle 折線、i5 的 Breunig 表與 Lewis 長條圖、d2 的冪等時序圖。
 
-### 3 觀念補充 `section.part#s-background`
+### 3 觀念補充 `section.part#s-background`（v5.0 起不再寫；L4 已併入第 2 段的 `details.gloss`，其他頁面待改）
 - 2026-10-25 起改成**查閱用的詞條**：`header.part-head` 裡加一句 `p.lede`（「第 2 段已經在第一次出現的地方解釋過這些名詞。這裡是查閱用的短版……」）。每條 `dd` 2–4 句，結尾指回第 2 段講解的位置（`見 <a href="#i2">i2</a> 的 search 一節`）。
 - 只有和主線無關的背景（例如 L4 的 reasoning model、guardrail 與 prompt injection）才在這裡完整寫。
 - `dl.terms`，建議 4–6 條（上限只是建議，`check_discuss.py` 只警告），每條包在 `div#tN`：`dt`（名詞 + `<small>` 一句用途）。既有的 `#tN` 錨點有別頁連過來（index、L2、L5、L6），改寫時保留順序，新詞條加在後面。
 
 ### 本文延伸（沒有獨立的段，2026-10-26 起全站如此）
 - 超出 slide 的推論放在它所屬章節的末尾，用收合區塊：`div.exlist.deeplist > details.ex.deep#xN`，summary 寫「本文延伸｜標題」+ `<span>不是 slide 的內容</span>`，內容放 `div.exbody.prose`。錨點用 `#x1`…依全頁順序編號；一個章節可以有好幾個。
-- 不再寫 `section#s-beyond`。舊頁面的「延伸思考」已在 2026-10-26 全部併入章節，段落編號固定為：1 架構、2 核心觀念、3 觀念補充、4 問題討論、5 動手試試、6 延伸閱讀（2026-10-27 起）。正文提到段落用這套編號（「第 4 段的基礎題」「第 5 段有實測」）。
-- `ul.meta` 有一行「本文延伸 `span.deep-time`，收合」；頁面同時有「深入」區塊時寫「深入與本文延伸」。時間由 `check_article.py --fix-time` 填。
+- 不再寫 `section#s-beyond`。舊頁面的「延伸思考」已在 2026-10-26 全部併入章節。段落編號：v5.0 的頁面（L4）是 1 架構、2 核心觀念、3 問題討論、4 動手試試、5 延伸閱讀；還有觀念補充的頁面是 1 架構、2 核心觀念、3 觀念補充、4 問題討論、5 動手試試、6 延伸閱讀。正文提到段落用該頁的編號（L4：「第 3 段的基礎題」「第 4 段有實測」）；跨頁引用時寫對方頁面的編號（L2 寫「L4 第 4 段」）。首頁「怎麼讀」不寫段號，寫「問題討論」段。
+- `ul.meta` 有一行「本文延伸 `span.deep-time`，收合」；頁面同時有「深入」區塊時寫「深入與本文延伸」；v5.0 的頁面寫「註與延伸」（`deep-time` 算進 `details.deep` 與 `details.gloss`）。時間由 `check_article.py --fix-time` 填。
 - 推論要有根據，不要誇大。Slide 留給 assignment 的問題（例如 L4 p.39「哪幾招 prompt 過期」），本文直接給判斷，標明「本文的判斷（年月）」，不要讓讀者自己去找。
 - 工具：`check_article.py` 不再要求 `#s-beyond`；`add_lecture.py`、`discuss.py` 依頁面有沒有 `#s-beyond` 決定段號（新頁面一律沒有）。
 
-### 4 問題討論 `section.part#s-discuss` ← 最重要
+### 4 問題討論 `section.part#s-discuss` ← 最重要（v5.0 的頁面是第 3 段）
 - `header.part-head` 的 `.lede` 照 l02。
 - `div.qtabs`：兩個 `button.qtab`（`#tab-basic`「基礎」、`#tab-adv`「進階」）。
 - `div.qset#qset-basic`：基礎題，見 `STYLE_BASIC.md`。
@@ -99,7 +111,7 @@
 - `textarea#copy-fallback.copybox[hidden]`：照 l02。
 - `h3.subhead`「自我檢查」+ `div.quiz`：3 題有標準答案的題目（`details` > `summary` + `div.answer`）。
 
-### 5 動手試試 `section.part#s-try`
+### 5 動手試試 `section.part#s-try`（v5.0 的頁面是第 4 段）
 - `p.lede` 一句說明範例依據。`div.exlist` 內 2–4 個 `details.ex`（預設收合）。`summary` 寫標題 + `<span>頁碼</span>`，內容 `div.exbody`。
 - 工具類講次：可以照打的設定檔、指令、程式碼（`figure.file` > `figcaption` + `pre > code`）。
 - 觀念類講次（Part II 多數是）：小練習（估算、設計、用 python 驗證一個現象），附解答。
@@ -114,8 +126,8 @@
   ```
 - 內容（lede、這堂與全部討論串的連結、留言方式）由 `tools/discuss.py` 填入。
 
-### 6 延伸閱讀 `section.wrap#wrap`
-- `p.kicker`「6 · 延伸閱讀」+ `h2` 延伸閱讀；`p.rg-intro`：教授列了幾篇、官方清單連結（`readings/<mon-dd>.html`）。
+### 6 延伸閱讀 `section.wrap#wrap`（v5.0 的頁面是第 5 段）
+- `p.kicker`「6 · 延伸閱讀」（L4 寫「5 · 延伸閱讀」）+ `h2` 延伸閱讀；`p.rg-intro`：教授列了幾篇、官方清單連結（`readings/<mon-dd>.html`）。
 - `p.rg-legend`（照抄 l02）。
 - 選用：`div.callout`「最短路徑」：時間不夠時讀哪幾篇、順序。
 - 依主題分組：`h3.rg-h`（中文 + `<small>` 英文）+ `ol.rg`。每篇 `li`：
@@ -131,7 +143,7 @@
 
 2026-10-22 放寬（James 讀 L4 覺得卡）。原因：「一句只講一件事」把推理的因果切成好幾句，句子之間的「所以、但是」常常消失，讀者要自己接回去。中文少了英文的冠詞、代名詞與時態幫忙串句，拆短之後更像條列。L4 第 1–4 段是第一個照新規則改寫的範例。
 
-**推理段落，約 60–70%**：「先看這裡」的 thesis、第 1 段讀圖重點、第 2 段核心觀念（含深入區塊）、第 4 段延伸思考、進階題的參考觀點。
+**推理段落，約 60–70%**：「先看這裡」的 thesis、第 1 段讀圖重點、第 2 段核心觀念（含本文延伸與 `details.gloss`）、進階題的參考觀點。
 
 1. 一句可以講兩三件有關係的事，但關係要用連接詞寫明：因為、所以、但、因此、也就是、反過來、這表示。
 2. 句子要接得上：下一句從上一句的結論往下講，不要每句都換主詞重新開始。

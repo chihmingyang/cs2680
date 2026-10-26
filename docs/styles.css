@@ -957,7 +957,97 @@ a.row:hover .t { color: var(--signal); }
 .article .part-head { padding-bottom: .7rem; }
 .article .part > .prose, .article .part > .ideas, .article .part > .terms,
 .article .part > .qlist, .article .part > .exlist, .article .part > .diagram,
-.article .part > .note-own { margin-top: 1rem; }
+.article .part > .note-own, .article .part > .map { margin-top: 1rem; }
+
+/* ---------- 核心觀念 (L4 layout, 2026-10-27): numbered chapters in groups,
+   a reading map under the section head, inline collapsed notes ---------- */
+.idea-no {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: .9375rem;
+  color: var(--signal);
+  font-variant-numeric: tabular-nums;
+  margin-right: .15rem;
+}
+.idea-group {
+  margin: 1.6rem 0 0;
+  padding: .35rem 0 .35rem;
+  border-top: 2px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .08em;
+  color: var(--ink-soft);
+}
+.idea-group:first-child { margin-top: .4rem; }
+.idea-group + .idea { border-top: 0; padding-top: .6rem; }
+.map { display: grid; gap: .15rem; }
+.map-g {
+  margin: .7rem 0 .15rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .08em;
+  color: var(--ink-soft);
+}
+.map-g:first-child { margin-top: 0; }
+.map-row {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+  gap: .25rem .7rem;
+  align-items: baseline;
+  padding: .45rem .7rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  color: var(--ink);
+  text-decoration: none;
+  line-height: 1.5;
+}
+.map-row:hover { border-color: var(--signal); color: var(--signal); }
+.map-no { font-family: var(--font-mono); font-size: .8125rem; color: var(--signal); font-variant-numeric: tabular-nums; }
+.map-t { font-weight: 600; min-width: 0; }
+.map-t small { display: block; font-weight: 400; font-size: .8125rem; color: var(--ink-soft); line-height: 1.5; }
+.map-m { font-family: var(--font-mono); font-size: .6875rem; color: var(--ink-soft); white-space: nowrap; }
+@media (max-width: 640px) {
+  .map-row { grid-template-columns: 2.4rem minmax(0, 1fr); }
+  .map-m { grid-column: 2; }
+}
+/* a term in the prose that has a note: dotted underline, same ink */
+a.tm {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted var(--signal);
+  cursor: help;
+}
+a.tm:hover { color: var(--signal); }
+/* the note itself: a quiet collapsed row right after the paragraph */
+.gloss {
+  margin: 0;
+  border-left: 3px solid var(--rail);
+  background: var(--note-wash);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: .45rem .85rem .45rem .8rem;
+  font-size: .9375rem;
+}
+.gloss > summary { cursor: pointer; line-height: 1.6; color: var(--ink); list-style: none; display: block; }
+.gloss > summary::-webkit-details-marker { display: none; }
+.gloss > summary::before { content: "▸"; display: inline-block; width: .9rem; font-size: .75rem; color: var(--signal); }
+.gloss[open] > summary::before { content: "▾"; }
+.gloss > summary:hover { color: var(--signal); }
+.gloss-k {
+  display: inline-block;
+  margin-right: .5rem;
+  font-family: var(--font-mono);
+  font-size: .6875rem;
+  letter-spacing: .08em;
+  color: var(--signal);
+}
+.gloss[open] > summary { margin-bottom: .55rem; }
+.gloss-body { line-height: 1.8; gap: .6rem; }
+.gloss:target, .gloss.is-lit { border-left-color: var(--signal); }
+.gloss > summary::before { font-family: var(--font-mono); }
+.prose > p[id], .anchor, .gloss[id] { scroll-margin-top: 4.5rem; }
+.prose > p[id]:target > b { color: var(--signal); }
+.anchor { display: inline-block; width: 0; height: 0; overflow: hidden; }
 
 /* ---------- discussion cards (pre-session questions) ---------- */
 .copyrow { margin-top: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; }
@@ -1401,6 +1491,26 @@ a.person-q:hover { color: var(--signal); }
 }
 .sn-sub:hover { color: var(--signal); }
 .sn-sub.is-active { color: var(--ink); border-left-color: var(--signal); }
+/* L4 layout (2026-10-27): group labels among the chapters, numbered chapters,
+   and a third level (the chapter's sub-sections) shown only for the chapter in view */
+.sn-group { margin-left: -1px; padding: .45rem .55rem .1rem 1.75rem; }
+.sn-g { font-family: var(--font-mono); font-size: .625rem; letter-spacing: .08em; color: var(--ink-soft); }
+.sn-sub .sn-n { margin-right: .4rem; }
+.sn-sub.is-active .sn-n { color: var(--signal); }
+.sn-sub2s { list-style: none; margin: 0; padding: 0; display: none; }
+li.is-active > .sn-sub2s { display: grid; }
+.sn-sub2 {
+  display: block;
+  margin-left: -1px;
+  padding: .12rem .55rem .12rem 2.6rem;
+  border-left: 2px solid transparent;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: .75rem;
+  line-height: 1.45;
+}
+.sn-sub2:hover { color: var(--signal); }
+.sn-sub2.is-active { color: var(--ink); border-left-color: var(--signal); }
 .sn-soon { margin: .35rem 0 0; padding-left: .5rem; font-size: .75rem; line-height: 1.5; }
 .sn-soon a { color: var(--ink-soft); text-decoration: none; }
 .sn-soon a:hover { color: var(--signal); }

@@ -114,6 +114,7 @@ def here_block(m):
     ideas = section_html(s, "s-ideas")
     idea_items, starts, ends = [], [], []
     for iid, h3 in re.findall(r'<div class="idea" id="(i\d+)">\s*<h3>(.*?)</h3>', ideas, re.S):
+        h3 = re.sub(r'<span class="idea-no">.*?</span>', "", h3, flags=re.S)  # 2026-10-27: L4 numbers its chapters
         idea_items.append((iid, re.sub(r"\s*<a class=\"ref\".*", "", h3, flags=re.S).strip()))
         for a, b in re.findall(r"p\.(\d+)(?:–(\d+))?", text(re.search(r'<a class="ref"[^>]*>(.*?)</a>', h3, re.S).group(1)) if 'class="ref"' in h3 else ""):
             starts.append(int(a)); ends.append(int(b or a))
@@ -125,15 +126,17 @@ def here_block(m):
     beyond = [(xid, re.sub(r"\s*<a class=\"ref\".*", "", h3, flags=re.S).strip())
               for xid, h3 in re.findall(r'<div class="idea" id="(x\d+)">\s*<h3>(.*?)</h3>', by, re.S)]
     has_beyond = 'id="s-beyond"' in s  # 2026-10-26: L4 folded 延伸思考 into the chapters; later sections renumber
-    k = 5 if has_beyond else 4
+    has_bg = 'id="s-background"' in s  # 2026-10-27: L4 merged 觀念補充 into the chapters (details.note); later sections renumber
+    k = 3 + (1 if has_bg else 0) + (1 if has_beyond else 0)
     parts = [
         sec("tldr-h", "", "先看這裡") + "</li>",
         sec("s-arch", "1", "架構") + "</li>",
         sec("s-ideas", "2", "核心觀念", extra=span) + subs(idea_items) + "</li>",
-        sec("s-background", "3", "觀念補充") + subs(terms) + "</li>",
     ]
+    if has_bg:
+        parts.append(sec("s-background", "3", "觀念補充") + subs(terms) + "</li>")
     if has_beyond:
-        parts.append(sec("s-beyond", "4", "延伸思考") + subs(beyond) + "</li>")
+        parts.append(sec("s-beyond", str(k - 1), "延伸思考") + subs(beyond) + "</li>")
     parts += [
         sec("s-discuss", str(k), "問題討論") + "</li>",
         sec("s-try", str(k + 1), "動手試試") + "</li>",

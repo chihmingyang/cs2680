@@ -3,7 +3,7 @@
 
 Usage: python3 -I check_article.py docs/lXX.html --pages N --pdf FILE.pdf [--fix-time]
 
-Checks: tag balance; required sections (#s-arch #s-ideas #s-background [#s-beyond optional]
+Checks: tag balance; required sections (#s-arch #s-ideas [#s-background, #s-beyond optional]
 #s-discuss #s-try #s-submit #wrap) and parts (tldr, diagram, two question tabs,
 quiz, reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
@@ -12,7 +12,7 @@ STE heuristics on prose; reading times.
 Reading times (400 text units per minute; a CJK character or an English word is 1 unit;
 under 15 min: round up; 15 min or more: nearest 5):
   read-time  text a reader sees with every <details> closed (summaries count), no SVG text
-  deep-time  text inside details.deep (only pages that have 深入 blocks)
+  deep-time  text inside details.deep and details.gloss (深入 / 本文延伸 / 名詞註 blocks)
   full-time  all text in <main>, no SVG text
 --fix-time writes all three spans. The formula reproduces the numbers on L1-L8 (2026-10-19).
 """
@@ -30,7 +30,8 @@ PROSE_CLASSES = {"prose", "hint", "qtext", "qctx", "qh", "lede", "qset-lede", "t
 FILLERS = ["其實", "基本上", "非常", "相當", "可以說", "事實上", "總而言之", "簡單來說", "換句話說", "顯然"]
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
-REQUIRED_IDS = ["s-arch", "s-ideas", "s-background", "s-discuss",  # s-beyond optional since 2026-10-26 (L4) "s-try", "s-submit", "wrap",
+# s-beyond optional since 2026-10-26 (L4); s-background optional since 2026-10-27 (L4 merged it into #s-ideas)
+REQUIRED_IDS = ["s-arch", "s-ideas", "s-discuss", "s-try", "s-submit", "wrap",
                 "read-box", "qset-basic", "qset-adv", "sidenav"]
 REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "div.qtabs", "ol.qlist", "div.quiz", "ol.rg", "nav.pager",
                     "p.fineprint", "span.read-time", "span.full-time", "aside.sidenav", "nav.lecnav"]
@@ -131,7 +132,7 @@ class Vis(HTMLParser):
             return
         n = units(data)
         self.b["full-time"] += n
-        if any("deep" in c for t, c in self.stack if t == "details"):
+        if any(("deep" in c or "gloss" in c) for t, c in self.stack if t == "details"):
             self.b["deep-time"] += n
         d = tags.count("details")
         if d == 0 or (d == 1 and "summary" in tags[tags.index("details"):]):

@@ -249,7 +249,7 @@
                     <li><b>Prefix cache 有效的原因：</b>每圈 request 的前段完全相同，只有最後面是新的。</li>
                     <li><b>p.14 的經典 agent 圖：</b>LLM 是 model。Memory 是 <code>system</code>、<code>messages</code> 和記憶檔。Tools 是 <code>tools</code>。Observation 是 <code>tool_result</code>。</li>
                   </ul>
-                  <p>其他家的 API 長得不一樣，但結構相同：一段系統指令、一份 tool 清單、一串輪流的訊息，model 的 tool call 和 harness 的結果各有固定格式。寫自己的 harness（L4 第 5 段）時，只要換這幾個欄位名稱。</p>
+                  <p>其他家的 API 長得不一樣，但結構相同：一段系統指令、一份 tool 清單、一串輪流的訊息，model 的 tool call 和 harness 的結果各有固定格式。寫自己的 harness（L4 第 4 段）時，只要換這幾個欄位名稱。</p>
                   <div class="table-wrap"><table class="wide">
                     <thead><tr><th></th><th>Claude Messages API</th><th>OpenAI Responses API</th><th>OpenAI Chat Completions</th><th>Gemini generateContent</th></tr></thead>
                     <tbody>
@@ -261,7 +261,7 @@
                       <tr><td>Loop 結束的訊號</td><td><code>stop_reason: "end_turn"</code></td><td>output 裡沒有 <code>function_call</code></td><td><code>finish_reason: "stop"</code></td><td>回覆裡沒有 <code>functionCall</code></td></tr>
                     </tbody>
                   </table></div>
-                  <p>兩個差別值得記住。第一，Claude 和 Gemini 把 tool 結果放在 user 這一方，OpenAI 給它獨立的 role 或 item；對 model 來說都是「環境回來的觀察」。第二，OpenAI 的 <code>arguments</code> 是 JSON 字串，要自己 parse；Claude 的 <code>input</code> 已經是物件。L4 第 5 段的 <code>agent.py</code> 用 <code>call.name</code>、<code>call.arguments</code> 抽象掉這些差別。欄位名稱依 2026 年 10 月的各家官方文件；Gemini 另有較新的 Interactions API，這裡列的是 generateContent。</p>
+                  <p>兩個差別值得記住。第一，Claude 和 Gemini 把 tool 結果放在 user 這一方，OpenAI 給它獨立的 role 或 item；對 model 來說都是「環境回來的觀察」。第二，OpenAI 的 <code>arguments</code> 是 JSON 字串，要自己 parse；Claude 的 <code>input</code> 已經是物件。L4 第 4 段的 <code>agent.py</code> 用 <code>call.name</code>、<code>call.arguments</code> 抽象掉這些差別。欄位名稱依 2026 年 10 月的各家官方文件；Gemini 另有較新的 Interactions API，這裡列的是 generateContent。</p>
                 </div>
               </details>
               <details class="ex deep" id="d2">
@@ -814,7 +814,7 @@ claude mcp add --env AIRTABLE_API_KEY=xxx --transport stdio airtable -- npx -y a
                     <li>Repo 不會整份送出；context 變大，來自每一步的回覆、檔案內容、指令輸出。</li>
                     <li>快滿 → compaction：摘要舊過程，重新放入 CLAUDE.md 和 memory → 只在對話裡講的事會被摘要掉。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t1">Prefix cache</a>〉、〈<a href="#t3">漸進載入</a>〉；<a href="l04.html#i5">L4 Context 是有限資源</a>、<a href="l04.html#t6">L4 Lost in the middle</a>。</p>
+                  <p class="tk-rel"><b>相關：</b>觀念補充〈<a href="#t1">Prefix cache</a>〉、〈<a href="#t3">漸進載入</a>〉；<a href="l04.html#i6">L4 Context 的成本</a>、<a href="l04.html#t6">L4 Lost in the middle</a>。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/99" target="_blank" rel="noopener">到 GitHub 回答這一題（Q2）↗</a></p>
               </div>

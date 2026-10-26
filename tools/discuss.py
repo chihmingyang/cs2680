@@ -130,7 +130,9 @@ def read_page(path):
     head = s[s.index('<header class="lecture-head">'):]
     lec = {"key": key, "no": int(key[1:]), "pdf": pdf, "path": path,
            "title": md(first(r"<h1>(.*?)</h1>", head)), "basic": [],
-           "has_beyond": 'id="s-beyond"' in s}
+           "has_beyond": 'id="s-beyond"' in s,
+           # 2026-10-27: 問題討論 is §3 on pages without 觀念補充 (L4), §4 with it, §5 with 延伸思考 too
+           "discuss_no": 3 + (1 if 'id="s-background"' in s else 0) + (1 if 'id="s-beyond"' in s else 0)}
     for m in re.finditer(r'<li class="bq" id="(b\d+)">', s):
         blk = li_block(s, m.start())
         tag = first(r'<p class="qtag">(.*?)</p>', blk)
@@ -160,7 +162,7 @@ def thread_body(lec):
     lines = [f"**CS2680 L{lec['no']} · {lec['title']}** · 基礎題 {n} 題", "",
              f"看 slides 前先看這 {n} 題，帶著問題去讀。看完後**每人在下面留一則**，用 `### Q1` … `### Q{n}` 當小標，"
              "一題一段。要補充就編輯自己那一則。建議先寫自己的，再看別人的。", "",
-             f"進階題不在這裡。它們在[站台第 4 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
+             f"進階題不在這裡。它們在[站台第 {lec['discuss_no']} 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
     for q in lec["basic"]:
         lines += [f"### Q{q['n']} · {q['topic']}", "", "> " + q["text"].replace("\n", "\n> "), ""]
         bits = [f"[參考答案]({page}#{q['id']})"]
