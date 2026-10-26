@@ -129,7 +129,8 @@ def read_page(path):
     key, pdf = mm.group(1), mm.group(2)
     head = s[s.index('<header class="lecture-head">'):]
     lec = {"key": key, "no": int(key[1:]), "pdf": pdf, "path": path,
-           "title": md(first(r"<h1>(.*?)</h1>", head)), "basic": []}
+           "title": md(first(r"<h1>(.*?)</h1>", head)), "basic": [],
+           "has_beyond": 'id="s-beyond"' in s}
     for m in re.finditer(r'<li class="bq" id="(b\d+)">', s):
         blk = li_block(s, m.start())
         tag = first(r'<p class="qtag">(.*?)</p>', blk)
@@ -159,7 +160,7 @@ def thread_body(lec):
     lines = [f"**CS2680 L{lec['no']} · {lec['title']}** · 基礎題 {n} 題", "",
              f"看 slides 前先看這 {n} 題，帶著問題去讀。看完後**每人在下面留一則**，用 `### Q1` … `### Q{n}` 當小標，"
              "一題一段。要補充就編輯自己那一則。建議先寫自己的，再看別人的。", "",
-             f"進階題不在這裡。它們在[站台第 5 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
+             f"進階題不在這裡。它們在[站台第 {5 if lec.get('has_beyond', True) else 4} 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
     for q in lec["basic"]:
         lines += [f"### Q{q['n']} · {q['topic']}", "", "> " + q["text"].replace("\n", "\n> "), ""]
         bits = [f"[參考答案]({page}#{q['id']})"]
@@ -182,11 +183,12 @@ def talk_p(url, n):
 
 def submit_section(lec, url):
     n = len(lec["basic"])
+    k = 5 if lec.get("has_beyond", True) else 4  # 2026-10-26: pages without 延伸思考 number 問題討論 as 第 4 段
     return f"""<section class="part" id="s-submit">
         <header class="part-head">
-          <p class="kicker">7 · 大家的討論</p>
+          <p class="kicker">{k + 2} · 大家的討論</p>
           <h2>這堂的討論</h2>
-          <p class="lede">這堂一串，放在 GitHub Issues。看完 slides 後，把第 5 段的 {n} 題基礎題寫成一則留言，用 Q1 到 Q{n} 當小標。進階題不用先寫，讀書會當天一起討論。</p>
+          <p class="lede">這堂一串，放在 GitHub Issues。看完 slides 後，把第 {k} 段的 {n} 題基礎題寫成一則留言，用 Q1 到 Q{n} 當小標。進階題不用先寫，讀書會當天一起討論。</p>
         </header>
         <div class="copyrow gh-row">
           <a class="copybtn" href="{url}" {EXT}>到這堂的討論串 ↗</a>

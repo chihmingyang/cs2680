@@ -3,7 +3,7 @@
 
 Usage: python3 -I check_article.py docs/lXX.html --pages N --pdf FILE.pdf [--fix-time]
 
-Checks: tag balance; required sections (#s-arch #s-ideas #s-background #s-beyond
+Checks: tag balance; required sections (#s-arch #s-ideas #s-background [#s-beyond optional]
 #s-discuss #s-try #s-submit #wrap) and parts (tldr, diagram, two question tabs,
 quiz, reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
@@ -30,7 +30,7 @@ PROSE_CLASSES = {"prose", "hint", "qtext", "qctx", "qh", "lede", "qset-lede", "t
 FILLERS = ["其實", "基本上", "非常", "相當", "可以說", "事實上", "總而言之", "簡單來說", "換句話說", "顯然"]
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
-REQUIRED_IDS = ["s-arch", "s-ideas", "s-background", "s-beyond", "s-discuss", "s-try", "s-submit", "wrap",
+REQUIRED_IDS = ["s-arch", "s-ideas", "s-background", "s-discuss",  # s-beyond optional since 2026-10-26 (L4) "s-try", "s-submit", "wrap",
                 "read-box", "qset-basic", "qset-adv", "sidenav"]
 REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "div.qtabs", "ol.qlist", "div.quiz", "ol.rg", "nav.pager",
                     "p.fineprint", "span.read-time", "span.full-time", "aside.sidenav", "nav.lecnav"]

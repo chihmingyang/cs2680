@@ -124,15 +124,20 @@ def here_block(m):
     by = section_html(s, "s-beyond")
     beyond = [(xid, re.sub(r"\s*<a class=\"ref\".*", "", h3, flags=re.S).strip())
               for xid, h3 in re.findall(r'<div class="idea" id="(x\d+)">\s*<h3>(.*?)</h3>', by, re.S)]
+    has_beyond = 'id="s-beyond"' in s  # 2026-10-26: L4 folded 延伸思考 into the chapters; later sections renumber
+    k = 5 if has_beyond else 4
     parts = [
         sec("tldr-h", "", "先看這裡") + "</li>",
         sec("s-arch", "1", "架構") + "</li>",
         sec("s-ideas", "2", "核心觀念", extra=span) + subs(idea_items) + "</li>",
         sec("s-background", "3", "觀念補充") + subs(terms) + "</li>",
-        sec("s-beyond", "4", "延伸思考") + subs(beyond) + "</li>",
-        sec("s-discuss", "5", "問題討論") + "</li>",
-        sec("s-try", "6", "動手試試") + "</li>",
-        sec("s-submit", "7", "大家的討論", short="討論") + "</li>",
+    ]
+    if has_beyond:
+        parts.append(sec("s-beyond", "4", "延伸思考") + subs(beyond) + "</li>")
+    parts += [
+        sec("s-discuss", str(k), "問題討論") + "</li>",
+        sec("s-try", str(k + 1), "動手試試") + "</li>",
+        sec("s-submit", str(k + 2), "大家的討論", short="討論") + "</li>",
         sec("wrap", "", "延伸閱讀") + "</li>",
     ]
     return (f'<li class="sn-lec is-here"><a class="sn-row" href="{m["key"]}.html" aria-current="page">'
