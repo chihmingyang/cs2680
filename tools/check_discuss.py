@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Structural check of a lecture page's sections, focused on §5 (discussion).
+"""Structural check of a lecture page's sections, focused on §4 (discussion; §5 before 2026-10-26).
 
 Usage: python3 -I check_discuss.py docs/l01.html [...]
 Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
@@ -13,7 +13,7 @@ Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
     details「作答範本」(details.qstart, >= 2 p.tpl) and「參考觀點與追問」(4-6 li + 追問).
   Every li.bq has p.gh-talk linking to the lecture's GitHub issue; li.dq has none (進階題 stay
     on the page); §7 #s-submit links to that issue (all written by tools/discuss.py).
-  §7 #s-submit and the reading list ol.rg in #wrap exist.
+  #s-submit (§6) and the reading list ol.rg in #wrap exist. #s-beyond is optional (gone since 2026-10-26).
 """
 import re
 import sys

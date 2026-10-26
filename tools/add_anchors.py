@@ -4,7 +4,8 @@
 Usage: python3 -I add_anchors.py docs/l01.html [docs/l02.html ...]
 
   section#s-ideas      div.idea      -> id="i1", "i2", ...
-  section#s-beyond     div.idea      -> id="x1", "x2", ...
+  section#s-ideas      details.ex.deep whose summary starts with 本文延伸 -> id="x1", "x2", ... (page order)
+  section#s-beyond     div.idea      -> id="x1", ... (legacy pages only)
   section#s-background dl.terms > div -> id="t1", "t2", ...
 
 The index page links its course-map chips to these anchors.
@@ -50,13 +51,39 @@ def number(text, sid, open_pat, prefix, head_pat):
     return text[:start] + body + text[end:], found
 
 
+def number_beyond(text):
+    """Give every 本文延伸 details block in #s-ideas an id x1, x2, ... in page order."""
+    span = section_span(text, "s-ideas")
+    if not span:
+        return text, []
+    start, end = span
+    body = text[start:end]
+    found = []
+    k = [0]
+
+    def repl(m):
+        if not re.match(r'\s*<summary>本文延伸', m.group(3)):
+            return m.group(0)
+        k[0] += 1
+        xid = "x%d" % k[0]
+        found.append((xid, strip_tags(re.search(r"<summary>本文延伸｜(.*?)<span>", m.group(3), re.S).group(1))))
+        return m.group(1) + ' id="%s"' % xid + m.group(2) + m.group(3)
+
+    body = re.sub(r'(<details class="ex deep")(?: id="[^"]*")?(>)(\s*<summary>.*?</summary>)', repl, body, flags=re.S)
+    return text[:start] + body + text[end:], found
+
+
 def main(paths):
     for p in paths:
         path = Path(p)
         text = path.read_text(encoding="utf-8")
         listing = []
         text, a = number(text, "s-ideas", r'(<div class="idea")(?: id="[^"]*")?(>)', "i", r"<h3>(.*?)</h3>")
-        text, b = number(text, "s-beyond", r'(<div class="idea")(?: id="[^"]*")?(>)', "x", r"<h3>(.*?)</h3>")
+        # 本文延伸 blocks (details.ex.deep whose summary starts with 本文延伸) live inside #s-ideas since 2026-10-26
+        text, b = number_beyond(text)
+        if 'id="s-beyond"' in text:  # legacy pages only
+            text, b2 = number(text, "s-beyond", r'(<div class="idea")(?: id="[^"]*")?(>)', "x", r"<h3>(.*?)</h3>")
+            b += b2
         # terms: the <div> rows directly inside dl.terms
         span = section_span(text, "s-background")
         c = []

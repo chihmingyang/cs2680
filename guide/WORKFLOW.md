@@ -62,8 +62,8 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
 ### B3. 寫頁面
 
 1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l02.html`（最完整，有「深入」區塊）。目錄（`aside.sidenav`）照抄範本即可，B5 會重建。
-2. 第 5 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
-3. 頁面很長，分段寫：先寫骨架和第 1–4 段，再寫第 5 段，最後第 6 段和延伸閱讀。可以把第 5 段的基礎題和進階題交給兩個 subagent 平行寫，各自回傳 HTML 片段，再接回頁面。
+2. 第 4 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
+3. 頁面很長，分段寫：先寫骨架和第 1–3 段，再寫第 4 段，最後第 5 段和延伸閱讀。可以把第 4 段的基礎題和進階題交給兩個 subagent 平行寫，各自回傳 HTML 片段，再接回頁面。
 
 ### B4. 驗證這一頁
 
@@ -91,7 +91,7 @@ python3 -I tools/discuss.py docs/l09.html         # 開 issue，把連結寫進�
 
 `add_lecture.py` 會改：每一頁的目錄、`LX / N`、L8 的下一堂連結、首頁「已公開的講次」、首頁「還沒有 slides 的講次」。
 
-`discuss.py` 會：替這堂開一個 issue（label `L09`；內文是基礎題 Q1–Q5、每題的參考答案與 slide 連結、回覆範本）；在每題基礎題下面寫「到 GitHub 回答這一題（Qn）」連結，進階題不寫；重建第 7 段。跑第二次不會重開。
+`discuss.py` 會：替這堂開一個 issue（label `L09`；內文是基礎題 Q1–Q5、每題的參考答案與 slide 連結、回覆範本）；在每題基礎題下面寫「到 GitHub 回答這一題（Qn）」連結，進階題不寫；重建第 6 段。跑第二次不會重開。
 
 手動補兩件事：
 
