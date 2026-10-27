@@ -62,9 +62,22 @@ p{margin:0}
 ul.pts{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
 ul.pts li{position:relative;padding-left:18px}
 ul.pts li::before{content:"";position:absolute;left:2px;top:.72em;width:6px;height:6px;background:var(--accent)}
-code{font-family:var(--font-mono);font-size:.86em;background:var(--code-bg);padding:1px 5px}
-pre{margin:0;background:var(--code-bg);border:1px solid var(--rule);padding:12px 14px;overflow-x:auto;font-family:var(--font-mono);font-size:.8rem;line-height:1.65}
-pre code{background:none;padding:0;font-size:inherit}
+/* code: same look as styles.css (inline code in purple; blocks as a dark editor in both themes; code.js colors the tokens) */
+:root{--icode-ink:#7B3AA6;--icode-wash:#F3EDF8;--cd-bg:#1E2632;--cd-bar:#151B24;--cd-edge:#151B24;--cd-fg:#D6DEE6;--cd-dim:#7D8996;--cd-com:#86B878;--cd-kw:#C792EA;--cd-str:#E6A57E;--cd-num:#B5CEA8;--cd-key:#9CDCFE;--cd-fn:#E8CF7A;--cd-const:#74B6F2;--cd-type:#4EC9B0;--cd-flag:#80CBC4;--cd-head:#74B6F2;--cd-err:#F48771;--cd-ok:#8FD488;--cd-add:rgba(87,171,90,.20);--cd-del:rgba(244,112,103,.20);--key:#C62828}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--icode-ink:#D9B2F5;--icode-wash:#241E2E;--cd-bg:#0F151C;--cd-bar:#0A0F14;--cd-edge:#2A3542;--key:#FF7B72}}
+:root[data-theme="dark"]{--icode-ink:#D9B2F5;--icode-wash:#241E2E;--cd-bg:#0F151C;--cd-bar:#0A0F14;--cd-edge:#2A3542;--key:#FF7B72}
+b,strong{font-weight:700}
+strong{color:var(--key)}
+code{font-family:var(--font-mono);font-size:.86em;color:var(--icode-ink);background:var(--icode-wash);padding:1px 5px;border-radius:3px}
+strong code,a code{color:inherit}
+pre{margin:0;color:var(--cd-fg);background:var(--cd-bg);border:1px solid var(--cd-edge);border-radius:6px;padding:.8rem .95rem;overflow-x:auto;font-family:var(--font-mono);font-size:.8rem;line-height:1.65;scrollbar-width:thin;scrollbar-color:#4A5868 transparent}
+pre code{color:inherit;background:none;padding:0;font-size:inherit;border-radius:0}
+.file{margin:0;border:1px solid var(--cd-edge);border-radius:6px;overflow:hidden;background:var(--cd-bg);min-width:0}
+.file figcaption{font-family:var(--font-mono);font-size:.74rem;line-height:1.5;color:#AEBBC8;padding:.45rem .85rem .4rem;border-bottom:1px solid rgba(255,255,255,.06);background:var(--cd-bar)}
+.file figcaption::before{content:"";display:inline-block;width:.5rem;height:.5rem;margin-right:.5rem;border-radius:50%;background:#E5A47A;vertical-align:.05em}
+.file pre{border:0;border-radius:0}
+.tk-com{color:var(--cd-com)}.tk-kw{color:var(--cd-kw)}.tk-str{color:var(--cd-str)}.tk-num{color:var(--cd-num)}.tk-key{color:var(--cd-key)}.tk-fn{color:var(--cd-fn)}.tk-const{color:var(--cd-const)}.tk-type{color:var(--cd-type)}.tk-flag{color:var(--cd-flag)}.tk-var{color:var(--cd-key)}.tk-dim{color:var(--cd-dim)}.tk-head{color:var(--cd-head);font-weight:600}.tk-err{color:var(--cd-err)}.tk-ok{color:var(--cd-ok)}.tk-in{color:#FFF;font-weight:500}.tk-hunk{color:var(--cd-kw)}
+.ln-add,.ln-del{display:inline-block;min-width:100%;margin:0 -.95rem;padding:0 .95rem;box-sizing:content-box}.ln-add{background:var(--cd-add)}.ln-del{background:var(--cd-del)}.ln-add .tk-sign{color:var(--cd-ok)}.ln-del .tk-sign{color:var(--cd-err)}
 .cap{font-family:var(--font-mono);font-size:.74rem;color:var(--muted);margin-bottom:-6px}
 
 /* header meta */
@@ -433,8 +446,7 @@ footer.fn{font-size:.82rem;color:var(--muted);border-top:1px solid var(--rule);p
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">第一次在專案裡用 Claude Code：一個完整的流程</p>
-<pre><code>cd ~/repo/my-service
+    <figure class="file"><figcaption>第一次在專案裡用 Claude Code：一個完整的流程</figcaption><pre><code>cd ~/repo/my-service
 claude                                   # 進入互動模式
 
 &gt; /init                                  # 產生 CLAUDE.md 初稿，之後再刪減
@@ -445,9 +457,8 @@ claude                                   # 進入互動模式
 &gt; 照計畫實作。為 callback handler 寫測試，跑 pytest，修到全部通過。
   貼出最後一次測試的完整輸出。
 &gt; 用清楚的 commit message commit，然後開 PR。
-&gt; /clear                                 # 換到下一個不相關的任務前</code></pre>
-    <p class="cap">一份精簡的 CLAUDE.md（只放 Claude 猜不到的事）</p>
-<pre><code># 指令
+&gt; /clear                                 # 換到下一個不相關的任務前</code></pre></figure>
+    <figure class="file"><figcaption>一份精簡的 CLAUDE.md（只放 Claude 猜不到的事）</figcaption><pre><code># 指令
 - 全部測試：make test
 - 單一測試：pytest tests/test_auth.py::test_refresh -q
 - 改完一批程式後跑型別檢查：mypy src/
@@ -455,7 +466,7 @@ claude                                   # 進入互動模式
 # 範圍
 - 不要修改 migrations/ 底下的檔案
 - 不要新增套件相依；需要時先問
-- Branch 命名：feat/&lt;ticket&gt;-&lt;短描述&gt;</code></pre>
+- Branch 命名：feat/&lt;ticket&gt;-&lt;短描述&gt;</code></pre></figure>
     <p class="small muted">注意「範圍」三行都是「不要」型的限制。<a href="#r9">09</a> 的實驗發現，這類規則最有幫助。「不要改 migrations/」如果必須保證，改用 <a href="#r7">07</a> 的 hook。</p>
   </section>
 
@@ -519,8 +530,7 @@ claude                                   # 進入互動模式
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">可以直接打的 prompt</p>
-<pre><code># 新 session 的第一句
+    <figure class="file"><figcaption>可以直接打的 prompt</figcaption><pre><code># 新 session 的第一句
 First run the tests
 
 # 實作新功能
@@ -534,7 +544,7 @@ First run the tests
 用 git bisect 找出是哪個 commit 讓「匯出 CSV 少一欄」這個 bug 出現。
 
 # 收尾
-把最後三個 commit 合併成一個，寫一個清楚的 commit message。</code></pre>
+把最後三個 commit 合併成一個，寫一個清楚的 commit message。</code></pre></figure>
   </section>
 
   <section class="blk"><h2>背景概念</h2>
@@ -593,14 +603,12 @@ First run the tests
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">一個 skill 的資料夾（Claude Code 放在 .claude/skills/ 底下）</p>
-<pre><code>.claude/skills/release-notes/
+    <figure class="file"><figcaption>一個 skill 的資料夾（Claude Code 放在 .claude/skills/ 底下）</figcaption><pre><code>.claude/skills/release-notes/
 ├── SKILL.md              # 第 1 層：frontmatter 常駐；第 2 層：body 用到才讀
 ├── template.md           # 第 3 層：需要時才打開
 └── scripts/
-    └── collect_prs.sh    # 第 3 層：直接執行，內容不進 context</code></pre>
-    <p class="cap">SKILL.md</p>
-<pre><code>---
+    └── collect_prs.sh    # 第 3 層：直接執行，內容不進 context</code></pre></figure>
+    <figure class="file"><figcaption>SKILL.md</figcaption><pre><code>---
 name: release-notes
 description: 為一個版本整理 release notes。使用者提到 release notes、版本說明或 changelog 時使用。
 ---
@@ -610,7 +618,7 @@ description: 為一個版本整理 release notes。使用者提到 release notes
 2. 依 feature、fix、breaking change 分類。
 3. 依 template.md 的格式輸出。
 
-- 不要列出純內部 refactor 的 PR。</code></pre>
+- 不要列出純內部 refactor 的 PR。</code></pre></figure>
     <p class="small muted">在 Claude Code 裡，Claude 會依 description 自動載入；你也可以打 <code>/release-notes</code> 直接呼叫。</p>
   </section>
 
@@ -673,17 +681,15 @@ description: 為一個版本整理 release notes。使用者提到 release notes
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">MCP server 被呈現成這樣的檔案樹</p>
-<pre><code>servers/
+    <figure class="file"><figcaption>MCP server 被呈現成這樣的檔案樹</figcaption><pre><code>servers/
 ├── jira/
 │   ├── searchIssues.ts
 │   ├── addComment.ts
 │   └── index.ts
 └── slack/
     ├── postMessage.ts
-    └── index.ts</code></pre>
-    <p class="cap">Agent 寫出、並在 sandbox 執行的程式（示意）</p>
-<pre><code>import * as jira from './servers/jira';
+    └── index.ts</code></pre></figure>
+    <figure class="file"><figcaption>Agent 寫出、並在 sandbox 執行的程式（示意）</figcaption><pre><code class="lang-js">import * as jira from './servers/jira';
 import * as slack from './servers/slack';
 
 const issues = await jira.searchIssues({ jql: 'project = OPS AND status = Blocked' });
@@ -692,7 +698,7 @@ await slack.postMessage({
   channel: '#ops',
   text: `${stale.length} 張 ticket blocked 超過 7 天`,
 });
-console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一行回到模型</code></pre>
+console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一行回到模型</code></pre></figure>
     <p class="small muted">直接呼叫 tool 的版本：全部 issue 先進 context，模型讀完再自己挑，最後把文字再寫一次進 Slack 的參數。</p>
   </section>
 
@@ -767,8 +773,7 @@ console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一
         </tbody>
       </table>
     </div>
-    <p class="cap">把「先 dry run」做成必填參數，而不是寫在 prompt 裡（示意）</p>
-<pre><code>{
+    <figure class="file"><figcaption>把「先 dry run」做成必填參數，而不是寫在 prompt 裡（示意）</figcaption><pre><code>{
   "name": "purge_queue",
   "description": "清空一個 subscription 的積壓訊息。",
   "input_schema": {
@@ -779,7 +784,7 @@ console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一
     },
     "required": ["subscription", "mode"]
   }
-}</code></pre>
+}</code></pre></figure>
     <p class="small muted">Server 端再檢查：同一個 subscription 沒有先跑過 dry_run，就拒絕 confirm。規則落在程式裡，模型無法說服它。</p>
   </section>
 
@@ -860,8 +865,7 @@ console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">.claude/settings.json：保護 migrations/，並要求測試通過才結束</p>
-<pre><code>{
+    <figure class="file"><figcaption>.claude/settings.json：保護 migrations/，並要求測試通過才結束</figcaption><pre><code>{
   "hooks": {
     "PreToolUse": [
       {
@@ -887,9 +891,8 @@ console.log(stale.slice(0, 3).map(i =&gt; i.key));               // 只有這一
       }
     ]
   }
-}</code></pre>
-    <p class="cap">.claude/hooks/protect-migrations.sh</p>
-<pre><code>#!/bin/bash
+}</code></pre></figure>
+    <figure class="file"><figcaption>.claude/hooks/protect-migrations.sh</figcaption><pre><code>#!/bin/bash
 # stdin 是 JSON，例如 {"tool_name":"Edit","tool_input":{"file_path":"..."}, ...}
 FILE=$(jq -r '.tool_input.file_path // empty')
 
@@ -897,9 +900,9 @@ if [[ "$FILE" == *"/migrations/"* ]]; then
   echo "migrations/ 由 DBA 管理，agent 不能修改" &gt;&amp;2
   exit 2      # 擋下；stderr 會回給 Claude，讓它知道原因
 fi
-exit 0        # 不做決定，走正常的 permission 流程</code></pre>
-<pre><code>chmod +x .claude/hooks/protect-migrations.sh   # 必須可執行
-claude                                         # 進入後打 /hooks 確認已載入</code></pre>
+exit 0        # 不做決定，走正常的 permission 流程</code></pre></figure>
+<figure class="file"><figcaption>terminal</figcaption><pre><code>chmod +x .claude/hooks/protect-migrations.sh   # 必須可執行
+claude                                         # 進入後打 /hooks 確認已載入</code></pre></figure>
   </section>
 
   <section class="blk"><h2>背景概念</h2>
@@ -959,15 +962,14 @@ claude                                         # 進入後打 /hooks 確認已�
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">一個獨立於產品的 harness repo（依原文結構整理）</p>
-<pre><code>my-harness/
+    <figure class="file"><figcaption>一個獨立於產品的 harness repo（依原文結構整理）</figcaption><pre><code>my-harness/
 ├── AGENTS.md          # 所有 agent 共用的指令
 ├── AGENTS.local.md
 ├── skills/            # 依角色分組
 ├── extensions/
 ├── prompts/  plans/  bin/
 ├── artifacts/         # 所有產出集中在這裡，方便稽核
-└── work/              # 實際專案的 repo 放這裡</code></pre>
+└── work/              # 實際專案的 repo 放這裡</code></pre></figure>
     <div class="tbl">
       <table>
         <thead><tr><th>階段</th><th>做什麼</th><th>用哪種模型</th></tr></thead>
@@ -1040,11 +1042,10 @@ claude                                         # 進入後打 /hooks 確認已�
   </section>
 
   <section class="blk"><h2>具體範例</h2>
-    <p class="cap">Ablation 中有益的三條規則，寫成 CLAUDE.md</p>
-<pre><code># 範圍限制
+    <figure class="file"><figcaption>Ablation 中有益的三條規則，寫成 CLAUDE.md</figcaption><pre><code># 範圍限制
 - 不要重構與這次 issue 無關的程式碼，也不要加不需要的功能
 - 不要新增套件相依，除非絕對必要
-- 不要修改與這次 issue 無關的檔案</code></pre>
+- 不要修改與這次 issue 無關的檔案</code></pre></figure>
     <p class="cap">論文的作者建議（Box 1，限 Claude Code 類 agent 與 SWE-bench 類任務）</p>
     <div class="tbl">
       <table>
@@ -1219,5 +1220,6 @@ claude                                         # 進入後打 /hooks 確認已�
   show();
 })();
 </script>
+<script src="code.js"></script>
 </body>
 </html>

@@ -250,7 +250,7 @@
           <figcaption>藍框是持有計畫的角色。一般箭頭是派工或認領，藍色箭頭是交回的結果，藍色虛線是 teammate 之間的訊息。A 到 D 同時用更多 agent；E 讓一個 agent 做更久。</figcaption>
         </figure>
         <div class="prose">
-          <p>這張圖是整堂課後半的地圖，前半的兩個案例都還是一個 agent，所以圖上沒有它們。先定兩個名詞。Session 是你打開 Claude Code 之後的一段對話，它有自己的 context window（一次送給 model 的全部文字，L4 有完整說明）。Agent 在這堂課裡就是一個在跑的 session，或是一個由 session 派出去的小 agent。圖上每一個方框都有自己的 context，<strong>方框之間看不到彼此的 context</strong>，這是所有擴展方式的共同前提。</p>
+          <p>這張圖是整堂課後半的地圖，前半的兩個案例都還是一個 agent，所以圖上沒有它們。先定兩個名詞。Session 是你打開 Claude Code 之後的一段對話，它有自己的 context window（一次送給 model 的全部文字，L4 有完整說明）。Agent 在這堂課裡就是一個在跑的 session，或是一個由 session 派出去的小 agent。圖上每一個方框都有自己的 context，方框之間看不到彼此的 context，這是所有擴展方式的共同前提。</p>
           <p>看圖時先找藍框：誰持有計畫。從 A 到 D，計畫依序在你腦中（A 手動平行）、主 agent（B subagent）、lead 與共用清單（C agent team）、script 裡（D workflow）。<strong>計畫在哪裡，決定了誰負責派工、誰負責整合</strong>，也決定了這個做法能撐到幾個 agent。每個 worker 都有自己的 context；差別在結果怎麼交回，以及交回給誰。E 是 slide 的第三個軸：時間，由停止條件決定一個 agent 什麼時候結束。第 2 段會先講兩個案例，再依 A 到 E 的順序把每一種做法講清楚。</p>
         </div>
       </section>
@@ -601,7 +601,7 @@ If off, deactivate.</code></pre></figure>
                 </tbody>
               </table></div>
               <p>Slide 把三者的差別寫成一句：proxy 攔截每一個 request，MCP 只在呼叫時執行；proxy 站在 agent 和 provider 之間，MCP 站在旁邊；proxy 改得了 context，MCP 改不了。最後一句註記值得記：<strong>用別人的 agent 才需要 proxy</strong>，自己寫 harness 的話，這件事在 harness 裡直接做就好，L4 的 <a class="tm" href="#n-context">admission</a> 就是這個位置。</p>
-              <p id="i2-6"><b>每一種機制各有位置。</b>Slide p.25 把 Caveman 用到的每一種機制列成表：skill 管風格，hook 管啟動、追蹤和強化模式，command 管你選模式，MCP 管壓縮、取回和統計，plugin 把這些打包，proxy 攔截 request。兩個案例合起來看，L2 講的擴充機制各有一個明確的位置：想改 model 的行為用 skill，想保證某件事一定發生用 hook，想給 model 新能力用 MCP，<strong>想改 model 讀到的東西只能在 request 的路上動手</strong>。</p>
+              <p id="i2-6"><b>每一種機制各有位置。</b>Slide p.25 把 Caveman 用到的每一種機制列成表：skill 管風格，hook 管啟動、追蹤和強化模式，command 管你選模式，MCP 管壓縮、取回和統計，plugin 把這些打包，proxy 攔截 request。兩個案例合起來看，L2 講的擴充機制各有一個明確的位置：想改 model 的行為用 skill，想保證某件事一定發生用 hook，想給 model 新能力用 MCP，想改 model 讀到的東西只能在 request 的路上動手。</p>
             </div>
           </div>
           <p class="idea-group" id="g-b">B · 多個 agent：三個擴展軸</p>
@@ -895,7 +895,7 @@ $ git push                            # agent B 後到
 $ git pull --rebase
 CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task-43</code></pre></figure>
               <p>這叫樂觀鎖（optimistic locking）：先做，衝突時才處理，不用一個中央的管理者發派。它的弱點是 stale lock：agent 中途當掉，鎖就一直留著，所以鎖要能過期，或是有人定期清理。Agent 之間沒有對話，context 靠檔案傳：新 session 先讀 README、進度文件和 CI 的失敗紀錄找回狀況，再用自動化測試判斷自己有沒有進展。另外有幾個專職的 agent 管文件、效能、品質和去重。<strong>狀態放在檔案和測試裡，不靠 model 記住</strong>，這就是 <code>/goal</code> 那句「終點要能檢查」放大到 16 個 agent 的樣子。</p>
-              <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的地方：<strong>merge conflict 很頻繁</strong>；所有 agent 碰到同一個 kernel 的錯誤時，平行就沒有用了；16 位元 x86 的一部分仍靠 GCC；產生的程式碼效率比 GCC 差。下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
+              <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的地方：merge conflict 很頻繁；所有 agent 碰到同一個 kernel 的錯誤時，平行就沒有用了；16 位元 x86 的一部分仍靠 GCC；產生的程式碼效率比 GCC 差。下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">
@@ -993,7 +993,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                   <tr><td>3.0 新加的</td><td>GPU 的 nondeterministic kernel、浮點數差異</td><td>agent 在寫程式的過程中就會碰環境</td><td>compiler 和 model 都有多種 kernel 與取樣</td></tr>
                 </tbody>
               </table></div>
-              <p>依 p.55 整理。結論是：同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用。那 3.0 新增的不確定性在哪裡？Slide p.57 列了四個來源：自然語言本身的語意不確定；檢索的漂移，索引更新、切 chunk、context 截斷都會改變 model 看到的東西；model 生成的機率性，取樣加上軟硬體的 nondeterminism（同一個輸入，因為浮點運算順序或執行緒排程不同而算出不同結果，L1 講過）；agent 和 tool 的迴圈，軌跡、環境、tool 失敗、環境改變。重點是最後一行：程式產生之後通常是確定的，除非它在執行時又呼叫 model 或 tool。所以<strong>不確定性集中在產生程式的階段</strong>；程式碼經過 commit、review、測試之後，可以用 2.0 的老方法管。</p>
+              <p>依 p.55 整理。結論是：同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用。那 3.0 新增的不確定性在哪裡？Slide p.57 列了四個來源：自然語言本身的語意不確定；檢索的漂移，索引更新、切 chunk、context 截斷都會改變 model 看到的東西；model 生成的機率性，取樣加上軟硬體的 nondeterminism（同一個輸入，因為浮點運算順序或執行緒排程不同而算出不同結果，L1 講過）；agent 和 tool 的迴圈，軌跡、環境、tool 失敗、環境改變。重點是最後一行：程式產生之後通常是確定的，除非它在執行時又呼叫 model 或 tool。所以不確定性集中在產生程式的階段；程式碼經過 commit、review、測試之後，可以用 2.0 的老方法管。</p>
               <p id="i6-4"><b>怎麼和不確定性共處。</b>Slide p.58 給的做法分三組：</p>
               <ul>
                 <li><b>DEFINE。</b>先把假設寫出來；有歧義的地方讓 model 先確認再動手。</li>
@@ -1066,7 +1066,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                 </div>
                 <figcaption>依 p.68 重畫，藍字是本文對到這堂課的位置。</figcaption>
               </figure>
-              <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。<strong>OpenAI 的員工整體仍在階梯的下半部</strong>。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
+              <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。OpenAI 的員工整體仍在階梯的下半部。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x3">
@@ -1085,7 +1085,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                   <div class="exbody prose">
 
               <p>這一章的數字來自 OpenAI 自己的報告。OpenAI 員工幾乎全部在用 Codex；個人使用者不到 1%，組織使用者是 17.3%。員工是開發這個工具的人，工作內容、熟練度和使用條件，都和一般團隊不同。</p>
-              <p>「agent-hours」量的是 agent 跑了多久，<strong>它沒有量交付的價值</strong>。任務大小用「人要做幾小時」估算，這個估算本身就有誤差。讀這類數字時，問三個問題：樣本是誰、指標量什麼、和什麼比較。L7 講 agent 評估時，也會討論成功率以外該量哪些指標。</p>
+              <p>「agent-hours」量的是 agent 跑了多久，它沒有量交付的價值。任務大小用「人要做幾小時」估算，這個估算本身就有誤差。讀這類數字時，問三個問題：樣本是誰、指標量什麼、和什麼比較。L7 講 agent 評估時，也會討論成功率以外該量哪些指標。</p>
             
                   </div>
                 </details>
@@ -2152,5 +2152,6 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
 </main>
 </div>
 <script src="app.js"></script>
+<script src="code.js"></script>
 </body>
 </html>

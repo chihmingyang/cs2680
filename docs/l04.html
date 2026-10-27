@@ -1321,7 +1321,7 @@ C lazy-load assets       impact 4, effort 1
                   <p>條件只有一個：開頭要逐字相同。上圖虛線以上的 system prompt、tool 定義、CLAUDE.md 在 session 內不變，<code>messages</code> 又只在尾端加新的一輪，所以 agent 每一圈的 request 幾乎都是「上一圈加一點」，命中率很高。反過來說，改動開頭的任何一個字，或是改 <code>messages</code> 中間的一筆，那一點之後的 cache 全部失效；2.7 講 transformation 和 compaction 時會再回到這個代價。L2 第 2 段講 Claude Code 怎麼靠它省錢，L8 會算它的帳。</p>
                 </div>
               </details>
-              <p id="i6-3"><b>三種成本。</b>這件事重要，是因為 context 有三種成本。第一是錢：model 沒有記憶，每一圈 harness 都要把整個 window 重送一次，所以一份 8,000 token 的 tool 結果進了 context，<strong>之後每一圈都要再付一次</strong>。第二是延遲。Model 處理一次 request 分兩個階段：prefill 先把整個 prompt 讀一遍，decode 再一個 token 一個 token 地產生回答。Prompt 越長，prefill 越久；而 decode 每產生一個 token 都要回頭看整個 context，所以也會變慢。第三是注意力：window 越滿，model 越難從裡面找回資訊。</p>
+              <p id="i6-3"><b>三種成本。</b>這件事重要，是因為 context 有三種成本。第一是錢：model 沒有記憶，每一圈 harness 都要把整個 window 重送一次，所以一份 8,000 token 的 tool 結果進了 context，之後每一圈都要再付一次。第二是延遲。Model 處理一次 request 分兩個階段：prefill 先把整個 prompt 讀一遍，decode 再一個 token 一個 token 地產生回答。Prompt 越長，prefill 越久；而 decode 每產生一個 token 都要回頭看整個 context，所以也會變慢。第三是注意力：window 越滿，model 越難從裡面找回資訊。</p>
               <p id="i6-4"><span class="anchor" id="t6"></span><b>注意力的成本，兩組實驗量過。</b>第一組是 Chroma 的 Context Rot（2025）：同一個問題，輸入越長，準確率越低，有干擾內容時掉得更快。第二組是 Liu 等人的 Lost in the Middle（TACL 2024）：把含答案的文件放在 20 份文件中的不同位置，放第 1 份，準確率 76%；<strong>放第 10 份掉到 55%</strong>；放第 20 份又回到 71%，曲線呈 U 形。原因還沒有定論，但設計上的意義很清楚：關鍵的指示放開頭或結尾；中間是 model 最看不到的位置。</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -2460,5 +2460,6 @@ error: patch failed: client.ts:41</code></pre></figure>
 </main>
 </div>
 <script src="app.js"></script>
+<script src="code.js"></script>
 </body>
 </html>

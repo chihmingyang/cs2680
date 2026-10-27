@@ -259,7 +259,7 @@
           <figcaption>同一份結果，兩個 metric 差 3 倍。pass@4 看不出任務 B 偶爾失敗、任務 C 幾乎都失敗。上線前要看 pass^k，而且要逐題計算再平均（見第 3 段）。</figcaption>
         </figure>
         <div class="prose">
-          <p>看第一張圖，先找藍框：<strong>grader 是整個系統裡唯一「下判斷」的地方</strong>，它只能看答案、狀態、trajectory 三種輸入。一個 benchmark 的性格，大半由 grader 看哪一種決定。左邊的重置與預算不產生分數，但少了它們，分數就無法比較，評估也可能不會結束。第二張圖提醒你：grader 給的是單次分數，要說 agent 可靠，<strong>得把 k 次 trial 用 pass^k 彙整</strong>。</p>
+          <p>看第一張圖，先找藍框：<strong>grader 是整個系統裡唯一「下判斷」的地方</strong>，它只能看答案、狀態、trajectory 三種輸入。一個 benchmark 的性格，大半由 grader 看哪一種決定。左邊的重置與預算不產生分數，但少了它們，分數就無法比較，評估也可能不會結束。第二張圖提醒你：grader 給的是單次分數，要說 agent 可靠，得把 k 次 trial 用 pass^k 彙整。</p>
         </div>
       </section>
 
@@ -273,16 +273,16 @@
           <div class="idea" id="i1">
             <h3>評估的對象，從預測文字變成完成互動任務 <a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=6" target="_blank" rel="noopener">p.6–9</a></h3>
             <div class="prose">
-              <p>L6 說 agent 常常沒驗證就宣布完成，所以要從外面驗證。Slide 先回顧評估目標怎麼演進，排成五層：預測文字、答對問題、得到偏好、寫出能跑的程式、完成互動任務。越往下，<strong>grader 越需要「執行」</strong>。前兩層比對文字就夠；最後一層要先架好網站或資料庫，跑完再檢查狀態。所以 <strong>agent 評估本身是一個系統工程問題</strong>。</p>
-              <p>Slide 也分兩個層級。Component-level 看內部的單一能力，回答「為什麼失敗」。End-to-end 只看成功率、成本、latency，回答「能不能用」。<strong>兩種都要有，像 unit test 和 integration test</strong>。</p>
+              <p>L6 說 agent 常常沒驗證就宣布完成，所以要從外面驗證。Slide 先回顧評估目標怎麼演進，排成五層：預測文字、答對問題、得到偏好、寫出能跑的程式、完成互動任務。越往下，grader 越需要「執行」。前兩層比對文字就夠；最後一層要先架好網站或資料庫，跑完再檢查狀態。所以 <strong>agent 評估本身是一個系統工程問題</strong>。</p>
+              <p>Slide 也分兩個層級。Component-level 看內部的單一能力，回答「為什麼失敗」。End-to-end 只看成功率、成本、latency，回答「能不能用」。兩種都要有，像 unit test 和 integration test。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>一個成功率不夠：pass^k、成本、latency 各量一件事 <a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=10" target="_blank" rel="noopener">p.10–11、p.19</a></h3>
             <div class="prose">
               <p>pass@k 問「k 次裡至少 1 次成功嗎」，pass^k 問「k 次全部成功嗎」。差距就是 agent 不穩定的部分。單次成功率 0.8、各次獨立時：pass@4 = 1 − 0.2⁴ = 0.998，<strong>pass^4 = 0.8⁴ = 0.41</strong>。</p>
-              <p><strong>該看哪一個，取決於失敗能不能重試</strong>。產生 5 個 patch 再用測試挑一個，是 pass@k 的世界。客服每位客戶只來一次，是 pass^k 的世界；τ-bench 提出 pass^k，就是因為它量的是客服。</p>
-              <p>成本要含 tool call 與 prefix cache miss；latency 要含 tool 執行與跑測試的時間。Slide 的對比：<strong>一次 200 步花 40 美元，另一次 12 步花 0.30 美元</strong>，兩次都「成功」。</p>
+              <p>該看哪一個，取決於失敗能不能重試。產生 5 個 patch 再用測試挑一個，是 pass@k 的世界。客服每位客戶只來一次，是 pass^k 的世界；τ-bench 提出 pass^k，就是因為它量的是客服。</p>
+              <p>成本要含 tool call 與 prefix cache miss；latency 要含 tool 執行與跑測試的時間。Slide 的對比：一次 200 步花 40 美元，另一次 12 步花 0.30 美元，兩次都「成功」。</p>
             </div>
           </div>
           <div class="idea" id="i3">
@@ -302,7 +302,7 @@
                   <tr><td>TheAgentCompany</td><td>模擬公司：GitLab、工單、聊天</td><td>Checkpoint 與最終狀態</td></tr>
                 </tbody>
               </table></div>
-              <p>只有 GAIA 只看答案，<strong>其他 7 個都檢查某種狀態</strong>。檢查狀態的好處是路徑自由：任何正確的路都得分。<strong>代價是環境要能重置</strong>，所以 WebArena 自架網站，Terminal-Bench 用 container。選 benchmark 時，挑動作空間和你的 agent 相同的；長任務要有 checkpoint，否則所有 agent 都是 0 分。</p>
+              <p>只有 GAIA 只看答案，其他 7 個都檢查某種狀態。檢查狀態的好處是路徑自由：任何正確的路都得分。代價是環境要能重置，所以 WebArena 自架網站，Terminal-Bench 用 container。選 benchmark 時，<strong>挑動作空間和你的 agent 相同的</strong>；長任務要有 checkpoint，否則所有 agent 都是 0 分。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x1">
@@ -320,8 +320,8 @@
             <h3>評估很難：leakage 走整個 stack，單一 turn 獎勵亂猜，一次執行只是雜訊 <a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=25" target="_blank" rel="noopener">p.25–31</a></h3>
             <div class="prose">
               <p>Leakage 不只發生在訓練。表現 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment），scaffold 就是 harness，每個輸入都能帶進答案。Web search 搜到已 merge 的 PR；sandbox 的 git 歷史露出修正；memory 記住上一輪的答案；開發者反覆看失敗案例調 prompt。所以<strong>「model 沒用測試集訓練」不足以證明分數乾淨</strong>。</p>
-              <p>多數 benchmark 只給一個完整指令，中間沒有使用者，這會<strong>獎勵「有自信地猜」</strong>。Agent 問釐清問題要多花步數，卻拿不到分數。多輪評估因此要測 clarification、recovery、memory 三件事。</p>
-              <p>還有三個挑戰。非確定性：<strong>只跑一次的分數大多是雜訊</strong>。副作用：過程中刪檔、寄信，分數不會扣。評分方式：只看結果會放過不安全的執行，比對 trajectory 會判錯其他正確的做法。</p>
+              <p>多數 benchmark 只給一個完整指令，中間沒有使用者，這會獎勵「有自信地猜」。Agent 問釐清問題要多花步數，卻拿不到分數。多輪評估因此要測 clarification、recovery、memory 三件事。</p>
+              <p>還有三個挑戰。非確定性：只跑一次的分數大多是雜訊。副作用：過程中刪檔、寄信，分數不會扣。評分方式：只看結果會放過不安全的執行，比對 trajectory 會判錯其他正確的做法。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">
@@ -329,7 +329,7 @@
                   <div class="exbody prose">
 
               <p>p.32 說公開 benchmark 從推出到飽和只要幾個月到三年。團隊內部的評估集更快，原因是 p.26 的最後一列：開發者每看一次失敗案例、改一次 prompt，就把評估集的資訊帶進系統。幾週後，分數反映的是對這幾十題的熟悉度。</p>
-              <p>所以要<strong>固定一份 held-out 集，開發時不看</strong>，發版前才跑。每個 sprint 從 production 的失敗案例補新題，全員都做對的題目刪掉。舊題也要留著，才能回答「新版有沒有退步」。</p>
+              <p>所以要固定一份 held-out 集，開發時不看，發版前才跑。每個 sprint 從 production 的失敗案例補新題，全員都做對的題目刪掉。舊題也要留著，才能回答「新版有沒有退步」。</p>
             
                   </div>
                 </details>
@@ -338,15 +338,15 @@
           <div class="idea" id="i5">
             <h3>Benchmark 很快飽和，所以真實 agent 要用 Pareto 看 <a class="ref" href="https://cs2680.com/slides/7_agent_design_4.pdf#page=32" target="_blank" rel="noopener">p.32–35</a></h3>
             <div class="prose">
-              <p>Slide 用 6 個 benchmark 說明飽和速度：frontier model 追上基準線只花 6 到 39 個月。SWE-bench Verified <strong>從 33% 到 95% 用了 22 個月</strong>。飽和後，頂尖 model 的分數擠在一起，<strong>benchmark 就分不出強弱</strong>。對策有三種：出更難的版本（SWE-bench Pro）、刪掉飽和的題目（Terminal-Bench 4.0）、出更長的任務（OSWorld 2.0）。</p>
-              <p>比較真實 agent 時要<strong>同時看能力、成本、速度</strong>。A 每個維度都不比 B 差，且至少一個更好，就說 A 支配 B；沒有人支配的那一群是 Pareto frontier。這個方法不需要權重，只排除明顯較差的選項。</p>
+              <p>Slide 用 6 個 benchmark 說明飽和速度：frontier model 追上基準線只花 6 到 39 個月。SWE-bench Verified <strong>從 33% 到 95% 用了 22 個月</strong>。飽和後，頂尖 model 的分數擠在一起，benchmark 就分不出強弱。對策有三種：出更難的版本（SWE-bench Pro）、刪掉飽和的題目（Terminal-Bench 4.0）、出更長的任務（OSWorld 2.0）。</p>
+              <p>比較真實 agent 時要同時看能力、成本、速度。A 每個維度都不比 B 差，且至少一個更好，就說 A 支配 B；沒有人支配的那一群是 Pareto frontier。這個方法不需要權重，只排除明顯較差的選項。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x3">
                   <summary>本文延伸｜公開 benchmark 回答「model 多強」，production 評估回答「我的 agent 能不能上線」<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>公開 benchmark 要跨團隊可比，所以題目固定、環境通用。你的 agent 要回答的問題不同：在你的 tool、資料、政策下，它會不會出錯。p.26 的公式說表現是整個 stack 的函數；<strong>換成你的 stack，分數就要重量</strong>。</p>
+              <p>公開 benchmark 要跨團隊可比，所以題目固定、環境通用。你的 agent 要回答的問題不同：在你的 tool、資料、政策下，它會不會出錯。p.26 的公式說表現是整個 stack 的函數；換成你的 stack，分數就要重量。</p>
               <p>所以 production 評估的任務該來自真實流量：匿名化的客戶請求、出過事的案例、政策的邊界條件。公開 benchmark 仍然有用，但用途是挑 model 與 harness 的起點，不是上線的證據。</p>
             
                   </div>
@@ -357,7 +357,7 @@
                   <summary>本文延伸｜你們團隊自己的 agent 評估，該長什麼樣<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>一份夠用的評估有五樣東西。可重置的環境：資料庫快照、mock 掉的外部 tool、清空的 memory。任務集：<strong>50 到 100 題，含「應該拒絕」的負面題</strong>。Grader：先檢查狀態，再掃 trajectory 的危險動作，最後才用 judge 看品質。Metrics：pass^k、每題成本、p95 latency 一起報。流程：一次只改一件事，用同一組任務重跑（L8）。</p>
+              <p>一份夠用的評估有五樣東西。可重置的環境：資料庫快照、mock 掉的外部 tool、清空的 memory。任務集：50 到 100 題，含「應該拒絕」的負面題。Grader：先檢查狀態，再掃 trajectory 的危險動作，最後才用 judge 看品質。Metrics：pass^k、每題成本、p95 latency 一起報。流程：一次只改一件事，用同一組任務重跑（L8）。</p>
               <p>最後一個提醒來自 L6：agent 常常「沒驗證就宣布完成」。評估是 harness 外面的驗證，不依賴 agent 的自我報告。</p>
             
                   </div>
@@ -946,10 +946,10 @@ records = [run_trial(t, rng) for t in tasks for _ in range(8)]
 for k in (1, 2, 4, 8):
     print(f"pass^{k} = {report(records, k):.2f}")</code></pre></figure>
               <p>執行結果（seed = 2）：</p>
-              <pre><code>pass^1 = 0.88
+              <figure class="file"><figcaption>eval_loop.py 的輸出（seed = 2）</figcaption><pre><code>pass^1 = 0.88
 pass^2 = 0.77
 pass^4 = 0.61
-pass^8 = 0.50</code></pre>
+pass^8 = 0.50</code></pre></figure>
               <p>「已出貨」那題 8 次只對 6 次，所以 pass^8 只剩 0.50。換一個 seed，pass^k 會跳動，這就是 p.31 的非確定性。</p>
             </div>
           </details>
@@ -1007,8 +1007,8 @@ def pareto_ranks(items):
 print(pareto_ranks(configs))
 print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看 latency</code></pre></figure>
               <details><summary>解答</summary><div class="answer">
-                <pre><code>{'P1': 1, 'P2': 1, 'P3': 1, 'P4': 1, 'P5': 2, 'P6': 2}
-{'P1': 1, 'P2': 1, 'P4': 1, 'P3': 2, 'P6': 2, 'P5': 3}</code></pre>
+                <figure class="file"><figcaption>pareto.py 的輸出</figcaption><pre><code>{'P1': 1, 'P2': 1, 'P3': 1, 'P4': 1, 'P5': 2, 'P6': 2}
+{'P1': 1, 'P2': 1, 'P4': 1, 'P3': 2, 'P6': 2, 'P5': 3}</code></pre></figure>
                 <p>三個維度時 P3 在 Rank 1：它比 P2 貴，但快 25 秒。拿掉 latency 後，P2 能力相同、成本更低，就支配了 P3。少一個維度，排序就不同。</p>
               </div></details>
             </div>
@@ -1288,5 +1288,6 @@ print(pareto_ranks({n: (v[0], v[1], 0) for n, v in configs.items()}))   # 不看
 </main>
 </div>
 <script src="app.js"></script>
+<script src="code.js"></script>
 </body>
 </html>

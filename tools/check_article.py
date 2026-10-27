@@ -9,8 +9,9 @@ quiz, reading list ol.rg, pager, fineprint, read-time, full-time, read-box, side
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
 STE heuristics on prose; reading times;
 red key points (<strong>, STYLE_ARTICLE 6c): never inside b/a/code/pre/headings/summary/figcaption/
-figure/svg/table/nav/aside/details.gloss and no <b> inside them (problems); per chapter 3-6, tldr <= 3,
-#s-arch <= 2, each <= 30 units (warnings).
+figure/svg/table/nav/aside/details.gloss and no <b> inside them (problems); one mark per ~200 units of
+main chapter prose outside any <details> (target = round(units / 200), 1..5; target-1 is fine),
+plus at most 1 inside 深入/本文延伸 blocks per chapter, tldr exactly 3, #s-arch exactly 1, each mark <= 30 units (warnings).
 
 Reading times (400 text units per minute; a CJK character or an English word is 1 unit;
 under 15 min: round up; 15 min or more: nearest 5):
@@ -80,7 +81,8 @@ class P(HTMLParser):
             where = next((i for t, c, i in reversed(self.anc) if t == "div" and "idea" in c), "")
             where = where or next((i or ("tldr" if "tldr" in c else "") for t, c, i in reversed(self.anc)
                                    if t == "section"), "")
-            self.strong = {"where": where, "text": ""}
+            deep = any(t == "details" and "deep" in c for t, c, _ in self.anc)
+            self.strong = {"where": where, "text": "", "deep": deep}
         elif tag == "b" and self.strong is not None:
             self.errors.append(f"<b> inside a red mark at line {self.getpos()[0]}")
         is_prose = bool(cls & PROSE_CLASSES) or tag == "dd"
@@ -127,6 +129,44 @@ class P(HTMLParser):
             self.strong["text"] += data
         if self.prose_depth and not self.skip_depth:
             self.text.append(data)
+
+
+class ChapterUnits(HTMLParser):
+    """Main-prose units per div.idea: nothing inside <details> (深入、本文延伸、名詞註), code,
+    figures, tables, headings or summaries."""
+    SKIP_IN = {"pre", "figure", "table", "svg", "summary", "h3", "nav"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.stack, self.cur, self.u = [], None, {}
+
+    def handle_starttag(self, tag, attrs):
+        if tag in VOID:
+            return
+        a = dict(attrs)
+        cls = (a.get("class") or "").split()
+        self.stack.append((tag, cls))
+        if tag == "div" and "idea" in cls:
+            self.cur = a.get("id")
+            self.u[self.cur] = 0
+
+    def handle_endtag(self, tag):
+        if tag in VOID:
+            return
+        while self.stack:
+            t, c = self.stack.pop()
+            if t == "div" and "idea" in c:
+                self.cur = None
+            if t == tag:
+                break
+
+    def handle_data(self, data):
+        if self.cur and not any(t in self.SKIP_IN or t == "details" for t, c in self.stack):
+            self.u[self.cur] += units(data)
+
+
+def mark_target(n_units):
+    return min(5, max(1, int(n_units / 200 + 0.5)))
 
 
 def units(s):
@@ -226,17 +266,22 @@ def main():
         print(f"  filler words: {fillers}")
     print(f"  passive 被: {passive}; reading time: " + ", ".join(f"{k} {v} min" for k, v in t.items() if v))
     # red key points (STYLE_ARTICLE 6c): counts are advice, so they print as warn
-    per = {}
+    per, deep = {}, {}
     for m in p.strongs:
         per[m["where"]] = per.get(m["where"], 0) + 1
-    chapters = re.findall(r'<div class="idea" id="(i\d+)"', html)
+        deep[m["where"]] = deep.get(m["where"], 0) + m["deep"]
+    cu = ChapterUnits()
+    cu.feed(html)
     print(f"  red marks: {len(p.strongs)} (" + ", ".join(f"{k or '?'} {v}" for k, v in per.items()) + ")")
-    for i in chapters:
-        if not 3 <= per.get(i, 0) <= 6:
-            print(f"  warn: chapter {i} has {per.get(i, 0)} red marks (3-6)")
-    for k, cap in (("tldr", 3), ("s-arch", 2)):
-        if per.get(k, 0) > cap:
-            print(f"  warn: {k} has {per[k]} red marks (max {cap})")
+    for i, n in cu.u.items():
+        want, got = mark_target(n), per.get(i, 0) - deep.get(i, 0)
+        if not max(1, want - 1) <= got <= want:
+            print(f"  warn: chapter {i} has {got} red marks in its main prose; {n} units want {want}")
+        if deep.get(i, 0) > 1:
+            print(f"  warn: chapter {i} has {deep[i]} red marks inside 深入/本文延伸 (max 1)")
+    for k, want in (("tldr", 3), ("s-arch", 1)):
+        if per.get(k, 0) != want:
+            print(f"  warn: {k} has {per.get(k, 0)} red marks (want {want})")
     for m in p.strongs:
         if units(m["text"]) > 30:
             print(f"  warn: long red mark ({units(m['text'])}): {m['text'][:40]}")

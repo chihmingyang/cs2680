@@ -193,7 +193,7 @@
           <figcaption>依 p.22 的 5 個數字按比例畫，長條高度是 0.95ⁿ 的精確值。這還是樂觀的估計，因為它假設每步獨立。</figcaption>
         </figure>
         <div class="prose">
-          <p>第一張圖：store 的內容<strong>只有經過檢索（藍色箭頭）才會回到 context</strong>；其他五站都在改寫 store。每一格都要有一條寫下來的規則。第二張圖：長條照 0.95ⁿ 的比例畫，<strong>50 步只剩 8%</strong>。Memory 決定 model 看到什麼；可靠性決定看對了之後，還有多大機會把任務做完。</p>
+          <p>第一張圖：store 的內容<strong>只有經過檢索（藍色箭頭）才會回到 context</strong>；其他五站都在改寫 store。每一格都要有一條寫下來的規則。第二張圖：長條照 0.95ⁿ 的比例畫，50 步只剩 8%。Memory 決定 model 看到什麼；可靠性決定看對了之後，還有多大機會把任務做完。</p>
         </div>
       </section>
 
@@ -218,7 +218,7 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">2.1</span>Memory 的設計：兩層 store，中間是一串 policy 決策 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=5" target="_blank" rel="noopener">p.5–10、p.17</a></h3>
             <div class="prose">
-              <p id="i1-1"><b>Model 沒有狀態，記憶是 harness 搬進來的。</b>Agent 看起來記得事情，是因為 harness 把 store（存在 context 外面的記憶，例如硬碟上的檔案或一個資料庫）裡的文字放進 <a class="tm" href="#n-context">context</a>。所以 memory 是兩層：store 是長期的，context 是這一次 request 看得到的；memory 的每個設計問題都在問同一件事：<strong>什麼時候，把什麼，從哪一層搬到哪一層</strong>。Slide 把它拆成 7 個問題（p.6）：誰擁有這條記憶、值得記嗎、存成什麼形式、放在哪種 backend（存放的系統：檔案、SQL、vector database）、這個任務需要它嗎、能歸納出什麼教訓、還成立嗎。</p>
+              <p id="i1-1"><b>Model 沒有狀態，記憶是 harness 搬進來的。</b>Agent 看起來記得事情，是因為 harness 把 store（存在 context 外面的記憶，例如硬碟上的檔案或一個資料庫）裡的文字放進 <a class="tm" href="#n-context">context</a>。所以 memory 是兩層：store 是長期的，context 是這一次 request 看得到的；memory 的每個設計問題都在問同一件事：什麼時候，把什麼，從哪一層搬到哪一層。Slide 把它拆成 7 個問題（p.6）：誰擁有這條記憶、值得記嗎、存成什麼形式、放在哪種 backend（存放的系統：檔案、SQL、vector database）、這個任務需要它嗎、能歸納出什麼教訓、還成立嗎。</p>
               <details class="gloss" id="n-context">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Context 與它的代價（L4）：每一條記憶都要每圈重送</span></summary>
                 <div class="gloss-body prose">
@@ -257,7 +257,7 @@
           <div class="idea" id="i2">
             <h3><span class="idea-no">2.2</span>檢索：語意相似分不出現在的事實，還要四個訊號 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=11" target="_blank" rel="noopener">p.11</a></h3>
             <div class="prose">
-              <p id="i2-1"><b>語意相似分不出現在的事實。</b>Store 裡的東西要經過檢索才回到 context，所以<strong>檢索的規則最重要</strong>。常見的檢索是 <a class="tm" href="#t1">semantic search</a>：把記憶和問題都轉成向量，取最相近的 k 筆。先看一個問題：使用者問「現在用哪個 serving engine？」，「用 vLLM」和「用 SGLang」兩筆的相似度幾乎一樣。<strong>語意分不出哪一筆是現在的事實</strong>。</p>
+              <p id="i2-1"><b>語意相似分不出現在的事實。</b>Store 裡的東西要經過檢索才回到 context，所以<strong>檢索的規則最重要</strong>。常見的檢索是 <a class="tm" href="#t1">semantic search</a>：把記憶和問題都轉成向量，取最相近的 k 筆。先看一個問題：使用者問「現在用哪個 serving engine？」，「用 vLLM」和「用 SGLang」兩筆的相似度幾乎一樣。語意分不出哪一筆是現在的事實。</p>
               <details class="gloss" id="t1">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Embedding 與 vector search（L4 2.2）：top-k 是怎麼算出來的</span></summary>
                 <div class="gloss-body prose">
@@ -266,14 +266,14 @@
                 </div>
               </details>
               <p id="i2-2"><b>另外四個訊號。</b>Slide 列出另外 4 個訊號。Scope：同一個使用者、專案或任務。Importance：漏掉它和放進來的代價。Validity：此刻仍然成立。Provenance：來源、信心、證據。</p>
-              <p id="i2-3"><b>過濾還是排序。</b>四個訊號的用法不同。<strong>Scope 和 validity 要寫成硬過濾條件</strong>；只當排序分數時，別人的記憶仍可能進入 top-k，這就是 p.18 的 isolation failure（A 使用者的記憶漏進 B 的查詢結果）。Importance 和 provenance 適合調整排序，或做成不看 query 的常駐規則。</p>
+              <p id="i2-3"><b>過濾還是排序。</b>四個訊號的用法不同。Scope 和 validity 要寫成硬過濾條件；只當排序分數時，別人的記憶仍可能進入 top-k，這就是 p.18 的 isolation failure（A 使用者的記憶漏進 B 的查詢結果）。Importance 和 provenance 適合調整排序，或做成不看 query 的常駐規則。</p>
             </div>
           </div>
           <div class="idea" id="i3">
             <h3><span class="idea-no">2.3</span>遺忘與有效時間：忘記、valid time、來源都是第一級操作 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=12" target="_blank" rel="noopener">p.12–14、p.18–19</a></h3>
             <div class="prose">
-              <p id="i3-1"><b>事實會變：valid time 與 provenance。</b>專案 4 月用 vLLM，6 月換成 SGLang（p.14）。系統如果只會新增，<strong>舊的會蓋過新的</strong>，這是 p.18 的 staleness（過期的記憶還當成現在的事實）。解法是兩個欄位：valid time 記事實在哪段時間成立，<strong>新事實讓舊的 <code>valid_to</code> 關上，但不刪除</strong>，所以還能回答「以前是什麼」；provenance 記來源與信心，使用者親口說的和網頁讀到的，信任等級不同。</p>
-              <p id="i3-2"><b>四種遺忘，加上歸納。</b>遺忘有 4 種做法：標記失效、永久刪除、<a class="tm" href="#t2">TTL 到期</a>、分層移出（從常駐的一層搬到要查才讀的一層）（p.13）。歸納是另一種改寫：多筆觀察合成一條較高層的記憶，要附信心值並連回證據（p.12）。證據太少就歸納，<strong>一次事件會變成長期偏好</strong>。</p>
+              <p id="i3-1"><b>事實會變：valid time 與 provenance。</b>專案 4 月用 vLLM，6 月換成 SGLang（p.14）。系統如果只會新增，舊的會蓋過新的，這是 p.18 的 staleness（過期的記憶還當成現在的事實）。解法是兩個欄位：valid time 記事實在哪段時間成立，<strong>新事實讓舊的 <code>valid_to</code> 關上，但不刪除</strong>，所以還能回答「以前是什麼」；provenance 記來源與信心，使用者親口說的和網頁讀到的，信任等級不同。</p>
+              <p id="i3-2"><b>四種遺忘，加上歸納。</b>遺忘有 4 種做法：標記失效、永久刪除、<a class="tm" href="#t2">TTL 到期</a>、分層移出（從常駐的一層搬到要查才讀的一層）（p.13）。歸納是另一種改寫：多筆觀察合成一條較高層的記憶，要附信心值並連回證據（p.12）。證據太少就歸納，一次事件會變成長期偏好。</p>
               <details class="gloss" id="t2">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">TTL 與 eviction：自動遺忘的兩種機制</span></summary>
                 <div class="gloss-body prose">
@@ -288,7 +288,7 @@
             <h3><span class="idea-no">2.4</span>錯誤相乘：每步 95%，50 步只剩 8% <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=22" target="_blank" rel="noopener">p.22</a></h3>
             <div class="prose">
               <p id="i4-1"><b>每步 95%，n 步只剩 0.95ⁿ。</b>後半換題目：就算 model 看到了對的東西，任務還是常做不完。原因是一個 run（agent 從接到任務到停下來的一整趟執行）要每一步都對才算成功。每步成功率 95%，n 步全對的機率是 0.95ⁿ：5 步 77%，10 步 60%，20 步 36%，50 步 8%。<strong>約 13 次才有 1 次全對</strong>。</p>
-              <p id="i4-2"><b>真實的 run 更差：錯誤會往後傳。</b>這個算法<a class="tm" href="#t4">假設每步獨立</a>。真實的 run 更差：第 3 步讀錯檔案，第 4 步就改錯地方，第 5 步再為錯的修改補洞。反過來算，要讓 50 步有 90% 全對，<strong>每步要 99.79%</strong>。所以三件事要同時做：<strong>減少步數、讓每步更可靠、在中途驗證並存 checkpoint</strong>（驗證過的狀態存一份快照，失敗只重跑之後的步驟）。</p>
+              <p id="i4-2"><b>真實的 run 更差：錯誤會往後傳。</b>這個算法<a class="tm" href="#t4">假設每步獨立</a>。真實的 run 更差：第 3 步讀錯檔案，第 4 步就改錯地方，第 5 步再為錯的修改補洞。反過來算，要讓 50 步有 90% 全對，每步要 99.79%。所以三件事要同時做：減少步數、讓每步更可靠、在中途驗證並存 checkpoint（驗證過的狀態存一份快照，失敗只重跑之後的步驟）。</p>
               <details class="gloss" id="t4">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">獨立假設：0.95ⁿ 背後的前提，以及 checkpoint 為什麼有用</span></summary>
                 <div class="gloss-body prose">
@@ -303,7 +303,7 @@
                   <div class="exbody prose">
 
               <p>p.20 的三個 benchmark（LoCoMo、LongMemEval、BEAM）測的都是聊天歷史的回想：給一段很長的使用者與助理對話，問它早先提過的事。Coding agent 的記憶，例如專案慣例，不在範圍內。</p>
-              <p>要知道自己的 memory 有沒有用，<strong>要自己做測試集</strong>：一組「應該記得」、一組「應該忘掉」、一組別人的事實，各自查一遍。沒有這組測試，policy 的改動只能靠感覺。L7 會講怎麼建 eval。</p>
+              <p>要知道自己的 memory 有沒有用，要自己做測試集：一組「應該記得」、一組「應該忘掉」、一組別人的事實，各自查一遍。沒有這組測試，policy 的改動只能靠感覺。L7 會講怎麼建 eval。</p>
             
                   </div>
                 </details>
@@ -312,7 +312,7 @@
           <div class="idea" id="i5">
             <h3><span class="idea-no">2.5</span>失敗的五層：同一個症狀五個來源，每層一道防線 <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=24" target="_blank" rel="noopener">p.24–30</a></h3>
             <div class="prose">
-              <p id="i5-1"><b>同一個症狀，五個來源。</b>「agent 說測試過了，但測試沒過」：也許 model 沒跑測試，也許 tool 截掉了錯誤輸出，也許環境是舊的 build。Slide 把<strong>來源分成 5 層</strong>：任務規格、<a class="tm" href="#n-harness">harness</a>、model、tool、環境（p.24）。</p>
+              <p id="i5-1"><b>同一個症狀，五個來源。</b>「agent 說測試過了，但測試沒過」：也許 model 沒跑測試，也許 tool 截掉了錯誤輸出，也許環境是舊的 build。Slide 把來源分成 5 層：任務規格、<a class="tm" href="#n-harness">harness</a>、model、tool、環境（p.24）。</p>
               <details class="gloss" id="n-harness">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Harness 與 tool（L4）：五層裡 model 以外的兩層是什麼</span></summary>
                 <div class="gloss-body prose">
@@ -345,7 +345,7 @@
                   <summary>本文延伸｜「還沒有最佳實踐」對團隊的意思<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>Slide 的結語是：我們對大規模的 agent 了解不多（p.30）。這堂的表格是起點，之後會改。對團隊的做法有三件：把每條規則寫成可量測的 policy；記錄每個 run 的 trajectory（一趟執行的完整紀錄：每一步的輸入、輸出、tool 結果）；定期看失敗來自哪一層。<strong>沒有記錄，就不知道該改什麼</strong>。</p>
+              <p>Slide 的結語是：我們對大規模的 agent 了解不多（p.30）。這堂的表格是起點，之後會改。對團隊的做法有三件：把每條規則寫成可量測的 policy；記錄每個 run 的 trajectory（一趟執行的完整紀錄：每一步的輸入、輸出、tool 結果）；定期看失敗來自哪一層。沒有記錄，就不知道該改什麼。</p>
             
                   </div>
                 </details>
@@ -871,10 +871,10 @@ print(f"checkpoint every 10:   {(n // 10) * 10 / p**10:.0f} steps")</code></pre>
             <summary>給每個 run 設預算<span>p.26、p.30</span></summary>
             <div class="exbody">
               <p>Claude Code 的非互動模式（<code>-p</code>）有兩個對應的 flag，時間上限用系統的 <code>timeout</code> 指令。數字沿用 Q6 的結果。</p>
-              <pre><code>timeout 24m claude -p "找出 tests/ 裡的 flaky test，隔離它，開 PR" \
+              <figure class="file"><figcaption>terminal：給一個 run 設預算</figcaption><pre><code>timeout 24m claude -p "找出 tests/ 裡的 flaky test，隔離它，開 PR" \
   --max-turns 54 \
   --max-budget-usd 2.80 \
-  --permission-mode acceptEdits</code></pre>
+  --permission-mode acceptEdits</code></pre></figure>
               <p><code>--max-turns</code> 限制 agentic turn 數，到上限就結束並回報錯誤；<code>--max-budget-usd</code> 在估計的花費到上限時停止。兩個 flag 都只在 <code>-p</code> 模式有效；成本是估計值，可能超過上限，所以要留餘裕。自己寫 harness 時，把同一套規則寫成設定檔，再加一條「沒進展就停」：</p>
               <figure class="file"><figcaption>run_budget.yaml（示意：自己寫 harness 時的停止規則）</figcaption><pre><code>task: isolate-flaky-test
 max_steps: 54             # 2 x p95
@@ -1036,5 +1036,6 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
 </main>
 </div>
 <script src="app.js"></script>
+<script src="code.js"></script>
 </body>
 </html>

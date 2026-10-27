@@ -266,7 +266,7 @@
                       <tr><td><code>messages[1…]</code></td><td>一圈一組：assistant 的 <code>tool_use</code>、user 的 <code>tool_result</code>；中途載入的 skill 全文、檔案內容、有 <code>paths</code> 的 rule 也在這裡</td><td>Model 提議，harness 執行後接上</td><td>摘要掉；用過的 skill 全文和最近 5 個檔案重放</td></tr>
                     </tbody>
                   </table></div>
-                  <p>官方文件明說 <strong>CLAUDE.md 以 user message 送出</strong>，不屬於 system prompt。對 model 來說，它和你打的 prompt 是同一種東西，所以只算建議；要強制，用 hook 或權限。</p>
+                  <p>官方文件明說 CLAUDE.md 以 user message 送出，不屬於 system prompt。對 model 來說，它和你打的 prompt 是同一種東西，所以只算建議；要強制，用 hook 或權限。</p>
                   <p>Model 的回覆只有兩種：</p>
                   <ul>
                     <li>一個 <code>tool_use</code>（<code>stop_reason: "tool_use"</code>）。Harness 執行它，把 <code>tool_result</code> 接在 <code>messages</code> 最後，再送一次。</li>
@@ -310,7 +310,7 @@
                       <tr><td>代價</td><td>多跑幾圈 loop，多花 token 與時間</td><td>可能撈到相似但無關的片段</td></tr>
                     </tbody>
                   </table></div>
-                  <p>兩者有同一個限制：<strong>agent 沒讀到的檔案，它就不知道</strong>。在 CLAUDE.md 寫目錄配置和地雷，就是替 agent 省掉幾圈搜尋，對應 p.17 的 Repeated discovery。</p>
+                  <p>兩者有同一個限制：agent 沒讀到的檔案，它就不知道。在 CLAUDE.md 寫目錄配置和地雷，就是替 agent 省掉幾圈搜尋，對應 p.17 的 Repeated discovery。</p>
                 </div>
               </details>
             </div>
@@ -330,7 +330,7 @@
             <h3><span class="idea-no">2.2</span>權限：每個動作先過規則，再看模式 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=11" target="_blank" rel="noopener">p.11–13</a></h3>
             <div class="prose">
               <p>Loop 的每一圈，model 提議的動作都要先過 harness 的權限檢查。這一章講權限由哪兩部分組成，六種模式各在什麼時候用，以及為什麼 tool 讀回來的東西也要當成風險。</p>
-              <p id="i2-1"><b>先比規則，再看模式。</b>每個動作執行前，harness 先查權限 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=11" target="_blank" rel="noopener">p.11</a>。權限由一份規則清單加一個模式組成。規則<strong>依 deny → ask → allow 的順序</strong>比對 tool 名稱和參數；規則的寫法（例如 <code>Bash(git push *)</code>）在 2.3 的 settings.json 例子裡。沒有規則符合時，由模式決定：每步都問（default）、自動同意編輯（acceptEdits）、只讀不改（plan）、交給另一個 classifier model（一個只負責判斷「這個動作安不安全」的小 model）審查（auto）、全部放行（bypassPermissions）。</p>
+              <p id="i2-1"><b>先比規則，再看模式。</b>每個動作執行前，harness 先查權限 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=11" target="_blank" rel="noopener">p.11</a>。權限由一份規則清單加一個模式組成。規則依 deny → ask → allow 的順序比對 tool 名稱和參數；規則的寫法（例如 <code>Bash(git push *)</code>）在 2.3 的 settings.json 例子裡。沒有規則符合時，由模式決定：每步都問（default）、自動同意編輯（acceptEdits）、只讀不改（plan）、交給另一個 classifier model（一個只負責判斷「這個動作安不安全」的小 model）審查（auto）、全部放行（bypassPermissions）。</p>
               <p id="i2-2"><b>規則和 hook 都是確定性的，CLAUDE.md 不是。</b>寫在 prompt 或 CLAUDE.md 的規則，是對 model 的要求，<strong>model 大多會照做，但沒有保證</strong>；權限規則和 hook 是程式，條件成立就一定執行。差別在能檢查什麼：規則只比對 tool 名稱和參數字串，要看內容、跑邏輯，例如掃描 diff 裡有沒有 secret，就用 hook（2.4）。</p>
               <details class="gloss" id="t4">
                 <summary><span class="gloss-k">背景</span><span class="gloss-t">Prompt injection：tool 讀回來的文字也是攻擊面</span></summary>
@@ -344,7 +344,7 @@
               <details class="ex deep" id="d3">
                 <summary>深入｜六種權限模式，什麼時候用哪一種<span>p.11</span></summary>
                 <div class="exbody prose">
-                  <p>規則的寫法和比對順序（deny → ask → allow），見第 3 段基礎題第 1 題的重點複習。這裡補上模式：沒有規則符合時，由模式決定。Slide 只列了四種，<strong>實際有六種</strong>。</p>
+                  <p>規則的寫法和比對順序（deny → ask → allow），見第 3 段基礎題第 1 題的重點複習。這裡補上模式：沒有規則符合時，由模式決定。Slide 只列了四種，實際有六種。</p>
                   <div class="table-wrap"><table class="wide">
                     <thead><tr><th><code>--permission-mode</code></th><th>沒有規則符合時</th></tr></thead>
                     <tbody>
@@ -365,7 +365,7 @@
           <div class="idea" id="i3">
             <h3><span class="idea-no">2.3</span>記憶：就是每次 session 開始都會載入的檔案 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=14" target="_blank" rel="noopener">p.14–26</a></h3>
             <div class="prose">
-              <p id="i3-1"><b>Model 沒有狀態，記憶是 harness 放進去的檔案。</b>Model 不記得上一個 session，也不記得上一圈 loop。Agent 看起來記得事情，是因為 <strong>harness 每次都把相關文字放進 context</strong>。這一章講 Claude Code 的兩套記憶、檔案放在哪一層、設定檔和記憶的差別，以及記憶的成本。</p>
+              <p id="i3-1"><b>Model 沒有狀態，記憶是 harness 放進去的檔案。</b>Model 不記得上一個 session，也不記得上一圈 loop。Agent 看起來記得事情，是因為 harness 每次都把相關文字放進 context。這一章講 Claude Code 的兩套記憶、檔案放在哪一層、設定檔和記憶的差別，以及記憶的成本。</p>
               <p id="i3-2"><b>兩套持久記憶：CLAUDE.md 和 auto memory。</b>Claude Code 有兩套持久記憶。CLAUDE.md 是你寫的規則：怎麼跑測試、哪些事不准做、推不出來的專案事實。Auto memory 是 Claude 自己寫的筆記：你的偏好、你給過的糾正。兩者都在 session 開始時載入。</p>
               <p id="i3-3"><b>兩個層級：個人與專案。</b>檔案放在兩個層級 <a class="ref" href="https://cs2680.com/slides/2_agent_use_1.pdf#page=18" target="_blank" rel="noopener">p.18–25</a>。<code>~/.claude/</code> 是個人層：CLAUDE.md 寫你的偏好，auto memory 也在這裡，MEMORY.md 是索引，<strong>每次只載入前 200 行</strong>。Repo 根目錄是專案層：CLAUDE.md 寫團隊規則，進 git；<code>CLAUDE.local.md</code> 寫你在這個專案的個人規則，不進 git。各層的 CLAUDE.md 全部串接進 context，不互相覆蓋。</p>
               <p id="i3-4"><b>CLAUDE.md 只放三類東西。</b>CLAUDE.md 是一份 Markdown，寫給 model 看。一份夠用的樣子如下，只放三類：指令、硬規則、推不出來的事實。完整版和 <code>.claude/rules/</code> 的寫法見第 3 段。</p>
@@ -381,7 +381,7 @@
 
 ## Facts you cannot infer
 - Money is an integer in cents. Never use float.</code></pre></figure>
-              <p id="i3-5"><b>settings.json 放設定，不放規則。</b>每一層還有一個 settings.json。它放的不是規則，是設定：權限規則（allow / ask / deny）、模式、hooks、model、環境變數。<code>~/.claude/settings.json</code> 是你的；<code>.claude/settings.json</code> 是團隊的，進 git；<code>.claude/settings.local.json</code> 是你在這個專案的，不進 git。和 CLAUDE.md 不同，settings 有優先順序：<strong>local 蓋過專案，專案蓋過個人</strong>；只有 allow 這類清單會合併。</p>
+              <p id="i3-5"><b>settings.json 放設定，不放規則。</b>每一層還有一個 settings.json。它放的不是規則，是設定：權限規則（allow / ask / deny）、模式、hooks、model、環境變數。<code>~/.claude/settings.json</code> 是你的；<code>.claude/settings.json</code> 是團隊的，進 git；<code>.claude/settings.local.json</code> 是你在這個專案的，不進 git。和 CLAUDE.md 不同，settings 有優先順序：local 蓋過專案，專案蓋過個人；只有 allow 這類清單會合併。</p>
               <figure class="file"><figcaption>.claude/settings.json（團隊共用，進 git）</figcaption><pre><code>{
   "permissions": {
     "allow": ["Bash(npm run *)"],
@@ -494,7 +494,7 @@ User wants targeted runs (pytest -x &lt;dir&gt;), not the full suite. Reason: fu
                   <summary>本文延伸｜CLAUDE.md 會累積技術債<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>團隊一起用 agent 時，CLAUDE.md 會不斷變長：每個人遇到問題，就加一條規則。規則之間開始矛盾，過期的規則沒人刪。官方文件說，<strong>規則矛盾時，Claude 可能任選一條</strong>。</p>
+              <p>團隊一起用 agent 時，CLAUDE.md 會不斷變長：每個人遇到問題，就加一條規則。規則之間開始矛盾，過期的規則沒人刪。官方文件說，規則矛盾時，Claude 可能任選一條。</p>
               <p>所以 CLAUDE.md 需要負責人，也需要 review，和程式碼一樣走 PR。也可以定期用 <code>/doctor</code> 檢查，找出不該放在裡面的內容。</p>
             
                   </div>
@@ -558,7 +558,7 @@ User wants targeted runs (pytest -x &lt;dir&gt;), not the full suite. Reason: fu
                       <tr><td>子目錄 CLAUDE.md</td><td>沒有索引</td><td>全文</td><td>Harness：碰到那個目錄的檔案就載入</td></tr>
                     </tbody>
                   </table></div>
-                  <p><strong>誰觸發，決定可靠度</strong>。由 model 觸發的載入是機率性的：model 可能沒想到要載入某個 skill 或某條 memory。由 harness 觸發的載入是確定性的。所以「改 migration 時一定要遵守」的規則，要寫成有 <code>paths</code> 的 rule，不要做成 skill。</p>
+                  <p>誰觸發，決定可靠度。由 model 觸發的載入是機率性的：model 可能沒想到要載入某個 skill 或某條 memory。由 harness 觸發的載入是確定性的。所以「改 migration 時一定要遵守」的規則，要寫成有 <code>paths</code> 的 rule，不要做成 skill。</p>
                   <p>Lazy loading 只是延後付租金。內容一旦載入，就留在 messages 裡，之後每一圈都重送，直到 compaction。它省下的是沒用到的那些內容。</p>
                 </div>
               </details>
@@ -590,11 +590,11 @@ Do not change any code.</code></pre></figure>
                 <div class="exbody prose">
                   <p>先問一個問題：十次任務裡，有幾次用得到這段內容？大多數都用得到，就放 CLAUDE.md。只有某類任務用得到，就做成 skill。</p>
                   <p><code>description</code> 決定 model 會不會選用這個 skill。它要同時寫「做什麼」和「什麼時候用」：</p>
-                  <pre><code># ✗ 太短：model 不知道什麼時候該用
+                  <figure class="file"><figcaption>SKILL.md 的 description 欄位，兩種寫法</figcaption><pre><code class="lang-yaml"># ✗ 太短：model 不知道什麼時候該用
 description: Release helper
 
 # ✓ 寫出做什麼、什麼時候用
-description: Prepare and publish a release. Use when the user asks to cut, tag, or publish a version.</code></pre>
+description: Prepare and publish a release. Use when the user asks to cut, tag, or publish a version.</code></pre></figure>
                   <ul>
                     <li>設了 <code>disable-model-invocation: true</code>，連 description 都不常駐。只有你輸入 <code>/release</code> 時才載入。</li>
                     <li>Skill 可以附 <code>scripts/</code>。Model 讀完 SKILL.md，用 Bash 執行裡面的程式（p.34）。固定的步驟交給程式，例如解析 log、轉換格式。這樣 model 不用每次重新推理。</li>
@@ -606,10 +606,10 @@ description: Prepare and publish a release. Use when the user asks to cut, tag, 
                 <summary>深入｜MCP server 實際上是什麼<span>p.36–37；選讀 p.45–52</span></summary>
                 <div class="exbody prose">
                   <p>MCP server 是一個程式，有兩種跑法。本機 process（stdio）由 Claude Code 啟動，透過 stdin 和 stdout 交換訊息。遠端服務（HTTP）則是 Claude Code 連到一個 URL。</p>
-                  <pre><code># 本機 stdio server：-- 後面是啟動它的指令（遠端 HTTP 的例子見基礎題第 5 題）
+                  <figure class="file"><figcaption>terminal：加一個本機 MCP server</figcaption><pre><code># 本機 stdio server：-- 後面是啟動它的指令（遠端 HTTP 的例子見基礎題第 5 題）
 claude mcp add --env AIRTABLE_API_KEY=xxx --transport stdio airtable -- npx -y airtable-mcp-server
 
-# 加上 --scope project，設定會寫進 repo 的 .mcp.json，全隊共用</code></pre>
+# 加上 --scope project，設定會寫進 repo 的 .mcp.json，全隊共用</code></pre></figure>
                   <ul>
                     <li><b>對 model 來說，MCP tool 和 Read、Bash 沒有差別。</b>它只是 <code>tools</code> 清單裡的一項，名稱像 <code>mcp__github__create_issue</code>。差別在 harness：harness 把呼叫轉給 MCP server 執行（p.37）。</li>
                     <li><b>為什麼不直接用 Bash 跑 <code>gh issue create</code>？</b>這樣也可以，而且常常更省 token。MCP 的價值在四個地方：沒有 CLI 的服務、統一的認證與權限範圍、結構化的輸入輸出、集中管理。代價是 tool 定義要佔 context，所以 Claude Code 預設用 tool search 延後載入。</li>
@@ -663,7 +663,7 @@ claude mcp add --env AIRTABLE_API_KEY=xxx --transport stdio airtable -- npx -y a
                   <summary>本文延伸｜自主程度要配合風險<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>權限模式是一條光譜：每步都問（manual）、自動同意編輯（acceptEdits）、交給另一個 model 判斷（auto）、完全不問（bypass）。越往後越快，<strong>出錯時的代價也越大</strong>。</p>
+              <p>權限模式是一條光譜：每步都問（manual）、自動同意編輯（acceptEdits）、交給另一個 model 判斷（auto）、完全不問（bypass）。越往後越快，出錯時的代價也越大。</p>
               <p>L3 的原則是「自主程度配合風險」。碰到正式資料或受監管的環境，用 hook 和權限設定守住底線，比相信 model 的判斷可靠。</p>
             
                   </div>
@@ -1243,9 +1243,9 @@ Prepare release $ARGUMENTS.
             <summary>選一個權限模式啟動<span>p.11</span></summary>
             <div class="exbody">
               <p>新版 Claude Code（v2.1.283 起）預設是 auto 模式：由另一個 model 判斷每個動作能不能執行。在 session 裡按 Shift+Tab 切換；也可以啟動時指定：</p>
-              <pre><code>claude --permission-mode manual        # 改檔、跑指令、連網前先問你
+              <figure class="file"><figcaption>terminal：指定權限模式啟動</figcaption><pre><code>claude --permission-mode manual        # 改檔、跑指令、連網前先問你
 claude --permission-mode acceptEdits   # 檔案編輯自動同意
-claude --permission-mode plan          # 你核准計畫之前，不會改檔</code></pre>
+claude --permission-mode plan          # 你核准計畫之前，不會改檔</code></pre></figure>
               <p>Bypass 模式完全不問，只在可丟棄的環境用，例如 container 或 VM。</p>
             </div>
           </details>
@@ -1488,5 +1488,6 @@ claude --permission-mode plan          # 你核准計畫之前，不會改檔</c
 </main>
 </div>
 <script src="app.js"></script>
+<script src="code.js"></script>
 </body>
 </html>

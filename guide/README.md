@@ -1,6 +1,6 @@
 # CS2680 讀書會站台：維護說明
 
-更新：2026-10-28（L3 加 2.8「本文補的案例」：mattpocock/skills，slide 沒有的第三個 plugin 案例，和 Superpowers、Caveman 並排；規則見 STYLE_ARTICLE v5.2）。2026-10-28（紅字重點 `<strong>`、code snippet 改成 IDE 配色，見 STYLE_ARTICLE 第 6c 節；`check_article.py` 多檢查紅字）。2026-10-27（L4 先行：觀念補充併入核心觀念，詞條改成正文裡的收合註 `details.gloss`，章編號 2.1–2.7 分三組、段首閱讀地圖、目錄多一層；L4 因此只有 5 段，其他講次仍 6 段，見 STYLE_ARTICLE v5.0）。2026-10-27（「大家的討論」併入問題討論末尾，延伸閱讀編為第 6 段）。2026-10-26（全站取消「延伸思考」段，推論併入章節的「本文延伸」收合區塊，段落改為 6 段；指令與設定檔一律 code snippet、每章至少一張圖或表，STYLE_ARTICLE v4.1）。2026-10-25（文章改為不看 slides 也能讀完的主體，名詞就地解釋，見 STYLE_ARTICLE v4.0；L3、L4 已改寫）。2026-10-22（進階題每堂最多 3 題）。2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
+更新：2026-10-28（紅字依長度配、每個 code block 都有編輯器外框、上色移到 `docs/code.js`，全站一致，見 STYLE_ARTICLE v5.3）。2026-10-28（L3 加 2.8「本文補的案例」：mattpocock/skills，slide 沒有的第三個 plugin 案例，和 Superpowers、Caveman 並排；規則見 STYLE_ARTICLE v5.2）。2026-10-28（紅字重點 `<strong>`、code snippet 改成 IDE 配色，見 STYLE_ARTICLE 第 6c 節；`check_article.py` 多檢查紅字）。2026-10-27（L4 先行：觀念補充併入核心觀念，詞條改成正文裡的收合註 `details.gloss`，章編號 2.1–2.7 分三組、段首閱讀地圖、目錄多一層；L4 因此只有 5 段，其他講次仍 6 段，見 STYLE_ARTICLE v5.0）。2026-10-27（「大家的討論」併入問題討論末尾，延伸閱讀編為第 6 段）。2026-10-26（全站取消「延伸思考」段，推論併入章節的「本文延伸」收合區塊，段落改為 6 段；指令與設定檔一律 code snippet、每章至少一張圖或表，STYLE_ARTICLE v4.1）。2026-10-25（文章改為不看 slides 也能讀完的主體，名詞就地解釋，見 STYLE_ARTICLE v4.0；L3、L4 已改寫）。2026-10-22（進階題每堂最多 3 題）。2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## 這個 repo 管什麼
 
@@ -15,7 +15,7 @@
 
 | 東西 | 位置 | 說明 |
 |---|---|---|
-| 站台檔案 | `docs/`（index、l01–l08、l02-readings、styles.css、app.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
+| 站台檔案 | `docs/`（index、l01–l08、l02-readings、styles.css、app.js、code.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
 | 撰寫規範 | `guide/STYLE_ARTICLE.md`、`guide/STYLE_BASIC.md`、`guide/STYLE_DIGEST.md` | 寫新講次或改內容前先讀。DIGEST 是延伸閱讀裡必讀與推薦摘要的規範。 |
 | 工作流程 | `guide/WORKFLOW.md` | 開工、新講次、修改、發布、讀討論。 |
 | 腳本 | `tools/` | 9 支 `.py`，用法寫在每個檔案開頭。 |
@@ -34,7 +34,7 @@
 | 檔案 | 做什麼 |
 |---|---|
 | `punct.py` | 中文標點正規化（全形標點、中英文間空格）。`--diff` 先看會改什麼；數學式與英文片語的 ASCII 括號、冒號會保留。只對新片段跑，不要對頁面盲跑。 |
-| `check_article.py` | 全頁結構（`#s-background`、`#s-beyond` 可有可無）、slide 頁碼連結、STE 句長、閱讀時間（`--fix-time` 寫回三個時間；`deep-time` 含 `details.deep` 與 `details.gloss`）、紅字重點 `<strong>` 的位置與每章數量。 |
+| `check_article.py` | 全頁結構（`#s-background`、`#s-beyond` 可有可無）、slide 頁碼連結、STE 句長、閱讀時間（`--fix-time` 寫回三個時間；`deep-time` 含 `details.deep` 與 `details.gloss`）、紅字重點 `<strong>` 的位置與每章數量（依正文長度算目標）。 |
 | `check_discuss.py` | 問題討論段：基礎題 3–5 題與重點複習結構、進階題最多 3 題、題型不重複，與提示／範本；基礎題連到該堂 issue、進階題不連；核心觀念 3–8 章。 |
 | `add_anchors.py` | 核心觀念、觀念補充、本文延伸加上 `i1`、`t1`、`x1` 錨點，並列出標題（v5.0 頁面沒有觀念補充，`tN` 錨點手動保留在正文）。 |
 | `add_lecture.py` | 新講次接到全站：目錄、講次數、上一堂連結、首頁列表。段號依頁面有沒有 `#s-background`／`#s-beyond` 決定；每頁自己的展開目錄不重建（L4 的三層目錄是手寫的）。 |

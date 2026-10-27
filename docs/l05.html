@@ -224,7 +224,7 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">2.1</span>多一個 agent：只換到四樣東西，每一樣都有價格 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=6" target="_blank" rel="noopener">p.5–7</a></h3>
             <div class="prose">
-              <p id="i1-1"><b>四樣換得到的東西。</b>L2 到 L4 看的是一個 agent。多一個 agent，<strong>只有四種東西可以換到</strong>。Specialization：每個 agent 用不同的 model、prompt、tool。Isolation：讀網頁的 agent 沒有 shell。Parallelism：互不相依的子任務同時跑。Context management：worker 只拿到自己的子任務，supervisor 只收摘要（context 為什麼是成本，L4 的 2.6 講過）。</p>
+              <p id="i1-1"><b>四樣換得到的東西。</b>L2 到 L4 看的是一個 agent。多一個 agent，只有四種東西可以換到。Specialization：每個 agent 用不同的 model、prompt、tool。Isolation：讀網頁的 agent 沒有 shell。Parallelism：互不相依的子任務同時跑。Context management：worker 只拿到自己的子任務，supervisor 只收摘要（context 為什麼是成本，L4 的 2.6 講過）。</p>
               <p id="i1-2"><b>每一樣都有價格。</b>多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是：<strong>先問真的需要 multi-agent 嗎</strong>。</p>
               <p id="i1-3"><b>三張圖描述任何架構。</b>決定要拆之後，slide 用三張圖描述任何架構（p.7）：control graph 寫誰協調，communication graph 寫誰和誰說話，task graph 寫工作怎麼拆。之後每一種架構，都用這三張圖標出自己的答案（p.9–16）。</p>
             </div>
@@ -272,7 +272,7 @@
                   <div class="exbody prose">
 
               <p>p.16 說 dynamic topology 的失敗很難重現。原因有兩層：topology 由 LLM 在執行時決定，而 LLM 的輸出有隨機性。同一個 ticket 跑兩次，形狀可能不同。沒有全域時鐘，兩個 agent 的 log 誰先誰後也說不準。</p>
-              <p>可行的做法是<strong>把 topology 當資料記下來</strong>：每個 envelope 都 log，用 task_id 串起來，至少能照同一個形狀重跑。L7 做 agent 評估時會再碰到這個問題。</p>
+              <p>可行的做法是把 topology 當資料記下來：每個 envelope 都 log，用 task_id 串起來，至少能照同一個形狀重跑。L7 做 agent 評估時會再碰到這個問題。</p>
             
                   </div>
                 </details>
@@ -281,16 +281,16 @@
           <div class="idea" id="i3">
             <h3><span class="idea-no">2.3</span>子任務：要寫成規格，拆得越細不一定越快 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=19" target="_blank" rel="noopener">p.19–25</a></h3>
             <div class="prose">
-              <p id="i3-1"><b>規格的八個欄位。</b>Worker 看不到 supervisor 的 context，<strong>規格沒寫的事它都不知道</strong>。所以 p.21 要求八個欄位：目標、輸入、邊界、tool 與權限、輸出 schema、完成條件、預算、相依關係。「Research storage systems」是差的規格；寫明年份、回傳欄位、排除項才是好規格。</p>
+              <p id="i3-1"><b>規格的八個欄位。</b>Worker 看不到 supervisor 的 context，規格沒寫的事它都不知道。所以 p.21 要求八個欄位：目標、輸入、邊界、tool 與權限、輸出 schema、完成條件、預算、相依關係。「Research storage systems」是差的規格；寫明年份、回傳欄位、排除項才是好規格。</p>
               <p id="i3-2"><b>拆多細：一條估算式。</b>p.22 給了估算式：T_multi ≈ T_planning + T_critical_path + T_communication + T_merge。平行只縮短 critical path（最長那條相依鏈），其他三項隨子任務數量增加。用 slide 的 20 個 lookup 例子估算（每個 lookup 5 秒，每個子任務多 8 秒派工與回報，規劃與合併各 10 秒）：<strong>不拆 100 秒，拆成 20 份 185 秒，4 份 77 秒</strong>。</p>
-              <p id="i3-3"><b>動態拆解要設上限；六種拆錯方式。</b>動態拆解會在執行中生出新任務，所以要設上限：spawn 數量、預算、深度、終止條件。p.24–25 的六種拆錯方式：重疊、缺口、隱藏的相依、無法合併的輸出、失去全局 context、straggler（一份特別慢的子任務拖住全部）。<strong>前四種靠規格預防，後兩種靠最後的通讀和 timeout</strong>。</p>
+              <p id="i3-3"><b>動態拆解要設上限；六種拆錯方式。</b>動態拆解會在執行中生出新任務，所以要設上限：spawn 數量、預算、深度、終止條件。p.24–25 的六種拆錯方式：重疊、缺口、隱藏的相依、無法合併的輸出、失去全局 context、straggler（一份特別慢的子任務拖住全部）。前四種靠規格預防，後兩種靠最後的通讀和 timeout。</p>
             </div>
           </div>
           <p class="idea-group" id="g-c">C · 拆開之後怎麼溝通</p>
           <div class="idea" id="i4">
             <h3><span class="idea-no">2.4</span>訊息：欄位給 runtime，內容給 LLM <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=27" target="_blank" rel="noopener">p.26–32</a></h3>
             <div class="prose">
-              <p id="i4-1"><b>溝通的四個維度。</b>拆好了，agent 之間要傳話。溝通有四個維度（p.27）：topology（誰能和誰說）、medium（訊息、共享記憶體或檔案）、format（自然語言或結構化）、channel（點對點、broadcast、<a class="tm" href="#t4">pub/sub</a> 或 request/response），可以分開選。<strong>大型產出放檔案，只傳路徑</strong>。Broadcast 的一則訊息會進入 n 個 context，只有所有人都要知道時才用。</p>
+              <p id="i4-1"><b>溝通的四個維度。</b>拆好了，agent 之間要傳話。溝通有四個維度（p.27）：topology（誰能和誰說）、medium（訊息、共享記憶體或檔案）、format（自然語言或結構化）、channel（點對點、broadcast、<a class="tm" href="#t4">pub/sub</a> 或 request/response），可以分開選。大型產出放檔案，只傳路徑。Broadcast 的一則訊息會進入 n 個 context，只有所有人都要知道時才用。</p>
               <details class="gloss" id="t4">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Pub/sub 與 request/response：兩種 channel 的差別</span></summary>
                 <div class="gloss-body prose">
@@ -298,7 +298,7 @@
                   <p>所以 pub/sub 適合「狀態更新」這類很多人要知道、但沒有人要回答的訊息；要對方做一件事並等結果，仍用 request/response。</p>
                 </div>
               </details>
-              <p id="i4-2"><b>Envelope：外層欄位給 runtime，payload 給 LLM。</b>p.31 的 envelope（信封：包在每則訊息外面的一組固定欄位）是核心。外層是 runtime 看得懂的欄位：id、task_id、from、to、type（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE 九種）。<strong>路由、重試、停止由 runtime 依欄位決定</strong>，不用問 LLM。Payload 才是自然語言：一份子任務規格，或一句 claim 加上 confidence 與 evidence。p.32 的法則因此是：<strong>依欄位路由，不依內文路由</strong>。</p>
+              <p id="i4-2"><b>Envelope：外層欄位給 runtime，payload 給 LLM。</b>p.31 的 envelope（信封：包在每則訊息外面的一組固定欄位）是核心。外層是 runtime 看得懂的欄位：id、task_id、from、to、type（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE 九種）。路由、重試、停止由 runtime 依欄位決定，不用問 LLM。Payload 才是自然語言：一份子任務規格，或一句 claim 加上 confidence 與 evidence。p.32 的法則因此是：<strong>依欄位路由，不依內文路由</strong>。</p>
             </div>
           </div>
           <div class="idea" id="i5">
@@ -319,14 +319,14 @@
                   <p>所以設計分兩層：傳遞層做 at-least-once，應用層用冪等處理去除重複，合起來的效果等於 exactly-once。這就是上面「at-least-once 加冪等」的意思。</p>
                 </div>
               </details>
-              <p id="i5-2"><b>繼承的老問題，加上 LLM 帶來的新問題。</b>p.34 列出繼承的六個分散式系統老問題：<a class="tm" href="#t3">partial failure</a>、並行與不確定性、副本的一致性、沒有全域時鐘、不可靠的網路、分散的 log 難除錯。p.36 再加上黑盒子 LLM 帶來的：摘要丟細節、context 過期、信念衝突、沒人認領的 ownership、繞圈的 communication loop。<strong>對策多半是老辦法</strong>：每個 task 一個 owner，訊息帶跳數上限，log 用 task_id 串起來。</p>
+              <p id="i5-2"><b>繼承的老問題，加上 LLM 帶來的新問題。</b>p.34 列出繼承的六個分散式系統老問題：<a class="tm" href="#t3">partial failure</a>、並行與不確定性、副本的一致性、沒有全域時鐘、不可靠的網路、分散的 log 難除錯。p.36 再加上黑盒子 LLM 帶來的：摘要丟細節、context 過期、信念衝突、沒人認領的 ownership、繞圈的 communication loop。對策多半是老辦法：每個 task 一個 owner，訊息帶跳數上限，log 用 task_id 串起來。</p>
               <details class="gloss" id="t3">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Partial failure：分不出對方是慢，還是掛了</span></summary>
                 <div class="gloss-body prose">
                   <p>單機程式要嘛全部在跑，要嘛全部停了。分散式系統裡，一部分正常、另一部分掛掉，而且你分不出來：沒有回覆，可能是 crash、斷網、或只是慢（p.34）。LLM agent 的「慢」特別常見，一圈 loop 可能跑幾分鐘。所以 timeout 之後要有動作：查狀態、開備援、或用部分結果，不能只是再送一次。</p>
                 </div>
               </details>
-              <p id="i5-3"><b>兩個協定，分工明確。</b>最後是兩個協定（p.43）。A2A（agent-to-agent protocol）連接 agent 與 agent，單位是一個有 ID、<a class="tm" href="#t5">有狀態</a>、能暫停的 task（p.40）；對方從 agent card（一份公開的自我介紹：會做什麼、怎麼呼叫）得知你會什麼。<a class="tm" href="#n-mcp">MCP</a> 連接 agent 與服務，單位是一次 tool call。<strong>兩者都不負責 orchestration</strong>：要不要委派、怎麼拆，仍由 harness（包在 model 外面、負責跑 loop 與 tool 的那層程式，L4 的 2.1）決定。</p>
+              <p id="i5-3"><b>兩個協定，分工明確。</b>最後是兩個協定（p.43）。A2A（agent-to-agent protocol）連接 agent 與 agent，單位是一個有 ID、<a class="tm" href="#t5">有狀態</a>、能暫停的 task（p.40）；對方從 agent card（一份公開的自我介紹：會做什麼、怎麼呼叫）得知你會什麼。<a class="tm" href="#n-mcp">MCP</a> 連接 agent 與服務，單位是一次 tool call。兩者都不負責 orchestration：要不要委派、怎麼拆，仍由 harness（包在 model 外面、負責跑 loop 與 tool 的那層程式，L4 的 2.1）決定。</p>
               <details class="gloss" id="t5">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">狀態機：A2A 的 task lifecycle 為什麼畫成那樣</span></summary>
                 <div class="gloss-body prose">
@@ -347,7 +347,7 @@
                   <summary>本文延伸｜溝通的價格是 token 和 context<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>LLM agent 的通訊成本多一項：每則訊息都進入某個 context，之後每一圈 loop 都重送。一則 2k token 的 broadcast 發給 10 個 agent，每個再跑 20 圈，就是 <strong>400k token 的 input</strong>。這是 p.44 說「密集的 mesh 很少是好的預設」的原因。L8 會算 agent 系統的成本結構。</p>
+              <p>LLM agent 的通訊成本多一項：每則訊息都進入某個 context，之後每一圈 loop 都重送。一則 2k token 的 broadcast 發給 10 個 agent，每個再跑 20 圈，就是 400k token 的 input。這是 p.44 說「密集的 mesh 很少是好的預設」的原因。L8 會算 agent 系統的成本結構。</p>
             
                   </div>
                 </details>
@@ -898,8 +898,8 @@
             <summary>子任務規格範本，加上 granularity 的試算<span>p.21–23</span></summary>
             <div class="exbody">
               <p>欄位依 p.21，數字是假設的。貼進 DELEGATE 的 payload，或 subagent 的 prompt。p.23 的上限在 Claude Code 裡是 subagent 的 <code>maxTurns</code>，加上兩個環境變數：</p>
-              <pre><code>export CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1    # 深度，預設 3 層
-export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5    # 同時數量，預設 20</code></pre>
+              <figure class="file"><figcaption>terminal：subagent 的兩個上限</figcaption><pre><code>export CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1    # 深度，預設 3 層
+export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5    # 同時數量，預設 20</code></pre></figure>
               <figure class="file"><figcaption>subtask.yaml（簡化版）</figcaption><pre><code>objective:  Find storage-systems papers published in 2026
 inputs:     topic list from the planner (attached)
 boundaries: skip database query optimization papers
@@ -959,7 +959,7 @@ def purchase(msg):
             <summary>最小的 A2A agent card<span>p.38</span></summary>
             <div class="exbody">
               <p>每個 A2A server 在 <code>/.well-known/agent-card.json</code> 公開一張機器可讀的名片。欄位名稱依 A2A 1.0 規格，省略選填欄位。</p>
-              <pre><code>curl https://travel.example.com/.well-known/agent-card.json</code></pre>
+              <figure class="file"><figcaption>terminal：讀一張 agent card</figcaption><pre><code>curl https://travel.example.com/.well-known/agent-card.json</code></pre></figure>
               <figure class="file"><figcaption>agent-card.json（簡化版）</figcaption><pre><code>{
   "name": "Travel Agent",
   "description": "Plans business travel",
@@ -1097,5 +1097,6 @@ def purchase(msg):
 </main>
 </div>
 <script src="app.js"></script>
+<script src="code.js"></script>
 </body>
 </html>
