@@ -625,9 +625,28 @@ aider/commands.py:
               <ol>
                 <li>讀專案設定（例如 <code>tsconfig.json</code>），決定哪些檔案屬於這個專案。</li>
                 <li>Parse：把每個檔案轉成語法樹（2.3 講 AST）。</li>
-                <li>建 symbol table：記下每個函式、class、變數宣告在哪裡，再把每個使用處順著 import 連回它的宣告。這一步做完，「哪一個 charge」就有答案了。</li>
+                <li>建 symbol table：記下每個函式、class、變數宣告在哪裡，再把每個使用處順著 import 連回它的宣告。這一步做完，「哪一個 charge」就有答案了。用上面的例子，表裡大致是這樣（本文的例子，位置寫成 <code>檔案 行:字元</code>）：
+                  <div class="table-wrap"><table class="wide">
+                    <thead><tr><th>位置</th><th>寫的字</th><th>宣告還是使用</th><th>連到哪個宣告</th></tr></thead>
+                    <tbody>
+                      <tr><td><code>payments.ts 18:16</code></td><td><code>charge</code></td><td>宣告（扣款的 function）</td><td>自己，記作 ①</td></tr>
+                      <tr><td><code>battery.ts 7:16</code></td><td><code>charge</code></td><td>宣告（充電的 function）</td><td>自己，記作 ②</td></tr>
+                      <tr><td><code>checkout.ts 1:9</code></td><td><code>charge</code>（import 那一行）</td><td>使用</td><td>①</td></tr>
+                      <tr><td><code>checkout.ts 40:4</code></td><td><code>pay</code></td><td>使用（別名）</td><td>①</td></tr>
+                      <tr><td><code>charger.ts 9:2</code></td><td><code>charge</code></td><td>使用</td><td>②</td></tr>
+                    </tbody>
+                  </table></div>
+                  字面相同的 <code>charge</code> 連到兩個不同的宣告；字面不同的 <code>pay</code> 連到 ①。註解裡的「charge」不是 symbol，不會進這張表。</li>
                 <li>推型別：算出每個表達式的型別。</li>
-                <li>建反向索引：從一個 symbol 對到所有用到它的位置。Find references 和 rename 查的就是這張表。</li>
+                <li>建反向索引：從一個 symbol 對到所有用到它的位置。Find references 和 rename 查的就是這張表。它是把上一張表倒過來排：
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>Symbol（宣告位置）</th><th>用到它的位置</th></tr></thead>
+                    <tbody>
+                      <tr><td>① <code>charge</code>，<code>payments.ts 18:16</code></td><td><code>checkout.ts 1:9</code>、<code>checkout.ts 40:4</code>、<code>refund.ts 12:6</code>……共 7 個檔案、42 處</td></tr>
+                      <tr><td>② <code>charge</code>，<code>battery.ts 7:16</code></td><td><code>charger.ts 9:2</code></td></tr>
+                    </tbody>
+                  </table></div>
+                  在 <code>payments.ts 18:16</code> 按 Shift+F12，server 先查出那個位置是 ①，再回第一列的 42 處，不必重新掃檔案。按 F2 改名，也是照第一列逐處改；別名的呼叫 <code>pay()</code> 不用改，只改 import 裡的 <code>charge</code>。</li>
               </ol>
               <p>之後改一個檔案，它只重新處理那個檔案和受影響的部分。所以 cold start 只在兩種情況下要緊：任務很短，例如一次 30 秒的修改，大 repo 建索引卻要幾分鐘；或是 agent 每個 session 都開新的 container，每次都要從零建。長的 session 裡，這筆成本會攤掉。它的限制是只能回答 symbol 的問題，「我們在哪裡做 rate limit」這種問題它答不了，要交給 semantic search 或 grep。</p>
               <p id="i2-8"><b>四種放在一起。</b></p>
