@@ -7,7 +7,10 @@ Checks: tag balance; required sections (#s-arch #s-ideas [#s-background, #s-beyo
 #s-discuss #s-try #s-submit #wrap) and parts (tldr, diagram, two question tabs,
 quiz, reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
-STE heuristics on prose; reading times.
+STE heuristics on prose; reading times;
+red key points (<strong>, STYLE_ARTICLE 6c): never inside b/a/code/pre/headings/summary/figcaption/
+figure/svg/table/nav/aside/details.gloss and no <b> inside them (problems); per chapter 3-6, tldr <= 3,
+#s-arch <= 2, each <= 30 units (warnings).
 
 Reading times (400 text units per minute; a CJK character or an English word is 1 unit;
 under 15 min: round up; 15 min or more: nearest 5):
@@ -28,6 +31,9 @@ SKIP = {"pre", "code", "svg", "summary", "figcaption", "script", "style"}
 PROSE_CLASSES = {"prose", "hint", "qtext", "qctx", "qh", "lede", "qset-lede", "thesis", "exbody", "answer",
                  "note-own", "rg-s", "rg-g"}
 FILLERS = ["其實", "基本上", "非常", "相當", "可以說", "事實上", "總而言之", "簡單來說", "換句話說", "顯然"]
+# 2026-10-28: where a red key point (<strong>) may not go
+STRONG_NOT_IN = {"b", "a", "code", "pre", "h1", "h2", "h3", "h4", "summary", "figcaption", "figure", "svg",
+                 "table", "nav", "aside", "strong"}
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
 # s-beyond optional since 2026-10-26 (L4); s-background optional since 2026-10-27 (L4 merged it into #s-ideas)
@@ -46,6 +52,9 @@ class P(HTMLParser):
         self.skip_depth = 0
         self.in_toc = False
         self.dd_depth = 0
+        self.anc = []            # (tag, classes, id) for every open element, parallel to self.stack
+        self.strong = None       # the <strong> being read: {"where": ..., "text": ...}
+        self.strongs = []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -63,8 +72,20 @@ class P(HTMLParser):
             self.toc.append(a["href"][1:])
         if tag in VOID:
             return
+        if tag == "strong":
+            for t, c, _ in self.anc:
+                if t in STRONG_NOT_IN or (t == "details" and "gloss" in c):
+                    self.errors.append(f"red mark <strong> inside <{t}> at line {self.getpos()[0]}")
+                    break
+            where = next((i for t, c, i in reversed(self.anc) if t == "div" and "idea" in c), "")
+            where = where or next((i or ("tldr" if "tldr" in c else "") for t, c, i in reversed(self.anc)
+                                   if t == "section"), "")
+            self.strong = {"where": where, "text": ""}
+        elif tag == "b" and self.strong is not None:
+            self.errors.append(f"<b> inside a red mark at line {self.getpos()[0]}")
         is_prose = bool(cls & PROSE_CLASSES) or tag == "dd"
         is_skip = tag in SKIP
+        self.anc.append((tag, cls, a.get("id") or ""))
         self.stack.append((tag, is_prose, is_skip))
         if is_prose:
             self.prose_depth += 1
@@ -85,8 +106,12 @@ class P(HTMLParser):
         if tag not in names:
             self.errors.append(f"unexpected </{tag}> at line {self.getpos()[0]}")
             return
+        if tag == "strong" and self.strong is not None:
+            self.strongs.append(self.strong)
+            self.strong = None
         while self.stack:
             t, pr, sk = self.stack.pop()
+            self.anc.pop()
             if pr:
                 self.prose_depth -= 1
             if sk:
@@ -98,6 +123,8 @@ class P(HTMLParser):
             self.in_toc = False
 
     def handle_data(self, data):
+        if self.strong is not None:
+            self.strong["text"] += data
         if self.prose_depth and not self.skip_depth:
             self.text.append(data)
 
@@ -198,6 +225,21 @@ def main():
     if fillers:
         print(f"  filler words: {fillers}")
     print(f"  passive 被: {passive}; reading time: " + ", ".join(f"{k} {v} min" for k, v in t.items() if v))
+    # red key points (STYLE_ARTICLE 6c): counts are advice, so they print as warn
+    per = {}
+    for m in p.strongs:
+        per[m["where"]] = per.get(m["where"], 0) + 1
+    chapters = re.findall(r'<div class="idea" id="(i\d+)"', html)
+    print(f"  red marks: {len(p.strongs)} (" + ", ".join(f"{k or '?'} {v}" for k, v in per.items()) + ")")
+    for i in chapters:
+        if not 3 <= per.get(i, 0) <= 6:
+            print(f"  warn: chapter {i} has {per.get(i, 0)} red marks (3-6)")
+    for k, cap in (("tldr", 3), ("s-arch", 2)):
+        if per.get(k, 0) > cap:
+            print(f"  warn: {k} has {per[k]} red marks (max {cap})")
+    for m in p.strongs:
+        if units(m["text"]) > 30:
+            print(f"  warn: long red mark ({units(m['text'])}): {m['text'][:40]}")
     if args.fix_time:
         new = html
         for k, v in t.items():

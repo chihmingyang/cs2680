@@ -66,11 +66,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這堂從一個 agent 走到很多個 agent。前半用兩個 plugin 案例說明：model 不變，改 workflow 和 token 的進出，結果就不同。後半比較擴大規模的幾種做法：誰協調、context 在哪裡隔離、各要付什麼代價。最後退一步問：用自然語言叫 agent 寫程式，和以前的寫法差在哪裡，不確定性要怎麼管。這篇文章會把 plugin、skill、hook、MCP、proxy、git worktree、subagent 這些名詞，在第一次出現的地方講清楚。</p>
+    <p class="thesis">這堂從一個 agent 走到很多個 agent。前半用兩個 plugin 案例說明：<strong>model 不變，改 workflow 和 token 的進出，結果就不同</strong>。後半比較擴大規模的幾種做法：誰協調、context 在哪裡隔離、各要付什麼代價。最後退一步問：用自然語言叫 agent 寫程式，和以前的寫法差在哪裡，不確定性要怎麼管。這篇文章會把 plugin、skill、hook、MCP、proxy、git worktree、subagent 這些名詞，在第一次出現的地方講清楚。</p>
     <ul class="core">
       <li><span><b>Model 不變，改 workflow 就改結果。</b>Superpowers 用 skill 定義開發流程，再用 SessionStart hook 保證 agent 每次都讀到規則。Caveman 用 skill 讓 model 寫得短，用一個本機 proxy 讓 model 讀得少。兩個 plugin 都沒有換 model，也沒有加新能力。</span></li>
-      <li><span><b>每種擴展方式都有代價。</b>平行要你 merge，subagent 的摘要會丟細節，agent team 的 token 隨人數成長，workflow 每個任務用更多 token。只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，才用 workflow。</span></li>
-      <li><span><b>Agent 不確定，周邊系統要可靠。</b>寫可驗證的終點、跑測試、讓自主程度配合風險。<code>/goal</code> 能自己停下來，靠的是一個可以檢查的終點；16 個 agent 能寫出一個 C compiler，靠的是 git、lock file 和測試，不是 agent 之間的聊天。</span></li>
+      <li><span><b>每種擴展方式都有代價。</b>平行要你 merge，subagent 的摘要會丟細節，<strong>agent team 的 token 隨人數成長</strong>，workflow 每個任務用更多 token。只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，才用 workflow。</span></li>
+      <li><span><b>Agent 不確定，周邊系統要可靠。</b>寫可驗證的終點、跑測試、讓自主程度配合風險。<code>/goal</code> 能自己停下來，靠的是一個可以檢查的終點；16 個 agent 能寫出一個 C compiler，<strong>靠的是 git、lock file 和測試，不是 agent 之間的聊天</strong>。</span></li>
     </ul>
     <p class="readhow">這篇可以不看 slides 從頭讀到尾：每個名詞在第一次出現的地方就有解釋，由淺入深，頁碼只是出處。少見的名詞和 L2、L4 講過的東西收在正文裡的「名詞」「前情」註，碰到不懂的再點開。想對照 slides，就在讀到頁碼時打開那幾頁；想先帶著問題讀，就先看第 3 段的基礎題。讀書會前用第 3 段的進階題。建議先讀 L4，因為這堂會一直用到 L4 講的 context 代價和 subagent；沒時間讀，2.2 開頭的「前情」註有摘要。</p>
   </section>
@@ -250,8 +250,8 @@
           <figcaption>藍框是持有計畫的角色。一般箭頭是派工或認領，藍色箭頭是交回的結果，藍色虛線是 teammate 之間的訊息。A 到 D 同時用更多 agent；E 讓一個 agent 做更久。</figcaption>
         </figure>
         <div class="prose">
-          <p>這張圖是整堂課後半的地圖，前半的兩個案例都還是一個 agent，所以圖上沒有它們。先定兩個名詞。Session 是你打開 Claude Code 之後的一段對話，它有自己的 context window（一次送給 model 的全部文字，L4 有完整說明）。Agent 在這堂課裡就是一個在跑的 session，或是一個由 session 派出去的小 agent。圖上每一個方框都有自己的 context，方框之間看不到彼此的 context，這是所有擴展方式的共同前提。</p>
-          <p>看圖時先找藍框：誰持有計畫。從 A 到 D，計畫依序在你腦中（A 手動平行）、主 agent（B subagent）、lead 與共用清單（C agent team）、script 裡（D workflow）。計畫在哪裡，決定了誰負責派工、誰負責整合，也決定了這個做法能撐到幾個 agent。每個 worker 都有自己的 context；差別在結果怎麼交回，以及交回給誰。E 是 slide 的第三個軸：時間，由停止條件決定一個 agent 什麼時候結束。第 2 段會先講兩個案例，再依 A 到 E 的順序把每一種做法講清楚。</p>
+          <p>這張圖是整堂課後半的地圖，前半的兩個案例都還是一個 agent，所以圖上沒有它們。先定兩個名詞。Session 是你打開 Claude Code 之後的一段對話，它有自己的 context window（一次送給 model 的全部文字，L4 有完整說明）。Agent 在這堂課裡就是一個在跑的 session，或是一個由 session 派出去的小 agent。圖上每一個方框都有自己的 context，<strong>方框之間看不到彼此的 context</strong>，這是所有擴展方式的共同前提。</p>
+          <p>看圖時先找藍框：誰持有計畫。從 A 到 D，計畫依序在你腦中（A 手動平行）、主 agent（B subagent）、lead 與共用清單（C agent team）、script 裡（D workflow）。<strong>計畫在哪裡，決定了誰負責派工、誰負責整合</strong>，也決定了這個做法能撐到幾個 agent。每個 worker 都有自己的 context；差別在結果怎麼交回，以及交回給誰。E 是 slide 的第三個軸：時間，由停止條件決定一個 agent 什麼時候結束。第 2 段會先講兩個案例，再依 A 到 E 的順序把每一種做法講清楚。</p>
         </div>
       </section>
 
@@ -279,10 +279,10 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">2.1</span>Superpowers：model 不變，換一套 workflow，結果就不同 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=5" target="_blank" rel="noopener">p.5–14</a></h3>
             <div class="prose">
-              <p id="i1-1"><b>先把擴充機制擺好。</b>這堂的兩個案例都是 Claude Code 的 plugin，所以先把 L2 講過的幾個名詞放回桌上，每個用一段說清楚。Claude Code 是 Anthropic 的 coding agent，在終端機裡跑；它有一個 model、一個 loop（model 想一步、呼叫一個 tool、看結果、再想）和一組內建 tool（讀檔、改檔、跑指令、搜尋）。這堂課的重點是：不動 model，只靠下面幾種機制，就能改變它的行為。</p>
+              <p id="i1-1"><b>先把擴充機制擺好。</b>這堂的兩個案例都是 Claude Code 的 plugin，所以先把 L2 講過的幾個名詞放回桌上，每個用一段說清楚。Claude Code 是 Anthropic 的 coding agent，在終端機裡跑；它有一個 model、一個 loop（model 想一步、呼叫一個 tool、看結果、再想）和一組內建 tool（讀檔、改檔、跑指令、搜尋）。這堂課的重點是：<strong>不動 model，只靠下面幾種機制，就能改變它的行為</strong>。</p>
               <ul>
                 <li><b>Skill</b> 是一個資料夾，裡面有一份 <code>SKILL.md</code>。檔案開頭是一小段 metadata（叫 front matter，用 <code>---</code> 包起來），寫這個 skill 叫什麼、什麼時候用；檔案本文是一段給 model 讀的程序，告訴它該怎麼做這件事。Model 每一圈都看得到所有 skill 的名字和說明，覺得用得上就把本文載入 context 照著做。</li>
-                <li><b>Hook</b> 是 Claude Code 在固定時機自動執行的 shell 指令，時機有 session 開始、你送出一則訊息、tool 執行前後等；hook 的輸出可以加進 context。它和 skill 的差別是：skill 由 model 決定要不要用，hook 一定會跑。</li>
+                <li><b>Hook</b> 是 Claude Code 在固定時機自動執行的 shell 指令，時機有 session 開始、你送出一則訊息、tool 執行前後等；hook 的輸出可以加進 context。它和 skill 的差別是：<strong>skill 由 model 決定要不要用，hook 一定會跑</strong>。</li>
                 <li><b>Command</b> 是你自己定義的斜線指令，例如 <code>/caveman</code>，內容也是一份 Markdown，你打了它才執行。</li>
                 <li><b>MCP</b> 是 Model Context Protocol，一個讓外部程式把 tool 提供給 agent 的標準：你在設定檔寫一個 MCP server 的啟動指令，Claude Code 啟動它，它提供的 tool 就出現在 model 的 tool 清單裡。</li>
                 <li><b>Plugin</b> 把以上幾種東西打包成一個可以安裝的單位；marketplace 是存放 plugin 的目錄。</li>
@@ -388,7 +388,7 @@ description: Use before creative work.   ← model 決定要不要載入的依�
 6. Wait for user approval            ← 人工核准的關卡：停下來等你說好
 7. Invoke writing-plans              ← 點名下一個 skill，流程自己往下接</code></pre></figure>
               <p>Slide p.10 把一份 skill 能定義的東西列出來：進入條件、必做的動作、禁止的動作、人工核准關卡、驗證要求、下一個 skill。所以流程會自己往下接：<code>brainstorming</code> 做完叫 <code>writing-plans</code>，<code>writing-plans</code> 做完叫實作的 skill，agent 先問清楚再動手。</p>
-              <p id="i1-3"><b>只有 skill 還不夠，所以加 hook。</b>裝了 skill，model 只是「可以」用它；它每一圈看到的是一行 description，可能沒查就直接寫 code。Superpowers 的解法是一個 SessionStart hook（slide p.11）：</p>
+              <p id="i1-3"><b>只有 skill 還不夠，所以加 hook。</b>裝了 skill，model 只是「可以」用它；它每一圈看到的是一行 description，<strong>可能沒查就直接寫 code</strong>。Superpowers 的解法是一個 SessionStart hook（slide p.11）：</p>
               <figure class="file"><figcaption>hooks/hooks.json，逐行標出</figcaption><pre><code>{
   "hooks": {
     "SessionStart": [{                    ← 時機：session 開始
@@ -466,7 +466,7 @@ printf '{"hookSpecificOutput": {
                     </div>
                     <figcaption>上排是 session 裡的三個時機，下排是 hook 執行後的 context。藍框是 hook 注入的規則，也就是 using-superpowers 的內容。</figcaption>
                   </figure>
-              <p>上圖是一個 session 的時間軸：開新 session 時 hook 注入規則；你打 <code>/clear</code> 之後舊對話清空，只剩 hook 再注入的規則；compaction 之後，舊對話變成摘要，規則也再注入一次。少了任何一個，agent 就會在那之後忘記規則。Slide p.11 把 hook 的保證寫成三句：時機固定，每個 session 都跑；在 agent 動手之前跑；clear 和 compaction 之後重跑。</p>
+              <p>上圖是一個 session 的時間軸：開新 session 時 hook 注入規則；你打 <code>/clear</code> 之後舊對話清空，只剩 hook 再注入的規則；compaction 之後，舊對話變成摘要，規則也再注入一次。<strong>少了任何一個，agent 就會在那之後忘記規則</strong>。Slide p.11 把 hook 的保證寫成三句：時機固定，每個 session 都跑；在 agent 動手之前跑；clear 和 compaction 之後重跑。</p>
               <p id="i1-4"><b>整個流程走一遍。</b>Slide p.13 用「Add authentication」當例子：</p>
               <ol>
                 <li>Claude Code 開 session，hook 讀進 bootstrap skill，agent 拿到選 skill 的規則。</li>
@@ -476,13 +476,13 @@ printf '{"hookSpecificOutput": {
                 <li>Agent 載入 <code>writing-plans</code>，寫出實作計畫。</li>
                 <li>之後才是開 worktree、測試驅動實作、review、驗證、整合 branch。</li>
               </ol>
-              <p>這延續 L2 的分工：hook 保證規則一定在 context 裡，要載入哪個 skill 仍由 model 判斷。Slide p.14 把設計上的選擇整理成一張表，核心是四句：複雜的行為拆成小而可組合的 skill；靠一個 session hook 注入 bootstrap skill 讓 agent 記得用它們；只在需要時載入任務 skill，context 才不會爆；每個 skill 自己寫明關卡和下一個 skill，階段才接得起來。最後一句是：不是每個 plugin 都需要 command 或 MCP，用到再加。Caveman 正好是用到的例子。</p>
+              <p>這延續 L2 的分工：hook 保證規則一定在 context 裡，要載入哪個 skill 仍由 model 判斷。Slide p.14 把設計上的選擇整理成一張表，核心是四句：複雜的行為拆成小而可組合的 skill；靠一個 session hook 注入 bootstrap skill 讓 agent 記得用它們；<strong>只在需要時載入任務 skill，context 才不會爆</strong>；每個 skill 自己寫明關卡和下一個 skill，階段才接得起來。最後一句是：不是每個 plugin 都需要 command 或 MCP，用到再加。Caveman 正好是用到的例子。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3><span class="idea-no">2.2</span>Caveman：token 要雙向壓縮，輸入方向只有 proxy 管得到 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=15" target="_blank" rel="noopener">p.15–25</a></h3>
             <div class="prose">
-              <p id="i2-1"><b>為什麼要壓縮 token。</b>第二個案例是 Caveman，一個專門省 token 的 plugin。它要解決的問題來自 L4 講的 <a class="tm" href="#n-context">context 代價</a>：log、diff、tool 輸出會塞滿 context；每一圈 loop 都重送整個 context，所以一份長 log 進了 context，之後每一圈都要再付一次錢和時間；等到 context 快滿才做 compaction，又會把重要的細節摘掉。Slide p.16 的例子：</p>
+              <p id="i2-1"><b>為什麼要壓縮 token。</b>第二個案例是 Caveman，一個專門省 token 的 plugin。它要解決的問題來自 L4 講的 <a class="tm" href="#n-context">context 代價</a>：log、diff、tool 輸出會塞滿 context；每一圈 loop 都重送整個 context，所以一份長 log 進了 context，<strong>之後每一圈都要再付一次錢和時間</strong>；等到 context 快滿才做 compaction，又會把重要的細節摘掉。Slide p.16 的例子：</p>
               <details class="gloss" id="n-context">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Context 的代價與四種管理策略（L4）：這堂一直用到的四個名詞</span></summary>
                 <div class="gloss-body prose">
@@ -502,7 +502,7 @@ FAIL src/api/client.test.ts
 
 # 之後：model 只讀到這一行
 3 tests fail: ETIMEDOUT at client.ts:88</code></pre></figure>
-              <p>Caveman 的目標就是讓 model 只讀到那一行，原文留著，要的時候再取。Token 有兩個方向：model 讀進去的叫 input，model 寫出來的叫 output。Caveman 兩邊都壓（slide p.17）。輸出方向用一個 skill：它規定回答的風格，model 載入後就寫得短。輸入方向用一個本機 proxy：所有送給 model 的內容先經過它，它把 log、diff 壓短再送出去。一句話記：skill 改 model 怎麼寫，proxy 改 model 讀什麼。</p>
+              <p>Caveman 的目標就是讓 model 只讀到那一行，原文留著，要的時候再取。Token 有兩個方向：model 讀進去的叫 input，model 寫出來的叫 output。Caveman 兩邊都壓（slide p.17）。輸出方向用一個 skill：它規定回答的風格，model 載入後就寫得短。輸入方向用一個本機 proxy：所有送給 model 的內容先經過它，它把 log、diff 壓短再送出去。一句話記：<strong>skill 改 model 怎麼寫，proxy 改 model 讀什麼</strong>。</p>
               <figure class="diagram">
                     <div class="scroll">
                       <svg viewBox="0 0 640 292" role="img" aria-label="Caveman 的兩個壓縮方向。左邊是 coding agent，tool 輸出了 786 行 log；agent 裡的 hook 只能改單一 tool 的輸入輸出。中間是本機 proxy，每個 request 都經過它，依類型壓縮：log 留錯誤和頭尾，diff 留檔頭和改動行。右邊是 model provider。上方的輸入方向：786 行的 request 經過 proxy，變成 1 行才送到 model。下方的輸出方向：context 裡有 response skill，model 的回答寫得短，output 少 65%。底部說明：proxy 每個 request 都經過，能改整個 context；MCP 只在 agent 呼叫時執行，例如用 caveman_retrieve 取回原文。">
@@ -561,7 +561,7 @@ description: Compressed mode
 Preserve: technical terms, commands, paths, code, errors, numbers, units, negation
 Remove: filler, repetition, pleasantries, hedging
 Short sentences. Active voice.</code></pre></figure>
-              <p>Slide 的數字是 output token 少 65%，但 skill 本身也佔 input，所以整個 session 省的比例小一些。這份 skill 只改 agent 怎麼對你說話，沒有改它讀到的東西。</p>
+              <p>Slide 的數字是 <strong>output token 少 65%</strong>，但 skill 本身也佔 input，所以整個 session 省的比例小一些。這份 skill 只改 agent 怎麼對你說話，沒有改它讀到的東西。</p>
               <p id="i2-3"><b>Command 讓你手動控制程度。</b>Slide p.21 列了它的指令：<code>/caveman</code> 開預設的 full 模式，<code>/caveman ultra</code> 壓到最緊，<code>/caveman off</code> 關掉；另外有 <code>/caveman-commit</code> 寫簡短的 commit 訊息、<code>/caveman-review</code> 寫簡短的 review、<code>/caveman-stats</code> 看這個 session 省了多少 token。Command 的定義也是一份 Markdown：</p>
               <figure class="file"><figcaption>commands/caveman.md（p.21）</figcaption><pre><code>---
 description: Activate Caveman mode
@@ -585,7 +585,7 @@ If off, deactivate.</code></pre></figure>
 {"compressed": "3 tests fail. Root error: timeout.",
  "ratio": 0.72,
  "recovery_handle": "ccr_abc123"}    ← 之後用 caveman_retrieve("ccr_abc123") 取回原文</code></pre></figure>
-              <p>這和 L4 講的 <a class="tm" href="#n-context">offloading</a> 是同一招：原文放在外面，context 裡只留一個 handle。問題是 MCP tool 只在 agent 呼叫它的時候才執行。Agent 跑完測試，786 行的輸出已經進了 context，它才有機會呼叫 <code>caveman_compress</code>，而且壓縮的結果只是再加一段，原文還在。Hook 也不行：hook 能改單一 tool 的輸入或輸出，但不能透明地改寫整份送給 model 的 request（slide p.24 的註記）。能做到的只有 proxy。</p>
+              <p>這和 L4 講的 <a class="tm" href="#n-context">offloading</a> 是同一招：原文放在外面，context 裡只留一個 handle。問題是 <strong>MCP tool 只在 agent 呼叫它的時候才執行</strong>。Agent 跑完測試，786 行的輸出已經進了 context，它才有機會呼叫 <code>caveman_compress</code>，而且壓縮的結果只是再加一段，原文還在。Hook 也不行：hook 能改單一 tool 的輸入或輸出，但不能透明地改寫整份送給 model 的 request（slide p.24 的註記）。能做到的只有 proxy。</p>
               <p id="i2-5"><span class="anchor" id="t6"></span><b>Proxy：站在 agent 和 provider 中間的程式。</b>Claude Code 本來直接把 request 送到 Anthropic 的 API；裝了 Caveman 之後，你把 Claude Code 的 API 位址指到本機的 proxy，Claude Code 以為自己在跟 provider 講話，但每一個 request 都先經過 proxy，proxy 改完再轉送給 provider。因為每個 request 都經過它，它看得到整份 context，也改得了整份 context。Caveman 的 proxy 依內容類型壓縮（slide p.24）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>內容類型</th><th>留下什麼</th></tr></thead>
@@ -598,8 +598,8 @@ If off, deactivate.</code></pre></figure>
                   <tr><td>HTML / 文字</td><td>標題、相關段落</td></tr>
                 </tbody>
               </table></div>
-              <p>Slide 把三者的差別寫成一句：proxy 攔截每一個 request，MCP 只在呼叫時執行；proxy 站在 agent 和 provider 之間，MCP 站在旁邊；proxy 改得了 context，MCP 改不了。最後一句註記值得記：用別人的 agent 才需要 proxy，自己寫 harness 的話，這件事在 harness 裡直接做就好，L4 的 <a class="tm" href="#n-context">admission</a> 就是這個位置。</p>
-              <p id="i2-6"><b>每一種機制各有位置。</b>Slide p.25 把 Caveman 用到的每一種機制列成表：skill 管風格，hook 管啟動、追蹤和強化模式，command 管你選模式，MCP 管壓縮、取回和統計，plugin 把這些打包，proxy 攔截 request。兩個案例合起來看，L2 講的擴充機制各有一個明確的位置：想改 model 的行為用 skill，想保證某件事一定發生用 hook，想給 model 新能力用 MCP，想改 model 讀到的東西只能在 request 的路上動手。</p>
+              <p>Slide 把三者的差別寫成一句：proxy 攔截每一個 request，MCP 只在呼叫時執行；proxy 站在 agent 和 provider 之間，MCP 站在旁邊；proxy 改得了 context，MCP 改不了。最後一句註記值得記：<strong>用別人的 agent 才需要 proxy</strong>，自己寫 harness 的話，這件事在 harness 裡直接做就好，L4 的 <a class="tm" href="#n-context">admission</a> 就是這個位置。</p>
+              <p id="i2-6"><b>每一種機制各有位置。</b>Slide p.25 把 Caveman 用到的每一種機制列成表：skill 管風格，hook 管啟動、追蹤和強化模式，command 管你選模式，MCP 管壓縮、取回和統計，plugin 把這些打包，proxy 攔截 request。兩個案例合起來看，L2 講的擴充機制各有一個明確的位置：想改 model 的行為用 skill，想保證某件事一定發生用 hook，想給 model 新能力用 MCP，<strong>想改 model 讀到的東西只能在 request 的路上動手</strong>。</p>
             </div>
           </div>
           <p class="idea-group" id="g-b">B · 多個 agent：三個擴展軸</p>
@@ -608,7 +608,7 @@ If off, deactivate.</code></pre></figure>
             <div class="prose">
               <p id="i3-1"><b>三個擴展軸。</b>兩個案例都是一個 agent 在做事。要做更多事，slide p.27 把擴展分成三個軸，每個軸買到一樣東西：</p>
               <ul>
-                <li><b>平行。</b>很多個獨立的任務同時做，每個在自己的工作目錄裡。買到 <a class="tm" href="#n-throughput">throughput</a>，也就是單位時間做完的事變多；答案不會更好。</li>
+                <li><b>平行。</b>很多個獨立的任務同時做，每個在自己的工作目錄裡。買到 <a class="tm" href="#n-throughput">throughput</a>，也就是單位時間做完的事變多；<strong>答案不會更好</strong>。</li>
                 <li><b>Subagent。</b>把一個有邊界的任務交給一個新的 context 去做，只拿一段摘要回來。買到 throughput 和專注；主對話永遠看不到中間的雜訊。</li>
                 <li><b>長時間執行。</b>讓一個 agent 跨很多步做一件大事。買到範圍，也就是用更少的介入做更多事。</li>
               </ul>
@@ -659,7 +659,7 @@ git worktree list                    # 看目前有哪些
 # 用 Claude Code 開：-w 替這個 session 開一個 worktree，session 就在裡面跑
 claude -w feature-payments           # terminal 1：做 feature
 claude -w bugfix-auth                # terminal 2：修 bug，碰不到 terminal 1 的檔案</code></pre></figure>
-              <p>Worktree 有兩個限制要知道。同一個 branch 不能同時在兩個 worktree 裡 checkout；新目錄裡也沒有 <code>.env</code>、<code>node_modules</code> 這類不在 git 裡的檔案，要重新裝。更重要的是它只隔離檔案：port、資料庫、外部服務還是共用的，最後的 merge 也還是你的事。Slide p.30 說明這個做法撐到哪裡：3 個 session 你還記得住計畫，20 個 session 你需要一個分身。四個原因：計畫在你腦中，每一次交接都靠你；session 之間看不到彼此，發現要靠你搬過去；branch 要你來 merge，順序和衝突都是你的；而且沒有人把整件事記下來，下次不能重跑。接下來的三種做法，分別把這四件事交給別人。</p>
+              <p>Worktree 有兩個限制要知道。同一個 branch 不能同時在兩個 worktree 裡 checkout；新目錄裡也沒有 <code>.env</code>、<code>node_modules</code> 這類不在 git 裡的檔案，要重新裝。更重要的是它只隔離檔案：port、資料庫、外部服務還是共用的，最後的 merge 也還是你的事。Slide p.30 說明這個做法撐到哪裡：3 個 session 你還記得住計畫，<strong>20 個 session 你需要一個分身</strong>。四個原因：計畫在你腦中，每一次交接都靠你；session 之間看不到彼此，發現要靠你搬過去；branch 要你來 merge，順序和衝突都是你的；而且沒有人把整件事記下來，下次不能重跑。接下來的三種做法，分別把這四件事交給別人。</p>
               <p id="i3-3"><span class="anchor" id="t2"></span><b>B Subagent：結果回到主 agent。</b>Subagent 是一個專門的小助手，有自己的 context window、自己的 tool 清單和權限（slide p.31）。主 agent 把一個任務交給它，它在自己的 context 裡做完，只交回一段摘要。Slide 列了五個理由：</p>
               <ul>
                 <li><b>保護 context。</b>log、搜尋結果、整個檔案的內容都留在 subagent 裡，主對話只多一段摘要。</li>
@@ -711,7 +711,7 @@ claude -w bugfix-auth                # terminal 2：修 bug，碰不到 terminal
                     </div>
                     <figcaption>橫條是 context window 的用量。A 的中間產物留在主對話，之後每一圈都重送；B 的中間產物留在 subagent，主對話只多一段摘要。</figcaption>
                   </figure>
-              <p>上圖把第一個理由畫出來。同一個搜尋任務，主對話自己做，檔案、log、搜尋結果全進了主對話的 context，之後每一圈都重送，快滿時 compaction 還可能把細節摘掉。交給 subagent，這些中間產物留在 subagent 的 context 裡，做完就丟掉，主對話只多一段摘要。這是有損壓縮：30 份文件換成一頁結論，所以委派時要指定回報格式，例如「每個問題附 file:line」，不然細節就沒了。代價還有一個：subagent 看不到主對話的歷史，它要從零開始收集 context，所以多一段延遲。</p>
+              <p>上圖把第一個理由畫出來。同一個搜尋任務，主對話自己做，檔案、log、搜尋結果全進了主對話的 context，之後每一圈都重送，快滿時 compaction 還可能把細節摘掉。交給 subagent，這些中間產物留在 subagent 的 context 裡，做完就丟掉，主對話只多一段摘要。<strong>這是有損壓縮：30 份文件換成一頁結論</strong>，所以委派時要指定回報格式，例如「每個問題附 file:line」，不然細節就沒了。代價還有一個：subagent 看不到主對話的歷史，它要從零開始收集 context，所以多一段延遲。</p>
               <p id="i3-4"><b>內建的三個 subagent，和自己定義一個。</b>Claude Code 內建三個 subagent，它自己會視情況派（slide p.32）：Explore 只讀不寫，用來搜 codebase，可以指定要找多徹底；Plan 在 <a class="tm" href="#n-claude-code">plan mode</a> 裡做研究，讓探索不佔主視窗；general-purpose 做又要探索又要動手的多步工作。Explore 和 Plan 為了快，不讀 <a class="tm" href="#n-claude-code"><code>CLAUDE.md</code></a> 也不看 git status。自己定義一個 subagent 是一份 Markdown（slide p.33）：</p>
               <details class="gloss" id="n-claude-code">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">CLAUDE.md 與 plan mode（L2）：Claude Code 的兩個基本設定</span></summary>
@@ -728,7 +728,7 @@ model: sonnet                              ← 用哪個 model
 ---
 You are a code reviewer. Analyze the       ← 本文變成這個 subagent 的 system prompt
 code and give actionable feedback.</code></pre></figure>
-              <p>放在專案的 <code>.claude/agents/</code> 就跟著 repo 走，全隊共用；放在 <code>~/.claude/agents/</code> 就是你個人的，每個專案都能用。Subagent 也可以再派 subagent（slide p.34）：在 <code>tools</code> 裡加上 <code>Agent</code>，它就能用 Agent tool 生出子 subagent。最多 5 層，slide 說 2 到 3 層最好，因為每多一層，結果就再摘要一次。常見的分層（slide p.35）：</p>
+              <p>放在專案的 <code>.claude/agents/</code> 就跟著 repo 走，全隊共用；放在 <code>~/.claude/agents/</code> 就是你個人的，每個專案都能用。Subagent 也可以再派 subagent（slide p.34）：在 <code>tools</code> 裡加上 <code>Agent</code>，它就能用 Agent tool 生出子 subagent。最多 5 層，slide 說 <strong>2 到 3 層最好</strong>，因為每多一層，結果就再摘要一次。常見的分層（slide p.35）：</p>
               <figure class="diagram">
                 <div class="scroll">
                   <svg viewBox="0 0 740 230" role="img" aria-label="三層的樹。第 0 層是主 agent，持有計畫。它往下派給第 1 層的三個 subagent：implementer、debugging、code-review。第 1 層再往下派給第 2 層的 test-writer 和 verification。每條往下的線標派任務，往上的藍線標只交回摘要。右側註記：每一層都從新的 context 開始；每多一層，結果就再摘要一次，所以 2 到 3 層最好。">
@@ -801,7 +801,7 @@ $ claude --agent code-reviewer</code></pre></figure>
                 <li><b>Task list。</b>一份共用的任務清單，teammate 從裡面認領任務、做完標記完成。</li>
                 <li><b>Mailbox。</b>每個 agent 一個 JSON 收件匣，teammate 把訊息放進對方的收件匣。</li>
               </ul>
-              <p>要注意 teammate 不會繼承你的對話，它們只自動載入 <code>CLAUDE.md</code> 和 skill，所以任務的細節要寫在生出它們的那段 prompt 裡。Team 適合需要討論的工作（slide p.38）：review 時幾個 teammate 從不同角度看，再互相挑戰對方的發現；幾個獨立模組各由一個 teammate 負責；除錯時幾個假設平行驗證，收斂得快；跨層的工作，前端、後端、測試各一個。代價是協調開銷和 token 都隨人數成長，因為每個 teammate 都是完整的 session。所以順序相依的任務、改同一個檔案的任務、彼此依賴很重的任務，交給一個 session 或 subagent 比較好。</p>
+              <p>要注意 teammate 不會繼承你的對話，它們只自動載入 <code>CLAUDE.md</code> 和 skill，所以任務的細節要寫在生出它們的那段 prompt 裡。Team 適合需要討論的工作（slide p.38）：review 時幾個 teammate 從不同角度看，再互相挑戰對方的發現；幾個獨立模組各由一個 teammate 負責；除錯時幾個假設平行驗證，收斂得快；跨層的工作，前端、後端、測試各一個。代價是<strong>協調開銷和 token 都隨人數成長</strong>，因為每個 teammate 都是完整的 session。所以順序相依的任務、改同一個檔案的任務、彼此依賴很重的任務，交給一個 session 或 subagent 比較好。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th></th><th>Subagent</th><th>Agent team</th></tr></thead>
                 <tbody>
@@ -812,8 +812,8 @@ $ claude --agent code-reviewer</code></pre></figure>
                   <tr><td>Token 成本</td><td>低</td><td>高</td></tr>
                 </tbody>
               </table></div>
-              <p>依 p.41 整理。結論是：team 比較貴，只在工作需要討論時用。依 slide（2026 年 9 月），agent team 是實驗功能，預設關閉。</p>
-              <p id="i4-2"><b>D Dynamic workflow：script 持有計畫。</b>當一個任務需要的 agent 多到一個對話協調不了，例如掃整個 codebase 找 bug、500 個檔案的搬遷、從好幾個角度交叉查證一份研究，就用 dynamic workflow（slide p.43）。它是一支 JavaScript script，在背景調度很多 subagent：計畫在 script 裡，不在對話裡；中間結果存在 script 的變數裡，不進主 context；而且 script 可以重跑，這正好補上手動平行做不到的「記下來」。在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 讓 Claude 自己決定；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是每個任務用的 token 更多。</p>
+              <p>依 p.41 整理。結論是：<strong>team 比較貴，只在工作需要討論時用</strong>。依 slide（2026 年 9 月），agent team 是實驗功能，預設關閉。</p>
+              <p id="i4-2"><b>D Dynamic workflow：script 持有計畫。</b>當一個任務需要的 agent 多到一個對話協調不了，例如掃整個 codebase 找 bug、500 個檔案的搬遷、從好幾個角度交叉查證一份研究，就用 dynamic workflow（slide p.43）。它是一支 JavaScript script，在背景調度很多 subagent：計畫在 script 裡，不在對話裡；中間結果存在 script 的變數裡，不進主 context；而且 script 可以重跑，這正好補上手動平行做不到的「記下來」。在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 讓 Claude 自己決定；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是<strong>每個任務用的 token 更多</strong>。</p>
               <p id="i4-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             </div>
               <div class="exlist deeplist">
@@ -821,7 +821,7 @@ $ claude --agent code-reviewer</code></pre></figure>
                   <summary>本文延伸｜協調開銷決定平行加速的上限<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>16 個 agent 不會快 16 倍。規劃、整合、review 這些工作，只能一件一件做。Amdahl's law 說的就是這件事：一個工作裡只有一部分能平行，加速的上限由不能平行的那部分決定。假設 80% 的工作能平行，16 個 agent 最多快 1 ÷（0.2 ＋ 0.8 ÷ 16）＝ 4 倍；agent 再多，也不會超過 5 倍，因為那 20% 永遠要一個人做完。</p>
+              <p><strong>16 個 agent 不會快 16 倍</strong>。規劃、整合、review 這些工作，只能一件一件做。Amdahl's law 說的就是這件事：一個工作裡只有一部分能平行，加速的上限由不能平行的那部分決定。假設 80% 的工作能平行，16 個 agent 最多快 1 ÷（0.2 ＋ 0.8 ÷ 16）＝ 4 倍；agent 再多，也不會超過 5 倍，因為那 20% 永遠要一個人做完。</p>
               <p>協調成本還會隨人數變大。C compiler 案例的 merge conflict 很常見 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=50" target="_blank" rel="noopener">p.50</a>；agent team 的 token 隨人數線性成長。L5 會把它寫成估算式：總時間約等於規劃、critical path（2.3 的註）、溝通、合併四項相加，而平行只能縮短 critical path。</p>
             
                   </div>
@@ -831,7 +831,7 @@ $ claude --agent code-reviewer</code></pre></figure>
           <div class="idea" id="i5">
             <h3><span class="idea-no">2.5</span>長時間執行：agent 需要一個能檢查的終點 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=44" target="_blank" rel="noopener">p.44–50</a></h3>
             <div class="prose">
-              <p id="i5-1"><span class="anchor" id="t4"></span><b>/goal：給一個可以驗證的終點。</b>第三個軸是時間：讓一個 agent 做更久。<code>/goal</code> 給 Claude 一個條件，它一直做到條件成立為止（slide p.44）。它的運作方式是：Claude 做一輪，每一輪結束後，另一個小而快的 model 讀對話，判斷條件是否成立；沒成立就把 Claude 送回去再做一輪；成立就停，或是 <code>--max-tries</code> 用完也停。關鍵在於做事的 model 不能自己宣布完成，判斷的是另一個 model。</p>
+              <p id="i5-1"><span class="anchor" id="t4"></span><b>/goal：給一個可以驗證的終點。</b>第三個軸是時間：讓一個 agent 做更久。<code>/goal</code> 給 Claude 一個條件，它一直做到條件成立為止（slide p.44）。它的運作方式是：Claude 做一輪，每一輪結束後，另一個小而快的 model 讀對話，判斷條件是否成立；沒成立就把 Claude 送回去再做一輪；成立就停，或是 <code>--max-tries</code> 用完也停。關鍵在於<strong>做事的 model 不能自己宣布完成</strong>，判斷的是另一個 model。</p>
               <figure class="file"><figcaption>/goal 與 /loop（p.44–45）</figcaption><pre><code># /goal：給一個條件，做到條件成立才停
 /goal "npm run lint exits with zero errors"
 /goal "all integration tests pass; no file under tests/ is modified" --max-tries 20
@@ -843,9 +843,9 @@ $ claude --agent code-reviewer</code></pre></figure>
 # /loop：每 5 分鐘重跑同一段 prompt，直到你按 Esc
 /loop 5m "check CI, fix whatever broke"
 # 預設的 prompt 可以放在 .claude/loop.md</code></pre></figure>
-              <p>所以條件要能從對話裡證明。「npm run lint exits with zero errors」可以檢查，因為 lint 的輸出就在對話裡。「refactor the code」無法檢查，因為沒有一個輸出能證明重構完成。檢查的 model 不跑指令、不讀檔案，只讀對話，所以證據必須出現在 Claude 的輸出裡。還有一個陷阱：「所有測試通過」可以靠刪掉失敗的測試達成。所以條件旁邊要加不變量，例如「不修改 <code>tests/</code>」。這是 Goodhart's law：指標一旦變成目標，就不再是好指標。</p>
+              <p>所以條件要能從對話裡證明。「npm run lint exits with zero errors」可以檢查，因為 lint 的輸出就在對話裡。「refactor the code」無法檢查，因為沒有一個輸出能證明重構完成。檢查的 model 不跑指令、不讀檔案，只讀對話，所以證據必須出現在 Claude 的輸出裡。還有一個陷阱：<strong>「所有測試通過」可以靠刪掉失敗的測試達成</strong>。所以條件旁邊要加不變量，例如「不修改 <code>tests/</code>」。這是 Goodhart's law：指標一旦變成目標，就不再是好指標。</p>
               <p id="i5-2"><b>/loop：用時間觸發。</b><code>/loop</code> 是另一種長時間執行（slide p.45）。它是一個觸發器，不是一個測試：你設定間隔，它每次都跑同一段話，不判斷做完了沒；做完了也照跑，直到你在它等待時按 Esc 取消。兩者的差別一句話：<code>/goal</code> 在條件成立時停，<code>/loop</code> 在你叫它停時停。Slide p.46 把整個後半收成兩組：讓一個 agent 做更久（<code>/goal</code>、<code>/loop</code>）；同時用更多 agent（手動平行、subagent、agent team、workflow）。</p>
-              <p id="i5-3"><b>16 個 agent 寫一個 C compiler。</b>Anthropic 的 C compiler 案例是長時間執行放大到極限的版本（slide p.47）：16 個 agent 平行，約兩週、約 2,000 個 session，用了 20 億 input token 和 1.4 億 output token，API 費用略低於 20,000 美元。結果是一個約 100,000 行 Rust 寫的 C compiler，能編譯 Linux 6.9 kernel，在 x86、ARM、RISC-V 上都能跑，也能編譯並執行 QEMU（模擬器）、FFmpeg、Postgres、Redis 和 Doom，主要測試套件的通過率約 99%。注意 input 是 output 的 14 倍，這就是 2.2 說輸入方向更值得壓縮的原因。</p>
+              <p id="i5-3"><b>16 個 agent 寫一個 C compiler。</b>Anthropic 的 C compiler 案例是長時間執行放大到極限的版本（slide p.47）：16 個 agent 平行，約兩週、約 2,000 個 session，用了 20 億 input token 和 1.4 億 output token，<strong>API 費用略低於 20,000 美元</strong>。結果是一個約 100,000 行 Rust 寫的 C compiler，能編譯 Linux 6.9 kernel，在 x86、ARM、RISC-V 上都能跑，也能編譯並執行 QEMU（模擬器）、FFmpeg、Postgres、Redis 和 Doom，主要測試套件的通過率約 99%。注意 input 是 output 的 14 倍，這就是 2.2 說輸入方向更值得壓縮的原因。</p>
               <p id="i5-4"><b>用 container、git 和文字檔協調。</b>它怎麼協調 16 個 agent？用的是最普通的基礎設施：container、git、文字檔（slide p.48）。沒有 manager agent，也沒有聊天頻道。每個 agent 在自己的 container 和 git checkout 裡跑，流程是一個四步的圈（slide p.49）：</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -892,8 +892,8 @@ $ git push                            # agent B 後到
 ! [rejected]  main -&gt; main (fetch first)
 $ git pull --rebase
 CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task-43</code></pre></figure>
-              <p>這叫樂觀鎖（optimistic locking）：先做，衝突時才處理，不用一個中央的管理者發派。它的弱點是 stale lock：agent 中途當掉，鎖就一直留著，所以鎖要能過期，或是有人定期清理。Agent 之間沒有對話，context 靠檔案傳：新 session 先讀 README、進度文件和 CI 的失敗紀錄找回狀況，再用自動化測試判斷自己有沒有進展。另外有幾個專職的 agent 管文件、效能、品質和去重。狀態放在檔案和測試裡，不靠 model 記住，這就是 <code>/goal</code> 那句「終點要能檢查」放大到 16 個 agent 的樣子。</p>
-              <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的地方：merge conflict 很頻繁；所有 agent 碰到同一個 kernel 的錯誤時，平行就沒有用了；16 位元 x86 的一部分仍靠 GCC；產生的程式碼效率比 GCC 差。下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
+              <p>這叫樂觀鎖（optimistic locking）：先做，衝突時才處理，不用一個中央的管理者發派。它的弱點是 stale lock：agent 中途當掉，鎖就一直留著，所以鎖要能過期，或是有人定期清理。Agent 之間沒有對話，context 靠檔案傳：新 session 先讀 README、進度文件和 CI 的失敗紀錄找回狀況，再用自動化測試判斷自己有沒有進展。另外有幾個專職的 agent 管文件、效能、品質和去重。<strong>狀態放在檔案和測試裡，不靠 model 記住</strong>，這就是 <code>/goal</code> 那句「終點要能檢查」放大到 16 個 agent 的樣子。</p>
+              <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的地方：<strong>merge conflict 很頻繁</strong>；所有 agent 碰到同一個 kernel 的錯誤時，平行就沒有用了；16 位元 x86 的一部分仍靠 GCC；產生的程式碼效率比 GCC 差。下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">
@@ -902,7 +902,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
 
               <p>C compiler 案例有一頁在講失敗 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=50" target="_blank" rel="noopener">p.50</a>。編譯 Linux kernel 時，所有 agent 都卡在同一個錯誤。原文寫道：每個 agent 都修同一個 bug，再互相覆蓋彼此的修改。</p>
               <p>原文的解法，是把一個大的失敗訊號切成很多小訊號。作者用 GCC 當已知正確的 oracle（測試裡用來判斷對錯的標準答案來源）：隨機挑大部分檔案用 GCC 編譯，其餘檔案才用 agent 寫的 compiler。Kernel 能跑，問題就不在那些檔案；壞了，就再縮小範圍。每個 agent 因此拿到不同的失敗檔案，可以平行修不同的 bug。</p>
-              <p>一般原則：平行需要獨立的子任務，也需要獨立的進度訊號。只有一個大測試失敗時，先把它拆成很多小訊號，再考慮加 agent。</p>
+              <p>一般原則：<strong>平行需要獨立的子任務，也需要獨立的進度訊號</strong>。只有一個大測試失敗時，先把它拆成很多小訊號，再考慮加 agent。</p>
             
                   </div>
                 </details>
@@ -912,7 +912,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
           <div class="idea" id="i6">
             <h3><span class="idea-no">2.6</span>Programming 3.0：接受不確定性，讓周邊系統可靠 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=51" target="_blank" rel="noopener">p.51–59</a></h3>
             <div class="prose">
-              <p id="i6-1"><b>三代程式設計。</b>前面都在講怎麼用更多 agent。最後一節退一步問：這種寫程式的方式，和以前差在哪裡。講者把它叫 Programming 3.0（slide p.52），用「人寫什麼」分三代。1.0 是人直接寫機器指令或組合語言，交給硬體。2.0 是人寫程式語言，compiler 翻成機器指令。3.0 是人用自然語言說目標，agent 寫程式語言，再由 compiler 翻成機器指令。每一代都在人和硬體之間多加一層；產能變高，不確定性也變高，因為 compiler 是確定的，agent 不是。</p>
+              <p id="i6-1"><b>三代程式設計。</b>前面都在講怎麼用更多 agent。最後一節退一步問：這種寫程式的方式，和以前差在哪裡。講者把它叫 Programming 3.0（slide p.52），用「人寫什麼」分三代。1.0 是人直接寫機器指令或組合語言，交給硬體。2.0 是人寫程式語言，compiler 翻成機器指令。3.0 是人用自然語言說目標，agent 寫程式語言，再由 compiler 翻成機器指令。每一代都在人和硬體之間多加一層；產能變高，不確定性也變高，因為 <strong>compiler 是確定的，agent 不是</strong>。</p>
               <figure class="diagram">
                     <div class="scroll">
                       <svg viewBox="0 0 640 284" role="img" aria-label="三代程式設計的層次。1.0：人直接寫機器指令，交給硬體。2.0：人寫程式語言，compiler 轉成機器指令。3.0：人說目標，用自然語言交給 agent，agent 產生程式語言，再經 compiler 轉成機器指令。每一代多一層，產能變高，不確定性也變高。3.0 的不確定性集中在自然語言到程式碼這一段：語意、取樣、tool loop。程式碼經過 commit、review、測試之後，執行時通常是確定的。底部是結論原則：不期待 agent 確定，讓周邊系統可靠；自主程度配合風險。">
@@ -981,7 +981,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                     </div>
                     <figcaption>每一列是一代。藍色是 3.0 多出來的那一層：人寫自然語言，agent 寫程式碼。不確定性集中在這一層；程式碼產生之後，可以用 2.0 的老方法管。</figcaption>
                   </figure>
-              <p id="i6-2"><span class="anchor" id="t5"></span><b>Karpathy 的 Software 3.0 是另一種分法。</b>Slide p.53 放了它，兩者名字像，分法不同，不要混。Karpathy 用「程式是什麼」分：1.0 的程式是原始碼，人用 Python 或 C++ 寫；2.0 的程式是神經網路的權重，人收集資料再用 optimizer 訓練出來；3.0 的程式是 prompt，人用自然語言寫，LLM 執行。他的結論是：知道在哪裡劃 1.0、2.0、3.0 的界線，是一項重要的工程技能。兩種分法導向同一個工程問題：哪一塊用確定的程式，哪一塊交給 model。拿 Caveman 當例子，壓縮 engine 是 1.0 的程式，回答風格寫在 skill 裡，屬於 3.0。</p>
+              <p id="i6-2"><span class="anchor" id="t5"></span><b>Karpathy 的 Software 3.0 是另一種分法。</b>Slide p.53 放了它，兩者名字像，分法不同，不要混。Karpathy 用「程式是什麼」分：1.0 的程式是原始碼，人用 Python 或 C++ 寫；2.0 的程式是神經網路的權重，人收集資料再用 optimizer 訓練出來；3.0 的程式是 prompt，人用自然語言寫，LLM 執行。他的結論是：知道在哪裡劃 1.0、2.0、3.0 的界線，是一項重要的工程技能。兩種分法導向同一個工程問題：<strong>哪一塊用確定的程式，哪一塊交給 model</strong>。拿 Caveman 當例子，壓縮 engine 是 1.0 的程式，回答風格寫在 skill 裡，屬於 3.0。</p>
               <p id="i6-3"><b>不確定性是新的嗎。</b>Slide p.54 只有一句話：不確定性變成核心主題，你要學著和它共處。但 p.55 接著指出，不確定性早就存在：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th></th><th>硬體</th><th>環境</th><th>軟體</th></tr></thead>
@@ -991,20 +991,20 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                   <tr><td>3.0 新加的</td><td>GPU 的 nondeterministic kernel、浮點數差異</td><td>agent 在寫程式的過程中就會碰環境</td><td>compiler 和 model 都有多種 kernel 與取樣</td></tr>
                 </tbody>
               </table></div>
-              <p>依 p.55 整理。結論是：同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用。那 3.0 新增的不確定性在哪裡？Slide p.57 列了四個來源：自然語言本身的語意不確定；檢索的漂移，索引更新、切 chunk、context 截斷都會改變 model 看到的東西；model 生成的機率性，取樣加上軟硬體的 nondeterminism（同一個輸入，因為浮點運算順序或執行緒排程不同而算出不同結果，L1 講過）；agent 和 tool 的迴圈，軌跡、環境、tool 失敗、環境改變。重點是最後一行：程式產生之後通常是確定的，除非它在執行時又呼叫 model 或 tool。所以不確定性集中在產生程式的階段；程式碼經過 commit、review、測試之後，可以用 2.0 的老方法管。</p>
+              <p>依 p.55 整理。結論是：同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用。那 3.0 新增的不確定性在哪裡？Slide p.57 列了四個來源：自然語言本身的語意不確定；檢索的漂移，索引更新、切 chunk、context 截斷都會改變 model 看到的東西；model 生成的機率性，取樣加上軟硬體的 nondeterminism（同一個輸入，因為浮點運算順序或執行緒排程不同而算出不同結果，L1 講過）；agent 和 tool 的迴圈，軌跡、環境、tool 失敗、環境改變。重點是最後一行：程式產生之後通常是確定的，除非它在執行時又呼叫 model 或 tool。所以<strong>不確定性集中在產生程式的階段</strong>；程式碼經過 commit、review、測試之後，可以用 2.0 的老方法管。</p>
               <p id="i6-4"><b>怎麼和不確定性共處。</b>Slide p.58 給的做法分三組：</p>
               <ul>
                 <li><b>DEFINE。</b>先把假設寫出來；有歧義的地方讓 model 先確認再動手。</li>
                 <li><b>CONTROL。</b>把提案和執行分開，agent 先提計畫，驗證過才 commit。明確管理 context：自己管 memory、來源和檢索，讓過時的資訊過期。寫結果而不是寫 prompt：需求、不變量、限制和驗收測試。</li>
-                <li><b>VERIFY &amp; GOVERN。</b>把產生和驗證的迴圈收緊，便宜而頻繁的檢查勝過最後一次昂貴的 review。量深一層：自己寫測試、看多個指標、用自己能推理的合成負載。</li>
+                <li><b>VERIFY &amp; GOVERN。</b>把產生和驗證的迴圈收緊，<strong>便宜而頻繁的檢查勝過最後一次昂貴的 review</strong>。量深一層：自己寫測試、看多個指標、用自己能推理的合成負載。</li>
               </ul>
-              <p id="i6-5"><b>兩句原則。</b>最後是 p.59 的兩句原則：不要期待 agent 是確定的，讓它周圍的系統可靠；自主程度要配合風險，自主越高，不確定性和風險越高。回頭看這堂課，前面的 hook、可驗證的終點、lock file、測試，都是「周圍的系統」的零件。</p>
+              <p id="i6-5"><b>兩句原則。</b>最後是 p.59 的兩句原則：<strong>不要期待 agent 是確定的，讓它周圍的系統可靠</strong>；自主程度要配合風險，自主越高，不確定性和風險越高。回頭看這堂課，前面的 hook、可驗證的終點、lock file、測試，都是「周圍的系統」的零件。</p>
             </div>
           </div>
           <div class="idea" id="i7">
             <h3><span class="idea-no">2.7</span>田野證據：人從執行者變成委派者 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=60" target="_blank" rel="noopener">p.60–68</a></h3>
             <div class="prose">
-              <p id="i7-1"><b>兩份報告，兩種用法。</b>最後一節是兩份 OpenAI 的報告，一份是 2026 年 6 月的 Codex 使用報告，一份是 2026 年 9 月 OpenAI 內部的使用情況。Codex 是 OpenAI 的 coding agent，和 Claude Code 同一類。Slide p.61 先畫兩種用法：對話式 AI 是人問、model 答、人留在迴圈裡、人自己動手做，人是執行者；agent 式是人委派一個任務、agent 自己規劃、呼叫 tool、改檔案、跑指令、交出成品，人負責 review 和整合。2026 年上半年 Codex 的活躍使用者成長超過 5 倍；過去 28 天用過 Codex 的比例，個人使用者不到 1%，組織使用者 17.3%，OpenAI 員工幾乎全部。</p>
+              <p id="i7-1"><b>兩份報告，兩種用法。</b>最後一節是兩份 OpenAI 的報告，一份是 2026 年 6 月的 Codex 使用報告，一份是 2026 年 9 月 OpenAI 內部的使用情況。Codex 是 OpenAI 的 coding agent，和 Claude Code 同一類。Slide p.61 先畫兩種用法：對話式 AI 是人問、model 答、人留在迴圈裡、人自己動手做，人是執行者；agent 式是人委派一個任務、agent 自己規劃、呼叫 tool、改檔案、跑指令、交出成品，人負責 review 和整合。2026 年上半年 Codex 的<strong>活躍使用者成長超過 5 倍</strong>；過去 28 天用過 Codex 的比例，個人使用者不到 1%，組織使用者 17.3%，OpenAI 員工幾乎全部。</p>
               <p id="i7-2"><b>委派的任務在變大。</b>Slide p.62 的數字：以人要做幾小時來估算任務大小：</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -1035,7 +1035,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                 </div>
                 <figcaption>依 p.62 的數字重畫：委派給 Codex 的任務裡，佔多少比例達到某個大小。半年內，整天份的任務從 2.1% 變成 25.6%。</figcaption>
               </figure>
-              <p id="i7-3"><b>一個人同時管很多 agent。</b>這也變成常態（slide p.63）：2026 年 6 月，28.6% 的 OpenAI 使用者一週內同時跑過 5 個以上的 agent；OpenAI 員工的中位數是每天約 2.5 個 agent 小時，第 99 百分位是每天約 71 個 agent 小時。人的角色變成規劃者、委派者、監看者、reviewer、整合者，這就是第 1 段架構圖裡 A 到 D 的「你」。9 月的報告說，2026 年 6 月之前 agent 的執行時間還少於人的工作時間，現在 agent 做的工作量是人的 3.14 倍，多數研究員同時有 4 個以上的工作流在跑（slide p.64）。</p>
+              <p id="i7-3"><b>一個人同時管很多 agent。</b>這也變成常態（slide p.63）：2026 年 6 月，28.6% 的 OpenAI 使用者一週內同時跑過 5 個以上的 agent；OpenAI 員工的中位數是每天約 2.5 個 agent 小時，第 99 百分位是每天約 71 個 agent 小時。人的角色變成規劃者、委派者、監看者、reviewer、整合者，這就是第 1 段架構圖裡 A 到 D 的「你」。9 月的報告說，2026 年 6 月之前 agent 的執行時間還少於人的工作時間，現在 <strong>agent 做的工作量是人的 3.14 倍</strong>，多數研究員同時有 4 個以上的工作流在跑（slide p.64）。</p>
               <p id="i7-4"><b>五層的階梯。</b>Slide p.68 把使用方式排成一個五層的階梯：</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -1064,14 +1064,14 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                 </div>
                 <figcaption>依 p.68 重畫，藍字是本文對到這堂課的位置。</figcaption>
               </figure>
-              <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。OpenAI 的員工整體仍在階梯的下半部。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
+              <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。<strong>OpenAI 的員工整體仍在階梯的下半部</strong>。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x3">
                   <summary>本文延伸｜人的角色，變成規劃者和 reviewer<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>這一章的實務證據指向同一件事：人從執行者，變成委派、監看、review、整合的人。Agent 寫得更快，review 的速度沒有跟著變快。5 個 agent 每小時各交一個 PR，你一小時 review 得完 5 個嗎？</p>
+              <p>這一章的實務證據指向同一件事：人從執行者，變成委派、監看、review、整合的人。<strong>Agent 寫得更快，review 的速度沒有跟著變快</strong>。5 個 agent 每小時各交一個 PR，你一小時 review 得完 5 個嗎？</p>
               <p>瓶頸因此移到兩端：前端是把任務寫清楚，後端是驗證結果。這正好對應 2.6 的 DEFINE 和 VERIFY。可驗證的終點和自動化測試讓 review 變便宜；它們決定一個人能同時管幾個 agent。</p>
             
                   </div>
@@ -1083,7 +1083,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                   <div class="exbody prose">
 
               <p>這一章的數字來自 OpenAI 自己的報告。OpenAI 員工幾乎全部在用 Codex；個人使用者不到 1%，組織使用者是 17.3%。員工是開發這個工具的人，工作內容、熟練度和使用條件，都和一般團隊不同。</p>
-              <p>「agent-hours」量的是 agent 跑了多久，它沒有量交付的價值。任務大小用「人要做幾小時」估算，這個估算本身就有誤差。讀這類數字時，問三個問題：樣本是誰、指標量什麼、和什麼比較。L7 講 agent 評估時，也會討論成功率以外該量哪些指標。</p>
+              <p>「agent-hours」量的是 agent 跑了多久，<strong>它沒有量交付的價值</strong>。任務大小用「人要做幾小時」估算，這個估算本身就有誤差。讀這類數字時，問三個問題：樣本是誰、指標量什麼、和什麼比較。L7 講 agent 評估時，也會討論成功率以外該量哪些指標。</p>
             
                   </div>
                 </details>

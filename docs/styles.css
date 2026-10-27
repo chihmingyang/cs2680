@@ -30,6 +30,32 @@
   --scrim: rgba(22, 33, 45, .38);
   --shadow: 0 8px 24px rgba(22, 33, 45, .16), 0 1px 3px rgba(22, 33, 45, .12);
   --scroll-thumb: #B5C0CC;
+  /* emphasis: <b> is the black bold lead-in, <strong> is the red key point
+     (key numbers, the conclusion, the main cost or risk) */
+  --key: #C62828;
+  /* inline <code> in prose */
+  --icode-ink: #7B3AA6;
+  --icode-wash: #F3EDF8;
+  /* code blocks: a dark editor in both themes (IDE-like); app.js colors the tokens */
+  --cd-bg: #1E2632;
+  --cd-bar: #151B24;
+  --cd-edge: #151B24;
+  --cd-fg: #D6DEE6;
+  --cd-dim: #7D8996;
+  --cd-com: #86B878;
+  --cd-kw: #C792EA;
+  --cd-str: #E6A57E;
+  --cd-num: #B5CEA8;
+  --cd-key: #9CDCFE;
+  --cd-fn: #E8CF7A;
+  --cd-const: #74B6F2;
+  --cd-type: #4EC9B0;
+  --cd-flag: #80CBC4;
+  --cd-head: #74B6F2;
+  --cd-err: #F48771;
+  --cd-ok: #8FD488;
+  --cd-add: rgba(87, 171, 90, .20);
+  --cd-del: rgba(244, 112, 103, .20);
   /* which theme is showing: app.js reads --theme-name, the toggle icon follows */
   --theme-name: light;
   --show-moon: block;
@@ -65,6 +91,12 @@
     --scrim: rgba(0, 0, 0, .55);
     --shadow: 0 8px 24px rgba(0, 0, 0, .55), 0 1px 3px rgba(0, 0, 0, .45);
     --scroll-thumb: #3A4858;
+    --key: #FF7B72;
+    --icode-ink: #D9B2F5;
+    --icode-wash: #241E2E;
+    --cd-bg: #0F151C;
+    --cd-bar: #0A0F14;
+    --cd-edge: #2A3542;
     --theme-name: dark;
     --show-moon: none;
     --show-sun: block;
@@ -92,6 +124,12 @@
   --scrim: rgba(0, 0, 0, .55);
   --shadow: 0 8px 24px rgba(0, 0, 0, .55), 0 1px 3px rgba(0, 0, 0, .45);
   --scroll-thumb: #3A4858;
+  --key: #FF7B72;
+  --icode-ink: #D9B2F5;
+  --icode-wash: #241E2E;
+  --cd-bg: #0F151C;
+  --cd-bar: #0A0F14;
+  --cd-edge: #2A3542;
   --theme-name: dark;
   --show-moon: none;
   --show-sun: block;
@@ -137,7 +175,10 @@ a { color: var(--signal); text-underline-offset: .18em; text-decoration-thicknes
 a:hover { text-decoration-thickness: 2px; }
 :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; border-radius: 2px; }
 ::selection { background: var(--signal-wash); color: var(--ink); }
-b, strong { font-weight: 600; }
+b, strong { font-weight: 700; }
+/* red key point: only <strong> is red; <b> lead-ins stay ink */
+strong { color: var(--key); }
+strong code, a code { color: inherit; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 html { scroll-behavior: smooth; }
 
@@ -474,34 +515,74 @@ h2[id] { scroll-margin-top: 4.5rem; }
 code {
   font-family: var(--font-mono);
   font-size: .875em;
-  background: var(--code-wash);
+  color: var(--icode-ink);
+  background: var(--icode-wash);
   padding: .05em .32em;
   border-radius: 3px;
   overflow-wrap: anywhere;
 }
+/* code blocks look like an editor: dark in both themes, token colors from app.js */
 pre {
   margin: 0;
   overflow-x: auto;
-  padding: .75rem .9rem;
+  padding: .8rem .95rem;
   font-family: var(--font-mono);
   font-size: .8125rem;
-  line-height: 1.6;
+  line-height: 1.65;
   tab-size: 2;
-  background: var(--code-wash);
+  color: var(--cd-fg);
+  background: var(--cd-bg);
+  border: 1px solid var(--cd-edge);
   border-radius: var(--radius);
+  scrollbar-color: #4A5868 transparent;
 }
-pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
-.file { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--code-wash); min-width: 0; }
+pre code { color: inherit; background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+.file { margin: 0; border: 1px solid var(--cd-edge); border-radius: var(--radius); overflow: hidden; background: var(--cd-bg); min-width: 0; }
+/* the caption is the editor's tab bar: a dot, then the file name or title */
 .file figcaption {
   font-family: var(--font-mono);
   font-size: .75rem;
-  color: var(--ink-soft);
-  padding: .35rem .8rem;
-  border-bottom: 1px solid var(--rule);
-  background: var(--sheet);
+  line-height: 1.5;
+  color: #AEBBC8;
+  padding: .45rem .85rem .4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  background: var(--cd-bar);
 }
-.file pre { border-radius: 0; }
-.callout pre { background: var(--sheet); }
+.file figcaption::before {
+  content: "";
+  display: inline-block;
+  width: .5rem;
+  height: .5rem;
+  margin-right: .5rem;
+  border-radius: 50%;
+  background: #E5A47A;
+  vertical-align: .05em;
+}
+.file pre { border: 0; border-radius: 0; }
+.callout pre { background: var(--cd-bg); }
+.file figcaption code { color: #E6C3FF; background: rgba(255, 255, 255, .08); }
+/* token colors (app.js wraps tokens in span.tk-*) */
+.tk-com { color: var(--cd-com); }
+.tk-kw { color: var(--cd-kw); }
+.tk-str { color: var(--cd-str); }
+.tk-num { color: var(--cd-num); }
+.tk-key { color: var(--cd-key); }
+.tk-fn { color: var(--cd-fn); }
+.tk-const { color: var(--cd-const); }
+.tk-type { color: var(--cd-type); }
+.tk-flag { color: var(--cd-flag); }
+.tk-var { color: var(--cd-key); }
+.tk-dim { color: var(--cd-dim); }
+.tk-head { color: var(--cd-head); font-weight: 600; }
+.tk-err { color: var(--cd-err); }
+.tk-ok { color: var(--cd-ok); }
+.tk-in { color: #FFFFFF; font-weight: 500; }
+.tk-hunk { color: var(--cd-kw); }
+.ln-add, .ln-del { display: inline-block; min-width: 100%; margin: 0 -.95rem; padding: 0 .95rem; box-sizing: content-box; }
+.ln-add { background: var(--cd-add); }
+.ln-del { background: var(--cd-del); }
+.ln-add .tk-sign { color: var(--cd-ok); }
+.ln-del .tk-sign { color: var(--cd-err); }
 .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); }
 table { border-collapse: collapse; width: 100%; font-size: .875rem; line-height: 1.6; }
 table.wide { min-width: 34rem; }

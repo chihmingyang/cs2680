@@ -67,9 +67,9 @@
     <h2 class="label" id="tldr-h">先看這裡</h2>
     <p class="thesis">這堂把 agent 的花費拆成一串乘數，再逐項壓低。前半講錢：turn、step、token、單價。後半講時間與結構：完成時間由 critical path 決定；harness 的架構決定你能換什麼、能隔離什麼。</p>
     <ul class="core">
-      <li><span><b>大部分 token 是重讀的 context。</b>全班的 Claude Code 資料中，97.6% 的 token 是 cache read。省錢先看 context 大小，再看 output。</span></li>
-      <li><span><b>每個省錢手段都有反向成本。</b>Compaction、routing、subagent、speculation 都可能讓總花費變多。在同一組任務上量淨效果，替每個任務設上限。</span></li>
-      <li><span><b>快和省是兩件事。</b>平行與 speculative action 用更多 token 換更少等待。先找出 critical path，再決定優化哪裡。</span></li>
+      <li><span><b>大部分 token 是重讀的 context。</b>全班的 Claude Code 資料中，<strong>97.6% 的 token 是 cache read</strong>。省錢先看 context 大小，再看 output。</span></li>
+      <li><span><b>每個省錢手段都有反向成本。</b>Compaction、routing、subagent、speculation <strong>都可能讓總花費變多</strong>。在同一組任務上量淨效果，替每個任務設上限。</span></li>
+      <li><span><b>快和省是兩件事。</b>平行與 speculative action <strong>用更多 token 換更少等待</strong>。先找出 critical path，再決定優化哪裡。</span></li>
     </ul>
     <p class="readhow">建議順序：先讀第 4 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。沒時間看 slides，直接讀第 1 到 4 段就能跟上這堂的內容，頁碼可以略過。讀書會前用第 4 段的進階題。</p>
   </section>
@@ -193,7 +193,7 @@
           <figcaption>Slide p.7 的乘法公式，加上每一項對應的槓桿。設計 agent 時只能壓低右邊四項。藍框是貫穿全堂的提醒：每個節省都有反向成本。</figcaption>
         </figure>
         <div class="prose">
-          <p>看這張圖，先記住一件事：這是乘法。任何一項減半，總成本就減半，所以每一項都值得單獨優化。但每個槓桿都有代價。藍框那一行是整堂課的紀律：毛節省要扣掉反向成本，而且要在同一組任務上量。最下面一行提醒你，時間和錢是兩個目標。</p>
+          <p>看這張圖，先記住一件事：這是乘法。<strong>任何一項減半，總成本就減半</strong>，所以每一項都值得單獨優化。但每個槓桿都有代價。藍框那一行是整堂課的紀律：毛節省要扣掉反向成本，而且要在同一組任務上量。最下面一行提醒你，時間和錢是兩個目標。</p>
         </div>
         <figure class="diagram">
           <div class="scroll">
@@ -294,39 +294,39 @@
           <div class="idea" id="i1">
             <h3>成本是一串乘數，大宗是重讀的 context <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=6" target="_blank" rel="noopener">p.6–7、p.13–15</a></h3>
             <div class="prose">
-              <p>一個 turn 從使用者訊息開始，到 agent 回覆結束。一個 step 是一次 model call，加上它要求的 tool call。Slide 把成本寫成乘法：Cost = Users × Sessions/User × Turns/Session × Steps/Turn × Tokens/Step × Price/Token。乘法的好處是每一項都能單獨優化。前兩項會隨產品成長，所以 agent 設計要壓低後四項。</p>
-              <p>全班的 Claude Code 資料給了基準。主 agent 每一步的 token 數，中位數 200K–300K，p90 600K–700K，幾乎都是重送的 context。全班做 Assignment 1（用 Claude Code 完成的作業）的 token，有 97.6% 是 cache read。Cache read 單價最低，但量太大，仍是成本大宗。</p>
+              <p>一個 turn 從使用者訊息開始，到 agent 回覆結束。一個 step 是一次 model call，加上它要求的 tool call。Slide 把成本寫成乘法：Cost = Users × Sessions/User × Turns/Session × Steps/Turn × Tokens/Step × Price/Token。乘法的好處是每一項都能單獨優化。前兩項會隨產品成長，所以 <strong>agent 設計要壓低後四項</strong>。</p>
+              <p>全班的 Claude Code 資料給了基準。主 agent <strong>每一步的 token 數，中位數 200K–300K</strong>，p90 600K–700K，幾乎都是重送的 context。全班做 Assignment 1（用 Claude Code 完成的作業）的 token，有 <strong>97.6% 是 cache read</strong>。Cache read 單價最低，但量太大，仍是成本大宗。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>Turn 越多越貴，而且是平方；step 要批次 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=8" target="_blank" rel="noopener">p.8–12</a></h3>
             <div class="prose">
-              <p>第 k 個 turn 要重讀前 k−1 個 turn 的內容。所以 turn 數加倍，總量約變 4 倍。全班多數 session 只有一個 prompt，從成本看是好習慣。</p>
-              <p>使用者回來追問，常見原因有三個：沒有計畫、agent 太早停、沒人檢查結果。對應的解法：先規劃、拆解任務、交回前自我驗證。目標是 agent 一次做完。</p>
-              <p>Step 數的中位數只有 3 到 4，但有長尾，少數 turn 跑了近 1,000 步。每個 step 都重讀整個 context。先規劃再批次執行，4 次 model call 可以變 2 次。</p>
+              <p>第 k 個 turn 要重讀前 k−1 個 turn 的內容。所以 <strong>turn 數加倍，總量約變 4 倍</strong>。全班多數 session 只有一個 prompt，從成本看是好習慣。</p>
+              <p>使用者回來追問，常見原因有三個：沒有計畫、agent 太早停、沒人檢查結果。對應的解法：先規劃、拆解任務、交回前自我驗證。<strong>目標是 agent 一次做完</strong>。</p>
+              <p>Step 數的中位數只有 3 到 4，但有長尾，少數 turn 跑了近 1,000 步。每個 step 都重讀整個 context。先規劃再批次執行，<strong>4 次 model call 可以變 2 次</strong>。</p>
             </div>
           </div>
           <div class="idea" id="i3">
             <h3>每一步少送一點：context 要精簡，output 要節制 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=16" target="_blank" rel="noopener">p.16–20</a></h3>
             <div class="prose">
-              <p>留在 context 裡的 token，之後每一步都再付一次。Slide 給三個方向：丟掉過期的、縮小進來的、只載入需要的。一份 20K 的測試 log 留 50 步，重讀 1M token。只留 500 token 的錯誤摘要，只要 25K。</p>
-              <p>探索類的工作交給 subagent。Subagent 從乾淨的 context 開始，每一步的中位數約 80K。主 agent 只拿回摘要。</p>
-              <p>Output 量小，但單價最高。在 prompt 講清楚長度與格式，用 schema 限制欄位，再用 API 的 output 上限當保險。推理量依步驟調整：查找用 low，除錯用 high。</p>
+              <p>留在 context 裡的 token，之後每一步都再付一次。Slide 給三個方向：丟掉過期的、縮小進來的、只載入需要的。一份 20K 的測試 log 留 50 步，<strong>重讀 1M token</strong>。只留 500 token 的錯誤摘要，<strong>只要 25K</strong>。</p>
+              <p>探索類的工作交給 subagent。Subagent 從乾淨的 context 開始，<strong>每一步的中位數約 80K</strong>。主 agent 只拿回摘要。</p>
+              <p><strong>Output 量小，但單價最高</strong>。在 prompt 講清楚長度與格式，用 schema 限制欄位，再用 API 的 output 上限當保險。推理量依步驟調整：查找用 low，除錯用 high。</p>
             </div>
           </div>
           <div class="idea" id="i4">
             <h3>單價可以差 100 倍，但每個省法都有反向成本 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=21" target="_blank" rel="noopener">p.21–27</a></h3>
             <div class="prose">
-              <p>同樣的 token，價格可以差 100 倍。Cache read 是 base input 的 0.1×，batch 是 0.5×，疊加是 0.05×。條件是 prefix 穩定、工作能等。Routing 把簡單的步驟交給便宜的 model。</p>
-              <p>每個節省都有反向成本。Compaction 丟掉的檔案要重讀，摘要改了 prefix，cache 要重寫。便宜 model 的一個壞計畫會多出很多步。每個 subagent 都重讀共用的檔案。Speculation 猜錯就浪費 token。淨節省 = 毛節省 − 反向成本，兩者都要在同一組任務上量。</p>
-              <p>所以要替每個任務設上限：金額、model call 次數、tool 時間、每步重試。上限從 trace 定，例如成功任務 p95 的 2 倍。進度停滯就停下，交出摘要。最後再問：這一步真的需要 LLM 嗎？格式固定的步驟用 script 或 regex。</p>
+              <p>同樣的 token，<strong>價格可以差 100 倍</strong>。Cache read 是 base input 的 0.1×，batch 是 0.5×，疊加是 0.05×。條件是 prefix 穩定、工作能等。Routing 把簡單的步驟交給便宜的 model。</p>
+              <p>每個節省都有反向成本。Compaction 丟掉的檔案要重讀，摘要改了 prefix，cache 要重寫。便宜 model 的一個壞計畫會多出很多步。每個 subagent 都重讀共用的檔案。Speculation 猜錯就浪費 token。<strong>淨節省 = 毛節省 − 反向成本</strong>，兩者都要在同一組任務上量。</p>
+              <p>所以要<strong>替每個任務設上限</strong>：金額、model call 次數、tool 時間、每步重試。上限從 trace 定，例如成功任務 p95 的 2 倍。進度停滯就停下，交出摘要。最後再問：這一步真的需要 LLM 嗎？格式固定的步驟用 script 或 regex。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x1">
                   <summary>本文延伸｜淨節省只能在同一組任務上量<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>p.25 的公式簡單，難在量測。Agent 的 trajectory 有隨機性，同一個任務跑兩次，step 數可能差一倍。所以比較兩個設定時，要用同一組任務、跑多次、看分布。</p>
+              <p>p.25 的公式簡單，難在量測。Agent 的 trajectory 有隨機性，同一個任務跑兩次，<strong>step 數可能差一倍</strong>。所以比較兩個設定時，要用同一組任務、跑多次、看分布。</p>
               <p>p.38 的「一次只改一件事」是同一個理由。同時改 compaction 門檻和 model，就分不出效果來自哪裡。L7 的評估方法在這裡派上用場。</p>
             
                   </div>
@@ -336,9 +336,9 @@
           <div class="idea" id="i5">
             <h3>完成時間看 critical path；架構決定邊界在哪裡 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=28" target="_blank" rel="noopener">p.28–54</a></h3>
             <div class="prose">
-              <p>省錢的手段多半也省時間，但兩者不同。序列執行時，總時間是每步相加。平行時，總時間是最長的那條相依鏈，也就是 critical path。平行與 speculative action（先猜下一步會需要什麼，例如邊改邊先跑測試）用更多 token 換更少等待。</p>
-              <p>速度的其他槓桿在 harness：非同步執行、持久的 shell、串流中就開始 tool call、tool 與 model 放在一起。Tool 本身也可能比 model 慢，先量時間。優化要在迴圈裡做：記錄、量測、一次改一件事、同一組任務重測。</p>
-              <p>這些槓桿能不能用，看 harness 的架構。後半講三種：monolithic 把所有元件放在一個 runtime，通訊最快，隔離最難；modular 用介面抽換 provider，仍在同一個 process；microkernel 只保留狀態、排程、安全，能力是外部服務，隔離與擴展最強，通訊最貴。最後比較 8 個 harness（Claude Code、Codex CLI、DeepSeek Harness、OpenCode、Pi、oh-my-pi、OpenClaw、Hermes Agent），每個獨特設計都在解決成本、速度、安全、可靠性之一。</p>
+              <p>省錢的手段多半也省時間，但兩者不同。序列執行時，總時間是每步相加。平行時，<strong>總時間是最長的那條相依鏈</strong>，也就是 critical path。平行與 speculative action（先猜下一步會需要什麼，例如邊改邊先跑測試）用更多 token 換更少等待。</p>
+              <p>速度的其他槓桿在 harness：非同步執行、持久的 shell、串流中就開始 tool call、tool 與 model 放在一起。<strong>Tool 本身也可能比 model 慢</strong>，先量時間。優化要在迴圈裡做：記錄、量測、一次改一件事、同一組任務重測。</p>
+              <p><strong>這些槓桿能不能用，看 harness 的架構</strong>。後半講三種：monolithic 把所有元件放在一個 runtime，通訊最快，隔離最難；modular 用介面抽換 provider，仍在同一個 process；microkernel 只保留狀態、排程、安全，能力是外部服務，隔離與擴展最強，通訊最貴。最後比較 8 個 harness（Claude Code、Codex CLI、DeepSeek Harness、OpenCode、Pi、oh-my-pi、OpenClaw、Hermes Agent），每個獨特設計都在解決成本、速度、安全、可靠性之一。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">
@@ -346,7 +346,7 @@
                   <div class="exbody prose">
 
               <p>小 model 單價低，卻可能多走幾步，結果更慢。平行與 speculation 減少等待，token 總量變多。</p>
-              <p>所以 Assignment 3 的三個指標要分開看：解出幾題、每題花費、每題時間。優化一個指標時，另外兩個要一起量。</p>
+              <p>所以 Assignment 3 的三個指標要分開看：解出幾題、每題花費、每題時間。<strong>優化一個指標時，另外兩個要一起量</strong>。</p>
             
                   </div>
                 </details>
@@ -367,7 +367,7 @@
                   <summary>本文延伸｜Microkernel 只在共用基礎設施時回本<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>Microkernel 的優點是隔離、獨立擴展、集中管理。代價是通訊開銷、更多故障模式、更難除錯。單一 agent 用不到這些優點，只付代價。</p>
+              <p>Microkernel 的優點是隔離、獨立擴展、集中管理。代價是通訊開銷、更多故障模式、更難除錯。<strong>單一 agent 用不到這些優點，只付代價</strong>。</p>
               <p>團隊有多個 agent 共用 sandbox、memory、tool 服務時，才值得。Slide 的結論一致：單一 agent 用 monolithic，multi-agent 基礎設施用 microkernel。Modular 是常見的起點。</p>
             
                   </div>

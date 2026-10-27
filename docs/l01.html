@@ -65,10 +65,10 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這堂前半講課務，後半畫出整門課的地圖。它回答兩個問題：AI 系統和傳統系統差在哪裡，以及 agent 為什麼是一個系統問題。結論是：agent 的目標是任務成功，tokens/sec 只是手段。</p>
+    <p class="thesis">這堂前半講課務，後半畫出整門課的地圖。它回答兩個問題：AI 系統和傳統系統差在哪裡，以及 agent 為什麼是一個系統問題。結論是：<strong>agent 的目標是任務成功，tokens/sec 只是手段</strong>。</p>
     <ul class="core">
-      <li><span><b>AI workload 打破傳統系統的假設。</b>Decode 受記憶體頻寬限制；同一個 prompt 可能得到不同輸出；大叢集每幾小時壞一張 GPU。</span></li>
-      <li><span><b>Agent 把一次 inference 拉成一條鏈。</b>infer → tool → infer …，每一步都等上一步。延遲、狀態和失敗沿著整條鏈累積。</span></li>
+      <li><span><b>AI workload 打破傳統系統的假設。</b>Decode 受記憶體頻寬限制；同一個 prompt 可能得到不同輸出；<strong>大叢集每幾小時壞一張 GPU</strong>。</span></li>
+      <li><span><b>Agent 把一次 inference 拉成一條鏈。</b>infer → tool → infer …，每一步都等上一步。<strong>延遲、狀態和失敗沿著整條鏈累積</strong>。</span></li>
       <li><span><b>優化目標要換。</b>Tokens/sec 高，agent 仍可能又慢又貴。要看任務成功率，和每個成功任務的成本。</span></li>
     </ul>
     <p class="readhow">建議順序：先讀第 4 段的基礎題，帶著問題自己一頁一頁看完 slides；再回來讀這篇。讀書會前用第 4 段的進階題。</p>
@@ -245,7 +245,7 @@
           <figcaption>上：傳統 serving 一個 request 只跑一次 inference。下：agent 的一個 prompt 在 GPU 與 tool 之間來回。藍色方塊越來越寬，代表 context 每一步變長；虛線框是等 tool 的時間（p.39）。</figcaption>
         </figure>
         <div class="prose">
-          <p>兩張圖一起看。第一張是空間：系統分 6 層，課程從上往下講。第二張是時間：agent 把一次 inference 拉成一條鏈，每一步都在 critical path 上。這堂的主張落在交點：下層為 throughput 做的優化，放到上層的鏈上不一定划算。</p>
+          <p>兩張圖一起看。第一張是空間：系統分 6 層，課程從上往下講。第二張是時間：agent 把一次 inference 拉成一條鏈，每一步都在 critical path 上。這堂的主張落在交點：<strong>下層為 throughput 做的優化，放到上層的鏈上不一定划算</strong>。</p>
         </div>
       </section>
 
@@ -259,29 +259,29 @@
           <div class="idea" id="i1">
             <h3>AI 系統優化的東西，和 AI/ML 不同 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=28" target="_blank" rel="noopener">p.28–29</a></h3>
             <div class="prose">
-              <p>同一個 model，兩種人問不同的問題。ML 研究者問：該用哪個 model，它答對幾題？系統工程師問：怎麼在上千張 GPU 上穩定地訓練與 serve？前者優化 accuracy，後者優化 GPU 使用率、資源浪費、停機時間與碳排。</p>
-              <p>系統這一側的零件和傳統系統一樣：scheduling、狀態管理、通訊、caching、fault tolerance。差別在 workload 的性質。p.29：把 model 的能力變成產品，比 AI 本身更難。</p>
+              <p>同一個 model，兩種人問不同的問題。ML 研究者問：該用哪個 model，它答對幾題？系統工程師問：怎麼在上千張 GPU 上穩定地訓練與 serve？前者優化 accuracy，<strong>後者優化 GPU 使用率、資源浪費、停機時間與碳排</strong>。</p>
+              <p>系統這一側的零件和傳統系統一樣：scheduling、狀態管理、通訊、caching、fault tolerance。<strong>差別在 workload 的性質</strong>。p.29：<strong>把 model 的能力變成產品，比 AI 本身更難</strong>。</p>
             </div>
           </div>
           <div class="idea" id="i2">
             <h3>AI workload 打破傳統系統的五個假設 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=30" target="_blank" rel="noopener">p.30–34</a></h3>
             <div class="prose">
-              <p>傳統服務隱含幾個假設：處理時間可以預測、同樣的輸入得到同樣的輸出、狀態小、故障少見。LLM 的 workload 打破每一條。一個請求分兩個階段：prefill 受算力限制，decode 受記憶體頻寬限制。執行時間取決於輸出多少 token，事先無法得知。</p>
-              <p>浮點數的加總順序會改變結果，所以同一個 prompt 可能得到不同輸出。狀態很大：權重從幾 GB 到幾 TB，KV cache 每個 token 要幾十到幾百 KB，瓶頸常在搬資料。Model 與 workload 變化快。故障是常態：16K 張 GPU 約每 3 小時壞一張；一台 server 從 800 W 升到 6,000 W。</p>
+              <p>傳統服務隱含幾個假設：處理時間可以預測、同樣的輸入得到同樣的輸出、狀態小、故障少見。<strong>LLM 的 workload 打破每一條</strong>。一個請求分兩個階段：prefill 受算力限制，<strong>decode 受記憶體頻寬限制</strong>。執行時間取決於輸出多少 token，事先無法得知。</p>
+              <p>浮點數的加總順序會改變結果，所以<strong>同一個 prompt 可能得到不同輸出</strong>。狀態很大：權重從幾 GB 到幾 TB，KV cache 每個 token 要幾十到幾百 KB，瓶頸常在搬資料。Model 與 workload 變化快。故障是常態：<strong>16K 張 GPU 約每 3 小時壞一張</strong>；一台 server 從 800 W 升到 6,000 W。</p>
             </div>
           </div>
           <div class="idea" id="i3">
             <h3>Agent 是一種新的電腦，也是一個系統問題 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=36" target="_blank" rel="noopener">p.36–43</a></h3>
             <div class="prose">
-              <p>Slide 把 agent 看成一台新的電腦：LLM 是 CPU，context window 是 RAM，tool 是周邊裝置，harness 是 OS，agent 是 application。兩個不同點：程式用自然語言寫，每次可能走不同路徑；LLM 出錯是常態，所以 harness 要像 OS 一樣做隔離與權限控制。</p>
-              <p>傳統 serving 是 request → inference → response。Agent 把它拉成 infer → tool → infer → retrieval → … 的鏈，跨過 GPU、CPU、storage、network 與外部服務。每一步都等上一步，所以整條鏈都在 critical path 上。Tool 執行時 agent 用不到 GPU，它的 KV cache 卻還佔著記憶體。這帶出 p.42 的新問題：狀態管理、prefix caching、checkpoint。要優化先要看得到，所以 observability 是一等問題（p.43）。</p>
+              <p>Slide 把 agent 看成一台新的電腦：LLM 是 CPU，context window 是 RAM，tool 是周邊裝置，harness 是 OS，agent 是 application。兩個不同點：程式用自然語言寫，每次可能走不同路徑；LLM 出錯是常態，所以 <strong>harness 要像 OS 一樣做隔離與權限控制</strong>。</p>
+              <p>傳統 serving 是 request → inference → response。Agent 把它拉成 infer → tool → infer → retrieval → … 的鏈，跨過 GPU、CPU、storage、network 與外部服務。每一步都等上一步，所以<strong>整條鏈都在 critical path 上</strong>。Tool 執行時 agent 用不到 GPU，它的 <strong>KV cache 卻還佔著記憶體</strong>。這帶出 p.42 的新問題：狀態管理、prefix caching、checkpoint。要優化先要看得到，所以 observability 是一等問題（p.43）。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x1">
                   <summary>本文延伸｜不確定性改變團隊測試 LLM 功能的方式<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>傳統測試假設同樣的輸入得到同樣的輸出，所以可以比對字串。LLM 功能沒有這個保證，temperature 0 也沒有。字串比對的測試會時好時壞；團隊習慣直接重跑之後，真正的退步也跟著漏掉。</p>
+              <p>傳統測試假設同樣的輸入得到同樣的輸出，所以可以比對字串。LLM 功能沒有這個保證，temperature 0 也沒有。字串比對的測試會時好時壞；團隊習慣直接重跑之後，<strong>真正的退步也跟著漏掉</strong>。</p>
               <p>做法分兩層。Harness 的程式碼是確定性的：錄下 model 的回覆（record / replay），用一般的 unit test 測。Model 的行為用 eval 測：同一題跑多次，檢查性質，看通過率。L7 的 pass^k 是同一個想法。</p>
             
                   </div>
@@ -292,7 +292,7 @@
                   <summary>本文延伸｜長時間的 agent run 需要可靠性工程<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>對單一個 run，GPU 故障很少見：30 分鐘的 run 跑在 8 張 GPU 上，遇到故障的機率約 0.008%。但一天跑 10 萬個這種 run，就有約 8 個會遇到。Tool 逾時、API 錯誤更常見：每步 1% 出錯時，60 步全部順利的機率只有約 55%。</p>
+              <p>對單一個 run，GPU 故障很少見：30 分鐘的 run 跑在 8 張 GPU 上，遇到故障的機率約 0.008%。但一天跑 10 萬個這種 run，就有約 8 個會遇到。Tool 逾時、API 錯誤更常見：<strong>每步 1% 出錯時，60 步全部順利的機率只有約 55%</strong>。</p>
               <p>所以長的 run 要用分散式系統的老方法：每一步存 checkpoint，有副作用的 tool 要冪等（idempotent），重試要有上限。L4 的「tool 預設冪等」和 L6 的「checkpoint 與回滾」處理同一個問題。第 4 段第 5 題請你設計一套復原機制。</p>
             
                   </div>
@@ -302,15 +302,15 @@
           <div class="idea" id="i4">
             <h3>目標：在限制下讓任務成功 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=41" target="_blank" rel="noopener">p.41–44</a></h3>
             <div class="prose">
-              <p>Throughput 不適合當 agent 的目標。目標是在 latency、cost、resources、reliability、security 的限制下，讓任務成功率最高。TTFT、TPOT、GPU 使用率都有用，但各自只量一個元件。要看任務層級：成功率、端到端延遲、每個任務的 token 數、每個成功任務的花費與耗能。</p>
-              <p>例：A 跑 100 次花 $40，成功 50 次，每個成功任務 $0.80。B 花 $60，成功 90 次，約 $0.67。B 每次較貴，換算後反而便宜。p.44 用 9 個問題收尾，要求你能用數字回答。第 4 段的討論題從這裡出發。</p>
+              <p><strong>Throughput 不適合當 agent 的目標</strong>。目標是在 latency、cost、resources、reliability、security 的限制下，讓任務成功率最高。TTFT、TPOT、GPU 使用率都有用，但各自只量一個元件。要看任務層級：成功率、端到端延遲、每個任務的 token 數、每個成功任務的花費與耗能。</p>
+              <p>例：A 跑 100 次花 $40，成功 50 次，<strong>每個成功任務 $0.80</strong>。B 花 $60，<strong>成功 90 次，約 $0.67</strong>。B 每次較貴，換算後反而便宜。p.44 用 9 個問題收尾，要求你能用數字回答。第 4 段的討論題從這裡出發。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x3">
                   <summary>本文延伸｜Tokens/sec 會把 agent 的優化帶錯方向<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p>Tokens/sec 是 serving 層的指標，適合做容量規劃。拿來評估 agent 有三個盲點：大 batch 讓 critical path 上的每一步變慢；繞遠路的 agent 生成更多 token，數字反而好看；tool 的時間不在裡面。</p>
+              <p>Tokens/sec 是 serving 層的指標，適合做容量規劃。拿來評估 agent 有三個盲點：大 batch 讓 critical path 上的每一步變慢；<strong>繞遠路的 agent 生成更多 token，數字反而好看</strong>；tool 的時間不在裡面。</p>
               <p>指標一旦變成目標，團隊就會去優化它，不管它還代不代表原本的目的（Goodhart's law）。所以儀表板最上面放任務層級的指標，tokens/sec 留在 serving 的分頁。第 4 段第 3 題請你設計這組指標。</p>
             
                   </div>
