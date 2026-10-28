@@ -11,7 +11,8 @@ STE heuristics on prose; reading times;
 red key points (<strong>, STYLE_ARTICLE 6c): never inside b/a/code/pre/headings/summary/figcaption/
 figure/svg/table/nav/aside/details.gloss and no <b> inside them (problems); one mark per ~200 units of
 main chapter prose outside any <details> (target = round(units / 200), 1..5; target-1 is fine),
-plus at most 1 inside 深入/本文延伸 blocks per chapter, tldr exactly 3, #s-arch exactly 1, each mark <= 30 units (warnings).
+plus at most 1 inside 深入/本文延伸 blocks per chapter, tldr exactly 3, #s-arch exactly 1, each mark <= 30 units (warnings);
+inline lists (STYLE_ARTICLE 4, v5.6): a <p> with 4+ items joined by ； warns (skips p.lede, 相關：, p[data-inline]).
 
 Reading times (400 text units per minute; a CJK character or an English word is 1 unit;
 under 15 min: round up; 15 min or more: nearest 5):
@@ -217,6 +218,23 @@ def times(html):
     return {k: (minutes(n) if n else 0) for k, n in v.b.items()}
 
 
+def inline_lists(html):
+    """STYLE_ARTICLE 4 (v5.6): 4+ parallel items joined by ； in one <p> belong in ul/ol.
+    Skipped: p.lede (the group map is right below it), 相關： lines, and <p data-inline> (a chain of
+    reasoning or arithmetic that only looks like a list). ； inside <code> does not count."""
+    out = []
+    for m in re.finditer(r"<p\b([^>]*)>(.*?)</p>", html, re.S):
+        attrs, body = m.group(1), m.group(2)
+        if "lede" in attrs or "data-inline" in attrs:
+            continue
+        txt = re.sub(r"<code>.*?</code>", "x", body, flags=re.S)
+        txt = re.sub(r"<[^>]+>", "", txt).strip()
+        if txt.startswith("相關：") or txt.count("；") < 3:
+            continue
+        out.append((html.count("\n", 0, m.start()) + 1, txt))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("path")
@@ -285,6 +303,8 @@ def main():
     for m in p.strongs:
         if units(m["text"]) > 30:
             print(f"  warn: long red mark ({units(m['text'])}): {m['text'][:40]}")
+    for line, txt in inline_lists(html):
+        print(f"  warn: line {line}: {txt.count('；') + 1} items joined by ；, use ul/ol: {txt[:40]}")
     if args.fix_time:
         new = html
         for k, v in t.items():

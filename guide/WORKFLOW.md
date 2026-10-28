@@ -77,7 +77,7 @@ python3 -I tools/check_discuss.py docs/l09.html
 python3 -I tools/shot_article.py docs/l09.html
 ```
 
-- `check_article.py` 要印出 `OK`。`LONG` 句子拆短；`被` 改成主動。`warn` 可以不改，但要看一次。
+- `check_article.py` 要印出 `OK`。`LONG` 句子拆短；`被` 改成主動。`warn` 可以不改，但要看一次。`… items joined by ；, use ul/ol` 這種 warn 要改：拆成清單，或確認是推理／算式後在 `<p>` 加 `data-inline`（STYLE_ARTICLE 第 4 節「並列項目一項一行」）。
 - v5.0 版面（有 `nav.map`）的頁面，閱讀地圖裡每章的分鐘數這樣算（和 `check_article.py` 同一條公式；`notes/` 是暫存）：
   ```bash
   python3 -I - <<'EOF'
