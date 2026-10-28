@@ -606,7 +606,7 @@ grader: git apply patch.diff             # 套用 patch
         pytest FAIL_TO_PASS PASS_TO_PASS  # 兩組測試：原本失敗的要變成功，原本成功的不能壞
         → resolved / not resolved</code></pre></figure>
               <p>Grader 只做一件事：套用 patch、跑測試。測試分兩組，<strong>原本失敗的要變成功，原本成功的不能壞</strong>。這就是 2.1 說的第四層「寫出能跑的程式」，但環境是整個 repo，所以 agent 要先找到該改哪裡。原始題目有描述不清、測試不合理的案例，所以 OpenAI 在 2024 年人工篩出 Verified 子集，之後的分數多半報 Verified。變體有四個：Lite 是 300 題的子集，Multilingual 有 9 種語言，Multimodal 的 issue 附圖片，Pro 更難、要改多個檔案。</p>
-              <p id="i4-5"><b>τ-bench：和使用者對話、守政策、改後端。</b>前三個 benchmark 的指令都是一次給完。τ-bench（Yao 等人，2024）加了一個會說話的對手：一個 LLM 扮演客戶，agent 要和它對話，同時守一份航空公司的政策，並透過 API 改一個真的資料庫。Slide p.18 的政策例子是「basic economy 的機票不能改」。一題的典型流程：客戶說「我要把明天的航班改成晚班」，agent 先驗證身分、查訂位、搜航班、說明票價差、取得確認，再叫 <code>change_booking</code>，訂位更新。評分看最終的資料庫狀態，加上 2.2 講的 r = r_action × r_output：資料庫要和標註的目標一樣，回覆也要含必要資訊。這個 benchmark 第一次把三件事綁在一起量：<strong>對話、政策、副作用</strong>。Slide 提到後續版本（τ³-bench）修正了題目、加了領域、知識檢索與語音。</p>
+              <p id="i4-5"><b>τ-bench：和使用者對話、守政策、改後端。</b>前三個 benchmark 的指令都是一次給完。τ-bench（Yao 等人，2024）加了一個會說話的對手：一個 LLM 扮演客戶，agent 要和它對話，同時守一份航空公司的政策，並透過 API 改一個真的資料庫。Slide p.18 的政策例子是「basic economy 的機票不能改」。一題的典型流程：客戶說「我要把明天的航班改成晚班」，agent 先驗證身分、查訂位、搜航班、說明票價差、取得確認，再叫 <code>change_booking</code>，訂位更新。評分看最終的資料庫狀態，加上 2.2 講的 r = r_action × r_output：資料庫要和標註的目標一樣，回覆也要含必要資訊。這個 benchmark 第一次把三件事綁在一起量：<strong>對話、政策、副作用</strong>。Slide 提到後續版本 τ³-bench（Sierra，2026-03）修正了原本的題目、加了領域、知識檢索與語音；中間還有一版 τ²-bench。</p>
               <p id="i4-6"><b>四個放在一起。</b>它們的 grader 都是「重置，跑完，比對狀態」，差別在動作空間與觀察：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th></th><th>WebArena</th><th>OSWorld</th><th>SWE-bench</th><th>τ-bench</th></tr></thead>
@@ -702,7 +702,7 @@ PASS</code></pre></figure>
                 </tbody>
               </table></div>
               <p>表來自 p.26。<strong>最後一列最常見也最難防</strong>，因為它就是正常的開發流程：看失敗、改一下、再跑。L6 講的 memory 也在表裡：agent 跑過一次 benchmark，把「這題的答案是 4,381」寫進 memory，第二次跑就是在查筆記。所以 slide 的結論是<strong>「model 沒用測試集訓練」不足以證明分數乾淨</strong>，那只擋了九層裡的一層。</p>
-              <p id="i6-4"><b>怎麼防：每一層各一招。</b>Slide 沒有給防法，本文依上表整理（本文的判斷，2026-10）。訓練與 fine-tuning 這兩層靠「新題」：用 model 訓練截止日之後才出現的 issue（LiveCodeBench、SWE-bench 的新版都這樣做），或用沒公開的題。Prompt 與 scaffold 靠「分集」：調整時只看開發集，測試集封起來，發版前才跑一次；2.7 的本文延伸會講評估集怎麼新陳代謝。Retrieval 與 memory 靠「清空」：跑評估前重建索引、清掉 memory，每個 trial 從空白開始。Web search 靠「斷網或白名單」：或至少記錄 agent 搜了什麼、讀了什麼，事後抽查。Environment 靠「剪歷史」：repo 只留題目當時的 commit，測試檔不放進 sandbox，Terminal-Bench 把解法藏起來就是這一招。最後一層靠紀律：分數突然跳升，先問是不是有人看了測試集。</p>
+              <p id="i6-4"><b>怎麼防：每一層各一招。</b>Slide 沒有給防法，本文依上表整理（本文的判斷，2026-10）。訓練與 fine-tuning 這兩層靠「新題」：用 model 訓練截止日之後才出現的 issue（LiveCodeBench、SWE-bench Live 都這樣做），或用沒公開的題。Prompt 與 scaffold 靠「分集」：調整時只看開發集，測試集封起來，發版前才跑一次；2.7 的本文延伸會講評估集怎麼新陳代謝。Retrieval 與 memory 靠「清空」：跑評估前重建索引、清掉 memory，每個 trial 從空白開始。Web search 靠「斷網或白名單」：或至少記錄 agent 搜了什麼、讀了什麼，事後抽查。Environment 靠「剪歷史」：repo 只留題目當時的 commit，測試檔不放進 sandbox，Terminal-Bench 把解法藏起來就是這一招。最後一層靠紀律：分數突然跳升，先問是不是有人看了測試集。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">

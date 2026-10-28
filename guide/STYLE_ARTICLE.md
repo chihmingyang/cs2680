@@ -236,19 +236,23 @@
 | l07.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 |
 | l08.html | 8_agent_design_5.pdf | 54 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 |
 
-Part II（依課程網站時程，可能調整；PDF 檔名等 slides 公開後再填）：
+Part II（依課程網站 2026-10-28 的時程，可能調整；PDF 檔名等 slides 公開後再填）：
 
 | 日期 | 英文標題 | 備註 |
 |---|---|---|
-| 10-19 | Efficient LLM serving: basics I | |
-| 10-21 | Efficient LLM serving: basics II | |
-| 10-28 | Efficient LLM serving: speculative decoding | |
-| 11-02 | Efficient agentic systems: scheduling and prefix caching | |
-| 11-04 | Efficient LLM serving: pruning and quantization | |
+| 10-19 | Efficient LLM serving basics I: intro to LLMs | |
+| 10-21 | Efficient LLM serving basics II: intro to GPUs | |
+| 10-26 | Assignment feedback and Assignment 3 student sharing | 學生分享 |
+| 10-28 | Efficient LLM serving basics III: batching, paging, and parallelism | |
+| 11-02 | Efficient LLM serving: speculative decoding | |
+| 11-04 | Efficient agentic systems: scheduling and prefix caching | |
 | 11-09 | Guest lecture: Why Infrastructure sets the pace of AI (Meta) | 客座 |
-| 11-11 | Efficient LLM serving: GPU and kernels | |
+| 11-11 | Efficient LLM serving: pruning and quantization | |
 | 11-16 | Efficient LLM serving: KV-cache optimization and model architectures | 學生主講 |
+| 11-18 | Student sharing III: engine optimizations and agent-engine co-design | 學生主講 |
 | 11-23 | Efficient agentic system: routing and load balancing | |
 | 11-30 | Efficient agentic systems: others | |
+| 12-02 | Student sharing IV | 學生主講 |
+| 12-07 | Final project poster and demo | |
 
 10/05 客座（Snowflake）沒有公開 slides；10/14 Advanced agent design II 是學生主講。兩堂目前都沒有頁面。

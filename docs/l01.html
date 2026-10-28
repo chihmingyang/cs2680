@@ -587,18 +587,18 @@
               </ul>
               <p>對照 2.3 的五個假設，這條鏈讓每一條更糟：時間更不可預測，因為步數也未知；狀態更大、活得更久，因為 context 跨幾十步一直在；失敗點更多，因為每一步都可能碰外界。<strong>Agent 把 serving 的問題乘上步數</strong>。</p>
               <p id="i5-2"><b>六層 stack，每一層有人在優化。</b>p.40 把整個系統畫成六層，第 1 段的第一張圖照它重畫：最上面是 application 與使用者；接著是 agent 與 harness，負責 planning、context、memory、tools、subagents；再來是 model；model 下面是 serving system，做 batching、scheduling、routing、caching；再下面是 runtime 與 kernel，CUDA、Triton、collectives；最底是硬體，GPU、CPU、記憶體、網路、儲存。Harness 旁邊有一個「外部環境」：web、檔案、API、人，tool 就是通往它的路。Slide 另外標了三個跨層的箭頭：agent serving 橫跨 serving 以下幾層；systems 標在 scheduling 與 caching；hardware co-design 把 agent serving 連到硬體。傳統的 LLM serving 只看 model 以下三層；agent 把上面兩層接進來，問題就變成跨層：<strong>harness 怎麼組 context，決定 serving 層的 prefix cache 能不能命中</strong>，這是第 1 段圖右下角的例子。這門課的 Part I 講上面兩層，Part II 往下講。</p>
-              <p id="i5-3"><b>十個新問題，各對到一堂課。</b>p.42 把 agent workload 的十個性質，各對到一個系統課題。右欄是本文的整理：本站哪一堂或 Part II 哪一天會講，日期依 10 月底的課表，可能調整。</p>
+              <p id="i5-3"><b>十個新問題，各對到一堂課。</b>p.42 把 agent workload 的十個性質，各對到一個系統課題。右欄是本文的整理：本站哪一堂或 Part II 哪一天會講，日期依 2026-10-28 的課程網站課表，可能調整。</p>
               <div class="table-wrap"><table class="wide">
                 <thead><tr><th>Workload 的性質</th><th>系統課題（slide）</th><th>哪裡講（本文的整理）</th></tr></thead>
                 <tbody>
                   <tr><td>軌跡很長</td><td>狀態與 context 管理</td><td>L4 2.6–2.7、L6</td></tr>
-                  <tr><td>開頭一再重複</td><td>prefix caching</td><td>L8 2.1；11/02</td></tr>
-                  <tr><td>tool 之間有依賴</td><td>dependency-aware scheduling</td><td>11/02</td></tr>
-                  <tr><td>tool 的 latency 變化大</td><td>非同步執行</td><td>L8 2.5；11/30</td></tr>
+                  <tr><td>開頭一再重複</td><td>prefix caching</td><td>L8 2.1；11/04</td></tr>
+                  <tr><td>tool 之間有依賴</td><td>dependency-aware scheduling</td><td>11/04</td></tr>
+                  <tr><td>tool 的 latency 變化大</td><td>非同步執行</td><td>L8 2.7；11/30</td></tr>
                   <tr><td>多個 agent</td><td>orchestration 與通訊</td><td>L5</td></tr>
                   <tr><td>context 很大</td><td>記憶體階層與檢索</td><td>L6；11/16</td></tr>
-                  <tr><td>推理會分支</td><td>speculative execution</td><td>L8 2.5；10/28</td></tr>
-                  <tr><td>不同的 model</td><td>routing</td><td>L8 2.4；11/23</td></tr>
+                  <tr><td>推理會分支</td><td>speculative execution</td><td>L8 2.7；11/02</td></tr>
+                  <tr><td>不同的 model</td><td>routing</td><td>L8 2.5；11/23</td></tr>
                   <tr><td>對外有副作用</td><td>security 與隔離</td><td>L2、L4 2.4</td></tr>
                   <tr><td>任務跑很久</td><td>checkpointing 與 fault tolerance</td><td>L6；本章的本文延伸 x2</td></tr>
                 </tbody>
@@ -700,7 +700,7 @@
                 <details class="ex deep" id="x4">
                   <summary>本文延伸｜九個問題裡，Part II 負責 stack 的下半部<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
-                    <p>p.44 的九個問題，Part I 已經碰到幾個：L3 與 L5 談什麼時候開 subagent（第 6 題）；L8 談每個成功任務的成本與 routing（第 2、7、9 題）；L6 談 checkpoint（第 8 題）。剩下的多半在 stack 的下半部。依 10 月底的課表推測：batching 的取捨（第 1 題）在 10/19–10/21；KV 狀態與排程（第 3、4 題）在 11/02；tool call 與 inference 重疊（第 5 題）在 11/30；routing（第 7 題）在 11/23。讀 Part II 時，拿 p.44 當檢查表，每堂回答一題。本文的判斷（2026-10）。</p>
+                    <p>p.44 的九個問題，Part I 已經碰到幾個：L3 與 L5 談什麼時候開 subagent（第 6 題）；L8 談每個成功任務的成本與 routing（第 2、7、9 題）；L6 談 checkpoint（第 8 題）。剩下的多半在 stack 的下半部。依 2026-10-28 的課程網站課表：batching 的取捨（第 1 題）在 10/28；KV 狀態與排程（第 3、4 題）在 11/04 與 11/16；tool call 與 inference 重疊（第 5 題）在 11/30；routing（第 7 題）在 11/23。讀 Part II 時，拿 p.44 當檢查表，每堂回答一題。本文的判斷（2026-10）。</p>
                   </div>
                 </details>
               </div>
