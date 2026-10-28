@@ -224,7 +224,13 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">2.1</span>多一個 agent：只換到四樣東西，每一樣都有價格 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=6" target="_blank" rel="noopener">p.5–7</a></h3>
             <div class="prose">
-              <p id="i1-1"><b>四樣換得到的東西。</b>L2 到 L4 看的是一個 agent。多一個 agent，只有四種東西可以換到。Specialization：每個 agent 用不同的 model、prompt、tool。Isolation：讀網頁的 agent 沒有 shell。Parallelism：互不相依的子任務同時跑。Context management：worker 只拿到自己的子任務，supervisor 只收摘要（context 為什麼是成本，L4 的 2.6 講過）。</p>
+              <p id="i1-1"><b>四樣換得到的東西。</b>L2 到 L4 看的是一個 agent。多一個 agent，只有四種東西可以換到：</p>
+              <ul>
+                <li><b>Specialization。</b>每個 agent 用不同的 model、prompt、tool。</li>
+                <li><b>Isolation。</b>讀網頁的 agent 沒有 shell。</li>
+                <li><b>Parallelism。</b>互不相依的子任務同時跑。</li>
+                <li><b>Context management。</b>Worker 只拿到自己的子任務，supervisor 只收摘要（context 為什麼是成本，L4 的 2.6 講過）。</li>
+              </ul>
               <p id="i1-2"><b>每一樣都有價格。</b>多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是：<strong>先問真的需要 multi-agent 嗎</strong>。</p>
               <p id="i1-3"><b>三張圖描述任何架構。</b>決定要拆之後，slide 用三張圖描述任何架構（p.7）：control graph 寫誰協調，communication graph 寫誰和誰說話，task graph 寫工作怎麼拆。之後每一種架構，都用這三張圖標出自己的答案（p.9–16）。</p>
             </div>
@@ -244,7 +250,25 @@
           <div class="idea" id="i2">
             <h3><span class="idea-no">2.2</span>八種架構：都是三張圖的不同組合，弱點從線就讀得出來 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=8" target="_blank" rel="noopener">p.8–18</a></h3>
             <div class="prose">
-              <p id="i2-1"><b>八種架構，分三類。</b>p.18 把八種架構分成 centralized、decentralized、hybrid。中心化的四種：supervisor–worker（一個 agent 規劃、派工、整合）、hierarchical（supervisor 再管 supervisor）、pipeline（固定階段，一站傳一站）、market（agent 對任務出價，最便宜的得標）。去中心化的三種：blackboard（透過共享狀態協調，例如一個 git repo）、committee（各自回答，再由裁判或投票裁決）、swarm（同儕直接協商，沒有協調者）。混合的一種是 dynamic topology：執行中增減或改接 agent。</p>
+              <p id="i2-1"><b>八種架構，分三類。</b>p.18 把八種架構分成 centralized、decentralized、hybrid 三類：</p>
+              <ul>
+                <li><b>中心化的四種。</b>
+                  <ul>
+                    <li><b>Supervisor–worker。</b>一個 agent 規劃、派工、整合。</li>
+                    <li><b>Hierarchical。</b>Supervisor 再管 supervisor。</li>
+                    <li><b>Pipeline。</b>固定階段，一站傳一站。</li>
+                    <li><b>Market。</b>Agent 對任務出價，最便宜的得標。</li>
+                  </ul>
+                </li>
+                <li><b>去中心化的三種。</b>
+                  <ul>
+                    <li><b>Blackboard。</b>透過共享狀態協調，例如一個 git repo。</li>
+                    <li><b>Committee。</b>各自回答，再由裁判或投票裁決。</li>
+                    <li><b>Swarm。</b>同儕直接協商，沒有協調者。</li>
+                  </ul>
+                </li>
+                <li><b>混合的一種：dynamic topology。</b>執行中增減或改接 agent。</li>
+              </ul>
               <p id="i2-2"><b>兩類的弱點在不同地方。</b>中心化的四種好預測、好 debug，弱點都在中心：planner 瓶頸、每層摘要造成錯誤放大、錯誤往下游傳、market 的不實出價。去中心化的三種沒有單點，<strong>弱點變成一致性</strong>：狀態過期、groupthink（大家跟著第一個意見走，沒有人真的獨立判斷）、<code>O(n²)</code> 的訊息量（n 個 agent 兩兩互傳，訊息數隨 n 的平方成長）。</p>
               <p id="i2-3"><b>弱點都能從線讀出來。</b>Supervisor 的線全部匯到一點，所以它的 context 長得最快。Pipeline 沒有回頭的線，所以加一條 retry edge（一條讓結果退回上一站重做的線）勝過多加一個 agent。Committee 的兩個 grader 用同一個 model，<strong>兩票同意帶來的新資訊很少</strong>。真實系統是混合體（p.17）：Claude Code 的 <a class="tm" href="#n-teams">agent teams</a> 有 lead 派工、共享 task list、直接傳訊，三種都有。</p>
               <details class="gloss" id="n-teams">
@@ -380,7 +404,14 @@
                 <p class="qtext">把工作拆給多個 agent 有哪四個理由？描述架構用的三張圖，各回答什麼問題？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>四個理由（p.6）：specialization，每個 agent 用不同的 model、prompt、tool；isolation，給不同的權限；parallelism，互不相依的子任務同時跑；context management，不必把整條 trajectory 交給每個 agent。三張圖（p.7）：control graph 回答誰協調，communication graph 回答 agent 怎麼溝通，task graph 回答工作怎麼拆。</p>
+                    <p><b>答案：</b>四個理由（p.6）：</p>
+                    <ul>
+                      <li><b>Specialization。</b>每個 agent 用不同的 model、prompt、tool。</li>
+                      <li><b>Isolation。</b>每個 agent 給不同的權限。</li>
+                      <li><b>Parallelism。</b>互不相依的子任務同時跑。</li>
+                      <li><b>Context management。</b>不必把整條 trajectory 交給每個 agent。</li>
+                    </ul>
+                    <p>三張圖（p.7）：control graph 回答誰協調，communication graph 回答 agent 怎麼溝通，task graph 回答工作怎麼拆。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
                   <p>四個理由換到的東西不同。Specialization 讓每個角色有短而專一的 prompt，也能配不同的 model。Isolation 切割權限：讀網頁的 agent 沒有 shell，網頁裡夾帶的指令就碰不到危險的 tool。Context management 換到乾淨的 context：worker 只看到自己的子任務，supervisor 只收摘要。Parallelism 換到的是時間。</p>
@@ -571,7 +602,14 @@
                     </div>
                     <figcaption>n 是子任務數。往右走，藍色的 critical path 變短，白色的 communication 變長；兩者相加有一個最低點。數字是假設，形狀才是重點。</figcaption>
                   </figure>
-                  <p>p.23 把拆解分成四種：static 在執行前就知道；dynamic 依發現生出新任務；recursive 讓 worker 再委派；opportunistic 讓閒著的 agent 認領新任務。後三種的任務數在執行前未知，所以需要四種上限：spawn 數量、預算、深度、終止條件。</p>
+                  <p>p.23 把拆解分成四種：</p>
+                  <ul>
+                    <li><b>Static。</b>任務在執行前就知道。</li>
+                    <li><b>Dynamic。</b>依發現生出新任務。</li>
+                    <li><b>Recursive。</b>讓 worker 再委派。</li>
+                    <li><b>Opportunistic。</b>讓閒著的 agent 認領新任務。</li>
+                  </ul>
+                  <p>後三種的任務數在執行前未知，所以需要四種上限：spawn 數量、預算、深度、終止條件。</p>
                   <p class="tk-h">背景補充</p>
                   <p>最低點可以算。總時間裡會隨 n 變的部分是 100 ÷ n ＋ 8n。前項遞減，後項遞增，最低點在 n = √(100 ÷ 8) ≈ 3.5。整數裡 4 最好，和圖一致。L3 的 Amdahl's law 說不能平行的部分限制加速上限；這裡更糟，overhead 隨 n 成長，所以拆過頭會變慢。</p>
                   <p>拆得越細，fan-out 越大，也越容易遇到 straggler。Critical path 取最慢的那一份。假設每份有 1% 機率變慢，fan-out 100 時，至少一份變慢的機率是 1 − 0.99<sup>100</sup> ≈ 63%。Google 的〈The Tail at Scale〉用這個算式說明 fan-out 讓尾端延遲變重要。這是 p.25 失敗 06 的機率面。</p>
@@ -807,7 +845,7 @@
                   </ul>
                 </div>
                 <details class="qstart"><summary>作答範本</summary><div class="hint">
-                  <p class="tpl">目標：＿＿；輸入：＿＿；邊界：＿＿；權限：＿＿；輸出：＿＿；完成條件：＿＿；預算：＿＿；相依：＿＿。</p>
+                  <p class="tpl" data-inline>目標：＿＿；輸入：＿＿；邊界：＿＿；權限：＿＿；輸出：＿＿；完成條件：＿＿；預算：＿＿；相依：＿＿。</p>
                   <p class="tpl">我沿 ＿＿ 軸拆成 ＿＿ 個 worker，各驗一個假設：＿＿。再多會 ＿＿，再少會 ＿＿。</p>
                   <p class="tpl">擋住各失敗的那一行：01 ＿＿、02 ＿＿、03 ＿＿、04 ＿＿、05 ＿＿、06 ＿＿。</p>
                 </div></details>
