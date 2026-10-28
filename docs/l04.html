@@ -311,7 +311,13 @@
                 </div>
                 <figcaption>本文的整理。左：model 只會讀文字、寫文字。右：harness 把 model 的 tool call 變成真的動作，再把結果以文字送回；model 自己從頭到尾只看到文字。</figcaption>
               </figure>
-              <p id="i1-2"><b>ReAct 把推理和行動接成一個圈。</b>ReAct 是 2022 年的一篇論文（Yao 等人，arXiv 2210.03629），名字來自 Reason 和 Act。它讓 model 輪流做三件事：Thought、Action、Observation。Thought 是 model 寫下「我知道什麼、還缺什麼、下一步做什麼」；Action 是 model 發出一個結構化的請求，請外界替它做一件事，例如搜尋一個字串；Observation 是外界把真實的結果放回 context。拿「修 login 的 timeout」當例子：</p>
+              <p id="i1-2"><b>ReAct 把推理和行動接成一個圈。</b>ReAct 是 2022 年的一篇論文（Yao 等人，arXiv 2210.03629），名字來自 Reason 和 Act。它讓 model 輪流做三件事：</p>
+              <ol>
+                <li><b>Thought。</b>Model 寫下「我知道什麼、還缺什麼、下一步做什麼」。</li>
+                <li><b>Action。</b>Model 發出一個結構化的請求，請外界替它做一件事，例如搜尋一個字串。</li>
+                <li><b>Observation。</b>外界把真實的結果放回 context。</li>
+              </ol>
+              <p>拿「修 login 的 timeout」當例子：</p>
               <figure class="file"><figcaption>一圈 ReAct，model 看到的文字</figcaption><pre><code>Thought: 先找程式碼裡哪裡設 timeout。
 Action: grep -rn "timeout" src/
 Observation: 37 筆結果，在 12 個檔案裡（省略）
@@ -557,7 +563,14 @@ aider/commands.py:
 ⋮</code></pre></figure>
               <p>所以 model 一開始就知道 repo 裡有哪些檔案、每個檔案裡有什麼、誰是核心，但一行本體都沒讀。它要改 <code>apply_updates</code> 時，就說「把 <code>base_coder.py</code> 加進對話」，Aider 才把整個檔案放進 context。Repo map 和 semantic search 的差別：一個回答「這個 repo 長什麼樣」，一個回答「哪一段和我的問題意思相近」。它的代價一樣是要同步，檔案一改就要重新解析那個檔案（Aider 會快取沒改的檔案）；而且它只有大綱，沒有本體，所以適合「該讀哪個檔」這一步，不適合「這段邏輯怎麼寫的」。</p>
               <p id="i2-6"><b>找法 3：extrinsic signal，程式碼以外的證據。</b>第三種是 stack trace、失敗的測試、git 歷史。有這種訊號時它最準。Stack trace 是程式出錯那一刻的呼叫鏈：最上面一行是出錯的位置，往下每一行（每一個 frame）是呼叫它的函式，一路列到 <code>main</code>。Slide 的例子是一份 checkout 的 crash report：stack trace 指到 <code>cart.ts:88</code>，順著 3 層 frame 往下讀到 <code>tax.ts</code> 的 <code>applyTax</code> 在四捨五入出錯，修掉，跑 <code>pytest tests/tax.py</code> 變綠，一次搜尋都不用。但它只在有人回報問題時才存在；寫新功能時沒有 stack trace 可以看。</p>
-              <p id="i2-7"><span class="anchor" id="t2"></span><b>找法 4：LSP，依 symbol 找。</b>先從你用過的功能講起。在 VS Code 裡把游標放在一個函式名上，按 F12 會跳到它的定義（go to definition）；按 Shift+F12 會列出所有呼叫它的地方（find references）；按 F2 改名，所有呼叫端一起改（rename）；滑鼠移上去會顯示型別（hover）。這些功能都要「懂這個語言」：知道哪一個 <code>charge</code> 才是這個函式。早期每個編輯器要替每種語言各寫一套這種程式，N 個編輯器乘 M 種語言。2016 年 Microsoft 隨 VS Code 推出 Language Server Protocol（LSP），把它拆成兩半：編輯器只管畫面，另外跑一個程式叫 language server，一種語言一個，專門負責懂程式碼。兩者之間用一套固定的訊息溝通，這套訊息就是 LSP；訊息的格式是 JSON-RPC，也就是用 JSON 寫的請求與回應，每一則有 <code>method</code>（要做什麼）和 <code>params</code>（對哪個檔案的哪個位置）。於是每種語言只要寫一個 server，每個編輯器只要會說 LSP，N 乘 M 變成 N 加 M（L2 的 <a class="tm" href="#n-mcp">MCP</a> 也是同一個思路）。常見的 server：TypeScript 用 <code>typescript-language-server</code>，Python 用 pyright，Rust 用 rust-analyzer，C/C++ 用 clangd。</p>
+              <p id="i2-7"><span class="anchor" id="t2"></span><b>找法 4：LSP，依 symbol 找。</b>先從你用過的功能講起。在 VS Code 裡，對一個函式名有四個常用的功能：</p>
+              <ul>
+                <li><b>Go to definition。</b>把游標放在函式名上，按 F12，會跳到它的定義。</li>
+                <li><b>Find references。</b>按 Shift+F12，會列出所有呼叫它的地方。</li>
+                <li><b>Rename。</b>按 F2 改名，所有呼叫端一起改。</li>
+                <li><b>Hover。</b>滑鼠移上去，會顯示型別。</li>
+              </ul>
+              <p>這些功能都要「懂這個語言」：知道哪一個 <code>charge</code> 才是這個函式。早期每個編輯器要替每種語言各寫一套這種程式，N 個編輯器乘 M 種語言。2016 年 Microsoft 隨 VS Code 推出 Language Server Protocol（LSP），把它拆成兩半：編輯器只管畫面，另外跑一個程式叫 language server，一種語言一個，專門負責懂程式碼。兩者之間用一套固定的訊息溝通，這套訊息就是 LSP；訊息的格式是 JSON-RPC，也就是用 JSON 寫的請求與回應，每一則有 <code>method</code>（要做什麼）和 <code>params</code>（對哪個檔案的哪個位置）。於是每種語言只要寫一個 server，每個編輯器只要會說 LSP，N 乘 M 變成 N 加 M（L2 的 <a class="tm" href="#n-mcp">MCP</a> 也是同一個思路）。常見的 server：TypeScript 用 <code>typescript-language-server</code>，Python 用 pyright，Rust 用 rust-analyzer，C/C++ 用 clangd。</p>
               <details class="gloss" id="n-mcp">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">MCP（L2）：tool 這一邊的 LSP</span></summary>
                 <div class="gloss-body prose">
@@ -756,7 +769,13 @@ FunctionDeclaration
                 └── BinaryExpression "+"
                     ├── StringLiteral "/users/"
                     └── Identifier "id"</code></pre></figure>
-              <p>AST 編輯讓 model 不輸出文字，只點名一個操作和一個 symbol，例如 <code>add_param(fetchUser, "timeout", default: "5s")</code>。Tool 做三件事：用 parser 把檔案讀成樹；在樹上找到 <code>fetchUser</code> 的 <code>FunctionDeclaration</code> 節點，在它的 <code>params</code> 底下加一個 <code>Parameter</code> 節點；再用 printer（parser 的反向，把樹印回文字）寫回檔案。因為改的是樹，印回來的程式碼一定能 parse，也不受原本的排版影響，這就是 slide 說的「immune to formatting」。而且 tool 可以順著 symbol 找到所有呼叫端（和 LSP 用同一份索引），替 18 個 <code>fetchUser(…)</code> 的 <code>CallExpression</code> 各加一個引數，一個操作就全部改完。常見的工具：tree-sitter 負責 parse，很多語言都支援；jscodeshift、ts-morph 做 JavaScript／TypeScript 的改寫；Python 有 libcst。這類工具平常叫 codemod，大型 refactor 用它。</p>
+              <p>AST 編輯讓 model 不輸出文字，只點名一個操作和一個 symbol，例如 <code>add_param(fetchUser, "timeout", default: "5s")</code>。Tool 做三件事：用 parser 把檔案讀成樹；在樹上找到 <code>fetchUser</code> 的 <code>FunctionDeclaration</code> 節點，在它的 <code>params</code> 底下加一個 <code>Parameter</code> 節點；再用 printer（parser 的反向，把樹印回文字）寫回檔案。因為改的是樹，印回來的程式碼一定能 parse，也不受原本的排版影響，這就是 slide 說的「immune to formatting」。而且 tool 可以順著 symbol 找到所有呼叫端（和 LSP 用同一份索引），替 18 個 <code>fetchUser(…)</code> 的 <code>CallExpression</code> 各加一個引數，一個操作就全部改完。常見的工具有三組：</p>
+              <ul>
+                <li><b>tree-sitter。</b>負責 parse，很多語言都支援。</li>
+                <li><b>jscodeshift、ts-morph。</b>做 JavaScript／TypeScript 的改寫。</li>
+                <li><b>libcst。</b>Python 的改寫用它。</li>
+              </ul>
+              <p>這類工具平常叫 codemod，大型 refactor 用它。</p>
               <p>代價有兩個。每種語言要一套 parser 和 printer，而且每一種操作都要有人先寫好程式：<code>rename</code>、<code>add_param</code>、<code>extract_function</code> 各是一段邏輯。所以 model 能做的只有工具定義好的那幾種，「改寫這段折扣邏輯」沒有對應的操作，還是要回到前三種改文字的方法。</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -1109,7 +1128,13 @@ ValueError: bad id"}
                 <figcaption>依 p.28 重畫。藍框是這堂課的位置：prompt 只是 context 的一小塊，context 又只是 harness 的一部分。講者說列出這些名詞是為了讓你認得它們，不代表背書。</figcaption>
               </figure>
               <p id="i5-1"><b>八種技巧，三層成本。</b>Slide p.29–37 列了八種 prompt 技巧，每一種配一個例子。它們依成本分成三層，<strong>從上往下試，夠用就停</strong>，因為每往下一層，token 與呼叫次數都會增加。</p>
-              <p id="i5-2"><b>第一層只改指令。</b>Zero-shot 是只給指令，不給範例；few-shot 在指令後面附幾個做好的例子；role 和 persona 給 model 一個身分和讀者。三者用同一個例子看：</p>
+              <p id="i5-2"><b>第一層只改指令。</b>這一層有三種寫法：</p>
+              <ul>
+                <li><b>Zero-shot。</b>只給指令，不給範例。</li>
+                <li><b>Few-shot。</b>在指令後面附幾個做好的例子。</li>
+                <li><b>Role 和 persona。</b>給 model 一個身分和讀者。</li>
+              </ul>
+              <p>三者用同一個例子看：</p>
               <figure class="file"><figcaption>第一層的三種寫法（p.30–32 的例子）</figcaption><pre><code># Zero-shot：只有指令。任務常見、規則講得清楚，就用它
 You are a support triage assistant. Classify the ticket as
 billing, bug, feature, or other. Reply with JSON only: {"label": ...}.
@@ -1209,7 +1234,14 @@ C lazy-load assets       impact 4, effort 1
                   <tr><td>Slide 沒列的：「深呼吸」「給你 200 美元小費」「這對我的職涯很重要」</td><td>過期</td><td>情緒或獎勵的句子，早期 model 有一點效果，現在沒有。</td></tr>
                 </tbody>
               </table></div>
-              <p>所以 slide p.40 給的是四條不會過期的原則：從簡單開始再迭代；把 prompt 分成 context、指令、tool、輸出格式幾個區塊；具體精簡，花俏的措辭換不到東西；大任務拆成小任務。最後一句是：<strong>prompt 的建議和 model 綁在一起，換 model 就要重調</strong>。</p>
+              <p>所以 slide p.40 給的是四條不會過期的原則：</p>
+              <ul>
+                <li><b>從簡單開始。</b>先寫簡單的，再迭代。</li>
+                <li><b>分段。</b>把 prompt 分成 context、指令、tool、輸出格式幾個區塊。</li>
+                <li><b>具體精簡。</b>花俏的措辭換不到東西。</li>
+                <li><b>拆任務。</b>大任務拆成小任務。</li>
+              </ul>
+              <p>最後一句是：<strong>prompt 的建議和 model 綁在一起，換 model 就要重調</strong>。</p>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">
                   <summary>本文延伸｜Prompt 的招式會過期，原則不會<span>不是 slide 的內容</span></summary>
@@ -1322,7 +1354,7 @@ C lazy-load assets       impact 4, effort 1
                 </div>
               </details>
               <p id="i6-3"><b>三種成本。</b>這件事重要，是因為 context 有三種成本。第一是錢：model 沒有記憶，每一圈 harness 都要把整個 window 重送一次，所以一份 8,000 token 的 tool 結果進了 context，之後每一圈都要再付一次。第二是延遲。Model 處理一次 request 分兩個階段：prefill 先把整個 prompt 讀一遍，decode 再一個 token 一個 token 地產生回答。Prompt 越長，prefill 越久；而 decode 每產生一個 token 都要回頭看整個 context，所以也會變慢。第三是注意力：window 越滿，model 越難從裡面找回資訊。</p>
-              <p id="i6-4"><span class="anchor" id="t6"></span><b>注意力的成本，兩組實驗量過。</b>第一組是 Chroma 的 Context Rot（2025）：同一個問題，輸入越長，準確率越低，有干擾內容時掉得更快。第二組是 Liu 等人的 Lost in the Middle（TACL 2024）：把含答案的文件放在 20 份文件中的不同位置，放第 1 份，準確率 76%；<strong>放第 10 份掉到 55%</strong>；放第 20 份又回到 71%，曲線呈 U 形。原因還沒有定論，但設計上的意義很清楚：關鍵的指示放開頭或結尾；中間是 model 最看不到的位置。</p>
+              <p id="i6-4" data-inline><span class="anchor" id="t6"></span><b>注意力的成本，兩組實驗量過。</b>第一組是 Chroma 的 Context Rot（2025）：同一個問題，輸入越長，準確率越低，有干擾內容時掉得更快。第二組是 Liu 等人的 Lost in the Middle（TACL 2024）：把含答案的文件放在 20 份文件中的不同位置，放第 1 份，準確率 76%；<strong>放第 10 份掉到 55%</strong>；放第 20 份又回到 71%，曲線呈 U 形。原因還沒有定論，但設計上的意義很清楚：關鍵的指示放開頭或結尾；中間是 model 最看不到的位置。</p>
               <figure class="diagram">
                 <div class="scroll">
                   <svg viewBox="0 0 640 260" role="img" aria-label="折線圖：含答案的文件放在 20 份文件中的第幾份，對回答準確率。第 1 份 76%，第 5 份 61%，第 10 份 55%，第 15 份 59%，第 20 份 71%。曲線呈 U 形，中間最低。中段加了一個虛線框，註記 agent 的舊 tool 結果通常堆在這一段。">
@@ -1496,7 +1528,13 @@ Available tools (call tool_search to load one):
 
 // sliding window：第 2 到第 9 圈整段不送，messages 直接從第 10 圈接上第 1 則訊息</code></pre></figure>
               <p>三種做法共同的性質：不呼叫 LLM，所以便宜；換掉的內容大多可以重跑 tool 拿回，所以對目前的任務幾乎無損。它們也有一個共同的代價，來自 <a class="tm" href="#n-prefix">prefix cache</a>（2.6 的註）：cache 只對「和上一次完全相同的開頭」有效，改了 <code>messages</code> 中間的一筆，<strong>那一筆之後的 cache 全部失效</strong>，下一圈要重算。所以 harness 不會每圈遮一筆，而是攢到一個門檻（例如 context 用了 60%）再一次遮一批，讓 cache 失效一次就好；Lewis 的改良 harness（這章最後的實驗）做的就是這類事。還有一個風險：遮掉的 tool 結果裡可能有 model 後來要引用的事實，這就是下面五種失敗裡的 drift，解法是把關鍵事實寫進 memory 或 pinned 的訊息。</p>
-              <p id="i7-4"><b>Compaction：LLM 當最後手段。</b>Compaction 是用 LLM 把舊歷史寫成一段摘要，換掉原文。做法有兩種：rolling summary 邊走邊把舊的 tool 結果摘要掉；full summary 等 window 快滿時把整段歷史重寫一次。Claude Code 的 <code>/compact</code> 和自動 compaction 就是後者。它<strong>有損又不可逆</strong>，因為留什麼由 model 決定，原文沒有 handle 可以拿回，所以排在最後。Slide 給了三個提醒：要預留輸出的空間，不能等到完全滿；system prompt 和 tool 定義那一段要保持原樣，因為 prefix cache 靠它；摘要之後要把關鍵的事實重新放回去，例如目前的目標。Auto memory（Claude Code 自動把重要的事實寫進 memory 檔的機制，L2 講過）是它的配套：關鍵事實寫到 window 外面的檔案，就不怕摘要漏掉。</p>
+              <p id="i7-4"><b>Compaction：LLM 當最後手段。</b>Compaction 是用 LLM 把舊歷史寫成一段摘要，換掉原文。做法有兩種：rolling summary 邊走邊把舊的 tool 結果摘要掉；full summary 等 window 快滿時把整段歷史重寫一次。Claude Code 的 <code>/compact</code> 和自動 compaction 就是後者。它<strong>有損又不可逆</strong>，因為留什麼由 model 決定，原文沒有 handle 可以拿回，所以排在最後。Slide 給了三個提醒：</p>
+              <ul>
+                <li><b>預留空間。</b>要預留輸出的空間，不能等到完全滿。</li>
+                <li><b>保持開頭。</b>System prompt 和 tool 定義那一段要保持原樣，因為 prefix cache 靠它。</li>
+                <li><b>放回關鍵事實。</b>摘要之後要把關鍵的事實重新放回去，例如目前的目標。</li>
+              </ul>
+              <p>Auto memory（Claude Code 自動把重要的事實寫進 memory 檔的機制，L2 講過）是它的配套：關鍵事實寫到 window 外面的檔案，就不怕摘要漏掉。</p>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x3">
                   <summary>本文延伸｜無損與有損的排序，就是成本的排序<span>不是 slide 的內容</span></summary>
@@ -1589,7 +1627,14 @@ Available tools (call tool_search to load one):
                 <p class="qtext">只推理和只行動的 model 各會出什麼問題？Slide 標出 harness 設計者的哪四項工作？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>只推理：沒有東西檢查推理，小錯誤累積成自信的幻覺。只行動：tool call 背後沒有計畫，model 一直重複同樣的動作（p.4）。四項工作（p.6）：組出 context；寫 tool 定義；驗證請求、檢查權限，再執行；整理結果、管理 context。第 4 項是可選的。</p>
+                    <p><b>答案：</b>只推理：沒有東西檢查推理，小錯誤累積成自信的幻覺。只行動：tool call 背後沒有計畫，model 一直重複同樣的動作（p.4）。四項工作（p.6）：</p>
+                    <ol>
+                      <li>組出 context。</li>
+                      <li>寫 tool 定義。</li>
+                      <li>驗證請求、檢查權限，再執行。</li>
+                      <li>整理結果、管理 context。</li>
+                    </ol>
+                    <p>第 4 項是可選的。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
                   <p>ReAct 讓兩種做法交錯（p.4）。Thought 決定下一個 action；action 的 observation 再修正下一個 thought。推理給行動方向，observation 給推理一個外部的檢查點。Loop 一直跑，直到 observation 回答了問題，或停止規則結束這次執行。</p>
@@ -1666,7 +1711,12 @@ Available tools (call tool_search to load one):
                   <p>四項工作都在 model 之外（p.6）。前三項是 loop 能跑的最低需求：沒有 context，model 不知道任務；沒有 tool 定義，model 不知道能做什麼；沒有驗證，錯誤的參數會直接執行。第 4 項可選，因為原始結果直接加回去，loop 也能跑。但結果越堆越多，context 就變貴、變慢、變不準，這是 p.41 之後的主題。p.7 把同樣的分工畫成三個元件：model 加 loop、tool 與 guardrail、state（context 與 memory）。</p>
                   <p class="tk-h">背景補充</p>
                   <p>ReAct 出自 Yao 等人 2022 年的論文（p.4 引用的 arXiv 2210.03629），實驗用問答與互動環境（ALFWorld、WebShop）。當時 model 用純文字寫出 Thought 與 Action。Harness 解析 Action 那一行、執行，再把 Observation 接在後面。現在的 API 有原生的 tool calling：model 輸出結構化的 tool call，harness 回傳附 tool_call_id 的結果。格式變了，loop 沒有變。</p>
-                  <p>ReAct 每一步都 loop，但它不是唯一的做法。p.55 的選讀列出另外三種：Reflexion 失敗之後才 loop（嘗試、評估、反省、重試）；plan-and-execute 偏離計畫才重新規劃；tree search 一次展開多條分支，留下最好的。</p>
+                  <p>ReAct 每一步都 loop，但它不是唯一的做法。p.55 的選讀列出另外三種：</p>
+                  <ul>
+                    <li><b>Reflexion。</b>失敗之後才 loop（嘗試、評估、反省、重試）。</li>
+                    <li><b>Plan-and-execute。</b>偏離計畫才重新規劃。</li>
+                    <li><b>Tree search。</b>一次展開多條分支，留下最好的。</li>
+                  </ul>
                   <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Model 會自己 think，就不需要 observation。」Thinking 再長，也還是 p.4 的「只推理」：它看不到 repo 裡真正的程式碼，也跑不了測試。能抓到錯誤的，是來自 model 外面的 observation。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
                     <li>只推理 → 沒有檢查 → 自信的幻覺；只行動 → 沒有計畫 → 重複動作。ReAct 讓兩者互相修正。</li>
@@ -1729,7 +1779,14 @@ Available tools (call tool_search to load one):
                     <figcaption>依 p.26 的數字重畫，分組是本文的整理。上面兩列多給了資訊，下面兩列少了專用的 tool，結果都比完整介面差。</figcaption>
                   </figure>
                   <p class="tk-h">背景補充</p>
-                  <p>數字出自 SWE-agent 論文（Yang 等人，2024）。論文把 agent 與電腦之間的介面叫 agent-computer interface（ACI）。預設的 ACI 有幾個設計：viewer 一次顯示 100 行，附行號；edit 改完先跑 linter，語法錯就拒絕並說明原因；搜尋回傳摘要過的結果；歷史只留最近 5 個 observation 的全文，更早的各縮成一行。p.26 的兩個「多給」設定，就是把 viewer 與歷史改回不設限。</p>
+                  <p>數字出自 SWE-agent 論文（Yang 等人，2024）。論文把 agent 與電腦之間的介面叫 agent-computer interface（ACI）。預設的 ACI 有四個設計：</p>
+                  <ul>
+                    <li><b>Viewer。</b>一次顯示 100 行，附行號。</li>
+                    <li><b>Edit。</b>改完先跑 linter，語法錯就拒絕並說明原因。</li>
+                    <li><b>搜尋。</b>回傳摘要過的結果。</li>
+                    <li><b>歷史。</b>只留最近 5 個 observation 的全文，更早的各縮成一行。</li>
+                  </ul>
+                  <p>p.26 的兩個「多給」設定，就是把 viewer 與歷史改回不設限。</p>
                   <p>p.26 的答案也依 model 而定。這頁是 GPT-4 的數據，slide 要你在 assignment 自己驗證。延伸閱讀裡 Schmid 的文章主張：新 model 對 bash 訓練充分，一個 shell tool 就夠；那是沒有量化的觀察。兩種看法可以並存：就算只給 shell，輸出的長度與錯誤訊息仍要由 harness 處理（p.23）。</p>
                   <div class="callout caution"><span class="tag">常見誤解</span><div><p>「給 model 越多資訊，它答得越好。」p.26 的兩列是反例：整個檔案與完整歷史都低於預設。資訊有用，但它佔掉的注意力也是成本。該問的是：這段輸出能不能幫 model 決定下一步？</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
@@ -1748,7 +1805,13 @@ Available tools (call tool_search to load one):
                 <p class="qtext">八種 prompt 技巧分成哪三層？換 model 時，slide 要你怎麼處理 prompt？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>p.38 的三層：先用簡單的（zero-shot、few-shot、role/persona）；加入推理（chain-of-thought、tree-of-thought、self-consistency）；設計成系統（prompt chaining、meta prompting）。p.40：prompt 的建議依 model 而異，換 model 就要重新調整。p.39 說有些技巧已經過時，是哪些要你在 assignment 自己找出來。</p>
+                    <p><b>答案：</b>p.38 的三層：</p>
+                    <ol>
+                      <li><b>先用簡單的。</b>包括 zero-shot、few-shot、role/persona。</li>
+                      <li><b>加入推理。</b>包括 chain-of-thought、tree-of-thought、self-consistency。</li>
+                      <li><b>設計成系統。</b>包括 prompt chaining、meta prompting。</li>
+                    </ol>
+                    <p>p.40：prompt 的建議依 model 而異，換 model 就要重新調整。p.39 說有些技巧已經過時，是哪些要你在 assignment 自己找出來。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
                   <p>三層的順序就是成本的順序。第一層只改 prompt 的寫法，每件工作呼叫 model 一次。第二層要 model 寫出推理，輸出變長；self-consistency 還要取樣多次再投票，p.35 取樣 5 次，成本約 5 倍。第三層把工作拆成多段，每段各呼叫一次；或讓 model 依測試結果改寫 prompt。所以從上往下試，夠用就停。</p>
@@ -1766,7 +1829,14 @@ Available tools (call tool_search to load one):
                       <tr><td>Meta prompting</td><td>把 prompt 和答錯的測試案例交給 model，請它改寫（p.37）</td><td>已經有一組測試案例</td></tr>
                     </tbody>
                   </table></div>
-                  <p>p.40 也給了四條不分 model 的原則：從簡單開始，需要時才加 context；分段（context、指示、tool、輸出規格）；具體且精簡；大任務拆成小任務。p.28 把這一段放進更大的脈絡：prompt engineering 只是第一個階段，後面依序是 context、harness、goal engineering。Prompt 只是 harness 組出的 context 的一部分。</p>
+                  <p>p.40 也給了四條不分 model 的原則：</p>
+                  <ul>
+                    <li>從簡單開始，需要時才加 context。</li>
+                    <li>分段（context、指示、tool、輸出規格）。</li>
+                    <li>具體且精簡。</li>
+                    <li>大任務拆成小任務。</li>
+                  </ul>
+                  <p>p.28 把這一段放進更大的脈絡：prompt engineering 只是第一個階段，後面依序是 context、harness、goal engineering。Prompt 只是 harness 組出的 context 的一部分。</p>
                   <p class="tk-h">背景補充</p>
                   <p>技巧為什麼會過期？一招有效，是因為它補了 model 當時的弱點。現在的 reasoning model 在訓練時就學會先推理再回答。對它說「think step by step」是重複的指示，有些 model 的官方文件直接建議不要再寫。其他哪些過期，照 p.39 的要求，在 assignment 裡量。</p>
                   <p>Self-consistency 要 temperature 大於 0。T = 0 時 5 次取樣幾乎走同一條路，一致也沒有資訊。p.35 用 T = 0.7，讓每次的推理路徑不同。</p>
@@ -2185,7 +2255,13 @@ error: patch failed: client.ts:41</code></pre></figure>
               <li><b>前三種 workflow pattern 的路徑能事先寫死。</b>Prompt chaining：任務能切成固定子步驟，中間可加程式檢查。Routing：先分類再分流，簡單問題給小 model，難的給大 model。Parallelization：拆段同時跑（sectioning），或同一題跑多次投票（voting）。</li>
               <li><b>後兩種把一部分決定交給 model。</b>Orchestrator-workers：子任務無法事先列出，由一個 LLM 動態拆解再彙整，例如跨多檔的程式修改。Evaluator-optimizer：一個產生、一個評分，來回迭代，例如文學翻譯。</li>
               <li><b>Agent 的實作通常很簡單。</b>LLM 在 loop 裡用 tool，依環境回饋決定下一步。每一步要從環境拿到 ground truth：tool 結果、程式執行結果。要有停止條件，例如最大迭代次數。用在步驟數無法預測的開放任務。</li>
-              <li><b>三條原則：簡單、透明、ACI。</b>設計保持簡單；把規劃步驟明白顯示出來；tool 的文件與測試要像 HCI 一樣投入。</li>
+              <li><b>三條原則：簡單、透明、ACI。</b>
+                <ul>
+                  <li><b>簡單。</b>設計保持簡單。</li>
+                  <li><b>透明。</b>把規劃步驟明白顯示出來。</li>
+                  <li><b>ACI。</b>Tool 的文件與測試要像 HCI 一樣投入。</li>
+                </ul>
+              </li>
               <li><b>Tool 格式要順著 model 的習慣。</b>Diff 要在寫新程式碼之前先算好 hunk header 的行數；JSON 裡的程式碼要跳脫換行與引號。給 model 思考的 token，用網路上常見的格式，避免計數與跳脫。SWE-bench 的案例：agent 離開根目錄後相對路徑常出錯，改成要求絕對路徑後就不再錯。</li>
             </ol>
             <p class="tk-h">原文怎麼讀</p>
@@ -2398,7 +2474,14 @@ error: patch failed: client.ts:41</code></pre></figure>
               <li><b>範例 1：跨 4 個檔案改名，一次套用。</b>Python heredoc 先數每個舊字串出現的次數，數目不對就不寫入。再一次改完 4 個檔，接著跑 <code>ruff</code>、<code>pyright</code>、<code>pytest</code>、<code>git diff --check</code>。失敗的結果留在 working tree，下一圈再修。</li>
               <li><b>範例 2：用 <code>git bisect run</code> 找 flaky 測試的起點。</b>在暫存目錄開 detached worktree，不動目前的 checkout。每個 commit 跑 5 個 seed，失敗少於 3 次才算 good。</li>
               <li><b>範例 3：log 太大進不了 context，就在環境裡算。</b>Python 串流讀 gzip 的 JSONL log，每批 10,000 列灌進暫存 SQLite，用 SQL 算前 5 個失敗 endpoint 的錯誤類別與 P95。回到 model 的只有 5 筆 JSON。</li>
-              <li><b>原子 tool 的保護搬進 harness。</b>作者以前主張不讓 agent 用 <code>cat</code>、<code>sed</code>，因為會灌滿 context、錯誤不透明、引號出錯會弄壞檔案。現在 harness 負責四件事：截斷大輸出並提示怎麼縮小範圍；回報 exit status 與時間；在 model 外面強制路徑與網路規則；讓長程序在背景跑。</li>
+              <li><b>原子 tool 的保護搬進 harness。</b>作者以前主張不讓 agent 用 <code>cat</code>、<code>sed</code>，因為會灌滿 context、錯誤不透明、引號出錯會弄壞檔案。現在 harness 負責四件事：
+                <ul>
+                  <li>截斷大輸出，並提示怎麼縮小範圍。</li>
+                  <li>回報 exit status 與時間。</li>
+                  <li>在 model 外面強制路徑與網路規則。</li>
+                  <li>讓長程序在背景跑。</li>
+                </ul>
+              </li>
               <li><b>仍然需要專用 tool 的地方。</b>多模態輸入：shell 能截圖，但像素要經另一個管道進 model。瀏覽器控制：一個 tool 能導航、點擊、等頁面穩定、回傳截圖，用 bash 要拆成好幾步。服務整合可以用 MCP，或用 CLI 讓 schema 不進 prompt。</li>
               <li><b>作者的建議。</b>刪掉 micro-tool，先試 bash。用 subagent 當 execution firewall，把雜亂的探索關在外面。</li>
             </ol>
