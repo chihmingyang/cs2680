@@ -287,7 +287,13 @@
               </table></div>
               <p>A3 與 A5 用排行榜評分：名次，加上比 baseline 進步多少。這條線也是本站的順序：L2 用 Claude Code（A1），L4 講 agent loop 與 tool（A2），L4–L8 講 context、memory、評估、成本（A3），Part II 講 serving（A4、A5）。Slide 的警告寫得很直接：<strong>每週預期 10 小時以上，在乎 GPA 就不要修</strong>（p.12）。</p>
               <p id="i1-3"><b>成績、期限與用 AI 的規則。</b>成績的其他部分：project 16%，presentation 10%（講一篇論文，加上 A1 的分享），participation 4%，另有 10% 的 bonus，給課程回饋和「找出 AI 解不了的問題」（p.16）。遲交整學期有 4 天的額度，超過每天扣 20%。評分採 20% 拿 A 的政策，A 或 A- 都不容易。Project 二選一：做一個你自己會用的工具，或是先找 TF 談一個研究題目；個人完成，可以用 AI；reading period 有 poster 與 demo，評分看程式、報告和同學互評（p.13）。</p>
-              <p>用 AI 的規則（p.18）值得照抄到自己的團隊：可以用，甚至鼓勵用，但要揭露 AI 幫了什麼、什麼沒成功；每份作業附上 session log；你要能解釋 AI 產生的程式碼，而且<strong>對交出去的每一行負責</strong>。其他政策：要到場，課不錄影；筆電開著就坐後排（p.19）。計算資源有四種（p.20）：Claude Code 的 API 額度、GitHub 的 private repo（和課程人員共用）、課程的 HPC（<a class="tm" href="#n-slurm">SLURM</a> 排程，RTX 6000 PRO Blackwell GPU，只能做課程作業）、AWS（要先填表，不用時關機）。Slide 提醒資源不會隨人數增加：原本預算 40 人，開課當天 80 人，截止日當天可能拿不到 GPU（p.17）。</p>
+              <p>用 AI 的規則（p.18）有三條，值得照抄到自己的團隊：</p>
+              <ul>
+                <li>可以用，甚至鼓勵用，但要揭露 AI 幫了什麼、什麼沒成功。</li>
+                <li>每份作業附上 session log。</li>
+                <li>你要能解釋 AI 產生的程式碼，而且<strong>對交出去的每一行負責</strong>。</li>
+              </ul>
+              <p>其他政策：要到場，課不錄影；筆電開著就坐後排（p.19）。計算資源有四種（p.20）：Claude Code 的 API 額度、GitHub 的 private repo（和課程人員共用）、課程的 HPC（<a class="tm" href="#n-slurm">SLURM</a> 排程，RTX 6000 PRO Blackwell GPU，只能做課程作業）、AWS（要先填表，不用時關機）。Slide 提醒資源不會隨人數增加：原本預算 40 人，開課當天 80 人，截止日當天可能拿不到 GPU（p.17）。</p>
               <details class="gloss" id="n-slurm">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">SLURM：HPC 叢集的工作排程器</span></summary>
                 <div class="gloss-body prose">
@@ -312,7 +318,14 @@
                   <p>L2 講 Claude Code 怎麼用這四樣東西；L3 講 subagent 與平行 agent 怎麼放大產能。</p>
                 </div>
               </details>
-              <p id="i1-5"><b>不講什麼。</b>p.45 列出這門課不碰的部分：訓練（資料管線、checkpoint、pre-training、fine-tuning、post-training、RL rollout），理由是 inference 已經是算力需求的大宗；叢集管理；model 架構設計；其他和 inference 有關但不講的題目：通訊、電力與能源、新硬體設計。所以範圍是 inference 這一側的軟體，從 agent 往下講到 kernel。p.44 用 9 個問題收尾，要求學期末能用數字回答它們，2.6 會逐題列出。</p>
+              <p id="i1-5"><b>不講什麼。</b>p.45 列出這門課不碰的四塊：</p>
+              <ul>
+                <li><b>訓練。</b>資料管線、checkpoint、pre-training、fine-tuning、post-training、RL rollout。理由是 inference 已經是算力需求的大宗。</li>
+                <li><b>叢集管理。</b></li>
+                <li><b>Model 架構設計。</b></li>
+                <li><b>其他和 inference 有關但不講的題目。</b>通訊、電力與能源、新硬體設計。</li>
+              </ul>
+              <p>所以範圍是 inference 這一側的軟體，從 agent 往下講到 kernel。p.44 用 9 個問題收尾，要求學期末能用數字回答它們，2.6 會逐題列出。</p>
             </div>
           </div>
 
@@ -352,7 +365,15 @@
             <h3><span class="idea-no">2.3</span>AI workload：打破傳統系統的五個假設 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=30" target="_blank" rel="noopener">p.30–34</a></h3>
             <div class="prose">
               <p>這一章先列出傳統系統默認的五個假設，再逐一看 slide 講的五項差異：算力、不確定性、記憶體與通訊、變化速度、可靠性與電力。每一項先講機制，再給 slide 的數字；第 4 段有三支小程式可以自己算。</p>
-              <p id="i3-1"><b>傳統系統的五個假設。</b>寫一個 web 服務時，你多半默認幾件事：一個請求花多久大致可以預測；同樣的輸入給同樣的輸出；每個請求的狀態很小，一個 session 幾 KB；機器很少壞；一台 server 幾百瓦。Scheduler、cache、測試、容量規劃都建在這些假設上。<strong>LLM 的 workload 把五條都打破</strong>（p.30–34）。下表是本文的整理，後面逐條講：</p>
+              <p id="i3-1"><b>傳統系統的五個假設。</b>寫一個 web 服務時，你多半默認五件事：</p>
+              <ul>
+                <li>一個請求花多久大致可以預測。</li>
+                <li>同樣的輸入給同樣的輸出。</li>
+                <li>每個請求的狀態很小，一個 session 幾 KB。</li>
+                <li>機器很少壞。</li>
+                <li>一台 server 幾百瓦。</li>
+              </ul>
+              <p>Scheduler、cache、測試、容量規劃都建在這些假設上。<strong>LLM 的 workload 把五條都打破</strong>（p.30–34）。下表是本文的整理，後面逐條講：</p>
               <div class="table-wrap"><table class="wide">
                 <thead><tr><th>傳統的假設</th><th>LLM 的現實</th><th>Slide 的數字或例子</th><th>頁</th></tr></thead>
                 <tbody>
@@ -464,11 +485,26 @@
                   <p>以 32 層、8 個 KV head、head 維度 128、BF16 的 8B model 為例，每個 token 要 128 KiB。100K token 的 session 約 13 GB，接近權重的 16 GB。Prefix cache 保留共同開頭的 KV cache 給下一個請求重用 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32</a>。</p>
                 </div>
               </details>
-              <p>一張 GPU 放不下時要<a class="tm" href="#t5">切到多張</a>，GPU 之間就要通訊。Slide 列了四樣東西：平行化的種類（pipeline、tensor、expert、context，見註）；collective 函式庫，例如 NCCL 與 UCCL，負責 all-reduce 這類「所有 GPU 一起交換再加總」的操作；拓樸，同一台機器內走 NVLink，跨機器走 Ethernet 或 InfiniBand；RDMA，讓網卡直接讀寫對方機器的記憶體，繞過 CPU 和作業系統的 kernel。一張 H100 的數字給你量級：HBM（GPU 自己的記憶體）約 3.35 TB/s，NVLink 合計約 900 GB/s，PCIe 5.0 x16 單向約 64 GB/s，離運算單元越遠越窄。所以把 13 GB 的 KV cache 從 HBM 讀一遍約 4 ms，搬到另一張 GPU 要幾十 ms，搬到 CPU 記憶體要幾百 ms；第 3 段第 3 題的參考答案有完整的算式。</p>
+              <p>一張 GPU 放不下時要<a class="tm" href="#t5">切到多張</a>，GPU 之間就要通訊。Slide 列了四樣東西：</p>
+              <ul>
+                <li><b>平行化的種類。</b>Pipeline、tensor、expert、context，見註。</li>
+                <li><b>Collective 函式庫。</b>例如 NCCL 與 UCCL，負責 all-reduce 這類「所有 GPU 一起交換再加總」的操作。</li>
+                <li><b>拓樸。</b>同一台機器內走 NVLink，跨機器走 Ethernet 或 InfiniBand。</li>
+                <li><b>RDMA。</b>讓網卡直接讀寫對方機器的記憶體，繞過 CPU 和作業系統的 kernel。</li>
+              </ul>
+              <p>一張 H100 的數字給你量級：HBM（GPU 自己的記憶體）約 3.35 TB/s，NVLink 合計約 900 GB/s，PCIe 5.0 x16 單向約 64 GB/s，離運算單元越遠越窄。所以把 13 GB 的 KV cache 從 HBM 讀一遍約 4 ms，搬到另一張 GPU 要幾十 ms，搬到 CPU 記憶體要幾百 ms；第 3 段第 3 題的參考答案有完整的算式。</p>
               <details class="gloss" id="t5">
                 <summary><span class="gloss-k">背景</span><span class="gloss-t">平行化的切法：一張 GPU 放不下時</span></summary>
                 <div class="gloss-body prose">
-                  <p>Data parallelism 複製整個 model，各處理不同請求。Tensor parallelism 把每一層的矩陣切給多張 GPU；pipeline parallelism 按層切；expert parallelism 把 MoE 的 expert 分到不同 GPU；context parallelism 把一段很長的輸入切給多張 GPU 一起算。切得越細，GPU 之間交換的資料越多，所以 tensor parallelism 通常留在同一台機器內走 NVLink <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32</a>。</p>
+                  <p>平行化有五種切法：</p>
+                  <ul>
+                    <li><b>Data parallelism。</b>複製整個 model，各處理不同請求。</li>
+                    <li><b>Tensor parallelism。</b>把每一層的矩陣切給多張 GPU。</li>
+                    <li><b>Pipeline parallelism。</b>把 model 按層切給多張 GPU。</li>
+                    <li><b>Expert parallelism。</b>把 MoE 的 expert 分到不同 GPU。</li>
+                    <li><b>Context parallelism。</b>把一段很長的輸入切給多張 GPU 一起算。</li>
+                  </ul>
+                  <p>切得越細，GPU 之間交換的資料越多，所以 tensor parallelism 通常留在同一台機器內走 NVLink <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=32" target="_blank" rel="noopener">p.32</a>。</p>
                 </div>
               </details>
               <p id="i3-5"><b>差異 4：model 與 workload 變化快。</b>Model 架構一年換好幾輪（p.33）：<a class="tm" href="#n-attn">MHA、GQA、MLA、NSA、linear attention</a>，每一種改的都是 attention 這一層，而 attention 決定 KV cache 的大小與形狀，所以 serving 系統的記憶體管理要跟著改。Workload 也在變，slide 列四種：多輪聊天（互動式，對延遲敏感）、解題（reasoning，輸出很長）、RAG（先檢索文件再回答，context 很長）、agent（context 長、prefix cache 關鍵、需要 routing 與 load balancing）。四種對系統的要求不同：聊天要第一個 token 快，解題要 decode 快，RAG 要 prefill 快，agent 要 cache 命中。Slide 底下的原則是雙向的：<strong>model 要配合硬體，硬體也要為 model 架構設計</strong>；A5 的「engine 與 agent 一起設計」是同一個精神。</p>
@@ -494,7 +530,14 @@
             <h3><span class="idea-no">2.4</span>Agent：一台用自然語言編程、常常出錯的新電腦 <a class="ref" href="https://cs2680.com/slides/1_intro.pdf#page=36" target="_blank" rel="noopener">p.36–38、p.49–50</a></h3>
             <div class="prose">
               <p>這一章先給 agent 的定義和它的五步 loop，再問為什麼需要 agent（LLM 哪裡強、哪裡弱），然後把 agent 對到一台電腦的五個零件，最後用 slide 的補充表分清 agent、assistant 和 bot；2.5 看把它 serve 起來為什麼是系統問題。</p>
-              <p id="i4-1"><b>定義與五步 loop。</b>Slide 的定義（p.36）：agent 是一個自主的軟體系統，用一個 AI model 推理一個目標、使用外部 tool、執行多步動作，直到任務完成。拆開看有四個要素：有目標，不是一問一答；會用 tool，例如 API、資料庫、shell；多步；<strong>自己決定什麼時候算完成</strong>。Slide 把一圈拆成五步：</p>
+              <p id="i4-1"><b>定義與五步 loop。</b>Slide 的定義（p.36）：agent 是一個自主的軟體系統，用一個 AI model 推理一個目標、使用外部 tool、執行多步動作，直到任務完成。拆開看有四個要素：</p>
+              <ul>
+                <li>有目標，不是一問一答。</li>
+                <li>會用 tool，例如 API、資料庫、shell。</li>
+                <li>多步。</li>
+                <li><strong>自己決定什麼時候算完成</strong>。</li>
+              </ul>
+              <p>Slide 把一圈拆成五步：</p>
               <ol>
                 <li><b>Plan。</b>把任務拆成子步驟。</li>
                 <li><b>Act。</b>呼叫外部 tool，例如打一個 API、查資料庫、跑一個指令。</li>
@@ -503,7 +546,22 @@
                 <li><b>Deliver。</b>回傳最終結果。</li>
               </ol>
               <p>p.36 的圖只有兩個箱子：agent（裡面是 LLM 的 reasoning 與 planning，加上 memory）送 action 給 environment，environment 回 observation。這和 L4 要寫成程式的 ReAct loop 是同一件事：<strong>model 每一圈只決定下一個 action</strong>，執行它、把 observation 放回去的是 model 外面的程式，這一章下面會叫它 harness。</p>
-              <p id="i4-2"><b>為什麼需要 agent：LLM 是一台奇怪的電腦。</b>p.37 引 Andrej Karpathy 2025 年的演講：LLM 是奇怪的電腦，同時超人又無能。超人的地方：記得大量事實、語言、pattern matching、寫程式碼、跨很多領域都能用。弱的地方：沒有持久記憶，每次對話從零開始；不能可靠地理解 context；會 hallucinate，也就是編出不存在的事實；不知道自己不知道什麼；對 security 與對抗性輸入沒有抵抗力。把兩張清單對起來看，agent 的周邊就是在補弱項：memory 補持久記憶（L6）；tool 與 observation 補「不知道」，讓它查而不是猜；測試補 hallucination，因為 tool 的結果會回到它眼前（L4）；權限與 sandbox 補 security（L2）。所以 <strong>agent 不是把 LLM 變聰明，是替它記、替它查、替它擋</strong>。</p>
+              <p id="i4-2"><b>為什麼需要 agent：LLM 是一台奇怪的電腦。</b>p.37 引 Andrej Karpathy 2025 年的演講：LLM 是奇怪的電腦，同時超人又無能。超人的地方：記得大量事實、語言、pattern matching、寫程式碼、跨很多領域都能用。弱的地方有五個：</p>
+              <ul>
+                <li>沒有持久記憶，每次對話從零開始。</li>
+                <li>不能可靠地理解 context。</li>
+                <li>會 hallucinate，也就是編出不存在的事實。</li>
+                <li>不知道自己不知道什麼。</li>
+                <li>對 security 與對抗性輸入沒有抵抗力。</li>
+              </ul>
+              <p>把兩張清單對起來看，agent 的周邊就是在補弱項，共四樣：</p>
+              <ul>
+                <li><b>Memory。</b>補持久記憶（L6）。</li>
+                <li><b>Tool 與 observation。</b>補「不知道」，讓它查而不是猜。</li>
+                <li><b>測試。</b>補 hallucination，因為 tool 的結果會回到它眼前（L4）。</li>
+                <li><b>權限與 sandbox。</b>補 security（L2）。</li>
+              </ul>
+              <p>所以 <strong>agent 不是把 LLM 變聰明，是替它記、替它查、替它擋</strong>。</p>
               <p id="i4-3"><b>把 agent 對到一台電腦的五個零件。</b>p.38 的主張：LLM 不只是一顆更聰明的 CPU，它是一種新的可編程電腦，programming model 和 failure model 都不同。Slide 把傳統電腦的五個零件逐一對到 agent：</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -586,7 +644,22 @@
                 <li><b>失敗可能在軌跡的任何一點。</b>GPU、tool、網路、外部 API，任何一個都可能出錯。</li>
               </ul>
               <p>對照 2.3 的五個假設，這條鏈讓每一條更糟：時間更不可預測，因為步數也未知；狀態更大、活得更久，因為 context 跨幾十步一直在；失敗點更多，因為每一步都可能碰外界。<strong>Agent 把 serving 的問題乘上步數</strong>。</p>
-              <p id="i5-2"><b>六層 stack，每一層有人在優化。</b>p.40 把整個系統畫成六層，第 1 段的第一張圖照它重畫：最上面是 application 與使用者；接著是 agent 與 harness，負責 planning、context、memory、tools、subagents；再來是 model；model 下面是 serving system，做 batching、scheduling、routing、caching；再下面是 runtime 與 kernel，CUDA、Triton、collectives；最底是硬體，GPU、CPU、記憶體、網路、儲存。Harness 旁邊有一個「外部環境」：web、檔案、API、人，tool 就是通往它的路。Slide 另外標了三個跨層的箭頭：agent serving 橫跨 serving 以下幾層；systems 標在 scheduling 與 caching；hardware co-design 把 agent serving 連到硬體。傳統的 LLM serving 只看 model 以下三層；agent 把上面兩層接進來，問題就變成跨層：<strong>harness 怎麼組 context，決定 serving 層的 prefix cache 能不能命中</strong>，這是第 1 段圖右下角的例子。這門課的 Part I 講上面兩層，Part II 往下講。</p>
+              <p id="i5-2"><b>六層 stack，每一層有人在優化。</b>p.40 把整個系統畫成六層，第 1 段的第一張圖照它重畫。六層由上到下：</p>
+              <ol>
+                <li><b>Application 與使用者。</b></li>
+                <li><b>Agent 與 harness。</b>負責 planning、context、memory、tools、subagents。</li>
+                <li><b>Model。</b></li>
+                <li><b>Serving system。</b>做 batching、scheduling、routing、caching。</li>
+                <li><b>Runtime 與 kernel。</b>CUDA、Triton、collectives。</li>
+                <li><b>硬體。</b>GPU、CPU、記憶體、網路、儲存。</li>
+              </ol>
+              <p>Harness 旁邊有一個「外部環境」：web、檔案、API、人，tool 就是通往它的路。Slide 另外標了三個跨層的箭頭：</p>
+              <ul>
+                <li><b>Agent serving。</b>橫跨 serving 以下幾層。</li>
+                <li><b>Systems。</b>標在 scheduling 與 caching。</li>
+                <li><b>Hardware co-design。</b>把 agent serving 連到硬體。</li>
+              </ul>
+              <p>傳統的 LLM serving 只看 model 以下三層；agent 把上面兩層接進來，問題就變成跨層：<strong>harness 怎麼組 context，決定 serving 層的 prefix cache 能不能命中</strong>，這是第 1 段圖右下角的例子。這門課的 Part I 講上面兩層，Part II 往下講。</p>
               <p id="i5-3"><b>十個新問題，各對到一堂課。</b>p.42 把 agent workload 的十個性質，各對到一個系統課題。右欄是本文的整理：本站哪一堂或 Part II 哪一天會講，日期依 2026-10-28 的課程網站課表，可能調整。</p>
               <div class="table-wrap"><table class="wide">
                 <thead><tr><th>Workload 的性質</th><th>系統課題（slide）</th><th>哪裡講（本文的整理）</th></tr></thead>
@@ -700,7 +773,20 @@
                 <details class="ex deep" id="x4">
                   <summary>本文延伸｜九個問題裡，Part II 負責 stack 的下半部<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
-                    <p>p.44 的九個問題，Part I 已經碰到幾個：L3 與 L5 談什麼時候開 subagent（第 6 題）；L8 談每個成功任務的成本與 routing（第 2、7、9 題）；L6 談 checkpoint（第 8 題）。剩下的多半在 stack 的下半部。依 2026-10-28 的課程網站課表：batching 的取捨（第 1 題）在 10/28；KV 狀態與排程（第 3、4 題）在 11/04 與 11/16；tool call 與 inference 重疊（第 5 題）在 11/30；routing（第 7 題）在 11/23。讀 Part II 時，拿 p.44 當檢查表，每堂回答一題。本文的判斷（2026-10）。</p>
+                    <p>p.44 的九個問題，Part I 已經碰到幾個，分在三處：</p>
+                    <ul>
+                      <li><b>L3 與 L5。</b>談什麼時候開 subagent（第 6 題）。</li>
+                      <li><b>L8。</b>談每個成功任務的成本與 routing（第 2、7、9 題）。</li>
+                      <li><b>L6。</b>談 checkpoint（第 8 題）。</li>
+                    </ul>
+                    <p>剩下的多半在 stack 的下半部。依 2026-10-28 的課程網站課表，Part II 有四處：</p>
+                    <ul>
+                      <li><b>Batching 的取捨（第 1 題）。</b>在 10/28。</li>
+                      <li><b>KV 狀態與排程（第 3、4 題）。</b>在 11/04 與 11/16。</li>
+                      <li><b>Tool call 與 inference 重疊（第 5 題）。</b>在 11/30。</li>
+                      <li><b>Routing（第 7 題）。</b>在 11/23。</li>
+                    </ul>
+                    <p>讀 Part II 時，拿 p.44 當檢查表，每堂回答一題。本文的判斷（2026-10）。</p>
                   </div>
                 </details>
               </div>
