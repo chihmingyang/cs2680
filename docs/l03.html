@@ -411,11 +411,34 @@ description: Use before creative work.   ← model 決定要不要載入的依�
     }] } }</code></pre></figure>
               <p>這個檔放在 plugin 裡，裝了 plugin 就生效。你自己的 hook 寫在 <a class="tm" href="#n-hook-files"><code>settings.json</code></a>，格式相同；第 4 段動手試試的第一個範例，就是同一個 SessionStart hook 寫在專案裡的版本。</p>
               <details class="gloss" id="n-hook-files">
-                <summary><span class="gloss-k">名詞</span><span class="gloss-t">hooks.json 與 settings.json：同一種 hook 設定，差在誰寫、何時生效</span></summary>
+                <summary><span class="gloss-k">名詞</span><span class="gloss-t">hooks.json 與 settings.json：同一種 hook 設定，放的檔案不同</span></summary>
                 <div class="gloss-body prose">
-                  <p><code>settings.json</code> 是 Claude Code 的設定檔，管權限、環境變數、model 等。<code>hooks</code> 只是它的其中一個 key。<code>~/.claude/settings.json</code> 管你所有的專案。<code>.claude/settings.json</code> 管一個專案，可以 commit 給團隊；<code>.claude/settings.local.json</code> 也管一個專案，但不 commit。</p>
-                  <p>Plugin 的 <code>hooks/hooks.json</code> 只放 hook。Plugin 作者寫它，它跟著 plugin 安裝和更新，plugin 啟用時才生效。Hook 也可以直接寫在 <code>plugin.json</code> 的 <code>"hooks"</code> 裡，2.2 的 Caveman 就這樣寫（p.19）。格式和 <code>settings.json</code> 的 <code>"hooks"</code> 相同，只差腳本路徑：plugin 用 <code>${CLAUDE_PLUGIN_ROOT}</code>，專案用 <code>${CLAUDE_PROJECT_DIR}</code>。</p>
-                  <p>各處的 hook 合併，不互相覆蓋。事件發生時，符合的 hook 平行執行，所以你的 SessionStart 和 Superpowers 的都會跑。但 plugin 改不了你的設定：plugin 附的 <code>settings.json</code> 只認 <code>agent</code> 和 <code>subagentStatusLine</code> 兩個 key。所以 Caveman 要把 API 位址改到 proxy，得用它自己的 CLI 寫進你的 <code>~/.claude/settings.json</code>（2.2 的本文延伸）。</p>
+                  <p>Hook 是「某個事件發生時，Claude Code 自動跑的一段指令」。事件例如 SessionStart（開新對話）、PreToolUse（工具執行前）。Hook 的寫法只有一種，差別在放在哪個檔案、誰負責寫。</p>
+                  <p>你自己寫的 hook 放在 <code>settings.json</code>。它是 Claude Code 的總設定檔，管權限、環境變數、model；<code>hooks</code> 只是其中一個 key。它有三個位置：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>位置</th><th>管的範圍</th><th>會 commit 嗎</th></tr></thead>
+                    <tbody>
+                      <tr><td><code>~/.claude/settings.json</code></td><td>你機器上所有專案</td><td>不在 repo 裡</td></tr>
+                      <tr><td><code>.claude/settings.json</code></td><td>這一個專案</td><td>會，給團隊共用</td></tr>
+                      <tr><td><code>.claude/settings.local.json</code></td><td>這一個專案，只有你</td><td>不會（進 <code>.gitignore</code>）</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>案例（本文補的）：你要這個專案每次開對話，先印出 git 狀態。在專案的 <code>.claude/settings.json</code> 寫：</p>
+                  <figure class="file"><figcaption>.claude/settings.json</figcaption><pre><code>{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "git status --short" }
+        ]
+      }
+    ]
+  }
+}</code></pre></figure>
+                  <p>完整一點的版本（跑一支腳本、把規則檔注入 context）在第 4 段動手試試的第一個範例。</p>
+                  <p>Plugin 作者寫的 hook 放在 plugin 的 <code>hooks/hooks.json</code>，就是上面 p.11 那個檔。這個檔只放 hook。它跟著 plugin 一起安裝、更新，plugin 啟用才生效。格式和專案的完全相同，只差腳本路徑用的變數：plugin 用 <code>${CLAUDE_PLUGIN_ROOT}</code>（plugin 裝在哪，就指到哪），專案用 <code>${CLAUDE_PROJECT_DIR}</code>。Hook 也可以不另開檔案，直接寫在 <code>plugin.json</code> 的 <code>"hooks"</code> key 裡，2.2 的 Caveman 就這樣寫（p.19）。</p>
+                  <p>兩邊的 hook 合併，不互相覆蓋。事件發生時，所有符合的 hook 一起平行跑。所以上面的案例和 Superpowers 同時存在時，你開一個對話，<code>git status --short</code> 和 Superpowers 的 <code>session-start</code> 都會執行。</p>
+                  <p>但 plugin 改不了你的 <code>settings.json</code>。Plugin 可以附一份 <code>settings.json</code>，不過 Claude Code 只認裡面的 <code>agent</code> 和 <code>subagentStatusLine</code> 兩個 key，其他一律忽略。所以 Caveman 要把 API 位址改到它的 proxy，靠 plugin 附的設定檔做不到，得用它自己的 CLI 寫進你的 <code>~/.claude/settings.json</code>（2.2 的本文延伸）。</p>
                 </div>
               </details>
               <p><code>matcher</code> 的三個值：<code>startup</code> 是開新 session，<code>clear</code> 是你打了 <code>/clear</code> 清掉對話，<code>compact</code> 是 <a class="tm" href="#n-context">compaction</a> 之後（context 快滿時 Claude Code 把舊對話換成一段摘要）。觸發後跑的程式（slide p.12）做的事很簡單：</p>
