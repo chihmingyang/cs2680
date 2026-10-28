@@ -366,7 +366,19 @@ claude plugin install caveman@caveman</code></pre></figure>
                 </div>
                 <figcaption>依 p.6 重畫，skill 名稱依 p.7 對上。預設的 Claude Code 收到需求就動手；Superpowers 先問、先核准、先寫計畫，才開始寫。</figcaption>
               </figure>
-              <p>Slide p.7 從 repo 挑了 9 個 skill 對上六個階段，列了每一個的職責（repo 在 v6.3.0 就有 14 個，現在是 15 個，本章最後一節補齊）：<code>using-superpowers</code> 教 model 怎麼找到並使用其他 skill；<code>brainstorming</code> 把需求變成一份核准過的設計；<code>writing-plans</code> 把設計拆成具體的任務；<code>using-git-worktrees</code> 開一個隔離的工作目錄（2.3 會講 worktree 是什麼）；<code>test-driven-development</code> 強制先寫測試再寫程式；<code>systematic-debugging</code> 先找根因再提修法；<code>requesting-code-review</code> 對照計畫 review 實作；<code>verification-before-completion</code> 要求有證據才能回報完成；<code>finishing-a-development-branch</code> 負責 merge、PR 或清理。Slide p.8 把 repo 結構簡化成三種東西：</p>
+              <p>Slide p.7 從 repo 挑了 9 個 skill 對上六個階段，列了每一個的職責（repo 在 v6.3.0 就有 14 個，現在是 15 個，本章最後一節補齊）：</p>
+              <ul>
+                <li><code>using-superpowers</code>：教 model 怎麼找到並使用其他 skill。</li>
+                <li><code>brainstorming</code>：把需求變成一份核准過的設計。</li>
+                <li><code>writing-plans</code>：把設計拆成具體的任務。</li>
+                <li><code>using-git-worktrees</code>：開一個隔離的工作目錄（2.3 會講 worktree 是什麼）。</li>
+                <li><code>test-driven-development</code>：強制先寫測試再寫程式。</li>
+                <li><code>systematic-debugging</code>：先找根因再提修法。</li>
+                <li><code>requesting-code-review</code>：對照計畫 review 實作。</li>
+                <li><code>verification-before-completion</code>：要求有證據才能回報完成。</li>
+                <li><code>finishing-a-development-branch</code>：負責 merge、PR 或清理。</li>
+              </ul>
+              <p>Slide p.8 把 repo 結構簡化成三種東西：</p>
               <figure class="file"><figcaption>Superpowers 的 repo（p.8）</figcaption><pre><code>superpowers/
 ├── .claude-plugin/     plugin.json        ← plugin 的 metadata：名字、版本
 ├── hooks/              hooks.json, session-start   ← 一個 SessionStart hook
@@ -510,7 +522,13 @@ printf '{"hookSpecificOutput": {
                     </div>
                     <figcaption>上排是 session 裡的三個時機，下排是 hook 執行後的 context。藍框是 hook 注入的規則，也就是 using-superpowers 的內容。</figcaption>
                   </figure>
-              <p>上圖是一個 session 的時間軸：開新 session 時 hook 注入規則；你打 <code>/clear</code> 之後舊對話清空，只剩 hook 再注入的規則；compaction 之後，舊對話變成摘要，規則也再注入一次。<strong>少了任何一個，agent 就會在那之後忘記規則</strong>。Slide p.11 把 hook 的保證寫成三句：時機固定，每個 session 都跑；在 agent 動手之前跑；clear 和 compaction 之後重跑。</p>
+              <p>上圖是一個 session 的時間軸，hook 在三個時機注入規則：</p>
+              <ol>
+                <li><b>開新 session。</b>Hook 注入規則。</li>
+                <li><b>你打 <code>/clear</code> 之後。</b>舊對話清空，只剩 hook 再注入的規則。</li>
+                <li><b>Compaction 之後。</b>舊對話變成摘要，規則也再注入一次。</li>
+              </ol>
+              <p><strong>少了任何一個，agent 就會在那之後忘記規則</strong>。Slide p.11 把 hook 的保證寫成三句：時機固定，每個 session 都跑；在 agent 動手之前跑；clear 和 compaction 之後重跑。</p>
               <p id="i1-4"><b>整個流程走一遍。</b>Slide p.13 用「Add authentication」當例子：</p>
               <ol>
                 <li>Claude Code 開 session，hook 讀進 bootstrap skill，agent 拿到選 skill 的規則。</li>
@@ -520,7 +538,14 @@ printf '{"hookSpecificOutput": {
                 <li>Agent 載入 <code>writing-plans</code>，寫出實作計畫。</li>
                 <li>之後才是開 worktree、測試驅動實作、review、驗證、整合 branch。</li>
               </ol>
-              <p>這延續 L2 的分工：hook 保證規則一定在 context 裡，要載入哪個 skill 仍由 model 判斷。Slide p.14 把設計上的選擇整理成一張表，核心是四句：複雜的行為拆成小而可組合的 skill；靠一個 session hook 注入 bootstrap skill 讓 agent 記得用它們；<strong>只在需要時載入任務 skill，context 才不會爆</strong>；每個 skill 自己寫明關卡和下一個 skill，階段才接得起來。最後一句是：不是每個 plugin 都需要 command 或 MCP，用到再加。Caveman 正好是用到的例子。</p>
+              <p>這延續 L2 的分工：hook 保證規則一定在 context 裡，要載入哪個 skill 仍由 model 判斷。Slide p.14 把設計上的選擇整理成一張表，核心是四句：</p>
+              <ul>
+                <li>複雜的行為拆成小而可組合的 skill。</li>
+                <li>靠一個 session hook 注入 bootstrap skill，讓 agent 記得用它們。</li>
+                <li><strong>只在需要時載入任務 skill，context 才不會爆</strong>。</li>
+                <li>每個 skill 自己寫明關卡和下一個 skill，階段才接得起來。</li>
+              </ul>
+              <p>最後一句是：不是每個 plugin 都需要 command 或 MCP，用到再加。Caveman 正好是用到的例子。</p>
               <p id="i1-5"><b>Slide 之後，Superpowers 改了什麼。</b>這一節讓你判斷上面哪些還成立。講課是 2026-09-14，當時最新的是 v6.3.0（2026-08-12）；slide 上 brainstorming 的「Classify the scope」也是這一版才加的，所以 slide 對應 v6.3.0。之後又出了 v6.4.1、v6.4.2、v7.0.0、v7.0.1，本文在 2026-10-28 對照 repo 的 main。結論是 hook 的機制沒變，brainstorming 改最多，其次是 slide 沒畫出來的執行階段。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Slide<br>v6.3.0</th><th>現在<br>v7.0.1</th><th>何時改<br>為什麼</th></tr></thead>
@@ -557,7 +582,14 @@ printf '{"hookSpecificOutput": {
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Context 的代價與四種管理策略（L4）：這堂一直用到的四個名詞</span></summary>
                 <div class="gloss-body prose">
                   <p>Context 是每一圈送進 model 的全部文字：system prompt、tool 定義、對話歷史、每一筆 tool 結果；上限叫 context window。L4 說它有三種代價。錢：model 沒有記憶，每一圈都要把整個 window 重送一次，一份 786 行的 log 進了 context，之後每圈都再付一次。延遲：prompt 越長，model 讀得越久。注意力：window 越滿，model 越難找回中間的資訊。</p>
-                  <p>L4 給了四種管理策略，由無損排到有損：<b>admission</b> 在內容進 window 之前把關，只放需要的部分（截斷、整形、交給 subagent）；<b>offloading</b> 把內容放在 window 外面，只留一個 handle，要用再讀回；<b>transformation</b> 把舊的或重複的 tool 結果換成一行占位文字；<b>compaction</b> 用 LLM 把舊歷史寫成一段摘要換掉原文，有損又不可逆，所以排在最後。Claude Code 的 <code>/compact</code> 和自動 compaction 就是最後一種。</p>
+                  <p>L4 給了四種管理策略，由無損排到有損：</p>
+                  <ol>
+                    <li><b>Admission。</b>在內容進 window 之前把關，只放需要的部分（截斷、整形、交給 subagent）。</li>
+                    <li><b>Offloading。</b>把內容放在 window 外面，只留一個 handle，要用再讀回。</li>
+                    <li><b>Transformation。</b>把舊的或重複的 tool 結果換成一行占位文字。</li>
+                    <li><b>Compaction。</b>用 LLM 把舊歷史寫成一段摘要換掉原文，有損又不可逆，所以排在最後。</li>
+                  </ol>
+                  <p>Claude Code 的 <code>/compact</code> 和自動 compaction 就是最後一種。</p>
                   <p>Caveman 的 proxy 做的是 admission，<code>caveman_compress</code> 回 handle 是 offloading，Superpowers 的 hook 在 compaction 之後重新注入規則，就是在補 compaction 丟掉的東西。細節見 L4 的 2.6 與 2.7。</p>
                 </div>
               </details>
@@ -646,7 +678,13 @@ If off, deactivate.</code></pre></figure>
   "UserPromptSubmit": ["node caveman-mode-tracker.js"]   ← 你每送一則訊息就看一眼，有 /caveman ultra 就更新模式
 }</code></pre></figure>
               <p>兩個 hook 的分工是：SessionStart 負責初始化，UserPromptSubmit 負責在對話中途偵測改變。</p>
-              <p id="i2-4"><b>輸入方向要改寫每一個 request。</b>輸入方向難做，因為要改的是送給 model 的整份 context。先看 Caveman 用 MCP 提供的五個 tool（slide p.23）：<code>caveman_compress</code> 把一段文字壓縮，並回一個 recovery handle；<code>caveman_retrieve</code> 用 handle 取回一字不差的原文；<code>caveman_stats</code> 看統計；另外兩個把 JSON 和 TOON（Token-Oriented Object Notation，一種比 JSON 少打引號和括號、較省 token 的文字格式）互轉。</p>
+              <p id="i2-4"><b>輸入方向要改寫每一個 request。</b>輸入方向難做，因為要改的是送給 model 的整份 context。先看 Caveman 用 MCP 提供的五個 tool（slide p.23）：</p>
+              <ul>
+                <li><code>caveman_compress</code>：把一段文字壓縮，並回一個 recovery handle。</li>
+                <li><code>caveman_retrieve</code>：用 handle 取回一字不差的原文。</li>
+                <li><code>caveman_stats</code>：看統計。</li>
+                <li><b>另外兩個。</b>把 JSON 和 TOON（Token-Oriented Object Notation，一種比 JSON 少打引號和括號、較省 token 的文字格式）互轉。</li>
+              </ul>
               <figure class="file"><figcaption>MCP server 的設定，和 caveman_compress 回的結果（p.23）</figcaption><pre><code>// 設定：Claude Code 啟動時用這行指令把 MCP server 跑起來
 {"mcpServers": {
   "caveman": { "command": "npx", "args": ["-y", "caveman-mcp"] } }}
@@ -801,7 +839,14 @@ git worktree list                    # 看目前有哪些
 # 用 Claude Code 開：-w 替這個 session 開一個 worktree，session 就在裡面跑
 claude -w feature-payments           # terminal 1：做 feature
 claude -w bugfix-auth                # terminal 2：修 bug，碰不到 terminal 1 的檔案</code></pre></figure>
-              <p>Worktree 有兩個限制要知道。同一個 branch 不能同時在兩個 worktree 裡 checkout；新目錄裡也沒有 <code>.env</code>、<code>node_modules</code> 這類不在 git 裡的檔案，要重新裝。更重要的是它只隔離檔案：port、資料庫、外部服務還是共用的，最後的 merge 也還是你的事。Slide p.30 說明這個做法撐到哪裡：3 個 session 你還記得住計畫，<strong>20 個 session 你需要一個分身</strong>。四個原因：計畫在你腦中，每一次交接都靠你；session 之間看不到彼此，發現要靠你搬過去；branch 要你來 merge，順序和衝突都是你的；而且沒有人把整件事記下來，下次不能重跑。接下來的三種做法，分別把這四件事交給別人。</p>
+              <p>Worktree 有兩個限制要知道。同一個 branch 不能同時在兩個 worktree 裡 checkout；新目錄裡也沒有 <code>.env</code>、<code>node_modules</code> 這類不在 git 裡的檔案，要重新裝。更重要的是它只隔離檔案：port、資料庫、外部服務還是共用的，最後的 merge 也還是你的事。Slide p.30 說明這個做法撐到哪裡：3 個 session 你還記得住計畫，<strong>20 個 session 你需要一個分身</strong>。四個原因：</p>
+              <ul>
+                <li><b>計畫在你腦中。</b>每一次交接都靠你。</li>
+                <li><b>Session 之間看不到彼此。</b>發現要靠你搬過去。</li>
+                <li><b>Branch 要你來 merge。</b>順序和衝突都是你的。</li>
+                <li><b>沒有人把整件事記下來。</b>下次不能重跑。</li>
+              </ul>
+              <p>接下來的三種做法，分別把這四件事交給別人。</p>
               <p id="i3-3"><span class="anchor" id="t2"></span><b>B Subagent：結果回到主 agent。</b>Subagent 是一個專門的小助手，有自己的 context window、自己的 tool 清單和權限（slide p.31）。主 agent 把一個任務交給它，它在自己的 context 裡做完，只交回一段摘要。Slide 列了五個理由：</p>
               <ul>
                 <li><b>保護 context。</b>log、搜尋結果、整個檔案的內容都留在 subagent 裡，主對話只多一段摘要。</li>
@@ -854,7 +899,13 @@ claude -w bugfix-auth                # terminal 2：修 bug，碰不到 terminal
                     <figcaption>橫條是 context window 的用量。A 的中間產物留在主對話，之後每一圈都重送；B 的中間產物留在 subagent，主對話只多一段摘要。</figcaption>
                   </figure>
               <p>上圖把第一個理由畫出來。同一個搜尋任務，主對話自己做，檔案、log、搜尋結果全進了主對話的 context，之後每一圈都重送，快滿時 compaction 還可能把細節摘掉。交給 subagent，這些中間產物留在 subagent 的 context 裡，做完就丟掉，主對話只多一段摘要。<strong>這是有損壓縮：30 份文件換成一頁結論</strong>，所以委派時要指定回報格式，例如「每個問題附 file:line」，不然細節就沒了。代價還有一個：subagent 看不到主對話的歷史，它要從零開始收集 context，所以多一段延遲。</p>
-              <p id="i3-4"><b>內建的三個 subagent，和自己定義一個。</b>Claude Code 內建三個 subagent，它自己會視情況派（slide p.32）：Explore 只讀不寫，用來搜 codebase，可以指定要找多徹底；Plan 在 <a class="tm" href="#n-claude-code">plan mode</a> 裡做研究，讓探索不佔主視窗；general-purpose 做又要探索又要動手的多步工作。Explore 和 Plan 為了快，不讀 <a class="tm" href="#n-claude-code"><code>CLAUDE.md</code></a> 也不看 git status。自己定義一個 subagent 是一份 Markdown（slide p.33）：</p>
+              <p id="i3-4"><b>內建的三個 subagent，和自己定義一個。</b>Claude Code 內建三個 subagent，它自己會視情況派（slide p.32）：</p>
+              <ul>
+                <li><b>Explore。</b>只讀不寫，用來搜 codebase，可以指定要找多徹底。</li>
+                <li><b>Plan。</b>在 <a class="tm" href="#n-claude-code">plan mode</a> 裡做研究，讓探索不佔主視窗。</li>
+                <li><b>General-purpose。</b>做又要探索又要動手的多步工作。</li>
+              </ul>
+              <p>Explore 和 Plan 為了快，不讀 <a class="tm" href="#n-claude-code"><code>CLAUDE.md</code></a> 也不看 git status。自己定義一個 subagent 是一份 Markdown（slide p.33）：</p>
               <details class="gloss" id="n-claude-code">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">CLAUDE.md 與 plan mode（L2）：Claude Code 的兩個基本設定</span></summary>
                 <div class="gloss-body prose">
@@ -943,7 +994,14 @@ $ claude --agent code-reviewer</code></pre></figure>
                 <li><b>Task list。</b>一份共用的任務清單，teammate 從裡面認領任務、做完標記完成。</li>
                 <li><b>Mailbox。</b>每個 agent 一個 JSON 收件匣，teammate 把訊息放進對方的收件匣。</li>
               </ul>
-              <p>要注意 teammate 不會繼承你的對話，它們只自動載入 <code>CLAUDE.md</code> 和 skill，所以任務的細節要寫在生出它們的那段 prompt 裡。Team 適合需要討論的工作（slide p.38）：review 時幾個 teammate 從不同角度看，再互相挑戰對方的發現；幾個獨立模組各由一個 teammate 負責；除錯時幾個假設平行驗證，收斂得快；跨層的工作，前端、後端、測試各一個。代價是<strong>協調開銷和 token 都隨人數成長</strong>，因為每個 teammate 都是完整的 session。所以順序相依的任務、改同一個檔案的任務、彼此依賴很重的任務，交給一個 session 或 subagent 比較好。</p>
+              <p>要注意 teammate 不會繼承你的對話，它們只自動載入 <code>CLAUDE.md</code> 和 skill，所以任務的細節要寫在生出它們的那段 prompt 裡。Team 適合需要討論的工作，slide p.38 舉了四種：</p>
+              <ul>
+                <li><b>Review。</b>幾個 teammate 從不同角度看，再互相挑戰對方的發現。</li>
+                <li><b>獨立模組。</b>幾個獨立模組各由一個 teammate 負責。</li>
+                <li><b>除錯。</b>幾個假設平行驗證，收斂得快。</li>
+                <li><b>跨層的工作。</b>前端、後端、測試各一個。</li>
+              </ul>
+              <p>代價是<strong>協調開銷和 token 都隨人數成長</strong>，因為每個 teammate 都是完整的 session。所以順序相依的任務、改同一個檔案的任務、彼此依賴很重的任務，交給一個 session 或 subagent 比較好。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th></th><th>Subagent</th><th>Agent team</th></tr></thead>
                 <tbody>
@@ -955,7 +1013,13 @@ $ claude --agent code-reviewer</code></pre></figure>
                 </tbody>
               </table></div>
               <p>依 p.41 整理。結論是：<strong>team 比較貴，只在工作需要討論時用</strong>。依 slide（2026 年 9 月），agent team 是實驗功能，預設關閉。</p>
-              <p id="i4-2"><b>D Dynamic workflow：script 持有計畫。</b>當一個任務需要的 agent 多到一個對話協調不了，例如掃整個 codebase 找 bug、500 個檔案的搬遷、從好幾個角度交叉查證一份研究，就用 dynamic workflow（slide p.43）。它是一支 JavaScript script，在背景調度很多 subagent：計畫在 script 裡，不在對話裡；中間結果存在 script 的變數裡，不進主 context；而且 script 可以重跑，這正好補上手動平行做不到的「記下來」。在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 讓 Claude 自己決定；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是<strong>每個任務用的 token 更多</strong>。</p>
+              <p id="i4-2"><b>D Dynamic workflow：script 持有計畫。</b>當一個任務需要的 agent 多到一個對話協調不了，例如掃整個 codebase 找 bug、500 個檔案的搬遷、從好幾個角度交叉查證一份研究，就用 dynamic workflow（slide p.43）。它是一支 JavaScript script，在背景調度很多 subagent，有三個性質：</p>
+              <ul>
+                <li><b>計畫在 script 裡。</b>不在對話裡。</li>
+                <li><b>中間結果存在 script 的變數裡。</b>不進主 context。</li>
+                <li><b>Script 可以重跑。</b>這正好補上手動平行做不到的「記下來」。</li>
+              </ul>
+              <p>在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 讓 Claude 自己決定；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是<strong>每個任務用的 token 更多</strong>。</p>
               <p id="i4-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             </div>
               <div class="exlist deeplist">
@@ -1035,7 +1099,14 @@ $ git push                            # agent B 後到
 $ git pull --rebase
 CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task-43</code></pre></figure>
               <p>這叫樂觀鎖（optimistic locking）：先做，衝突時才處理，不用一個中央的管理者發派。它的弱點是 stale lock：agent 中途當掉，鎖就一直留著，所以鎖要能過期，或是有人定期清理。Agent 之間沒有對話，context 靠檔案傳：新 session 先讀 README、進度文件和 CI 的失敗紀錄找回狀況，再用自動化測試判斷自己有沒有進展。另外有幾個專職的 agent 管文件、效能、品質和去重。<strong>狀態放在檔案和測試裡，不靠 model 記住</strong>，這就是 <code>/goal</code> 那句「終點要能檢查」放大到 16 個 agent 的樣子。</p>
-              <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的地方：merge conflict 很頻繁；所有 agent 碰到同一個 kernel 的錯誤時，平行就沒有用了；16 位元 x86 的一部分仍靠 GCC；產生的程式碼效率比 GCC 差。下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
+              <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的四個地方：</p>
+              <ul>
+                <li><b>Merge conflict。</b>很頻繁。</li>
+                <li><b>同一個 kernel 的錯誤。</b>所有 agent 都碰到它時，平行就沒有用了。</li>
+                <li><b>16 位元 x86。</b>一部分仍靠 GCC。</li>
+                <li><b>程式碼效率。</b>產生的程式碼效率比 GCC 差。</li>
+              </ul>
+              <p>下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x4">
@@ -1123,7 +1194,13 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                     </div>
                     <figcaption>每一列是一代。藍色是 3.0 多出來的那一層：人寫自然語言，agent 寫程式碼。不確定性集中在這一層；程式碼產生之後，可以用 2.0 的老方法管。</figcaption>
                   </figure>
-              <p id="i6-2"><span class="anchor" id="t5"></span><b>Karpathy 的 Software 3.0 是另一種分法。</b>Slide p.53 放了它，兩者名字像，分法不同，不要混。Karpathy 用「程式是什麼」分：1.0 的程式是原始碼，人用 Python 或 C++ 寫；2.0 的程式是神經網路的權重，人收集資料再用 optimizer 訓練出來；3.0 的程式是 prompt，人用自然語言寫，LLM 執行。他的結論是：知道在哪裡劃 1.0、2.0、3.0 的界線，是一項重要的工程技能。兩種分法導向同一個工程問題：<strong>哪一塊用確定的程式，哪一塊交給 model</strong>。拿 Caveman 當例子，壓縮 engine 是 1.0 的程式，回答風格寫在 skill 裡，屬於 3.0。</p>
+              <p id="i6-2"><span class="anchor" id="t5"></span><b>Karpathy 的 Software 3.0 是另一種分法。</b>Slide p.53 放了它，兩者名字像，分法不同，不要混。Karpathy 用「程式是什麼」分成三代：</p>
+              <ul>
+                <li><b>1.0。</b>程式是原始碼，人用 Python 或 C++ 寫。</li>
+                <li><b>2.0。</b>程式是神經網路的權重，人收集資料再用 optimizer 訓練出來。</li>
+                <li><b>3.0。</b>程式是 prompt，人用自然語言寫，LLM 執行。</li>
+              </ul>
+              <p>他的結論是：知道在哪裡劃 1.0、2.0、3.0 的界線，是一項重要的工程技能。兩種分法導向同一個工程問題：<strong>哪一塊用確定的程式，哪一塊交給 model</strong>。拿 Caveman 當例子，壓縮 engine 是 1.0 的程式，回答風格寫在 skill 裡，屬於 3.0。</p>
               <p id="i6-3"><b>不確定性是新的嗎。</b>Slide p.54 只有一句話：不確定性變成核心主題，你要學著和它共處。但 p.55 接著指出，不確定性早就存在：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th></th><th>硬體</th><th>環境</th><th>軟體</th></tr></thead>
@@ -1133,7 +1210,14 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                   <tr><td>3.0 新加的</td><td>GPU 的 nondeterministic kernel、浮點數差異</td><td>agent 在寫程式的過程中就會碰環境</td><td>compiler 和 model 都有多種 kernel 與取樣</td></tr>
                 </tbody>
               </table></div>
-              <p>依 p.55 整理。結論是：同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用。那 3.0 新增的不確定性在哪裡？Slide p.57 列了四個來源：自然語言本身的語意不確定；檢索的漂移，索引更新、切 chunk、context 截斷都會改變 model 看到的東西；model 生成的機率性，取樣加上軟硬體的 nondeterminism（同一個輸入，因為浮點運算順序或執行緒排程不同而算出不同結果，L1 講過）；agent 和 tool 的迴圈，軌跡、環境、tool 失敗、環境改變。重點是最後一行：程式產生之後通常是確定的，除非它在執行時又呼叫 model 或 tool。所以不確定性集中在產生程式的階段；程式碼經過 commit、review、測試之後，可以用 2.0 的老方法管。</p>
+              <p>依 p.55 整理。結論是：同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用。那 3.0 新增的不確定性在哪裡？Slide p.57 列了四個來源：</p>
+              <ul>
+                <li><b>自然語言。</b>語意本身不確定。</li>
+                <li><b>檢索的漂移。</b>索引更新、切 chunk、context 截斷都會改變 model 看到的東西。</li>
+                <li><b>Model 生成的機率性。</b>取樣加上軟硬體的 nondeterminism（同一個輸入，因為浮點運算順序或執行緒排程不同而算出不同結果，L1 講過）。</li>
+                <li><b>Agent 和 tool 的迴圈。</b>軌跡、環境、tool 失敗、環境改變。</li>
+              </ul>
+              <p>重點是 slide 的最後一行：程式產生之後通常是確定的，除非它在執行時又呼叫 model 或 tool。所以不確定性集中在產生程式的階段；程式碼經過 commit、review、測試之後，可以用 2.0 的老方法管。</p>
               <p id="i6-4"><b>怎麼和不確定性共處。</b>Slide p.58 給的做法分三組：</p>
               <ul>
                 <li><b>DEFINE。</b>先把假設寫出來；有歧義的地方讓 model 先確認再動手。</li>
@@ -1320,8 +1404,13 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
               <details class="gloss" id="n-adr">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">ADR、ubiquitous language、tracer bullet、seam：這套 skill 從四本書借的名詞</span></summary>
                 <div class="gloss-body prose">
-                  <p>ADR 是 Architecture Decision Record：一頁的決策紀錄，寫背景、決定、後果，放在 <code>docs/adr/</code>，一個決定一個檔案。Ubiquitous language 來自 Eric Evans 的 Domain-Driven Design：開發者和領域專家共用同一套詞，程式碼裡的名字也用它；這套 skill 把它寫成 <code>GLOSSARY.md</code>。</p>
-                  <p>Tracer bullet 來自 The Pragmatic Programmer：先打一條穿過每一層（schema、API、UI、測試）的細路徑，能動了再加寬；<code>to-tickets</code> 要求每張 ticket 都是這種垂直切片。Seam 是測試落點：模組對外的邊界，從外面觀察行為、不碰內部；<code>tdd</code> 規定只在事先講好的 seam 寫測試。</p>
+                  <p>這套 skill 借了四個名詞：</p>
+                  <ul>
+                    <li><b>ADR。</b>ADR 是 Architecture Decision Record：一頁的決策紀錄，寫背景、決定、後果，放在 <code>docs/adr/</code>，一個決定一個檔案。</li>
+                    <li><b>Ubiquitous language。</b>它來自 Eric Evans 的 Domain-Driven Design：開發者和領域專家共用同一套詞，程式碼裡的名字也用它。這套 skill 把它寫成 <code>GLOSSARY.md</code>。</li>
+                    <li><b>Tracer bullet。</b>它來自 The Pragmatic Programmer：先打一條穿過每一層（schema、API、UI、測試）的細路徑，能動了再加寬。<code>to-tickets</code> 要求每張 ticket 都是這種垂直切片。</li>
+                    <li><b>Seam。</b>Seam 是測試落點：模組對外的邊界，從外面觀察行為、不碰內部。<code>tdd</code> 規定只在事先講好的 seam 寫測試。</li>
+                  </ul>
                 </div>
               </details>
               <p id="i8-3"><b>主線：grill → spec → tickets → implement → review。</b>作者在 <code>ask-matt</code> 裡把多數工作走的路畫成一條主線。下圖依它重畫，並標出每一步的入口是誰、派出了什麼 subagent、東西存在哪裡：</p>
@@ -1434,7 +1523,12 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2</code></pre></figure>
               <p><code>implement</code> 做一張：抓 ticket、在講好的 seam 上跑 <code>tdd</code>、常跑 typecheck 和單檔測試、最後跑一次整套，然後叫 <code>code-review</code>，再 commit。<code>code-review</code> 比對 HEAD 和一個固定點的 diff，分兩軸：Standards 看有沒有照 repo 的規範（加一組 Fowler 的 code smell 當底線），Spec 看有沒有做到 issue 要的。兩軸各派一個 subagent 平行跑，SKILL.md 寫明理由：不讓兩邊污染彼此的 context。報告並排，不合併、不排名，因為兩軸會互相遮掩：照規範但做錯東西，或做對東西但壞了慣例。</p>
-              <p>和 2.1 的 Superpowers 並排，同一條線有三個差別。第一，Superpowers 的 skill 自己點名下一個（<code>brainstorming</code> 做完叫 <code>writing-plans</code>）；這裡 user-invoked 之間不接，每一步你看過結果再打下一個。第二，計畫放的地方不同，但兩邊都放在對話外面，所以都能跨 session。Superpowers 把 design doc 和計畫寫成 repo 裡的 Markdown 檔（slide 沒提，見 2.1 最後一節）；這裡 spec 是 issue、ticket 是 issue、依賴是 tracker 的 blocking 關係，所以<strong>進度和依賴都在 tracker 上查得到</strong>。第三，核准關卡的形式：Superpowers 在 skill 裡寫一步「等使用者核准」；這裡 grilling 每一輪都等你，<code>to-spec</code> 要你確認 seam，<code>to-tickets</code> 要你核准拆法。關卡多，但每個都小。</p>
+              <p>和 2.1 的 Superpowers 並排，同一條線有三個差別：</p>
+              <ol>
+                <li><b>誰接下一步。</b>Superpowers 的 skill 自己點名下一個（<code>brainstorming</code> 做完叫 <code>writing-plans</code>）；這裡 user-invoked 之間不接，每一步你看過結果再打下一個。</li>
+                <li><b>計畫放哪。</b>兩邊放的地方不同，但都放在對話外面，所以都能跨 session。Superpowers 把 design doc 和計畫寫成 repo 裡的 Markdown 檔（slide 沒提，見 2.1 最後一節）；這裡 spec 是 issue、ticket 是 issue、依賴是 tracker 的 blocking 關係，所以<strong>進度和依賴都在 tracker 上查得到</strong>。</li>
+                <li><b>核准關卡的形式。</b>Superpowers 在 skill 裡寫一步「等使用者核准」；這裡 grilling 每一輪都等你，<code>to-spec</code> 要你確認 seam，<code>to-tickets</code> 要你核准拆法。關卡多，但每個都小。</li>
+              </ol>
               <p id="i8-4"><b>implement-spec：把 ticket 當 task graph 派 subagent。</b>一張一張 <code>/implement</code> 是手動模式。<code>/implement-spec</code> 一次做整份 spec，它的 SKILL.md 只有 40 行，卻把第 1 段架構圖的 A、B、D 各用了一次：</p>
               <ol>
                 <li>讀 spec 和 ticket，把它們當 task graph：有 blocking 關係，所以隨時有一個 frontier，也就是可以直接開工的 ticket。</li>
@@ -1446,16 +1540,36 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 <li>全部做完，對 integration branch 跑一次 <code>code-review</code>，問題交給一個 implementer 修。</li>
                 <li>把 draft PR 標成可 review，或依 tracker 的方式結案；清掉所有 worktree。</li>
               </ol>
-              <p>SKILL.md 另外規定：和 subagent 的溝通要少，主要用 context pointer，也就是指向 spec、ticket、研究筆記、commit 的連結，不複製內容。這和 2.3 說的「委派時只交任務訊息」是同一件事。放回第 1 段的架構圖：計畫在 ticket 裡，不在對話裡，這是 D 的性質，所以可以重跑；派工的是主對話，這是 B；每個 worker 一個 worktree，這是 A。它沒有 C，implementer 之間不講話。和 2.5 的 C compiler 比，<strong>這裡不需要 lock file，因為派工的只有一個主對話</strong>；C compiler 有 16 個對等的 agent，才要用 git 裁決。Frontier 就是 2.3 註講的 critical path 的另一面：有 blocker 的 ticket 要等，沒有的才能平行。代價也有：主對話持有派工狀態，ticket 多了 context 會滿；merge conflict 和 p.50 一樣常見，只是交給 merger subagent 解。巢狀 subagent 的上限，作者明文不在 skill 裡擋，交給 harness，也就是 2.3 提到的 <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code>。</p>
+              <p>SKILL.md 另外規定：和 subagent 的溝通要少，主要用 context pointer，也就是指向 spec、ticket、研究筆記、commit 的連結，不複製內容。這和 2.3 說的「委派時只交任務訊息」是同一件事。放回第 1 段的架構圖，它用了其中三種：</p>
+              <ul>
+                <li><b>D 的性質。</b>計畫在 ticket 裡，不在對話裡，所以可以重跑。</li>
+                <li><b>B。</b>派工的是主對話。</li>
+                <li><b>A。</b>每個 worker 一個 worktree。</li>
+              </ul>
+              <p>它沒有 C，implementer 之間不講話。和 2.5 的 C compiler 比，<strong>這裡不需要 lock file，因為派工的只有一個主對話</strong>；C compiler 有 16 個對等的 agent，才要用 git 裁決。Frontier 就是 2.3 註講的 critical path 的另一面：有 blocker 的 ticket 要等，沒有的才能平行。代價也有：主對話持有派工狀態，ticket 多了 context 會滿；merge conflict 和 p.50 一樣常見，只是交給 merger subagent 解。巢狀 subagent 的上限，作者明文不在 skill 裡擋，交給 harness，也就是 2.3 提到的 <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code>。</p>
               <figure class="file"><figcaption>整條主線在 session 裡打起來的樣子（本文擬的例子；issue 編號是假的）</figcaption><pre><code>&gt; /grill-with-docs                 ← 一輪一輪問你；順手改 GLOSSARY.md、寫 ADR
 &gt; /to-spec                         ← 把對話整理成 spec，發成 issue #120，標 ready-for-agent
 &gt; /to-tickets #120                 ← 拆成 #121–#126，各設 blocked by；你核准拆法才發
 &gt; /implement-spec #120             ← 讀 ticket 圖，frontier 上各派一個 implementer；最後 code-review
 &gt; /retro                           ← 回頭看：哪條規則該變成 lint，哪個檔案該加指標</code></pre></figure>
-              <p id="i8-5"><b>可靠性的零件：tdd、diagnosing-bugs、retro。</b>2.6 的結論是「不期待 agent 確定，讓周邊系統可靠」。這套 skill 裡負責周邊系統的是三個 model-invoked skill。<code>tdd</code> 的規則：先和你講好 seam，不在沒講好的 seam 寫測試；紅在綠之前，只寫剛好讓測試過的程式；一次一個 slice；refactor 不在迴圈裡，留給 review。它列了三種壞測試：綁住實作細節的、assert 用和程式一樣的算法算出來的（永遠過）、先寫完所有測試再寫實作的（測的是想像的行為）。</p>
+              <p id="i8-5"><b>可靠性的零件：tdd、diagnosing-bugs、retro。</b>2.6 的結論是「不期待 agent 確定，讓周邊系統可靠」。這套 skill 裡負責周邊系統的是三個 model-invoked skill。<code>tdd</code> 有四條規則：</p>
+              <ul>
+                <li>先和你講好 seam，不在沒講好的 seam 寫測試。</li>
+                <li>紅在綠之前，只寫剛好讓測試過的程式。</li>
+                <li>一次一個 slice。</li>
+                <li>Refactor 不在迴圈裡，留給 review。</li>
+              </ul>
+              <p>它列了三種壞測試：綁住實作細節的、assert 用和程式一樣的算法算出來的（永遠過）、先寫完所有測試再寫實作的（測的是想像的行為）。</p>
               <p><code>diagnosing-bugs</code> 把 2.5 的「可以檢查的終點」寫成 bug 版。它的 Phase 1 只做一件事：建一個會因為這個 bug 變紅的 feedback loop。完成條件寫得很硬：你要能說出一個指令（測試、curl、script），已經至少跑過一次，而且它會抓到使用者講的那個症狀、每次結果一樣、幾秒跑完、不用人介入。<strong>沒有這個指令，不准進下一階段提假設</strong>。<code>/goal</code> 的檢查 model 只讀對話，所以證據要出現在輸出裡；<code>diagnosing-bugs</code> 要求一個已經跑過、會變紅的指令。兩個作者從不同方向走到同一條規則。它對 flaky bug 的做法也和 2.5 一致：不追求乾淨的重現，而是把重現率拉高到能 debug，例如跑 100 次、加壓力、縮時間窗。</p>
               <p><code>retro</code> 在做完之後跑，改的是 agent 的環境，不是程式：哪裡找檔案花太久（加一個導航指標）、哪個錯誤自動檢查能抓（加 lint、型別、測試）、哪條規範該給 reviewer。它把規範分兩類：機械的（固定的語法樣式、禁用的 API、檔案位置）一律變成確定的檢查，lint 規則、pre-commit hook 或 CI；只有判斷題才留在 <code>CODING_STANDARDS.md</code>。這是 2.6 說的 VERIFY：便宜而頻繁的檢查，勝過最後一次昂貴的 review。它還有一條對 <code>CLAUDE.md</code> 的看法：這個檔案每個 agent 都載入，所以只放導航指標；規範放在 review 階段讀的檔案，因為 reviewer 的 context 壓力最小，只拿到一份 diff。</p>
-              <p id="i8-6"><b>GLOSSARY.md：用共用語言省 token。</b>README 的第二個失敗模式是囉嗦，作者的例子是他自己的 repo：改之前要說「一門課程裡某一節底下的 lesson 變成『真的』，也就是在檔案系統上有了位置」；有了 glossary 之後只說「materialization cascade 有問題」。<code>domain-modeling</code> 負責建這份語言：你用的詞和 glossary 衝突就當場指出；詞太模糊就提一個精確的（你說 account，是 Customer 還是 User？）；用具體情境測邊界；你說程式怎麼運作，它去對程式碼，不一致就問。詞一定下來就立刻寫進 <code>GLOSSARY.md</code>，不攢著。ADR 只在三個條件都成立時才寫：難回頭、沒有脈絡會看不懂、而且是真的取捨過。每個工程 skill 開頭都有一句「先讀 <code>GLOSSARY.md</code>」，所以 spec、ticket、測試名、PR 都用同一套詞。</p>
+              <p id="i8-6"><b>GLOSSARY.md：用共用語言省 token。</b>README 的第二個失敗模式是囉嗦，作者的例子是他自己的 repo：改之前要說「一門課程裡某一節底下的 lesson 變成『真的』，也就是在檔案系統上有了位置」；有了 glossary 之後只說「materialization cascade 有問題」。<code>domain-modeling</code> 負責建這份語言，做四件事：</p>
+              <ul>
+                <li><b>指出衝突。</b>你用的詞和 glossary 衝突，就當場指出。</li>
+                <li><b>換成精確的詞。</b>詞太模糊，就提一個精確的（你說 account，是 Customer 還是 User？）。</li>
+                <li><b>測邊界。</b>用具體情境測詞的邊界。</li>
+                <li><b>對程式碼。</b>你說程式怎麼運作，它去對程式碼，不一致就問。</li>
+              </ul>
+              <p>詞一定下來就立刻寫進 <code>GLOSSARY.md</code>，不攢著。ADR 只在三個條件都成立時才寫：難回頭、沒有脈絡會看不懂、而且是真的取捨過。每個工程 skill 開頭都有一句「先讀 <code>GLOSSARY.md</code>」，所以 spec、ticket、測試名、PR 都用同一套詞。</p>
               <p>作者說好處有三：變數和檔案命名一致、codebase 更好導航、model 想事情用更少 token。這些是他的經驗，repo 裡沒有量測。它和 2.2 的 Caveman 省的是不同的 token，本章第一個本文延伸比較兩者。</p>
               <p id="i8-7"><b>三個 plugin 並排。</b>把 Superpowers、Caveman 和這套放在一起，三者各用了這堂講的哪些零件就清楚了：</p>
               <div class="table-wrap"><table>
@@ -1472,7 +1586,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 </tbody>
               </table></div>
               <p>本文的整理。Superpowers 依 p.5–14 與 repo 的 v7.0.1（2026-10-28 比對），Caveman 依 p.15–25，mattpocock/skills 依 repo（2026-10-27）。</p>
-              <p>最後一列值得多看。這個 repo 的 <code>.out-of-scope/</code> 目錄記錄作者拒絕過的功能，理由都指向同一個原則：skill 是跨 harness 的純文字，harness 專屬的事不做。有人要求在 skill 裡擋 subagent 遞迴，他說上限該由 harness 設，一處設定對所有 skill 生效；寫進一個 skill 的提醒只管那個 skill，還每次花 token。有人要求 grilling 改用 Claude Code 的 AskUserQuestion 介面，他說每個 harness 的問答工具不同，而且選單會把開放的問題變成選擇題；要用就寫在你自己的 <code>CLAUDE.md</code>。三個 plugin 因此排成一條線：mattpocock/skills 只用 skill，Superpowers 加 hook，Caveman 再加 MCP 和 proxy。<strong>往右走，能保證的事越多，也越綁在一個 harness 上</strong>。Superpowers 後來支援十幾個 harness，代價是每個都要各自接一次 bootstrap；Antigravity 沒有 session hook，只能退回靠 description，hook 的保證也就沒了。放回 2.7 的階梯，user-invoked skill 加 <code>implement-spec</code> 站在第三到第四層；<code>retro</code> 做的是 2.7 說的人的新角色：不寫程式，改環境。</p>
+              <p data-inline>最後一列值得多看。這個 repo 的 <code>.out-of-scope/</code> 目錄記錄作者拒絕過的功能，理由都指向同一個原則：skill 是跨 harness 的純文字，harness 專屬的事不做。有人要求在 skill 裡擋 subagent 遞迴，他說上限該由 harness 設，一處設定對所有 skill 生效；寫進一個 skill 的提醒只管那個 skill，還每次花 token。有人要求 grilling 改用 Claude Code 的 AskUserQuestion 介面，他說每個 harness 的問答工具不同，而且選單會把開放的問題變成選擇題；要用就寫在你自己的 <code>CLAUDE.md</code>。三個 plugin 因此排成一條線：mattpocock/skills 只用 skill，Superpowers 加 hook，Caveman 再加 MCP 和 proxy。<strong>往右走，能保證的事越多，也越綁在一個 harness 上</strong>。Superpowers 後來支援十幾個 harness，代價是每個都要各自接一次 bootstrap；Antigravity 沒有 session hook，只能退回靠 description，hook 的保證也就沒了。放回 2.7 的階梯，user-invoked skill 加 <code>implement-spec</code> 站在第三到第四層；<code>retro</code> 做的是 2.7 說的人的新角色：不寫程式，改環境。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x7">
@@ -1603,7 +1717,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 <p class="qtext">Caveman 從哪兩個方向壓縮 token？輸入方向為什麼要用 proxy，不用 hook？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>輸出方向靠 response skill，讓 model 寫得短；slide 的數字是 output token 少 65%（p.17）。輸入方向靠本機 proxy，壓縮 model 讀到的 log、diff、tool 結果；p.16 的例子把 786 行的 npm test 輸出壓成 1 行。壓縮輸入要改寫送給 model 的每一個 request。Hook 不能透明地改寫 LLM request；proxy 位在 coding agent 和 model provider 之間，每個 request 都經過它（p.24）。</p>
+                    <p data-inline><b>答案：</b>輸出方向靠 response skill，讓 model 寫得短；slide 的數字是 output token 少 65%（p.17）。輸入方向靠本機 proxy，壓縮 model 讀到的 log、diff、tool 結果；p.16 的例子把 786 行的 npm test 輸出壓成 1 行。壓縮輸入要改寫送給 model 的每一個 request。Hook 不能透明地改寫 LLM request；proxy 位在 coding agent 和 model provider 之間，每個 request 都經過它（p.24）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
                   <p>Log、diff、tool 輸出會塞滿 context（p.16）。Agent 每一圈 loop 都重送整個 context，所以一份長 log 進來以後，之後每一圈都要再付一次。等 context 快滿才修剪，重要的資訊可能已經被剪掉（p.16）。所以 Caveman 在資料進 context 時就壓，兩個方向都壓，而且保留原文。</p>
@@ -2221,7 +2335,15 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
               <li><b>四個組件：lead、teammate、task list、mailbox。</b>Lead 是主 session，負責開人、派工、整合。每個 agent 的 mailbox 是一個 JSON 檔，放在 <code>~/.claude/teams/</code> 底下。Teammate 載入 CLAUDE.md 與 skill，但不繼承 lead 的對話，所以任務細節要寫進 spawn prompt。</li>
               <li><b>任務清單有三種狀態與相依。</b>pending、in progress、completed；有相依的任務要等前置完成才能認領。Teammate 做完會自己認領下一題。三個 hook 當品質關卡：<code>TeammateIdle</code>、<code>TaskCreated</code>、<code>TaskCompleted</code>，exit code 2 就退回並附回饋。</li>
               <li><b>Lead 怎麼帶，權限也集中在 lead。</b>用自然語言跟 lead 說要幾個 teammate、用哪個 model、各自的角色；也可以引用 <code>.claude/agents/</code> 裡的 subagent 定義當角色。Teammate 繼承 lead 的 permission mode，它的權限提示都回到 lead 的 session 由你核准；teammate 不能替你核准任何事。</li>
-              <li><b>限制清單要先看。</b><code>/resume</code> 不會把 in-process 的 teammate 找回來；任務狀態可能卡住沒更新；一個 session 只有一個 team；teammate 不能再開 team；lead 不能換人。建議：3 到 5 個 teammate、每人 5 到 6 個任務、不要讓兩人改同一個檔案。</li>
+              <li><b>限制清單要先看。</b>文件列了五條：
+                <ul>
+                  <li><code>/resume</code> 不會把 in-process 的 teammate 找回來。</li>
+                  <li>任務狀態可能卡住沒更新。</li>
+                  <li>一個 session 只有一個 team。</li>
+                  <li>Teammate 不能再開 team。</li>
+                  <li>Lead 不能換人。</li>
+                </ul>
+                建議：3 到 5 個 teammate、每人 5 到 6 個任務、不要讓兩人改同一個檔案。</li>
             </ol>
             <p class="tk-h">原文怎麼讀</p>
             <ul>
