@@ -101,6 +101,7 @@ diff /tmp/before.txt /tmp/after.txt                    # 只能差行號和句�
 - `guide/README.md` 第 3 行「更新：」最前面加一句，說改了哪一段、為什麼。
 - 新的寫法（例如「名詞註可以放表和 code」）寫進 `guide/STYLE_ARTICLE.md` 對應的節。
 - commit 訊息用中文，一句說改了什麼。push 到 `main`。
+- push 被拒（non-fast-forward）：`git fetch origin main && git rebase origin/main`。`README.md` 和 `STYLE_ARTICLE.md` 第 3 行的「更新：」幾乎一定衝突：保留對方的句子，把自己的句子加在最前面；對方也升了版號，自己的版號再加一（例如對方 v5.7，自己改成 v5.8），標題行一起改。解完再跑一次第 6 步的檢查。
 
 回覆 James：只列改了什麼、哪裡要他看。不重貼全文。
 
