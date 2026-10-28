@@ -59,8 +59,8 @@
       <li><span class="k">頁數</span>72</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
-      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 7 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 75 分鐘</span></li>
+      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 12 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 80 分鐘</span></li>
     </ul>
   </header>
 
@@ -376,6 +376,15 @@ claude plugin install caveman@caveman</code></pre></figure>
 │   ├── writing-plans/
 │   └── test-driven-development/            ← slide 列 9 個，repo 有 15 個
 └── tests/</code></pre></figure>
+              <p>最上面的 <a class="tm" href="#n-plugin-dir"><code>.claude-plugin/</code></a> 只放 manifest，也就是寫名字和版本的那個檔；Claude Code 看到它，就把這個資料夾當成一個 plugin。Skill 和 hook 放在根目錄的 <code>skills/</code> 和 <code>hooks/</code>。</p>
+              <details class="gloss" id="n-plugin-dir">
+                <summary><span class="gloss-k">名詞</span><span class="gloss-t">.claude-plugin/：Claude Code 認 plugin 的資料夾，每個 harness 各有一個</span></summary>
+                <div class="gloss-body prose">
+                  <p>這個資料夾只放 manifest。<code>plugin.json</code> 寫名字、版本、作者，只有 <code>name</code> 必填。選用的 <code>marketplace.json</code> 讓這個 repo 也當 marketplace；2.2 的 <code>claude plugin marketplace add JuliusBrussee/caveman</code> 讀的就是它。<code>skills/</code>、<code>hooks/</code>、<code>commands/</code> 要放在根目錄，Claude Code 只在那裡找。</p>
+                  <p>Manifest 也可以省略。沒有 <code>plugin.json</code>，Claude Code 照固定位置載入：skill 在 <code>skills/</code>，hook 在 <code>hooks/hooks.json</code>，MCP server 在 <code>.mcp.json</code>。Superpowers v7.0.1 的 <code>plugin.json</code> 只有 8 個欄位：name、description、version、author、homepage、repository、license、keywords。</p>
+                  <p>名字開頭的點表示「給工具讀的設定」，和 <code>.github/</code>、<code>.vscode/</code> 一樣。每個 harness 讀自己的資料夾，所以 Superpowers 的根目錄有 8 個：<code>.claude-plugin/</code>、<code>.codex-plugin/</code>、<code>.cursor-plugin/</code>、<code>.antigravity-plugin/</code> 等。<code>skills/</code> 只有一份，各家共用；manifest 每個 harness 各寫一份。2.8 說 skill 不綁 harness，要綁的就是這一層。</p>
+                </div>
+              </details>
               <p>看一份 skill 長什麼樣子（slide p.9，<code>skills/brainstorming/SKILL.md</code> 的簡化版）：</p>
               <figure class="file"><figcaption>skills/brainstorming/SKILL.md（簡化）</figcaption><pre><code>---
 name: brainstorming                  ← front matter：名字
@@ -399,6 +408,15 @@ description: Use before creative work.   ← model 決定要不要載入的依�
         "command": "run-hook.cmd",        ← 要跑的程式
         "async": false }]                 ← 跑完才讓 agent 動
     }] } }</code></pre></figure>
+              <p>這個檔放在 plugin 裡，裝了 plugin 就生效。你自己的 hook 寫在 <a class="tm" href="#n-hook-files"><code>settings.json</code></a>，格式相同；第 4 段動手試試的第一個範例，就是同一個 SessionStart hook 寫在專案裡的版本。</p>
+              <details class="gloss" id="n-hook-files">
+                <summary><span class="gloss-k">名詞</span><span class="gloss-t">hooks.json 與 settings.json：同一種 hook 設定，差在誰寫、何時生效</span></summary>
+                <div class="gloss-body prose">
+                  <p><code>settings.json</code> 是 Claude Code 的設定檔，管權限、環境變數、model 等。<code>hooks</code> 只是它的其中一個 key。<code>~/.claude/settings.json</code> 管你所有的專案。<code>.claude/settings.json</code> 管一個專案，可以 commit 給團隊；<code>.claude/settings.local.json</code> 也管一個專案，但不 commit。</p>
+                  <p>Plugin 的 <code>hooks/hooks.json</code> 只放 hook。Plugin 作者寫它，它跟著 plugin 安裝和更新，plugin 啟用時才生效。Hook 也可以直接寫在 <code>plugin.json</code> 的 <code>"hooks"</code> 裡，2.2 的 Caveman 就這樣寫（p.19）。格式和 <code>settings.json</code> 的 <code>"hooks"</code> 相同，只差腳本路徑：plugin 用 <code>${CLAUDE_PLUGIN_ROOT}</code>，專案用 <code>${CLAUDE_PROJECT_DIR}</code>。</p>
+                  <p>各處的 hook 合併，不互相覆蓋。事件發生時，符合的 hook 平行執行，所以你的 SessionStart 和 Superpowers 的都會跑。但 plugin 改不了你的設定：plugin 附的 <code>settings.json</code> 只認 <code>agent</code> 和 <code>subagentStatusLine</code> 兩個 key。所以 Caveman 要把 API 位址改到 proxy，得用它自己的 CLI 寫進你的 <code>~/.claude/settings.json</code>（2.2 的本文延伸）。</p>
+                </div>
+              </details>
               <p><code>matcher</code> 的三個值：<code>startup</code> 是開新 session，<code>clear</code> 是你打了 <code>/clear</code> 清掉對話，<code>compact</code> 是 <a class="tm" href="#n-context">compaction</a> 之後（context 快滿時 Claude Code 把舊對話換成一段摘要）。觸發後跑的程式（slide p.12）做的事很簡單：</p>
               <figure class="file"><figcaption>hooks/session-start（簡化，p.12）</figcaption><pre><code>#!/usr/bin/env bash
 set -euo pipefail
@@ -613,7 +631,8 @@ If off, deactivate.</code></pre></figure>
 {"compressed": "3 tests fail. Root error: timeout.",
  "ratio": 0.72,
  "recovery_handle": "ccr_abc123"}    ← 之後用 caveman_retrieve("ccr_abc123") 取回原文</code></pre></figure>
-              <p>這和 L4 講的 <a class="tm" href="#n-context">offloading</a> 是同一招：原文放在外面，context 裡只留一個 handle。問題是 <strong>MCP tool 只在 agent 呼叫它的時候才執行</strong>。Agent 跑完測試，786 行的輸出已經進了 context，它才有機會呼叫 <code>caveman_compress</code>，而且壓縮的結果只是再加一段，原文還在。Hook 也不行：hook 能改單一 tool 的輸入或輸出，但不能透明地改寫整份送給 model 的 request（slide p.24 的註記）。能做到的只有 proxy。</p>
+              <p>這和 L4 講的 <a class="tm" href="#n-context">offloading</a> 是同一招：原文放在外面，context 裡只留一個 handle。問題是 <strong>MCP tool 只在 agent 呼叫它的時候才執行</strong>。Agent 跑完測試，786 行的輸出已經進了 context，它才有機會呼叫 <code>caveman_compress</code>，而且壓縮的結果只是再加一段，原文還在。</p>
+              <p>Hook 只做得到一半。依 2026-10-28 的 hooks 文件，PostToolUse hook 可以用 <code>updatedToolOutput</code> 換掉任何 tool 的結果，所以 786 行的輸出能在進 context 之前就換成一行。但 hook 只改得到觸發它的那一筆，碰不到 system prompt、tool 定義和之前幾圈的對話；slide p.24 的註記也說，hook 不能透明地改寫整份送給 model 的 request。能改整份 request 的只有 proxy。</p>
               <p id="i2-5"><span class="anchor" id="t6"></span><b>Proxy：站在 agent 和 provider 中間的程式。</b>Claude Code 本來直接把 request 送到 Anthropic 的 API；裝了 Caveman 之後，你把 Claude Code 的 API 位址指到本機的 proxy，Claude Code 以為自己在跟 provider 講話，但每一個 request 都先經過 proxy，proxy 改完再轉送給 provider。因為每個 request 都經過它，它看得到整份 context，也改得了整份 context。Caveman 的 proxy 依內容類型壓縮（slide p.24）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>內容類型</th><th>留下什麼</th></tr></thead>
@@ -629,6 +648,77 @@ If off, deactivate.</code></pre></figure>
               <p>Slide 把三者的差別寫成一句：proxy 攔截每一個 request，MCP 只在呼叫時執行；proxy 站在 agent 和 provider 之間，MCP 站在旁邊；proxy 改得了 context，MCP 改不了。最後一句註記值得記：<strong>用別人的 agent 才需要 proxy</strong>，自己寫 harness 的話，這件事在 harness 裡直接做就好，L4 的 <a class="tm" href="#n-context">admission</a> 就是這個位置。</p>
               <p id="i2-6"><b>每一種機制各有位置。</b>Slide p.25 把 Caveman 用到的每一種機制列成表：skill 管風格，hook 管啟動、追蹤和強化模式，command 管你選模式，MCP 管壓縮、取回和統計，plugin 把這些打包，proxy 攔截 request。兩個案例合起來看，L2 講的擴充機制各有一個明確的位置：想改 model 的行為用 skill，想保證某件事一定發生用 hook，想給 model 新能力用 MCP，想改 model 讀到的東西只能在 request 的路上動手。</p>
             </div>
+              <div class="exlist deeplist">
+                <details class="ex deep" id="x1">
+                  <summary>本文延伸｜Caveman 哪裡靠 model，哪裡靠程式規則<span>不是 slide 的內容</span></summary>
+                  <div class="exbody prose">
+                    <p>讀完這一章，容易以為壓縮都是 model 在做。本文對照 2026-10-25 的 repo（v4.0.1）：Caveman 有三處在壓縮，只有兩處用 model，量最大的輸入方向用的是程式規則。</p>
+                    <div class="table-wrap"><table>
+                      <thead><tr><th>部分</th><th>誰壓</th><th>怎麼壓</th></tr></thead>
+                      <tbody>
+                        <tr><td><b>輸出方向</b><br>skill <code>caveman</code></td><td>Model 自己</td><td>規則寫在 skill 裡，model 載入後照著寫短（上面 p.20 的檔案）</td></tr>
+                        <tr><td><b>輸入方向</b><br>proxy 與 engine</td><td>Go 程式</td><td>先判斷內容類型，再交給 16 種 compressor 之一；用 regex、保留頭尾、BM25 排序，不呼叫 model</td></tr>
+                        <tr><td><b>記憶檔</b><br><code>/caveman-compress</code></td><td>Model</td><td>Script 把 <code>CLAUDE.md</code> 這類檔案送給 Claude 改寫，再用程式檢查結果，最多重試 2 次</td></tr>
+                      </tbody>
+                    </table></div>
+                    <p>輸入方向的規則很具體。以 log 為例，compressor 只做四件事：</p>
+                    <figure class="file"><figcaption>engine/compressors/log.go（簡化，2026-10-25 的 repo）</figcaption><pre><code>// 1 這些字出現的行一定留：錯誤、警告、stack trace
+importantLineRe = regexp.MustCompile(`(?i)(` +
+  `\b(ERROR|FATAL|PANIC|EXCEPTION|FAIL|FAILED|WARN|...)\b` +
+  `|^\s+at\s|\.go:\d+|caused by)`)
+
+// 2 開頭 2 行、結尾 2 行一定留
+func NewLog() Compressor { return &amp;logCompressor{keepHead: 2, keepTail: 2} }
+
+// 3 和這次 query 最相關的行，用 BM25 排序，最多再留 16 行
+keepQueryRelevant(keep, docs, query, 16, 0.30)
+
+// 4 其餘連續的行，收成一行標記
+return fmt.Sprintf("… %d lines elided (caveman) …", n)</code></pre></figure>
+                    <p>為什麼輸入方向用規則，不用 model？本文的判斷是三個原因，都來自同一件事：每個 request 都要經過它。</p>
+                    <ul>
+                      <li><b>成本。</b>用 model 壓，每一圈要多一次 model call；多花的錢和時間，可能比省下的還多。</li>
+                      <li><b>每次結果一樣。</b>壓過的內容會留在之後每個 request 的開頭，同一段若每次壓得不一樣，<a href="l04.html#n-prefix">prefix cache</a> 就失效。所以 engine 記下原文和壓縮結果的對照，同一段永遠壓成同一串 bytes；log.go 的註解也寫明這個理由。</li>
+                      <li><b>出錯時退回原文。</b>解析不了，或壓完沒有變小，engine 就原樣送出；改寫之前先存原文，所以 <code>caveman_retrieve</code> 一定取得回來。Model 改寫可能把「not found」寫成「found」，而且每次寫法不同，很難逐一檢查。</li>
+                    </ul>
+                    <p>記憶檔反過來用 model，因為一個 <code>CLAUDE.md</code> 只壓一次：錢付一次，之後每個 session 都省，改寫的結果也能先檢查再存。這正是 2.6 的問題：哪一塊用確定的程式，哪一塊交給 model。</p>
+                  </div>
+                </details>
+              </div>
+              <div class="exlist deeplist">
+                <details class="ex deep" id="x2">
+                  <summary>本文延伸｜這件事為什麼不直接做進 harness<span>不是 slide 的內容</span></summary>
+                  <div class="exbody prose">
+                    <p>可以做，slide p.24 的註記也這樣說：自己寫 harness，就在 harness 裡做。Claude Code 也已經內建通用的版本。下表依 2026-10-28 的 tools 文件，最後一欄對到 L4 的四種策略：</p>
+                    <div class="table-wrap"><table>
+                      <thead><tr><th>情況</th><th>Claude Code<br>怎麼做</th><th>L4 的<br>策略</th></tr></thead>
+                      <tbody>
+                        <tr><td><b>Bash 成功</b><br>輸出超過約 3 萬字元</td><td>整份存成檔案，context 只放路徑和前 2,000 字元；要更多，model 再讀檔或搜尋</td><td>Offloading</td></tr>
+                        <tr><td><b>Bash 失敗</b><br>輸出超過約 1 萬字元</td><td>只留頭和尾，共約 1 萬字元，不存檔</td><td>Admission</td></tr>
+                        <tr><td><b>Read 讀大檔</b></td><td>一次最多回 25,000 token，超過就只給第一頁並提示分段讀；整檔超過 256 KB 直接回錯誤</td><td>Admission</td></tr>
+                        <tr><td><b>Context 快滿</b></td><td>用 model 把舊對話寫成摘要</td><td>Compaction</td></tr>
+                      </tbody>
+                    </table></div>
+                    <p>這些規則不看內容是什麼。Bash 失敗時一律留頭尾，錯誤剛好在中間就看不到；Caveman 依類型挑，log 留錯誤行，diff 留改動的行。那 harness 為什麼不內建 Caveman 這種程度的壓縮？本文的判斷有三個原因：</p>
+                    <ul>
+                      <li><b>要留什麼隨任務變。</b>同一份 log，問「為什麼 fail」要錯誤行，問「為什麼變慢」要中段的 timing 行。Caveman 沒有為每個場景各寫一套規則：它依內容類型選 compressor，再用這次的 query 挑相關的行，最後一定能取回原文。</li>
+                      <li><b>壓錯的代價由使用者付。</b>有損的壓縮可能讓 agent 修錯層，進階題第 2 題列了五種風險。通用的 harness 要對所有任務負責，所以只做保守的截斷，或存成檔案讓 model 自己去讀。</li>
+                      <li><b>Caveman 是第三方。</b>它改不了 Claude Code 的程式，只能用開放的擴充點。Hook 只換得掉一筆 tool 結果（2.2 正文），plugin 也改不了 API 位址（2.1 的註）。所以它另外裝一個 CLI，<code>caveman enable claude</code> 把 proxy 的位址寫進你的設定：</li>
+                    </ul>
+                    <figure class="file"><figcaption>~/.claude/settings.json：caveman enable claude 加的 env（簡化，依 repo 的 packages/cli/src/index.ts）</figcaption><pre><code>{
+  "env": {
+    // request 改送到本機的 proxy
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:8787/w/claude",
+    // 照官方 API 對待它；proxy 的上游是官方 API 才加
+    "_CLAUDE_CODE_ASSUME_FIRST_PARTY_BASE_URL": "1",
+    // 換了位址，tool search 預設會關；這行再打開
+    "ENABLE_TOOL_SEARCH": "true"
+  }
+}</code></pre></figure>
+                    <p>這也有代價。API 位址指到 <code>api.anthropic.com</code> 以外的主機時，Claude Code 會關掉幾個功能。依 2026-10-28 的環境變數文件，Remote Control 從 v2.1.196 起不能用，MCP tool search 預設關閉。依 Caveman 原始碼的註解，1M 的 context window 也會退回 200k。上面的後兩行就是補回這兩項；Remote Control 補不回來。</p>
+                  </div>
+                </details>
+              </div>
           </div>
           <p class="idea-group" id="g-b">B · 多個 agent：三個擴展軸</p>
           <div class="idea" id="i3">
@@ -845,7 +935,7 @@ $ claude --agent code-reviewer</code></pre></figure>
               <p id="i4-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x1">
+                <details class="ex deep" id="x3">
                   <summary>本文延伸｜協調開銷決定平行加速的上限<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -924,7 +1014,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
               <p id="i5-6"><b>沒做好的地方。</b>Slide p.50 也列了它沒做好的地方：merge conflict 很頻繁；所有 agent 碰到同一個 kernel 的錯誤時，平行就沒有用了；16 位元 x86 的一部分仍靠 GCC；產生的程式碼效率比 GCC 差。下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x2">
+                <details class="ex deep" id="x4">
                   <summary>本文延伸｜任務切不開，加 agent 也沒用<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1095,7 +1185,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
               <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。OpenAI 的員工整體仍在階梯的下半部。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x3">
+                <details class="ex deep" id="x5">
                   <summary>本文延伸｜人的角色，變成規劃者和 reviewer<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1106,7 +1196,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                 </details>
               </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x4">
+                <details class="ex deep" id="x6">
                   <summary>本文延伸｜讀 Codex 與 OpenAI 的數字要小心<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1361,7 +1451,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
               <p>最後一列值得多看。這個 repo 的 <code>.out-of-scope/</code> 目錄記錄作者拒絕過的功能，理由都指向同一個原則：skill 是跨 harness 的純文字，harness 專屬的事不做。有人要求在 skill 裡擋 subagent 遞迴，他說上限該由 harness 設，一處設定對所有 skill 生效；寫進一個 skill 的提醒只管那個 skill，還每次花 token。有人要求 grilling 改用 Claude Code 的 AskUserQuestion 介面，他說每個 harness 的問答工具不同，而且選單會把開放的問題變成選擇題；要用就寫在你自己的 <code>CLAUDE.md</code>。三個 plugin 因此排成一條線：mattpocock/skills 只用 skill，Superpowers 加 hook，Caveman 再加 MCP 和 proxy。<strong>往右走，能保證的事越多，也越綁在一個 harness 上</strong>。Superpowers 後來支援十幾個 harness，代價是每個都要各自接一次 bootstrap；Antigravity 沒有 session hook，只能退回靠 description，hook 的保證也就沒了。放回 2.7 的階梯，user-invoked skill 加 <code>implement-spec</code> 站在第三到第四層；<code>retro</code> 做的是 2.7 說的人的新角色：不寫程式，改環境。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x5">
+                <details class="ex deep" id="x7">
                   <summary>本文延伸｜GLOSSARY.md 和 Caveman 省的是不同的 token<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
                     <p>Caveman 壓的是內容：log、diff、tool 輸出進 context 之前先截短，原文留在外面。這是 L4 的 admission 和 offloading，每一圈都省，而且省的是輸入方向的大宗（2.2 算過，input 約是 output 的 14 倍）。</p>
@@ -1370,7 +1460,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 </details>
               </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x6">
+                <details class="ex deep" id="x8">
                   <summary>本文延伸｜沒有 hook，拿什麼保證 skill 會用到<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
                     <p>2.1 的教訓是：skill 裝了，model 不一定用。Superpowers 用 hook 補這個洞。mattpocock/skills 沒有 hook，它靠三件事。入口是 user-invoked，你打了就一定載入，不靠 model 判斷；這等於把「要不要走流程」這個決定交回給人。紀律是 model-invoked，靠 description 裡的觸發詞讓 model 自己挑，這一層沒有保證，和 2.1 的狀況一樣。流程裡的 skill 用「Call the Skill tool with "tdd"」這種句子點名下一個，作者說寫成 tool 呼叫比寫 <code>/tdd</code> 命中率高。</p>
@@ -1495,7 +1585,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                   <p>Log、diff、tool 輸出會塞滿 context（p.16）。Agent 每一圈 loop 都重送整個 context，所以一份長 log 進來以後，之後每一圈都要再付一次。等 context 快滿才修剪，重要的資訊可能已經被剪掉（p.16）。所以 Caveman 在資料進 context 時就壓，兩個方向都壓，而且保留原文。</p>
                   <p>輸出方向用 skill，改的是 model 怎麼寫（p.17）。它保留技術名詞、指令、路徑、程式碼、錯誤、數字、單位和否定詞；刪掉贅字、重複、客套和含糊的保留語（p.20）。結果是 output 少 65%（p.17）。</p>
                   <p>輸入方向用 proxy，改的是 model 讀到什麼。這個方向的量更大：C compiler 案例用了 2B input、140M output token（p.47），2B ÷ 140M ≈ 14 倍。Proxy 依內容類型壓縮：log 留錯誤、stack trace、開頭和結尾；diff 留檔案與 hunk 標頭、改動的行（p.24）。Agent 需要細節時，用 MCP tool <code>caveman_retrieve</code> 取回逐 byte 相同的原文（p.23）。</p>
-                  <p>為什麼一定要 proxy？Hook 綁在事件上。改 tool 的 hook 在單一 tool call 前後執行，只能改那一個 tool 的輸入或輸出，碰不到整個 request。MCP 只在 agent 呼叫時執行，也改不了 context。只有夾在中間的 proxy，每個 request 都經過（p.24）。自己寫 harness 的話，也能在 harness 裡改。</p>
+                  <p>為什麼一定要 proxy？Hook 綁在事件上。改 tool 的 hook 在單一 tool call 前後執行，只能改那一個 tool 的輸入或輸出，碰不到整個 request。所以一筆 tool 輸出，PostToolUse hook 換得掉（2.2）；system prompt 和之前的對話，它換不掉。MCP 只在 agent 呼叫時執行，也改不了 context。只有夾在中間的 proxy，每個 request 都經過（p.24）。自己寫 harness 的話，也能在 harness 裡改。</p>
                   <figure class="diagram">
                     <div class="scroll">
                       <svg viewBox="0 0 640 292" role="img" aria-label="Caveman 的兩個壓縮方向。左邊是 coding agent，tool 輸出了 786 行 log；agent 裡的 hook 只能改單一 tool 的輸入輸出。中間是本機 proxy，每個 request 都經過它，依類型壓縮：log 留錯誤和頭尾，diff 留檔頭和改動行。右邊是 model provider。上方的輸入方向：786 行的 request 經過 proxy，變成 1 行才送到 model。下方的輸出方向：context 裡有 response skill，model 的回答寫得短，output 少 65%。底部說明：proxy 每個 request 都經過，能改整個 context；MCP 只在 agent 呼叫時執行，例如用 caveman_retrieve 取回原文。">
@@ -1625,7 +1715,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                     <li>Subagent ＝ 新的 context ＋ 只交回摘要 → 中間產物不進主對話，之後每一圈都省。</li>
                     <li>摘要是有損壓縮 → 委派時指定回報格式；要頻繁來回討論的工作留在主對話（p.37）。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">平行與 subagent：各買到一樣東西，也各有代價</a>〉的〈<a href="#t1">Git worktree</a>〉與〈<a href="#t2">Context 隔離與摘要</a>〉兩段、〈<a href="#i4">Agent team 與 dynamic workflow</a>〉、本文延伸〈<a href="#x1">協調開銷決定平行加速的上限</a>〉、L4〈<a href="l04.html#t6">Lost in the middle</a>〉。<a href="#q1">進階題第 1 題</a>替任務選擴展方式。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">平行與 subagent：各買到一樣東西，也各有代價</a>〉的〈<a href="#t1">Git worktree</a>〉與〈<a href="#t2">Context 隔離與摘要</a>〉兩段、〈<a href="#i4">Agent team 與 dynamic workflow</a>〉、本文延伸〈<a href="#x3">協調開銷決定平行加速的上限</a>〉、L4〈<a href="l04.html#t6">Lost in the middle</a>〉。<a href="#q1">進階題第 1 題</a>替任務選擴展方式。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
@@ -1756,7 +1846,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                     <li>不確定性早就存在；新的部分集中在產生程式的階段，程式寫好後通常是確定的。</li>
                     <li>不追求 agent 確定 → 讓周邊系統可靠（可驗證的終點、測試、hook），自主程度配合風險。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉（含〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段）、本文延伸〈<a href="#x3">人的角色，變成規劃者和 reviewer</a>〉、L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉、L2〈<a href="l02.html#x4">自主程度要配合風險</a>〉。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉（含〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段）、本文延伸〈<a href="#x5">人的角色，變成規劃者和 reviewer</a>〉、L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉、L2〈<a href="l02.html#x4">自主程度要配合風險</a>〉。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>
@@ -2012,7 +2102,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Karpathy 在 2017 年提出：神經網路的權重是一種新的軟體。人不再逐行寫程式，改成給目標與資料，由 optimizer 在程式空間裡搜出程式。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.53 的 1.0／2.0／3.0 表格，2.0 那一列（程式是權重、用資料加優化產生）就是這篇。本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同：這篇分「程式是什麼」，講者分「人寫什麼」。〈<a href="#i6">Programming 3.0：接受不確定性</a>〉談的不確定性，這篇在 2017 年已經寫到。本文延伸〈<a href="#x3">人的角色，變成規劃者和 reviewer</a>〉問人做什麼；這篇的答案是：多數人整理資料集，少數人維護訓練基礎設施。</p>
+            <p>Slides p.53 的 1.0／2.0／3.0 表格，2.0 那一列（程式是權重、用資料加優化產生）就是這篇。本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同：這篇分「程式是什麼」，講者分「人寫什麼」。〈<a href="#i6">Programming 3.0：接受不確定性</a>〉談的不確定性，這篇在 2017 年已經寫到。本文延伸〈<a href="#x5">人的角色，變成規劃者和 reviewer</a>〉問人做什麼；這篇的答案是：多數人整理資料集，少數人維護訓練基礎設施。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>2.0 的「原始碼」是資料集加網路架構，訓練就是 compile。</b>1.0 由人寫 Python 或 C++，每一行把程式釘在程式空間的一個點。2.0 由人給目標與架構骨架，backprop 與 SGD 在這個子空間裡搜尋。</li>
@@ -2043,7 +2133,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 40 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Software 3.0 用英文 prompt 寫程式。LLM 會犯錯，所以現在該蓋帶 autonomy slider 的部分自主產品，不是全自主 agent。人的工作變成讓「生成、驗證」迴圈轉得快。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.53 直接引用這支影片的 1.0／2.0／3.0 分法；本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同。〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉的結論「自主程度配合風險」（p.59），就是 Karpathy 的 autonomy slider。本文延伸〈<a href="#x3">人的角色，變成規劃者和 reviewer</a>〉接的是他的生成與驗證迴圈。</p>
+            <p>Slides p.53 直接引用這支影片的 1.0／2.0／3.0 分法；本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同。〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉的結論「自主程度配合風險」（p.59），就是 Karpathy 的 autonomy slider。本文延伸〈<a href="#x5">人的角色，變成規劃者和 reviewer</a>〉接的是他的生成與驗證迴圈。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>軟體 70 年沒大變，最近幾年變了兩次。</b>1.0 是手寫程式碼，2.0 是神經網路權重，3.0 是給 LLM 的 prompt。Tesla Autopilot 裡的 C++ 逐步刪除，功能移進神經網路；他預期 prompt 會再吃掉一部分。</li>
@@ -2099,7 +2189,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Agent team 是好幾個完整的 Claude Code session 一起做事：一個 lead 派工，teammate 認領共用任務清單上的工作，彼此直接傳訊。文件自己標明 experimental、預設關閉、token 隨人數線性增加。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.38–42 取自這份文件：p.38 的四種適用情境與警語、p.39 的四個組件、p.41 的 subagent 對照表。本頁 2.4 的〈<a href="#i4-1">C Agent team</a>〉一段的選擇規則「需要討論才用 team」，就是文件的結論。本文延伸〈<a href="#x1">協調開銷決定平行加速的上限</a>〉講的 token 線性成長，文件寫成建議：先開 3 到 5 個。2.5 的〈<a href="#t3">Lock file 認領</a>〉做法這裡也用：teammate 認領任務時靠 file locking 防止搶同一題。</p>
+            <p>Slides p.38–42 取自這份文件：p.38 的四種適用情境與警語、p.39 的四個組件、p.41 的 subagent 對照表。本頁 2.4 的〈<a href="#i4-1">C Agent team</a>〉一段的選擇規則「需要討論才用 team」，就是文件的結論。本文延伸〈<a href="#x3">協調開銷決定平行加速的上限</a>〉講的 token 線性成長，文件寫成建議：先開 3 到 5 個。2.5 的〈<a href="#t3">Lock file 認領</a>〉做法這裡也用：teammate 認領任務時靠 file locking 防止搶同一題。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>和 subagent 差在三件事。</b>Subagent 只把結果交回呼叫者，主 agent 管所有工作。Teammate 是獨立的 session，彼此直接傳訊，靠共用任務清單自我協調。所以 subagent 適合只要結果的任務，team 適合需要討論的工作，代價是每個 teammate 都是一個完整的 Claude 實例。</li>
@@ -2133,7 +2223,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>16 個 Claude agent 平行跑兩週，沒有人介入，用 Rust 從零寫出能編譯 Linux kernel 的 C compiler。成立的條件有兩個：測試接近完美，失敗訊號能切成很多小塊。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.47–50 直接取材於這篇，見〈<a href="#i5">長時間執行：agent 需要一個能檢查的終點</a>〉；lock file 認領對應本頁 2.5 的〈<a href="#t3">用 git 當鎖</a>〉一段（p.49）。Kernel 卡關的故事是本文延伸〈<a href="#x2">任務切不開，加 agent 也沒用</a>〉的來源（p.50）。Slides 沒有講的是成本數字、agent 的分工角色，以及作者對「測試通過」的保留態度。</p>
+            <p>Slides p.47–50 直接取材於這篇，見〈<a href="#i5">長時間執行：agent 需要一個能檢查的終點</a>〉；lock file 認領對應本頁 2.5 的〈<a href="#t3">用 git 當鎖</a>〉一段（p.49）。Kernel 卡關的故事是本文延伸〈<a href="#x4">任務切不開，加 agent 也沒用</a>〉的來源（p.50）。Slides 沒有講的是成本數字、agent 的分工角色，以及作者對「測試通過」的保留態度。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>規模與成本。</b>16 個 agent、將近 2,000 個 Claude Code session、兩週，model 是 Opus 4.6。API 成本略低於 20,000 美元；input 20 億 token，output 1.4 億 token。Compiler 約 100,000 行 Rust，過程中沒有網路。</li>
@@ -2172,7 +2262,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
         <a class="prev" href="l02.html"><span>← 上一堂 L2</span>Claude Code 怎麼運作</a>
         <a class="next" href="l04.html"><span>下一堂 L4 →</span>Context 管理與 tool 設計</a>
       </nav>
-      <p class="fineprint">本文整理自 CS2680 L3 的 slides，加上名詞註、「本文延伸」、2.1 最後一節的 Superpowers 版本對照（依 2026-10-28 的 repo，v7.0.1）與一章本文補的案例（2.8，依 mattpocock/skills 2026-10-27 的內容）；本文延伸與 2.8 是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的指令與設定依據 2026 年 10 月的官方文件。</p>
+      <p class="fineprint">本文整理自 CS2680 L3 的 slides，加上名詞註、「本文延伸」、2.1 最後一節的 Superpowers 版本對照（依 2026-10-28 的 repo，v7.0.1）、2.2 本文延伸裡的 Caveman 實作（依 2026-10-25 的 repo，v4.0.1）與一章本文補的案例（2.8，依 mattpocock/skills 2026-10-27 的內容）；本文延伸與 2.8 是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的指令與設定依據 2026 年 10 月的官方文件。</p>
     </div>
   </div>
 </main>
