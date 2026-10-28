@@ -358,8 +358,25 @@
               <details class="gloss" id="n-benchnames">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">p.7 那些 benchmark 的名字：各自考什麼</span></summary>
                 <div class="gloss-body prose">
-                  <p>PTB（Penn Treebank）與 WikiText 是整理過的文字語料，量 model 預測下一個字的能力。SQuAD 是閱讀理解：給一段 Wikipedia，問一個答案在文中的問題。GLUE 與 SuperGLUE 是九個左右的語言理解小題組合，例如判斷兩句話是否同義。ARC、HellaSwag、WinoGrande 是常識推理的選擇題。</p>
-                  <p>MMLU 是 57 個學科的選擇題；GSM8K 是小學文字數學題；MATH 是競賽數學；HumanEval 是 164 題 Python 函式，用測試判對錯；GPQA 是研究生等級的科學題；Humanity's Last Exam（HLE）是專家出的最難題。MT-Bench、Chatbot Arena、AlpacaEval 比的是回答偏好，由人或 model 當裁判。MMLU-Pro、LiveBench、LiveCodeBench 是舊題組的加難或定期更新版。GDPval 用真實職業的工作產出評分，BrowseComp 是很難查的網路搜尋題，ARC-AGI 是抽象圖形推理。這一堂會細講的只有 agent 類：GAIA、BFCL、WebArena、OSWorld、SWE-bench、τ-bench、Terminal-Bench、TheAgentCompany。</p>
+                  <p>p.7 列的 benchmark，各自考什麼，共 15 項：</p>
+                  <ul>
+                    <li><b>PTB（Penn Treebank）與 WikiText。</b>整理過的文字語料，量 model 預測下一個字的能力。</li>
+                    <li><b>SQuAD。</b>閱讀理解：給一段 Wikipedia，問一個答案在文中的問題。</li>
+                    <li><b>GLUE 與 SuperGLUE。</b>九個左右的語言理解小題組合，例如判斷兩句話是否同義。</li>
+                    <li><b>ARC、HellaSwag、WinoGrande。</b>常識推理的選擇題。</li>
+                    <li><b>MMLU。</b>57 個學科的選擇題。</li>
+                    <li><b>GSM8K。</b>小學文字數學題。</li>
+                    <li><b>MATH。</b>競賽數學。</li>
+                    <li><b>HumanEval。</b>164 題 Python 函式，用測試判對錯。</li>
+                    <li><b>GPQA。</b>研究生等級的科學題。</li>
+                    <li><b>Humanity's Last Exam（HLE）。</b>專家出的最難題。</li>
+                    <li><b>MT-Bench、Chatbot Arena、AlpacaEval。</b>比的是回答偏好，由人或 model 當裁判。</li>
+                    <li><b>MMLU-Pro、LiveBench、LiveCodeBench。</b>舊題組的加難或定期更新版。</li>
+                    <li><b>GDPval。</b>用真實職業的工作產出評分。</li>
+                    <li><b>BrowseComp。</b>很難查的網路搜尋題。</li>
+                    <li><b>ARC-AGI。</b>抽象圖形推理。</li>
+                  </ul>
+                  <p>這一堂會細講的只有 agent 類：GAIA、BFCL、WebArena、OSWorld、SWE-bench、τ-bench、Terminal-Bench、TheAgentCompany。</p>
                 </div>
               </details>
               <p id="i1-4"><b>五層評估目標，越往下越要執行。</b>Slide p.8 把上面的歷史換一個角度整理：不看年代，看「成功的定義是什麼」。一共五層：</p>
@@ -373,7 +390,14 @@
                   <tr><td>完成互動任務</td><td>WebArena、OSWorld、τ-bench、Terminal-Bench</td><td>環境到達要求的狀態</td><td>架環境、重置、檢查狀態</td></tr>
                 </tbody>
               </table></div>
-              <p>最右一欄是本文補的，它說明為什麼 agent 評估比 model 評估難：前兩層的 grader 是幾行比對程式；第三層要找人或另一個 model；第四層要有能跑程式的環境；<strong>最後一層要先架好網站、資料庫或桌面</strong>，跑完再檢查狀態，而且下一題開始前要把環境恢復原狀。所以 agent 評估本身是一個系統工程問題：第 1 段的架構圖裡，環境、重置、預算、grader 四個零件，缺一個分數就沒有意義。</p>
+              <p>最右一欄是本文補的，它說明為什麼 agent 評估比 model 評估難。由上到下，每一層的 grader 要的東西：</p>
+              <ol>
+                <li><b>前兩層。</b>Grader 是幾行比對程式。</li>
+                <li><b>第三層。</b>要找人或另一個 model。</li>
+                <li><b>第四層。</b>要有能跑程式的環境。</li>
+                <li><b>最後一層。</b><strong>要先架好網站、資料庫或桌面</strong>，跑完再檢查狀態，而且下一題開始前要把環境恢復原狀。</li>
+              </ol>
+              <p>所以 agent 評估本身是一個系統工程問題：第 1 段的架構圖裡，環境、重置、預算、grader 四個零件，缺一個分數就沒有意義。</p>
               <p id="i1-5"><b>這堂課只管最後一層。</b>「完成互動任務」的意思是：agent 收到一句指令，在一個真的環境裡反覆觀察、行動，最後環境要變成指令要求的樣子。它和「寫出能跑的程式」的差別在<strong>副作用</strong>：程式題的輸出是一段文字，環境不變；互動任務會改資料庫、改檔案、送出表單，所以 grader 要看的是環境，不是輸出。接下來的指標與 benchmark，全部圍繞這一層。</p>
             </div>
           </div>
@@ -475,7 +499,13 @@
                 </tbody>
               </table></div>
               <p>用這兩欄看，8 個 benchmark 只有 GAIA 完全不看環境，其他 7 個都檢查某種狀態或執行結果。這個分界是這一組三章的順序：這一章講看答案與看 call 的兩個，2.4 講檢查狀態的四個，2.5 講用測試腳本與 checkpoint 的兩個。</p>
-              <p id="i3-2"><b>GAIA：自備 tool，只看最終答案。</b>GAIA（General AI Assistant，Mialon 等人，2023）有 466 題人寫的問題，題目要用到網頁瀏覽、試算表、PDF、圖片、音訊和計算。它沒有固定的 tool API：每個受測的 agent 自己帶搜尋、瀏覽器、Python 和 shell，所以它測的是整個 agent 系統，不只是 model。題目分三級：Level 1 不超過 5 步、最多用一個 tool；Level 2 要 5 到 10 步、多個 tool；Level 3 步數不限、要很多 tool。答案很短，一個數字、一個字串或一個清單，例如 17.4 或 4,381，這是刻意的設計，下一段會說為什麼。</p>
+              <p id="i3-2"><b>GAIA：自備 tool，只看最終答案。</b>GAIA（General AI Assistant，Mialon 等人，2023）有 466 題人寫的問題，題目要用到網頁瀏覽、試算表、PDF、圖片、音訊和計算。它沒有固定的 tool API：每個受測的 agent 自己帶搜尋、瀏覽器、Python 和 shell，所以它測的是整個 agent 系統，不只是 model。題目分三級：</p>
+              <ol>
+                <li><b>Level 1。</b>不超過 5 步，最多用一個 tool。</li>
+                <li><b>Level 2。</b>要 5 到 10 步，用多個 tool。</li>
+                <li><b>Level 3。</b>步數不限，要用很多 tool。</li>
+              </ol>
+              <p>答案很短，一個數字、一個字串或一個清單，例如 17.4 或 4,381，這是刻意的設計，下一段會說為什麼。</p>
               <p id="i3-3"><b>GAIA 的例子：中間做了什麼都不算分。</b>Slide p.13 的例子：一張試算表列了很多部電影，找出符合兩個條件的那一部，查它的導演，回答導演的出生地。Agent 的 trajectory 大致是：</p>
               <figure class="file"><figcaption>GAIA 一題的 trajectory（p.13 的例子，格式是本文補的）</figcaption><pre><code>step 1  search("films list spreadsheet ...")        # 找到題目附的資料來源
 step 2  open_webpage(url)                          # 打開網頁
@@ -766,7 +796,14 @@ PASS</code></pre></figure>
                 <li><b>Memory。</b>第一個 turn 給的限制（「不要動資料庫 schema」），到第十個 turn 還記不記得。</li>
               </ul>
               <p>要量這三件事，環境裡得有一個會回話的使用者。τ-bench 用 LLM 扮客戶就是這個方向，但它的客戶照腳本走；更難的是讓模擬使用者在中途改需求，而且改得像真人。這是 2.8 的 p.34 表裡「互動」那一列從靜態走向多輪的原因。</p>
-              <p id="i7-3"><b>非確定性：一次執行只是雜訊。</b>Slide p.31 的第二點：同一個 agent 跑同一題，結果可能不同。來源不只 temperature：L1 講過浮點數加總順序讓 T = 0 也不保證重現；tool 的回傳每次不同（搜尋結果、時間戳）；環境的狀態有細微差異；一步走偏，後面整條路都不同。所以只跑一次的分數大多是<a class="tm" href="#t5">雜訊</a>，兩個版本差 3 個百分點，可能只是運氣。該怎麼做，2.2 已經講了一半：每題跑 k 次，報 pass^k 或平均值；另一半是題數，題目太少，平均也不準，註裡有算式。<strong>報分數要附跑了幾次、幾題</strong>，否則讀者無法判斷差距是不是真的。</p>
+              <p id="i7-3"><b>非確定性：一次執行只是雜訊。</b>Slide p.31 的第二點：同一個 agent 跑同一題，結果可能不同。來源不只 temperature，還有四個：</p>
+              <ul>
+                <li><b>浮點數。</b>L1 講過浮點數加總順序讓 T = 0 也不保證重現。</li>
+                <li><b>Tool 的回傳。</b>每次不同（搜尋結果、時間戳）。</li>
+                <li><b>環境。</b>環境的狀態有細微差異。</li>
+                <li><b>路徑。</b>一步走偏，後面整條路都不同。</li>
+              </ul>
+              <p>所以只跑一次的分數大多是<a class="tm" href="#t5">雜訊</a>，兩個版本差 3 個百分點，可能只是運氣。該怎麼做，2.2 已經講了一半：每題跑 k 次，報 pass^k 或平均值；另一半是題數，題目太少，平均也不準，註裡有算式。<strong>報分數要附跑了幾次、幾題</strong>，否則讀者無法判斷差距是不是真的。</p>
               <details class="gloss" id="t5">
                 <summary><span class="gloss-k">背景</span><span class="gloss-t">Benchmark 分數的標準誤：50 題的分數，有多大的雜訊</span></summary>
                 <div class="gloss-body prose">
@@ -774,7 +811,7 @@ PASS</code></pre></figure>
                   <p>縮小雜訊有三招。加題目：N 要變 4 倍，標準誤才減半。每題多跑幾次：只能消掉同一題的執行變異。比較兩版時用配對：在同一組題目上看哪些題翻盤。</p>
                 </div>
               </details>
-              <p id="i7-4"><b>副作用：通往成功的路上刪了什麼，沒人扣分。</b>第三點：agent 為了讓測試通過，把失敗的測試刪了；為了清出空間，刪了不該刪的檔；中途寄出一封信、花了一筆錢。只看最終狀態的 grader 看到「測試全過」<strong>就給 1 分</strong>。2.4 的 τ-bench 擋了一部分：多寫一筆資料庫就 0 分；但刪檔、寄信、花錢這類不在目標狀態裡的事，多數 benchmark 不量。要量它，grader 得看 trajectory：用規則掃每一步的 action，碰到 <code>rm -rf</code>、刪測試、對外送出東西，直接判 0。這就是第 1 段架構圖裡 grader 的第三種輸入。</p>
+              <p id="i7-4" data-inline><b>副作用：通往成功的路上刪了什麼，沒人扣分。</b>第三點：agent 為了讓測試通過，把失敗的測試刪了；為了清出空間，刪了不該刪的檔；中途寄出一封信、花了一筆錢。只看最終狀態的 grader 看到「測試全過」<strong>就給 1 分</strong>。2.4 的 τ-bench 擋了一部分：多寫一筆資料庫就 0 分；但刪檔、寄信、花錢這類不在目標狀態裡的事，多數 benchmark 不量。要量它，grader 得看 trajectory：用規則掃每一步的 action，碰到 <code>rm -rf</code>、刪測試、對外送出東西，直接判 0。這就是第 1 段架構圖裡 grader 的第三種輸入。</p>
               <p id="i7-5"><b>評分方式的兩難。</b>第四點把前面的矛盾講明：<strong>只看結果，會放過靠運氣和不安全的 run</strong>；比對 trajectory，又會判錯其他正確的做法，因為到同一個狀態的路不只一條。Slide 沒有給答案，本文的整理是三層疊起來：先檢查狀態（結果對不對），再用規則掃 trajectory 的危險動作（過程安不安全），最後才用 judge 看品質（做得好不好）。2.8 的本文延伸會把這三層放進一份團隊自己的評估裡。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>難處</th><th>Benchmark 的做法</th><th>錯在獎勵了什麼</th><th>怎麼量</th></tr></thead>
@@ -834,7 +871,15 @@ PASS</code></pre></figure>
               </figure>
               <p>讀這張表有兩個重點。第一，速度：MMLU 撐了三年多，<strong>2023 年之後的 benchmark 多半一年內就追上</strong>，這和 2.1 的時間軸每兩三年換一代是同一件事。第二，SWE-bench Verified 從 33% 到 95% 用了 22 個月，但<strong>這 22 個月裡進步的不只是 model，還有 harness</strong>：同一個 model 換一個 scaffold，分數可以差一倍（L4 的本文延伸講過），所以這條線量的是「model 加 harness」的進步。</p>
               <p id="i8-2"><b>飽和是什麼意思。</b>Slide p.33 的定義有兩種：frontier model 追上了人類基準線，或者頂尖的幾個 model 分數擠在一起，分不出高下。飽和的 benchmark 還能用，但只能證明「這個 model 不差」，不能回答「哪一個比較好」，因為 <strong>95 分和 96 分的差距在雜訊範圍裡</strong>（2.7 的註）。p.33 把 2016 到 2026 年的 benchmark 排成時間軸，分五類：單一任務、語言理解題組、知識與推理、助理、agent。前四類幾乎全部飽和；agent 類裡 WebArena、SWE-bench、OSWorld 已飽和或接近，還開著的是 Terminal-Bench、GDPval、SWE-bench Pro、Remote Labor Index、ARC-AGI-3、OSWorld 2.0，也就是 2.1 時間軸的最後一格。</p>
-              <p id="i8-3"><b>出題的人怎麼應對。</b>從前幾章的例子可以歸納三種對策：出更難的版本，SWE-bench Pro 要改多個檔案；刪掉飽和的題，Terminal-Bench 從 89 題刪到 66 題；把任務拉長，OSWorld 2.0 的題動輒一小時。還有兩招在 2.6 講 leakage 時碰過：用新題（LiveBench 定期換題），把解法藏起來（Terminal-Bench 的 hidden solutions）。這五招的共同點是和 model 賽跑，<strong>benchmark 是耗材</strong>，2.6 的本文延伸說團隊內部的評估集消耗得更快。</p>
+              <p id="i8-3"><b>出題的人怎麼應對。</b>從前幾章的例子可以歸納三種對策，再加上 2.6 講 leakage 時碰過的兩招，共五招：</p>
+              <ul>
+                <li><b>出更難的版本。</b>SWE-bench Pro 要改多個檔案。</li>
+                <li><b>刪掉飽和的題。</b>Terminal-Bench 從 89 題刪到 66 題。</li>
+                <li><b>把任務拉長。</b>OSWorld 2.0 的題動輒一小時。</li>
+                <li><b>用新題。</b>LiveBench 定期換題。</li>
+                <li><b>把解法藏起來。</b>Terminal-Bench 的 hidden solutions。</li>
+              </ul>
+              <p>這五招的共同點是和 model 賽跑，<strong>benchmark 是耗材</strong>，2.6 的本文延伸說團隊內部的評估集消耗得更快。</p>
               <p id="i8-4"><b>評估怎麼演進：六個維度。</b>Slide p.34 用一張表把這堂課總結成「以前」和「現在」：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>維度</th><th>早期的評估</th><th>現在的前沿</th></tr></thead>
@@ -847,7 +892,15 @@ PASS</code></pre></figure>
                   <tr><td>主要關切</td><td>跨題目的泛化</td><td>真實限制與安全要求下的穩定完成</td></tr>
                 </tbody>
               </table></div>
-              <p>每一列都對到前面某一章：對象是 2.6 的 P = f（…）；互動是 2.7 的單一 turn；grader 是 2.3 到 2.5；資料集是 2.6 的 leakage 與這章的飽和；指標是 2.2；最後一列「真實限制」就是下一段的多個維度。</p>
+              <p>每一列都對到前面某一章，6 列各對到：</p>
+              <ul>
+                <li><b>對象。</b>2.6 的 P = f（…）。</li>
+                <li><b>互動。</b>2.7 的單一 turn。</li>
+                <li><b>Grader。</b>2.3 到 2.5。</li>
+                <li><b>資料集。</b>2.6 的 leakage 與這章的飽和。</li>
+                <li><b>指標。</b>2.2。</li>
+                <li><b>主要關切。</b>最後一列的「真實限制」，就是下一段的多個維度。</li>
+              </ul>
               <p id="i8-5"><b>真實 agent：四個軸，用 Pareto 比。</b>Slide p.35 說比較真實的 agent 至少看四個軸：能力、成本、速度、對使用者好不好用。Assignment 3 用其中三個評分：能力越高越好，成本越低越好，第三個是速度。四個數字怎麼比成一個排名？一種做法是加權平均，但權重由誰定：客服 agent 的使用者在乎速度，研究用的 agent 在乎能力，沒有一組權重對每個人都對。Slide 用的是 Pareto dominance：A 在每個維度都不比 B 差，而且至少一個維度更好，就說 A 支配 B。沒有任何人支配得了的那一群是 <a class="tm" href="#t4">Pareto frontier</a>，slide 叫 Rank 1；拿掉 Rank 1 後剩下的不受支配者是 Rank 2，依此類推。</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -998,7 +1051,7 @@ PASS</code></pre></figure>
                   <p class="tk-h">背景補充</p>
                   <p>元件分數高，不代表任務會成功，因為錯誤會沿著步驟相乘（L6）。每一步都對，整個任務才對。所以 component-level 的 95% 和 end-to-end 的 36% 可以同時成立，下面的例子算給你看。</p>
                   <p>實務上兩種評估共用同一份資料：trajectory。先跑 end-to-end 找出失敗的任務，再讀這些任務的 trajectory，把每次失敗歸到一個元件。Tracing 工具記錄每一次 LLM call 與 tool call，這一步就不必手動整理。最常出錯的元件，再補一組 component-level 的測試題。</p>
-                  <div class="callout example"><span class="tag">例子</span><div><p>假設任務有 20 步，每步成功率 0.95，各步獨立。任務成功率 = 0.95²⁰。逐步算：0.95² = 0.9025；0.95⁴ ≈ 0.8145；0.95⁵ ≈ 0.7738；0.95¹⁰ = （0.95⁵）² ≈ 0.5987；0.95²⁰ = （0.95¹⁰）² ≈ 0.358。每一步看起來都很好，任務卻只有約 36% 成功。</p></div></div>
+                  <div class="callout example"><span class="tag">例子</span><div><p data-inline>假設任務有 20 步，每步成功率 0.95，各步獨立。任務成功率 = 0.95²⁰。逐步算：0.95² = 0.9025；0.95⁴ ≈ 0.8145；0.95⁵ ≈ 0.7738；0.95¹⁰ = （0.95⁵）² ≈ 0.5987；0.95²⁰ = （0.95¹⁰）² ≈ 0.358。每一步看起來都很好，任務卻只有約 36% 成功。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
                     <li>End-to-end：agent 是黑箱，只看 success、cost、latency → 回答「能不能用」。</li>
                     <li>Component-level：逐一檢查 planning、tool use、memory、error recovery → 回答「為什麼失敗」。</li>
@@ -1027,7 +1080,12 @@ PASS</code></pre></figure>
                       <tr><td>Trajectory</td><td>怎麼做到的、安不安全</td><td>BFCL 檢查每個 call 的名稱與參數（p.14）</td><td>會判錯做法不同但正確的執行（p.31）</td></tr>
                     </tbody>
                   </table></div>
-                  <p>GAIA 有 466 題人寫的題目，涵蓋網頁、試算表、PDF、圖片、音訊與計算（p.12）。答案很短：一個數字、字串或清單，例如 17.4 或 4,381。它沒有固定的 tool API，每個 agent 自備 search、browser、Python、shell。難度分三級：Level 1 不超過 5 步、最多 1 個 tool；Level 2 要 5–10 步、多個 tool；Level 3 長度不限、tool 很多。</p>
+                  <p>GAIA 有 466 題人寫的題目，涵蓋網頁、試算表、PDF、圖片、音訊與計算（p.12）。答案很短：一個數字、字串或清單，例如 17.4 或 4,381。它沒有固定的 tool API，每個 agent 自備 search、browser、Python、shell。難度分三級：</p>
+                  <ol>
+                    <li><b>Level 1。</b>不超過 5 步，最多 1 個 tool。</li>
+                    <li><b>Level 2。</b>要 5–10 步，用多個 tool。</li>
+                    <li><b>Level 3。</b>長度不限，tool 很多。</li>
+                  </ol>
                   <p>評分公式是 score = (1/N) Σᵢ 1[normalize(ŷᵢ) = normalize(yᵢ)]（p.13）。意思是：每題的答案正規化後和標準答案完全相同，得 1；否則得 0；再對 N 題取平均。所以 GAIA 量得到推理、檢索、選 tool、整合資訊，量不到動作。Agent 途中寄了一封錯的信，只要最後的數字對，這題仍然得 1 分。</p>
                   <p class="tk-h">背景補充</p>
                   <p>GAIA 只看答案，有一個實際的理由：每個 agent 自備 tool，各家的 trajectory 長得完全不同，能公平比較的共同輸出只剩答案。答案限制成短格式，grader 就只是幾行程式：結果確定、成本低、能重現，不需要 judge model。GAIA 論文把這種「依型別正規化，再完全比對」的做法稱為 quasi exact match。</p>
