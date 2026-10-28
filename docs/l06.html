@@ -223,10 +223,23 @@
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Context 與它的代價（L4）：每一條記憶都要每圈重送</span></summary>
                 <div class="gloss-body prose">
                   <p>Context 是每一次送進 model 的全部文字：system prompt、tool 定義、對話歷史、tool 結果，上限叫 context window。Model 沒有記憶，request 結束 context 就消失，下一圈 harness 重新組一份再送。所以 memory 要先由 harness 讀進 context，model 才看得到；L4 2.1 的「三個零件」把 state 分成 context 和 memory 兩塊，就是這裡的兩層。</p>
-                  <p>Context 有三種代價（L4 2.6）：錢，每一圈整份重送，一條 2,000 token 的記憶 50 圈就是 100,000 token；延遲，prompt 越長 prefill 越久；注意力，window 越滿，model 越難找回中間的資訊。所以記憶不是越多越好，L4 2.7 的四種策略（admission、offloading、transformation、compaction）在 memory 上一樣適用：常駐只放索引，細節要用再讀。</p>
+                  <p>Context 有三種代價（L4 2.6）：</p>
+                  <ul>
+                    <li><b>錢。</b>每一圈整份重送，一條 2,000 token 的記憶 50 圈就是 100,000 token。</li>
+                    <li><b>延遲。</b>Prompt 越長，prefill 越久。</li>
+                    <li><b>注意力。</b>Window 越滿，model 越難找回中間的資訊。</li>
+                  </ul>
+                  <p>所以記憶不是越多越好，L4 2.7 的四種策略（admission、offloading、transformation、compaction）在 memory 上一樣適用：常駐只放索引，細節要用再讀。</p>
                 </div>
               </details>
-              <p id="i1-2"><b>七個問題，每個都是取捨。</b>寫入的時機：每次互動都寫，<a class="tm" href="#t3">recall</a> 最高，雜訊也最多；只在使用者要求時寫，precision 最高，但漏很多（p.7）。存成什麼形式（p.8）：原始事件最完整，但很大；摘要精簡，但丟掉「以前用 vLLM」（vLLM 和 SGLang 都是 LLM serving engine，Part II 會講）；結構化狀態好查，但存不進 schema（事先定好的欄位表）沒有的欄位；<a class="tm" href="#n-kg">knowledge graph</a> 能表達隨時間的變化。p.17 的 checklist 把六站排成一列，<strong>每一站都要有明確、可量測的規則</strong>。</p>
+              <p id="i1-2"><b>七個問題，每個都是取捨。</b>寫入的時機：每次互動都寫，<a class="tm" href="#t3">recall</a> 最高，雜訊也最多；只在使用者要求時寫，precision 最高，但漏很多（p.7）。存成什麼形式，p.8 列了 4 種：</p>
+              <ul>
+                <li><b>原始事件。</b>最完整，但很大。</li>
+                <li><b>摘要。</b>精簡，但丟掉「以前用 vLLM」（vLLM 和 SGLang 都是 LLM serving engine，Part II 會講）。</li>
+                <li><b>結構化狀態。</b>好查，但存不進 schema（事先定好的欄位表）沒有的欄位。</li>
+                <li><b><a class="tm" href="#n-kg">Knowledge graph</a>。</b>能表達隨時間的變化。</li>
+              </ul>
+              <p>p.17 的 checklist 把六站排成一列，<strong>每一站都要有明確、可量測的規則</strong>。</p>
               <details class="gloss" id="t3">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Precision 與 recall：用在 memory 的寫入與檢索</span></summary>
                 <div class="gloss-body prose">
@@ -320,7 +333,23 @@
                   <p>所以「harness 的 context 截斷」是 harness 為了省 context 把 tool 輸出砍短，砍掉了錯誤訊息；「tool 的靜默失敗」是 tool 失敗了卻回一個看起來正常的結果。L4 2.4 的五項保護（失敗訊號、輸出量、時間、預算、隔離）就是修這兩層的方法。</p>
                 </div>
               </details>
-              <p id="i5-2"><b>每層的失敗型態，與五個原則。</b>每層有自己的失敗型態（p.25–29）：規格的代理目標（proxy goal：把「測試變綠」當成目標，agent 就去改測試）、harness 的 context 截斷、model 的沒驗證就宣布完成、tool 的靜默失敗、環境的版本不符。p.30 把修法濃縮成 5 個原則：把「完成」寫成測試；每個 run 都有上限；要求證據；tool 失敗要大聲；環境固定並隔離。除錯時<strong>先找第一個出錯的步驟，在那一層修</strong>。</p>
+              <p id="i5-2"><b>每層的失敗型態，與五個原則。</b>每層有自己的失敗型態（p.25–29）：</p>
+              <ol>
+                <li><b>規格。</b>代理目標（proxy goal：把「測試變綠」當成目標，agent 就去改測試）。</li>
+                <li><b>Harness。</b>Context 截斷。</li>
+                <li><b>Model。</b>沒驗證就宣布完成。</li>
+                <li><b>Tool。</b>靜默失敗。</li>
+                <li><b>環境。</b>版本不符。</li>
+              </ol>
+              <p>p.30 把修法濃縮成 5 個原則：</p>
+              <ol>
+                <li>把「完成」寫成測試。</li>
+                <li>每個 run 都有上限。</li>
+                <li>要求證據。</li>
+                <li>Tool 失敗要大聲。</li>
+                <li>環境固定並隔離。</li>
+              </ol>
+              <p>除錯時<strong>先找第一個出錯的步驟，在那一層修</strong>。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x3">
@@ -577,7 +606,7 @@
                     </div>
                     <figcaption>藍線是 0.95ⁿ，灰色虛線是 0.99ⁿ，兩條都照精確值畫。每步失敗率從 5% 降到 1%，50 步的成功率從 7.7% 變成 60.5%。</figcaption>
                   </figure>
-                  <div class="callout example"><span class="tag">例子</span><div><p>不用計算機算 0.95⁵⁰：一直平方。0.95² = 0.9025；0.95⁴ = 0.9025² ≈ 0.8145；0.95⁸ ≈ 0.6634；0.95¹⁶ ≈ 0.4401；0.95³² ≈ 0.1937。50 = 32 + 16 + 2，所以 0.95⁵⁰ = 0.1937 × 0.4401 × 0.9025 ≈ 0.0769，約 7.7%。倒數 1 ÷ 0.0769 ≈ 13，就是「13 次才有 1 次全對」。</p></div></div>
+                  <div class="callout example"><span class="tag">例子</span><div><p data-inline>不用計算機算 0.95⁵⁰：一直平方。0.95² = 0.9025；0.95⁴ = 0.9025² ≈ 0.8145；0.95⁸ ≈ 0.6634；0.95¹⁶ ≈ 0.4401；0.95³² ≈ 0.1937。50 = 32 + 16 + 2，所以 0.95⁵⁰ = 0.1937 × 0.4401 × 0.9025 ≈ 0.0769，約 7.7%。倒數 1 ÷ 0.0769 ≈ 13，就是「13 次才有 1 次全對」。</p></div></div>
                   <p class="tk-h">背景補充</p>
                   <p>這是可靠性工程的串聯系統：每個元件都要正常，系統才正常，整體可靠度等於各元件可靠度相乘（Lusser's law）。微服務也一樣：一個請求依序經過 10 個 99.9% 可用的服務，整體約 0.999¹⁰ ≈ 99.0%。</p>
                   <p>心算捷徑：每步失敗率 ε 很小時，(1 − ε)ⁿ ≈ e^(−nε)。nε 是一個 run 平均出幾個錯。50 × 0.05 = 2.5 個錯，e^(−2.5) ≈ 0.082，和 7.7% 很接近。所以要控制的是「一個 run 平均出幾個錯」：步數加倍、失敗率減半，結果幾乎不變。</p>
@@ -692,7 +721,7 @@
                 </div>
                 <details class="qstart"><summary>作答範本</summary><div class="hint">
                   <p class="tpl">寫入：＿＿ 時寫一筆；＿＿ 這類事不寫。每筆一行：日期 · ＿＿ · 來源 · 內容。</p>
-                  <p class="tpl">失效（標記失效／刪除／TTL／分層）：任務筆記 ＿＿；專案決策 ＿＿；個人偏好 ＿＿；路徑類事實 ＿＿。</p>
+                  <p class="tpl" data-inline>失效（標記失效／刪除／TTL／分層）：任務筆記 ＿＿；專案決策 ＿＿；個人偏好 ＿＿；路徑類事實 ＿＿。</p>
                   <p class="tpl">負責人 ＿＿ 每 ＿＿ 合併並 review 一次；用 ＿＿ 和 ＿＿ 兩個指標檢查 policy。</p>
                 </div></details>
                 <details><summary>參考觀點與追問</summary><div class="hint">
@@ -712,7 +741,7 @@
               <div class="qbody">
                 <p class="qtag">分析 · 失敗來源 · <a class="ref" href="https://cs2680.com/slides/6_agent_design_3.pdf#page=24" target="_blank" rel="noopener">p.24–29</a></p>
                 <p class="qtext">把下面 5 個事故各歸到一個失敗來源：任務規格、harness、model、tool、環境。說明你的證據，並在那一層提出修法。</p>
-                <p class="qctx"><b>情境：</b>（a）你說「讓所有測試通過」，agent 刪掉 3 個失敗的測試。（b）Context 壓縮之後，agent 改了公開 API 的函式簽名；「不能改 API」只在對話裡講過。（c）Agent 呼叫不存在的 <code>requests.fetch()</code>，程式 crash。（d）搜尋 tool 回傳 exit 0 和空清單，agent 回報「沒有符合的檔案」；其實索引服務掛了。（e）測試在 sandbox 通過，CI 失敗；sandbox 是 Python 3.8，CI 是 3.12。</p>
+                <p class="qctx" data-inline><b>情境：</b>（a）你說「讓所有測試通過」，agent 刪掉 3 個失敗的測試。（b）Context 壓縮之後，agent 改了公開 API 的函式簽名；「不能改 API」只在對話裡講過。（c）Agent 呼叫不存在的 <code>requests.fetch()</code>，程式 crash。（d）搜尋 tool 回傳 exit 0 和空清單，agent 回報「沒有符合的檔案」；其實索引服務掛了。（e）測試在 sandbox 通過，CI 失敗；sandbox 是 Python 3.8，CI 是 3.12。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
                     <li>每個事故給一個來源層，加一句證據：第一個出錯的步驟在哪裡。<span class="qh">提示：照 p.24 依序問：任務清楚嗎？Context 有需要的資訊嗎？判斷對嗎？回傳完整嗎？環境一樣嗎？第一個「不」就是來源層。</span></li>
@@ -995,7 +1024,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Oxford 的 3 位作者統合 2023–2026 年的 27 篇研究（19 個 benchmark），歸納出 6 類失敗。結論：失敗隨任務長度非線性複利，子技能強不等於任務會成功，多加 scaffolding 不一定有幫助，排行榜分數有一部分來自測量錯誤。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.22 說真實的 run 比 0.95ⁿ 更差，見〈<a href="#i4">錯誤相乘：每步 95%，50 步只剩 8%</a>〉與〈<a href="#t4">獨立假設</a>〉；這篇 7.1 節同意：實測的下降比固定每步錯誤率更快，因為 agent 走錯後不會回頭。p.24 的 5 層依來源分，這篇的 6 類依症狀分，見〈<a href="#i5">失敗的五層：同一個症狀五個來源，每層一道防線</a>〉；這篇的 tool 類是 agent 叫錯 tool 或給錯參數，依 slides 屬 p.27 的 model 層。長任務退化的瓶頸是 context 的管理，接到〈<a href="#x1">Memory 和任務搶同一個 context</a>〉；測量效度接 L7，也呼應〈<a href="#x2">Memory 要像任何元件一樣做 eval</a>〉。</p>
+            <p data-inline>Slides p.22 說真實的 run 比 0.95ⁿ 更差，見〈<a href="#i4">錯誤相乘：每步 95%，50 步只剩 8%</a>〉與〈<a href="#t4">獨立假設</a>〉；這篇 7.1 節同意：實測的下降比固定每步錯誤率更快，因為 agent 走錯後不會回頭。p.24 的 5 層依來源分，這篇的 6 類依症狀分，見〈<a href="#i5">失敗的五層：同一個症狀五個來源，每層一道防線</a>〉；這篇的 tool 類是 agent 叫錯 tool 或給錯參數，依 slides 屬 p.27 的 model 層。長任務退化的瓶頸是 context 的管理，接到〈<a href="#x1">Memory 和任務搶同一個 context</a>〉；測量效度接 L7，也呼應〈<a href="#x2">Memory 要像任何元件一樣做 eval</a>〉。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>這是文獻統合，不是實驗。</b>入選條件：有量化的錯誤分析、有人工標註的 taxonomy，或檢驗過 benchmark 的效度；只報分數的不收。作者把 60 多個錯誤類別合併成 6 群。</li>
