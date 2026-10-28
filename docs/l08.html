@@ -506,7 +506,30 @@
                 <li><b>一開始就載入 context。</b>任務需要的檔案在第一步一起讀進來，不要做到一半才一個一個補。這和第一條是同一個道理，差別在時機。</li>
                 <li><b>每一次 model call 都重讀整個 context，所以 call 越少越便宜。</b>這一條是前三條的理由，也是 2.1 公式裡 Steps/Turn 這一項的意義。</li>
               </ol>
-              <p id="i2-7"><b>重用計畫與經驗的研究。</b>第二條做法背後有一群論文，slide p.12 標為 ADVANCED，自行略讀即可。它們分四類：skill library（Voyager 2023 把學會的技能存成可執行的程式；SkillRL 2026 同時改進 skill library 和 agent 的策略）；從經驗萃取洞見（ExpeL 2023 整理可重用的心得；ReasoningBank 2025 連失敗的 run 也留下策略）；計畫模板（Test-Time Plan Caching 2025 重用並改寫計畫模板）；持久的對話記憶（Mem0 2025 存放並更新事實；LightMem 2025 離線整併；SimpleMem 2026 壓縮記憶）。Slide 的結論是一句取捨：<strong>任務重複出現時，重用才回本</strong>；維護記憶的成本和過期的條目，可能把省下的吃掉。這是 2.6 反向成本的第一個例子。</p>
+              <p id="i2-7"><b>重用計畫與經驗的研究。</b>第二條做法背後有一群論文，slide p.12 標為 ADVANCED，自行略讀即可。它們分四類：</p>
+              <ul>
+                <li><b>Skill library。</b>
+                  <ul>
+                    <li><b>Voyager 2023。</b>把學會的技能存成可執行的程式。</li>
+                    <li><b>SkillRL 2026。</b>同時改進 skill library 和 agent 的策略。</li>
+                  </ul>
+                </li>
+                <li><b>從經驗萃取洞見。</b>
+                  <ul>
+                    <li><b>ExpeL 2023。</b>整理可重用的心得。</li>
+                    <li><b>ReasoningBank 2025。</b>連失敗的 run 也留下策略。</li>
+                  </ul>
+                </li>
+                <li><b>計畫模板。</b>Test-Time Plan Caching 2025 重用並改寫計畫模板。</li>
+                <li><b>持久的對話記憶。</b>
+                  <ul>
+                    <li><b>Mem0 2025。</b>存放並更新事實。</li>
+                    <li><b>LightMem 2025。</b>離線整併。</li>
+                    <li><b>SimpleMem 2026。</b>壓縮記憶。</li>
+                  </ul>
+                </li>
+              </ul>
+              <p>Slide 的結論是一句取捨：<strong>任務重複出現時，重用才回本</strong>；維護記憶的成本和過期的條目，可能把省下的吃掉。這是 2.6 反向成本的第一個例子。</p>
             </div>
           </div>
 
@@ -576,7 +599,13 @@
               <details class="gloss" id="n-compaction">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Compaction 與 L4 的四種 context 管理策略</span></summary>
                 <div class="gloss-body prose">
-                  <p>L4 把 context 管理分成四種策略，依成本由低到高排。Admission 決定什麼可以進來；offloading 把內容搬到 context 外面，只留指標；transformation 改寫已經在裡面的內容，例如截短；compaction 請 model 把歷史摘要成一段狀態，取代原文。</p>
+                  <p>L4 把 context 管理分成四種策略，依成本由低到高排：</p>
+                  <ol>
+                    <li><b>Admission。</b>決定什麼可以進來。</li>
+                    <li><b>Offloading。</b>把內容搬到 context 外面，只留指標。</li>
+                    <li><b>Transformation。</b>改寫已經在裡面的內容，例如截短。</li>
+                    <li><b>Compaction。</b>請 model 把歷史摘要成一段狀態，取代原文。</li>
+                  </ol>
                   <p>前三種不呼叫 LLM，也幾乎無損；compaction 要多一次 model call，而且不可逆。這堂 p.16 的「丟掉過期的」對應後三種，「只載入需要的」對應 admission。細節見 L4 的〈<a href="l04.html#i7">Context 管理</a>〉。</p>
                 </div>
               </details>
@@ -584,10 +613,32 @@
               <p id="i3-4"><b>方向 3：只載入需要的。</b>這是針對左段，每一步都在的 system prompt、tool 定義與 memory。做法也有兩種。第一種是選擇性載入：只放這個任務相關的 tool 定義和 memory 條目，不把一百個 tool 全部塞進每個 request。L2 講的 skill 漸進載入就是這個想法：先只放名稱和描述，用到才載入全文。第二種是把探索隔離在 subagent 裡：找檔案、讀文件這類探索工作交給一個從乾淨 context 開始的 subagent，中間讀的幾十個檔案都留在它那裡，主 agent 只收到最後的摘要。2.1 的數字說明了效果：<strong>subagent 每一步的中位數約 80K</strong>，主 agent 是 200K–300K。</p>
               <p id="i3-5"><b>論文量到的數字。</b>Slide p.17 列了四組研究，標 ADVANCED。這裡只記數字，因為它們告訴你每個方向大約能省多少：</p>
               <ul>
-                <li><b>壓縮 agent 的歷史。</b>ACON（2025）把 context 的峰值砍掉 26–54%；Active Context Compression（2026）讓 agent 自己決定何時 compaction，少用 23% 的 token；TRACE（2026）則量到反面：<strong>摘要本身會造成重工</strong>，model 丟了細節之後要重做。</li>
-                <li><b>把 context 當外部記憶。</b>MemGPT（2023）把 context 當成快的那一層記憶，其餘放外面；Scroll（2026）保留一份無損的外部 log，由程式決定 model 看到哪一段。</li>
-                <li><b>壓縮 prompt 本身。</b>LLMLingua（2023）最多少 20 倍的 token，後續有 LongLLMLingua 與 LLMLingua-2（2024）；Prompt Compression in the Wild（2026）發現只有長 prompt 才划算。</li>
-                <li><b>讓 tool 的資料不進 context。</b>Code execution with MCP（2025）在程式裡先過濾結果，<strong>150K 降到 2K token</strong>；Tool Search（2025）少 85% 的 tool 定義 token；Programmatic Tool Calling 少 37%。</li>
+                <li><b>壓縮 agent 的歷史。</b>
+                  <ul>
+                    <li><b>ACON（2025）。</b>把 context 的峰值砍掉 26–54%。</li>
+                    <li><b>Active Context Compression（2026）。</b>讓 agent 自己決定何時 compaction，少用 23% 的 token。</li>
+                    <li><b>TRACE（2026）。</b>量到反面：<strong>摘要本身會造成重工</strong>，model 丟了細節之後要重做。</li>
+                  </ul>
+                </li>
+                <li><b>把 context 當外部記憶。</b>
+                  <ul>
+                    <li><b>MemGPT（2023）。</b>把 context 當成快的那一層記憶，其餘放外面。</li>
+                    <li><b>Scroll（2026）。</b>保留一份無損的外部 log，由程式決定 model 看到哪一段。</li>
+                  </ul>
+                </li>
+                <li><b>壓縮 prompt 本身。</b>
+                  <ul>
+                    <li><b>LLMLingua（2023）。</b>最多少 20 倍的 token，後續有 LongLLMLingua 與 LLMLingua-2（2024）。</li>
+                    <li><b>Prompt Compression in the Wild（2026）。</b>發現只有長 prompt 才划算。</li>
+                  </ul>
+                </li>
+                <li><b>讓 tool 的資料不進 context。</b>
+                  <ul>
+                    <li><b>Code execution with MCP（2025）。</b>在程式裡先過濾結果，<strong>150K 降到 2K token</strong>。</li>
+                    <li><b>Tool Search（2025）。</b>少 85% 的 tool 定義 token。</li>
+                    <li><b>Programmatic Tool Calling。</b>少 37%。</li>
+                  </ul>
+                </li>
               </ul>
               <p>四組數字指向同一個順序：最大的節省來自讓資料根本不進 context（第四組），其次是丟掉已經進來的（第一組）；而第一組裡 TRACE 的反例提醒你，有損的做法要量反向成本，2.6 會回到這裡。</p>
             </div>
@@ -651,7 +702,38 @@ if resp.stop_reason == "max_tokens":   # 撞到上限：答案可能不完整
                 </table>
               </div>
               <p>本文的整理。第 4 段有可以照打的 prompt、schema 與 subagent 設定。</p>
-              <p id="i4-6"><b>論文怎麼說。</b>Slide p.20 的四組研究也標 ADVANCED，數字和警告值得記。要求簡短的 prompt 與預算：Concise CoT（2024）直接要求精簡；CCoT（2024）限制推理的字數；Chain of Draft（2025）只寫草稿式的推理；TALE（2024）給推理一個 token 預算。自動調 effort：Ares（2026）每一步選 effort；When to Plan（2025）只在有用時才規劃；s1 與 L1（2025）強制 thinking 預算。結構化輸出：Let Me Speak Freely?（2024）發現 <strong>太嚴的格式可能傷推理</strong>，這是第三層的反向成本；XGrammar 與 SGLang（2024）、JSONSchemaBench（2025）則是讓 schema 解碼變快變準的工具。只輸出變動的部分：AdaEdit（2026）自動選 diff 或整檔；CodeStruct（2026）在 AST 層級編輯；Tool-making agents（2026）讓 agent 把常用的動作做成工具重用，output token 少 58%。最後一組和 L4 的 edit tool 直接相關：output 要少，先從「不要整檔重寫」開始。</p>
+              <p id="i4-6"><b>論文怎麼說。</b>Slide p.20 的四組研究也標 ADVANCED，數字和警告值得記：</p>
+              <ul>
+                <li><b>要求簡短的 prompt 與預算。</b>
+                  <ul>
+                    <li><b>Concise CoT（2024）。</b>直接要求精簡。</li>
+                    <li><b>CCoT（2024）。</b>限制推理的字數。</li>
+                    <li><b>Chain of Draft（2025）。</b>只寫草稿式的推理。</li>
+                    <li><b>TALE（2024）。</b>給推理一個 token 預算。</li>
+                  </ul>
+                </li>
+                <li><b>自動調 effort。</b>
+                  <ul>
+                    <li><b>Ares（2026）。</b>每一步選 effort。</li>
+                    <li><b>When to Plan（2025）。</b>只在有用時才規劃。</li>
+                    <li><b>s1 與 L1（2025）。</b>強制 thinking 預算。</li>
+                  </ul>
+                </li>
+                <li><b>結構化輸出。</b>
+                  <ul>
+                    <li><b>Let Me Speak Freely?（2024）。</b>發現 <strong>太嚴的格式可能傷推理</strong>，這是第三層的反向成本。</li>
+                    <li><b>XGrammar 與 SGLang（2024）、JSONSchemaBench（2025）。</b>它們是讓 schema 解碼變快變準的工具。</li>
+                  </ul>
+                </li>
+                <li><b>只輸出變動的部分。</b>
+                  <ul>
+                    <li><b>AdaEdit（2026）。</b>自動選 diff 或整檔。</li>
+                    <li><b>CodeStruct（2026）。</b>在 AST 層級編輯。</li>
+                    <li><b>Tool-making agents（2026）。</b>讓 agent 把常用的動作做成工具重用，output token 少 58%。</li>
+                  </ul>
+                </li>
+              </ul>
+              <p>最後一組和 L4 的 edit tool 直接相關：output 要少，先從「不要整檔重寫」開始。</p>
             </div>
           </div>
 
@@ -660,7 +742,14 @@ if resp.stop_reason == "max_tokens":   # 撞到上限：答案可能不完整
             <h3><span class="idea-no">2.5</span>單價：同樣的 token，價格可以差 100 倍 <a class="ref" href="https://cs2680.com/slides/8_agent_design_5.pdf#page=21" target="_blank" rel="noopener">p.21–24</a></h3>
             <div class="prose">
               <p>這一章講第四個槓桿。前三章讓 token 變少，這一章讓每個 token 變便宜：先看價格表，再講拿到折扣的兩個條件，然後講 routing 把步驟分給便宜的 model，最後是留給後面課程的系統層手段。</p>
-              <p id="i5-1"><b>價格表：從 0.05× 到 5×。</b>Slide p.21 用 Claude API 的定價畫了一張相對價格表，以一般的 input token 為 1×：output 5×；放進 batch 的 input 0.5×；命中 cache 的 input 0.1×；batch 加 cache 疊起來 0.05×。最貴和最便宜之間，<strong>5 ÷ 0.05 = 100 倍</strong>。同一個 token，送的時機和放的位置不同，價格就差兩個數量級。</p>
+              <p id="i5-1"><b>價格表：從 0.05× 到 5×。</b>Slide p.21 用 Claude API 的定價畫了一張相對價格表，以一般的 input token 為 1×，其他四種的價格：</p>
+              <ul>
+                <li><b>Output。</b>5×。</li>
+                <li><b>放進 batch 的 input。</b>0.5×。</li>
+                <li><b>命中 cache 的 input。</b>0.1×。</li>
+                <li><b>Batch 加 cache 疊起來。</b>0.05×。</li>
+              </ul>
+              <p>最貴和最便宜之間，<strong>5 ÷ 0.05 = 100 倍</strong>。同一個 token，送的時機和放的位置不同，價格就差兩個數量級。</p>
               <figure class="diagram">
                 <div class="scroll">
                   <svg viewBox="0 0 720 206" role="img" aria-label="五根水平長條，依比例畫出相對價格：batch 加 cache 的 input 0.05 倍，cache 的 input 0.1 倍，batch 的 input 0.5 倍，一般 input 1 倍，output 5 倍。長條長度依比例，output 最長。">
@@ -714,7 +803,14 @@ if resp.stop_reason == "max_tokens":   # 撞到上限：答案可能不完整
                 <li><b>硬體。</b>更快的 kernel、更好的 kernel 排程、專用的加速器。</li>
               </ul>
               <p>這三層都在 agent 設計者的手伸不到的地方，但 <strong>它們決定了 Price/Token 的底線</strong>。前面四章的技巧是在這個底線上再省。</p>
-              <p id="i5-6"><b>論文。</b>Slide p.24 標 ADVANCED：prefix caching 的實作有 vLLM（2023）的 PagedAttention、SGLang（2024）的 RadixAttention、Prompt Cache（2024）的模組化重用；「開始前選」有 RouteLLM（2024）的學習型 router 與 MasRouter（2025）；「失敗才升級」有 FrugalGPT（2023）的 cascade、AutoMix（2023）的自我驗證、EcoAssistant（2023）的執行回饋；「每一步重選」有 ToolOrchestra（2025）的小 orchestrator、BAAR 與 MTRouter（2026）的預算感知 routing。延伸閱讀的 RouteLLM 摘要會算它實際省多少。</p>
+              <p id="i5-6"><b>論文。</b>Slide p.24 標 ADVANCED，論文分四組：</p>
+              <ul>
+                <li><b>Prefix caching 的實作。</b>vLLM（2023）的 PagedAttention、SGLang（2024）的 RadixAttention、Prompt Cache（2024）的模組化重用。</li>
+                <li><b>「開始前選」。</b>RouteLLM（2024）的學習型 router 與 MasRouter（2025）。</li>
+                <li><b>「失敗才升級」。</b>FrugalGPT（2023）的 cascade、AutoMix（2023）的自我驗證、EcoAssistant（2023）的執行回饋。</li>
+                <li><b>「每一步重選」。</b>ToolOrchestra（2025）的小 orchestrator、BAAR 與 MTRouter（2026）的預算感知 routing。</li>
+              </ul>
+              <p>延伸閱讀的 RouteLLM 摘要會算它實際省多少。</p>
             </div>
           </div>
 
@@ -744,7 +840,14 @@ if resp.stop_reason == "max_tokens":   # 撞到上限：答案可能不完整
                 </table>
               </div>
               <p>Slide p.26 的四個上限與示意值；「怎麼定」和「碰到時」是 slide 的規則。第 4 段有寫成設定檔和 Claude Code 指令的版本。</p>
-              <p id="i6-3"><b>停止規則：停下來交摘要，比失控便宜。</b>上限是最後一道防線，前面還要有停止規則，slide 列了四條：verifier 通過，任務完成；連續 N 步沒有新的測試通過，表示沒有進展；同一個錯誤重複出現，表示 agent 在繞圈；碰到任一上限。前三條停下時任務多半沒做完，但 agent 要交出一段摘要，讓接手的人知道做了什麼、卡在哪裡。Slide 的結論是 <strong>停下來交摘要的任務，比失控的任務便宜</strong>。第 3 段的進階題第 2 題會用一組 trace 數字實際訂一次。</p>
+              <p id="i6-3"><b>停止規則：停下來交摘要，比失控便宜。</b>上限是最後一道防線，前面還要有停止規則，slide 列了四條：</p>
+              <ul>
+                <li><b>Verifier 通過。</b>任務完成。</li>
+                <li><b>連續 N 步沒有新的測試通過。</b>表示沒有進展。</li>
+                <li><b>同一個錯誤重複出現。</b>表示 agent 在繞圈。</li>
+                <li><b>碰到任一上限。</b>上面表格的四個上限，碰到一個就停。</li>
+              </ul>
+              <p>前三條停下時任務多半沒做完，但 agent 要交出一段摘要，讓接手的人知道做了什麼、卡在哪裡。Slide 的結論是 <strong>停下來交摘要的任務，比失控的任務便宜</strong>。第 3 段的進階題第 2 題會用一組 trace 數字實際訂一次。</p>
               <p id="i6-4"><b>這一步真的需要 LLM 嗎。</b>所有槓桿裡最大的一個，是把 LLM 從不需要它的步驟拿掉。Slide p.27 用四個問題幫你判斷：</p>
               <div class="table-wrap">
                 <table>
@@ -788,7 +891,14 @@ if resp.stop_reason == "max_tokens":   # 撞到上限：答案可能不完整
                   <p>把 A 加速一倍，總時間不變。把 B 縮短 10 秒，總時間就少 10 秒。所以優化前先找出哪一條鏈最長。這個概念來自專案管理的 critical path method，第 3 段 Q4 的參考答案有圖。</p>
                 </div>
               </details>
-              <p id="i7-2"><b>槓桿 1：serving 層，省錢的手段都省時間。</b>Slide p.30 只有一句話：前面講的每一個降低成本的技巧，同時也降低延遲。Turn 少、step 少，就少等幾次 model；token 少，prefill 就短；cache 命中，prefill 幾乎不用算；小 model 每個 token 的 decode 更快。所以優化時間的第一步，就是先做完前六章。</p>
+              <p id="i7-2"><b>槓桿 1：serving 層，省錢的手段都省時間。</b>Slide p.30 只有一句話：前面講的每一個降低成本的技巧，同時也降低延遲。四個例子：</p>
+              <ul>
+                <li><b>Turn 少、step 少。</b>就少等幾次 model。</li>
+                <li><b>Token 少。</b>Prefill 就短。</li>
+                <li><b>Cache 命中。</b>Prefill 幾乎不用算。</li>
+                <li><b>小 model。</b>每個 token 的 decode 更快。</li>
+              </ul>
+              <p>所以優化時間的第一步，就是先做完前六章。</p>
               <p id="i7-3"><b>槓桿 2：orchestration，harness 怎麼安排步驟。</b>Slide p.31 列四招，都是 harness 的事，和 model 無關：</p>
               <ul>
                 <li><b>非同步執行。</b>一個 tool call 在跑的時候，harness 不要停下來等，先開始下一個不相依的步驟。</li>
@@ -796,7 +906,14 @@ if resp.stop_reason == "max_tokens":   # 撞到上限：答案可能不完整
                 <li><b>串流中就開始。</b>Model 的回覆是一個 token 一個 token 串流出來的。Tool call 的 JSON 一旦完整，harness 就可以先執行它，不必等整則回覆結束。</li>
                 <li><b>Tool 和 model 放在一起。</b>把 tool 跑在 model 所在的同一台主機或同一個資料中心，每一步省掉一段網路來回。</li>
               </ul>
-              <p id="i7-4"><b>槓桿 3：tool 本身，先量再調。</b>Slide p.32 提醒一件大家常忽略的事：<strong>build、測試、載入網頁可能比 model call 還慢</strong>。所以在調 model 之前，先量每一步花在 tool 上的時間。有五招：快取 tool 的結果（重複的 read 和 search 直接命中）；用更快的硬體（重的計算放在 server，不放在筆電）；用更好的 tool（同一件事用更快、更便宜的 tool，而且只在需要時呼叫）；fail fast（卡住的呼叫設 timeout，不要等）；量每一步的 tool 時間。</p>
+              <p id="i7-4"><b>槓桿 3：tool 本身，先量再調。</b>Slide p.32 提醒一件大家常忽略的事：<strong>build、測試、載入網頁可能比 model call 還慢</strong>。所以在調 model 之前，先量每一步花在 tool 上的時間。有五招：</p>
+              <ul>
+                <li><b>快取 tool 的結果。</b>重複的 read 和 search 直接命中。</li>
+                <li><b>用更快的硬體。</b>重的計算放在 server，不放在筆電。</li>
+                <li><b>用更好的 tool。</b>同一件事用更快、更便宜的 tool，而且只在需要時呼叫。</li>
+                <li><b>Fail fast。</b>卡住的呼叫設 timeout，不要等。</li>
+                <li><b>量每一步的 tool 時間。</b>也就是上面說的，調 model 之前先量。</li>
+              </ul>
               <p id="i7-5"><b>槓桿 4：平行，只對獨立的工作有效。</b>Slide p.33 的例子：依序讀檔案 A、B、C，要等三次；三個一起讀，工作量相同，<strong>等待只剩三分之一</strong>。平行有兩個層次：一個 step 裡發出多個獨立的 tool call（2.2 的批次），以及把獨立的子任務交給平行的 subagent，各自做完回傳摘要再合併。條件只有一個：只有互相獨立的工作能平行；共用狀態的工作需要一個 merge 的步驟，而 merge 就在 critical path 上。</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -911,7 +1028,7 @@ tool_call: search(q)                              ← 主 model 真的發出時�
 )
 # 要把 Docker 換成 Firecracker：改這一行的 provider，agent 的程式碼不動</code></pre></figure>
               <p>Agent 仍然控制 loop，但每個元件透過一個介面取用，所以 <strong>換 provider，不用改 agent</strong>：把 Docker 換成 Firecracker（AWS 的輕量 microVM，啟動比 container 慢一點，隔離更強），只改一個 provider。優點：元件好替換、好測試、好擴充，責任分得清楚，第三方的實作可以接上。缺點：controller 仍然擁有所有元件的生命週期，協調的邏輯會越長越複雜；大家仍在同一個 process，一個 provider 掛了可能拖垮整個 agent；要同時調整幾個元件，還是要改 controller。</p>
-              <p id="i8-4"><b>Microkernel：runtime 只協調，能力由服務提供。</b>名字借自作業系統：microkernel 的核心只做最少的事，檔案系統、驅動程式都是核心外的服務。Slide p.43 的 agent runtime 只保留狀態、協調、排程、安全，透過一個標準協定連到三個服務：memory 服務（後面是資料庫）、tool 服務（後面是各種 tool API）、execution 服務（後面是一池 sandbox）。服務可以跑在不同的 container，甚至不同的機器。L2 講的 MCP 就是這種標準協定的例子，tool 那一條線已經有現成的協定可用。優點：每個服務獨立擴展，一個服務掛了不影響其他；隔離可以在架構層強制；基礎設施集中管理，多個 agent 共用。缺點：每次呼叫多一段網路來回，故障模式變多，一個任務的 log 散在好幾個服務裡，端到端除錯更難；而且要先有標準的協定和生命週期。所以 <strong>隔離、共用與擴展，換來的是通訊開銷與更多故障模式</strong>。</p>
+              <p id="i8-4" data-inline><b>Microkernel：runtime 只協調，能力由服務提供。</b>名字借自作業系統：microkernel 的核心只做最少的事，檔案系統、驅動程式都是核心外的服務。Slide p.43 的 agent runtime 只保留狀態、協調、排程、安全，透過一個標準協定連到三個服務：memory 服務（後面是資料庫）、tool 服務（後面是各種 tool API）、execution 服務（後面是一池 sandbox）。服務可以跑在不同的 container，甚至不同的機器。L2 講的 MCP 就是這種標準協定的例子，tool 那一條線已經有現成的協定可用。優點：每個服務獨立擴展，一個服務掛了不影響其他；隔離可以在架構層強制；基礎設施集中管理，多個 agent 共用。缺點：每次呼叫多一段網路來回，故障模式變多，一個任務的 log 散在好幾個服務裡，端到端除錯更難；而且要先有標準的協定和生命週期。所以 <strong>隔離、共用與擴展，換來的是通訊開銷與更多故障模式</strong>。</p>
               <p id="i8-5"><b>同一個動作，三條路徑。</b>Slide p.44 用「執行一段 Python」比較三者，差別在誰負責 sandbox：</p>
               <figure class="diagram">
                 <div class="scroll">
@@ -1175,7 +1292,12 @@ tool_call: search(q)                              ← 主 model 真的發出時�
                 <p class="qtext">全班的 token 有幾 % 是 cache read？精簡 context 有哪三個方向？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>Assignment 1 的 token 有 97.6% 是 cache read（p.15）。p.16 的三個方向：丟掉過期的（截短舊 tool 結果、遮掉用過的 tool 輸出、compaction）；縮小進來的（只留錯誤、大輸出寫進檔案）；只載入需要的（相關的 tool 與 memory、探索交給 subagent）。</p>
+                    <p><b>答案：</b>Assignment 1 的 token 有 97.6% 是 cache read（p.15）。p.16 的三個方向：</p>
+                    <ul>
+                      <li><b>丟掉過期的。</b>截短舊 tool 結果、遮掉用過的 tool 輸出、compaction。</li>
+                      <li><b>縮小進來的。</b>只留錯誤、大輸出寫進檔案。</li>
+                      <li><b>只載入需要的。</b>相關的 tool 與 memory、探索交給 subagent。</li>
+                    </ul>
                   </div>
                   <p class="tk-h">重點拆解</p>
                   <p>Agent 每一步都重送整個 context。這一步新增的只有上一步的回覆與 tool 輸出。其餘部分和上一個 request 相同，所以直接讀 prefix cache。全班主 agent 每一步的 token 數，中位數 200K–300K，p90 600K–700K（p.13）。到第 500 步左右，context 約 650K–670K（p.14）。</p>
