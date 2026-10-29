@@ -1198,7 +1198,7 @@ n = agent 數            例：16
                 <li><b>合併。</b>拆給每個 agent 自己做。像 2.5 的 C compiler 案例，每個 agent 自己 pull、解 conflict、push，沒有一個總負責人在最後一次合併全部。</li>
                 <li><b>Review。</b>盡量交給自動測試，而不是等一個人從頭讀到尾。</li>
               </ul>
-              <p><b>推論 4：真實情況比 Amdahl's law 算的還差。</b>Amdahl's law 假設不能平行的 20 分鐘是固定的，不管 agent 有幾個。但 agent 一多，要協調的事也變多：16 個 agent 改同一個 repo，merge conflict 很常見（C compiler 案例 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=50" target="_blank" rel="noopener">p.50</a>）；agent team 的 teammate 互傳訊息，量隨人數成長。所以循序的部分會隨 n 變大，總時間不只停在 20 分鐘的下限，過了某個 n 還會回頭變長。L5 把這件事寫成估算式：總時間約等於規劃、critical path（2.3 的註）、溝通、合併四項相加，平行只能縮短 critical path；它也算出拆成幾份最快（<a href="l05.html#x4">L5 的本文延伸</a>）。</p>
+              <p><b>推論 4：真實情況比 Amdahl's law 算的還差。</b>Amdahl's law 假設不能平行的 20 分鐘是固定的，不管 agent 有幾個。但 agent 一多，要協調的事也變多：16 個 agent 改同一個 repo，merge conflict 很常見（C compiler 案例 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=50" target="_blank" rel="noopener">p.50</a>）；agent team 的 teammate 互傳訊息，量隨人數成長。所以循序的部分會隨 n 變大，總時間不只停在 20 分鐘的下限，過了某個 n 還會回頭變長。L5 把這件事寫成估算式：總時間約等於規劃、critical path（2.3 的註）、溝通、合併四項相加，平行只能縮短 critical path；它也算出拆成幾份最快（<a href="l05.html#i5">L5 的 2.5</a>）。</p>
               <p><b>反過來看：工作量不固定時。</b>Amdahl's law 還有一個假設：工作量固定，只問同一件事能做多快。1988 年 John Gustafson 指出，實務上機器變多時，人通常會拿它去做更大的工作，而不是把同一件事做快（Gustafson's law）。換到 agent 也一樣：有 16 個 agent，你不會只改 300 個檔案，而是去掃整個 codebase。規劃和合併沒有變多少，能平行的部分卻大了好幾倍，s 的比例因此變小，加速就比 Amdahl's law 算的好。這也是 2.4 說 dynamic workflow 適合「掃整個 codebase、500 個檔案的搬遷」這種大工作的原因：工作越大，循序的那一小段越不重要。</p>
             
                   </div>
