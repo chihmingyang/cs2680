@@ -59,8 +59,8 @@
       <li><span class="k">頁數</span>72</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
-      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 12 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 80 分鐘</span></li>
+      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 13 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 85 分鐘</span></li>
     </ul>
   </header>
 
@@ -379,8 +379,8 @@ claude plugin install caveman@caveman</code></pre></figure>
                 <li><code>finishing-a-development-branch</code>：負責 merge、PR 或清理。</li>
               </ul>
               <p>Slide p.8 把 repo 結構簡化成三種東西：</p>
-              <figure class="file"><figcaption>Superpowers 的 repo（p.8）</figcaption><pre><code>superpowers/
-├── .claude-plugin/     plugin.json        ← plugin 的 metadata：名字、版本
+              <figure class="file"><figcaption>Superpowers 的 repo（p.8）</figcaption><pre><code>superpowers/                                ← 這整個資料夾就是 plugin
+├── .claude-plugin/     plugin.json        ← plugin 的身分證：名字、版本
 ├── hooks/              hooks.json, session-start   ← 一個 SessionStart hook
 ├── skills/
 │   ├── using-superpowers/                  ← bootstrap skill：怎麼選 skill
@@ -388,12 +388,57 @@ claude plugin install caveman@caveman</code></pre></figure>
 │   ├── writing-plans/
 │   └── test-driven-development/            ← slide 列 9 個，repo 有 15 個
 └── tests/</code></pre></figure>
-              <p>最上面的 <a class="tm" href="#n-plugin-dir"><code>.claude-plugin/</code></a> 只放 manifest，也就是寫名字和版本的那個檔；Claude Code 看到它，就把這個資料夾當成一個 plugin。Skill 和 hook 放在根目錄的 <code>skills/</code> 和 <code>hooks/</code>。</p>
+              <p>Plugin 是整個 <code>superpowers/</code> 資料夾。最上面的 <a class="tm" href="#n-plugin-dir"><code>.claude-plugin/</code></a> 只放 manifest，也就是寫名字和版本的那個檔；Claude Code 看到它，就把整個資料夾當成一個 plugin。Skill 和 hook 也屬於這個 plugin，只是放在根目錄的 <code>skills/</code> 和 <code>hooks/</code>。</p>
               <details class="gloss" id="n-plugin-dir">
-                <summary><span class="gloss-k">名詞</span><span class="gloss-t">.claude-plugin/：告訴 Claude Code「這個 repo 是一個 plugin」的資料夾</span></summary>
+                <summary><span class="gloss-k">名詞</span><span class="gloss-t">.claude-plugin/：plugin 的身分證放在這裡，整個 repo 才是 plugin</span></summary>
                 <div class="gloss-body prose">
-                  <p>這個資料夾只放一個東西：manifest，也就是 <code>plugin.json</code>。manifest 寫 plugin 的名字、版本、作者，只有 <code>name</code> 必填。Superpowers v7.0.1 的 <code>plugin.json</code> 也只有 8 個欄位：name、description、version、author、homepage、repository、license、keywords。</p>
-                  <p>Skill、hook、command 不放在這裡。它們放在 repo 根目錄的 <code>skills/</code>、<code>hooks/</code>、<code>commands/</code>，Claude Code 只在根目錄找這三樣。Manifest 甚至可以不寫：沒有 <code>plugin.json</code>，Claude Code 照固定位置載入，skill 在 <code>skills/</code>、hook 在 <code>hooks/hooks.json</code>、MCP server 在 <code>.mcp.json</code>。</p>
+                  <p>Plugin 是整個 repo；<code>.claude-plugin/</code> 只是 repo 裡放身分證的資料夾。這張身分證叫 manifest，檔名是 <code>plugin.json</code>，寫 plugin 的名字、版本、作者，只有 <code>name</code> 必填。可以拿 npm 來想：<code>plugin.json</code> 像 <code>package.json</code>，<code>skills/</code>、<code>hooks/</code> 像 <code>src/</code>。</p>
+                  <p>案例（本文補的）：Superpowers v7.0.1 的 <code>plugin.json</code> 全文如下。8 個欄位都是 metadata，沒有一行指向 skill 或 hook：</p>
+                  <figure class="file"><figcaption>.claude-plugin/plugin.json（Superpowers v7.0.1，2026-10-29 的 repo；// 註解是本文加的）</figcaption><pre><code>{
+  // 唯一必填；裝好後 skill 名字前面會加 superpowers:
+  "name": "superpowers",
+  "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+  // 作者改這個數字，你才更新得到新版
+  "version": "7.0.1",
+  "author": {
+    "name": "Jesse Vincent",
+    "email": "jesse@fsck.com"
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "skills", "tdd", "debugging",
+    "collaboration", "best-practices", "workflows"
+  ]
+}</code></pre></figure>
+                  <p>Skill、hook、command 也屬於這個 plugin，只是放在 repo 根目錄的 <code>skills/</code>、<code>hooks/hooks.json</code>、<code>commands/</code>，不放進 <code>.claude-plugin/</code>。Claude Code 認得這些固定的位置，所以 manifest 不必列出檔案清單；放在別的位置，才要在 <code>plugin.json</code> 用 <code>skills</code>、<code>hooks</code> 這類欄位指過去（2.2 的 Caveman 把 hook 直接寫在 <code>plugin.json</code> 裡）。Manifest 甚至可以不寫：沒有 <code>plugin.json</code>，Claude Code 照固定位置載入，名字取自 marketplace 或資料夾名。</p>
+                  <p>那 plugin 的用處是什麼？它把 skill、hook、command、MCP server 包成一個單位，讓你一起安裝、一起升版、一起關掉。拿 Superpowers 比一下沒有 plugin 時要自己做的事：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>要做的事</th><th>沒有 plugin，自己搬</th><th>有 plugin</th></tr></thead>
+                    <tbody>
+                      <tr><td>裝 15 個 skill</td><td>把 <code>skills/</code> 底下的資料夾一個個複製到 <code>~/.claude/skills/</code></td><td>一行 <code>install</code></td></tr>
+                      <tr><td>加 SessionStart hook</td><td>把下面 p.11 的 <code>hooks.json</code> 貼進你的 <code>~/.claude/settings.json</code>，腳本路徑改成你機器上的絕對路徑</td><td>跟著 plugin 生效；<code>${CLAUDE_PLUGIN_ROOT}</code> 自動指到安裝位置</td></tr>
+                      <tr><td>升版</td><td>重新複製、重新貼</td><td><code>update</code></td></tr>
+                      <tr><td>不想用了</td><td>從 <code>settings.json</code> 挑出別人寫的那幾行刪掉</td><td><code>disable</code> 或 <code>uninstall</code></td></tr>
+                      <tr><td>名字撞到</td><td>你自己的 <code>brainstorming</code> 和它的同名</td><td>自動加前綴：<code>superpowers:brainstorming</code></td></tr>
+                    </tbody>
+                  </table></div>
+                  <figure class="file"><figcaption>terminal：把 Superpowers 當成一個單位管理</figcaption><pre><code># 15 個 skill 和 hook 一起裝好
+$ claude plugin install superpowers@claude-plugins-official
+
+# 列出裝了哪些 plugin、版本、有沒有啟用
+$ claude plugin list
+
+# 拿作者發的新版
+$ claude plugin update superpowers
+
+# 先關掉，檔案留著
+$ claude plugin disable superpowers
+
+# 整包移除
+$ claude plugin uninstall superpowers</code></pre></figure>
+                  <p>所以 <code>plugin.json</code> 裡的 <code>name</code> 和 <code>version</code>，就是讓 Claude Code 能用一個名字管理這一整包的依據。</p>
                   <p>資料夾裡還可以多放一個 <code>marketplace.json</code>。有了它，這個 repo 本身就是一個 marketplace。2.2 的 <code>claude plugin marketplace add JuliusBrussee/caveman</code> 讀的就是這個檔。</p>
                   <p>名字開頭的點表示「給工具讀的設定」，和 <code>.github/</code>、<code>.vscode/</code> 一樣。每個 harness（跑 agent 的程式，例如 Claude Code、Codex、Cursor）只讀自己名字的那個資料夾，所以 Superpowers 的根目錄有 8 個這種資料夾：<code>.claude-plugin/</code>、<code>.codex-plugin/</code>、<code>.cursor-plugin/</code>、<code>.antigravity-plugin/</code> 等。但 <code>skills/</code> 只有一份，8 個 harness 共用。這就是 2.8 說「skill 不綁 harness」的理由：skill 本身誰都能讀，綁 harness 的只有 manifest 這一層。</p>
                 </div>
