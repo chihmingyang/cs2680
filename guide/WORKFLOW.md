@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
+更新：2026-10-30（`assemble_ideas.py` 的側欄第三層也會抓開頭有 `span.anchor` 的小標；L3 重排用它組回，片段是用 `notes/l03/build_iN.py` 從舊頁面切出來的，大改既有頁面時可以照這個做法：先切片段、改片段、再組回）。2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 

@@ -63,7 +63,7 @@ for iid, no, title, pages, rest in pat.findall(ideas):
     short = title.split("：")[0].strip()
     for x, y in re.findall(r"p\.(\d+)(?:–(\d+))?", pages):
         starts.append(int(x)); ends.append(int(y or x))
-    sub2 = re.findall(r'<p id="(i\d-\d+)"><b>(.*?)</b>', rest, re.S)
+    sub2 = re.findall(r'<p id="(i\d-\d+)">(?:<span class="anchor" id="[^"]+"></span>)?<b>(.*?)</b>', rest, re.S)
     items = "".join(f'<li><a class="sn-sub2" href="#{sid}">{re.sub(r"<[^>]+>", "", st).rstrip("。")}</a></li>' for sid, st in sub2)
     subs.append(f'<li><a class="sn-sub" href="#{iid}"><span class="sn-n">{no}</span><span class="sn-t">{short}</span></a><ol class="sn-sub2s">{items}</ol></li>')
 span = f'<span class="sn-p">p.{min(starts)}–{max(ends)}</span>'
