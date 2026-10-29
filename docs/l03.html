@@ -59,7 +59,7 @@
       <li><span class="k">頁數</span>72</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
-      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 15 分鐘</span>，收合</li>
+      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 20 分鐘</span>，收合</li>
       <li><span class="k">全部展開</span><span class="full-time">約 90 分鐘</span></li>
     </ul>
   </header>
@@ -1128,11 +1128,78 @@ $ claude --agent code-reviewer</code></pre></figure>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x4">
-                  <summary>本文延伸｜協調開銷決定平行加速的上限<span>不是 slide 的內容</span></summary>
+                  <summary>本文延伸｜Amdahl's law：16 個 agent 為什麼不會快 16 倍<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
-              <p><strong>16 個 agent 不會快 16 倍</strong>。規劃、整合、review 這些工作，只能一件一件做。Amdahl's law 說的就是這件事：一個工作裡只有一部分能平行，加速的上限由不能平行的那部分決定。假設 80% 的工作能平行，16 個 agent 最多快 1 ÷（0.2 ＋ 0.8 ÷ 16）＝ 4 倍；agent 再多，也不會超過 5 倍，因為那 20% 永遠要一個人做完。</p>
-              <p>協調成本還會隨人數變大。C compiler 案例的 merge conflict 很常見 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=50" target="_blank" rel="noopener">p.50</a>；agent team 的 token 隨人數線性成長。L5 會把它寫成估算式：總時間約等於規劃、critical path（2.3 的註）、溝通、合併四項相加，而平行只能縮短 critical path。</p>
+              <p><b>先說問題。</b>2.4 的四種做法都在回答同一件事：多派幾個 agent，工作會快多少？直覺的答案是 16 個 agent 快 16 倍，但實際上不會。一件工作裡總有些步驟只能一件一件做：規劃要先寫完，才能把子任務派出去；16 份結果交回來，要有人合併；合併完，還要有人 review。這些步驟花的時間，派再多 agent 也不會變短。</p>
+              <p><b>Amdahl's law 是什麼。</b>這是 IBM 的電腦架構師 Gene Amdahl 在 1967 年提出的論證。當時大家在爭論多處理器的電腦值不值得做，他指出：處理器加再多，程式裡只能循序執行的那一段還是一樣慢，所以加速有上限。原本講的是 CPU，把「處理器」換成「agent」，道理完全一樣。它的做法很簡單：把一件工作的時間切成兩塊，一塊能平行、一塊不能平行，然後問：能平行的那一塊交給 n 個 agent 分著做之後，總時間還剩多少？</p>
+              <p><b>用一個例子算一次。</b>假設一個 agent 從頭做到尾要 100 分鐘。其中 20 分鐘只能一個 agent 做：規劃 5 分鐘、合併 10 分鐘、review 5 分鐘。剩下 80 分鐘是改 300 個彼此無關的檔案，可以拆開。改成 16 個 agent 時，不能平行的 20 分鐘不變；能平行的 80 分鐘由 16 個 agent 分，每個做 5 分鐘。總時間是 20 ＋ 5 ＝ 25 分鐘，所以加速是 100 ÷ 25 ＝ 4 倍。把總時間 100 換成 1，就是原本那條式子：</p>
+              <figure class="file"><figcaption>Amdahl's law 的算式（本文補的）</figcaption><pre><code>加速倍數 = 1 ÷ ( s + p ÷ n )
+
+s = 不能平行的比例      例：規劃＋合併＋review = 20 分 ÷ 100 分 = 0.2
+p = 能平行的比例 = 1 − s  例：0.8
+n = agent 數            例：16
+
+1 ÷ ( 0.2 + 0.8 ÷ 16 ) = 1 ÷ ( 0.2 + 0.05 ) = 1 ÷ 0.25 = 4 倍</code></pre></figure>
+              <p>下面這張圖把 n 從 1 加到無限大，看總時間怎麼縮。灰色那段被 agent 分掉，越來越短；藍色那段是不能平行的 20 分鐘，永遠在那裡。</p>
+              <figure class="diagram">
+                <div class="scroll">
+                  <svg viewBox="0 0 680 250" role="img" aria-label="橫條圖，每一列是一種 agent 數，橫條長度是總時間，一格 5 像素代表 1 分鐘。每條都由兩段組成：藍色是不能平行的 20 分鐘，灰色是能平行的工作分給 n 個 agent 後的時間。1 個 agent：20 加 80，共 100 分鐘，1 倍。4 個：20 加 20，共 40 分鐘，2.5 倍。16 個：20 加 5，共 25 分鐘，4 倍。64 個：20 加 1.25，共 21.25 分鐘，4.7 倍。無限多個：只剩 20 分鐘，5 倍，這就是上限。">
+                    <text x="16" y="22" class="dg-tb">agent 數</text>
+                    <text x="120" y="22" class="dg-tb">總時間（分鐘）</text>
+                    <text x="664" y="22" text-anchor="end" class="dg-tb">加速</text>
+
+                    <text x="16" y="56" class="dg-t">n = 1</text>
+                    <rect x="120" y="40" width="100" height="26" class="dg-box-accent"/>
+                    <rect x="220" y="40" width="400" height="26" class="dg-box-soft"/>
+                    <text x="170" y="58" text-anchor="middle" class="dg-ta">20</text>
+                    <text x="420" y="58" text-anchor="middle" class="dg-t">80（一個 agent 全做）</text>
+                    <text x="664" y="58" text-anchor="end" class="dg-t">1 倍</text>
+
+                    <text x="16" y="96" class="dg-t">n = 4</text>
+                    <rect x="120" y="80" width="100" height="26" class="dg-box-accent"/>
+                    <rect x="220" y="80" width="100" height="26" class="dg-box-soft"/>
+                    <text x="170" y="98" text-anchor="middle" class="dg-ta">20</text>
+                    <text x="270" y="98" text-anchor="middle" class="dg-t">80 ÷ 4 = 20</text>
+                    <text x="334" y="98" class="dg-ts">共 40</text>
+                    <text x="664" y="98" text-anchor="end" class="dg-t">2.5 倍</text>
+
+                    <text x="16" y="136" class="dg-t">n = 16</text>
+                    <rect x="120" y="120" width="100" height="26" class="dg-box-accent"/>
+                    <rect x="220" y="120" width="25" height="26" class="dg-box-soft"/>
+                    <text x="170" y="138" text-anchor="middle" class="dg-ta">20</text>
+                    <text x="254" y="138" class="dg-ts">＋ 80 ÷ 16 = 5，共 25</text>
+                    <text x="664" y="138" text-anchor="end" class="dg-t">4 倍</text>
+
+                    <text x="16" y="176" class="dg-t">n = 64</text>
+                    <rect x="120" y="160" width="100" height="26" class="dg-box-accent"/>
+                    <rect x="220" y="160" width="6" height="26" class="dg-box-soft"/>
+                    <text x="170" y="178" text-anchor="middle" class="dg-ta">20</text>
+                    <text x="236" y="178" class="dg-ts">＋ 1.25，共 21.25</text>
+                    <text x="664" y="178" text-anchor="end" class="dg-t">4.7 倍</text>
+
+                    <text x="16" y="216" class="dg-t">n = ∞</text>
+                    <rect x="120" y="200" width="100" height="26" class="dg-box-accent"/>
+                    <text x="170" y="218" text-anchor="middle" class="dg-ta">20</text>
+                    <text x="236" y="218" class="dg-ts">只剩不能平行的部分</text>
+                    <text x="664" y="218" text-anchor="end" class="dg-ta">5 倍（上限）</text>
+
+                    <line x1="220" y1="34" x2="220" y2="232" class="dg-soft dg-dash"/>
+                    <text x="120" y="244" class="dg-ts">藍色：規劃＋合併＋review，誰都分不走</text>
+                  </svg>
+                </div>
+                <figcaption>多加 agent，總時間為什麼停在 20 分鐘？因為只有灰色那段會被分掉。例子的數字是本文的假設，形狀才是重點。</figcaption>
+              </figure>
+              <p><b>推論 1：加速有上限，等於 1 ÷ s。</b>n 變得很大時，p ÷ n 趨近 0，總時間只剩下不能平行的 s。所以加速最多是 1 ÷ s 倍：s 是 20%，上限 5 倍；s 是 10%，上限 10 倍；s 是 5%，上限 20 倍。原文說「agent 再多也不會超過 5 倍」，就是這樣算出來的。</p>
+              <p><b>推論 2：每多一個 agent，省下的時間越來越少。</b>從 1 個加到 4 個，省了 60 分鐘；從 4 個加到 16 個，只再省 15 分鐘；從 16 個加到 64 個，只再省 3.75 分鐘。但 token 費用不會跟著遞減：2.4 說過每個 agent 都是完整的 session，費用大約跟 agent 數成正比。換個角度看，16 個 agent 只快 4 倍，等於平均每個 agent 只發揮了 4 ÷ 16 ＝ 25% 的效用，其餘的時間都花在等那 20 分鐘的循序工作。</p>
+              <p><b>推論 3：要更快，先縮短不能平行的部分，而不是加 agent。</b>同樣用 16 個 agent，把 s 從 20% 降到 10%，加速從 4 倍變成 1 ÷（0.1 ＋ 0.9 ÷ 16）≈ 6.4 倍。反過來 s 不動、agent 從 16 個加到 64 個，只到 4.7 倍。<strong>縮短循序的部分比加 agent 有效</strong>。在 agent 的工作裡，就是讓那些「只能一個人做」的步驟變小：</p>
+              <ul>
+                <li><b>規劃。</b>計畫先寫成 dynamic workflow 的 script，不在對話裡邊聊邊規劃（2.4 的 D）。</li>
+                <li><b>合併。</b>拆給每個 agent 自己做。像 2.5 的 C compiler 案例，每個 agent 自己 pull、解 conflict、push，沒有一個總負責人在最後一次合併全部。</li>
+                <li><b>Review。</b>盡量交給自動測試，而不是等一個人從頭讀到尾。</li>
+              </ul>
+              <p><b>推論 4：真實情況比 Amdahl's law 算的還差。</b>Amdahl's law 假設不能平行的 20 分鐘是固定的，不管 agent 有幾個。但 agent 一多，要協調的事也變多：16 個 agent 改同一個 repo，merge conflict 很常見（C compiler 案例 <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=50" target="_blank" rel="noopener">p.50</a>）；agent team 的 teammate 互傳訊息，量隨人數成長。所以循序的部分會隨 n 變大，總時間不只停在 20 分鐘的下限，過了某個 n 還會回頭變長。L5 把這件事寫成估算式：總時間約等於規劃、critical path（2.3 的註）、溝通、合併四項相加，平行只能縮短 critical path；它也算出拆成幾份最快（<a href="l05.html#x4">L5 的本文延伸</a>）。</p>
+              <p><b>反過來看：工作量不固定時。</b>Amdahl's law 還有一個假設：工作量固定，只問同一件事能做多快。1988 年 John Gustafson 指出，實務上機器變多時，人通常會拿它去做更大的工作，而不是把同一件事做快（Gustafson's law）。換到 agent 也一樣：有 16 個 agent，你不會只改 300 個檔案，而是去掃整個 codebase。規劃和合併沒有變多少，能平行的部分卻大了好幾倍，s 的比例因此變小，加速就比 Amdahl's law 算的好。這也是 2.4 說 dynamic workflow 適合「掃整個 codebase、500 個檔案的搬遷」這種大工作的原因：工作越大，循序的那一小段越不重要。</p>
             
                   </div>
                 </details>
