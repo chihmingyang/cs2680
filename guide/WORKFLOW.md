@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
+更新：2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 
@@ -27,7 +27,7 @@
 1. 把 repo 加進 session，再 clone：
    - 呼叫 `add_repo`（owner `chihmingyang`、repo `cs2680`、access `push`）。
    - `git clone --depth 1 https://github.com/chihmingyang/cs2680 /home/claude/cs2680`（timeout 給 10 分鐘）。
-   - 呼叫 `register_repo_root`，directory 是 `/home/claude/cs2680`。
+   - 有 `register_repo_root` 工具（Claude Code 的 session）就呼叫，directory 是 `/home/claude/cs2680`；claude.ai 的 session 沒有這個工具（2026-10-30 實測，`add_repo` 之後也沒有），改成自己 Read `CLAUDE.md`，要用 skill 時 Read `.claude/skills/<name>/SKILL.md`。
 2. 確認 `gh` 可以用：
    ```bash
    gh api user --jq .login        # 應該印出 chihmingyang
@@ -61,7 +61,7 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
 
 ### B3. 寫頁面
 
-1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l02.html`（最完整，有「深入」區塊）。目錄（`aside.sidenav`）照抄範本即可，B5 會重建。
+1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v5.0 版面、8 章，2026-10-29 擴寫到 v4.0 密度）。不要照 `l02.html` 的密度：它只有 4 章，還留著 16 個「深入」區塊。目錄（`aside.sidenav`）照抄範本即可，B5 會重建。
 2. 第 3 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
 3. 頁面很長，分段寫：先寫骨架和第 1–2 段，再寫第 3 段，最後第 4 段和延伸閱讀。可以把第 3 段的基礎題和進階題交給兩個 subagent 平行寫，各自回傳 HTML 片段，再接回頁面。
 
