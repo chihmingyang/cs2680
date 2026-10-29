@@ -85,7 +85,7 @@
 - **Slide 案例的版本對照**（2026-10-28 定，James：「最好寫一下新版日期跟改動原因，方便讀者判斷 context」；L3 2.1 的 Superpowers 是範例）：slide 拿一個會改版的 repo、plugin 或產品當案例時，寫之前先抓 repo 對照。有差異就這樣寫：
   1. 介紹案例的那段加一句版本：slide 對應哪一版（依講課日期和 slide 上的細節判斷，例如某個步驟是哪一版才加的）、本文比對哪一天、當時最新是哪一版與發布日期。
   2. 章末加一個小節「Slide 之後，X 改了什麼」（粗體小標加 `id="iN-k"`，sidenav 第三層也加），開頭先給結論：哪些還成立、哪裡改最多。
-  3. 一張三欄表：Slide（版本）、現在（版本）、何時改與為什麼。第一欄的項目名用 `<b>項目</b><br>`，表頭用 `<br>` 分兩行，這樣 390px 寬不用左右滑。原因依 release notes 或 commit 寫，標版本與日期；release notes 沒寫原因就不寫。表下一行寫「本文的整理，依 repo 的 tag 與 RELEASE-NOTES，YYYY-MM-DD 比對」。
+  3. 一張三欄表：Slide（版本）、現在（版本）、何時改與為什麼。第一欄的項目名用 `<b>項目</b><br>`，表頭用 `<br>` 分兩行，這樣 390px 寬不用左右滑。`th` 是 nowrap，所以表頭每行都要短；4 欄以上在 390px 放不下時，把次要的一欄併進第一欄，寫成第二行的 `<small>`（L3 `#x4` 的 12 類變動表是例子，2026-10-30）。原因依 release notes 或 commit 寫，標版本與日期；release notes 沒寫原因就不寫。表下一行寫「本文的整理，依 repo 的 tag 與 RELEASE-NOTES，YYYY-MM-DD 比對」。
   4. 設定檔和 slide 的簡化版不同時，附實際檔案的 `figure.file`，figcaption 寫版本，差異用 `←` 標出。
   5. 正文裡依 slide 寫的數字（skill 數等）改成「slide 列 N 個，repo 有 M 個」；別章引用這個案例的地方（比較表、基礎題的重點複習）一起更正。`p.fineprint` 加一句比對日期與版本。
 - 選用：一個觀念要比較好幾種做法、或有一組數字時，可以在 `div.prose` 裡放一張 `figure.diagram` 或一個 `div.table-wrap` 表格（格式同第 6 節；`shot_article.py` 會一起截圖，收合的深入區塊裡的也會）。每個粗體小標最多一張，放在它說明的那段前後；slide 沒給的部分在 figcaption 寫明「本文的整理」。例子是 L4（2026-10-23）：i2 的 search 成本曲線與 edit 四種方式對照表、i4 的 lost in the middle 折線、i5 的 Breunig 表與 Lewis 長條圖、d2 的冪等時序圖。

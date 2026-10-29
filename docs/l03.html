@@ -59,8 +59,8 @@
       <li><span class="k">頁數</span>72</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
-      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 20 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 90 分鐘</span></li>
+      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 25 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 95 分鐘</span></li>
     </ul>
   </header>
 
@@ -943,7 +943,7 @@ git worktree list                    # 看目前有哪些
 # 用 Claude Code 開：-w 替這個 session 開一個 worktree，session 就在裡面跑
 claude -w feature-payments           # terminal 1：做 feature
 claude -w bugfix-auth                # terminal 2：修 bug，碰不到 terminal 1 的檔案</code></pre></figure>
-              <p>Worktree 有兩個限制要知道。同一個 branch 不能同時在兩個 worktree 裡 checkout；新目錄裡也沒有 <code>.env</code>、<code>node_modules</code> 這類不在 git 裡的檔案，要重新裝。更重要的是它只隔離檔案：port、資料庫、外部服務還是共用的，最後的 merge 也還是你的事。Slide p.30 說明這個做法撐到哪裡：3 個 session 你還記得住計畫，<strong>20 個 session 你需要一個分身</strong>。四個原因：</p>
+              <p>Worktree 有兩個限制要知道。同一個 branch 不能同時在兩個 worktree 裡 checkout；新目錄裡也沒有 <code>.env</code>、<code>node_modules</code> 這類不在 git 裡的檔案，要重新裝。更重要的是它只隔離檔案：port、資料庫、外部服務還是共用的，最後的 merge 也還是你的事。主幹在你做事的時候也會動，agent 到 merge 時能不能接住這些變動，本章末尾的本文延伸用一個 2026-10 的 benchmark 說明。Slide p.30 說明這個做法撐到哪裡：3 個 session 你還記得住計畫，<strong>20 個 session 你需要一個分身</strong>。四個原因：</p>
               <ul>
                 <li><b>計畫在你腦中。</b>每一次交接都靠你。</li>
                 <li><b>Session 之間看不到彼此。</b>發現要靠你搬過去。</li>
@@ -1086,6 +1086,104 @@ code and give actionable feedback.</code></pre></figure>
 $ claude --agent code-reviewer</code></pre></figure>
               <p>什麼時候該派、什麼時候留在主對話，slide p.37 給了清單。留在主對話：需要來回討論的工作、前後階段共用 context 的工作、小而明確的修改、在意延遲的時候。交給 subagent：輸出很長而且之後不會再用的工作、要限制 tool 或權限的工作、能自己做完交一段摘要的工作、可以平行的獨立工作、簡單到可以用小 model 的工作。還有一句：可重用的流程如果要在主對話裡跑，用 skill，不用 subagent。</p>
             </div>
+              <div class="exlist deeplist">
+                <details class="ex deep" id="x4">
+                  <summary>本文延伸｜主幹在動的時候：一個 benchmark，與「worktree 隔離、換 context 合併」的建議<span>不是 slide 的內容</span></summary>
+                  <div class="exbody prose">
+                    <p>上面說 worktree 只隔離檔案，最後的 merge 還是你的事。讀書會成員轉來一段評論（2026-10-29，原出處待補），把這件事往前推了一步：它引用一個 benchmark，說 agent 做到一半時主幹一變，成功率跌到兩成；接著建議執行期用 <code>git worktree</code> 隔離，合併期清空對話歷史，兩件事一起做才有用。本文先查證這個 benchmark，再判斷這個建議成不成立。Benchmark 是 <a href="https://arxiv.org/abs/2610.32196" target="_blank" rel="noopener">SWE-Shift</a>（Huang 等，arXiv 2026-10-23）；本文的數字依它的摘要，以及 <a href="https://github.com/JeixHuang/SWE-Shift" target="_blank" rel="noopener">repo</a> 公布的文件與結果檔（2026-10-30 比對）。</p>
+                    <p><b>SWE-Shift 量什麼。</b>SWE-bench 這類 benchmark 給 agent 一個 issue，改到測試通過就算解出，而且假設任務開始後 repo 不會動。SWE-Shift 問的是：做到一半 repo 變了，agent 還做得完嗎。它有 120 個場景，來自 SWE-bench Verified（60 個）、Multi-SWE-bench（35 個）與 SWE-bench Multilingual（25 個），分成 12 類變動，每類 10 個。每個場景先定一條參考軌跡，在上面取 9 個節點，叫 T10 到 T90，對應進度的一成到九成。到了節點，harness 把 agent 的 workspace 和對話存下來，分成兩條繼續：Clean 照舊做完，Shifted 先注入變動再做完。注入是腳本做的：改 workspace 的檔案、送一則訊息，或換掉 tool 的回應；同一個場景的 9 個節點用同一個變動。評論說的「確定性腳本、固定進度節點」就是這件事。</p>
+                    <p>12 類變動不都是檔案改了。下表列出每一類與 agent 怎麼得知（小字）、2.3 的 worktree 能不能把它擋在執行期外面，以及兩個最強系統的 PSR（paired success rate，下一段解釋）。得知的方式有三種：59 個場景會收到一則訊息，51 個沒有訊息、要自己查才看得到，10 個在 workspace 裡看不出來：</p>
+                    <div class="table-wrap"><table>
+                      <thead><tr><th>變動</th><th>Worktree<br>擋得住？</th><th>PSR<br>Astra／Fable</th></tr></thead>
+                      <tbody>
+                        <tr><td><b>F01</b> 使用者改了實作<br><small>收到訊息</small></td><td>擋得住</td><td>38.4／60.8</td></tr>
+                        <tr><td><b>F02</b> 使用者改了介面或結構<br><small>收到訊息</small></td><td>擋得住</td><td>8.9／6.3</td></tr>
+                        <tr><td><b>F03</b> 另一個 agent 改到相關 code<br><small>收到訊息</small></td><td>擋得住</td><td>22.2／30.5</td></tr>
+                        <tr><td><b>F04</b> 另一個 agent 改到間接相關的 code<br><small>多數有訊息</small></td><td>擋得住</td><td>57.3／23.6</td></tr>
+                        <tr><td><b>F05</b> Runtime 資源或 process 變了<br><small>要自己查</small></td><td>擋不住</td><td>0／0</td></tr>
+                        <tr><td><b>F06</b> Tool 或 session 協定變了<br><small>要自己查</small></td><td>擋不住</td><td>0／0</td></tr>
+                        <tr><td><b>F07</b> 外部副作用<br><small>看不出來</small></td><td>擋不住</td><td>22.1／18.9</td></tr>
+                        <tr><td><b>F08</b> 資訊分批揭露<br><small>要自己查</small></td><td>擋不住</td><td>14.9／16.2</td></tr>
+                        <tr><td><b>F09</b> 必須記住的糾正<br><small>收到訊息</small></td><td>擋不住</td><td>52.4／36.5</td></tr>
+                        <tr><td><b>F10</b> 目標改了<br><small>收到訊息</small></td><td>擋不住</td><td>9.3／4.1</td></tr>
+                        <tr><td><b>F11</b> 證據過期<br><small>要自己查</small></td><td>擋不住</td><td>0／0</td></tr>
+                        <tr><td><b>F12</b> 證據綁錯或矛盾<br><small>要自己查</small></td><td>擋不住</td><td>18.6／5.6</td></tr>
+                      </tbody>
+                    </table></div>
+                    <p>本文的整理，依 repo 的 <code>cases/public/*/case.json</code> 與 <code>docs/paper/results.json</code>（Table 2 與 Figure 4 的資料），2026-10-30 比對；Astra 是 GPT-6 Astra，Fable 是 Claude Fable 5.1。「擋得住」的意思是：變動只改檔案，agent 在自己的 worktree 裡做事時看不到它，要到 merge 才會碰到。</p>
+                    <p><b>怎麼算成功。</b>一條分支要同時通過幾組檢查：原任務的測試、還成立的工作有沒有保留（例如 teammate 新加的 API 還在不在）、狀態有沒有恢復、用的證據是不是現在的。少一組就算失敗。PSR 再往上加一層：同一個節點的 Clean 和 Shifted 兩條都成功才算，所以它量的是「本來做得到、變動後還做得到」。評論寫的「變動前後所有檢查點都通過」對應的就是這兩層；要注意 SWE-Shift 自己說的 checkpoint 是 T10 到 T90 那 9 個節點，不是檢查項目。17 個系統裡最好的是 GPT-6 Astra：<strong>Clean 67.35%，Shifted 24.79%</strong>，PSR 20.34%；Claude Fable 5.1 是 62.01%、18.33%、16.88%。每條分支有 100 萬 token 的預算。</p>
+                    <p><b>為什麼不能當事故頻率。</b>評論的第一個提醒成立，而且還有三個理由。第一，場景是挑過的：變動一定和任務有關，而且 repo 的驗證要求「agent 若照舊做會失敗」，日常 main 上大部分的 commit 和你手上的任務無關。第二，判定看的不只是測試。README 舉一個 Django 案例：teammate 加了一個控制 migration operation 能不能合併的 API，agent 一開始有用到它，修原本的 issue 時卻把它刪了，39 個原測試全過，仍算失敗。第三，節點定在參考軌跡上，不是這個 model 自己的進度；越晚的節點，剩下的預算越少，repo 的 limitations 自己寫明這一點。所以 20% 是「被針對時還做得完的比例」，不是十次有八次會崩。</p>
+                    <p><b>兩個痛點，一個量到了，一個是合理的解讀。</b>「順手刪掉主幹新加的 code」量到了，而且比想像的糟。F03 的 10 個場景都會收到訊息，訊息直接寫 teammate 的工作已經進了共用的 workspace，要「Keep it intact」。被明白告知要保留，Astra 的 PSR 仍只有 22.2%，Fable 30.5%。所以問題不在它不知道，在它的 context 裡有舊計畫和舊版的檔案內容，新的東西只在一則訊息裡出現過一次。「後期改不了舊計畫」是從下圖讀出來的：Astra 在 T10 的 PSR 是 38.8%，到 T70 剩 2.4%；Fable 從 27.4% 掉到 T80 的 6.2%。弱的系統像 Kimi-K3 一路 8% 到 9%，是平的，因為它本來就少成功。README 說時間的效果因系統而異，limitations 又說晚期預算少，所以這條線同時含「計畫固著」和「沒時間改」兩個原因，benchmark 沒把它們分開量。</p>
+                    <figure class="diagram">
+                      <div class="scroll">
+                        <svg viewBox="0 0 700 290" role="img" aria-label="折線圖：變動在任務進度的 T10 到 T90 注入時，三個系統的 PSR。GPT-6 Astra 從 T10 的 38.8% 一路下滑，T70 只剩 2.4%，T90 是 14.3%。Claude Fable 5.1 從 27.4% 平緩下滑到 T80 的 6.2%，T90 是 9.8%。Kimi-K3 一路在 8% 到 9% 之間，幾乎是平的。">
+                          <line x1="80" y1="232" x2="640" y2="232" class="dg-soft"/>
+                          <line x1="80" y1="232" x2="80" y2="24" class="dg-soft"/>
+                          <text x="72" y="236" text-anchor="end" class="dg-ts">0%</text>
+                          <text x="72" y="185" text-anchor="end" class="dg-ts">10%</text>
+                          <text x="72" y="134" text-anchor="end" class="dg-ts">20%</text>
+                          <text x="72" y="83" text-anchor="end" class="dg-ts">30%</text>
+                          <text x="72" y="32" text-anchor="end" class="dg-ts">40%</text>
+                          <line x1="80" y1="181" x2="640" y2="181" class="dg-soft dg-dash"/>
+                          <line x1="80" y1="130" x2="640" y2="130" class="dg-soft dg-dash"/>
+                          <line x1="80" y1="79" x2="640" y2="79" class="dg-soft dg-dash"/>
+
+                          <polyline points="80.0,189.2 150.0,187.1 220.0,200.4 290.0,196.3 360.0,190.7 430.0,185.6 500.0,185.1 570.0,188.1 640.0,189.2" class="dg-soft dg-dash"/>
+                          <polyline points="80.0,92.3 150.0,104.5 220.0,125.4 290.0,128.5 360.0,136.6 430.0,167.7 500.0,175.9 570.0,200.4 640.0,182.0" class="dg-line"/>
+                          <polyline points="80.0,34.1 150.0,58.3 220.0,147.0 290.0,91.1 360.0,145.0 430.0,132.9 500.0,219.9 570.0,167.2 640.0,159.1" class="dg-accent"/>
+                          <circle cx="80" cy="34.1" r="4.5" class="dg-fill-accent"/>
+                          <circle cx="500" cy="219.9" r="4.5" class="dg-fill-accent"/>
+                          <circle cx="80" cy="92.3" r="4.5" class="dg-fill-ink"/>
+                          <circle cx="570" cy="200.4" r="4.5" class="dg-fill-ink"/>
+                          <text x="90" y="30" class="dg-ta">GPT-6 Astra 38.8%</text>
+                          <text x="500" y="250" text-anchor="middle" class="dg-ta">2.4%</text>
+                          <text x="90" y="108" class="dg-tb">Claude Fable 5.1 27.4%</text>
+                          <text x="570" y="220" text-anchor="middle" class="dg-tb">6.2%</text>
+                          <text x="226" y="218" class="dg-ts">Kimi-K3 8–9%，一路平的</text>
+
+                          <text x="80" y="252" text-anchor="middle" class="dg-ts">T10</text>
+                          <text x="150" y="252" text-anchor="middle" class="dg-ts">T20</text>
+                          <text x="220" y="252" text-anchor="middle" class="dg-ts">T30</text>
+                          <text x="290" y="252" text-anchor="middle" class="dg-ts">T40</text>
+                          <text x="360" y="252" text-anchor="middle" class="dg-ts">T50</text>
+                          <text x="430" y="252" text-anchor="middle" class="dg-ts">T60</text>
+                          <text x="500" y="272" text-anchor="middle" class="dg-ts">T70</text>
+                          <text x="570" y="252" text-anchor="middle" class="dg-ts">T80</text>
+                          <text x="640" y="252" text-anchor="middle" class="dg-ts">T90</text>
+                          <text x="360" y="284" text-anchor="middle" class="dg-ts">變動注入的位置（參考軌跡的進度，一成到九成）</text>
+                        </svg>
+                      </div>
+                      <figcaption>依 repo 的 <code>results.json</code>（Figure 4 的資料）重畫：變動越晚到，強系統的 PSR 掉得越多；弱系統本來就低，看不出差別。本文的整理，2026-10-30。</figcaption>
+                    </figure>
+                    <p><b>評論的建議成不成立。</b>成立，但範圍要縮到上表「擋得住」的四類。Worktree 擋住的是檔案：別人在 main 上的 commit 不會跑進你的目錄，所以執行期不會出現 F01 到 F04 這種中途變動。代價是變動沒有消失，只是延到 merge 那一刻；好處是 git 會把它變成明確的：<code>git diff</code> 和 conflict marker 把兩邊都改到的地方列出來，agent 不必自己察覺。上表也看得出被告知有幫助：收到訊息的 F01 是 Fable 最高的一類（60.8%），要自己發現的 F05、F06、F11 全部是 0。但 F02 也收到訊息，PSR 只有 6.3%，所以變動一牽到介面或結構，告知還不夠。</p>
+                    <p>清空歷史補的是另一半。合併期的 agent 如果帶著執行期的對話，它就是圖裡 T70 到 T90 那個 agent：計畫在 context 裡，檔案的舊版內容也在 context 裡，merge 時容易把 main 的新東西當成要改回去的差異。開一個新 context 做 merge，它只看得到現況：branch 的 diff、main 的 diff、衝突的地方。代價是它不知道你為什麼這樣改，所以「為什麼」要寫在 commit message 或計畫檔裡，不能只留在對話裡；2.1 的 Superpowers 把計畫寫成 repo 裡的 Markdown，2.8 的 skill 用 issue 和 ticket，L6 講的 memory 寫入也是這件事。2.8 的 <code>/implement-spec</code> 兩步都有：implementer 回報前自己先把 integration branch merge 進來（舊 context），merger subagent 再把結果合進 integration branch（新 context）。照這個 benchmark 的結果，第一步比第二步危險。</p>
+                    <p>對擋不住的八類，worktree 幫不上忙，要的是在固定的節點重讀：需求改了就重讀 spec，tool 的介面變了就重探一次。2.4 的 agent team 把任務放在共用清單上，2.5 的 <code>/goal</code> 每一輪結束都檢查條件，都是把「重讀現況」排進流程，不靠 agent 自己想起來。下面是評論建議的兩段流程，在 Claude Code 裡打起來的樣子：</p>
+                    <figure class="file"><figcaption>執行期一個 worktree，合併期一個新 context（本文擬的例子）</figcaption><pre><code># 執行期：一個任務一個 worktree，main 上的新 commit 不會跑進你的目錄
+# 目錄是 .claude/worktrees/feat-auth，branch 叫 worktree-feat-auth
+$ claude -w feat-auth
+&gt; 照 docs/plans/auth.md 實作，做完 commit。
+  每個 commit message 寫清楚為什麼這樣改，之後合併的人只看得到 commit，看不到這段對話。
+
+# 合併期：換一個沒有執行期歷史的 context
+# /clear 把對話清空；舊對話還在磁碟上，之後可以 resume 回來
+&gt; /clear
+&gt; 先用 git log --oneline worktree-feat-auth..main 看 main 多了哪些 commit，
+  再用 git diff --stat main...worktree-feat-auth 看這條 branch 改了哪些檔案。
+  找出兩邊都改到的檔案，把 main merge 進來。衝突處以 main 新加的東西為準，
+  我這邊的改動要配合它調整，不要刪它。改完跑整套測試，
+  最後列出 main 新加、而且 merge 之後還在的函式或 API。
+
+# 不想用 /clear，就直接在 worktree 目錄開一個新 session，效果一樣
+$ cd .claude/worktrees/feat-auth &amp;&amp; claude</code></pre></figure>
+                    <p>最後一句「列出 main 新加、而且還在的東西」，就是 SWE-Shift 的保留檢查，Django 那個案例只跑原測試不會發現。本文的判斷（2026-10）：</p>
+                    <ul>
+                      <li><b>別人改了檔案。</b>執行期用 worktree，合併期換新 context，並把原因寫進 commit message 或計畫檔。</li>
+                      <li><b>需求、tool、環境變了。</b>Worktree 擋不住；在流程裡排固定的重讀節點。</li>
+                      <li><b>兩成不是日常的故障率。</b>但 teammate 的 code 被刪是會發生的事；merge 之後多跑一次「main 新加的東西還在嗎」，不只跑原本的測試。</li>
+                    </ul>
+                  </div>
+                </details>
+              </div>
           </div>
           <div class="idea" id="i4">
             <h3><span class="idea-no">2.4</span>Agent team 與 dynamic workflow：需要討論才用 team，對話協調不了才用 script <a class="ref" href="https://cs2680.com/slides/3_agent_use_2.pdf#page=38" target="_blank" rel="noopener">p.38–43</a></h3>
@@ -1127,7 +1225,7 @@ $ claude --agent code-reviewer</code></pre></figure>
               <p id="i4-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x4">
+                <details class="ex deep" id="x5">
                   <summary>本文延伸｜Amdahl's law：16 個 agent 為什麼不會快 16 倍<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1280,7 +1378,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
               <p>下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x5">
+                <details class="ex deep" id="x6">
                   <summary>本文延伸｜任務切不開，加 agent 也沒用<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1464,7 +1562,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
               <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。OpenAI 的員工整體仍在階梯的下半部。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x6">
+                <details class="ex deep" id="x7">
                   <summary>本文延伸｜人的角色，變成規劃者和 reviewer<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1475,7 +1573,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                 </details>
               </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x7">
+                <details class="ex deep" id="x8">
                   <summary>本文延伸｜讀 Codex 與 OpenAI 的數字要小心<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1760,7 +1858,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
               <p data-inline>最後一列值得多看。這個 repo 的 <code>.out-of-scope/</code> 目錄記錄作者拒絕過的功能，理由都指向同一個原則：skill 是跨 harness 的純文字，harness 專屬的事不做。有人要求在 skill 裡擋 subagent 遞迴，他說上限該由 harness 設，一處設定對所有 skill 生效；寫進一個 skill 的提醒只管那個 skill，還每次花 token。有人要求 grilling 改用 Claude Code 的 AskUserQuestion 介面，他說每個 harness 的問答工具不同，而且選單會把開放的問題變成選擇題；要用就寫在你自己的 <code>CLAUDE.md</code>。三個 plugin 因此排成一條線：mattpocock/skills 只用 skill，Superpowers 加 hook，Caveman 再加 MCP 和 proxy。<strong>往右走，能保證的事越多，也越綁在一個 harness 上</strong>。Superpowers 後來支援十幾個 harness，代價是每個都要各自接一次 bootstrap；Antigravity 沒有 session hook，只能退回靠 description，hook 的保證也就沒了。放回 2.7 的階梯，user-invoked skill 加 <code>implement-spec</code> 站在第三到第四層；<code>retro</code> 做的是 2.7 說的人的新角色：不寫程式，改環境。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x8">
+                <details class="ex deep" id="x9">
                   <summary>本文延伸｜GLOSSARY.md 和 Caveman 省的是不同的 token<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
                     <p>Caveman 壓的是內容：log、diff、tool 輸出進 context 之前先截短，原文留在外面。這是 L4 的 admission 和 offloading，每一圈都省，而且省的是輸入方向的大宗（2.2 算過，input 約是 output 的 14 倍）。</p>
@@ -1769,7 +1867,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 </details>
               </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x9">
+                <details class="ex deep" id="x10">
                   <summary>本文延伸｜沒有 hook，拿什麼保證 skill 會用到<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
                     <p>2.1 的教訓是：skill 裝了，model 不一定用。Superpowers 用 hook 補這個洞。mattpocock/skills 沒有 hook，它靠三件事。入口是 user-invoked，你打了就一定載入，不靠 model 判斷；這等於把「要不要走流程」這個決定交回給人。紀律是 model-invoked，靠 description 裡的觸發詞讓 model 自己挑，這一層沒有保證，和 2.1 的狀況一樣。流程裡的 skill 用「Call the Skill tool with "tdd"」這種句子點名下一個，作者說寫成 tool 呼叫比寫 <code>/tdd</code> 命中率高。</p>
@@ -2025,7 +2123,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                     <li>Subagent ＝ 新的 context ＋ 只交回摘要 → 中間產物不進主對話，之後每一圈都省。</li>
                     <li>摘要是有損壓縮 → 委派時指定回報格式；要頻繁來回討論的工作留在主對話（p.37）。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">平行與 subagent：各買到一樣東西，也各有代價</a>〉的〈<a href="#t1">Git worktree</a>〉與〈<a href="#t2">Context 隔離與摘要</a>〉兩段、〈<a href="#i4">Agent team 與 dynamic workflow</a>〉、本文延伸〈<a href="#x4">協調開銷決定平行加速的上限</a>〉、L4〈<a href="l04.html#t6">Lost in the middle</a>〉。<a href="#q1">進階題第 1 題</a>替任務選擴展方式。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">平行與 subagent：各買到一樣東西，也各有代價</a>〉的〈<a href="#t1">Git worktree</a>〉與〈<a href="#t2">Context 隔離與摘要</a>〉兩段、〈<a href="#i4">Agent team 與 dynamic workflow</a>〉、本文延伸〈<a href="#x5">協調開銷決定平行加速的上限</a>〉、L4〈<a href="l04.html#t6">Lost in the middle</a>〉。<a href="#q1">進階題第 1 題</a>替任務選擴展方式。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
@@ -2156,7 +2254,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                     <li>不確定性早就存在；新的部分集中在產生程式的階段，程式寫好後通常是確定的。</li>
                     <li>不追求 agent 確定 → 讓周邊系統可靠（可驗證的終點、測試、hook），自主程度配合風險。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉（含〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段）、本文延伸〈<a href="#x6">人的角色，變成規劃者和 reviewer</a>〉、L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉、L2〈<a href="l02.html#x4">自主程度要配合風險</a>〉。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉（含〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段）、本文延伸〈<a href="#x7">人的角色，變成規劃者和 reviewer</a>〉、L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉、L2〈<a href="l02.html#x4">自主程度要配合風險</a>〉。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>
@@ -2412,7 +2510,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Karpathy 在 2017 年提出：神經網路的權重是一種新的軟體。人不再逐行寫程式，改成給目標與資料，由 optimizer 在程式空間裡搜出程式。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.53 的 1.0／2.0／3.0 表格，2.0 那一列（程式是權重、用資料加優化產生）就是這篇。本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同：這篇分「程式是什麼」，講者分「人寫什麼」。〈<a href="#i6">Programming 3.0：接受不確定性</a>〉談的不確定性，這篇在 2017 年已經寫到。本文延伸〈<a href="#x6">人的角色，變成規劃者和 reviewer</a>〉問人做什麼；這篇的答案是：多數人整理資料集，少數人維護訓練基礎設施。</p>
+            <p>Slides p.53 的 1.0／2.0／3.0 表格，2.0 那一列（程式是權重、用資料加優化產生）就是這篇。本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同：這篇分「程式是什麼」，講者分「人寫什麼」。〈<a href="#i6">Programming 3.0：接受不確定性</a>〉談的不確定性，這篇在 2017 年已經寫到。本文延伸〈<a href="#x7">人的角色，變成規劃者和 reviewer</a>〉問人做什麼；這篇的答案是：多數人整理資料集，少數人維護訓練基礎設施。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>2.0 的「原始碼」是資料集加網路架構，訓練就是 compile。</b>1.0 由人寫 Python 或 C++，每一行把程式釘在程式空間的一個點。2.0 由人給目標與架構骨架，backprop 與 SGD 在這個子空間裡搜尋。</li>
@@ -2443,7 +2541,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 40 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Software 3.0 用英文 prompt 寫程式。LLM 會犯錯，所以現在該蓋帶 autonomy slider 的部分自主產品，不是全自主 agent。人的工作變成讓「生成、驗證」迴圈轉得快。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.53 直接引用這支影片的 1.0／2.0／3.0 分法；本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同。〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉的結論「自主程度配合風險」（p.59），就是 Karpathy 的 autonomy slider。本文延伸〈<a href="#x6">人的角色，變成規劃者和 reviewer</a>〉接的是他的生成與驗證迴圈。</p>
+            <p>Slides p.53 直接引用這支影片的 1.0／2.0／3.0 分法；本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同。〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉的結論「自主程度配合風險」（p.59），就是 Karpathy 的 autonomy slider。本文延伸〈<a href="#x7">人的角色，變成規劃者和 reviewer</a>〉接的是他的生成與驗證迴圈。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>軟體 70 年沒大變，最近幾年變了兩次。</b>1.0 是手寫程式碼，2.0 是神經網路權重，3.0 是給 LLM 的 prompt。Tesla Autopilot 裡的 C++ 逐步刪除，功能移進神經網路；他預期 prompt 會再吃掉一部分。</li>
@@ -2499,7 +2597,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Agent team 是好幾個完整的 Claude Code session 一起做事：一個 lead 派工，teammate 認領共用任務清單上的工作，彼此直接傳訊。文件自己標明 experimental、預設關閉、token 隨人數線性增加。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.38–42 取自這份文件：p.38 的四種適用情境與警語、p.39 的四個組件、p.41 的 subagent 對照表。本頁 2.4 的〈<a href="#i4-1">C Agent team</a>〉一段的選擇規則「需要討論才用 team」，就是文件的結論。本文延伸〈<a href="#x4">協調開銷決定平行加速的上限</a>〉講的 token 線性成長，文件寫成建議：先開 3 到 5 個。2.5 的〈<a href="#t3">Lock file 認領</a>〉做法這裡也用：teammate 認領任務時靠 file locking 防止搶同一題。</p>
+            <p>Slides p.38–42 取自這份文件：p.38 的四種適用情境與警語、p.39 的四個組件、p.41 的 subagent 對照表。本頁 2.4 的〈<a href="#i4-1">C Agent team</a>〉一段的選擇規則「需要討論才用 team」，就是文件的結論。本文延伸〈<a href="#x5">協調開銷決定平行加速的上限</a>〉講的 token 線性成長，文件寫成建議：先開 3 到 5 個。2.5 的〈<a href="#t3">Lock file 認領</a>〉做法這裡也用：teammate 認領任務時靠 file locking 防止搶同一題。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>和 subagent 差在三件事。</b>Subagent 只把結果交回呼叫者，主 agent 管所有工作。Teammate 是獨立的 session，彼此直接傳訊，靠共用任務清單自我協調。所以 subagent 適合只要結果的任務，team 適合需要討論的工作，代價是每個 teammate 都是一個完整的 Claude 實例。</li>
@@ -2541,7 +2639,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>16 個 Claude agent 平行跑兩週，沒有人介入，用 Rust 從零寫出能編譯 Linux kernel 的 C compiler。成立的條件有兩個：測試接近完美，失敗訊號能切成很多小塊。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.47–50 直接取材於這篇，見〈<a href="#i5">長時間執行：agent 需要一個能檢查的終點</a>〉；lock file 認領對應本頁 2.5 的〈<a href="#t3">用 git 當鎖</a>〉一段（p.49）。Kernel 卡關的故事是本文延伸〈<a href="#x5">任務切不開，加 agent 也沒用</a>〉的來源（p.50）。Slides 沒有講的是成本數字、agent 的分工角色，以及作者對「測試通過」的保留態度。</p>
+            <p>Slides p.47–50 直接取材於這篇，見〈<a href="#i5">長時間執行：agent 需要一個能檢查的終點</a>〉；lock file 認領對應本頁 2.5 的〈<a href="#t3">用 git 當鎖</a>〉一段（p.49）。Kernel 卡關的故事是本文延伸〈<a href="#x6">任務切不開，加 agent 也沒用</a>〉的來源（p.50）。Slides 沒有講的是成本數字、agent 的分工角色，以及作者對「測試通過」的保留態度。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>規模與成本。</b>16 個 agent、將近 2,000 個 Claude Code session、兩週，model 是 Opus 4.6。API 成本略低於 20,000 美元；input 20 億 token，output 1.4 億 token。Compiler 約 100,000 行 Rust，過程中沒有網路。</li>
