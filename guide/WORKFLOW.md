@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
+更新：2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 
@@ -139,6 +139,14 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
    成員的留言不受影響。
 5. 對改過的講次頁跑 B4 的檢查，再跑 `audit.py`。
 6. 發布（D）。
+
+大改一堂的核心觀念（2026-10-29 L5、L6 的做法）：每章寫成一個片段 `notes/lXX/iN.html`（開一組的那章把 `p.idea-group` 放在最前面），`head.html` 放 `section#s-ideas` 的開頭到 `<div class="ideas">`（`nav.map` 的分鐘數寫 `__iN__`），要改 tldr 或架構的讀圖重點就再放 `tldr.html`、`arch.html`，然後：
+
+```bash
+python3 -I tools/assemble_ideas.py docs/l05.html notes/l05   # 換掉 #s-ideas、填分鐘數、重建本頁目錄
+```
+
+接著手動改基礎題 `tk-rel`、延伸閱讀摘要、首頁 chip 與別頁連進來的 `#iN`（`grep -o 'l05.html#[a-z0-9-]*' docs/*.html`），再跑 B4 的檢查。片段留在 `notes/`（不 commit），改完就可以刪。
 
 延伸閱讀的摘要（`details.rg-dg`，必讀與推薦都有）怎麼寫、怎麼插入，見 `guide/STYLE_DIGEST.md`。
 
