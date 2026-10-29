@@ -604,55 +604,56 @@ FAIL src/api/client.test.ts
 
 # 之後：model 只讀到這一行
 3 tests fail: ETIMEDOUT at client.ts:88</code></pre></figure>
-              <p>Caveman 的目標就是讓 model 只讀到那一行，原文留著，要的時候再取。Token 有兩個方向：model 讀進去的叫 input，model 寫出來的叫 output。Caveman 兩邊都壓（slide p.17）。輸出方向用一個 skill：它規定回答的風格，model 載入後就寫得短。輸入方向用一個本機 proxy：所有送給 model 的內容先經過它，它把 log、diff 壓短再送出去。一句話記：<strong>skill 改 model 怎麼寫，proxy 改 model 讀什麼</strong>。</p>
+              <p>Caveman 的目標就是讓 model 只讀到那一行，原文留著，要的時候再取。Token 有兩個方向：model 讀進去的叫 input，model 寫出來的叫 output。Caveman 兩邊都壓（slide p.17）。輸出方向用一個 skill：它規定回答的風格，model 載入後就寫得短。Agent 每跑一圈，就把整段 context（system prompt、之前的對話、這次的 tool 輸出）打包成一個 request 送給 model；model 讀完，寫一個回答送回來。輸入方向用一個本機 proxy：每個 request 都先經過它，它把 log、diff 壓短再送出去。一句話記：<strong>skill 改 model 怎麼寫，proxy 改 model 讀什麼</strong>。</p>
               <figure class="diagram">
                     <div class="scroll">
-                      <svg viewBox="0 0 640 292" role="img" aria-label="Caveman 的兩個壓縮方向。左邊是 coding agent，tool 輸出了 786 行 log；agent 裡的 hook 只能改單一 tool 的輸入輸出。中間是本機 proxy，每個 request 都經過它，依類型壓縮：log 留錯誤和頭尾，diff 留檔頭和改動行。右邊是 model provider。上方的輸入方向：786 行的 request 經過 proxy，變成 1 行才送到 model。下方的輸出方向：context 裡有 response skill，model 的回答寫得短，output 少 65%。底部說明：proxy 每個 request 都經過，能改整個 context；MCP 只在 agent 呼叫時執行，例如用 caveman_retrieve 取回原文。">
+                      <svg viewBox="0 0 640 304" role="img" aria-label="Caveman 在哪裡壓 token。左邊是 coding agent，裡面有 786 行的 tool 輸出，和讓回答寫短的 skill，skill 跟著 request 送出。① agent 送出 786 行的 request 到中間的本機 proxy；② proxy 依內容類型壓縮，log 留錯誤和頭尾，diff 留檔頭和改動行，壓成 1 行送到右邊的 model provider；③ model 寫回答送回 agent，因為 skill 在 request 裡，回答短 65%。底部比較誰碰得到整個 request：proxy 每個都經過；hook 只改一筆 tool 輸出；MCP 要 agent 呼叫才跑。">
                         <defs>
                           <marker id="l3z2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
                           <marker id="l3z2-aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
                         </defs>
-                        <text x="320" y="22" text-anchor="middle" class="dg-ta">輸入方向：proxy 改 model 讀到的</text>
+                        <text x="320" y="22" text-anchor="middle" class="dg-ta">①② 送去的 request：model 讀的（input）</text>
 
-                        <rect x="16" y="36" width="160" height="134" rx="5" class="dg-box"/>
-                        <text x="96" y="56" text-anchor="middle" class="dg-tb">Coding agent</text>
-                        <text x="96" y="72" text-anchor="middle" class="dg-ts">例如 Claude Code</text>
-                        <rect x="28" y="84" width="136" height="26" rx="3" class="dg-box-soft"/>
-                        <text x="96" y="101" text-anchor="middle" class="dg-ts">tool 輸出 786 行</text>
-                        <rect x="28" y="120" width="136" height="42" rx="3" class="dg-frame"/>
-                        <text x="96" y="137" text-anchor="middle" class="dg-ts">hook 只能改</text>
-                        <text x="96" y="153" text-anchor="middle" class="dg-ts">單一 tool 的輸入輸出</text>
+                        <rect x="16" y="36" width="150" height="134" rx="5" class="dg-box"/>
+                        <text x="91" y="56" text-anchor="middle" class="dg-tb">Coding agent</text>
+                        <text x="91" y="72" text-anchor="middle" class="dg-ts">例如 Claude Code</text>
+                        <rect x="26" y="84" width="130" height="26" rx="3" class="dg-box-soft"/>
+                        <text x="91" y="101" text-anchor="middle" class="dg-ts">tool 輸出 786 行</text>
+                        <rect x="26" y="118" width="130" height="42" rx="3" class="dg-box-soft"/>
+                        <text x="91" y="135" text-anchor="middle" class="dg-ts">skill：回答寫短</text>
+                        <text x="91" y="151" text-anchor="middle" class="dg-ts">跟著 request 送出</text>
 
-                        <rect x="240" y="36" width="160" height="134" rx="5" class="dg-box-accent"/>
+                        <rect x="245" y="36" width="150" height="134" rx="5" class="dg-box-accent"/>
                         <text x="320" y="56" text-anchor="middle" class="dg-tb">本機 proxy</text>
                         <text x="320" y="72" text-anchor="middle" class="dg-ts">Caveman engine</text>
-                        <text x="320" y="100" text-anchor="middle" class="dg-t">每個 request 都經過</text>
-                        <text x="320" y="122" text-anchor="middle" class="dg-ts">log：留錯誤、頭尾</text>
-                        <text x="320" y="140" text-anchor="middle" class="dg-ts">diff：留檔頭、改動行</text>
-                        <text x="320" y="158" text-anchor="middle" class="dg-ts">依內容類型壓縮</text>
+                        <text x="320" y="104" text-anchor="middle" class="dg-t">依內容類型壓縮</text>
+                        <text x="320" y="128" text-anchor="middle" class="dg-ts">log：留錯誤、頭尾</text>
+                        <text x="320" y="146" text-anchor="middle" class="dg-ts">diff：留檔頭、改動行</text>
 
-                        <rect x="464" y="36" width="160" height="134" rx="5" class="dg-box"/>
-                        <text x="544" y="56" text-anchor="middle" class="dg-tb">Model provider</text>
-                        <text x="544" y="72" text-anchor="middle" class="dg-ts">LLM API</text>
-                        <rect x="476" y="84" width="136" height="42" rx="3" class="dg-box-soft"/>
-                        <text x="544" y="101" text-anchor="middle" class="dg-ts">context 裡有</text>
-                        <text x="544" y="117" text-anchor="middle" class="dg-ts">response skill</text>
-                        <text x="544" y="152" text-anchor="middle" class="dg-ta">讀得少、寫得短</text>
+                        <rect x="474" y="36" width="150" height="134" rx="5" class="dg-box"/>
+                        <text x="549" y="56" text-anchor="middle" class="dg-tb">Model provider</text>
+                        <text x="549" y="72" text-anchor="middle" class="dg-ts">LLM API</text>
+                        <text x="549" y="112" text-anchor="middle" class="dg-t">讀 1 行</text>
+                        <text x="549" y="136" text-anchor="middle" class="dg-t">回答寫得短</text>
 
-                        <line x1="178" y1="97" x2="238" y2="97" class="dg-line" marker-end="url(#l3z2-ah)"/>
-                        <text x="208" y="89" text-anchor="middle" class="dg-ts">786 行</text>
-                        <line x1="402" y1="97" x2="462" y2="97" class="dg-accent" marker-end="url(#l3z2-aha)"/>
-                        <text x="432" y="89" text-anchor="middle" class="dg-ta">1 行</text>
+                        <text x="205" y="80" text-anchor="middle" class="dg-ts">① request</text>
+                        <text x="205" y="94" text-anchor="middle" class="dg-ts">786 行</text>
+                        <line x1="168" y1="104" x2="243" y2="104" class="dg-line" marker-end="url(#l3z2-ah)"/>
+                        <text x="434" y="80" text-anchor="middle" class="dg-ta">② 壓成</text>
+                        <text x="434" y="94" text-anchor="middle" class="dg-ta">1 行</text>
+                        <line x1="397" y1="104" x2="472" y2="104" class="dg-accent" marker-end="url(#l3z2-aha)"/>
 
-                        <path d="M544,170 V192 H96 V174" class="dg-accent" marker-end="url(#l3z2-aha)"/>
-                        <text x="320" y="212" text-anchor="middle" class="dg-ta">輸出方向：skill 讓 model 寫得短（output 少 65%）</text>
+                        <path d="M549,170 V190 H91 V174" class="dg-accent" marker-end="url(#l3z2-aha)"/>
+                        <text x="320" y="210" text-anchor="middle" class="dg-ta">③ 回答送回 agent：model 寫的（output），因為有 skill，短 65%</text>
 
-                        <rect x="16" y="228" width="608" height="54" rx="4" class="dg-box-soft"/>
-                        <text x="320" y="250" text-anchor="middle" class="dg-t">Proxy：每個 request 都經過，能改整個 context</text>
-                        <text x="320" y="270" text-anchor="middle" class="dg-ts">MCP：agent 呼叫才執行，例如用 caveman_retrieve 取回原文</text>
+                        <rect x="16" y="226" width="608" height="68" rx="4" class="dg-box-soft"/>
+                        <text x="320" y="248" text-anchor="middle" class="dg-tb">誰碰得到整個 request？</text>
+                        <text x="118" y="276" text-anchor="middle" class="dg-t">proxy：每個都經過 ✓</text>
+                        <text x="320" y="276" text-anchor="middle" class="dg-ts">hook：只改一筆 tool 輸出</text>
+                        <text x="522" y="276" text-anchor="middle" class="dg-ts">MCP：agent 呼叫才跑</text>
                       </svg>
                     </div>
-                    <figcaption>上方箭頭是送給 model 的 request，下方箭頭是 model 的回答。兩個方向分別由 proxy 和 skill 負責；hook 和 MCP 都碰不到整個 request。</figcaption>
+                    <figcaption>Caveman 在哪裡壓 token？送去的 request 由 proxy 壓，786 行變 1 行。寫回來的回答由 skill 壓，短 65%。Hook 和 MCP 做不到前一件：hook 只改得到 request 裡的一筆 tool 輸出，MCP 要 agent 呼叫才跑；只有 proxy 每個 request 都整個經過。</figcaption>
                   </figure>
               <p id="i2-2"><b>輸出方向容易做。</b>輸出方向只要一份 skill：</p>
               <figure class="file"><figcaption>skills/caveman/SKILL.md（p.20）</figcaption><pre><code>---
@@ -1726,52 +1727,53 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                   <p>為什麼一定要 proxy？Hook 綁在事件上。改 tool 的 hook 在單一 tool call 前後執行，只能改那一個 tool 的輸入或輸出，碰不到整個 request。所以一筆 tool 輸出，PostToolUse hook 換得掉（2.2）；system prompt 和之前的對話，它換不掉。MCP 只在 agent 呼叫時執行，也改不了 context。只有夾在中間的 proxy，每個 request 都經過（p.24）。自己寫 harness 的話，也能在 harness 裡改。</p>
                   <figure class="diagram">
                     <div class="scroll">
-                      <svg viewBox="0 0 640 292" role="img" aria-label="Caveman 的兩個壓縮方向。左邊是 coding agent，tool 輸出了 786 行 log；agent 裡的 hook 只能改單一 tool 的輸入輸出。中間是本機 proxy，每個 request 都經過它，依類型壓縮：log 留錯誤和頭尾，diff 留檔頭和改動行。右邊是 model provider。上方的輸入方向：786 行的 request 經過 proxy，變成 1 行才送到 model。下方的輸出方向：context 裡有 response skill，model 的回答寫得短，output 少 65%。底部說明：proxy 每個 request 都經過，能改整個 context；MCP 只在 agent 呼叫時執行，例如用 caveman_retrieve 取回原文。">
+                      <svg viewBox="0 0 640 304" role="img" aria-label="Caveman 在哪裡壓 token。左邊是 coding agent，裡面有 786 行的 tool 輸出，和讓回答寫短的 skill，skill 跟著 request 送出。① agent 送出 786 行的 request 到中間的本機 proxy；② proxy 依內容類型壓縮，log 留錯誤和頭尾，diff 留檔頭和改動行，壓成 1 行送到右邊的 model provider；③ model 寫回答送回 agent，因為 skill 在 request 裡，回答短 65%。底部比較誰碰得到整個 request：proxy 每個都經過；hook 只改一筆 tool 輸出；MCP 要 agent 呼叫才跑。">
                         <defs>
                           <marker id="tk3-2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-ink"/></marker>
                           <marker id="tk3-2-aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-accent"/></marker>
                         </defs>
-                        <text x="320" y="22" text-anchor="middle" class="dg-ta">輸入方向：proxy 改 model 讀到的</text>
+                        <text x="320" y="22" text-anchor="middle" class="dg-ta">①② 送去的 request：model 讀的（input）</text>
 
-                        <rect x="16" y="36" width="160" height="134" rx="5" class="dg-box"/>
-                        <text x="96" y="56" text-anchor="middle" class="dg-tb">Coding agent</text>
-                        <text x="96" y="72" text-anchor="middle" class="dg-ts">例如 Claude Code</text>
-                        <rect x="28" y="84" width="136" height="26" rx="3" class="dg-box-soft"/>
-                        <text x="96" y="101" text-anchor="middle" class="dg-ts">tool 輸出 786 行</text>
-                        <rect x="28" y="120" width="136" height="42" rx="3" class="dg-frame"/>
-                        <text x="96" y="137" text-anchor="middle" class="dg-ts">hook 只能改</text>
-                        <text x="96" y="153" text-anchor="middle" class="dg-ts">單一 tool 的輸入輸出</text>
+                        <rect x="16" y="36" width="150" height="134" rx="5" class="dg-box"/>
+                        <text x="91" y="56" text-anchor="middle" class="dg-tb">Coding agent</text>
+                        <text x="91" y="72" text-anchor="middle" class="dg-ts">例如 Claude Code</text>
+                        <rect x="26" y="84" width="130" height="26" rx="3" class="dg-box-soft"/>
+                        <text x="91" y="101" text-anchor="middle" class="dg-ts">tool 輸出 786 行</text>
+                        <rect x="26" y="118" width="130" height="42" rx="3" class="dg-box-soft"/>
+                        <text x="91" y="135" text-anchor="middle" class="dg-ts">skill：回答寫短</text>
+                        <text x="91" y="151" text-anchor="middle" class="dg-ts">跟著 request 送出</text>
 
-                        <rect x="240" y="36" width="160" height="134" rx="5" class="dg-box-accent"/>
+                        <rect x="245" y="36" width="150" height="134" rx="5" class="dg-box-accent"/>
                         <text x="320" y="56" text-anchor="middle" class="dg-tb">本機 proxy</text>
                         <text x="320" y="72" text-anchor="middle" class="dg-ts">Caveman engine</text>
-                        <text x="320" y="100" text-anchor="middle" class="dg-t">每個 request 都經過</text>
-                        <text x="320" y="122" text-anchor="middle" class="dg-ts">log：留錯誤、頭尾</text>
-                        <text x="320" y="140" text-anchor="middle" class="dg-ts">diff：留檔頭、改動行</text>
-                        <text x="320" y="158" text-anchor="middle" class="dg-ts">依內容類型壓縮</text>
+                        <text x="320" y="104" text-anchor="middle" class="dg-t">依內容類型壓縮</text>
+                        <text x="320" y="128" text-anchor="middle" class="dg-ts">log：留錯誤、頭尾</text>
+                        <text x="320" y="146" text-anchor="middle" class="dg-ts">diff：留檔頭、改動行</text>
 
-                        <rect x="464" y="36" width="160" height="134" rx="5" class="dg-box"/>
-                        <text x="544" y="56" text-anchor="middle" class="dg-tb">Model provider</text>
-                        <text x="544" y="72" text-anchor="middle" class="dg-ts">LLM API</text>
-                        <rect x="476" y="84" width="136" height="42" rx="3" class="dg-box-soft"/>
-                        <text x="544" y="101" text-anchor="middle" class="dg-ts">context 裡有</text>
-                        <text x="544" y="117" text-anchor="middle" class="dg-ts">response skill</text>
-                        <text x="544" y="152" text-anchor="middle" class="dg-ta">讀得少、寫得短</text>
+                        <rect x="474" y="36" width="150" height="134" rx="5" class="dg-box"/>
+                        <text x="549" y="56" text-anchor="middle" class="dg-tb">Model provider</text>
+                        <text x="549" y="72" text-anchor="middle" class="dg-ts">LLM API</text>
+                        <text x="549" y="112" text-anchor="middle" class="dg-t">讀 1 行</text>
+                        <text x="549" y="136" text-anchor="middle" class="dg-t">回答寫得短</text>
 
-                        <line x1="178" y1="97" x2="238" y2="97" class="dg-line" marker-end="url(#tk3-2-ah)"/>
-                        <text x="208" y="89" text-anchor="middle" class="dg-ts">786 行</text>
-                        <line x1="402" y1="97" x2="462" y2="97" class="dg-accent" marker-end="url(#tk3-2-aha)"/>
-                        <text x="432" y="89" text-anchor="middle" class="dg-ta">1 行</text>
+                        <text x="205" y="80" text-anchor="middle" class="dg-ts">① request</text>
+                        <text x="205" y="94" text-anchor="middle" class="dg-ts">786 行</text>
+                        <line x1="168" y1="104" x2="243" y2="104" class="dg-line" marker-end="url(#tk3-2-ah)"/>
+                        <text x="434" y="80" text-anchor="middle" class="dg-ta">② 壓成</text>
+                        <text x="434" y="94" text-anchor="middle" class="dg-ta">1 行</text>
+                        <line x1="397" y1="104" x2="472" y2="104" class="dg-accent" marker-end="url(#tk3-2-aha)"/>
 
-                        <path d="M544,170 V192 H96 V174" class="dg-accent" marker-end="url(#tk3-2-aha)"/>
-                        <text x="320" y="212" text-anchor="middle" class="dg-ta">輸出方向：skill 讓 model 寫得短（output 少 65%）</text>
+                        <path d="M549,170 V190 H91 V174" class="dg-accent" marker-end="url(#tk3-2-aha)"/>
+                        <text x="320" y="210" text-anchor="middle" class="dg-ta">③ 回答送回 agent：model 寫的（output），因為有 skill，短 65%</text>
 
-                        <rect x="16" y="228" width="608" height="54" rx="4" class="dg-box-soft"/>
-                        <text x="320" y="250" text-anchor="middle" class="dg-t">Proxy：每個 request 都經過，能改整個 context</text>
-                        <text x="320" y="270" text-anchor="middle" class="dg-ts">MCP：agent 呼叫才執行，例如用 caveman_retrieve 取回原文</text>
+                        <rect x="16" y="226" width="608" height="68" rx="4" class="dg-box-soft"/>
+                        <text x="320" y="248" text-anchor="middle" class="dg-tb">誰碰得到整個 request？</text>
+                        <text x="118" y="276" text-anchor="middle" class="dg-t">proxy：每個都經過 ✓</text>
+                        <text x="320" y="276" text-anchor="middle" class="dg-ts">hook：只改一筆 tool 輸出</text>
+                        <text x="522" y="276" text-anchor="middle" class="dg-ts">MCP：agent 呼叫才跑</text>
                       </svg>
                     </div>
-                    <figcaption>上方箭頭是送給 model 的 request，下方箭頭是 model 的回答。兩個方向分別由 proxy 和 skill 負責；hook 和 MCP 都碰不到整個 request。</figcaption>
+                    <figcaption>Caveman 在哪裡壓 token？送去的 request 由 proxy 壓，786 行變 1 行。寫回來的回答由 skill 壓，短 65%。Hook 和 MCP 做不到前一件：hook 只改得到 request 裡的一筆 tool 輸出，MCP 要 agent 呼叫才跑；只有 proxy 每個 request 都整個經過。</figcaption>
                   </figure>
                   <p class="tk-h">背景補充</p>
                   <p>Proxy 是網路系統的老做法：在兩端之間插一層，兩端都不用改。公司常用的 LLM gateway 也是這種 proxy，用來集中管 API key、用量和紀錄。Claude Code 可以用環境變數 <code>ANTHROPIC_BASE_URL</code> 把 request 送到 gateway 或 proxy。</p>
