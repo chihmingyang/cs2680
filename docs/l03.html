@@ -59,8 +59,8 @@
       <li><span class="k">頁數</span>72</li>
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
-      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 13 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 85 分鐘</span></li>
+      <li><span class="k">註、深入與延伸</span><span class="deep-time">約 15 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 90 分鐘</span></li>
     </ul>
   </header>
 
@@ -265,7 +265,7 @@
         <nav class="map" aria-label="核心觀念的章節">
           <p class="map-g">A · 單一 agent：兩個 plugin 案例</p>
           <a class="map-row" href="#i1"><span class="map-no">2.1</span><span class="map-t">Superpowers<small>model 不變，換一套 workflow，結果就不同</small></span><span class="map-m" data-chapter="i1">p.5–14 · 約 7 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2.2</span><span class="map-t">Caveman<small>token 要雙向壓縮，輸入方向只有 proxy 管得到</small></span><span class="map-m" data-chapter="i2">p.15–25 · 約 4 分</span></a>
+          <a class="map-row" href="#i2"><span class="map-no">2.2</span><span class="map-t">Caveman<small>token 要雙向壓縮，輸入方向只有 proxy 管得到</small></span><span class="map-m" data-chapter="i2">p.15–25 · 約 5 分</span></a>
           <p class="map-g">B · 多個 agent：三個擴展軸</p>
           <a class="map-row" href="#i3"><span class="map-no">2.3</span><span class="map-t">平行與 subagent<small>各買到一樣東西，也各有代價</small></span><span class="map-m" data-chapter="i3">p.26–37 · 約 5 分</span></a>
           <a class="map-row" href="#i4"><span class="map-no">2.4</span><span class="map-t">Agent team 與 dynamic workflow<small>需要討論才用 team，對話協調不了才用 script</small></span><span class="map-m" data-chapter="i4">p.38–43 · 約 2 分</span></a>
@@ -709,7 +709,7 @@ description: Compressed mode
 Preserve: technical terms, commands, paths, code, errors, numbers, units, negation
 Remove: filler, repetition, pleasantries, hedging
 Short sentences. Active voice.</code></pre></figure>
-              <p>Slide 的數字是 <strong>output token 少 65%</strong>，但 skill 本身也佔 input，所以整個 session 省的比例小一些。這份 skill 只改 agent 怎麼對你說話，沒有改它讀到的東西。</p>
+              <p>Slide 的數字是 <strong>output token 少 65%</strong>，但 skill 本身也佔 input，所以整個 session 省的比例小一些。這 65% 的對照組也沒有叫 model 寫短；換成一句 <code>Answer concisely.</code> 當對照，skill 多省的就少很多，見本文延伸〈<a href="#x3">回答寫短真的好嗎</a>〉。這份 skill 只改 agent 怎麼對你說話，沒有改它讀到的東西。</p>
               <p id="i2-3"><b>Command 讓你手動控制程度。</b>Slide p.21 列了它的指令：<code>/caveman</code> 開預設的 full 模式，<code>/caveman ultra</code> 壓到最緊，<code>/caveman off</code> 關掉；另外有 <code>/caveman-commit</code> 寫簡短的 commit 訊息、<code>/caveman-review</code> 寫簡短的 review、<code>/caveman-stats</code> 看這個 session 省了多少 token。Command 的定義也是一份 Markdown：</p>
               <figure class="file"><figcaption>commands/caveman.md（p.21）</figcaption><pre><code>---
 description: Activate Caveman mode
@@ -824,6 +824,64 @@ return fmt.Sprintf("… %d lines elided (caveman) …", n)</code></pre></figure>
   }
 }</code></pre></figure>
                     <p>這也有代價。API 位址指到 <code>api.anthropic.com</code> 以外的主機時，Claude Code 會關掉幾個功能。依 2026-10-28 的環境變數文件，Remote Control 從 v2.1.196 起不能用，MCP tool search 預設關閉。依 Caveman 原始碼的註解，1M 的 context window 也會退回 200k。上面的後兩行就是補回這兩項；Remote Control 補不回來。</p>
+                  </div>
+                </details>
+              </div>
+              <div class="exlist deeplist">
+                <details class="ex deep" id="x3">
+                  <summary>本文延伸｜回答寫短真的好嗎：一篇評論對照之後的量測<span>不是 slide 的內容</span></summary>
+                  <div class="exbody prose">
+                    <p>林承慶在方格子寫過一篇〈<a href="https://vocus.cc/article/6a10254ffd897800017eaac1" target="_blank" rel="noopener">Caveman: 簡化 token 真的好嗎?</a>〉（2026-06-04）。他讀了 Hacker News 與 Reddit 的討論、一篇 benchmark 部落格和一篇論文，對本章輸出方向的 skill 提了幾個提醒，最後還提了一個他自己沒試過的想法。下表先把前四個提醒對回原始來源，再補上之後的量測（2026-10-29 查證）：</p>
+                    <div class="table-wrap"><table>
+                      <thead><tr><th>提醒</th><th>根據</th><th>本文對照<br>（2026-10）</th></tr></thead>
+                      <tbody>
+                        <tr><td><b>Model 要夠強</b><br>弱 model 寫短，品質會掉</td><td>Renze 與 Guven（2024）：1,000 題選擇題，在要求逐步推理的提示後面多加一句 <code>Be concise.</code>，GPT-3.5 與 GPT-4 的回答都短約 49%，整體正確率沒有顯著差異，只有數學題例外（下一列）。</td><td>JetBrains（2026-07）用 Claude Code 與 Sonnet 5 跑 86 個任務，每次回答都強制開 Caveman：分數和不開時分不出差別（p = 0.82）。</td></tr>
+                        <tr><td><b>推導題別壓</b><br>數學題壓了會錯</td><td>同一篇：GPT-3.5 的數學題正確率掉 27.69%，GPT-4 沒有顯著下降。</td><td>當年的 model 把推理寫在回答裡，壓回答就壓到推理。開了 thinking 的 model 先在 thinking 裡推理再回答，Caveman 的文件也說 skill 不壓 thinking token。</td></tr>
+                        <tr><td><b>扮演是第二個任務</b><br>演穴居人會分心</td><td>Hacker News 等討論串的推論，沒有量測。</td><td>v4.0.1 的 skill 只要穴居人的簡短語氣：不准為了像穴居人加字，寫法沒有比較短就用一般寫法。</td></tr>
+                        <tr><td><b>6 行就夠</b><br>不必裝整套 skill</td><td>Guzik（2026-04-08）：85 token 的 <a href="https://github.com/kuba-guzik/caveman-micro" target="_blank" rel="noopener">6 行版</a>和 552 token 的完整 skill，在 Sonnet 上一樣短，在 Opus 上更短，答案都對。</td><td>兩版都只比對照組的 <code>Be concise</code> 再少 9–21%；Caveman 自己的測試也一樣（下表）。</td></tr>
+                      </tbody>
+                    </table></div>
+                    <p>第 4 列點出一件事：省多少，要看跟誰比。Slide 的 65% 出自 Caveman 2026-04-05 的 README：10 個問題逐題算省了多少，再取平均，範圍 22%–87%。對照組的 system prompt 是 <code>You are a helpful assistant.</code>，沒有叫 model 寫短。Caveman 後來加了一組只寫 <code>Answer concisely.</code> 的對照，結果如下：</p>
+                    <div class="table-wrap"><table>
+                      <thead><tr><th>System prompt</th><th>10 題的<br>output token</th><th>比不加<br>少多少</th></tr></thead>
+                      <tbody>
+                        <tr><td>不加</td><td>6,983</td><td>（基準）</td></tr>
+                        <tr><td><code>Answer concisely.</code></td><td>4,334</td><td>37.9%</td></tr>
+                        <tr><td>同上 ＋ caveman 的 skill</td><td>4,119</td><td>41.0%</td></tr>
+                        <tr><td>同上 ＋ ultracave 的 skill（slide 的 <code>/caveman ultra</code>）</td><td>2,693</td><td>61.4%</td></tr>
+                      </tbody>
+                    </table></div>
+                    <p>本文的整理，依 Caveman v4.0.1 的 README 與 <code>evals/README.md</code>：claude-opus-5-5，v3.1.0 的規則，每題跑一次，只量長度；第 3、4 列的 skill 都疊在 <code>Answer concisely.</code> 上面。</p>
+                    <p>省下的 token 大部分來自那一句。按總數算，caveman 的 skill 只再少 5%，repo 寫的中位數是 3%；ultracave 再少 38%。到了 agent 任務省得更少。JetBrains 的實測裡 output 只少 8.5%，因為 agent 的輸出大多是 code、diff、tool call 和錯誤訊息，Caveman 原樣保留，能壓的只剩 tool call 之間的幾句話。</p>
+                    <p>文章最後的提醒最實用：最花 token 的是對話歷史和 skill 這些輸入，要省錢先從輸入省。L8 的資料也這樣說。全班 Assignment 1 的 Claude Code 資料裡，97.6% 的 token 是 cache read；用 L8 <a href="l08.html#i1-4">2.1 的典型比例</a>算，<strong>output 只佔花費約 8%</strong>。所以 output 少 65%，總花費也只少約 5%；照 JetBrains 的 8.5% 算，不到 1%。Caveman 的 README 也說，JetBrains 這個結果是它後來加做輸入壓縮（本章的 proxy）的原因之一。</p>
+                    <p>文章結尾的想法往反方向走：model 是字詞接龍器，猜得回文法和連接詞，所以 skill 或輸入只寫關鍵名詞和動詞，效果可能更好。Skill 這樣寫的效果，本文沒找到量測；但有一篇論文測了相近的事。Adobe Research 的 <a href="https://arxiv.org/abs/2606.24083" target="_blank" rel="noopener">CAVEWOMAN</a>（2026-06-23）用程式把題目壓成電報體，刪掉冠詞、介系詞、連接詞這類字。結果 input 少了，model 卻答得更長，五個資料集平均，總花費變成原本的 1.15 倍；壓得越狠，正確率掉得越多。</p>
+                    <p>Caveman 因此規定不改寫使用者的 prompt。它的 <code>/caveman-compress</code> 會壓 <code>CLAUDE.md</code> 這類記憶檔，但改寫後用程式檢查標題、code 與路徑都還在；repo 也只公布 token 數，沒有宣稱品質不變。</p>
+                    <p>兩個方向放在一起看，界線就清楚了：讀的人猜得回來的字可以刪，例如客套、hedging、重複和冠詞。猜不回來的字要留，例如 not、only、except、數字，以及交代因果的 so、because。文章附的 <a href="https://github.com/wilpel/caveman-compression" target="_blank" rel="noopener">caveman-compression</a> 把 because、therefore 也當成猜得到的字刪掉；Caveman 現在的 skill 則寫明 not、never、no、only、except 一律保留。下面是同一個回答的三種寫法：</p>
+                    <figure class="file"><figcaption>同一個回答，三種寫法（本文補的例子，用 p.16 的測試失敗）</figcaption><pre><code>&gt; Run the tests and explain the failure.
+
+# 1 一般寫法：48 個英文字
+Sure! I ran the test suite, and it looks like 3 tests are failing.
+The root cause is basically a connection timeout to 10.0.3.8:443.
+The retry logic at client.ts:88 only retries on 5xx responses,
+so a timeout is never retried. I'd suggest adding ETIMEDOUT to
+the retryable errors.
+
+# 2 刪掉猜得回來的字：客套、hedging、填充詞、冠詞（26 字）
+3 tests fail. Root cause: connect timeout to 10.0.3.8:443.
+Retry logic at client.ts:88 retries only 5xx, so timeout never
+retried. Fix: add ETIMEDOUT to retryable errors.
+
+# 3 刪過頭：only、so、never 也刪了（10 字）
+3 tests fail. Timeout 10.0.3.8:443. client.ts:88 retry 5xx.
+Add ETIMEDOUT.     ← 只重試 5xx 嗎？timeout 為什麼不重試？加在哪裡？</code></pre></figure>
+                    <p>第 3 種最短，但少了 only、so、never，讀的人分不出 retry 是只管 5xx，還是 timeout 也管，也看不出測試為什麼失敗。作者覺得 Caveman 用在人身上可能更合適，但人讀也有同一條界線。這個站的文章原本照 ASD-STE100（飛機維修手冊用的簡化英文規範）寫，一句只講一件事；Caveman 現在的 skill 也以它為底線。但句子切短以後，「所以」「但是」常常跟著消失，讀者得自己把因果接回去，所以本站在 2026-10 改成推理段落可以寫長句。</p>
+                    <p>本文的判斷（2026-10）：</p>
+                    <ul>
+                      <li><b>先加一句。</b>在 system prompt 或 <code>CLAUDE.md</code> 加一句 <code>Answer concisely.</code>，回答寫短的好處就拿到大半。還要更短再裝 skill，並在自己的任務上開、關各跑幾次比較。</li>
+                      <li><b>先看帳單。</b>花費的大宗是 input 與 cache read，所以壓輸入（本章的 proxy、L4 的 admission）比壓輸出有效。</li>
+                      <li><b>推理別壓。</b>弱 model、沒開 thinking、要逐步推導的任務，回答本身就是推理，不要壓。</li>
+                      <li><b>指令別壓。</b>要壓輸入，用能還原、能檢查的程式規則；skill、題目和規則本身不要改寫成電報體。</li>
+                    </ul>
                   </div>
                 </details>
               </div>
@@ -1069,7 +1127,7 @@ $ claude --agent code-reviewer</code></pre></figure>
               <p id="i4-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x3">
+                <details class="ex deep" id="x4">
                   <summary>本文延伸｜協調開銷決定平行加速的上限<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1155,7 +1213,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
               <p>下面的本文延伸和 2.4 的本文延伸會再談其中兩項。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x4">
+                <details class="ex deep" id="x5">
                   <summary>本文延伸｜任務切不開，加 agent 也沒用<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1339,7 +1397,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
               <p>對照這堂課：Superpowers 和 Caveman 在第三層把一個 agent 做好，A 到 D 是第四層，dynamic workflow 和 C compiler 案例踩進了第五層。OpenAI 的員工整體仍在階梯的下半部。這些數字怎麼讀，下面第二個本文延伸專門談。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x5">
+                <details class="ex deep" id="x6">
                   <summary>本文延伸｜人的角色，變成規劃者和 reviewer<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1350,7 +1408,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
                 </details>
               </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x6">
+                <details class="ex deep" id="x7">
                   <summary>本文延伸｜讀 Codex 與 OpenAI 的數字要小心<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
 
@@ -1635,7 +1693,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
               <p data-inline>最後一列值得多看。這個 repo 的 <code>.out-of-scope/</code> 目錄記錄作者拒絕過的功能，理由都指向同一個原則：skill 是跨 harness 的純文字，harness 專屬的事不做。有人要求在 skill 裡擋 subagent 遞迴，他說上限該由 harness 設，一處設定對所有 skill 生效；寫進一個 skill 的提醒只管那個 skill，還每次花 token。有人要求 grilling 改用 Claude Code 的 AskUserQuestion 介面，他說每個 harness 的問答工具不同，而且選單會把開放的問題變成選擇題；要用就寫在你自己的 <code>CLAUDE.md</code>。三個 plugin 因此排成一條線：mattpocock/skills 只用 skill，Superpowers 加 hook，Caveman 再加 MCP 和 proxy。<strong>往右走，能保證的事越多，也越綁在一個 harness 上</strong>。Superpowers 後來支援十幾個 harness，代價是每個都要各自接一次 bootstrap；Antigravity 沒有 session hook，只能退回靠 description，hook 的保證也就沒了。放回 2.7 的階梯，user-invoked skill 加 <code>implement-spec</code> 站在第三到第四層；<code>retro</code> 做的是 2.7 說的人的新角色：不寫程式，改環境。</p>
             </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x7">
+                <details class="ex deep" id="x8">
                   <summary>本文延伸｜GLOSSARY.md 和 Caveman 省的是不同的 token<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
                     <p>Caveman 壓的是內容：log、diff、tool 輸出進 context 之前先截短，原文留在外面。這是 L4 的 admission 和 offloading，每一圈都省，而且省的是輸入方向的大宗（2.2 算過，input 約是 output 的 14 倍）。</p>
@@ -1644,7 +1702,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 </details>
               </div>
               <div class="exlist deeplist">
-                <details class="ex deep" id="x8">
+                <details class="ex deep" id="x9">
                   <summary>本文延伸｜沒有 hook，拿什麼保證 skill 會用到<span>不是 slide 的內容</span></summary>
                   <div class="exbody prose">
                     <p>2.1 的教訓是：skill 裝了，model 不一定用。Superpowers 用 hook 補這個洞。mattpocock/skills 沒有 hook，它靠三件事。入口是 user-invoked，你打了就一定載入，不靠 model 判斷；這等於把「要不要走流程」這個決定交回給人。紀律是 model-invoked，靠 description 裡的觸發詞讓 model 自己挑，這一層沒有保證，和 2.1 的狀況一樣。流程裡的 skill 用「Call the Skill tool with "tdd"」這種句子點名下一個，作者說寫成 tool 呼叫比寫 <code>/tdd</code> 命中率高。</p>
@@ -1900,7 +1958,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                     <li>Subagent ＝ 新的 context ＋ 只交回摘要 → 中間產物不進主對話，之後每一圈都省。</li>
                     <li>摘要是有損壓縮 → 委派時指定回報格式；要頻繁來回討論的工作留在主對話（p.37）。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">平行與 subagent：各買到一樣東西，也各有代價</a>〉的〈<a href="#t1">Git worktree</a>〉與〈<a href="#t2">Context 隔離與摘要</a>〉兩段、〈<a href="#i4">Agent team 與 dynamic workflow</a>〉、本文延伸〈<a href="#x3">協調開銷決定平行加速的上限</a>〉、L4〈<a href="l04.html#t6">Lost in the middle</a>〉。<a href="#q1">進階題第 1 題</a>替任務選擴展方式。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i3">平行與 subagent：各買到一樣東西，也各有代價</a>〉的〈<a href="#t1">Git worktree</a>〉與〈<a href="#t2">Context 隔離與摘要</a>〉兩段、〈<a href="#i4">Agent team 與 dynamic workflow</a>〉、本文延伸〈<a href="#x4">協調開銷決定平行加速的上限</a>〉、L4〈<a href="l04.html#t6">Lost in the middle</a>〉。<a href="#q1">進階題第 1 題</a>替任務選擴展方式。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
@@ -2031,7 +2089,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                     <li>不確定性早就存在；新的部分集中在產生程式的階段，程式寫好後通常是確定的。</li>
                     <li>不追求 agent 確定 → 讓周邊系統可靠（可驗證的終點、測試、hook），自主程度配合風險。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉（含〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段）、本文延伸〈<a href="#x5">人的角色，變成規劃者和 reviewer</a>〉、L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉、L2〈<a href="l02.html#x4">自主程度要配合風險</a>〉。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉（含〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段）、本文延伸〈<a href="#x6">人的角色，變成規劃者和 reviewer</a>〉、L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉、L2〈<a href="l02.html#x4">自主程度要配合風險</a>〉。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>
@@ -2097,7 +2155,7 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                 <details><summary>參考觀點與追問</summary><div class="hint">
                   <ul>
                     <li>Token：每個 session 1.07M。Output 少 65% 省 45.5k，占 4.3%。Input 少 40% 省 400k，占 37.4%。以 token 數看，輸入方向重要約 9 倍，這是 p.17 的論點。</li>
-                    <li>費用：每個 session 約 $5.00 input ＋ $1.75 output ＝ $6.75。Output 少 65% 省 $1.14（16.9%）；input 少 40% 省 $2.00（29.6%）。Output 單價高，所以 response skill 的效果比 token 數顯示的好。真實帳單還要算 cache：input 大多是 cache hit，單價更低，proxy 省的錢會再縮小。</li>
+                    <li>費用：每個 session 約 $5.00 input ＋ $1.75 output ＝ $6.75。Output 少 65% 省 $1.14（16.9%）；input 少 40% 省 $2.00（29.6%）。Output 單價高，所以 response skill 的效果比 token 數顯示的好。真實帳單還要算 cache：input 大多是 cache hit，單價更低，proxy 省的錢會再縮小。情境的 65% 也要打折，因為它的對照組沒有叫 model 寫短：和一句 <code>Answer concisely.</code> 比，Caveman 的 skill 只再少約 5%，agent 任務的實測 output 也只少 8.5%（見 2.2 的本文延伸〈<a href="#x3">回答寫短真的好嗎</a>〉）。</li>
                     <li>風險一，語意翻轉：log 裡的「not found」壓成「found」；保留清單才特別列出否定詞（p.20）。風險二，刪掉 debug 需要的細節：proxy 截掉 stack trace 的中段，agent 修錯層。Caveman 用 <code>caveman_retrieve</code> 取回原文補救（p.23），但 agent 要知道該取回。風險三，diff 的行號或 hunk 標頭改變，agent 改錯位置。</li>
                     <li>風險四，多一個不確定來源：壓縮本身是程式（確定），但它改變了 model 的輸入，同一個任務的結果變得更難重現（p.57）。風險五，安全：proxy 讀得到所有原始碼、token、secret。自架的 proxy 要管好；第三方的 proxy 等於多一個供應商拿到你的程式碼。</li>
                     <li>測法：固定一組任務（例如 30 個有測試的 issue），開壓縮和不開各跑幾次，比較成功率、步數、費用。只省錢但成功率掉，就不划算：失敗的 run 要重跑，重跑的 token 全是浪費。這是 L7 的評估方法，也是 L8「一次只改一件事」的原則。</li>
@@ -2287,7 +2345,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Karpathy 在 2017 年提出：神經網路的權重是一種新的軟體。人不再逐行寫程式，改成給目標與資料，由 optimizer 在程式空間裡搜出程式。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.53 的 1.0／2.0／3.0 表格，2.0 那一列（程式是權重、用資料加優化產生）就是這篇。本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同：這篇分「程式是什麼」，講者分「人寫什麼」。〈<a href="#i6">Programming 3.0：接受不確定性</a>〉談的不確定性，這篇在 2017 年已經寫到。本文延伸〈<a href="#x5">人的角色，變成規劃者和 reviewer</a>〉問人做什麼；這篇的答案是：多數人整理資料集，少數人維護訓練基礎設施。</p>
+            <p>Slides p.53 的 1.0／2.0／3.0 表格，2.0 那一列（程式是權重、用資料加優化產生）就是這篇。本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同：這篇分「程式是什麼」，講者分「人寫什麼」。〈<a href="#i6">Programming 3.0：接受不確定性</a>〉談的不確定性，這篇在 2017 年已經寫到。本文延伸〈<a href="#x6">人的角色，變成規劃者和 reviewer</a>〉問人做什麼；這篇的答案是：多數人整理資料集，少數人維護訓練基礎設施。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>2.0 的「原始碼」是資料集加網路架構，訓練就是 compile。</b>1.0 由人寫 Python 或 C++，每一行把程式釘在程式空間的一個點。2.0 由人給目標與架構骨架，backprop 與 SGD 在這個子空間裡搜尋。</li>
@@ -2318,7 +2376,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 40 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Software 3.0 用英文 prompt 寫程式。LLM 會犯錯，所以現在該蓋帶 autonomy slider 的部分自主產品，不是全自主 agent。人的工作變成讓「生成、驗證」迴圈轉得快。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.53 直接引用這支影片的 1.0／2.0／3.0 分法；本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同。〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉的結論「自主程度配合風險」（p.59），就是 Karpathy 的 autonomy slider。本文延伸〈<a href="#x5">人的角色，變成規劃者和 reviewer</a>〉接的是他的生成與驗證迴圈。</p>
+            <p>Slides p.53 直接引用這支影片的 1.0／2.0／3.0 分法；本頁 2.6 的〈<a href="#t5">Software 1.0 / 2.0 / 3.0</a>〉一段說明它和講者 p.52 的分法不同。〈<a href="#i6">Programming 3.0：接受不確定性，讓周邊系統可靠</a>〉的結論「自主程度配合風險」（p.59），就是 Karpathy 的 autonomy slider。本文延伸〈<a href="#x6">人的角色，變成規劃者和 reviewer</a>〉接的是他的生成與驗證迴圈。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>軟體 70 年沒大變，最近幾年變了兩次。</b>1.0 是手寫程式碼，2.0 是神經網路權重，3.0 是給 LLM 的 prompt。Tesla Autopilot 裡的 C++ 逐步刪除，功能移進神經網路；他預期 prompt 會再吃掉一部分。</li>
@@ -2374,7 +2432,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 10 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>Agent team 是好幾個完整的 Claude Code session 一起做事：一個 lead 派工，teammate 認領共用任務清單上的工作，彼此直接傳訊。文件自己標明 experimental、預設關閉、token 隨人數線性增加。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.38–42 取自這份文件：p.38 的四種適用情境與警語、p.39 的四個組件、p.41 的 subagent 對照表。本頁 2.4 的〈<a href="#i4-1">C Agent team</a>〉一段的選擇規則「需要討論才用 team」，就是文件的結論。本文延伸〈<a href="#x3">協調開銷決定平行加速的上限</a>〉講的 token 線性成長，文件寫成建議：先開 3 到 5 個。2.5 的〈<a href="#t3">Lock file 認領</a>〉做法這裡也用：teammate 認領任務時靠 file locking 防止搶同一題。</p>
+            <p>Slides p.38–42 取自這份文件：p.38 的四種適用情境與警語、p.39 的四個組件、p.41 的 subagent 對照表。本頁 2.4 的〈<a href="#i4-1">C Agent team</a>〉一段的選擇規則「需要討論才用 team」，就是文件的結論。本文延伸〈<a href="#x4">協調開銷決定平行加速的上限</a>〉講的 token 線性成長，文件寫成建議：先開 3 到 5 個。2.5 的〈<a href="#t3">Lock file 認領</a>〉做法這裡也用：teammate 認領任務時靠 file locking 防止搶同一題。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>和 subagent 差在三件事。</b>Subagent 只把結果交回呼叫者，主 agent 管所有工作。Teammate 是獨立的 session，彼此直接傳訊，靠共用任務清單自我協調。所以 subagent 適合只要結果的任務，team 適合需要討論的工作，代價是每個 teammate 都是一個完整的 Claude 實例。</li>
@@ -2416,7 +2474,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>16 個 Claude agent 平行跑兩週，沒有人介入，用 Rust 從零寫出能編譯 Linux kernel 的 C compiler。成立的條件有兩個：測試接近完美，失敗訊號能切成很多小塊。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>Slides p.47–50 直接取材於這篇，見〈<a href="#i5">長時間執行：agent 需要一個能檢查的終點</a>〉；lock file 認領對應本頁 2.5 的〈<a href="#t3">用 git 當鎖</a>〉一段（p.49）。Kernel 卡關的故事是本文延伸〈<a href="#x4">任務切不開，加 agent 也沒用</a>〉的來源（p.50）。Slides 沒有講的是成本數字、agent 的分工角色，以及作者對「測試通過」的保留態度。</p>
+            <p>Slides p.47–50 直接取材於這篇，見〈<a href="#i5">長時間執行：agent 需要一個能檢查的終點</a>〉；lock file 認領對應本頁 2.5 的〈<a href="#t3">用 git 當鎖</a>〉一段（p.49）。Kernel 卡關的故事是本文延伸〈<a href="#x5">任務切不開，加 agent 也沒用</a>〉的來源（p.50）。Slides 沒有講的是成本數字、agent 的分工角色，以及作者對「測試通過」的保留態度。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>規模與成本。</b>16 個 agent、將近 2,000 個 Claude Code session、兩週，model 是 Opus 4.6。API 成本略低於 20,000 美元；input 20 億 token，output 1.4 億 token。Compiler 約 100,000 行 Rust，過程中沒有網路。</li>
@@ -2455,7 +2513,7 @@ If CI is green: say so in one line and do nothing else.</code></pre></figure>
         <a class="prev" href="l02.html"><span>← 上一堂 L2</span>Claude Code 怎麼運作</a>
         <a class="next" href="l04.html"><span>下一堂 L4 →</span>Context 管理與 tool 設計</a>
       </nav>
-      <p class="fineprint">本文整理自 CS2680 L3 的 slides，加上名詞註、「本文延伸」、2.1 最後一節的 Superpowers 版本對照（依 2026-10-28 的 repo，v7.0.1）、2.2 本文延伸裡的 Caveman 實作（依 2026-10-25 的 repo，v4.0.1）與一章本文補的案例（2.8，依 mattpocock/skills 2026-10-27 的內容）；本文延伸與 2.8 是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的指令與設定依據 2026 年 10 月的官方文件。</p>
+      <p class="fineprint">本文整理自 CS2680 L3 的 slides，加上名詞註、「本文延伸」、2.1 最後一節的 Superpowers 版本對照（依 2026-10-28 的 repo，v7.0.1）、2.2 本文延伸裡的 Caveman 實作（依 2026-10-25 的 repo，v4.0.1）、對林承慶〈Caveman: 簡化 token 真的好嗎?〉（方格子，2026-06-04）一文的查證（2026-10-29）與一章本文補的案例（2.8，依 mattpocock/skills 2026-10-27 的內容）；本文延伸與 2.8 是本文的觀點，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。Claude Code 的指令與設定依據 2026 年 10 月的官方文件。</p>
     </div>
   </div>
 </main>
