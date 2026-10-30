@@ -977,8 +977,18 @@ If off, deactivate.</code></pre></figure>
               <p>這和 L4 講的 <a class="tm" href="#n-context">offloading</a> 是同一招：原文放在外面，context 裡只留一個 handle。問題是 <strong>MCP tool 只在 agent 呼叫它的時候才執行</strong>。Agent 跑完測試，786 行的輸出已經進了 context，它才有機會呼叫 <code>caveman_compress</code>，而且壓縮的結果只是再加一段，原文還在。</p>
               <p>Hook 只做得到一半。依 2026-10-28 的 hooks 文件，PostToolUse hook 可以用 <code>updatedToolOutput</code> 換掉任何 tool 的結果，所以 786 行的輸出能在進 context 之前就換成一行。但 hook 只改得到觸發它的那一筆，碰不到 system prompt、tool 定義和之前幾圈的對話；slide p.24 的註記也說，hook 不能透明地改寫整份送給 model 的 request。能改整份 request 的只有 proxy。</p>
               <p id="i3-5"><span class="anchor" id="t6"></span><b>Proxy：站在 agent 和 provider 中間的程式。</b>Claude Code 本來直接把 request 送到 Anthropic 的 API；裝了 Caveman 之後，你把 Claude Code 的 API 位址指到本機的 proxy，Claude Code 以為自己在跟 provider 講話，但每一個 request 都先經過 proxy，proxy 改完再轉送給 provider。因為每個 request 都經過它，它看得到整份 context，也改得了整份 context。Caveman 的 proxy 依內容類型壓縮（slide p.24）：</p>
-              
-              <p>Slide 把三者的差別寫成一句：proxy 攔截每一個 request，MCP 只在呼叫時執行；proxy 站在 agent 和 provider 之間，MCP 站在旁邊；proxy 改得了 context，MCP 改不了。最後一句註記值得記：<strong>用別人的 agent 才需要 proxy</strong>，自己寫 harness 的話，這件事在 harness 裡直接做就好，L4 的 <a class="tm" href="#n-context">admission</a> 就是這個位置。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>內容類型</th><th>留下什麼</th></tr></thead>
+                <tbody>
+                  <tr><td>Log</td><td>錯誤、stack trace、頭尾幾行</td></tr>
+                  <tr><td>程式碼</td><td>import、函式簽名、型別；本體視情況</td></tr>
+                  <tr><td>Diff</td><td>檔名、hunk 標頭、改動的行</td></tr>
+                  <tr><td>JSON</td><td>key、結構、含錯誤的子樹</td></tr>
+                  <tr><td>搜尋結果</td><td>高價值的那幾筆、診斷訊息</td></tr>
+                  <tr><td>HTML / 文字</td><td>標題、相關段落</td></tr>
+                </tbody>
+              </table></div>
+              <p>Slide 把三者的差別寫成一句：proxy 攔截每一個 request，MCP 只在呼叫時執行；proxy 站在 agent 和 provider 之間，MCP 站在旁邊；proxy 改得了 context，MCP 改不了。兩者也是兩支不同的程式（依 2026-10-25 的 repo）：<code>caveman-proxy</code> 是本機的背景 process，聽 <code>127.0.0.1:8787</code>。<code>caveman-mcp</code> 是 Claude Code 用 stdio 啟動的 MCP server。兩支共用同一套 engine 和存原文的 <code>~/.caveman/ccr.db</code>：proxy 負責壓，MCP 的 <code>caveman_retrieve</code> 負責取回。最後一句註記值得記：<strong>用別人的 agent 才需要 proxy</strong>，自己寫 harness 的話，這件事在 harness 裡直接做就好，L4 的 <a class="tm" href="#n-context">admission</a> 就是這個位置。</p>
               <p id="i3-6"><b>Proxy 用的是程式規則，不是 model。</b>讀到這裡容易以為壓縮都是 model 在做。本文對照 2026-10-25 的 repo（v4.0.1）：Caveman 有三處在壓縮，只有兩處用 model，量最大的輸入方向用的是程式規則：</p>
               <div class="table-wrap"><table>
                       <thead><tr><th>部分</th><th>誰壓</th><th>怎麼壓</th></tr></thead>
