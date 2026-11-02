@@ -1194,7 +1194,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
               </div>
               <figcaption>平行之後，總時間由誰決定？由最長的那條相依鏈決定，也就是深紅色的 plan → B → merge。A 不在這條鏈上，它做完還要等 10 秒，所以加速 A 不會讓任務提早完成。</figcaption>
             </figure>
-<p>所以優化前先找最長的鏈。拆成幾份最划算要連派工的成本一起算，見 L5〈<a href="l05.html#i4-1">拆多細</a>〉；加 agent 的上限見 L3〈<a href="l03.html#i6-7">Amdahl's law</a>〉。</p>
+<p>所以優化前先找最長的鏈。拆成幾份最划算要連派工的成本一起算，見 L5〈<a href="l05.html#i4-1">拆多細</a>〉；加 agent 的上限見 L3〈<a href="l03.html#i2">Amdahl's law</a>〉。</p>
 <p id="i8-2"><b>先量：時間常常花在 tool。</b>大家習慣先想換快一點的 model，但 build、測試、載入網頁可能比 model call 還慢。TraceLab 量到一次 model 生成平均約 13 秒，一次 tool call 平均約 18 秒；而且 tool 時間集中在少數幾個：<strong>超過 1 分鐘的 call 只佔 4%，卻用掉 85% 的 tool 時間</strong>，1 秒內的 call 佔 61%，只用掉 1%。所以調 model 之前，先把每個 tool 的時間記下來：</p>
 <figure class="file"><figcaption>terminal：把 Claude Code 每個 tool 的時間記下來（依 2026-11 的監控文件）</figcaption><pre><code>$ export CLAUDE_CODE_ENABLE_TELEMETRY=1      # 打開 OpenTelemetry
 $ export OTEL_LOGS_EXPORTER=console          # event 走 logs exporter；正式環境換成 otlp
@@ -1771,7 +1771,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
                     <li>調 model 之前先量 tool 時間 → 少數幾個慢的 call 佔掉大部分。</li>
                     <li>邊界一條一條判斷：隔離什麼、什麼要活得久、誰要共用 → 不是三選一，也不只看 agent 數量。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i8">完成時間：看 critical path，錢看全部</a>〉、〈<a href="#i9">Harness 架構：邊界放在哪裡，看要隔離什麼、什麼要活得久</a>〉；L3〈<a href="l03.html#i6-7">Amdahl's law</a>〉；L5〈<a href="l05.html#i4-1">拆多細</a>〉、〈<a href="l05.html#t3">Partial failure</a>〉。進階題第 3 題替團隊選架構。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i8">完成時間：看 critical path，錢看全部</a>〉、〈<a href="#i9">Harness 架構：邊界放在哪裡，看要隔離什麼、什麼要活得久</a>〉；L3〈<a href="l03.html#i2">Amdahl's law</a>〉；L5〈<a href="l05.html#i4-1">拆多細</a>〉、〈<a href="l05.html#t3">Partial failure</a>〉。進階題第 3 題替團隊選架構。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/105" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>
