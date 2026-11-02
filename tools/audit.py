@@ -32,7 +32,7 @@ for p in pages:
                 problems.append(f"{p.name}: link to missing {href}")
             elif frag and frag not in page_ids.get(page, set()):
                 problems.append(f"{p.name}: {href} has no target in {page}")
-        elif href.endswith(".css") or href.startswith("http"):
+        elif href.partition("?")[0].endswith(".css") or href.startswith("http"):
             pass
         else:
             problems.append(f"{p.name}: unexpected href {href}")
