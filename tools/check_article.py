@@ -3,7 +3,7 @@
 
 Usage: python3 -I check_article.py docs/lXX.html --pages N --pdf FILE.pdf [--fix-time]
 
-Checks: tag balance; required sections (#s-arch #s-ideas [#s-background, #s-beyond optional]
+Checks: tag balance; required sections (#s-ideas [#s-arch optional since v7; #s-background, #s-beyond optional]
 #s-discuss #s-try #s-submit #wrap) and parts (tldr, diagram, two question tabs,
 quiz, reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
@@ -39,7 +39,7 @@ STRONG_NOT_IN = {"b", "a", "code", "pre", "h1", "h2", "h3", "h4", "summary", "fi
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
 # s-beyond optional since 2026-10-26 (L4); s-background optional since 2026-10-27 (L4 merged it into #s-ideas)
-REQUIRED_IDS = ["s-arch", "s-ideas", "s-discuss", "s-try", "s-submit", "wrap",
+REQUIRED_IDS = ["s-ideas", "s-discuss", "s-try", "s-submit", "wrap",
                 "read-box", "qset-basic", "qset-adv", "sidenav"]
 REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "div.qtabs", "ol.qlist", "div.quiz", "ol.rg", "nav.pager",
                     "p.fineprint", "span.read-time", "span.full-time", "aside.sidenav", "nav.lecnav"]
@@ -298,6 +298,8 @@ def main():
         if deep.get(i, 0) > 1:
             print(f"  warn: chapter {i} has {deep[i]} red marks inside 深入/本文延伸 (max 1)")
     for k, want in (("tldr", 3), ("s-arch", 1)):
+        if k == "s-arch" and 'id="s-arch"' not in html:
+            continue  # v7 idea-first pages have no 架構 section
         if per.get(k, 0) != want:
             print(f"  warn: {k} has {per.get(k, 0)} red marks (want {want})")
     for m in p.strongs:

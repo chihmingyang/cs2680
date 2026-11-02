@@ -1692,7 +1692,7 @@ n = agent 數            例：16
 </div>
 <figcaption>協調成本隨 agent 數變多時，總時間會怎樣？標 Amdahl 的線是上面的例子（20 ＋ 80 ÷ n）；標「加上協調」的線多加一項 0.5 × n 分鐘的協調成本（merge conflict、互傳訊息），係數是本文的假設，形狀才是重點。結果：總時間有一個最低點，過了它，加 agent 反而變慢。</figcaption>
 </figure>
-<p>L5 把這件事寫成估算式：總時間約等於規劃、critical path（2.4 的註）、溝通、合併四項相加，平行只能縮短 critical path，它也算出拆成幾份最快（<a href="l05.html#i5">L5 的 2.5</a>）。反過來，工作量不固定時結果會好一些：1988 年 John Gustafson 指出，機器變多時人通常拿它去做更大的工作（Gustafson's law），規劃和合併沒有變多少，能平行的部分卻大了好幾倍，s 就變小。這也是 2.5 說 dynamic workflow 適合「掃整個 codebase、500 個檔案的搬遷」這種大工作的原因。</p>
+<p>L5 把這件事寫成估算式：總時間約等於規劃、critical path（2.4 的註）、溝通、合併四項相加，平行只能縮短 critical path，它也算出拆成幾份最快（<a href="l05.html#i4">L5 第 4 章</a>）。反過來，工作量不固定時結果會好一些：1988 年 John Gustafson 指出，機器變多時人通常拿它去做更大的工作（Gustafson's law），規劃和合併沒有變多少，能平行的部分卻大了好幾倍，s 就變小。這也是 2.5 說 dynamic workflow 適合「掃整個 codebase、500 個檔案的搬遷」這種大工作的原因。</p>
               <p id="i6-8"><b>任務切不開，加 agent 也沒用。</b>p.50 的第二項是 Amdahl's law 的極端情況：平行的部分變成 0。編譯 Linux kernel 時，所有 agent 都卡在同一個錯誤。原文寫道：每個 agent 都修同一個 bug，再互相覆蓋彼此的修改。</p>
               <p>原文的解法，是把一個大的失敗訊號切成很多小訊號。作者用 GCC 當已知正確的 oracle（測試裡用來判斷對錯的標準答案來源）：隨機挑大部分檔案用 GCC 編譯，其餘檔案才用 agent 寫的 compiler。Kernel 能跑，問題就不在那些檔案；壞了，就再縮小範圍。每個 agent 因此拿到不同的失敗檔案，可以平行修不同的 bug。</p>
               <p>一般原則：<strong>平行需要獨立的子任務，也需要獨立的進度訊號</strong>。只有一個大測試失敗時，先把它拆成很多小訊號，再考慮加 agent。還有一個上限 slide 沒算：人 review 的速度。2.8 末尾的 dsh-superagent 案例把它當成第一條設計原則，連 worker 的位子都替人的訊息多留一個。</p>
@@ -2284,7 +2284,7 @@ Fix submitted: https://github.com/you/widgets/pull/123, ready for review.
                     <li>每個 teammate 是完整的 session，不繼承你的對話 → token 隨人數線性成長。</li>
                     <li><code>/goal</code> 由另一個 model 檢查條件才停；<code>/loop</code> 照時間觸發，要你取消。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">平行與 subagent：各買到一樣東西，也各有代價</a>〉、〈<a href="#i5">Agent team 與 dynamic workflow</a>〉、〈<a href="#i6">長時間執行與 16 個 agent</a>〉（含〈<a href="#t4">可驗證的完成條件</a>〉一段）、L5〈<a href="l05.html#i1">多一個 agent：只換到四樣東西，每一樣都有價格</a>〉。<a href="#q1">進階題第 1 題</a>替四個任務選做法，並寫出完整的 <code>/goal</code> 條件。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">平行與 subagent：各買到一樣東西，也各有代價</a>〉、〈<a href="#i5">Agent team 與 dynamic workflow</a>〉、〈<a href="#i6">長時間執行與 16 個 agent</a>〉（含〈<a href="#t4">可驗證的完成條件</a>〉一段）、L5〈<a href="l05.html#i1">根本的限制：agent 之間只能傳文字</a>〉。<a href="#q1">進階題第 1 題</a>替四個任務選做法，並寫出完整的 <code>/goal</code> 條件。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/100" target="_blank" rel="noopener">到 GitHub 回答這一題（Q4）↗</a></p>
               </div>

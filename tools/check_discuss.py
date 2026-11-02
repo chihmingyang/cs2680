@@ -6,7 +6,7 @@ Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
   基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
     div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
     A「常見誤解」callout is expected (warning only).
-  核心觀念 ideas: 3-8 (2026-10-27; was 3-6).
+  核心觀念 ideas: 3-10 (2026-11-03; was 3-8). Every idea has an a.ref, or none does (v7 idea-first pages).
   觀念補充 terms: 4-6 is a suggestion (warning only, 2026-10-22); the section is optional
     since 2026-10-27 (L4 merged it into the chapters as details.note).
   進階題 li.dq: at most 3 (2026-10-22; was 6), each a different type (the qtag label before「·」),
@@ -123,9 +123,9 @@ def check(path):
         items = ideas.find("div", "idea")
         refs = [it for it in items if it.find("a", "ref")]
         rep.append(f"ideas={len(items)}")
-        if not 3 <= len(items) <= 8:  # 2026-10-25: 放寬到 6 章（v4.0）；2026-10-27: 8 章（v5.0，L4 拆成 7 章）
+        if not 3 <= len(items) <= 10:  # 2026-10-25: 6 章（v4.0）；2026-10-27: 8 章（v5.0）；2026-11-03: 10 章（v7 依想法重組，L5 是 9 章）
             probs.append(f"s-ideas has {len(items)} ideas")
-        if len(refs) != len(items):
+        if refs and len(refs) != len(items):  # v7 頁面不寫 slide 頁碼，整頁都沒有 a.ref 也可以
             probs.append("an idea lacks a.ref")
     bg = sec("s-background")
     if bg:

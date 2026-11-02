@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-11-02（加 G：線上編輯與「問 Claude」）。2026-10-30（`assemble_ideas.py` 的側欄第三層也會抓開頭有 `span.anchor` 的小標；L3 重排用它組回，片段是用 `notes/l03/build_iN.py` 從舊頁面切出來的，大改既有頁面時可以照這個做法：先切片段、改片段、再組回）。2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
+更新：2026-11-03（加 H：把一堂改成 v7 依想法重組）。2026-11-02（加 G：線上編輯與「問 Claude」）。2026-10-30（`assemble_ideas.py` 的側欄第三層也會抓開頭有 `span.anchor` 的小標；L3 重排用它組回，片段是用 `notes/l03/build_iN.py` 從舊頁面切出來的，大改既有頁面時可以照這個做法：先切片段、改片段、再組回）。2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 
@@ -221,3 +221,9 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
    ```
 
 **改 `edit.js` 之後**：`python3 -I tools/test_editor.py`（用假的 GitHub API 在瀏覽器跑；全站每一段都要找得到原始碼位置，存檔的 diff 只能動到改過的段落）。
+
+---
+
+## H. 把一堂改成 v7：依想法重組（2026-11-03 起）
+
+照 `.claude/skills/idea-first-lecture/SKILL.md` 做，範本是 `docs/l05.html`，規則在 `STYLE_ARTICLE.md` 第 0 節。一個 session 改一堂。畫圖用 `tools/dg.py`，build script 放 `notes/lXX/`（不 commit）。
