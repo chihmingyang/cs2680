@@ -73,6 +73,7 @@ grep -o 'lXX\.html#[A-Za-z0-9_-]*' docs/*.html | grep -v '^docs/lXX' | sort | un
 
 - 別頁連進來的錨點：連到新章節（改那一頁的 href 與連結文字），或在新頁面相同內容的段落保留同一個 id（L5 保留了 `t1`、`t2`、`t3`）。
 - 問題討論、動手試試、延伸閱讀從舊頁面整段搬過來。kicker 的段號改成 2、3、4，「第 4 段動手試試」這類文字一起改。
+- 基礎題：先查這堂的 issue 有沒有成員留言（`gh api repos/chihmingyang/cs2680/issues/<n>/comments --jq length`）。沒有留言，就依新章節重出 5 題，照 `guide/STYLE_BASIC.md` 的「v7 頁面」一節（L5 是範例）；已經有人回答，就保留題目，只重寫每題的「相關：」，並告訴 James。進階題保留，除非 James 要換。
 - 每題基礎題的 `p.tk-rel`（相關：）整句重寫，連到新章節。延伸閱讀摘要裡連到舊章節、舊本文延伸（`#xN`）的地方也改。改完確認沒有殘留：`grep -o 'href="#[^"]*"' docs/lXX.html` 的每個目標都存在。
 - 側欄 `li.sn-lec.is-here`：四個 `sn-sec`，核心觀念底下列每章（`sn-sub`），每章的粗體小標當第三層（`sn-sub2`，小標的 `<p>` 要有 id）。
 - `h1`、`p.en-title` 不改，否則每一頁的側欄都要重建（`add_lecture.py --check` 會報）。
