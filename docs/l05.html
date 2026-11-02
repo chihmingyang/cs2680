@@ -1566,393 +1566,213 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
           <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
         </div>
         <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
-          <p class="qset-lede">看 slides 之前先讀一遍這 5 題。它們依 slide 順序排列，答案都在對應的頁裡。看到那幾頁時，把答案記下來；看完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。卡住的地方，按題目下面的「到 GitHub 討論這一題」留言。</p>
+          <p class="qset-lede">讀文章之前先看一遍這 5 題。它們依核心觀念的章節排列，每題標了答案在哪幾章。讀到那幾章時，把答案記下來；讀完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。卡住的地方，按題目下面的「到 GitHub 回答這一題」留言。</p>
           <div class="copyrow">
-            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L5 基礎題（帶著問題看 slides）：Multi-agent 架構與溝通" data-slides="https://cs2680.com/slides/5_agent_design_2.pdf">複製基礎題</button>
-            <span class="copyhint">只複製題目與頁碼，方便貼到群組。</span>
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L5 基礎題（帶著問題讀文章）：Multi-agent 架構與溝通 https://chihmingyang.github.io/cs2680/l05.html">複製基礎題</button>
+            <span class="copyhint">只複製題目與章節，方便貼到群組。</span>
           </div>
           <ol class="qlist qlist-basic">
             <li class="bq" id="b1">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=6" target="_blank" rel="noopener">p.6–7</a> · 為什麼拆、三張圖</p>
-                <p class="qtext">把工作拆給多個 agent 有哪四個理由？描述架構用的三張圖，各回答什麼問題？</p>
+                <p class="qtag"><a class="ref" href="#i1">第 1、8 章</a> · 只能傳文字</p>
+                <p class="qtext">多一個 agent，為什麼兩邊只能靠文字溝通？權限隔離擋得住什麼、擋不住什麼？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>四個理由（p.6）：</p>
-                    <ul>
-                      <li><b>Specialization。</b>每個 agent 用不同的 model、prompt、tool。</li>
-                      <li><b>Isolation。</b>每個 agent 給不同的權限。</li>
-                      <li><b>Parallelism。</b>互不相依的子任務同時跑。</li>
-                      <li><b>Context management。</b>不必把整條 trajectory 交給每個 agent。</li>
-                    </ul>
-                    <p>三張圖（p.7）：control graph 回答誰協調，communication graph 回答 agent 怎麼溝通，task graph 回答工作怎麼拆。</p>
+                    <p><b>答案：</b>每個 agent 是一個獨立的 loop，有自己的 context window，兩個 loop 沒有共用的記憶。一方知道的事，必須寫成文字送進另一方的 context，對方才知道（第 1 章）。</p>
+                    <p>權限隔離擋得住「受騙的 agent 自己動手」：讀網頁的 agent 沒有 shell，網頁裡的指令就算騙過它，也刪不了檔。擋不住的是文字流回來：它的摘要會進入有 shell 的 supervisor 的 context，指令就換到有權限的 agent 手上（第 8 章）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
-                  <p>四個理由換到的東西不同。Specialization 讓每個角色有短而專一的 prompt，也能配不同的 model。Isolation 切割權限：讀網頁的 agent 沒有 shell，網頁裡夾帶的指令就碰不到危險的 tool。Context management 換到乾淨的 context：worker 只看到自己的子任務，supervisor 只收摘要。Parallelism 換到的是時間。</p>
-                  <p>只有 parallelism 和速度有關，其他三個改善品質、安全與 context。每一項都有價格：多一次交接，就多一次資訊遺失、多一份 context、多一個會失敗的點。所以 p.44 的第一條原則是先問：真的需要 multi-agent 嗎？</p>
-                  <div class="table-wrap"><table>
-                    <thead><tr><th>圖</th><th>回答的問題</th><th>常見的答案（p.7）</th></tr></thead>
-                    <tbody>
-                      <tr><td>Control graph</td><td>誰協調？誰能派工、停工</td><td>一個 supervisor、一層層的 hierarchy、沒有協調者；執行中可用 handoff 換人</td></tr>
-                      <tr><td>Communication graph</td><td>Agent 之間怎麼傳話</td><td>直接傳訊、broadcast、共享的工作區</td></tr>
-                      <tr><td>Task graph</td><td>工作怎麼拆、誰相依誰</td><td>Planner 事先拆、用出價認領、從局部規則浮現</td></tr>
-                    </tbody>
-                  </table></div>
-                  <p>三張圖是三個獨立的軸。同樣拆成三個子任務（task graph 相同），可以由 supervisor 派工，也可以讓 agent 從共享的 task list 自己認領（control graph 不同）。p.9–16 每頁底部那一行，就是該架構在三張圖上的答案。</p>
+                  <p>隔離是拆開的好處來源。它換到四樣東西：平行、權限隔離、乾淨的 context、專一的 prompt 與 model。前兩樣一個 agent 做不到；後兩樣一個 agent 靠壓縮和 skill 也能做到一部分。所以只為了後兩樣而拆，常常不划算。</p>
+                  <p>代價也來自隔離。每交接一次，就多三件事：資訊遺失、多一份 context、多一個會失敗的點。Context 的帳最容易低估：訊息進了 context，之後每一圈 loop 都要重送。一則 2k token 的訊息發給 10 個 agent，各跑 20 圈，就是 400k token 的 input。</p>
+                  <p>文字流回來的問題，對策都在 runtime，不在 model。第一，把 worker 的回報放進固定欄位，當資料，不當指令。第二，刪除、付款、對外傳送這類動作，由 runtime 檢查 allowlist 或請人確認，不由文字決定。第三，同一個 agent 不要同時能讀私密資料、接觸不可信內容、又能對外傳送。</p>
                   <p class="tk-h">背景補充</p>
-                  <p>把「誰決定」和「訊息走哪條線」分開看，網路設計早就這樣做：路由器的 control plane 決定路徑，data plane 搬封包。Multi-agent 也一樣：agent team 的 lead 負責派工，teammate 之間卻能直接傳訊，訊息不經過 lead。</p>
-                  <p>Isolation 是資安的最小權限原則（least privilege）：每個元件只拿完成工作所需的權限。L2 講過 prompt injection：外部內容可能夾帶指令。讀不可信內容的 agent 和執行危險動作的 agent 分開，注入的指令就到不了危險的 tool。Context management 延伸自 L3 的 subagent：子任務在新的 context 跑，只交回摘要。</p>
-                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「拆成多個 agent，答案一定比較好。」四個理由都不會讓 model 變聰明。Parallelism 只換到時間，交接還會遺失資訊。2.1 末尾的本文判斷〈一個 agent 常常就夠了〉整理了反例：循序規劃的任務，拆開後大幅變差。</p></div></div>
+                  <p>這個問題在資安上有名字，叫 confused deputy（受誤導的代理人）：沒有權限的一方，騙一個有權限的程式替它做事。Norm Hardy 在 1988 年用編譯器的例子描述它。Supervisor 照著 worker 摘要裡的指令執行，就是一個 confused deputy。</p>
+                  <p>權限隔離是最小權限原則（least privilege）：每個元件只拿完成工作所需的權限。L2 講過 prompt injection：外部內容可能夾帶指令。Multi-agent 讓這條路變長，因為指令可以經過好幾個 agent 才到達有權限的那一個。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「讀網頁的 agent 沒有危險權限，系統就安全了。」它自己確實做不了壞事，但它寫的摘要是另一個 agent 的輸入。只要接收端把摘要當成指令，隔離就只擋了一半。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
-                    <li>四個理由：specialization、isolation、parallelism、context management；只有 parallelism 換到速度。</li>
-                    <li>多一個 agent → 多一次交接 → 多一個資訊遺失點與失敗點，所以先問要不要拆。</li>
-                    <li>任何架構都能用三張圖描述：誰協調（control）、怎麼傳話（communication）、怎麼拆（task）。</li>
+                    <li>兩個 context 互不相通 → agent 之間只能傳文字 → 好處和代價都從這裡來。</li>
+                    <li>拆開只換到四樣東西；只有平行和權限隔離是一個 agent 做不到的。</li>
+                    <li>權限隔離擋住動手，擋不住文字流回來 → 回報當資料，危險動作由 runtime 把關。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">根本的限制：agent 之間只能傳文字</a>〉、〈<a href="#i2">多數任務不該拆</a>〉、〈<a href="#i3">讀可以平行，寫留在單線</a>〉、〈<a href="#i8">安全：傳回來的文字也不可信</a>〉；L2〈<a href="l02.html#t4">Prompt injection</a>〉、L3〈<a href="l03.html#t2">Context 隔離與摘要</a>〉。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">根本的限制：agent 之間只能傳文字</a>〉、〈<a href="#i8">安全：傳回來的文字也不可信</a>〉；L2〈<a href="l02.html#t4">Prompt injection</a>〉、L3〈<a href="l03.html#t2">Context 隔離與摘要</a>〉。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/102" target="_blank" rel="noopener">到 GitHub 回答這一題（Q1）↗</a></p>
               </div>
             </li>
             <li class="bq" id="b2">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=9" target="_blank" rel="noopener">p.9–18</a> · 八種架構的弱點</p>
-                <p class="qtext">八種架構分成哪三類？中心化和去中心化的弱點差在哪裡？</p>
+                <p class="qtag"><a class="ref" href="#i2">第 2、3 章</a> · 要不要拆、讀與寫</p>
+                <p class="qtext">為什麼同樣用 multi-agent，可平行的任務進步、循序的任務退步？讀和寫為什麼要分開對待？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>p.18 的總表分成三類：centralized（supervisor–worker、hierarchical、pipeline/DAG、market）、decentralized（blackboard、committee、swarm）、hybrid（dynamic topology）。中心化的弱點是 planner 瓶頸、錯誤放大、錯誤往下傳、不實的出價：問題沿著控制的路徑集中或擴散。去中心化沒有控制者，弱點變成一致性與訊息量：狀態過期、groupthink、<code>O(n²)</code> 的訊息。</p>
+                    <p><b>答案：</b>效果由任務的形狀決定（第 2 章）。可以拆開分析的任務約進步 81%；嚴格循序的規劃任務，各種 multi-agent 都退步 39% 到 70%。循序任務的每一步都要知道上一步的細節，而細節正是交接時會掉的東西。</p>
+                    <p>讀可以平行，因為各自的發現只會累積，不會互相衝突。寫不行，因為每個動作都帶著沒說出口的決定，兩個 agent 各寫一半，就會各選一套（第 3 章）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
-                  <p>中心化的四種都有一個點決定誰做什麼，所以好預測、好 debug。弱點也從這個點出發。Supervisor 要重讀每份結果，context 長得最快（p.9）。Hierarchical 每一層都摘要一次，下層的錯一路往上放大。Pipeline 沒有回頭的路，後段不能要求前段重做，所以 p.11 說加一條 retry edge 勝過多加一個 agent。Market 的出價是 agent 自己報的，誇大能力的 agent 會得標（p.14）。</p>
-                  <p>去中心化拿掉協調者，沒有單點會卡住或掛掉，agent 也能隨時加入、離開（p.15）。代價是每個 agent 看到的狀態可能不同。Blackboard 要處理一致性、並行控制、來源、版本（p.12）。Committee 的失敗是沒有獨立性的同意：同一個 model、同一份 context，盲點也相同（p.13）。Swarm 的訊息量是 <code>O(n²)</code>，產品裡很少用（p.15）。</p>
-                  <p>Hybrid 只有 dynamic topology：工單升級時才加入 billing 和 log agent（p.16）。簡單工單維持便宜，代價是每次執行的形狀不同，失敗很難重現。</p>
                   <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 640 300" role="img" aria-label="中心化與去中心化的失敗點。左半是中心化：四個 worker 的回報全部匯入 supervisor，所以 supervisor 是瓶頸也是單點；下方的 pipeline 從 OCR、擷取、比對到入帳，OCR 讀錯的金額順著流程一路寫進帳本。右半是去中心化：Agent A 把 v3 寫進共享狀態，Agent B 讀到 v3，Agent C 手上還是早先讀的 v2，依 v2 行動就是狀態過期；committee 的票不獨立，swarm 的線數是 n(n−1)/2。">
-                  <defs><marker id="tk5-2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk5-2-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <rect x="4" y="4" width="312" height="292" rx="6" class="dg-panel"/>
-                  <text x="18" y="28" class="dg-h">中心化：問題沿控制路徑走</text>
-                  <path d="M52,118 L52,98 L262,98 L262,118" class="dg-link"/>
-                  <path d="M122,118 L122,98" class="dg-link"/>
-                  <path d="M192,118 L192,98" class="dg-link"/>
-                  <path d="M150,98 L150,74" class="dg-link" marker-end="url(#tk5-2-ah)"/>
-                  <rect x="96" y="42" width="108" height="32" rx="4" class="dg-n-focus"/>
-                  <text x="150" y="63.0" text-anchor="middle" class="dg-l-on">Supervisor</text>
-                  <text x="212" y="54" class="dg-k">全部回報匯入</text>
-                  <text x="212" y="71" class="dg-k">→ 瓶頸、單點</text>
-                  <rect x="24" y="118" width="56" height="26" rx="4" class="dg-n-c"/>
-                  <text x="52" y="136.0" text-anchor="middle" class="dg-ls">W1</text>
-                  <rect x="94" y="118" width="56" height="26" rx="4" class="dg-n-c"/>
-                  <text x="122" y="136.0" text-anchor="middle" class="dg-ls">W2</text>
-                  <rect x="164" y="118" width="56" height="26" rx="4" class="dg-n-c"/>
-                  <text x="192" y="136.0" text-anchor="middle" class="dg-ls">W3</text>
-                  <rect x="234" y="118" width="56" height="26" rx="4" class="dg-n-c"/>
-                  <text x="262" y="136.0" text-anchor="middle" class="dg-ls">W4</text>
-                  <text x="18" y="164" class="dg-c">Supervisor 重讀每份結果，context 長得最快</text>
-                  <text x="18" y="192" class="dg-cb">Pipeline：上游的錯順著流程往下傳</text>
-                  <rect x="18" y="202" width="58" height="28" rx="4" class="dg-n-d"/>
-                  <text x="47" y="221.0" text-anchor="middle" class="dg-ls">OCR</text>
-                  <path d="M76,216 L92,216" class="dg-link-key" marker-end="url(#tk5-2-ak)"/>
-                  <rect x="92" y="202" width="58" height="28" rx="4" class="dg-n-n"/>
-                  <text x="121" y="221.0" text-anchor="middle" class="dg-ls">擷取</text>
-                  <path d="M150,216 L166,216" class="dg-link-key" marker-end="url(#tk5-2-ak)"/>
-                  <rect x="166" y="202" width="58" height="28" rx="4" class="dg-n-n"/>
-                  <text x="195" y="221.0" text-anchor="middle" class="dg-ls">比對</text>
-                  <path d="M224,216 L240,216" class="dg-link-key" marker-end="url(#tk5-2-ak)"/>
-                  <rect x="240" y="202" width="58" height="28" rx="4" class="dg-n-d"/>
-                  <text x="269" y="221.0" text-anchor="middle" class="dg-ls">入帳</text>
-                  <text x="47" y="248" text-anchor="middle" class="dg-c">金額讀錯</text>
-                  <text x="269" y="248" text-anchor="middle" class="dg-k">錯帳</text>
-                  <text x="18" y="280" class="dg-cb">p.18：瓶頸、錯誤放大、錯誤下傳、不實出價</text>
-                  <rect x="324" y="4" width="312" height="292" rx="6" class="dg-panel"/>
-                  <text x="338" y="28" class="dg-h">去中心化：問題變成一致性</text>
-                  <path d="M384,72 L384,112" class="dg-link" marker-end="url(#tk5-2-ah)"/>
-                  <text x="390" y="97" class="dg-c">寫 v3</text>
-                  <path d="M474,112 L474,72" class="dg-link" marker-end="url(#tk5-2-ah)"/>
-                  <text x="480" y="97" class="dg-c">讀 v3</text>
-                  <path d="M564,112 L564,72" class="dg-link-key dg-dash" marker-end="url(#tk5-2-ak)"/>
-                  <text x="570" y="97" class="dg-k">早先讀 v2</text>
-                  <rect x="346" y="42" width="76" height="30" rx="4" class="dg-n-a"/>
-                  <text x="384" y="62.0" text-anchor="middle" class="dg-ls">Agent A</text>
-                  <rect x="436" y="42" width="76" height="30" rx="4" class="dg-n-a"/>
-                  <text x="474" y="62.0" text-anchor="middle" class="dg-ls">Agent B</text>
-                  <rect x="526" y="42" width="76" height="30" rx="4" class="dg-n-d"/>
-                  <text x="564" y="62.0" text-anchor="middle" class="dg-ls">Agent C</text>
-                  <rect x="346" y="112" width="256" height="32" rx="4" class="dg-n-b"/>
-                  <text x="474" y="133.0" text-anchor="middle" class="dg-l">共享狀態：最新版是 v3</text>
-                  <text x="338" y="170" class="dg-k">C 依 v2 行動 → 狀態過期</text>
-                  <text x="338" y="192" class="dg-c">沒有單點會卡住，但每個 agent 看到的狀態不同</text>
-                  <text x="338" y="220" class="dg-c">Committee：同一個 model 的票不獨立</text>
-                  <text x="338" y="244" class="dg-c">Swarm：線數 n(n−1)/2，10 個就 45 條</text>
-                  <text x="338" y="280" class="dg-cb">p.18：狀態過期、groupthink、O(n²)</text>
+                <svg viewBox="0 0 720 228" role="img" aria-label="橫條圖，和單一 agent 相比的變化。可以拆開分析的財務推理，中央協調，約加 81%。研究類任務，平行查很多方向，加 90.2%，但 token 約是聊天的 15 倍。嚴格循序的規劃任務 PlanCraft，各種 multi-agent 都變差，減 39% 到減 70%。">
+                  <defs><marker id="tk5-v2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk5-v2-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M330,14 L330,196" class="dg-soft-link"/>
+                  <text x="330" y="214" text-anchor="middle" class="dg-c">0（和單一 agent 一樣）</text>
+                  <text x="14" y="40" class="dg-cb">parallel analysis</text>
+                  <text x="14" y="58" class="dg-c">財務推理，中央協調</text>
+                  <rect x="330" y="28" width="178.20000000000002" height="34" rx="2" class="dg-n-a"/>
+                  <text x="516.2" y="50" class="dg-k">+81%</text>
+                  <text x="14" y="100" class="dg-cb">parallel research</text>
+                  <text x="14" y="118" class="dg-c">研究類，token 約 15 倍</text>
+                  <rect x="330" y="88" width="198.44000000000003" height="34" rx="2" class="dg-n-a"/>
+                  <text x="536.44" y="110" class="dg-k">+90.2%</text>
+                  <text x="14" y="160" class="dg-cb">sequential planning</text>
+                  <text x="14" y="178" class="dg-c">PlanCraft，循序規劃</text>
+                  <rect x="176.0" y="148" width="68.19999999999999" height="34" rx="2" class="dg-n-focus"/>
+                  <rect x="244.2" y="148" width="85.80000000000001" height="34" rx="2" class="dg-n-d"/>
+                  <text x="338" y="170" class="dg-k">−39% 到 −70%</text>
                 </svg>
               </div>
-              <figcaption>左邊的問題有固定位置：中心卡住，或錯誤順著控制路徑往下游走。右邊沒有中心，問題分散在每個 agent 對狀態的認知裡，不會報錯，比較難發現。</figcaption>
+              <figcaption>數字來自核心觀念第 2 章的兩個來源。循序規劃那一列，粉色是退步最少的情況（−39%），深紅延伸到退步最多的情況（−70%）。結論：同樣是 multi-agent，正負號由任務的形狀決定。</figcaption>
             </figure>
+                  <p>上圖的三列，差別不在架構，在子任務能不能獨立進行。研究類任務也進步，但代價是 token 約為聊天的 15 倍，所以「有沒有變好」之外，還要問「值不值得」。實務上的問法是：拿掉一個 agent，品質掉多少？要回答它，先要有單一 agent 的基準線。</p>
+                  <p>寫的問題用 Cognition 的例子最清楚：做 Flappy Bird，一個 agent 做背景，一個做鳥。背景選了 Mario 風格，鳥的風格不搭，合併的人要收拾兩個誤解。所以他們的結論是寫保持單線，其他 agent 貢獻判斷，不貢獻動作。行得通的形狀包括唯讀 subagent、writer 加 reviewer、manager 先把範圍切開再分給 child。</p>
+                  <p>Writer 加 reviewer 有一個反直覺的地方：reviewer 不共用作者的 context 時效果最好。它只看 diff，不知道作者的理由，理由就說服不了它。</p>
                   <p class="tk-h">背景補充</p>
-                  <p>分散式系統把中心化的弱點叫 single point of failure（SPOF）。常見的補法是備援加 leader election：協調者掛了，選一個新的接手，Raft 這類共識演算法就在做這件事。前提是協調者的狀態能從 log 或 checkpoint 重建。Agent 系統的 supervisor 也一樣，狀態只在它的 context 裡，它一掛，整個任務就停。</p>
-                  <p>Groupthink 對應 ensemble 的基本條件：多數決只有在錯誤彼此獨立時才有效。兩個同 model 的 grader 錯誤高度相關，兩票同意帶來的新資訊很少。補法是換不同的 model 或評分角度，先各自作答再看彼此。</p>
-                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「去中心化沒有單點，所以比較可靠。」它只是把失敗換了形狀：從一個點卡住，變成每個 agent 看到不同的狀態。延伸閱讀的 Scaling 論文量到：independent 系統把錯誤放大 17.2 倍，centralized 是 4.4 倍。有人彙整，錯誤才有機會停下來。</p></div></div>
+                  <p>Reviewer 要獨立的理由，在 1785 年就有人證明過。Condorcet 的陪審團定理說：每個投票者判斷對的機率高於一半，而且彼此獨立時，人越多，多數決越可能對。拿掉「獨立」，多數決就不會變好。同一個 model、讀同一份 context 的兩個 agent，錯誤高度相關，兩票同意的資訊量接近一票。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「用 worktree 把檔案分開，就能放心讓多個 agent 平行寫。」Worktree 擋得住檔案衝突，擋不住隱含決定的衝突：命名、風格、邊界條件的處理方式還是會各選一套。範圍切得開、又有能自動驗證的測試時，平行寫才比較安全。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
-                    <li>三類：中心化 4 種、去中心化 3 種、hybrid 1 種（dynamic topology）。</li>
-                    <li>中心化：問題沿控制路徑集中（瓶頸）或擴散（放大、下傳）→ 減輕中心的負擔，加一條回頭的線。</li>
-                    <li>去中心化：沒有單點，改付一致性與訊息量 → 狀態過期、groupthink、<code>O(n²)</code>。</li>
+                    <li>可平行 → 進步；循序 → 退步。先看任務形狀，再看架構。</li>
+                    <li>讀的發現會累積，寫的決定會衝突 → 寫留在單線，其他 agent 只檢查。</li>
+                    <li>多一票只在錯誤獨立時有用 → reviewer 不共用作者的 context。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i9">目錄：八種架構</a>〉、〈<a href="#i5">回報：彙整節點會丟細節</a>〉、〈<a href="#i7">狀態與時間</a>〉（dynamic topology 為什麼難重現）。進階題第 1 題練習選架構。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i2">最重要的判斷：多數任務不該拆</a>〉、〈<a href="#i3">最實用的分界：讀可以平行，寫留在單線</a>〉；第 3 段<a href="#s-try">動手試試</a>的單一 agent 與三個 subagent 對照。進階題第 1 題練習選架構。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/102" target="_blank" rel="noopener">到 GitHub 回答這一題（Q2）↗</a></p>
               </div>
             </li>
             <li class="bq" id="b3">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=22" target="_blank" rel="noopener">p.22–23</a> · 粒度與拆解上限</p>
-                <p class="qtext">拆得太細，為什麼反而變慢？動態拆解為什麼一定要設上限？</p>
+                <p class="qtag"><a class="ref" href="#i4">第 4 章</a> · 派工、拆多細</p>
+                <p class="qtext">規格少了 boundaries、depends_on、output，各會出什麼錯？為什麼拆成 20 份比不拆還慢？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>平行只縮短 T_critical_path；planning、communication、merge 都是額外成本，子任務越多，communication 越大。省下的循序時間小於這些成本，拆開就變慢，所以 p.22 把 20 個一行的 lookup 打包成 4 個子任務。動態拆解會在執行中生出新任務，worker 還能自己再委派，沒有上限就會遞迴爆炸。p.23 要求四種上限：spawn 數量、預算、深度、終止條件。</p>
+                    <p><b>答案：</b>少了 <code>boundaries</code>，兩個 worker 會做重疊的事（Overlap）。少了 <code>depends_on</code>，worker 會用到別人還沒產生的輸入，做到一半才發現（Hidden dependency）。少了 <code>output</code>，有人回文字、有人回 JSON，結果合併不起來（Unmergeable outputs）。</p>
+                    <p>拆成 20 份時，最慢那份只剩 5 秒，但派工與回報要 8 × 20 ＝ 160 秒，總時間 185 秒，比一個 agent 自己做的 100 秒還慢。最快的是 4 份，77 秒（第 4 章的例子）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
-                  <p>p.22 的估算式是 T_multi ≈ T_planning ＋ T_critical_path ＋ T_communication ＋ T_merge。四項裡只有 T_critical_path 會因為平行而變短：它是最長那條相依鏈的時間。T_communication 是每個子任務的派工加讀回報，子任務越多，這一項越大。所以 p.22 說兩頭都不好：子任務太大，平行度太低；太小，overhead 吃掉省下的時間。</p>
-                  <p>下圖用本頁「動手試試」的假設數字：每個 lookup 5 秒，每個子任務的溝通 8 秒，planning 和 merge 各 10 秒。拆 4 份最低，77 秒。拆 20 份要 185 秒，比不拆的 100 秒還慢。</p>
-                  <figure class="diagram">
-              <div class="scroll">
-                <svg viewBox="0 0 640 288" role="img" aria-label="20 個 lookup 拆成 n 份時的總時間，堆疊長條圖。每根長條由下往上是固定的 planning 加 merge 20 秒、critical path、communication。n 等於 1、2、4、5、10、20 時，總時間依序是 128、86、77、80、110、185 秒。Critical path 隨 n 變短，communication 隨 n 變長。一條虛線標出一個 agent 依序做完的 100 秒。n 等於 4 時最低。">
-                  <defs><marker id="tk5-3-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk5-3-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <path d="M56,236 L56,44" class="dg-link"/>
-                  <path d="M56,236 L424,236" class="dg-link"/>
-                  <text x="50" y="240" text-anchor="end" class="dg-mn">0</text>
-                  <text x="50" y="190" text-anchor="end" class="dg-mn">50</text>
-                  <text x="50" y="140" text-anchor="end" class="dg-mn">100</text>
-                  <text x="50" y="90" text-anchor="end" class="dg-mn">150</text>
-                  <text x="50" y="36" text-anchor="end" class="dg-c">秒</text>
-                  <rect x="72" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="72" y="116" width="36" height="100" class="dg-n-a"/>
-                  <rect x="72" y="108" width="36" height="8" class="dg-n-b"/>
-                  <rect x="132" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="132" y="166" width="36" height="50" class="dg-n-a"/>
-                  <rect x="132" y="150" width="36" height="16" class="dg-n-b"/>
-                  <rect x="192" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="192" y="191" width="36" height="25" class="dg-n-a"/>
-                  <rect x="192" y="159" width="36" height="32" class="dg-n-b"/>
-                  <rect x="252" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="252" y="196" width="36" height="20" class="dg-n-a"/>
-                  <rect x="252" y="156" width="36" height="40" class="dg-n-b"/>
-                  <rect x="312" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="312" y="206" width="36" height="10" class="dg-n-a"/>
-                  <rect x="312" y="126" width="36" height="80" class="dg-n-b"/>
-                  <rect x="372" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="372" y="211" width="36" height="5" class="dg-n-a"/>
-                  <rect x="372" y="51" width="36" height="160" class="dg-n-b"/>
-                  <path d="M60,136 L420,136" class="dg-link-key dg-dash"/>
-                  <text x="210" y="128" text-anchor="middle" class="dg-k">一個 agent 依序做完：100 秒</text>
-                  <text x="50" y="256" text-anchor="end" class="dg-mn">n</text>
-                  <text x="90" y="256" text-anchor="middle" class="dg-cb">1</text>
-                  <text x="90" y="276" text-anchor="middle" class="dg-mn">128</text>
-                  <text x="150" y="256" text-anchor="middle" class="dg-cb">2</text>
-                  <text x="150" y="276" text-anchor="middle" class="dg-mn">86</text>
-                  <text x="210" y="256" text-anchor="middle" class="dg-cb">4</text>
-                  <text x="210" y="276" text-anchor="middle" class="dg-k">77</text>
-                  <text x="270" y="256" text-anchor="middle" class="dg-cb">5</text>
-                  <text x="270" y="276" text-anchor="middle" class="dg-mn">80</text>
-                  <text x="330" y="256" text-anchor="middle" class="dg-cb">10</text>
-                  <text x="330" y="276" text-anchor="middle" class="dg-mn">110</text>
-                  <text x="390" y="256" text-anchor="middle" class="dg-cb">20</text>
-                  <text x="390" y="276" text-anchor="middle" class="dg-mn">185</text>
-                  <text x="50" y="276" text-anchor="end" class="dg-c">總計</text>
-                  <rect x="446" y="44" width="14" height="12" class="dg-n-b"/>
-                  <text x="466" y="54" class="dg-mn">T_communication</text>
-                  <text x="466" y="72" class="dg-c">每份 8 秒，隨 n 變長</text>
-                  <rect x="446" y="88" width="14" height="12" class="dg-n-a"/>
-                  <text x="466" y="98" class="dg-mn">T_critical_path</text>
-                  <text x="466" y="116" class="dg-c">最長一份：100 ÷ n 秒</text>
-                  <rect x="446" y="132" width="14" height="12" class="dg-n-n"/>
-                  <text x="466" y="142" class="dg-mn">planning + merge</text>
-                  <text x="466" y="160" class="dg-c">固定 10 ＋ 10 秒</text>
-                  <text x="446" y="198" class="dg-k">n = 4 最低：77 秒</text>
-                  <text x="446" y="218" class="dg-c">n = 20 比不拆慢 85 秒</text>
-                </svg>
-              </div>
-              <figcaption>n 是子任務數。往右走，青色的 critical path 變短，黃色的 communication 變長；兩者相加有一個最低點。數字是假設，形狀才是重點。</figcaption>
-            </figure>
-                  <p>p.23 把拆解分成四種：</p>
-                  <ul>
-                    <li><b>Static。</b>任務在執行前就知道。</li>
-                    <li><b>Dynamic。</b>依發現生出新任務。</li>
-                    <li><b>Recursive。</b>讓 worker 再委派。</li>
-                    <li><b>Opportunistic。</b>讓閒著的 agent 認領新任務。</li>
-                  </ul>
-                  <p>後三種的任務數在執行前未知，所以需要四種上限：spawn 數量、預算、深度、終止條件。</p>
+                  <p>Worker 的 context 是新的，看不到 supervisor 的對話和決定，所以規格沒寫的事就不存在。檢查方法：把規格交給一個完全不懂這個專案的人，他要問的每個問題，都是缺的一個欄位。另外三種拆錯也各有欄位擋：<code>objective</code> 的範圍擋缺口（Gap），<code>inputs</code> 的共同前提加最後通讀擋全局矛盾（Lost global context），<code>budget</code> 加 timeout 擋拖後腿的那一份（Straggler）。</p>
+                  <p>總時間有四段：規劃、最慢那一份、派工與回報、合併。只有「最慢那一份」會隨份數 n 變短，「派工與回報」會隨 n 變長。所以每多拆一份，要比較兩個數字：最慢那份省下幾秒，以及多付的 8 秒。從 4 份拆到 5 份，最慢那份只從 25 秒變 20 秒，省 5 秒，卻多付 8 秒，所以 4 份最快。</p>
+                  <div class="callout example"><span class="tag">例子</span><div>
+                    <figure class="file"><figcaption>總時間（秒），20 個 lookup、每個 5 秒</figcaption><pre><code class="lang-text">總時間 = 規劃 10 + 最慢那份 (100 ÷ n) + 派工與回報 (8 × n) + 合併 10
+n = 4  → 10 + 25 + 32  + 10 = 77    ← 最快
+n = 5  → 10 + 20 + 40  + 10 = 80
+n = 20 → 10 + 5  + 160 + 10 = 185   ← 比不拆的 100 還慢</code></pre></figure>
+                  </div></div>
                   <p class="tk-h">背景補充</p>
-                  <p>最低點可以算。總時間裡會隨 n 變的部分是 100 ÷ n ＋ 8n。前項遞減，後項遞增，最低點在 n = √(100 ÷ 8) ≈ 3.5。整數裡 4 最好，和圖一致。L3 的 Amdahl's law 說不能平行的部分限制加速上限；這裡更糟，overhead 隨 n 成長，所以拆過頭會變慢。</p>
-                  <p>拆得越細，fan-out 越大，也越容易遇到 straggler。Critical path 取最慢的那一份。假設每份有 1% 機率變慢，fan-out 100 時，至少一份變慢的機率是 1 − 0.99<sup>100</sup> ≈ 63%。Google 的〈The Tail at Scale〉用這個算式說明 fan-out 讓尾端延遲變重要。這是 p.25 失敗 06 的機率面。</p>
-                  <div class="callout example"><span class="tag">例子</span><div><p>沒有深度上限時，假設每個 worker 再開 3 個 subagent。第 1 層 3 個，第 2 層 9 個，第 3 層 27 個，第 4 層 81 個，合計 120 個 agent。每個都有自己的 context 和 token 帳單。Spawn 數量限制每層的寬度，深度上限限制層數，預算限制總花費，終止條件決定何時停。</p></div></div>
+                  <p>最快的份數可以直接算。會隨 n 變的部分是 100 ÷ n ＋ 8n，兩項相等時總和最小，也就是 n ≈ √(100 ÷ 8) ≈ 3.5，整數取 4。一般式是 √（總工作量 ÷ 每份的派工成本）：派工越貴，該拆的份數越少。L3 講的 Amdahl's law 是同一件事的另一面：平行只能縮短能平行的部分。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「agent 越多越快。」平行只縮短最慢那一份的時間；每多一份，就多一次派工和回報。過了最低點，加 agent 只會更慢，也更貴。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
-                    <li>平行只縮短 critical path；planning、communication、merge 是額外成本，communication 隨子任務數成長。</li>
-                    <li>總時間對子任務數有一個最低點 → 拆之前先算，太細比不拆還慢。</li>
-                    <li>動態、遞迴拆解的任務數事先未知 → 要設 spawn 數量、預算、深度、終止條件四種上限。</li>
+                    <li>Worker 的全部世界就是那段 prompt → 規格沒寫的事不存在。</li>
+                    <li>boundaries 擋重疊、depends_on 擋隱藏的相依、output 擋無法合併。</li>
+                    <li>省下的時間 &lt; 多付的派工時間 → 就該停止再拆。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">派工：規格、六種拆錯、拆多細</a>〉；第 3 段<a href="#s-try">動手試試</a>的 granularity.py；L3 2.6〈<a href="l03.html#i6-7">為什麼 16 個 agent 不會快 16 倍：Amdahl's law</a>〉。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">派工：worker 的全部世界就是那段 prompt</a>〉；第 3 段<a href="#s-try">動手試試</a>的 subtask.yaml 與 granularity.py；L3 2.6〈<a href="l03.html#i6-7">為什麼 16 個 agent 不會快 16 倍：Amdahl's law</a>〉。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/102" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
             </li>
             <li class="bq" id="b4">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=31" target="_blank" rel="noopener">p.31–33</a> · Envelope 與 idempotency</p>
-                <p class="qtext">Runtime 為什麼不用問 LLM 就能路由和停止？購買請求 timeout 後，靠哪個欄位避免買兩次？</p>
+                <p class="qtag"><a class="ref" href="#i5">第 5、6 章</a> · 回報與失敗</p>
+                <p class="qtext">彙整節點為什麼會丟細節，又為什麼不該拿掉？timeout 之後，冪等和 fencing token 各擋哪一種重複？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>p.31 的 envelope 把控制和內容分開：外層的 id、task_id、from、to、type 給 runtime 讀，payload 才放給 LLM 讀的自然語言。Type 只有 9 種（DELEGATE、QUERY、REPORT、HANDOFF、UPDATE、CANCEL、ACK、ERROR、COMPLETE），runtime 看欄位就能路由、重試、停止。購買請求靠 task_id（p.33）：重試時沿用同一個 task_id 當 idempotency key，B 認出這是同一個請求，就不會再買一次。</p>
+                    <p><b>答案：</b>彙整節點把多份輸入變成一份輸出，一定會丟細節，而且下游不知道丟了什麼。但不該拿掉它：沒有人彙整的系統把錯誤放大 17.2 倍，中央協調只有 4.4 倍。該做的是讓彙整者看得到證據：訊息只帶主張、證據指標和檔案路徑，原文放在檔案裡（第 5 章）。</p>
+                    <p>冪等擋重複的請求：重試時帶同一個 <code>task_id</code>，B 查到做過，就回傳上次的結果。Fencing token 擋重複的執行者：換人時發一個遞增的編號，存放結果的地方只接受最新的編號（第 6 章）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
-                  <p>Type 是封閉的 9 個值，runtime 可以直接照值分派。例如 CANCEL 就停掉該 task，ERROR 就重試或升級給人。這些判斷不經過 LLM，所以快、便宜、每次結果相同。p.32 把它寫成法則：依欄位路由，不依內文路由。反過來讓 LLM 讀內文決定路由，要多付一次 model 呼叫；同一句話也可能讀出不同意思。p.30 的建議是兩者並用：claim、confidence、evidence 給 LLM 判斷，task_id、type、requires_response 給 runtime。</p>
-                  <p>p.33 的難處在 timeout。A 請 B「購買 8 台 GPU instance」，然後沒有回覆。從 A 這一側，三種情況看起來一樣：請求沒送到、B 買了但回覆遺失、B 還在處理。不重試，可能一台都沒買；重試，可能買 16 台。Slide 列的對策是 task_id 當 idempotency key，加上一條 compensation（rollback）路徑。</p>
                   <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 640 436" role="img" aria-label="購買請求 timeout 後重試的時序圖。四條直線由左到右是 Agent A、Agent B、B 的持久紀錄、雲端 API。A 送出 DELEGATE，task_id 是 t-17，要買 8 台。B 先在紀錄寫入 working，再呼叫雲端 API 購買，拿到 order_id 後寫入 done。B 回給 A 的 REPORT 在途中遺失，A 等到 timeout，分不出三種情況。A 用同一個 task_id t-17 重試。B 查紀錄發現已經是 done，不再呼叫雲端 API，直接回傳同一個 order_id。底部對照：如果重試換了新的 task_id，B 查不到紀錄，會再買 8 台，共 16 台。">
-                  <defs><marker id="tk5-4-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk5-4-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <path d="M96,42 L96,384" class="dg-soft-link dg-dash"/>
-                  <path d="M280,42 L280,384" class="dg-soft-link dg-dash"/>
-                  <path d="M430,42 L430,384" class="dg-soft-link dg-dash"/>
-                  <path d="M570,42 L570,384" class="dg-soft-link dg-dash"/>
-                  <rect x="46" y="10" width="100" height="32" rx="4" class="dg-n-a"/>
-                  <text x="96" y="31.0" text-anchor="middle" class="dg-l">Agent A</text>
-                  <rect x="230" y="10" width="100" height="32" rx="4" class="dg-n-c"/>
-                  <text x="280" y="31.0" text-anchor="middle" class="dg-l">Agent B</text>
-                  <rect x="366" y="10" width="128" height="32" rx="4" class="dg-n-b"/>
-                  <text x="430" y="31.0" text-anchor="middle" class="dg-l">B 的持久紀錄</text>
-                  <rect x="516" y="10" width="108" height="32" rx="4" class="dg-n-n"/>
-                  <text x="570" y="31.0" text-anchor="middle" class="dg-l">雲端 API</text>
-                  <rect x="90" y="72" width="12" height="166" rx="2" class="dg-n-d"/>
-                  <text x="84" y="150" text-anchor="end" class="dg-c">等回覆</text>
-                  <text x="84" y="168" text-anchor="end" class="dg-c">到 timeout</text>
-                  <text x="190" y="62" text-anchor="middle" class="dg-c">DELEGATE t-17：買 8 台</text>
-                  <path d="M103,70 L280,70" class="dg-link" marker-end="url(#tk5-4-ah)"/>
-                  <text x="355" y="92" text-anchor="middle" class="dg-k">① 先寫 working</text>
-                  <path d="M280,100 L430,100" class="dg-link-key" marker-end="url(#tk5-4-ak)"/>
-                  <text x="500" y="122" text-anchor="middle" class="dg-c">② 買 8 台，tag t-17</text>
-                  <path d="M280,130 L570,130" class="dg-link" marker-end="url(#tk5-4-ah)"/>
-                  <text x="500" y="152" text-anchor="middle" class="dg-mn">order_id</text>
-                  <path d="M570,160 L280,160" class="dg-link dg-dash" marker-end="url(#tk5-4-ah)"/>
-                  <text x="355" y="182" text-anchor="middle" class="dg-c">③ 寫 done ＋ order_id</text>
-                  <path d="M280,190 L430,190" class="dg-link" marker-end="url(#tk5-4-ah)"/>
-                  <text x="225" y="214" text-anchor="middle" class="dg-c">REPORT</text>
-                  <path d="M280,222 L172,222" class="dg-link"/>
-                  <path d="M157,217 L167,227" class="dg-link-key"/>
-                  <path d="M157,227 L167,217" class="dg-link-key"/>
-                  <text x="134" y="227" text-anchor="middle" class="dg-k">遺失</text>
-                  <text x="108" y="258" class="dg-k">timeout：A 分不出三種情況</text>
-                  <text x="190" y="282" text-anchor="middle" class="dg-k">重試：同一個 t-17</text>
-                  <path d="M96,290 L280,290" class="dg-link-key" marker-end="url(#tk5-4-ak)"/>
-                  <text x="355" y="312" text-anchor="middle" class="dg-c">④ 查 t-17</text>
-                  <path d="M280,320 L430,320" class="dg-link" marker-end="url(#tk5-4-ah)"/>
-                  <text x="355" y="342" text-anchor="middle" class="dg-c">已是 done</text>
-                  <path d="M430,350 L280,350" class="dg-link dg-dash" marker-end="url(#tk5-4-ah)"/>
-                  <text x="500" y="342" text-anchor="middle" class="dg-k">不再呼叫雲端 API</text>
-                  <text x="190" y="368" text-anchor="middle" class="dg-k">回傳同一個 order_id</text>
-                  <path d="M280,376 L97,376" class="dg-link-key" marker-end="url(#tk5-4-ak)"/>
-                  <rect x="10" y="394" width="620" height="34" rx="4" class="dg-n-d"/>
-                  <text x="320" y="416.0" text-anchor="middle" class="dg-l">對照：重試換了新的 task_id → B 查不到紀錄 → 再買 8 台，共 16 台</text>
+                <svg viewBox="0 0 720 236" role="img" aria-label="兩種重複。左邊是重複的請求：A 用同一個 task_id t-17 重送兩次，B 查 durable log 發現 t-17 已經 done，第二次直接回傳上次的結果，這是冪等。右邊是重複的執行者：Worker 1 拿 #7、Worker 2 拿 #8 都寫入結果，存放處只接受最新的 #8，拒絕 #7，這是 fencing token。">
+                  <defs><marker id="tk5-v4-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk5-v4-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="352" height="228" rx="6" class="dg-panel"/>
+                  <rect x="364" y="4" width="352" height="228" rx="6" class="dg-panel"/>
+                  <text x="18" y="28" class="dg-h">Duplicate request</text>
+                  <text x="18" y="46" class="dg-c">同一個請求送了兩次</text>
+                  <path d="M116,84 L210,84" class="dg-link" marker-end="url(#tk5-v4-ah)"/>
+                  <path d="M116,126 L210,126" class="dg-link" marker-end="url(#tk5-v4-ah)"/>
+                  <text x="163" y="77" text-anchor="middle" class="dg-mn-ink">t-17</text>
+                  <text x="163" y="119" text-anchor="middle" class="dg-mn-ink">t-17（retry）</text>
+                  <rect x="18" y="64" width="98" height="82" rx="4" class="dg-n-a"/>
+                  <text x="67" y="110.0" text-anchor="middle" class="dg-l">Agent A</text>
+                  <rect x="210" y="64" width="132" height="82" rx="4" class="dg-n-c"/>
+                  <text x="276" y="102.0" text-anchor="middle" class="dg-l">Agent B</text>
+                  <text x="276" y="119.0" text-anchor="middle" class="dg-c">durable log</text>
+                  <text x="276" y="172" text-anchor="middle" class="dg-cb">t-17 已是 done</text>
+                  <text x="276" y="192" text-anchor="middle" class="dg-k">→ 回傳上次的結果</text>
+                  <text x="18" y="220" class="dg-cb">擋它的：idempotency key</text>
+                  <text x="378" y="28" class="dg-h">Duplicate executor</text>
+                  <text x="378" y="46" class="dg-c">兩個 worker 都以為任務是自己的</text>
+                  <path d="M492,82 L560,82 L560,98" class="dg-link" marker-end="url(#tk5-v4-ah)"/>
+                  <path d="M492,144 L560,144 L560,128" class="dg-link-key" marker-end="url(#tk5-v4-ak)"/>
+                  <text x="526" y="75" text-anchor="middle" class="dg-mn-ink">write #8</text>
+                  <text x="526" y="160" text-anchor="middle" class="dg-k">write #7</text>
+                  <rect x="378" y="62" width="114" height="40" rx="4" class="dg-n-c"/>
+                  <text x="435" y="87.0" text-anchor="middle" class="dg-ls">Worker 2</text>
+                  <rect x="378" y="124" width="114" height="40" rx="4" class="dg-n-a"/>
+                  <text x="435" y="141.0" text-anchor="middle" class="dg-ls">Worker 1</text>
+                  <text x="435" y="158.0" text-anchor="middle" class="dg-c">stalled, woke up</text>
+                  <rect x="560" y="92" width="142" height="42" rx="4" class="dg-n-b"/>
+                  <text x="631" y="118.0" text-anchor="middle" class="dg-ls">Result store</text>
+                  <text x="631" y="160" text-anchor="middle" class="dg-k">#7 &lt; #8 → reject</text>
+                  <text x="378" y="220" class="dg-cb">擋它的：fencing token</text>
                 </svg>
               </div>
-              <figcaption>四條直線是四個參與者，時間由上往下。關鍵是第 ① 步：B 在呼叫雲端 API 之前就寫下紀錄，重複的請求才查得到。</figcaption>
+              <figcaption>兩種重複要用兩種機制擋。只有冪等，換人之後醒來的舊 worker 還是蓋得掉新結果；只有 fencing token，重送的請求還是會再做一次。</figcaption>
             </figure>
-                  <p>紀錄要持久保存，而且要在呼叫雲端 API 之前寫入。否則 B 在購買後、寫入前 crash，重啟後查不到紀錄，就會再買一次。重複請求來時，B 照紀錄的狀態回覆：working 回「處理中」，done 回傳原本的 order_id。</p>
+                  <p>Timeout 之後，A 分不出三種情況：請求沒送到、B 做完但回覆遺失、B 還在做。不重試可能一台都沒買，重試可能買到兩次。所以傳遞層只能二選一：最多送一次（可能丟），或至少送一次（可能重複）。實務的組合是「至少送一次」加上接收端的冪等。</p>
+                  <p>冪等有兩個細節。第一，紀錄要在真的去做之前先寫一筆「處理中」，否則 B 做完、還沒寫紀錄就 crash，重啟後會再做一次。第二，重試由 runtime 用同一個訊息重送，不讓 LLM 決定，因為 LLM 可能產生新的 task_id。</p>
+                  <p>Timeout 也不等於失敗，LLM agent 一圈 loop 跑幾分鐘很常見。要判斷對方還活著沒，用心跳和租約：worker 定期續約，租約過期才換人。換人之後，舊 worker 可能只是卡住，醒來還會寫結果，這時就靠 fencing token 擋下它。</p>
                   <p class="tk-h">背景補充</p>
-                  <p>網路只能保證兩種傳遞語意。At-most-once：不重試，最多送達一次，可能遺失。At-least-once：重試到收到確認，至少送達一次，可能重複。傳遞層做不到 exactly-once。實務上傳遞層做 at-least-once，接收端用冪等處理去除重複，合起來效果等於 exactly-once。</p>
-                  <p>付款與雲端 API 普遍這樣做。Stripe 的 API 讓呼叫端在 header 帶 Idempotency-Key；AWS EC2 的 RunInstances 有 ClientToken 參數，同一個 token 重送不會多開機器。共通點：key 由呼叫端產生，每個操作一把，重試時不換。</p>
-                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Timeout 代表 B 沒做，重送就好。」Timeout 只代表 A 沒收到回覆。B 可能已經做完，也可能還在做。重送要由 runtime 用原本的 envelope 送，不要讓 LLM 重寫一次請求：重寫的請求可能帶新的 task_id，B 就會當成新的購買。</p></div></div>
+                  <p>付款 API 早就這樣做。例如 Stripe 讓呼叫端在請求帶一個 <code>Idempotency-Key</code> header，同一把 key 重送時回傳第一次的結果。Fencing token 是分散式鎖的標準做法，Martin Kleppmann 2016 年的文章〈How to do distributed locking〉用它說明為什麼單靠鎖的到期時間不夠。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「有冪等，就能放心換人重做。」冪等只認得重複的請求。舊 worker 醒來寫結果時，帶的是同一個 task_id，冪等會把它當成合法的寫入。要擋它，得靠每次換手都遞增的編號。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
-                    <li>Envelope 分兩層：欄位給 runtime（路由、重試、停止），payload 給 LLM → 依欄位路由，不依內文。</li>
-                    <li>Timeout ≠ 沒做：沒送到、回覆遺失、還在做，從呼叫端看起來都一樣。</li>
-                    <li>At-least-once 重試 ＋ 同一個 task_id 當 idempotency key ＋ 先寫紀錄再動手 → 重試也只買一次。</li>
+                    <li>彙整一定丟細節 → 不拿掉彙整者，而是讓它順著路徑查得到證據。</li>
+                    <li>Timeout ＝「我不知道了」→ 先查狀態，再決定重送或換人。</li>
+                    <li>重複的請求靠冪等，重複的執行者靠 fencing token，兩個都要有。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">回報：訊息只帶主張和證據</a>〉、〈<a href="#i6">送出去之後：timeout、冪等與 partial failure</a>〉，含〈<a href="#t1">冪等</a>〉與〈<a href="#t3">partial failure</a>〉；第 3 段<a href="#s-try">動手試試</a>的 runtime.py。進階題第 3 題會設計完整的重試與 compensation。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">回報：訊息只帶主張和證據，原文放檔案</a>〉、〈<a href="#i6">送出去之後：timeout、冪等與 partial failure</a>〉，含〈<a href="#t1">冪等</a>〉與〈<a href="#t3">partial failure</a>〉；第 3 段<a href="#s-try">動手試試</a>的 runtime.py。進階題第 3 題會設計完整的重試與 compensation。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/102" target="_blank" rel="noopener">到 GitHub 回答這一題（Q4）↗</a></p>
               </div>
             </li>
             <li class="bq" id="b5">
               <div class="qbody">
-                <p class="qtag"><a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=41" target="_blank" rel="noopener">p.41–43</a> · A2A 與 MCP</p>
-                <p class="qtext">A2A 只標準化溝通，哪些事仍留給 harness？MCP 和 A2A 的工作單位差在哪裡？</p>
+                <p class="qtag"><a class="ref" href="#i7">第 7 章</a> · 狀態與時間</p>
+                <p class="qtext">為什麼說每個 agent 的 context 是一份會過期的副本？網路分區時要在哪兩者之間選？為什麼不能用時間戳排先後？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>A2A 不負責 orchestration（p.41）。要不要委派、怎麼拆、何時停止，仍由 harness 決定。MCP 連接 agent 與服務，工作單位是一次 tool call：一次呼叫，一個結果（p.42）。A2A 連接 agent 與 agent，工作單位是一個長時間的 task（p.43）。</p>
+                    <p><b>答案：</b>Agent 讀進 context 的每個事實，都是外面那份狀態的副本，讀完的那一刻就開始過期，因為別的 agent 可能已經改了它。</p>
+                    <p>網路分區時，連不上共享狀態的 agent 只能二選一：選 consistency，停下來等；或選 availability，用手上的舊副本繼續做。每台機器的時鐘都會漂移，所以兩個 agent 的時間戳不能拿來比先後。用時間戳做 last-write-wins，可能把較晚的寫入丟掉（第 7 章）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>
-                  <p>A2A 標準化的是「和另一個 agent 合作」這一段。對方在 <code>/.well-known/agent-card.json</code> 公開 agent card，呼叫者從中得知對方的身分、skills、endpoint、能力和認證方式（p.38）。互動有三個抽象（p.39）：message 是一輪對話，task 是有 ID、有生命週期的工作，artifact 是 task 的產出。一則 message 開啟 task，後續的回覆加入同一個 task。</p>
-                  <p>Task 有狀態，所以能暫停（p.40）。缺資料時進入 Input required，缺授權時進入 Auth required，補齊後回到 Working。Task 可能跑很久，p.41 給三種追進度的方法：polling 適合短工作，streaming 適合互動式輸出，push notification（webhook）適合跑幾小時的工作。</p>
-                  <figure class="diagram">
-              <div class="scroll">
-                <svg viewBox="0 0 640 436" role="img" aria-label="同一個 agent 用兩種協定的工作單位對照。左邊是我的 agent，harness 在這裡決定要不要委派、怎麼拆、何時停止，兩個協定都不管這一層。上半是 MCP：agent 發出一次 tool call 給 MCP server，拿回一個結果就結束。下半是 A2A：agent 送 message 給遠端 agent，開啟 task-42。Task 從 Submitted 到 Working，遠端回傳進度更新；接著進入 Input required，反問出發日期；agent 回覆日期，加入同一個 task，回到 Working；最後 Completed，回傳行程 PDF 這個 artifact。遠端 agent 的內部狀態不公開，裡面可能再呼叫多個 MCP server。">
-                  <defs><marker id="tk5-5-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk5-5-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <rect x="10" y="64" width="130" height="340" rx="6" class="dg-n-a"/>
-                  <text x="75" y="90" text-anchor="middle" class="dg-h">我的 agent</text>
-                  <text x="75" y="210" text-anchor="middle" class="dg-k">Harness 決定</text>
-                  <text x="75" y="234" text-anchor="middle" class="dg-l-plain">要不要委派</text>
-                  <text x="75" y="254" text-anchor="middle" class="dg-l-plain">怎麼拆</text>
-                  <text x="75" y="274" text-anchor="middle" class="dg-l-plain">何時停止</text>
-                  <text x="75" y="300" text-anchor="middle" class="dg-c">兩個協定</text>
-                  <text x="75" y="318" text-anchor="middle" class="dg-c">都不管這層</text>
-                  <text x="160" y="28" class="dg-h">MCP：agent 與服務（p.42）</text>
-                  <text x="160" y="50" class="dg-c">Host 決定開放哪些 tool，不是 model 決定</text>
-                  <text x="305" y="98" text-anchor="middle" class="dg-c">tool call：一次呼叫，typed 參數</text>
-                  <path d="M140,106 L470,106" class="dg-link" marker-end="url(#tk5-5-ah)"/>
-                  <text x="305" y="128" text-anchor="middle" class="dg-c">一個結果</text>
-                  <path d="M470,136 L140,136" class="dg-link dg-dash" marker-end="url(#tk5-5-ah)"/>
-                  <rect x="470" y="86" width="160" height="60" rx="4" class="dg-n-c"/>
-                  <text x="550" y="113.0" text-anchor="middle" class="dg-l">MCP server</text>
-                  <text x="550" y="130.0" text-anchor="middle" class="dg-c">檔案、資料庫、GitHub</text>
-                  <text x="160" y="170" class="dg-k">工作單位：一次 tool call，呼叫完就結束</text>
-                  <path d="M150,184 L630,184" class="dg-soft-link dg-dash"/>
-                  <text x="160" y="206" class="dg-h">A2A：agent 與 agent（p.37–41）</text>
-                  <rect x="400" y="212" width="230" height="192" rx="6" class="dg-panel"/>
-                  <text x="515" y="232" text-anchor="middle" class="dg-cb">遠端 agent：task-42</text>
-                  <text x="275" y="244" text-anchor="middle" class="dg-c">message：Book a flight to Boston</text>
-                  <path d="M140,252 L410,252" class="dg-link" marker-end="url(#tk5-5-ah)"/>
-                  <rect x="410" y="240" width="112" height="24" rx="4" class="dg-n-n"/>
-                  <text x="466" y="256" text-anchor="middle" class="dg-mn-ink">Submitted</text>
-                  <text x="275" y="278" text-anchor="middle" class="dg-c">進度更新（streaming / polling）</text>
-                  <path d="M410,286 L140,286" class="dg-link dg-dash" marker-end="url(#tk5-5-ah)"/>
-                  <rect x="410" y="274" width="112" height="24" rx="4" class="dg-n-n"/>
-                  <text x="466" y="290" text-anchor="middle" class="dg-mn-ink">Working</text>
-                  <text x="275" y="312" text-anchor="middle" class="dg-c">反問：哪一天出發？</text>
-                  <path d="M410,320 L140,320" class="dg-link" marker-end="url(#tk5-5-ah)"/>
-                  <rect x="410" y="308" width="112" height="24" rx="4" class="dg-n-b"/>
-                  <text x="466" y="324" text-anchor="middle" class="dg-mn-ink">Input required</text>
-                  <text x="275" y="346" text-anchor="middle" class="dg-c">回覆日期：加入同一個 task</text>
-                  <path d="M140,354 L410,354" class="dg-link" marker-end="url(#tk5-5-ah)"/>
-                  <rect x="410" y="342" width="112" height="24" rx="4" class="dg-n-n"/>
-                  <text x="466" y="358" text-anchor="middle" class="dg-mn-ink">Working</text>
-                  <text x="275" y="380" text-anchor="middle" class="dg-k">artifact：行程 PDF</text>
-                  <path d="M410,388 L140,388" class="dg-link-key" marker-end="url(#tk5-5-ak)"/>
-                  <rect x="410" y="376" width="112" height="24" rx="4" class="dg-n-focus"/>
-                  <text x="466" y="392" text-anchor="middle" class="dg-mn-on">Completed</text>
-                  <rect x="532" y="240" width="90" height="158" rx="4" class="dg-n-n"/>
-                  <text x="577" y="260" text-anchor="middle" class="dg-c">內部狀態</text>
-                  <text x="577" y="277" text-anchor="middle" class="dg-c">不公開</text>
-                  <rect x="547" y="290" width="60" height="24" rx="4" class="dg-n-c"/>
-                  <text x="577" y="307.0" text-anchor="middle" class="dg-ls">MCP</text>
-                  <rect x="547" y="320" width="60" height="24" rx="4" class="dg-n-c"/>
-                  <text x="577" y="337.0" text-anchor="middle" class="dg-ls">MCP</text>
-                  <text x="577" y="362" text-anchor="middle" class="dg-cb">⋯</text>
-                  <text x="577" y="386" text-anchor="middle" class="dg-c">可能再呼叫</text>
-                  <text x="160" y="426" class="dg-k">工作單位：一個有 ID、有狀態、能暫停的 task</text>
-                </svg>
-              </div>
-              <figcaption>上半一來一回就結束。下半的 task 會暫停、等補資料、再繼續；雙方靠 task ID 對上同一件工作。左邊的 harness 決策，兩個協定都不碰。</figcaption>
-            </figure>
-                  <p>MCP 是 agent 的服務邊界（p.42）。它標準化 tools、resources、prompts 三種東西；一個 client 可以接多個 server，開放哪些 tool 由 host 決定。p.43 再補兩點。A2A 的遠端 agent 最好不公開內部狀態，它內部可能再呼叫多個 MCP server。類比上，MCP 像裝置或 API 介面，A2A 像 service 之間的 RPC。</p>
+                  <p>副本過期最常見的後果是 lost update：A 和 B 同時讀到 T4 沒人認領，各自寫上自己的名字，後寫的蓋掉先寫的。解法是 conditional write：寫入時附上讀到的版本，版本變了就拒絕、要求重讀。遠端已經更新時 git 拒絕 <code>git push</code>，就是這個機制。</p>
+                  <p>分區時選哪一邊，要事先依動作決定，否則 agent 通常會默默選 availability：</p>
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>動作</th><th>分區時選</th><th>理由</th></tr></thead>
+                    <tbody>
+                      <tr><td>寫入、不可逆的動作（付款、刪除、發信）</td><td>Consistency：先重讀，讀不到就停</td><td>用舊狀態做錯，事後收不回來</td></tr>
+                      <tr><td>讀、探索、草稿</td><td>Availability：可以用舊副本</td><td>做錯只是多做一次，代價小</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>要排先後，有兩種做法。一種是讓同一個地方發號碼：store 替每次寫入發遞增的版本號，fencing token 也是這個做法。另一種是 logical clock：每個 agent 帶一個計數器，送訊息時附上，收到的一方取兩者較大值再加 1，有因果關係的事件順序一定排得對。</p>
                   <p class="tk-h">背景補充</p>
-                  <p>兩個協定都在解 L2 的 N×M 整合問題，只是層次不同。MCP 由 Anthropic 在 2024 年 11 月發表，解 agent 對工具的整合；A2A 由 Google 在 2025 年 4 月發表，解 agent 對 agent 的整合，之後交給 Linux Foundation 管理。</p>
-                  <p>A2A 的 task 是分散式系統常見的 long-running operation 模式：送出請求，先拿到一個 ID，之後用 ID 查狀態或等通知。HTTP 的 202 Accepted 加上狀態查詢 URL 是同一個想法。這也連回 B4：task 有 ID 和狀態，timeout 之後可以先查狀態，不必盲目重送。</p>
-                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「用了 A2A，multi-agent 系統就設計好了。」A2A 只管傳話：找到對方、開 task、追狀態、拿回產出。要不要委派、拆多細、誰協調、何時停，仍是本堂前半段的設計問題（p.41）。協定換不掉 B1 到 B3 的判斷。</p></div></div>
+                  <p>CAP 最早是 Eric Brewer 在 2000 年提出的猜想，2002 年由 Gilbert 與 Lynch 證明。Logical clock 來自 Leslie Lamport 1978 年的論文〈Time, Clocks, and the Ordering of Events in a Distributed System〉。沒有分區時也有取捨：每次都重讀最新狀態，多一個 tool call 和一份 token；直接用副本，快但可能過期，這部分有人稱為 PACELC。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「CAP 是三選二。」分區不是你能選擇不要的東西，網路一定會出問題。正確的讀法是：分區發生時，在 consistency 和 availability 之間選一個；沒有分區時，兩者可以都有。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol>
-                    <li>A2A 標準化溝通：發現（agent card）、task、狀態、artifact；orchestration 留給 harness。</li>
-                    <li>MCP：agent 對服務，一次 tool call，一個結果。A2A：agent 對 agent，一個有 ID、有狀態、能暫停的 task。</li>
-                    <li>兩者互補，不互相取代：遠端的 A2A agent 內部可能再呼叫多個 MCP server。</li>
+                    <li>Context 裡的事實是副本 → 寫之前重讀，用 conditional write 擋 lost update。</li>
+                    <li>分區時只能保住一個 → 不可逆的動作選 consistency，讀和探索可以選 availability。</li>
+                    <li>時間戳排不出先後 → 用同一個地方發的版本號，或 logical clock。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i9">目錄</a>〉的兩個協定與〈<a href="#n-a2a">task 狀態機</a>〉；第 3 段<a href="#s-try">動手試試</a>的 agent card；L2〈<a href="l02.html#t5">N×M 整合問題</a>〉。第 2 段「自我檢查」的第 3 題可以用來自測 MCP 和 A2A 的選擇。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i7">狀態與時間：每個 agent 的 context 都是一份會過期的副本</a>〉；L6〈<a href="l06.html#i5">反思、遺忘與有效時間</a>〉講記憶裡的事實怎麼標有效期。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/102" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>
@@ -2073,7 +1893,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
         </div>
         <div class="submit" id="s-submit">
           <h3 class="subhead">到 GitHub 寫你的答案</h3>
-          <p class="lede">這堂一串，放在 GitHub Issues。看完 slides 後，把上面的 5 題基礎題寫成一則留言，用 Q1 到 Q5 當小標。進階題不用先寫，讀書會當天一起討論。</p>
+          <p class="lede">這堂一串，放在 GitHub Issues。讀完文章後，把上面的 5 題基礎題寫成一則留言，用 Q1 到 Q5 當小標。進階題不用先寫，讀書會當天一起討論。</p>
           <div class="copyrow gh-row">
             <a class="copybtn" href="https://github.com/chihmingyang/cs2680/issues/102" target="_blank" rel="noopener">到這堂的討論串 ↗</a>
             <a class="ghostbtn" href="https://github.com/chihmingyang/cs2680/issues" target="_blank" rel="noopener">全部講次的討論串 ↗</a>

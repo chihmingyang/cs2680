@@ -132,7 +132,8 @@ def read_page(path):
            "title": md(first(r"<h1>(.*?)</h1>", head)), "basic": [],
            "has_beyond": 'id="s-beyond"' in s,
            # 2026-10-27: 問題討論 is §3 on pages without 觀念補充 (L4), §4 with it, §5 with 延伸思考 too
-           "discuss_no": 3 + (1 if 'id="s-background"' in s else 0) + (1 if 'id="s-beyond"' in s else 0)}
+           "discuss_no": (3 if 'id="s-arch"' in s else 2) + (1 if 'id="s-background"' in s else 0) + (1 if 'id="s-beyond"' in s else 0),
+           "v7": 'id="s-arch"' not in s}  # v7 idea-first pages: no 架構 section, questions point at chapters
     for m in re.finditer(r'<li class="bq" id="(b\d+)">', s):
         blk = li_block(s, m.start())
         tag = first(r'<p class="qtag">(.*?)</p>', blk)
@@ -160,13 +161,15 @@ def thread_body(lec):
     page = f"{SITE_URL}{lec['key']}.html"
     n = len(lec["basic"])
     lines = [f"**CS2680 L{lec['no']} · {lec['title']}** · 基礎題 {n} 題", "",
-             f"看 slides 前先看這 {n} 題，帶著問題去讀。看完後**每人在下面留一則**，用 `### Q1` … `### Q{n}` 當小標，"
+             f"{'讀文章前' if lec.get('v7') else '看 slides 前'}先看這 {n} 題，帶著問題去讀。看完後**每人在下面留一則**，用 `### Q1` … `### Q{n}` 當小標，"
              "一題一段。要補充就編輯自己那一則。建議先寫自己的，再看別人的。", "",
              f"進階題不在這裡。它們在[站台第 {lec['discuss_no']} 段]({page}#s-discuss)，讀書會當天一起討論。", ""]
     for q in lec["basic"]:
         lines += [f"### Q{q['n']} · {q['topic']}", "", "> " + q["text"].replace("\n", "\n> "), ""]
         bits = [f"[參考答案]({page}#{q['id']})"]
-        if q["ref"]:
+        if q["ref"] and q["ref"][0].startswith("#"):
+            bits.append(f"[文章{q['ref'][1]}]({page}{q['ref'][0]})")
+        elif q["ref"]:
             bits.append(f"[Slides {q['ref'][1]}]({q['ref'][0]})")
         lines += ["　".join(bits), ""]
     lines += ["---", "", "**回覆範本**（複製到留言框再填）", "", "```markdown"]
@@ -188,7 +191,7 @@ def submit_section(lec, url):
     n = len(lec["basic"])
     return f"""<div class="submit" id="s-submit">
           <h3 class="subhead">到 GitHub 寫你的答案</h3>
-          <p class="lede">這堂一串，放在 GitHub Issues。看完 slides 後，把上面的 {n} 題基礎題寫成一則留言，用 Q1 到 Q{n} 當小標。進階題不用先寫，讀書會當天一起討論。</p>
+          <p class="lede">這堂一串，放在 GitHub Issues。{'讀完文章後' if lec.get('v7') else '看完 slides 後'}，把上面的 {n} 題基礎題寫成一則留言，用 Q1 到 Q{n} 當小標。進階題不用先寫，讀書會當天一起討論。</p>
           <div class="copyrow gh-row">
             <a class="copybtn" href="{url}" {EXT}>到這堂的討論串 ↗</a>
             <a class="ghostbtn" href="{ISSUES_URL}" {EXT}>全部講次的討論串 ↗</a>

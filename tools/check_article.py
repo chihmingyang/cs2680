@@ -262,6 +262,8 @@ def main():
         if a not in p.ids:
             problems.append(f"sidenav link #{a} has no target")
     for href in p.refs:
+        if href.startswith("#i") and href[1:] in p.ids:
+            continue  # v7: a basic question points at a chapter of this page
         m = re.search(r"#page=(\d+)$", href)
         if args.pdf not in href or not m:
             problems.append(f"bad slide ref {href}")

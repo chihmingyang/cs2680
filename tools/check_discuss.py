@@ -3,7 +3,7 @@
 
 Usage: python3 -I check_discuss.py docs/l01.html [...]
 Prints a short report and PROBLEMS / OK per page. Rules as of 2026-10-22:
-  基礎題 li.bq: 3-5, each with one details「參考答案與重點複習」> div.hint.takeaway holding
+  基礎題 li.bq: 3-5 (v7 pages: qtag a.ref may point at a chapter #iN, copy button has no data-slides), each with one details「參考答案與重點複習」> div.hint.takeaway holding
     div.tk-ans, p.tk-h「重點拆解」and「背景補充」, div.tk-keys (3 points), p.tk-rel.
     A「常見誤解」callout is expected (warning only).
   核心觀念 ideas: 3-10 (2026-11-03; was 3-8). Every idea has an a.ref, or none does (v7 idea-first pages).
@@ -147,7 +147,9 @@ def check(path):
         tabs = d.find("button", "qtab")
         if len(tabs) != 2:
             probs.append(f"{len(tabs)} qtabs")
-        for name, prefix in (("basic", f"CS2680 L{n} 基礎題（帶著問題看 slides）："), ("adv", f"CS2680 L{n} 進階題（讀書會討論）：")):
+        v7 = 'id="s-arch"' not in text  # v7 idea-first pages: basic questions follow the article, not the slides
+        basic_prefix = f"CS2680 L{n} 基礎題（帶著問題讀文章）：" if v7 else f"CS2680 L{n} 基礎題（帶著問題看 slides）："
+        for name, prefix in (("basic", basic_prefix), ("adv", f"CS2680 L{n} 進階題（讀書會討論）：")):
             panel = d.find("div", id=f"qset-{name}")
             if not panel:
                 probs.append(f"no #qset-{name}"); continue
@@ -161,7 +163,7 @@ def check(path):
                 sl = btn[0].attrs.get("data-slides", "")
                 if not t.startswith(prefix):
                     probs.append(f"{name} data-title {t!r}")
-                if sl != f"https://cs2680.com/slides/{pdf}":
+                if not (v7 and name == "basic" and sl == "") and sl != f"https://cs2680.com/slides/{pdf}":
                     probs.append(f"{name} data-slides {sl!r}")
         if not d.find("textarea", id="copy-fallback"):
             probs.append("no copy-fallback textarea")
