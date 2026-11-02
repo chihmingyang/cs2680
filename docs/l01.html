@@ -271,7 +271,7 @@
                   <tr><td>B：更貴的設定</td><td>$60</td><td>90</td><td>$0.60</td><td><b>$0.67</b></td></tr>
                 </tbody>
               </table></div>
-              <p><strong>B 每次較貴，每個成功任務反而便宜</strong>，使用者拿到結果的次數還幾乎是兩倍。只看每次請求的成本或 tokens/sec，你會選 A。要把這個數字算準，成功率得量得對，這是 <a href="l07.html#i2">L7</a> 的主題；token 數和單價再怎麼拆，是 <a href="l08.html#i1">L8</a> 的主題。</p>
+              <p><strong>B 每次較貴，每個成功任務反而便宜</strong>，使用者拿到結果的次數還幾乎是兩倍。只看每次請求的成本或 tokens/sec，你會選 A。要把這個數字算準，成功率得量得對，這是 <a href="l07.html#i3">L7</a> 的主題；token 數和單價再怎麼拆，是 <a href="l08.html#i1">L8</a> 的主題。</p>
               <p id="i2-2"><span class="anchor" id="x3"></span><b>本文的判斷：tokens/sec 會把優化帶錯方向。</b>它有三個盲點，每一個都會讓數字變好、agent 變差：</p>
               <ul>
                 <li><b>大 batch 讓鏈上的每一步變慢。</b>Batching 把多個請求併成一步算，整張 GPU 的 tokens/sec 升高，每個請求卻變慢（下圖）。一步生成 500 個 token、跑 40 步的 agent，batch 從 1 加到 32，生成時間從約 3.4 分鐘變成約 6.9 分鐘。</li>
@@ -407,7 +407,7 @@
               </div>
               <figcaption>AI 寫程式的等級升高時，人的時間花在哪裡？等級和第二行來自課程；第三行「誰驗證」是本文的整理。</figcaption>
             </figure>
-              <p>等級越高，你驗證的對象越往上游移。可是沒有能信任的測試就往上走，只是把沒人檢查的東西做得更快。人的角色怎麼變，<a href="l03.html#i3">L3</a> 有田野證據；成功怎麼量，是 <a href="l07.html#i2">L7</a> 的主題。時間有限的話，讀到這裡可以先跳到<a href="#i10">第 10 章</a>的九個問題，決定接下來讀什麼。</p>
+              <p>等級越高，你驗證的對象越往上游移。可是沒有能信任的測試就往上走，只是把沒人檢查的東西做得更快。人的角色怎麼變，<a href="l03.html#i3">L3</a> 有田野證據；成功怎麼量，是 <a href="l07.html#i3">L7</a> 的主題。時間有限的話，讀到這裡可以先跳到<a href="#i10">第 10 章</a>的九個問題，決定接下來讀什麼。</p>
             </div>
           </div>
 
@@ -604,7 +604,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <tr><td>這個 subagent 值不值得？</td><td>Agent tool 底下那棵子樹的 token 與時間</td></tr>
                 </tbody>
               </table></div>
-              <p>課程的口號是<strong>你無法優化你看不到的東西</strong>。這棵樹要趁早裝，因為事後補不回過去的 run。它也有界線：trace 告訴你時間和錢花在哪裡，不告訴你任務有沒有成功。成功率要另外量，這是 <a href="l07.html#i2">L7</a> 的主題。</p>
+              <p>課程的口號是<strong>你無法優化你看不到的東西</strong>。這棵樹要趁早裝，因為事後補不回過去的 run。它也有界線：trace 告訴你時間和錢花在哪裡，不告訴你任務有沒有成功。成功率要另外量，這是 <a href="l07.html#i3">L7</a> 的主題。</p>
             </div>
           </div>
 
@@ -1112,7 +1112,7 @@ def test_model_properties():
         t = to_ticket(call_model(BUG_123))
         passed += t.severity in SEVERITIES and bool(t.steps)   # 檢查性質，不比對字串
     assert passed &gt;= 18                            # 門檻依自己的基準線定；20 次的誤差很大</code></pre></figure>
-              <p>第 2 段進階題第 3 題請你替這個功能訂出判定退步的規則。<a href="l07.html#i2">L7</a> 的 pass^k（同一題 k 次都成功才算過）是同一個想法，用在 agent 上更重要，因為一個 token 不同，就可能換掉整個 tool call。</p>
+              <p>第 2 段進階題第 3 題請你替這個功能訂出判定退步的規則。<a href="l07.html#i3">L7</a> 的 pass^k（同一題 k 次都成功才算過）是同一個想法，用在 agent 上更重要，因為一個 token 不同，就可能換掉整個 tool call。</p>
               <p id="i9-3"><span class="anchor" id="t4"></span><b>故障是常態。</b>GPU 的 MTBF（mean time between failures，單一元件平均多久故障一次）約 50,000 小時，單張看很可靠。但 N 張一起用，只要每張獨立故障，叢集平均每 MTBF ÷ N 就壞一張：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>GPU 數</th><th>多久壞一張</th><th>換算</th></tr></thead>
@@ -1579,7 +1579,7 @@ def test_model_properties():
                     <li>TTFT、TPOT、tool-call latency、GPU 使用率各量一個元件 → 有用，但看不到整個任務。</li>
                     <li>改看任務指標：成功率、端到端延遲、每個任務的 token 數、每個成功任務的花費與耗能。要算得出來，trace 要能把請求歸到同一個任務（p.43）。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>第 2 章〈<a href="#i2">最重要的判斷：throughput 是錯的目標，要算每個成功任務的成本</a>〉與〈<a href="#x3">本文的判斷：tokens/sec 會把優化帶錯方向</a>〉、第 3 章〈<a href="#i3">目標少算的一項：人的時間</a>〉、第 4 章〈<a href="#i4-2">看不到就不能優化：trace</a>〉；<a href="l07.html#i2">L7 一個成功率不夠</a>、<a href="l08.html#i1">L8 成本是一串乘數</a>。進階題第 2 題請你替 coding agent 設計這組指標。</p>
+                  <p class="tk-rel"><b>相關：</b>第 2 章〈<a href="#i2">最重要的判斷：throughput 是錯的目標，要算每個成功任務的成本</a>〉與〈<a href="#x3">本文的判斷：tokens/sec 會把優化帶錯方向</a>〉、第 3 章〈<a href="#i3">目標少算的一項：人的時間</a>〉、第 4 章〈<a href="#i4-2">看不到就不能優化：trace</a>〉；<a href="l07.html#i3">L7 一個成功率不夠</a>、<a href="l08.html#i1">L8 成本是一串乘數</a>。進階題第 2 題請你替 coding agent 設計這組指標。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/98" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>

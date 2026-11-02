@@ -791,7 +791,7 @@ Prompt cache (main):   14 requests · 91% of input tokens from cache · 2 misses
               <figcaption>壓完要多久才回本？三條線的斜率相同，因為每步省的一樣；差別在一開始付了多少。線穿過 0 的地方就是回本點。</figcaption>
             </figure>
 <p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。任務快結束時不要壓；換任務時用 <code>/clear</code>，<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>直接說它不花錢；要繼續的長任務趁 cache 還熱時壓。還有一個趨勢值得注意：r 降到 0.05 時每步省的減半，三種情境的回本點變成 7、17、30 步。Cache read 越便宜，縮小 context 的回報越小，保住命中率的回報越大。真實系統的選擇也不同：Hermes Agent 在 context 用到 50% 就壓，Uber 等到 400K，OpenClaw 壓之前先寫一次記憶，替反向成本保險。</p>
-<p id="i4-3"><span class="anchor" id="x1"></span><b>淨節省只能在同一組任務上量。</b>Agent 的 trajectory 有隨機性，同一個任務跑兩次，step 數可能差一倍，所以比較兩個設定要用同一組任務、每題跑多次、看分布，方法見 L7〈<a href="l07.html#i7-3">非確定性</a>〉與〈<a href="l07.html#t5">標準誤</a>〉。Anthropic 的客服 benchmark 也提醒另一半：調到訓練題 98.9% 的設定，14 張 held-out 工單上是 90.5%（原設定 78.6%，成本約 1/5）。<strong>拿來調參的題目不能拿來報成績</strong>，這是 L7 講的 leakage。</p>
+<p id="i4-3"><span class="anchor" id="x1"></span><b>淨節省只能在同一組任務上量。</b>Agent 的 trajectory 有隨機性，同一個任務跑兩次，step 數可能差一倍，所以比較兩個設定要用同一組任務、每題跑多次、看分布，方法見 L7〈<a href="l07.html#i4">雜訊</a>〉與〈<a href="l07.html#t5">標準誤</a>〉。Anthropic 的客服 benchmark 也提醒另一半：調到訓練題 98.9% 的設定，14 張 held-out 工單上是 90.5%（原設定 78.6%，成本約 1/5）。<strong>拿來調參的題目不能拿來報成績</strong>，這是 L7 講的 leakage。</p>
 <p id="i4-4"><b>優化是一個迴圈。</b>上面的紀律可以收成四步，教授特別標了 Assignment 4 會用到：</p>
 <figure class="diagram">
               <div class="scroll">
@@ -1622,7 +1622,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
                     <li>每個成功任務的成本 = 每次嘗試的平均花費 ÷ 成功率 → 失敗的錢也算進去。</li>
                     <li>比完平均還要比邊際：多成功一次要多花多少，值不值得。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">成本公式：六個乘數，分母要算成功的任務</a>〉；L1〈<a href="l01.html#i2">優化目標</a>〉；L7〈<a href="l07.html#i2-2">pass@k</a>〉。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">成本公式：六個乘數，分母要算成功的任務</a>〉；L1〈<a href="l01.html#i2">優化目標</a>〉；L7〈<a href="l07.html#i3-1">pass@k</a>〉。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/105" target="_blank" rel="noopener">到 GitHub 回答這一題（Q1）↗</a></p>
               </div>
@@ -1719,7 +1719,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
                     <li>Compaction 要走幾步才回本 → 長任務趁 cache 還熱時壓，快結束不要壓。</li>
                     <li>失敗的錢佔大半 → 上限訂在成功任務 p95 的 2 倍，加上進展檢查，停下交摘要。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">淨節省：每個省法都有反向成本，要在同一組任務上量</a>〉、〈<a href="#i7">上限：失控的任務要有人喊停</a>〉；註〈<a href="#n-compaction">Compaction</a>〉；L6〈<a href="l06.html#i4">失敗的五層</a>〉；L7〈<a href="l07.html#i7-3">非確定性</a>〉。進階題第 2 題從 trace 訂上限。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">淨節省：每個省法都有反向成本，要在同一組任務上量</a>〉、〈<a href="#i7">上限：失控的任務要有人喊停</a>〉；註〈<a href="#n-compaction">Compaction</a>〉；L6〈<a href="l06.html#i4">失敗的五層</a>〉；L7〈<a href="l07.html#i4">雜訊</a>〉。進階題第 2 題從 trace 訂上限。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/105" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
