@@ -54,7 +54,7 @@
     <p class="eyebrow">Lecture 05 · 試讀版：依想法重組</p>
     <h1>Multi-agent：什麼時候值得拆，拆了怎麼不壞</h1>
     <ul class="meta">
-      <li><span class="k">閱讀</span>約 28 分鐘</li>
+      <li><span class="k">閱讀</span>約 31 分鐘</li>
       <li><span class="k">現行版本</span><a href="l05.html">L5（照投影片順序）</a></li>
     </ul>
   </header>
@@ -78,7 +78,7 @@
           <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>多數任務不該拆</small></span><span class="map-m">約 2 分</span></a>
           <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">最實用的分界<small>讀可以平行，寫留在單線（本文補的）</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">要用時會做：派工與回報</p>
-          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">派工<small>worker 的全部世界就是那段 prompt</small></span><span class="map-m">約 4 分</span></a>
+          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">派工<small>worker 的全部世界就是那段 prompt</small></span><span class="map-m">約 7 分</span></a>
           <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">回報<small>訊息只帶主張和證據，原文放檔案</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">底層：agent 系統就是分散式系統</p>
           <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">送出去之後<small>timeout、冪等、partial failure</small></span><span class="map-m">約 5 分</span></a>
@@ -318,7 +318,20 @@ output: JSON list of {title, date, contribution, url}     # 回傳什麼格式
 done_when: every item has a primary-source URL            # 怎樣算做完
 budget: at most 30 tool calls or 10 minutes               # 最多花多少
 depends_on: none                                          # 要等誰</code></pre></figure>
-              <p>檢查方法很簡單：把這段交給一個完全不懂這個專案的人，<strong>他要問的每個問題，都是規格缺的一個欄位</strong>。八個欄位各自擋一種拆錯：</p>
+              <p>怎麼知道規格寫夠了？把它交給一個完全不懂這個專案的人。<strong>他要問的每個問題，都是規格缺的一個欄位</strong>。</p>
+              <p>欄位缺了，壞的不只是那一個 worker。工作拆成幾份之後，份與份之間還有六種常見的拆錯。下表把每一種對回擋住它的欄位，欄位名稱就是上面 <code>subtask.yaml</code> 的 key：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>拆錯</th><th>長什麼樣</th><th>擋它的欄位</th></tr></thead>
+                <tbody>
+                  <tr><td><b>Overlap</b><br><small>重疊</small></td><td>兩個 worker 摘要了同一篇論文，白做一份</td><td><code>boundaries</code>：寫清楚哪些不歸你</td></tr>
+                  <tr><td><b>Gap</b><br><small>缺口</small></td><td>一份查 2020–2023、一份查 2025–2026，沒有人查 2024</td><td><code>objective</code>：範圍寫成明確的區間，拆完檢查有沒有接起來</td></tr>
+                  <tr><td><b>Hidden dependency</b><br><small>隱藏的相依</small></td><td>算價格（pricing）要先知道規模（sizing），做到一半才發現</td><td><code>depends_on</code>：先寫誰要等誰；沒寫的相依，worker 只能自己猜輸入</td></tr>
+                  <tr><td><b>Unmergeable outputs</b><br><small>無法合併</small></td><td>一份回一段文字，一份回 JSON，合併的程式讀不了</td><td><code>output</code>：所有 worker 共用同一份格式</td></tr>
+                  <tr><td><b>Lost global context</b><br><small>失去全局</small></td><td>每一節單獨看都對，合起來的報告前後矛盾</td><td><code>inputs</code>：放進大家共用的前提；合併時再讓一個 agent 從頭讀一遍</td></tr>
+                  <tr><td><b>Straggler</b><br><small>拖後腿的那一份</small></td><td>六份 20 秒做完，一份跑了 4 分鐘，大家都在等它</td><td><code>budget</code>：設上限，時間到就先用其他份的結果</td></tr>
+                </tbody>
+              </table></div>
+              <p>前四種在派工時就能擋住；後兩種要到執行時才看得到，所以除了欄位，還要靠合併時的通讀和 timeout。六種的樣子畫在下圖：</p>
               <figure class="diagram">
 <div class="scroll">
 <svg viewBox="0 0 720 372" role="img" aria-label="六種拆錯。01 重疊：Agent A 和 Agent B 的範圍有一段重疊，兩個都摘要同一篇論文。02 缺口：2020–23 和 2025–26 之間沒有人做 2024。03 隱藏的相依：Pricing 要先有 Sizing，執行時才發現。04 無法合併：一個回散文，一個回 JSON，合併失敗。05 失去全局 context：三節各自都對，整份報告自相矛盾。06 Straggler：兩條短橫條是 20 秒和 25 秒，一條長橫條是 4 分鐘。">
@@ -382,9 +395,30 @@ depends_on: none                                          # 要等誰</code></pr
                   <text x="648" y="321" class="dg-k">4 分鐘</text>
                 </svg>
 </div>
-<figcaption>邊界擋重疊，範圍擋缺口，相依擋隱藏的相依，輸出格式擋無法合併，共同前提加最後通讀擋全局矛盾，預算與 timeout 擋 straggler。Straggler 的橫條照實際秒數比例畫。</figcaption>
+<figcaption>六種拆錯的樣子，紅色是出問題的地方。Straggler 的橫條照秒數比例畫，4 分鐘是 20 秒的 12 倍。</figcaption>
 </figure>
-              <p><b>拆多細。</b>平行只縮短最長那條相依鏈，規劃、溝通和合併的時間都會增加，所以總時間有一個最低點。下面假設 20 個 lookup、每個 5 秒，每份派工加回報 8 秒，規劃與合併各 10 秒：</p>
+              <p><b>拆多細。</b>拆成越多份，不一定越快。把工作拆成 n 份交給 n 個 worker，總時間由四段組成，其中只有一段會隨 n 變短：</p>
+              <ul>
+                <li><b>規劃（planning）。</b>Supervisor 讀任務、寫規格。這段和 n 關係不大，這裡算固定 10 秒。</li>
+                <li><b>最慢那一份要跑多久（critical path）。</b>n 份同時開工，要等最後一份做完才能往下走。工作平均分成 n 份，這段就縮成原來的 1/n。四段裡只有它會變短。</li>
+                <li><b>派工和回報（communication）。</b>每多一份，supervisor 就要多送一次規格、多讀一份回報。假設它一份一份處理，這段時間會隨 n 一直累加。</li>
+                <li><b>合併（merge）。</b>把結果合起來、去重、通讀，這裡算固定 10 秒。</li>
+              </ul>
+              <p>用一個例子算：20 個 lookup，每個 5 秒，一個 agent 依序做完是 100 秒。拆成 n 份後，最慢那份是 100 ÷ n 秒；每份的派工加回報算 8 秒，n 份就是 8 × n 秒。四段加起來：</p>
+              <figure class="file"><figcaption>總時間（秒）</figcaption><pre><code class="lang-text">總時間 = 規劃 10 + 最慢那份 (100 ÷ n) + 派工與回報 (8 × n) + 合併 10</code></pre></figure>
+              <div class="table-wrap"><table>
+                <thead><tr><th>拆成幾份</th><th>規劃</th><th>最慢那份</th><th>派工與回報</th><th>合併</th><th>總時間</th></tr></thead>
+                <tbody>
+                  <tr><td>不拆，一個 agent 做</td><td>0</td><td>100</td><td>0</td><td>0</td><td>100</td></tr>
+                  <tr><td>1</td><td>10</td><td>100</td><td>8</td><td>10</td><td>128</td></tr>
+                  <tr><td>2</td><td>10</td><td>50</td><td>16</td><td>10</td><td>86</td></tr>
+                  <tr><td><b>4</b></td><td>10</td><td>25</td><td>32</td><td>10</td><td><b>77（最快）</b></td></tr>
+                  <tr><td>5</td><td>10</td><td>20</td><td>40</td><td>10</td><td>80</td></tr>
+                  <tr><td>10</td><td>10</td><td>10</td><td>80</td><td>10</td><td>110</td></tr>
+                  <tr><td>20</td><td>10</td><td>5</td><td>160</td><td>10</td><td>185</td></tr>
+                </tbody>
+              </table></div>
+              <p>這張表要這樣讀。拆成 1 份最划不來：工作沒有變快，卻多付了規劃、派工和合併。拆到 4 份最快，77 秒。再往下拆，最慢那份只再少幾秒，派工卻每份多 8 秒，所以拆成 20 份要 185 秒，<strong>比一個 agent 自己做還慢</strong>。最快的點落在「再多拆一份省下的時間，剛好等於多付的 8 秒」的地方。所以派工越貴，該拆的份數越少；拆之前，先用自己的數字算一次。</p>
               <figure class="diagram">
 <div class="scroll">
 <svg viewBox="0 0 640 288" role="img" aria-label="20 個 lookup 拆成 n 份時的總時間，堆疊長條圖。每根長條由下往上是固定的 planning 加 merge 20 秒、critical path、communication。n 等於 1、2、4、5、10、20 時，總時間依序是 128、86、77、80、110、185 秒。Critical path 隨 n 變短，communication 隨 n 變長。一條虛線標出一個 agent 依序做完的 100 秒。n 等於 4 時最低。">
@@ -431,10 +465,10 @@ depends_on: none                                          # 要等誰</code></pr
                   <text x="390" y="276" text-anchor="middle" class="dg-mn">185</text>
                   <text x="50" y="276" text-anchor="end" class="dg-c">總計</text>
                   <rect x="446" y="44" width="14" height="12" class="dg-n-b"/>
-                  <text x="466" y="54" class="dg-mn">T_communication</text>
+                  <text x="466" y="54" class="dg-mn">communication</text>
                   <text x="466" y="72" class="dg-c">每份 8 秒，隨 n 變長</text>
                   <rect x="446" y="88" width="14" height="12" class="dg-n-a"/>
-                  <text x="466" y="98" class="dg-mn">T_critical_path</text>
+                  <text x="466" y="98" class="dg-mn">critical path</text>
                   <text x="466" y="116" class="dg-c">最長一份：100 ÷ n 秒</text>
                   <rect x="446" y="132" width="14" height="12" class="dg-n-n"/>
                   <text x="466" y="142" class="dg-mn">planning + merge</text>
@@ -443,7 +477,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <text x="446" y="218" class="dg-c">n = 20 比不拆慢 85 秒</text>
                 </svg>
 </div>
-<figcaption>n 是子任務數。往右走，青色的 critical path 變短，黃色的 communication 變長。數字是假設，形狀才是重點：拆成 20 份比不拆還慢。</figcaption>
+<figcaption>上表畫成長條圖。青色是最慢那份（critical path），黃色是派工與回報（communication），灰色是規劃加合併。數字是假設的，形狀才是重點。</figcaption>
 </figure>
               <p><b>沿什麼切。</b>依資料切最獨立，例如一批檔案一個 worker，合併也最簡單。依專業角度切（安全、效能）要在合併時去重。依階段切有先後順序，回到第 2 章要小心的循序問題。Debug 時可以依假設切，每個 agent 驗證一個互斥的解釋。</p>
               <p><b>一定要設上限。</b>Worker 可以再開 worker 時，每層開 3 個，到第 4 層就是 120 個 agent，每個都有自己的帳單。要限制寬度、深度、預算和終止條件：</p>
