@@ -204,7 +204,7 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 **問 Claude（`.github/workflows/ask.yml`、`tools/ask_prompt.py`）**
 
 - 選一段文字 → 按「問 Claude」→ 頁面開一個 label 為 `ask` 的公開 issue。Workflow 用 James 訂閱的 token 跑 `claude -p`，把回答留言回去並關閉 issue；面板每 8 秒讀一次留言。接著問就是在同一串留言，關閉的 issue 也會再觸發。
-- 「問」只給唯讀工具。「請 Claude 改站台」多給 `Edit`、`Write`、`git`、`python3 -I tools/*`，照 `rewrite-with-example` 改、跑檢查、push。
+- 「問」只給唯讀工具。「請 Claude 改站台」多給 `Edit`、`Write`、`git`、`node --check`、`python3 -I tools/*`。內容問題照 `rewrite-with-example` 改；功能、版面、工具、規範也可以改（用途是 James 邊讀邊改進站台），跑檢查後 push。`.github/workflows/` 改不了，要改時只回覆改法。
 - 只有 `chihmingyang` 觸發得到；`ask_prompt.py` 也只把他和 workflow 的留言放進 prompt，別人的留言到不了 Claude。
 
 **設定（各做一次）**

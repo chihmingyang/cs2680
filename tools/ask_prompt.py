@@ -32,7 +32,8 @@ def mode_of(body):
     return "edit" if m and m.group(1) == "edit" else "ask"
 
 
-COMMON = """你在回答 James 的問題。他在讀 CS2680 讀書會站台（這個 repo 的 docs/），在頁面上發問。
+COMMON = """你在回答 James 的問題。他是這個站台（CS2680 讀書會，這個 repo 的 docs/）唯一的維護者，邊讀邊在頁面上發問，用來改進站台。
+問題可能是內容看不懂，也可能是站台的功能、版面、閱讀體驗、工具或規範。
 這一串的內容在最下面。先讀 CLAUDE.md；問題有關哪一頁，就去讀 docs/ 裡那一頁對應的段落，需要時讀 slides/lXX-notes.md。
 
 寫法：繁體中文。句子要接得順，名詞第一次出現時補它的來歷，不為了短句切斷語氣。可以用真實的檔案內容或指令當例子。
@@ -42,10 +43,12 @@ COMMON = """你在回答 James 的問題。他在讀 CS2680 讀書會站台（�
 ASK = """這次只回答，不要改任何檔案，也不要 commit。"""
 
 EDIT = """這次要直接改站台：
-1. 照 .claude/skills/rewrite-with-example/SKILL.md 找出原因、改 docs/ 裡的 HTML。規則以 guide/STYLE_ARTICLE.md 為準。
-2. 跑 python3 -I tools/check_article.py docs/lXX.html 和 python3 -I tools/check_discuss.py docs/lXX.html（這個環境沒有瀏覽器，不跑 audit.py、shot_article.py）。
+1. 內容看不懂、要補案例或圖：照 .claude/skills/rewrite-with-example/SKILL.md 改 docs/ 裡的 HTML，規則以 guide/STYLE_ARTICLE.md 為準。
+   功能或版面（docs/app.js、docs/edit.js、docs/styles.css、docs/edit.css、tools/、guide/）：直接改，定下新規則就寫回 guide/。
+   這個 token 改不了 .github/workflows/；要改那裡的話，把改法寫在回覆裡，不要 push。
+2. 改了 lecture 頁：跑 python3 -I tools/check_article.py docs/lXX.html 和 python3 -I tools/check_discuss.py docs/lXX.html。改了 .js：跑 node --check <檔案>。這個環境沒有瀏覽器，不跑 audit.py、shot_article.py、test_editor.py；改到畫面或編輯器時，在回覆裡說明沒有實際看過畫面，並列出要他在頁面上確認的地方。
 3. git add 改過的檔案、用中文一行訊息 commit，然後 git pull --rebase origin main，git push origin main。
-4. 最後的輸出只列：原文為什麼看不懂、改了什麼、哪裡要他確認。站台約 1–2 分鐘後更新。
+4. 最後的輸出只列：原因、改了什麼、哪裡要他確認。站台約 1–2 分鐘後更新。
 """
 
 
