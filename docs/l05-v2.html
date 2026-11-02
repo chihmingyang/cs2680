@@ -54,7 +54,7 @@
     <p class="eyebrow">Lecture 05 · 試讀版：依想法重組</p>
     <h1>Multi-agent：什麼時候值得拆，拆了怎麼不壞</h1>
     <ul class="meta">
-      <li><span class="k">閱讀</span>約 19 分鐘</li>
+      <li><span class="k">閱讀</span>約 21 分鐘</li>
       <li><span class="k">現行版本</span><a href="l05.html">L5（照投影片順序）</a></li>
     </ul>
   </header>
@@ -80,7 +80,7 @@
           <p class="map-g">要用時會做：拆了怎麼不壞</p>
           <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">派工<small>worker 的全部世界就是那段 prompt</small></span><span class="map-m">約 4 分</span></a>
           <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">回報<small>訊息只帶主張和證據，原文放檔案</small></span><span class="map-m">約 2 分</span></a>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">失敗<small>timeout 之後，你不知道對方做了沒</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">失敗<small>timeout 之後，你不知道對方做了沒</small></span><span class="map-m">約 5 分</span></a>
           <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">安全<small>傳回來的文字也不可信（本文補的）</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">需要時查</p>
           <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">目錄<small>八種架構、通訊選項、兩個協定</small></span><span class="map-m">需要時查</span></a>
@@ -598,7 +598,49 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
 </div>
 <figcaption>時間由上往下。關鍵是第 ① 步：B 在呼叫雲端 API 之前就寫下紀錄，重複的請求才查得到。</figcaption>
 </figure>
-              <p>LLM 還多一個陷阱：讓它自己決定重試，它可能產生新的 task_id，key 就對不上了。所以<strong>重試由 runtime 用同一個訊息重送</strong>，不交給 model。其他常見的失敗，對策也都在 runtime：</p>
+              <p>LLM 還多一個陷阱：讓它自己決定重試，它可能產生新的 task_id，key 就對不上了。所以<strong>重試由 runtime 用同一個訊息重送</strong>，不交給 model。</p>
+              <p><b>Partial failure：分不出對方是慢，還是掛了。</b>上面的購買例子，根源是分散式系統最基本的難題。單機程式要嘛整個在跑，要嘛整個停了；分散式系統裡，一部分正常、另一部分壞掉，而且從外面看不出來。沒有回覆，可能是對方 crash、網路斷了，或只是慢。在沒有時間上限保證的網路裡，只靠等待區分不了這三種：你永遠不知道回覆會不會在下一秒到。</p>
+              <p>LLM agent 讓這件事更難判斷，因為慢是常態。一圈 loop 可能跑幾分鐘，跑測試的 worker 可能十分鐘不出聲。Timeout 設短，會把正常的 worker 當成死掉；設長，真的死掉時又要等很久。所以 <strong>timeout 只代表「我不知道了」，不代表失敗</strong>。Timeout 之後要有明確的下一步：</p>
+              <ul>
+                <li><b>先問狀態，不要盲目重送。</b>用 <code>task_id</code> 查對方的紀錄，查得到就照狀態處理。A2A 把 task 做成有狀態的物件、提供 <code>GetTask</code>，就是為了這一步。</li>
+                <li><b>用心跳和租約判斷存活。</b>Worker 認領任務時拿到一份有期限的租約（lease），工作中定期送心跳（heartbeat）續約。租約過期，才把任務交給別人。這樣「要等多久」就從猜測變成規則。</li>
+                <li><b>換人之後，舊的 worker 可能還活著。</b>它只是卡住，回來後仍會寫結果，兩個 worker 都以為任務是自己的。解法是每次換手時發一個遞增的編號，叫 fencing token。寫入時要帶上編號，存放結果的地方只接受最新的編號。</li>
+                <li><b>等不到時，先用部分結果。</b>七個 worker 回了六個，就先合併六份，並標明缺了哪一份。這是讓整個系統不被一個 worker 卡住的邊界。</li>
+              </ul>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 262" role="img" aria-label="時序圖，三條直線是 Worker 1、Worker 2 和結果存放處。Worker 1 認領任務，拿到租約編號 7，之後送心跳續約。Worker 1 卡住，停止心跳，租約過期。存放處把任務交給 Worker 2，發出編號 8。Worker 2 帶著 8 寫入結果，被接受。Worker 1 醒來後帶著 7 寫入結果，因為 7 小於 8，被拒絕。">
+                  <defs><marker id="l5w-f-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5w-f-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M110,44 L110,252" class="dg-soft-link dg-dash"/>
+                  <path d="M330,44 L330,252" class="dg-soft-link dg-dash"/>
+                  <path d="M560,44 L560,252" class="dg-soft-link dg-dash"/>
+                  <rect x="50" y="10" width="120" height="34" rx="4" class="dg-n-a"/>
+                  <text x="110" y="32.0" text-anchor="middle" class="dg-l">Worker 1</text>
+                  <rect x="270" y="10" width="120" height="34" rx="4" class="dg-n-c"/>
+                  <text x="330" y="32.0" text-anchor="middle" class="dg-l">Worker 2</text>
+                  <rect x="490" y="10" width="140" height="34" rx="4" class="dg-n-b"/>
+                  <text x="560" y="32.0" text-anchor="middle" class="dg-l">結果存放處</text>
+                  <path d="M560,68 L111,68" class="dg-link" marker-end="url(#l5w-f-ah)"/>
+                  <text x="220" y="61" text-anchor="middle" class="dg-c">認領：拿到 #7</text>
+                  <path d="M110,98 L559,98" class="dg-link" marker-end="url(#l5w-f-ah)"/>
+                  <text x="220" y="91" text-anchor="middle" class="dg-c">心跳：續約</text>
+                  <rect x="105" y="108" width="10" height="62" rx="2" class="dg-n-d"/>
+                  <text x="124" y="144" class="dg-k">卡住，沒有心跳</text>
+                  <text x="572" y="150" class="dg-k">租約過期</text>
+                  <path d="M560,176 L331,176" class="dg-link" marker-end="url(#l5w-f-ah)"/>
+                  <text x="445" y="169" text-anchor="middle" class="dg-c">換人：W2 拿到 #8</text>
+                  <path d="M330,206 L559,206" class="dg-link" marker-end="url(#l5w-f-ah)"/>
+                  <text x="445" y="199" text-anchor="middle" class="dg-cb">寫結果，帶 #8：接受</text>
+                  <path d="M110,238 L546,238" class="dg-link-key"/>
+                  <path d="M540,232 L552,244" class="dg-link-key"/>
+                  <path d="M540,244 L552,232" class="dg-link-key"/>
+                  <text x="220" y="231" text-anchor="middle" class="dg-k">醒來寫結果，帶 #7：拒絕</text>
+                </svg>
+              </div>
+              <figcaption>本文的整理。存放處只接受最新的編號，所以就算 Worker 1 其實沒死，它的舊結果也蓋不掉 Worker 2 的。</figcaption>
+            </figure>
+              <p>合起來看，這四步把「對方可能死了」變成可以處理的狀態：查得到就照狀態做，查不到就等租約過期，過期就換人，再用編號擋住舊的寫入。<strong>冪等處理重複的請求，fencing token 處理重複的執行者</strong>，兩個都要有。Agent 系統容易漏掉後者，因為 subagent 常被當成一次函式呼叫，很少有人設想它卡住之後又回來（本文的判斷）。</p>
+              <p>其他常見的失敗，對策也都在 runtime：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>長什麼樣</th><th>對策</th></tr></thead>
                 <tbody>
@@ -606,7 +648,6 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <tr><td><b>沒人負責</b></td><td>每個 agent 都以為是別人的事</td><td>每個 task 一個 owner</td></tr>
                   <tr><td><b>過期的事實</b></td><td>X 已經改成 5，B 還依 X＝3 行動</td><td>事實帶版本，用之前重讀</td></tr>
                   <tr><td><b>互相矛盾</b></td><td>A 說安全，B 說有漏洞</td><td>指定裁決者，兩邊都附證據</td></tr>
-                  <tr><td><b>等不到人</b></td><td>一個 worker 慢，全部卡住</td><td>Timeout 後先用部分結果</td></tr>
                 </tbody>
               </table></div>
               <p>LLM 不會自己發現它在繞圈，也不會發現手上的事實過期了，要靠訊息的欄位和 runtime 的規則替它擋。</p>
