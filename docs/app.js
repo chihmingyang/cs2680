@@ -598,4 +598,22 @@
   for (var i = 0; i < pills.length; i++) {
     if (get('cs2680.read.' + pills[i].getAttribute('data-read-key')) === '1') pills[i].hidden = false;
   }
+
+  /* 維護者工具: open any page once with ?edit and this browser keeps the pencil
+     and 問 Claude buttons; ?edit=off removes them. Members never load edit.js. */
+  var ED_KEY = 'cs2680.ed.on';
+  var edParam = location.search.match(/[?&]edit(?:=(\w+))?/);
+  if (edParam) set(ED_KEY, edParam[1] === 'off' ? null : '1');
+  if (get(ED_KEY) === '1') {
+    var edCss = document.createElement('link');
+    edCss.rel = 'stylesheet';
+    edCss.href = 'edit.css';
+    document.head.appendChild(edCss);
+    /* wait for code.js: it runs right after this file and rewrites code blocks */
+    window.addEventListener('DOMContentLoaded', function () {
+      var edJs = document.createElement('script');
+      edJs.src = 'edit.js';
+      document.body.appendChild(edJs);
+    });
+  }
 })();

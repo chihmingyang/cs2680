@@ -1,0 +1,63 @@
+# 站台「問 Claude」面板的後端。頁面把問題開成 label 為 ask 的 issue，這裡跑 Claude Code 回覆。
+# 只有 repo 擁有者觸發得到（這個 repo 的 issue 是公開的）。設定見 guide/WORKFLOW.md 的 G 節。
+name: Ask Claude
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+
+concurrency:
+  group: ask-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  answer:
+    if: github.actor == 'chihmingyang' && contains(github.event.issue.labels.*.name, 'ask')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 裝 Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: 把這一串整理成 prompt
+        id: prompt
+        run: python3 -I tools/ask_prompt.py "$ISSUE" prompt.txt >> "$GITHUB_OUTPUT"
+
+      - name: 跑 Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          MODE: ${{ steps.prompt.outputs.mode }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$MODE" = "edit" ]; then
+            TOOLS='Read,Glob,Grep,WebFetch,WebSearch,Edit,Write,Bash(python3 -I tools/*),Bash(git *)'
+          else
+            TOOLS='Read,Glob,Grep,WebFetch,WebSearch'
+          fi
+          claude -p "$(cat prompt.txt)" --allowedTools "$TOOLS" --max-turns 60 > reply.md
+          test -s reply.md
+
+      - name: 回覆並關閉
+        run: |
+          gh issue comment "$ISSUE" --body-file reply.md
+          gh issue close "$ISSUE" --reason completed || true
+          # Claude 用 GITHUB_TOKEN push 時，保險起見請 Pages 重建一次
+          gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds" >/dev/null 2>&1 || true
+
+      - name: 失敗時留言
+        if: failure()
+        run: |
+          gh issue comment "$ISSUE" --body "這次沒跑完，沒有回答。執行紀錄：$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
