@@ -279,7 +279,7 @@
                 </div>
               </details>
               <p id="i1-2"><b>一個看得到檔案的例子：Claude Code。</b>這兩層在 Claude Code 裡都是磁碟上的檔案，L2 的 2.3 講過，這裡只看它們和兩層的對應：</p>
-              <figure class="file"><figcaption>Claude Code 的 memory store 長什麼樣（依 2026-10 的官方文件，L2 2.3 的整理）</figcaption><pre><code>~/.claude/
+              <figure class="file"><figcaption>Claude Code 的 memory store 長什麼樣（依 2026-10 的官方文件，L2 2.5 的整理）</figcaption><pre><code>~/.claude/
 ├── CLAUDE.md                      ← 你寫的規則：每個 session 開始時整份讀進 context
 └── projects/&lt;project&gt;/memory/     ← auto memory：Claude 自己寫的筆記
     ├── MEMORY.md                  ← 索引，一行一條；每次只讀前 200 行或 25KB 進 context
@@ -376,7 +376,7 @@ forget:    mark superseded facts invalid; delete only on user request      # 2.5
                 <li><b>確定性的規則。</b>寫死的條件：使用者說「不要」「以後都」就記；tool 結果不記。可預測、可測試，但只抓得到規則寫過的樣式。</li>
                 <li><b>使用者明確要求。</b>只在使用者說「記住這件事」時寫。Precision 最高，但使用者不會每件事都說，漏最多。</li>
               </ul>
-              <p>Claude Code 的 auto memory 偏右邊：Claude 自己判斷「下次對話還用不用得到」，程式碼裡讀得到的、CLAUDE.md 已經寫的都不記（L2 2.3）；使用者也可以直接說「記住」。實務上很少只用一種，<strong>寫入 policy 是光譜上的一個點，要依雜訊的代價選</strong>：每條記憶之後都會佔 context，所以寫錯的成本不是零。</p>
+              <p>Claude Code 的 auto memory 偏右邊：Claude 自己判斷「下次對話還用不用得到」，程式碼裡讀得到的、CLAUDE.md 已經寫的都不記（L2 2.6）；使用者也可以直接說「記住」。實務上很少只用一種，<strong>寫入 policy 是光譜上的一個點，要依雜訊的代價選</strong>：每條記憶之後都會佔 context，所以寫錯的成本不是零。</p>
               <details class="gloss" id="t3">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Precision 與 recall：用在 memory 的寫入與檢索</span></summary>
                 <div class="gloss-body prose">
@@ -622,7 +622,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
                 <li><b>事實衝突或重複的時候。</b>兩條記憶說的是同一件事（合併），或互相矛盾（要決定信哪一條，見下面的 provenance）。</li>
                 <li><b>能放背景工作時就放背景。</b>歸納要讀很多記憶、呼叫 LLM，放在使用者等待的路徑上會拖慢回應。</li>
               </ul>
-              <p>Claude Code 的做法是一個例子：MEMORY.md 快到 200 行的上限時，harness 提醒 Claude 合併相近的條目、刪掉過期的、把細節移到 topic 檔（L2 2.3）。這是「context 快滿時歸納」的版本。</p>
+              <p>Claude Code 的做法是一個例子：MEMORY.md 快到 200 行的上限時，harness 提醒 Claude 合併相近的條目、刪掉過期的、把細節移到 topic 檔（L2 2.6）。這是「context 快滿時歸納」的版本。</p>
               <p id="i5-2"><b>遺忘是第一級操作。</b>Slide p.13 的標題：forgetting is a first-class memory operation，遺忘和寫入一樣是正式的操作，要有自己的規則，不是等 store 塞滿再說。四種做法：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>操作（p.13）</th><th>做什麼</th><th>可逆嗎</th><th>適合（本文的整理）</th></tr></thead>
@@ -950,7 +950,7 @@ budget:
                 <tbody>
                   <tr><td><b>規格</b></td><td>把「完成」寫成測試</td><td>事先給驗收測試；列出什麼不能動</td><td>CLAUDE.md 寫驗收條件與禁止事項；任務 prompt 附重現步驟</td></tr>
                   <tr><td><b>Harness</b></td><td>每個 run 都有上限</td><td>步數、成本、時間上限；checkpoint 與回滾</td><td><code>--max-turns</code>、<code>--max-budget-usd</code>、<code>timeout</code>；<code>/rewind</code> 回到之前的檔案狀態</td></tr>
-                  <tr><td><b>Model</b></td><td>要求證據</td><td>每個主張都要證明；驗證；用更強的 model</td><td>Stop hook 檢查測試輸出，沒有就不准停（L2 2.4）</td></tr>
+                  <tr><td><b>Model</b></td><td>要求證據</td><td>每個主張都要證明；驗證；用更強的 model</td><td>Stop hook 檢查測試輸出，沒有就不准停（L2 2.8）</td></tr>
                   <tr><td><b>Tool</b></td><td>失敗要大聲</td><td>有型別的 schema；錯誤和空結果分開</td><td>自己寫 MCP tool 時回非 0 的 exit code 與明確的錯誤訊息</td></tr>
                   <tr><td><b>環境</b></td><td>固定並隔離</td><td>乾淨、釘好版本的 sandbox；flaky 的先重跑再下結論</td><td>Devcontainer 或 sandbox 設定；lockfile 進 repo</td></tr>
                 </tbody>
@@ -1084,7 +1084,7 @@ budget:
                     <li>「Store 裡有」不等於「model 知道」；中間的檢索可能失敗，這就是 retrieval miss。</li>
                     <li>寫入 policy 是 recall 與 precision 的取捨：全寫 → 雜訊多；只照要求寫 → 漏很多。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">Memory 的兩層與七個問題：model 沒有狀態，記憶是 harness 搬進來的</a>〉、〈<a href="#i2">寫入與格式：寫得越多 recall 越高、雜訊越多，四種格式各丟一種東西</a>〉；名詞註〈<a href="#t1">Embedding 與 vector search</a>〉、〈<a href="#t3">Precision 與 recall</a>〉；本文延伸〈<a href="#x1">Memory 和任務搶同一個 context</a>〉；<a href="l01.html#i4">L1 Agent 是一台新的電腦</a>、<a href="l02.html#i3">L2 記憶：就是每次 session 開始都會載入的檔案</a>。進階題第 1 題會替 coding agent 設計寫入 policy。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">Memory 的兩層與七個問題：model 沒有狀態，記憶是 harness 搬進來的</a>〉、〈<a href="#i2">寫入與格式：寫得越多 recall 越高、雜訊越多，四種格式各丟一種東西</a>〉；名詞註〈<a href="#t1">Embedding 與 vector search</a>〉、〈<a href="#t3">Precision 與 recall</a>〉；本文延伸〈<a href="#x1">Memory 和任務搶同一個 context</a>〉；<a href="l01.html#i4">L1 Agent 是一台新的電腦</a>、<a href="l02.html#i4">L2 記憶：model 沒有狀態，記憶是 harness 載入的檔案</a>。進階題第 1 題會替 coding agent 設計寫入 policy。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/103" target="_blank" rel="noopener">到 GitHub 回答這一題（Q1）↗</a></p>
               </div>

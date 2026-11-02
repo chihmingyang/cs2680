@@ -61,7 +61,7 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
 
 ### B3. 寫頁面
 
-1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v5.0 版面、8 章，2026-10-29 擴寫到 v4.0 密度）。不要照 `l02.html` 的密度：它只有 4 章，還留著 16 個「深入」區塊。目錄（`aside.sidenav`）照抄範本即可，B5 會重建。
+1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v5.0 版面、8 章，2026-10-29 擴寫到 v4.0 密度）。目錄（`aside.sidenav`）照抄範本即可，B5 會重建。
 2. 第 3 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
 3. 頁面很長，分段寫：先寫骨架和第 1–2 段，再寫第 3 段，最後第 4 段和延伸閱讀。可以把第 3 段的基礎題和進階題交給兩個 subagent 平行寫，各自回傳 HTML 片段，再接回頁面。
 

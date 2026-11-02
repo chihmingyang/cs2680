@@ -72,7 +72,7 @@
       <li><span><b>每種擴展方式都有代價。</b>平行要你 merge，subagent 的摘要會丟細節，<strong>agent team 的 token 隨人數成長</strong>，workflow 每個任務用更多 token。只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，才用 workflow。而且加 agent 有上限：不能平行的那段工作決定了最快能多快。</span></li>
       <li><span><b>Agent 不確定，周邊系統要可靠。</b>寫可驗證的終點、跑測試、讓自主程度配合風險。<code>/goal</code> 能自己停下來，靠的是一個可以檢查的終點；16 個 agent 能寫出一個 C compiler，<strong>靠的是 git、lock file 和測試，不是 agent 之間的聊天</strong>。</span></li>
     </ul>
-    <p class="readhow">這篇可以不看 slides 從頭讀到尾：每個名詞在第一次出現的地方就有解釋，由淺入深，頁碼只是出處。少見的名詞和 L2、L4 講過的東西收在正文裡的「名詞」「前情」註，碰到不懂的再點開。想對照 slides，就在讀到頁碼時打開那幾頁；想先帶著問題讀，就先看第 3 段的基礎題。讀書會前用第 3 段的進階題。建議先讀 L2 和 L4：前半的三個 plugin 用的是 L2 2.4 講的擴充機制，後半一直用到 L4 講的 context 代價和 subagent；沒時間讀，2.3 開頭的「前情」註有 L4 的摘要。</p>
+    <p class="readhow">這篇可以不看 slides 從頭讀到尾：每個名詞在第一次出現的地方就有解釋，由淺入深，頁碼只是出處。少見的名詞和 L2、L4 講過的東西收在正文裡的「名詞」「前情」註，碰到不懂的再點開。想對照 slides，就在讀到頁碼時打開那幾頁；想先帶著問題讀，就先看第 3 段的基礎題。讀書會前用第 3 段的進階題。建議先讀 L2 和 L4：前半的三個 plugin 用的是 L2 2.7–2.8 講的擴充機制，後半一直用到 L4 講的 context 代價和 subagent；沒時間讀，2.3 開頭的「前情」註有 L4 的摘要。</p>
   </section>
 
   <div class="layout">
@@ -260,7 +260,7 @@
         <header class="part-head">
           <p class="kicker">2 · 核心觀念</p>
           <h2>從改一個 agent 的行為，到同時用很多個 agent</h2>
-          <p class="lede">八章分三組：A 承接 L2 2.4 的擴充機制，用三個真實的 plugin 看不動 model 怎麼改一個 agent 的行為，其中 mattpocock/skills 是本文補的、slide 沒有，放在 Superpowers 旁邊並排；B 講同時用更多 agent 的三個擴展軸，從手動平行到 16 個 agent 寫 compiler；C 退一步看這種寫程式的方式和以前差在哪，以及人的角色怎麼變，末尾用一個本文補的案例（DeepSeek 的 dsh-superagent）看人的注意力怎麼變成設計原則。每個名詞在第一次出現的地方解釋；L2、L4 講過的東西收在「前情」註裡，點有底線的名詞或點註本身都會展開。</p>
+          <p class="lede">八章分三組：A 承接 L2 2.7–2.8 的擴充機制，用三個真實的 plugin 看不動 model 怎麼改一個 agent 的行為，其中 mattpocock/skills 是本文補的、slide 沒有，放在 Superpowers 旁邊並排；B 講同時用更多 agent 的三個擴展軸，從手動平行到 16 個 agent 寫 compiler；C 退一步看這種寫程式的方式和以前差在哪，以及人的角色怎麼變，末尾用一個本文補的案例（DeepSeek 的 dsh-superagent）看人的注意力怎麼變成設計原則。每個名詞在第一次出現的地方解釋；L2、L4 講過的東西收在「前情」註裡，點有底線的名詞或點註本身都會展開。</p>
         </header>
         <nav class="map" aria-label="核心觀念的章節">
           <p class="map-g">A · 一個 agent：三個 plugin 怎麼組合 L2 的擴充機制</p>
@@ -292,7 +292,7 @@
                   <tr><td><b>Plugin</b><br><small>整個 repo（下面說明）</small></td><td>把以上幾種打包成一個可以安裝、升版、關掉的單位；marketplace 是存放 plugin 的目錄</td><td>你，<code>install</code> 時<br><small>三個都是 plugin</small></td></tr>
                 </tbody>
               </table></div>
-              <p>本文的整理，依 L2 2.4 與 2026-10 的 Claude Code 文件。Command 在 L2 沒有獨立講，它和 skill 一樣是 Markdown，差別只在誰觸發。這張表最要記的是「誰觸發」那一欄：<strong>skill 由 model 決定要不要用，hook 一定會跑</strong>，後面三個案例的差別都從這裡來。三個案例都一行就能裝：</p>
+              <p>本文的整理，依 L2 2.7–2.8 與 2026-10 的 Claude Code 文件。Command 在 L2 沒有獨立講，它和 skill 一樣是 Markdown，差別只在誰觸發。這張表最要記的是「誰觸發」那一欄：<strong>skill 由 model 決定要不要用，hook 一定會跑</strong>，後面三個案例的差別都從這裡來。三個案例都一行就能裝：</p>
               <figure class="file"><figcaption>裝一個 plugin，三個案例的指令（p.5、p.15；mattpocock 是本文補的）</figcaption><pre><code># Superpowers 與 mattpocock/skills 在官方 marketplace 裡，一行就能裝
 /plugin install superpowers@claude-plugins-official
 /plugin install mattpocock-skills@claude-plugins-official
@@ -583,7 +583,7 @@ printf '{"hookSpecificOutput": {
                 <li><b>你打 <code>/clear</code> 之後。</b>舊對話清空，只剩 hook 再注入的規則。</li>
                 <li><b>Compaction 之後。</b>舊對話變成摘要，規則也再注入一次。</li>
               </ol>
-              <p><strong>少了任何一個，agent 就會在那之後忘記規則</strong>。Slide p.11 把 hook 的保證寫成三句：時機固定，每個 session 都跑；在 agent 動手之前跑；clear 和 compaction 之後重跑。這是 L2 2.4 那句「只有 hook 是確定的」的用法：要保證的事交給 hook，要判斷的事留給 model。</p>
+              <p><strong>少了任何一個，agent 就會在那之後忘記規則</strong>。Slide p.11 把 hook 的保證寫成三句：時機固定，每個 session 都跑；在 agent 動手之前跑；clear 和 compaction 之後重跑。這是 L2 2.8 那句「只有 hook 是確定的」的用法：要保證的事交給 hook，要判斷的事留給 model。</p>
               <p id="i1-7"><b>整個流程走一遍。</b>Slide p.13 用「Add authentication」當例子：</p>
               <ol>
                 <li>Claude Code 開 session，hook 讀進 bootstrap skill，agent 拿到選 skill 的規則。</li>
