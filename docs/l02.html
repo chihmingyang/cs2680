@@ -623,7 +623,7 @@ $ claude
               </div>
               <figcaption>每圈重送為什麼負擔得起？因為前段和上一圈完全相同，provider 直接讀 cache，不重算。灰色是讀 cache，黃色是這一圈要新算的部分。</figcaption>
             </figure>
-<p>Agent 的每一圈都是「上一圈加一點」，所以命中率很高，帳單上的大宗也就是 cache read。讀 cache 的價格約是一般 input 的十分之一，細的算法在 <a href="l08.html#t1">L8</a>。</p>
+<p>Agent 的每一圈都是「上一圈加一點」，所以命中率很高，帳單上的大宗也就是 cache read。讀 cache 的價格是一般 input 的十分之一或更低，細的算法在 <a href="l08.html#t1">L8</a>。</p>
 <p id="i3-4"><b>租金怎麼算。</b>拿一份 150 行、約 2,000 token 的 CLAUDE.md 當例子。先定義：<code>T</code> 是這段文字的 token 數，<code>N</code> 是這段 session 跑幾圈，第 1 圈算一般價格，之後每圈讀 cache，算 0.1 倍（這裡不計寫入 cache 的加價）：</p>
 <figure class="file"><figcaption>一段常駐文字的成本</figcaption><pre><code class="lang-text">等於多少一般 input token = T + T × (N − 1) × 0.1</code></pre></figure>
 <div class="table-wrap"><table>
@@ -1902,7 +1902,7 @@ $ claude plugin details commit-commands                  # 看它每個 session 
                     <figcaption>高度只表示大小關係，不是實際比例。每個 request 都重送整個 context；compaction 把舊的對話與 tool 結果換成一段摘要。</figcaption>
                   </figure>
                   <p class="tk-h">背景補充</p>
-                  <p>每一圈都重送整個 context，還負擔得起，是因為 prefix cache。Provider 會快取開頭相同的那一段；讀快取的價格約是一般 input 的十分之一。但 context 越長、圈數越多，讀快取的量就越大。所以 p.13 說，大部分成本來自 prefix cache 的讀取。</p>
+                  <p>每一圈都重送整個 context，還負擔得起，是因為 prefix cache。Provider 會快取開頭相同的那一段；讀快取的價格是一般 input 的十分之一或更低。但 context 越長、圈數越多，讀快取的量就越大。所以 p.13 說，大部分成本來自 prefix cache 的讀取。</p>
                   <p>Context 長也會影響品質。Claude Code 的官方文件提醒：context 越滿，model 越容易漏掉前面的指示，也更容易出錯。L4 的 lost in the middle 是同一個現象：放在長 context 中段的資訊，model 比較難用到。</p>
                   <div class="callout caution"><span class="tag">常見誤解</span><div><p>「Context window 有 1M token，就不用管 context。」不對。第一，每一步都重送整個 context，成本跟著長度增加。第二，context 越滿，model 越容易忽略指示。第三，compaction 會丟細節。上限大，只代表比較晚才需要 compaction。</p></div></div>
                   <div class="callout example"><span class="tag">例子</span><div>
