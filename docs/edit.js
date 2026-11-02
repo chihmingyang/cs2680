@@ -790,7 +790,13 @@
   function setEditing(on) {
     if (!on && main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，要結束編輯嗎？（修改會留在頁面上，重新整理就消失）')) return;
     editing = on;
-    var barBefore = topbar.offsetHeight;
+    /* keep the text in view where it is: Chrome's scroll anchoring does this by itself, Safari may not */
+    var refEl = null;
+    var ps = main.querySelectorAll('p');
+    for (var pi = 0; pi < ps.length && !refEl; pi++) {
+      if (ps[pi].getBoundingClientRect().top > 120) refEl = ps[pi];
+    }
+    var refTop = refEl ? refEl.getBoundingClientRect().top : 0;
     root.classList.toggle('ed-on', on);
     if (on) {
       if (!bar) buildBar();
@@ -805,7 +811,12 @@
     editBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     fab.classList.remove('is-shown');
     window.dispatchEvent(new Event('resize')); /* app.js re-measures the top bar */
-    if (window.pageYOffset > 0) window.scrollBy({ top: topbar.offsetHeight - barBefore, behavior: 'instant' });
+    if (refEl) {
+      window.requestAnimationFrame(function () {
+        var drift = refEl.getBoundingClientRect().top - refTop;
+        if (Math.abs(drift) > 1) window.scrollBy({ top: drift, behavior: 'instant' });
+      });
+    }
   }
 
   /* ---------- block handle: delete, add a paragraph, add an image ---------- */

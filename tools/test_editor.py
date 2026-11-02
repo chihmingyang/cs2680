@@ -327,6 +327,7 @@ def main():
         p_top = page.evaluate("(()=>{const e=[...document.querySelectorAll('main p')].find(p=>p.getBoundingClientRect().top>200);window.__p=e;return e.getBoundingClientRect().top})()")
         page.locator(".ed-fab").click()
         page.wait_for_selector(".ed-bar:not([hidden])")
+        page.wait_for_timeout(150)
         p_after = page.evaluate("window.__p.getBoundingClientRect().top")
         check(abs(p_after - p_top) < 3, f"reading position holds when the toolbar opens ({p_top:.0f}→{p_after:.0f})")
         page.locator(".ed-exit").first.click()
