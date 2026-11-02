@@ -94,3 +94,47 @@
   .ed-status { flex-basis: 100%; order: 3; text-align: left; padding-inline: 0; }
   .topbar-inner .ed-open { margin-right: .15rem; }
 }
+
+/* commit message: third row of the top bar */
+.ed-commit { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; padding-block: .4rem; border-top: 1px solid var(--rule); }
+.ed-commit-pre { font-size: .8125rem; color: var(--ink-soft); white-space: nowrap; }
+.ed-commit-input {
+  flex: 1 1 14rem; min-width: 0; height: 2rem; padding: 0 .55rem; box-sizing: border-box;
+  font: inherit; font-size: .875rem; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--signal); border-radius: 4px;
+}
+
+/* the actions on the block under the mouse */
+.ed-handle {
+  position: fixed; z-index: 15; display: flex; flex-wrap: wrap; gap: 1px;
+  max-width: calc(100vw - 16px);
+  background: var(--rule); border: 1px solid var(--rule); border-radius: 4px;
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.ed-hbtn {
+  padding: .2rem .55rem; font: inherit; font-size: .75rem; line-height: 1.5;
+  color: var(--ink); background: var(--sheet); border: 0; cursor: pointer; white-space: nowrap;
+}
+@media (hover: hover) { .ed-hbtn:hover { background: var(--signal-wash); } .ed-hbtn.is-del:hover { color: var(--key); } }
+@media (pointer: coarse) { .ed-hbtn { padding: .45rem .7rem; font-size: .8125rem; } }
+.ed-target { outline: 2px solid var(--key); outline-offset: 2px; }
+.ed-deleted, .ed-deleted:not(.ed-active) {
+  outline: 2px dashed var(--key); outline-offset: 2px; background: none;
+  opacity: .4; text-decoration: line-through;
+}
+figure[data-ed-new] figcaption:empty::before { content: '圖說（可留空，點這裡寫）'; color: var(--ink-soft); }
+figure[data-ed-new] figcaption { min-height: 1.4em; cursor: text; }
+
+/* floating pencil: above the back-to-top button */
+.ed-fab {
+  position: fixed; z-index: 20; display: grid; place-items: center;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + 2.75rem + .5rem + env(safe-area-inset-bottom, 0px));
+  width: 2.75rem; height: 2.75rem; padding: 0;
+  color: var(--sheet); background: var(--signal); border: 0; border-radius: 999px;
+  box-shadow: var(--shadow); cursor: pointer;
+  opacity: 0; visibility: hidden; transform: translateY(6px);
+  transition: opacity .12s, transform .12s, visibility 0s linear .12s;
+}
+.ed-fab.is-shown { opacity: 1; visibility: visible; transform: none; transition: opacity .12s, transform .12s; }
+.ed-fab svg { width: 18px; height: 18px; }

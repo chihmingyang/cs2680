@@ -198,7 +198,11 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 
 - 點一段就能改。可改：`p`、`li`（不含子清單）、標題、表格儲存格、`figcaption`。不能改：`pre` 的 code、SVG 圖、`summary`、目錄。這些請 Claude 改。
 - 工具列：`b` 粗體、`strong` 紅字、`em`、`u`、行內 `code`、`mark`、文字顏色（`span style="color: var(--…)"`，用 theme token，深色模式才正常）、連結、清除格式。Enter 在 `p`、`li` 分段；清空一段再存就刪掉那一段。
-- 存檔不序列化整頁：用 GitHub Contents API 抓最新原始碼，用「tag＋原本的內容＋相同內容裡的第幾個」找到那一段，只換那幾個位元組，再 PUT 一個 commit（訊息「網頁編輯：L3 改 N 段」）。那一段在 GitHub 上已被改過就標紅、不覆蓋。
+- 滑鼠移到區塊上，右上角出現操作：刪除（段落、清單項目、整個清單、表格的一列、整張表、圖、code、收合區塊、標題）、＋段落、＋圖。刪除要到存檔才生效，存檔前可按「復原」。區塊裡的錨點有別處連過來時會先問；刪掉後目錄不會自動更新，下次碰到那一頁要跑 `add_anchors.py`、`audit.py`。
+- 貼圖：⌘V 或工具列「貼圖」，放在目前這一段後面，markup 是 `figure.pasted`（`styles.css`）。圖檔存檔時才上傳到 `docs/img/<頁>-<時間>-<n>.<副檔名>`，先於頁面 commit。
+- 按「儲存」先出現 commit message 欄，已帶好摘要（「L3 改 2 段、刪 1 處」），可改；送出時自動加上前綴「網頁編輯：」，所以 `git log` 認得出來。
+- 往上捲時右下角立刻出現浮動鉛筆（`.ed-fab`），不等捲過多少距離。頂端的鉛筆一直都在。
+- 存檔不序列化整頁：用 GitHub Contents API 抓最新原始碼，用「tag＋原本的內容＋相同內容裡的第幾個」找到那一段，只換那幾個位元組，再 PUT 一個 commit。圖、表、code 這類區塊用文字找（`code.js` 會在執行時改寫 code，但字元不變）。那一段在 GitHub 上已被改過就標紅、不覆蓋。
 - 網頁編輯直接進 `main`，**不跑 `check_article.py`**。所以每個 session 開工前先 `git pull`（D 的 rebase 已涵蓋）；James 手改的文字是他的決定，不要順手改回來。紅字數量超過規則只是 warn，下次碰到那一頁再看。
 
 **問 Claude（`.github/workflows/ask.yml`、`tools/ask_prompt.py`）**

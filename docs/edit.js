@@ -100,11 +100,11 @@
       }
       if (!own) return false;
     }
-    return !!el.textContent.trim() || el.hasAttribute('data-ed-new');
+    return !!el.textContent.trim() || !!el.closest('[data-ed-new]');
   }
   function blockFrom(node) {
     var el = node && node.nodeType === 1 ? node : node && node.parentElement;
-    if (!el || el.closest('.ed-ui')) return null;
+    if (!el || el.closest('.ed-ui') || el.closest('.ed-deleted')) return null;
     while (el && el !== main) {
       if (BLOCK_TAGS[el.tagName]) return isBlock(el) ? el : null;
       el = el.parentElement;
@@ -137,13 +137,13 @@
         if (close < 0) break;
         re.lastIndex = close;
       } else if (!VOID[tag] && !/\/\s*$/.test(m[3])) {
-        stack.push({ tag: tag, start: m.index, openEnd: re.lastIndex });
+        stack.push({ tag: tag, start: m.index, openEnd: re.lastIndex, attrs: m[3] });
       }
     }
     var mains = out.filter(function (e) { return e.tag === 'main'; })[0];
     if (!mains) return [];
     return out.filter(function (e) {
-      return e.start > mains.start && e.end < mains.end && BLOCK_TAGS[e.tag.toUpperCase()];
+      return e.start > mains.start && e.end < mains.end;
     }).sort(function (a, b) { return a.start - b.start; });
   }
   var tpl = document.createElement('template');
@@ -154,7 +154,24 @@
   function sourceIndex(src) {
     var index = {};
     scanSource(src).forEach(function (e) {
+      if (!BLOCK_TAGS[e.tag.toUpperCase()]) return;
       var key = e.tag + '|' + normalize(src.slice(e.openEnd, e.closeStart));
+      (index[key] = index[key] || []).push(e);
+    });
+    return index;
+  }
+  /* anything that can be deleted or have a block added after it (figures, tables, code,
+     lists…). code.js rewrites code blocks at runtime, so these are found by their text:
+     it keeps the characters. */
+  var BOX_SEL = 'p,li,h2,h3,h4,h5,tr,figure,table,details,ul,ol,pre,blockquote,dt,dd,div.table-wrap';
+  var BOX_TAGS = { p: 1, li: 1, h2: 1, h3: 1, h4: 1, h5: 1, tr: 1, figure: 1, table: 1, details: 1, ul: 1, ol: 1, pre: 1, blockquote: 1, dt: 1, dd: 1 };
+  function squeeze(t) { return t.replace(/\s+/g, ''); }
+  function boxIndex(src) {
+    var index = {};
+    scanSource(src).forEach(function (e) {
+      if (!BOX_TAGS[e.tag] && !(e.tag === 'div' && /class="[^"]*\btable-wrap\b/.test(e.attrs))) return;
+      tpl.innerHTML = src.slice(e.openEnd, e.closeStart);
+      var key = e.tag + '|' + squeeze(tpl.content.textContent);
       (index[key] = index[key] || []).push(e);
     });
     return index;
@@ -164,6 +181,7 @@
   var editing = false;
   var active = null;
   var recs = new WeakMap();      /* block element -> { key, nth, html, undo, redo } */
+  var boxRecs = new WeakMap();   /* any box -> { key, nth }, from its text when editing began */
   var dirtyBlocks = [];
   var bar = null;
   var saveBtn = null;
@@ -182,6 +200,21 @@
       recs.set(el, { key: key, nth: nth, html: html, undo: [], redo: [] });
     }
     dirtyBlocks = [];
+    boxRecs = new WeakMap();
+    var boxSeen = {};
+    var boxes = main.querySelectorAll(BOX_SEL);
+    for (var b = 0; b < boxes.length; b++) {
+      var box = boxes[b];
+      if (box.classList.contains('swipe-hint') || box.closest('.ed-ui')) continue;
+      var text = box.textContent;
+      /* app.js adds the swipe hint at runtime; it is not in the source */
+      var hints = box.querySelectorAll('.swipe-hint');
+      for (var h2 = 0; h2 < hints.length; h2++) text = text.replace(hints[h2].textContent, '');
+      var boxKey = box.tagName.toLowerCase() + '|' + squeeze(text);
+      var boxNth = boxSeen[boxKey] || 0;
+      boxSeen[boxKey] = boxNth + 1;
+      boxRecs.set(box, { key: boxKey, nth: boxNth });
+    }
   }
 
   /* what the block's HTML will be in the source: no editing residue */
@@ -191,6 +224,15 @@
     Array.prototype.slice.call(box.querySelectorAll('*')).forEach(function (n) {
       n.removeAttribute('contenteditable');
       n.removeAttribute('spellcheck');
+      n.removeAttribute('data-ed-new');
+      n.classList.remove('ed-active', 'ed-dirty', 'ed-target');
+      if (!n.getAttribute('class')) n.removeAttribute('class');
+      if (n.tagName === 'IMG' && n.getAttribute('data-ed-file')) {
+        n.setAttribute('src', n.getAttribute('data-ed-file'));
+        n.removeAttribute('data-ed-file');
+        n.removeAttribute('data-ed-sent');
+        return;
+      }
       var tag = n.tagName;
       var style = n.getAttribute('style') || '';
       var keepStyle = tag === 'SPAN' && /^color:\s*var\(--[\w-]+\);?$/.test(style.trim());
@@ -201,7 +243,7 @@
       if (style && !keepStyle) n.removeAttribute('style');
     });
     /* elements left empty by a split or a delete */
-    Array.prototype.slice.call(box.querySelectorAll('b,strong,em,u,mark,span,code,a')).reverse().forEach(function (n) {
+    Array.prototype.slice.call(box.querySelectorAll('b,strong,em,u,mark,span,code,a,figcaption')).reverse().forEach(function (n) {
       if (!n.textContent && !n.querySelector('img,svg,br') && !n.id && !n.classList.contains('anchor')) n.parentNode.removeChild(n);
     });
     while (box.lastChild && box.lastChild.nodeName === 'BR') box.removeChild(box.lastChild);
@@ -221,7 +263,9 @@
   function markDirty(el) {
     var rec = recs.get(el);
     var dirty;
-    if (rec) {
+    if (el.classList.contains('ed-deleted')) {
+      dirty = true;
+    } else if (rec) {
       dirty = cleanHtml(el) !== rec.html;
       if (!dirty) {
         /* a split-off block keeps its origin dirty */
@@ -239,7 +283,14 @@
     var roots = [];
     var marked = main.querySelectorAll('.ed-dirty');
     for (var i = 0; i < marked.length; i++) {
-      var r = originOf(marked[i]) || marked[i];
+      var el = marked[i];
+      /* a caption inside a new figure belongs to that figure */
+      var fresh = el.parentElement && el.parentElement.closest('[data-ed-new]');
+      if (fresh) el = fresh;
+      /* inside something being deleted: the delete covers it */
+      var gone = el.parentElement && el.parentElement.closest('.ed-deleted');
+      if (gone) continue;
+      var r = originOf(el) || el;
       if (roots.indexOf(r) < 0) roots.push(r);
     }
     return roots;
@@ -248,7 +299,7 @@
     if (!saveBtn) return;
     var n = main.querySelectorAll('.ed-dirty').length;
     saveBtn.disabled = n === 0;
-    saveBtn.textContent = n ? '儲存（' + n + ' 段）' : '儲存';
+    saveBtn.textContent = n ? '儲存（' + n + ' 處）' : '儲存';
   }
   function say(text, kind) {
     if (!statusEl) return;
@@ -436,38 +487,53 @@
     return box.outerHTML;
   }
   function plainLen(el) { return el.textContent.replace(/\s/g, '').length; }
+  function hasContent(el) { return plainLen(el) > 0 || !!el.querySelector('img'); }
 
   function buildPatches(src, roots) {
     var index = sourceIndex(src);
+    var boxes = null;
     var patches = [];
     var failed = [];
     var kids = main.querySelectorAll('[data-ed-new]');
+    function boxSpan(el) {
+      if (!boxes) boxes = boxIndex(src);
+      var r = boxRecs.get(el);
+      var list = r && boxes[r.key];
+      return list && list[r.nth];
+    }
     roots.forEach(function (el) {
       var rec = recs.get(el);
-      var spans = rec && index[rec.key];
-      var span = spans && spans[rec.nth];
+      var deleted = el.classList.contains('ed-deleted');
+      var editable = !deleted && rec && isBlock(el);
+      var span = editable ? (index[rec.key] && index[rec.key][rec.nth]) : boxSpan(el);
       if (!span) { failed.push(el); return; }
       var followers = [];
       for (var i = 0; i < kids.length; i++) {
-        if (originOf(kids[i]) === el && plainLen(kids[i])) followers.push(kids[i]);
+        if (originOf(kids[i]) === el && hasContent(kids[i])) followers.push(kids[i]);
       }
       var lineStart = src.lastIndexOf('\n', span.start) + 1;
       var lead = src.slice(lineStart, span.start);
       var indent = /^\s*$/.test(lead) ? lead : '';
       var extra = followers.map(function (k) { return '\n' + indent + outerClean(k); }).join('');
-      if (plainLen(el)) {
-        var html = cleanHtml(el);
-        patches.push({ start: span.openEnd, end: span.closeStart, text: html });
-        if (extra) patches.push({ start: span.end, end: span.end, text: extra });
-      } else if (extra) {
-        patches.push({ start: span.start, end: span.end, text: extra.replace(/^\n\s*/, '') });
-      } else {
-        /* emptied: the block goes away, with its line */
-        var from = indent !== lead ? span.start : lineStart;
-        var to = span.end;
-        if (from === lineStart && src.charAt(to) === '\n') to += 1;
-        patches.push({ start: from, end: to, text: '' });
+      if (deleted || (editable && !plainLen(el))) {
+        if (extra) {
+          patches.push({ start: span.start, end: span.end, text: extra.replace(/^\n\s*/, ''), cut: true });
+        } else {
+          /* the block goes away, with its line */
+          var from = indent !== lead ? span.start : lineStart;
+          var to = span.end;
+          if (from === lineStart && src.charAt(to) === '\n') to += 1;
+          patches.push({ start: from, end: to, text: '', cut: true });
+        }
+        return;
       }
+      if (editable) patches.push({ start: span.openEnd, end: span.closeStart, text: cleanHtml(el) });
+      if (extra) patches.push({ start: span.end, end: span.end, text: extra });
+    });
+    /* something edited inside a block that is also cut: the cut wins */
+    var cuts = patches.filter(function (p) { return p.cut; });
+    patches = patches.filter(function (p) {
+      return p.cut || !cuts.some(function (c) { return p.start >= c.start && p.end <= c.end; });
     });
     return { patches: patches, failed: failed };
   }
@@ -478,70 +544,168 @@
     return src;
   }
 
+  /* a short summary of this save; the starting text of the commit message */
+  function summarize(roots) {
+    var edited = 0, cut = 0, added = 0, pics = 0;
+    var kids = main.querySelectorAll('[data-ed-new]');
+    roots.forEach(function (el) {
+      if (el.classList.contains('ed-deleted')) cut++;
+      else if (recs.get(el) && isBlock(el) && cleanHtml(el) !== recs.get(el).html) edited++;
+    });
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i].parentElement.closest('[data-ed-new]')) continue;
+      if (kids[i].querySelector('img')) pics++;
+      else if (plainLen(kids[i])) added++;
+    }
+    var bits = [];
+    if (edited) bits.push('改 ' + edited + ' 段');
+    if (added) bits.push('加 ' + added + ' 段');
+    if (pics) bits.push('貼 ' + pics + ' 張圖');
+    if (cut) bits.push('刪 ' + cut + ' 處');
+    var label = /^l\d/.test(pageTag) ? pageTag.replace(/^l0?(\d+)/, 'L$1') : pageTag;
+    return label + ' ' + (bits.join('、') || '修改');
+  }
+  function dropEmptyNew() {
+    Array.prototype.slice.call(main.querySelectorAll('[data-ed-new]')).forEach(function (el) {
+      if (!el.parentElement.closest('[data-ed-new]') && !hasContent(el)) el.parentNode.removeChild(el);
+    });
+    refreshCount();
+  }
+
+  var commitRow = null;
+  function askMessage() {
+    if (saving) return;
+    deactivate();
+    dropEmptyNew();
+    var roots = changedRoots();
+    if (!roots.length) { say('沒有要存的修改'); return; }
+    if (!store(TOKEN_KEY)) { showSettings('存檔要先設定 GitHub token。'); return; }
+    if (commitRow) { commitRow.querySelector('input').focus(); return; }
+    commitRow = h('div', 'ed-commit gutter');
+    commitRow.appendChild(h('span', 'ed-commit-pre', '網頁編輯：'));
+    var input = h('input', 'ed-commit-input');
+    input.type = 'text';
+    input.value = summarize(roots);
+    input.setAttribute('aria-label', 'Commit message');
+    commitRow.appendChild(input);
+    var send = h('button', 'ed-save', '送出 commit');
+    send.type = 'button';
+    commitRow.appendChild(send);
+    var cancel = h('button', 'ed-exit', '取消');
+    cancel.type = 'button';
+    commitRow.appendChild(cancel);
+    bar.appendChild(commitRow);
+    window.dispatchEvent(new Event('resize'));
+    function shut() {
+      if (commitRow && commitRow.parentNode) commitRow.parentNode.removeChild(commitRow);
+      commitRow = null;
+      window.dispatchEvent(new Event('resize'));
+    }
+    function go() {
+      var text = input.value.trim() || summarize(roots);
+      shut();
+      save(false, '網頁編輯：' + text);
+    }
+    send.addEventListener('click', go);
+    cancel.addEventListener('click', shut);
+    input.addEventListener('keydown', function (e) {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Enter') { e.preventDefault(); go(); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); shut(); }
+    });
+    input.focus();
+    input.select();
+  }
+
+  /* pasted images go in as their own commit first, so the page never points at a missing file */
+  function uploadImages(message) {
+    var pending = Array.prototype.slice.call(main.querySelectorAll('[data-ed-new] img[data-ed-file]')).filter(function (img) {
+      return !img.hasAttribute('data-ed-sent') && !img.closest('.ed-deleted');
+    });
+    return pending.reduce(function (chain, img) {
+      return chain.then(function () {
+        return gh('/contents/docs/' + img.getAttribute('data-ed-file'), {
+          method: 'PUT',
+          body: { message: message + '（圖檔）', content: img.src.split(',')[1], branch: BRANCH }
+        }).then(function () { img.setAttribute('data-ed-sent', ''); });
+      });
+    }, Promise.resolve());
+  }
+
   var saving = false;
-  function save(retry) {
+  function save(retry, message) {
     if (saving && !retry) return;
     deactivate();
     var roots = changedRoots();
     if (!roots.length) { say('沒有要存的修改'); return; }
-    if (!store(TOKEN_KEY)) { showSettings('存檔要先設定 GitHub token。'); return; }
     saving = true;
     deployRun++;
     saveBtn.disabled = true;
     say('儲存中…');
     var failed = [];
     var snippet = '';
-    gh('/contents/' + filePath + '?ref=' + BRANCH).then(function (file) {
+    uploadImages(message).then(function () {
+      return gh('/contents/' + filePath + '?ref=' + BRANCH);
+    }).then(function (file) {
       var src = fromBase64(file.content);
       var built = buildPatches(src, roots);
       failed = built.failed;
       if (!built.patches.length) throw new Error('nothing');
-      snippet = built.patches[0].text;
-      var count = roots.length - failed.length;
+      var written = built.patches.filter(function (p) { return p.text; })[0];
+      snippet = written ? written.text : '';
+      var next = applyPatches(src, built.patches);
+      if (next === src) throw new Error('same');
       return gh('/contents/' + filePath, {
         method: 'PUT',
-        body: {
-          message: '網頁編輯：' + pageTag.toUpperCase() + ' 改 ' + count + ' 段',
-          content: toBase64(applyPatches(src, built.patches)),
-          sha: file.sha,
-          branch: BRANCH
-        }
+        body: { message: message, content: toBase64(next), sha: file.sha, branch: BRANCH }
       });
     }).then(function (res) {
       saving = false;
       /* what was saved is now the baseline; keep failed blocks marked so they are not lost */
-      var kept = failed.map(function (el) { return { el: el, html: recs.get(el) && recs.get(el).html }; });
+      var kept = failed.map(function (el) {
+        return { el: el, rec: recs.get(el), box: boxRecs.get(el) };
+      });
+      Array.prototype.slice.call(main.querySelectorAll('.ed-deleted')).forEach(function (el) {
+        if (failed.indexOf(el) < 0 && el.parentNode) el.parentNode.removeChild(el);
+      });
       Array.prototype.slice.call(main.querySelectorAll('.ed-dirty')).forEach(function (el) {
         el.classList.remove('ed-dirty');
         if (!el.getAttribute('class')) el.removeAttribute('class');
       });
       Array.prototype.slice.call(main.querySelectorAll('[data-ed-new]')).forEach(function (el) { el.removeAttribute('data-ed-new'); });
       Array.prototype.slice.call(main.querySelectorAll('p,li,h1,h2,h3,h4,h5,td,th,figcaption,blockquote,dt,dd')).forEach(function (el) {
-        if (!el.textContent.trim() && !el.querySelector('img,svg,input')) el.parentNode.removeChild(el);
+        if (!el.textContent.trim() && !el.querySelector('img,svg,input') && failed.indexOf(el) < 0) el.parentNode.removeChild(el);
       });
+      origins = new WeakMap();
       indexBlocks();
       kept.forEach(function (k) {
-        var rec = recs.get(k.el);
-        if (rec && k.html !== null) { rec.html = k.html; rec.key = k.el.tagName.toLowerCase() + '|' + k.html; }
-        k.el.classList.add('ed-dirty');
+        if (k.rec) recs.set(k.el, k.rec);
+        if (k.box) boxRecs.set(k.el, k.box);
+        k.el.classList.add('ed-dirty', 'ed-conflict');
       });
+      moveHandle(null);
       refreshCount();
       var sha = res && res.commit && res.commit.sha ? res.commit.sha.slice(0, 7) : '';
       if (failed.length) {
-        say('存了，但有 ' + failed.length + ' 段在 GitHub 上已被改過，沒有存（紅框）。請重新整理後再改那幾段。', 'warn');
-        kept.forEach(function (k) { k.el.classList.add('ed-conflict'); });
-      } else {
+        say('存了，但有 ' + failed.length + ' 處在 GitHub 上已被改過，沒有存（紅框）。請重新整理後再改那幾處。', 'warn');
+      } else if (snippet) {
         say('已存（' + sha + '），等站台更新…', 'ok');
         waitForDeploy(snippet, sha);
+      } else {
+        say('已存（' + sha + '），站台約 1–2 分鐘後更新', 'ok');
       }
     }).catch(function (err) {
       saving = false;
       refreshCount();
       if (err.message === 'nothing') {
-        say('這幾段在 GitHub 上已被改過，存不進去。請重新整理頁面。', 'warn');
+        say('這幾處在 GitHub 上已被改過，存不進去。請重新整理頁面。', 'warn');
         roots.forEach(function (el) { el.classList.add('ed-conflict'); });
+      } else if (err.message === 'same') {
+        Array.prototype.slice.call(main.querySelectorAll('.ed-dirty')).forEach(function (el) { el.classList.remove('ed-dirty'); });
+        refreshCount();
+        say('內容和 GitHub 上一樣，沒有送 commit。');
       } else if (err.status === 409 && !retry) {
-        save(true); /* someone pushed between the read and the write */
+        save(true, message); /* someone pushed between the read and the write */
       } else if (err.status === 401 || err.status === 403 || err.status === 404) {
         say('');
         showSettings('GitHub 拒絕了（' + err.message + '）。token 可能過期，或權限不含 Contents: write。');
@@ -605,6 +769,7 @@
     });
     inner.appendChild(h('span', 'ed-sep'));
     inner.appendChild(tool('連結', '加或移除連結', setLink));
+    inner.appendChild(tool('貼圖', '選一張圖，放在目前這一段後面（也可以直接 ⌘V 貼上）', function () { pickImage(); }));
     inner.appendChild(tool('清除', '清除選取文字的格式', clearFormat));
     inner.appendChild(tool('問 Claude', '問 Claude 選取的文字', function () { openAsk(); }));
     statusEl = h('span', 'ed-status');
@@ -613,7 +778,7 @@
     saveBtn.type = 'button';
     saveBtn.disabled = true;
     saveBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    saveBtn.addEventListener('click', function () { save(); });
+    saveBtn.addEventListener('click', function () { askMessage(); });
     inner.appendChild(saveBtn);
     var done = h('button', 'ed-exit', '結束');
     done.type = 'button';
@@ -625,6 +790,7 @@
   function setEditing(on) {
     if (!on && main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，要結束編輯嗎？（修改會留在頁面上，重新整理就消失）')) return;
     editing = on;
+    var barBefore = topbar.offsetHeight;
     root.classList.toggle('ed-on', on);
     if (on) {
       if (!bar) buildBar();
@@ -633,10 +799,196 @@
       refreshCount();
     } else {
       deactivate();
+      moveHandle(null);
       if (bar) bar.hidden = true;
     }
     editBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    fab.classList.remove('is-shown');
     window.dispatchEvent(new Event('resize')); /* app.js re-measures the top bar */
+    if (window.pageYOffset > 0) window.scrollBy({ top: topbar.offsetHeight - barBefore, behavior: 'instant' });
+  }
+
+  /* ---------- block handle: delete, add a paragraph, add an image ---------- */
+  var NO_HANDLE = 'nav,.qtabs,.pager,.readmark,.map-row,.ed-ui,.swipe-hint';
+  function boxLabel(n) {
+    switch (n.tagName) {
+      case 'P': return '這段';
+      case 'LI': case 'DT': case 'DD': return '這項';
+      case 'H2': case 'H3': case 'H4': case 'H5': return '這個標題';
+      case 'TR': return '這一列';
+      case 'FIGURE': return n.querySelector('pre') ? '這段 code' : '這張圖';
+      case 'TABLE': return n.parentElement.classList.contains('table-wrap') ? '' : '整張表';
+      case 'DIV': return n.classList.contains('table-wrap') ? '整張表' : '';
+      case 'UL': case 'OL': return n.matches('.qlist,.rg') ? '' : '整個清單';
+      case 'DETAILS': return '整個收合區塊';
+      case 'PRE': return n.closest('figure') ? '' : '這段 code';
+      case 'BLOCKQUOTE': return '這段引用';
+      default: return '';
+    }
+  }
+  function targetsFor(node) {
+    var el = node && node.nodeType === 1 ? node : node && node.parentElement;
+    if (!el || !main.contains(el) || el.closest(NO_HANDLE)) return [];
+    var out = [];
+    for (var n = el; n && n !== main && out.length < 2; n = n.parentElement) {
+      if (boxLabel(n)) out.push(n);
+    }
+    return out;
+  }
+  function liftToFlow(el) {
+    var up = el.closest('figure,.table-wrap,table,ul,ol,details') || el;
+    return up;
+  }
+  var handle = h('div', 'ed-handle ed-ui');
+  handle.hidden = true;
+  document.body.appendChild(handle);
+  var handleFor = null;
+  var handleTimer = 0;
+  function placeHandle() {
+    if (!handleFor) return;
+    var r = handleFor.getBoundingClientRect();
+    var barBottom = topbar.getBoundingClientRect().bottom;
+    var top = Math.max(barBottom + 4, r.top - handle.offsetHeight + 1);
+    handle.style.top = top + 'px';
+    handle.style.left = Math.max(8, Math.min(r.right - handle.offsetWidth, window.innerWidth - handle.offsetWidth - 8)) + 'px';
+    handle.hidden = r.bottom < barBottom || r.top > window.innerHeight;
+  }
+  function handleButton(label, title, fn, target, cls) {
+    var b = h('button', 'ed-hbtn' + (cls ? ' ' + cls : ''), label);
+    b.type = 'button';
+    b.title = title;
+    b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    b.addEventListener('click', fn);
+    if (target) {
+      b.addEventListener('mouseenter', function () { target.classList.add('ed-target'); });
+      b.addEventListener('mouseleave', function () { target.classList.remove('ed-target'); });
+    }
+    return b;
+  }
+  function clearTargets() {
+    Array.prototype.slice.call(main.querySelectorAll('.ed-target')).forEach(function (el) { el.classList.remove('ed-target'); });
+  }
+  function moveHandle(node) {
+    var list = editing ? targetsFor(node) : [];
+    clearTargets();
+    handle.textContent = '';
+    handleFor = list[0] || null;
+    if (!handleFor) { handle.hidden = true; return; }
+    var dead = handleFor.closest('.ed-deleted');
+    if (dead) {
+      handleFor = dead;
+      handle.appendChild(handleButton('復原', '取消刪除', function () { undelete(dead); }));
+    } else {
+      list.forEach(function (t) {
+        handle.appendChild(handleButton('刪除' + boxLabel(t), '存檔時才真的刪；存檔前可以復原', function () { markDeleted(t); }, t, 'is-del'));
+      });
+      if (handleFor.tagName !== 'TR') {
+        handle.appendChild(handleButton('＋段落', '在下面加一段文字', function () { addParagraph(handleFor); }));
+        handle.appendChild(handleButton('＋圖', '在下面放一張圖', function () { pickImage(handleFor); }));
+      }
+    }
+    handle.hidden = false;
+    placeHandle();
+  }
+  function markDeleted(el) {
+    if (el === active || el.contains(active)) deactivate();
+    if (el.hasAttribute('data-ed-new')) {
+      el.parentNode.removeChild(el);
+      moveHandle(null);
+      refreshCount();
+      return;
+    }
+    /* anchors inside it may be linked from the table of contents or the text */
+    var ids = [];
+    if (el.id) ids.push(el.id);
+    Array.prototype.forEach.call(el.querySelectorAll('[id]'), function (n) { ids.push(n.id); });
+    var refs = 0;
+    ids.forEach(function (id) {
+      var links = document.querySelectorAll('a[href="#' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+      Array.prototype.forEach.call(links, function (a) { if (!el.contains(a)) refs++; });
+    });
+    if (refs && !window.confirm('目錄或內文有 ' + refs + ' 個連結指到這裡，刪掉後那些連結會失效。還是要刪嗎？')) return;
+    el.classList.add('ed-deleted', 'ed-dirty');
+    moveHandle(el);
+    refreshCount();
+  }
+  function undelete(el) {
+    el.classList.remove('ed-deleted', 'ed-dirty');
+    if (!el.getAttribute('class')) el.removeAttribute('class');
+    markDirty(el);
+    /* markDirty adds ed-dirty to a box with no text record; a box has nothing else to save */
+    if (!recs.get(el) || !isBlock(el)) el.classList.remove('ed-dirty');
+    if (!el.getAttribute('class')) el.removeAttribute('class');
+    moveHandle(el);
+    refreshCount();
+  }
+  function newAfter(target, fresh) {
+    var next = target.nextElementSibling;
+    /* the swipe hint belongs to the box before it */
+    var at = next && next.classList.contains('swipe-hint') ? next : target;
+    target.parentNode.insertBefore(fresh, at.nextSibling);
+    fresh.setAttribute('data-ed-new', '');
+    fresh.classList.add('ed-dirty');
+    origins.set(fresh, originOf(target) || target);
+  }
+  function addParagraph(target) {
+    var fresh = document.createElement(target.tagName === 'LI' ? 'li' : 'p');
+    fresh.appendChild(document.createElement('br'));
+    newAfter(target, fresh);
+    activate(fresh);
+    fresh.focus();
+    var r = document.createRange();
+    r.selectNodeContents(fresh);
+    r.collapse(true);
+    var sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    moveHandle(fresh);
+    refreshCount();
+  }
+
+  /* images */
+  var IMG_EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
+  var imgCount = 0;
+  var filePick = h('input', 'ed-file ed-ui');
+  filePick.type = 'file';
+  filePick.accept = 'image/png,image/jpeg,image/gif,image/webp';
+  filePick.hidden = true;
+  document.body.appendChild(filePick);
+  var pickFor = null;
+  function imageTarget() {
+    var base = handleFor || active;
+    return base ? (base.tagName === 'LI' || base.tagName === 'TR' ? liftToFlow(base) : base) : null;
+  }
+  function pickImage(target) {
+    pickFor = target ? (target.tagName === 'LI' ? liftToFlow(target) : target) : imageTarget();
+    if (!pickFor) { say('先點要把圖放在哪一段的後面', 'warn'); return; }
+    filePick.value = '';
+    filePick.click();
+  }
+  filePick.addEventListener('change', function () {
+    if (filePick.files[0] && pickFor) insertImage(filePick.files[0], pickFor);
+  });
+  function insertImage(file, target) {
+    var ext = IMG_EXT[file.type];
+    if (!ext) { say('只支援 PNG、JPEG、GIF、WebP', 'warn'); return; }
+    if (file.size > 10 * 1024 * 1024) { say('圖超過 10 MB，請先縮小', 'warn'); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var fig = document.createElement('figure');
+      fig.className = 'pasted';
+      var img = document.createElement('img');
+      img.src = reader.result;
+      img.alt = '';
+      img.setAttribute('data-ed-file', 'img/' + pageTag + '-' + Date.now() + '-' + (++imgCount) + '.' + ext);
+      fig.appendChild(img);
+      fig.appendChild(document.createElement('figcaption'));
+      newAfter(target, fig);
+      moveHandle(fig);
+      refreshCount();
+      say('圖已放上，存檔時才會上傳。可以在下面點一下寫圖說。');
+    };
+    reader.readAsDataURL(file);
   }
 
   /* ---------- page events while editing ---------- */
@@ -646,6 +998,19 @@
     if (el) activate(el);
     else deactivate();
   }, true);
+  document.addEventListener('mouseover', function (e) {
+    if (!editing) return;
+    if (e.target.closest && e.target.closest('.ed-handle')) { window.clearTimeout(handleTimer); return; }
+    if (e.target.closest && e.target.closest('.ed-ui')) return;
+    window.clearTimeout(handleTimer);
+    var node = e.target;
+    /* a short delay, so the mouse can travel to the handle across the block above */
+    handleTimer = window.setTimeout(function () { moveHandle(node); }, 120);
+  });
+  document.addEventListener('pointerdown', function (e) {
+    if (editing && e.pointerType !== 'mouse' && !e.target.closest('.ed-ui')) moveHandle(e.target);
+  }, true);
+  window.addEventListener('scroll', placeHandle, { passive: true });
   /* links and term notes stay put while editing */
   window.addEventListener('click', function (e) {
     if (!editing || !e.target.closest) return;
@@ -678,7 +1043,7 @@
     if (!editing) return;
     var mod = e.metaKey || e.ctrlKey;
     var k = (e.key || '').toLowerCase();
-    if (mod && k === 's') { e.preventDefault(); save(); return; }
+    if (mod && k === 's') { e.preventDefault(); askMessage(); return; }
     if (!active || e.isComposing || e.keyCode === 229) return;
     var rec = recs.get(active);
     if (mod && k === 'z') {
@@ -700,9 +1065,19 @@
     }
   });
   document.addEventListener('paste', function (e) {
-    if (!editing || !active || !active.contains(e.target)) return;
+    if (!editing || !e.clipboardData) return;
+    if (e.target.closest && e.target.closest('.ed-ui')) return;
+    var files = e.clipboardData.files;
+    if (files && files.length && IMG_EXT[files[0].type]) {
+      var at = imageTarget();
+      e.preventDefault();
+      if (at) insertImage(files[0], at);
+      else say('先點要把圖放在哪一段的後面', 'warn');
+      return;
+    }
+    if (!active || !active.contains(e.target)) return;
     e.preventDefault();
-    var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    var text = e.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text.replace(/\s*\n\s*/g, ' '));
   });
   window.addEventListener('beforeunload', function (e) {
@@ -1100,11 +1475,26 @@
     else if (currentQuote()) openAsk();
     else showList();
   });
+  /* a floating pencil within thumb reach, the moment the reader scrolls up, anywhere on the page */
+  var fab = h('button', 'ed-fab ed-ui');
+  fab.type = 'button';
+  fab.innerHTML = icon('M10.6 2.6l2.8 2.8L5.5 13.3l-3.5.7.7-3.5zM9.2 4l2.8 2.8');
+  fab.title = '編輯這一頁';
+  fab.setAttribute('aria-label', '編輯這一頁');
+  fab.addEventListener('click', function () { setEditing(true); });
+  document.body.appendChild(fab);
+  var fabY = window.pageYOffset;
+  window.addEventListener('scroll', function () {
+    var y = window.pageYOffset;
+    if (y < fabY - 1) fab.classList.toggle('is-shown', !editing && y > 0);
+    else if (y > fabY + 1) fab.classList.remove('is-shown');
+    fabY = y;
+  }, { passive: true });
   topbarInner.insertBefore(askBtn, themeBtn);
   topbarInner.insertBefore(editBtn, askBtn);
 
   /* test hook: the patch logic, for tools/test_editor.py */
-  window.__cs2680ed = { scanSource: scanSource, sourceIndex: sourceIndex, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, main: main };
+  window.__cs2680ed = { scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
 
   if (/[?&]edit=now\b/.test(location.search)) setEditing(true);
 })();

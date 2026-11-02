@@ -41,10 +41,21 @@ def serve():
     return httpd, httpd.server_address[1]
 
 
+def save_with(page, message=None):
+    page.locator(".ed-bar .ed-save").first.click()
+    box = page.locator(".ed-commit-input")
+    box.wait_for()
+    default = box.input_value()
+    if message:
+        box.fill(message)
+    box.press("Enter")
+    return default
+
+
 class FakeGitHub:
     """Enough of api.github.com for edit.js. `source` is what GET contents returns."""
     def __init__(self, source):
-        self.source, self.puts, self.issues, self.comments = source, [], [], {}
+        self.source, self.puts, self.issues, self.comments, self.images = source, [], [], {}, []
 
     def handle(self, route):
         req = route.request
@@ -59,6 +70,9 @@ class FakeGitHub:
             if method == "GET":
                 return reply({"sha": "abc", "content": base64.b64encode(self.source.encode()).decode()})
             body = json.loads(req.post_data)
+            if path.startswith("/contents/docs/img/"):
+                self.images.append({"path": path, "message": body["message"], "bytes": base64.b64decode(body["content"])})
+                return reply({"commit": {"sha": "1mage"}}, 201)
             self.puts.append({"message": body["message"], "text": base64.b64decode(body["content"]).decode("utf-8"), "sha": body["sha"]})
             return reply({"commit": {"sha": "deadbeefcafe"}})
         if path == "/issues" and method == "POST":
@@ -102,6 +116,16 @@ ROUNDTRIP = """async (src) => {
     const span = spans && spans[rec.nth];
     if (!span) missed.push(el.tagName + ': ' + el.textContent.slice(0, 50));
   }
+  const boxIdx = ed.boxIndex(src);
+  let boxes = 0;
+  for (const el of ed.main.querySelectorAll(ed.boxSel)) {
+    const rec = ed.boxRecs().get(el);
+    if (!rec) continue;
+    boxes++;
+    const span = boxIdx[rec.key] && boxIdx[rec.key][rec.nth];
+    if (!span || span.tag !== el.tagName.toLowerCase()) missed.push('box ' + el.tagName + ': ' + el.textContent.slice(0, 50));
+  }
+  blocks += boxes;
   return { blocks, missed };
 }"""
 
@@ -204,11 +228,12 @@ def main():
 
         count = page.locator(".ed-dirty").count()
         check(count >= 3, f"dirty blocks are marked ({count})")
-        page.locator(".ed-bar .ed-save").click()
+        default_msg = save_with(page, "L3 我自己寫的訊息")
+        check(default_msg.startswith("L3 ") and "段" in default_msg, "commit box starts with a summary: " + default_msg)
         page.wait_for_function("document.querySelector('.ed-status').textContent.includes('已存')")
         check(len(gh.puts) == 1, "save sends one PUT")
         put = gh.puts[0]
-        check(put["sha"] == "abc" and "L03" in put["message"], "PUT carries the sha and a commit message: " + put["message"])
+        check(put["sha"] == "abc" and put["message"] == "網頁編輯：L3 我自己寫的訊息", "PUT carries the sha and my commit message: " + put["message"])
         diff = changed_lines(src, put["text"])
         print("\n".join("     " + l[:150] for l in diff))
         check(any("TYPEDTEXT" in l for l in diff), "typed text is in the file")
@@ -231,10 +256,80 @@ def main():
         page.wait_for_timeout(350)
         gh.source = put["text"].replace("TYPEDTEXT", "SOMEONEELSE", 1) if "TYPEDTEXT" in put["text"] else put["text"]
         before_puts = len(gh.puts)
-        page.locator(".ed-bar .ed-save").click()
+        save_with(page)
         page.wait_for_function("document.querySelector('.ed-status').textContent.includes('改過')")
         check(len(gh.puts) == before_puts, "a block changed upstream is not overwritten")
         check(page.locator(".ed-conflict").count() == 1, "the conflicting block is marked")
+
+        # --- 6. delete boxes, add a paragraph, add an image
+        gh2 = FakeGitHub(src)
+        page.unroute("https://api.github.com/**")
+        page.route("https://api.github.com/**", gh2.handle)
+        page.on("dialog", lambda d: d.accept())
+        page.goto("about:blank")
+        page.goto(f"{base}/l03.html?edit=now", wait_until="load")
+        page.wait_for_selector(".ed-bar")
+        def handle_click(sel, label, nth=0):
+            el = page.locator(sel).nth(nth)
+            el.scroll_into_view_if_needed()
+            el.hover()
+            page.wait_for_timeout(200)
+            page.locator(".ed-handle .ed-hbtn", has_text=label).first.click()
+            page.wait_for_timeout(50)
+        counts = lambda t: (t.count("<figure"), t.count('class="table-wrap"'), t.count("<details"))
+        fig_text = page.locator("#i1 figure.diagram figcaption").first.inner_text()[:14]
+        code_cap = page.locator("#i1 figure.file figcaption").first.inner_text()[:14]
+        handle_click("#i1 figure.diagram", "刪除這張圖")
+        check(page.locator(".ed-deleted").count() == 1, "figure is marked, not gone yet")
+        handle_click("#i1 figure.diagram", "復原")
+        check(page.locator(".ed-deleted").count() == 0 and page.locator(".ed-dirty").count() == 0, "undo a delete: nothing left to save")
+        handle_click("#i1 figure.diagram", "刪除這張圖")
+        handle_click("#i1 figure.file", "刪除這段 code")
+        handle_click("#i1 .table-wrap", "刪除整張表")
+        handle_click("#i1 .prose > p:not(.ed-deleted)", "＋段落", 2)
+        page.keyboard.type("ADDEDPARA")
+        page.keyboard.press("Escape")
+        png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+        tgt = page.locator("#i1 .prose > p:not(.ed-deleted)").nth(3)
+        tgt.scroll_into_view_if_needed(); tgt.hover(); page.wait_for_timeout(200)
+        with page.expect_file_chooser() as fc:
+            page.locator(".ed-handle .ed-hbtn", has_text="＋圖").first.click()
+        fc.value.set_files({"name": "x.png", "mimeType": "image/png", "buffer": png})
+        page.wait_for_selector("figure.pasted img")
+        page.locator("figure.pasted figcaption").click()
+        page.keyboard.type("PICCAPTION")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(350)
+        if args.shots:
+            page.screenshot(path=f"{args.shots}/editor-delete.png")
+        msg = save_with(page)
+        check("刪 3 處" in msg and "加 1 段" in msg and "貼 1 張圖" in msg, "summary counts the changes: " + msg)
+        page.wait_for_function("document.querySelector('.ed-status').textContent.includes('已存')")
+        out = gh2.puts[0]["text"]
+        a, b = counts(src), counts(out)
+        check(b[0] == a[0] - 1 and b[1] == a[1] - 1 and b[2] == a[2], f"source lost exactly 1 net figure and 1 table (figures {a[0]}→{b[0]}, one pasted back; tables {a[1]}→{b[1]})")
+        check(fig_text not in out and code_cap not in out, "deleted figure and code are gone from the file")
+        check("ADDEDPARA" in out and "PICCAPTION" in out, "added paragraph and caption are in the file")
+        check('<figure class="pasted"><img src="img/l03-' in out and "data:image" not in out and "data-ed" not in out, "image points at the uploaded file, no data URL")
+        check(len(gh2.images) == 1 and gh2.images[0]["bytes"] == png and gh2.images[0]["path"].endswith(".png"), "image file is uploaded byte for byte")
+        check(out.count("<") - src.count("<") < 30 and "tk-" not in out.replace(src[:0], "")[:0] and out.count("tk-") == src.count("tk-"), "no runtime markup leaked")
+        check(page.locator(".ed-deleted").count() == 0, "deleted boxes leave the page after saving")
+        page.locator(".ed-exit").first.click()
+
+        # --- 7. floating pencil: appears on the first bit of upward scroll
+        page.evaluate("window.scrollTo(0, 5000)")
+        page.wait_for_timeout(80)
+        check(page.locator(".ed-fab.is-shown").count() == 0, "pencil hidden while scrolling down")
+        page.evaluate("window.scrollBy(0, -10)")
+        page.wait_for_timeout(80)
+        check(page.locator(".ed-fab.is-shown").count() == 1, "pencil appears after 10px of scrolling up")
+        y = page.evaluate("window.pageYOffset")
+        p_top = page.evaluate("(()=>{const e=[...document.querySelectorAll('main p')].find(p=>p.getBoundingClientRect().top>200);window.__p=e;return e.getBoundingClientRect().top})()")
+        page.locator(".ed-fab").click()
+        page.wait_for_selector(".ed-bar:not([hidden])")
+        p_after = page.evaluate("window.__p.getBoundingClientRect().top")
+        check(abs(p_after - p_top) < 3, f"reading position holds when the toolbar opens ({p_top:.0f}→{p_after:.0f})")
+        page.locator(".ed-exit").first.click()
 
         # --- 5. ask panel
         page.goto("about:blank")
@@ -256,7 +351,7 @@ def main():
         page.fill(".ed-panel textarea", "這段是什麼意思？")
         page.locator(".ed-panel .ed-save").click()
         page.wait_for_selector(".ed-msg.is-bot")
-        issue = gh.issues[0]
+        issue = gh2.issues[0]
         check(issue["labels"] == ["ask"] and issue["title"].startswith("[l03] "), "question becomes an issue with the label ask")
         check("cs2680:ask mode=ask file=docs/l03.html anchor=" in issue["body"], "issue body carries the mode, file and anchor")
         bot = page.locator(".ed-msg.is-bot .ed-msg-body")
