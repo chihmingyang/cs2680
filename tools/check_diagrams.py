@@ -22,6 +22,7 @@ JS = r"""
     boxes.forEach(b => {
       if (b.x < 0 || b.y < 0 || b.x + b.w > vb.width || b.y + b.h > vb.height) out.push(`fig${n} outside viewBox: ${b.s}`);
       const hit = rects.filter(r => b.cx>r.x&&b.cx<r.x+r.w&&b.cy>r.y&&b.cy<r.y+r.h).sort((p,q)=>p.w*p.h-q.w*q.h)[0];
+      rects.filter(r => r !== hit && r.c !== 'dg-panel' && !/dg-link|dg-frame/.test(r.c || '') && !(b.cx>r.x&&b.cx<r.x+r.w&&b.cy>r.y&&b.cy<r.y+r.h)).forEach(r => { const ox=Math.min(b.x+b.w,r.x+r.w)-Math.max(b.x,r.x), oy=Math.min(b.y+b.h,r.y+r.h)-Math.max(b.y,r.y); if (ox>1&&oy>3) out.push(`fig${n} text runs into a box: ${b.s}`); });
       if (hit) { const m = 2; if (b.x<hit.x+m||b.x+b.w>hit.x+hit.w-m) out.push(`fig${n} tight/overflow in rect w=${hit.w}: ${b.s} (text w=${b.w.toFixed(0)})`); }
     });
     for (let i=0;i<boxes.length;i++) for (let j=i+1;j<boxes.length;j++) { const a=boxes[i],c=boxes[j]; const ox=Math.min(a.x+a.w,c.x+c.w)-Math.max(a.x,c.x), oy=Math.min(a.y+a.h,c.y+c.h)-Math.max(a.y,c.y); if (ox>1&&oy>3) out.push(`fig${n} text overlap: ${a.s} / ${c.s}`); }

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261102">
+<link rel="stylesheet" href="styles.css?v=20261102b">
 </head>
 <body>
 <header class="topbar">
@@ -60,7 +60,7 @@
       <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>
       <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
       <li><span class="k">前情註</span><span class="deep-time">約 1 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 70 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 65 分鐘</span></li>
     </ul>
   </header>
 
@@ -206,7 +206,7 @@
           <p class="map-g">C · 拆開之後怎麼溝通</p>
           <a class="map-row" href="#i6"><span class="map-no">2.6</span><span class="map-t">溝通的設計空間<small>四個維度分開選，欄位給 runtime、內容給 LLM</small></span><span class="map-m" data-chapter="i6">p.26–32 · 約 6 分</span></a>
           <a class="map-row" href="#i7"><span class="map-no">2.7</span><span class="map-t">溝通是分散式系統問題<small>timeout 之後，你不知道對方做了沒</small></span><span class="map-m" data-chapter="i7">p.33–36 · 約 6 分</span></a>
-          <a class="map-row" href="#i8"><span class="map-no">2.8</span><span class="map-t">兩個協定與四條原則<small>A2A 連 agent，MCP 連服務，都不管 orchestration</small></span><span class="map-m" data-chapter="i8">p.37–44 · 約 5 分</span></a>
+          <a class="map-row" href="#i8"><span class="map-no">2.8</span><span class="map-t">兩個協定與四條原則<small>A2A 連 agent，MCP 連服務，都不管 orchestration</small></span><span class="map-m" data-chapter="i8">p.37–44 · 約 4 分</span></a>
         </nav>
         <div class="ideas">
           <p class="idea-group" id="g-a">A · 要不要拆</p>
@@ -345,18 +345,122 @@
             <h3><span class="idea-no">2.2</span>中心化的四種架構：線都經過一個點，弱點也在那一點 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=8" target="_blank" rel="noopener">p.8–11、p.14</a></h3>
             <div class="prose">
               <p>有了三張圖，就可以逐一看架構。Slide p.8 列了八種，之後每一頁講一種，頁底寫它在三張圖上的答案：</p>
-              <ol>
-                <li><b>Supervisor–worker。</b>一個 agent 規劃、派工、整合。</li>
-                <li><b>Hierarchical。</b>Supervisor 再管 supervisor。</li>
-                <li><b>Pipeline / DAG。</b>固定的階段，一站傳一站。</li>
-                <li><b>Blackboard。</b>透過共享狀態協調。</li>
-                <li><b>Committee / debate。</b>各自回答，再裁決。</li>
-                <li><b>Market / auction。</b>Agent 對任務出價。</li>
-                <li><b>Swarm。</b>同儕直接協商。</li>
-                <li><b>Dynamic topology。</b>執行中增減、改接 agent。</li>
-              </ol>
-              <p>p.18 的總表把它們分成三類：中心化（1、2、3、6）、去中心化（4、5、7）、混合（8）。「中心化」的意思是 control graph 有一個點決定誰做什麼，所以這一類好預測、好 debug，弱點也都在那一個點附近。這一章講中心化的四種，每一種依「機制、適合什麼、弱點、三張圖的答案」的順序走；2.3 講另外四種，再把八種排成一張表。</p>
-              <p id="i2-1"><b>Supervisor–worker：一個規劃，多個執行。</b>一個 supervisor 把任務拆成子任務，派給 worker，收回結果後整合（p.9）。Worker 只看到自己的子任務，看不到整個任務，也看不到其他 worker 在做什麼。Slide 的例子是 supervisor 帶三個 worker：researcher、coder、reviewer。Claude Code 的 subagent 就是這個架構：主對話是 supervisor，每個 subagent 在新的 context 裡做一件事，做完回一份結果（L3 的 2.3）。寫成程式，supervisor 的 loop 長這樣：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 276" role="img" aria-label="八種架構的總覽，每張卡片一個小圖。青色是中心化：1 Supervisor–worker、2 Hierarchical、3 Pipeline / DAG、6 Market / auction。黃色是去中心化：4 Blackboard、5 Committee / debate、7 Swarm。粉色是混合：8 Dynamic topology。">
+                  <defs><marker id="l5c-k-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-k-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="172" height="128" rx="6" class="dg-n-a"/>
+                  <text x="16" y="27" class="dg-cb">1 Supervisor–worker</text>
+                  <text x="90" y="119" text-anchor="middle" class="dg-c">一個規劃，多個執行</text>
+                  <path d="M46,90 L46,72 L134,72 L134,90" class="dg-soft-link"/>
+                  <path d="M90,54 L90,90" class="dg-soft-link"/>
+                  <rect x="77" y="45.5" width="26" height="13" rx="2" class="dg-n-focus"/>
+                  <rect x="37" y="86.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="81" y="86.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="125" y="86.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="184" y="4" width="172" height="128" rx="6" class="dg-n-a"/>
+                  <text x="196" y="27" class="dg-cb">2 Hierarchical</text>
+                  <text x="270" y="119" text-anchor="middle" class="dg-c">主管再管主管</text>
+                  <path d="M236,72 L236,62 L304,62 L304,72" class="dg-soft-link"/>
+                  <path d="M270,48 L270,62" class="dg-soft-link"/>
+                  <path d="M221,96 L221,84 L251,84 L251,96" class="dg-soft-link"/>
+                  <path d="M236,72 L236,84" class="dg-soft-link"/>
+                  <rect x="227" y="67.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="214.5" y="92.5" width="13" height="9" rx="2" class="dg-fill-link"/>
+                  <rect x="244.5" y="92.5" width="13" height="9" rx="2" class="dg-fill-link"/>
+                  <path d="M289,96 L289,84 L319,84 L319,96" class="dg-soft-link"/>
+                  <path d="M304,72 L304,84" class="dg-soft-link"/>
+                  <rect x="295" y="67.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="282.5" y="92.5" width="13" height="9" rx="2" class="dg-fill-link"/>
+                  <rect x="312.5" y="92.5" width="13" height="9" rx="2" class="dg-fill-link"/>
+                  <rect x="257" y="39.5" width="26" height="13" rx="2" class="dg-n-focus"/>
+                  <rect x="364" y="4" width="172" height="128" rx="6" class="dg-n-a"/>
+                  <text x="376" y="27" class="dg-cb">3 Pipeline / DAG</text>
+                  <text x="450" y="119" text-anchor="middle" class="dg-c">固定階段，一站傳一站</text>
+                  <path d="M394,74 L506,74" class="dg-soft-link"/>
+                  <rect x="383" y="67.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="420" y="67.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="458" y="67.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="495" y="67.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="544" y="4" width="172" height="128" rx="6" class="dg-n-b"/>
+                  <text x="556" y="27" class="dg-cb">4 Blackboard</text>
+                  <text x="630" y="119" text-anchor="middle" class="dg-c">透過共享狀態協調</text>
+                  <path d="M586,56 L586,90" class="dg-soft-link"/>
+                  <rect x="577" y="48.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <path d="M630,56 L630,90" class="dg-soft-link"/>
+                  <rect x="621" y="48.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <path d="M674,56 L674,90" class="dg-soft-link"/>
+                  <rect x="665" y="48.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="574" y="85" width="112" height="14" rx="2" class="dg-n-focus"/>
+                  <rect x="4" y="140" width="172" height="128" rx="6" class="dg-n-b"/>
+                  <text x="16" y="163" class="dg-cb">5 Committee / debate</text>
+                  <text x="90" y="255" text-anchor="middle" class="dg-c">各自回答，再裁決</text>
+                  <path d="M54,226 L54,208 L126,208 L126,226" class="dg-soft-link"/>
+                  <path d="M90,190 L90,208" class="dg-soft-link"/>
+                  <rect x="77" y="181.5" width="26" height="13" rx="2" class="dg-n-focus"/>
+                  <rect x="43" y="221.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="115" y="221.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="184" y="140" width="172" height="128" rx="6" class="dg-n-a"/>
+                  <text x="196" y="163" class="dg-cb">6 Market / auction</text>
+                  <text x="270" y="255" text-anchor="middle" class="dg-c">Agent 對任務出價</text>
+                  <path d="M226,190 L226,226" class="dg-soft-link"/>
+                  <rect x="217" y="222.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <path d="M270,190 L270,226" class="dg-soft-link"/>
+                  <rect x="261" y="222.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <path d="M314,190 L314,226" class="dg-soft-link"/>
+                  <rect x="305" y="222.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="214" y="181" width="112" height="14" rx="2" class="dg-n-focus"/>
+                  <rect x="364" y="140" width="172" height="128" rx="6" class="dg-n-b"/>
+                  <text x="376" y="163" class="dg-cb">7 Swarm</text>
+                  <text x="450" y="255" text-anchor="middle" class="dg-c">同儕直接協商</text>
+                  <path d="M412,188 L488,188" class="dg-soft-link"/>
+                  <path d="M412,188 L412,228" class="dg-soft-link"/>
+                  <path d="M412,188 L488,228" class="dg-soft-link"/>
+                  <path d="M488,188 L412,228" class="dg-soft-link"/>
+                  <path d="M488,188 L488,228" class="dg-soft-link"/>
+                  <path d="M412,228 L488,228" class="dg-soft-link"/>
+                  <rect x="401" y="181.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="477" y="181.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="401" y="221.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="477" y="221.5" width="22" height="13" rx="2" class="dg-fill-link"/>
+                  <rect x="544" y="140" width="172" height="128" rx="6" class="dg-n-d"/>
+                  <text x="556" y="163" class="dg-cb">8 Dynamic topology</text>
+                  <text x="630" y="255" text-anchor="middle" class="dg-c">執行中增減、改接</text>
+                  <path d="M606,208 L628,208" class="dg-link" marker-end="url(#l5c-k-ah)"/>
+                  <rect x="567" y="201" width="26" height="14" rx="2" class="dg-fill-link"/>
+                  <path d="M652,230 L652,214 L690,214 L690,230" class="dg-soft-link"/>
+                  <path d="M671,190 L671,214" class="dg-soft-link"/>
+                  <rect x="658" y="181" width="26" height="14" rx="2" class="dg-fill-link"/>
+                  <rect x="643" y="225.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                  <rect x="681" y="225.5" width="18" height="11" rx="2" class="dg-fill-link"/>
+                </svg>
+              </div>
+              <figcaption>依 p.8 與 p.18 的分類重畫。卡片的顏色是類別：青是中心化，黃是去中心化，粉是混合。小圖裡的深紅是協調的那一點；Blackboard 的深紅是共享工作區。</figcaption>
+            </figure>
+              <p>p.18 的總表把它們分成三類，就是卡片的三種顏色。「中心化」的意思是 control graph 有一個點決定誰做什麼，所以這一類好預測、好 debug，弱點也都在那一個點附近。這一章講中心化的四種，2.3 講另外四種，再把八種排成一張表。每一種的圖底下那一行，就是它在三張圖上的答案。</p>
+              <p id="i2-1"><b>Supervisor–worker：一個規劃，多個執行。</b>一個 supervisor 把任務拆成子任務，派給 worker，收回結果後整合（p.9）。Worker 只看到自己的子任務，看不到整個任務，也看不到其他 worker 在做什麼。Claude Code 的 subagent 就是這個架構：主對話是 supervisor，每個 subagent 在新的 context 裡做一件事，做完回一份結果（L3 的 2.3）。</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 216" role="img" aria-label="Supervisor 在上，底下三個 worker：researcher、coder、reviewer。Supervisor 和每個 worker 之間有線，worker 彼此沒有線。下方標著：十個 worker 各回 3,000 token，supervisor 的 context 多 30,000 token。">
+                  <defs><marker id="l5c-l-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-l-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M140,118 L140,88 L580,88 L580,118" class="dg-link"/>
+                  <path d="M360,56 L360,118" class="dg-link"/>
+                  <text x="368" y="80" class="dg-c">派工 / 回報</text>
+                  <rect x="280" y="14" width="160" height="42" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="40.0" text-anchor="middle" class="dg-l-on">Supervisor</text>
+                  <rect x="50" y="118" width="180" height="42" rx="4" class="dg-n-a"/>
+                  <text x="140" y="144.0" text-anchor="middle" class="dg-l">Researcher</text>
+                  <rect x="270" y="118" width="180" height="42" rx="4" class="dg-n-b"/>
+                  <text x="360" y="144.0" text-anchor="middle" class="dg-l">Coder</text>
+                  <rect x="490" y="118" width="180" height="42" rx="4" class="dg-n-c"/>
+                  <text x="580" y="144.0" text-anchor="middle" class="dg-l">Reviewer</text>
+                  <rect x="50" y="188" width="3" height="19" class="dg-n-focus"/>
+                  <text x="61" y="202" class="dg-c"><tspan class="dg-cb">Task</tspan> 事先拆好 · <tspan class="dg-cb">Control</tspan> 一個 supervisor · <tspan class="dg-cb">Comms</tspan> 星狀，全部經過中心</text>
+                </svg>
+              </div>
+              <figcaption>依 p.9 重畫。Worker 只看到自己的子任務，看不到彼此，所以線全部匯到中心。</figcaption>
+            </figure>
+            <p>寫成程式，supervisor 的 loop 長這樣：</p>
               <figure class="file"><figcaption>supervisor.py（簡化版，本文補的）</figcaption><pre><code>def run(task):
     subtasks = plan(task)                      # 1. 事先拆好：task graph 在這裡決定
     results = []
@@ -367,11 +471,11 @@
 def spawn_worker(sub):
     messages = [system_prompt(sub.role), sub.spec]   # worker 只拿到規格，沒有 supervisor 的歷史
     return agent_loop(messages, tools=sub.tools)     # L4 2.1 的那二十幾行</code></pre></figure>
-              <p>它適合子任務彼此獨立、可以平行的任務，因為 worker 之間不需要說話。弱點在第 3 步：<strong>supervisor 要重讀每一份結果，它的 context 長得最快</strong>。十個 worker 各回 3,000 token，supervisor 的 context 就多 30,000 token，而且這些結果之後每一圈都要重送。三張圖的答案：task 由 supervisor 事先拆好，control 是一個 supervisor，comms 是星狀，全部經過中心。</p>
+              <p>它適合子任務彼此獨立、可以平行的任務，因為 worker 之間不需要說話。弱點在第 3 步：<strong>supervisor 要重讀每一份結果，它的 context 長得最快</strong>。十個 worker 各回 3,000 token，supervisor 的 context 就多 30,000 token，而且這些結果之後每一圈都要重送。</p>
               <p id="i2-2"><b>Hierarchical：supervisor 再管 supervisor。</b>把 supervisor–worker 遞迴套用：supervisor 管的不是 worker，是另一層 supervisor（p.10）。它適合本來就有層次的任務，slide 舉的是 storage、query engine、測試這類系統，每一塊都可以再往下拆。例子是做一個 feature：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 640 234" role="img" aria-label="三層的樹。最上面是 Feature manager。第二層是 Backend lead 和 Frontend lead。第三層 Backend lead 底下是 API 和 Database，Frontend lead 底下是 UI 和 E2E tests。每一層匯到上一層的線都標著「摘要」，表示每一層只把摘要往上送；底部註記：每過一層邊界，細節少一次。">
+                <svg viewBox="0 0 640 268" role="img" aria-label="三層的樹。最上面是 Feature manager。第二層是 Backend lead 和 Frontend lead。第三層 Backend lead 底下是 API 和 Database，Frontend lead 底下是 UI 和 E2E tests。每一層匯到上一層的線都標著「摘要」，表示每一層只把摘要往上送；底部註記：每過一層邊界，細節少一次。">
                   <defs><marker id="l5c-e-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-e-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M165,94 L165,70 L475,70 L475,94" class="dg-link"/>
                   <path d="M320,70 L320,46" class="dg-link" marker-end="url(#l5c-e-ah)"/>
@@ -397,12 +501,43 @@ def spawn_worker(sub):
                   <text x="165" y="143" class="dg-c">摘要</text>
                   <text x="495" y="143" class="dg-c">摘要</text>
                   <text x="320" y="226" text-anchor="middle" class="dg-k">每過一層邊界，細節就少一次；底層的錯往上傳時沒有人看得到原文</text>
+                
+                  <rect x="10" y="242" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="256" class="dg-c"><tspan class="dg-cb">Task</tspan> 每一層再拆一次 · <tspan class="dg-cb">Control</tspan> 巢狀的 supervisor · <tspan class="dg-cb">Comms</tspan> 一棵樹，只有父子之間有線</text>
                 </svg>
               </div>
               <figcaption>依 p.10 重畫，顏色是層級，邊上的「摘要」是本文加的。往上的每一條邊只傳摘要，所以層數越多，最上面的 manager 離原始證據越遠。</figcaption>
             </figure>
-              <p>Slide 說它的難處有兩個：拆解在哪一層發生、每道邊界要過多少 context。這兩個問題合起來就是 p.18 寫的弱點：<strong>錯誤會放大</strong>。底層的 API worker 誤讀了一個欄位，Backend lead 把它摘要成「API 完成」，Feature manager 再摘要一次，沒有任何一層看得到原始的錯。2.3 末尾的本文判斷〈彙整節點是細節流失的地方〉會再談對策。三張圖的答案：task 在每一層再拆一次，control 是巢狀的 supervisor，comms 是一棵樹，只有父子之間有線。</p>
-              <p id="i2-3"><b>Pipeline / DAG：固定的階段，一站傳一站。</b>Pipeline 是一串固定的階段，每個階段一個 agent，前一站的輸出是後一站的輸入（p.11）。每道邊界有一份 typed contract：兩站事先約好傳什麼欄位、什麼型別，例如用一份 JSON Schema（L4 2.2 講過，用 JSON 描述另一份 JSON 該長什麼樣）。Slide 的例子是發票處理，五站：OCR、擷取欄位、比對採購單、核准、入帳。OCR 和擷取之間的 contract 可以長這樣：</p>
+              <p>Slide 說它的難處有兩個：拆解在哪一層發生、每道邊界要過多少 context。這兩個問題合起來就是 p.18 寫的弱點：<strong>錯誤會放大</strong>。底層的 API worker 誤讀了一個欄位，Backend lead 把它摘要成「API 完成」，Feature manager 再摘要一次，沒有任何一層看得到原始的錯。2.3 末尾的本文判斷〈彙整節點是細節流失的地方〉會再談對策。</p>
+              <p id="i2-3"><b>Pipeline / DAG：固定的階段，一站傳一站。</b>Pipeline 是一串固定的階段，每個階段一個 agent，前一站的輸出是後一站的輸入（p.11）。每道邊界有一份 typed contract：兩站事先約好傳什麼欄位、什麼型別，例如用一份 JSON Schema（L4 2.2 講過，用 JSON 描述另一份 JSON 該長什麼樣）。Slide 的例子是發票處理：</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 190" role="img" aria-label="發票處理的 pipeline，五站依序相連：OCR、擷取欄位、比對採購單、核准、入帳。一條紅色虛線從核准退回 OCR，是 retry edge。">
+                  <defs><marker id="l5c-m-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-m-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="10" y="76" width="124" height="44" rx="4" class="dg-n-a"/>
+                  <text x="72" y="103.0" text-anchor="middle" class="dg-l">OCR</text>
+                  <path d="M134,98 L154,98" class="dg-link" marker-end="url(#l5c-m-ah)"/>
+                  <rect x="154" y="76" width="124" height="44" rx="4" class="dg-n-b"/>
+                  <text x="216" y="103.0" text-anchor="middle" class="dg-l">擷取欄位</text>
+                  <path d="M278,98 L298,98" class="dg-link" marker-end="url(#l5c-m-ah)"/>
+                  <rect x="298" y="76" width="124" height="44" rx="4" class="dg-n-c"/>
+                  <text x="360" y="103.0" text-anchor="middle" class="dg-l">比對採購單</text>
+                  <path d="M422,98 L442,98" class="dg-link" marker-end="url(#l5c-m-ah)"/>
+                  <rect x="442" y="76" width="124" height="44" rx="4" class="dg-n-d"/>
+                  <text x="504" y="103.0" text-anchor="middle" class="dg-l">核准</text>
+                  <path d="M566,98 L586,98" class="dg-link" marker-end="url(#l5c-m-ah)"/>
+                  <rect x="586" y="76" width="124" height="44" rx="4" class="dg-n-a"/>
+                  <text x="648" y="103.0" text-anchor="middle" class="dg-l">入帳</text>
+                  <path d="M504,75 L504,44 L72,44 L72,75" class="dg-link-key dg-dash" marker-end="url(#l5c-m-ak)"/>
+                  <text x="288" y="34" text-anchor="middle" class="dg-k">一條 retry edge，勝過多加一個 agent</text>
+                  <text x="144" y="142" text-anchor="middle" class="dg-c">每道邊界一份 typed contract</text>
+                  <rect x="10" y="162" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="176" class="dg-c"><tspan class="dg-cb">Task</tspan> 設計時固定 · <tspan class="dg-cb">Control</tspan> 順序本身 · <tspan class="dg-cb">Comms</tspan> 站到站</text>
+                </svg>
+              </div>
+              <figcaption>依 p.11 重畫。實線只往前；紅色虛線是補上的回頭路。</figcaption>
+            </figure>
+            <p>OCR 和擷取之間的 contract 可以長這樣：</p>
               <figure class="file"><figcaption>contract_ocr_to_extract.json（本文補的例子）</figcaption><pre><code>{
   "type": "object",
   "properties": {
@@ -412,17 +547,40 @@ def spawn_worker(sub):
   },
   "required": ["invoice_id", "lines", "confidence"]
 }</code></pre></figure>
-              <p>DAG 是 pipeline 的一般形式：directed acyclic graph，有方向、沒有環的圖。Pipeline 是一條鏈；DAG 允許一站分給兩站、兩站匯到一站，但仍然不能回頭。因為每站的輸入輸出都有 contract，<strong>錯誤會停在出錯的那一站</strong>，slide 說這是最便宜的除錯方式：入帳的數字錯了，從後往前看哪一站的輸出先不對。弱點是沒有回頭的路，第四站不能要求第一站重做，例如核准那站發現 OCR 讀錯金額，也只能照錯的往下走。所以 p.11 的經驗法則是：<strong>加一條 retry edge，勝過多加一個 agent</strong>。Retry edge 是一條讓結果退回上一站重做的線，第 1 段架構圖裡的虛線就是它。三張圖的答案：task 在設計時固定，control 就是順序本身，comms 站到站。</p>
+              <p>DAG 是 pipeline 的一般形式：directed acyclic graph，有方向、沒有環的圖。Pipeline 是一條鏈；DAG 允許一站分給兩站、兩站匯到一站，但仍然不能回頭。因為每站的輸入輸出都有 contract，<strong>錯誤會停在出錯的那一站</strong>，slide 說這是最便宜的除錯方式：入帳的數字錯了，從後往前看哪一站的輸出先不對。弱點是沒有回頭的路，第四站不能要求第一站重做，例如核准那站發現 OCR 讀錯金額，也只能照錯的往下走。所以 p.11 的經驗法則是：<strong>加一條 retry edge，勝過多加一個 agent</strong>。Retry edge 是一條讓結果退回上一站重做的線，就是上圖的紅色虛線。</p>
               <p id="i2-4"><b>Market / auction：agent 對任務出價。</b>第四種中心化的架構，中心不派工，而是公告任務，讓 agent 依自己的能力、成本、延遲出價，由中心裁定得標者（p.14）。它適合異質的 agent：不同的 model、tool、機器，成本和專長都不同。Slide 的例子是一個 GPU job router，規則是「5 秒內能完成的出價裡，最便宜的得標」：</p>
-              <div class="table-wrap"><table>
-                <thead><tr><th>出價的節點</th><th>價格</th><th>預估完成時間</th><th>結果</th></tr></thead>
-                <tbody>
-                  <tr><td>A100 node</td><td>$0.20</td><td>3 秒</td><td><b>得標</b>：5 秒內最便宜</td></tr>
-                  <tr><td>T4 node</td><td>$0.05</td><td>10 秒</td><td>更便宜，但超過 5 秒</td></tr>
-                  <tr><td>H100 node</td><td>$0.40</td><td>1 秒</td><td>更快，但不是最便宜</td></tr>
-                </tbody>
-              </table></div>
-              <p>這樣工作會自動流向最便宜又做得到的 agent，中心不必知道每個 agent 的細節。弱點是出價由 agent 自己報：<strong>誇大能力的 agent 會得標</strong>，T4 node 若謊報 4 秒，就搶到自己做不完的工作。2.8 的 A2A agent card 也有同樣的問題，card 上寫的 skill 是自己宣稱的。三張圖的答案：task 公告後由出價認領，control 由拍賣者裁定，comms 是公告出去、出價回來。</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 256" role="img" aria-label="GPU job router。上方公告「誰能跑這個訓練工作？」。三個節點出價：A100 node 0.20 美元、3 秒，5 秒內最便宜，得標；T4 node 0.05 美元、10 秒，更便宜但超過 5 秒；H100 node 0.40 美元、1 秒，更快但不是最便宜。工作交給 A100 node。">
+                  <defs><marker id="l5c-o-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-o-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="10" y="8" width="700" height="38" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="32.0" text-anchor="middle" class="dg-l-on">「誰能跑這個訓練工作？」</text>
+                  <path d="M120,46 L120,74" class="dg-link" marker-start="url(#l5c-o-ah)" marker-end="url(#l5c-o-ah)"/>
+                  <rect x="10" y="74" width="220" height="56" rx="4" class="dg-n-a"/>
+                  <text x="120" y="99.0" text-anchor="middle" class="dg-l">A100 node</text>
+                  <text x="120" y="116.0" text-anchor="middle" class="dg-c">$0.20 · 3 秒</text>
+                  <text x="120" y="152" text-anchor="middle" class="dg-k">得標：5 秒內最便宜</text>
+                  <path d="M360,46 L360,74" class="dg-link" marker-start="url(#l5c-o-ah)" marker-end="url(#l5c-o-ah)"/>
+                  <rect x="250" y="74" width="220" height="56" rx="4" class="dg-n-b"/>
+                  <text x="360" y="99.0" text-anchor="middle" class="dg-l">T4 node</text>
+                  <text x="360" y="116.0" text-anchor="middle" class="dg-c">$0.05 · 10 秒</text>
+                  <text x="360" y="152" text-anchor="middle" class="dg-c">更便宜，但超過 5 秒</text>
+                  <path d="M600,46 L600,74" class="dg-link" marker-start="url(#l5c-o-ah)" marker-end="url(#l5c-o-ah)"/>
+                  <rect x="490" y="74" width="220" height="56" rx="4" class="dg-n-d"/>
+                  <text x="600" y="99.0" text-anchor="middle" class="dg-l">H100 node</text>
+                  <text x="600" y="116.0" text-anchor="middle" class="dg-c">$0.40 · 1 秒</text>
+                  <text x="600" y="152" text-anchor="middle" class="dg-c">更快，但不是最便宜</text>
+                  <text x="128" y="65" class="dg-c">公告 / 出價</text>
+                  <path d="M120,162 L120,202 L250,202" class="dg-link-key" marker-end="url(#l5c-o-ak)"/>
+                  <rect x="250" y="186" width="220" height="32" rx="4" class="dg-n-c"/>
+                  <text x="360" y="207.0" text-anchor="middle" class="dg-l">工作交給 A100 node</text>
+                  <rect x="10" y="230" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="244" class="dg-c"><tspan class="dg-cb">Task</tspan> 公告後由出價認領 · <tspan class="dg-cb">Control</tspan> 拍賣者裁定 · <tspan class="dg-cb">Comms</tspan> 公告出去、出價回來</text>
+                </svg>
+              </div>
+              <figcaption>依 p.14 重畫，每個節點落選或得標的理由是本文加的。</figcaption>
+            </figure>
+              <p>這樣工作會自動流向最便宜又做得到的 agent，中心不必知道每個 agent 的細節。弱點是出價由 agent 自己報：<strong>誇大能力的 agent 會得標</strong>，T4 node 若謊報 4 秒，就搶到自己做不完的工作。2.8 的 A2A agent card 也有同樣的問題，card 上寫的 skill 是自己宣稱的。</p>
               <p>四種放在一起看，中心的角色不同：supervisor–worker 的中心做規劃，hierarchical 的中心有好幾層，pipeline 的中心是順序本身，market 的中心只裁定。但弱點都在控制的路徑上，問題沿著它集中（瓶頸）或擴散（放大、下傳、不實出價）。這個規律在 2.3 會和去中心化的三種對照。</p>
             </div>
           </div>
@@ -430,7 +588,31 @@ def spawn_worker(sub):
             <h3><span class="idea-no">2.3</span>去中心化與混合：沒有中心，弱點變成一致性 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=12" target="_blank" rel="noopener">p.12–13、p.15–18</a></h3>
             <div class="prose">
               <p>中心化的四種，問題都在控制的路徑上。這一章看拿掉中心之後會怎樣：三種去中心化的架構、一種混合的架構，再看真實系統怎麼把幾種混在一起，最後用 p.18 的總表把八種收攏。「去中心化」的意思是 control graph 沒有一個固定的點決定誰做什麼，協調靠共享的狀態，或靠 agent 之間直接協商。</p>
-              <p id="i3-1"><b>Blackboard：透過共享狀態協調。</b>Agent 之間不直接傳訊息，而是讀寫同一個工作區（p.12）。工作區可以是一個資料庫、一個 vector store、一個檔案系統、一個 git repo，或一張 task graph。Slide 的例子是三個 agent 共用一個 git repo：feature agent、refactor agent、test agent，各自讀 task list、各自 commit，彼此之間沒有線。協調全靠共享狀態，例如一份 task list：</p>
+              <p id="i3-1"><b>Blackboard：透過共享狀態協調。</b>Agent 之間不直接傳訊息，而是讀寫同一個工作區（p.12）。工作區可以是一個資料庫、一個 vector store、一個檔案系統、一個 git repo，或一張 task graph。Slide 的例子是三個 agent 共用一個 git repo，各自讀 task list、各自 commit：</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 206" role="img" aria-label="三個 agent：feature、refactor、test，各自讀寫同一個 git repo，repo 裡有 task list、commits、history。Agent 彼此之間沒有線。">
+                  <defs><marker id="l5c-p-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-p-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="150" y="10" width="420" height="58" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="36.0" text-anchor="middle" class="dg-l-on">共享的 Git repo</text>
+                  <text x="360" y="53.0" text-anchor="middle" class="dg-c-on">task list、commits、history</text>
+                  <path d="M216,68 L216,118" class="dg-link" marker-start="url(#l5c-p-ah)" marker-end="url(#l5c-p-ah)"/>
+                  <rect x="150" y="118" width="132" height="40" rx="4" class="dg-n-a"/>
+                  <text x="216" y="143.0" text-anchor="middle" class="dg-l">Feature agent</text>
+                  <path d="M360,68 L360,118" class="dg-link" marker-start="url(#l5c-p-ah)" marker-end="url(#l5c-p-ah)"/>
+                  <rect x="294" y="118" width="132" height="40" rx="4" class="dg-n-a"/>
+                  <text x="360" y="143.0" text-anchor="middle" class="dg-l">Refactor agent</text>
+                  <path d="M504,68 L504,118" class="dg-link" marker-start="url(#l5c-p-ah)" marker-end="url(#l5c-p-ah)"/>
+                  <rect x="438" y="118" width="132" height="40" rx="4" class="dg-n-a"/>
+                  <text x="504" y="143.0" text-anchor="middle" class="dg-l">Test agent</text>
+                  <text x="368" y="98" class="dg-c">讀 / 寫</text>
+                  <rect x="10" y="180" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="194" class="dg-c"><tspan class="dg-cb">Task</tspan> 從共享狀態浮現 · <tspan class="dg-cb">Control</tspan> 沒有中心 · <tspan class="dg-cb">Comms</tspan> 間接，經過工作區</text>
+                </svg>
+              </div>
+              <figcaption>依 p.12 重畫。Agent 之間沒有線，協調全靠工作區裡的東西。</figcaption>
+            </figure>
+            <p>協調全靠共享狀態，例如一份 task list：</p>
               <figure class="file"><figcaption>tasks.md（共享工作區裡的 task list，本文補的例子）</figcaption><pre><code># Tasks
 - [x] T1 add /refund endpoint           owner: feature-agent   commit: a3f9c1
 - [ ] T2 extract PaymentClient class    owner: refactor-agent  started: 14:02
@@ -444,8 +626,30 @@ def spawn_worker(sub):
                 <li><b>版本（versioning）。</b>Refactor agent 改了 class 名稱，feature agent 手上的分支還用舊名。</li>
                 <li><b>垃圾回收（garbage collection）。</b>做完的 task、過期的筆記沒有人刪，工作區越來越大，每個 agent 讀進 context 的也越來越多。</li>
               </ul>
-              <p>p.18 把這五個難題濃縮成一個弱點：<strong>狀態過期</strong>（stale state）。每個 agent 看到的不是同一份狀態，而且系統不會報錯，只是各做各的。三張圖的答案：task 從共享狀態浮現，control 沒有中心，comms 間接，經過工作區。</p>
-              <p id="i3-2"><b>Committee / debate：各自回答，再裁決。</b>幾個 agent 對同一個問題各自提出答案，互相討論，最後由一個 judge 裁決，或用投票決定（p.13）。例子是作文評分：grader A 和 grader B 各給一個分數，judge 看兩份評語後定案。它適合需要判斷的任務，多一個獨立的意見能抓到單一 agent 的盲點。但 slide 點出一種失敗：agreement without independence，同意了但彼此不獨立。兩個 grader 用同一個 model、讀同一份 context，盲點也相同，兩票同意帶來的新資訊很少。這是 ensemble（把多個判斷合起來）的基本條件：多數決只在錯誤彼此獨立時有效。獨立性要刻意製造：</p>
+              <p>p.18 把這五個難題濃縮成一個弱點：<strong>狀態過期</strong>（stale state）。每個 agent 看到的不是同一份狀態，而且系統不會報錯，只是各做各的。</p>
+              <p id="i3-2"><b>Committee / debate：各自回答，再裁決。</b>幾個 agent 對同一個問題各自提出答案，互相討論，最後由一個 judge 裁決，或用投票決定（p.13）。例子是作文評分：grader A 和 grader B 各給一個分數，judge 看兩份評語後定案。</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 212" role="img" aria-label="作文評分。Grader A 和 Grader B 各自評分，先互相討論，再送到 Judge 裁決。下方註記：同一個 model、同一份 context，盲點也相同。">
+                  <defs><marker id="l5c-q-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-q-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M190,106 L190,76 L530,76 L530,106" class="dg-link"/>
+                  <path d="M360,76 L360,52" class="dg-link" marker-end="url(#l5c-q-ah)"/>
+                  <rect x="280" y="10" width="160" height="42" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="36.0" text-anchor="middle" class="dg-l-on">Judge</text>
+                  <rect x="90" y="106" width="200" height="42" rx="4" class="dg-n-a"/>
+                  <text x="190" y="132.0" text-anchor="middle" class="dg-l">Grader A</text>
+                  <rect x="430" y="106" width="200" height="42" rx="4" class="dg-n-a"/>
+                  <text x="530" y="132.0" text-anchor="middle" class="dg-l">Grader B</text>
+                  <path d="M290,127 L430,127" class="dg-link dg-dash" marker-start="url(#l5c-q-ah)" marker-end="url(#l5c-q-ah)"/>
+                  <text x="360" y="119" text-anchor="middle" class="dg-c">互相討論</text>
+                  <text x="360" y="172" text-anchor="middle" class="dg-k">同 model、同 context：盲點相同</text>
+                  <rect x="10" y="186" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="200" class="dg-c"><tspan class="dg-cb">Task</tspan> 同一件事平行做幾次 · <tspan class="dg-cb">Control</tspan> judge 決定 · <tspan class="dg-cb">Comms</tspan> 同儕先說，再送到 judge</text>
+                </svg>
+              </div>
+              <figcaption>依 p.13 重畫。兩票同意只在錯誤彼此獨立時才有意義。</figcaption>
+            </figure>
+            <p>它適合需要判斷的任務，多一個獨立的意見能抓到單一 agent 的盲點。但 slide 點出一種失敗：agreement without independence，同意了但彼此不獨立。兩個 grader 用同一個 model、讀同一份 context，盲點也相同，兩票同意帶來的新資訊很少。這是 ensemble（把多個判斷合起來）的基本條件：多數決只在錯誤彼此獨立時有效。獨立性要刻意製造：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>做法</th><th>製造什麼獨立性</th><th>代價</th></tr></thead>
                 <tbody>
@@ -454,11 +658,164 @@ def spawn_worker(sub):
                   <tr><td>先各自作答，再互看</td><td>避免第一個意見帶著第二個走</td><td>多一輪，多一份 context</td></tr>
                 </tbody>
               </table></div>
-              <p>三張圖的答案：task 是同一件事平行做幾次，control 由 judge 決定，comms 是同儕之間先說，再送到 judge。</p>
-              <p id="i3-3"><b>Swarm：同儕直接協商，沒有協調者。</b>沒有固定的協調者，agent 直接交換發現、互相協商（p.15）。例子是倉庫機器人協商誰去撿哪一張訂單。好處是沒有協調者會卡住或掛掉，同儕來來去去，工作照常進行。但它需要一整套協定，slide 列了五件事：discovery（怎麼找到彼此）、addressing（怎麼指名對方）、synchronization（怎麼對齊狀態）、termination（怎麼知道做完了）、trust（怎麼信任對方的說法）。2.8 的 A2A 就是在標準化前兩件。代價是訊息量：n 個 agent 兩兩都要說話，線數是 n(n−1)/2。<strong>4 個 agent 6 條線，10 個 45 條，50 個 1,225 條</strong>；每一條線上的每一則訊息都進入某個 context。衝突也難解，兩個 picker 都想撿同一張訂單時，沒有人裁決。所以 slide 說它在產品裡很少用。三張圖的答案：task 在局部協商，control 沒有固定的協調者，comms 全對全。</p>
-              <p id="i3-4"><b>Dynamic topology：執行中改接。</b>唯一一種混合的架構：agent 在任務進行中加入、移除或改接（p.16）。例子是客服 bot：一般工單只有一個 support bot；工單升級時，才接上 billing agent 和 log agent。好處是容量跟著難度走，簡單的工單維持便宜。弱點是每次執行的形狀都不同，<strong>失敗很難重現</strong>，下一段講原因與對策。三張圖的答案：task 在工作變難時重拆，control 隨 agent 加入而移動，comms 在執行時決定。</p>
+              
+              <p id="i3-3"><b>Swarm：同儕直接協商，沒有協調者。</b>沒有固定的協調者，agent 直接交換發現、互相協商（p.15）。例子是倉庫機器人協商誰去撿哪一張訂單。</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 264" role="img" aria-label="左邊四個 picker 兩兩相連，共 6 條線。右邊十個 agent 兩兩相連，共 45 條線。兩張圖都沒有協調者。">
+                  <defs><marker id="l5c-r-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-r-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="352" height="214" rx="6" class="dg-panel"/>
+                  <rect x="364" y="4" width="352" height="214" rx="6" class="dg-panel"/>
+                  <text x="18" y="28" class="dg-h">倉庫的 4 個 picker</text>
+                  <text x="378" y="28" class="dg-h">加到 10 個</text>
+                  <path d="M134,67 L226,67" class="dg-link"/>
+                  <path d="M134,157 L226,157" class="dg-link"/>
+                  <path d="M89,86 L89,138" class="dg-link"/>
+                  <path d="M271,86 L271,138" class="dg-link"/>
+                  <path d="M134,86 L226,138" class="dg-link"/>
+                  <path d="M226,86 L134,138" class="dg-link"/>
+                  <rect x="44" y="48" width="90" height="38" rx="4" class="dg-n-a"/>
+                  <text x="89" y="72.0" text-anchor="middle" class="dg-l">Picker 1</text>
+                  <rect x="226" y="48" width="90" height="38" rx="4" class="dg-n-b"/>
+                  <text x="271" y="72.0" text-anchor="middle" class="dg-l">Picker 2</text>
+                  <rect x="44" y="138" width="90" height="38" rx="4" class="dg-n-c"/>
+                  <text x="89" y="162.0" text-anchor="middle" class="dg-l">Picker 3</text>
+                  <rect x="226" y="138" width="90" height="38" rx="4" class="dg-n-d"/>
+                  <text x="271" y="162.0" text-anchor="middle" class="dg-l">Picker 4</text>
+                  <text x="180" y="205" text-anchor="middle" class="dg-k">6 條線</text>
+                  <path d="M540.0,38.0 L582.3,51.8" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L608.5,87.8" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L608.5,132.2" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L582.3,168.2" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L540.0,182.0" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L497.7,168.2" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M540.0,38.0 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L608.5,87.8" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L608.5,132.2" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L582.3,168.2" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L540.0,182.0" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L497.7,168.2" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M582.3,51.8 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L608.5,132.2" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L582.3,168.2" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L540.0,182.0" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L497.7,168.2" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M608.5,87.8 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M608.5,132.2 L582.3,168.2" class="dg-soft-link"/>
+                  <path d="M608.5,132.2 L540.0,182.0" class="dg-soft-link"/>
+                  <path d="M608.5,132.2 L497.7,168.2" class="dg-soft-link"/>
+                  <path d="M608.5,132.2 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M608.5,132.2 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M608.5,132.2 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M582.3,168.2 L540.0,182.0" class="dg-soft-link"/>
+                  <path d="M582.3,168.2 L497.7,168.2" class="dg-soft-link"/>
+                  <path d="M582.3,168.2 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M582.3,168.2 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M582.3,168.2 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M540.0,182.0 L497.7,168.2" class="dg-soft-link"/>
+                  <path d="M540.0,182.0 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M540.0,182.0 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M540.0,182.0 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M497.7,168.2 L471.5,132.2" class="dg-soft-link"/>
+                  <path d="M497.7,168.2 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M497.7,168.2 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M471.5,132.2 L471.5,87.8" class="dg-soft-link"/>
+                  <path d="M471.5,132.2 L497.7,51.8" class="dg-soft-link"/>
+                  <path d="M471.5,87.8 L497.7,51.8" class="dg-soft-link"/>
+                  <circle cx="540.0" cy="38.0" r="8" class="dg-n-a"/>
+                  <circle cx="582.3" cy="51.8" r="8" class="dg-n-a"/>
+                  <circle cx="608.5" cy="87.8" r="8" class="dg-n-a"/>
+                  <circle cx="608.5" cy="132.2" r="8" class="dg-n-a"/>
+                  <circle cx="582.3" cy="168.2" r="8" class="dg-n-a"/>
+                  <circle cx="540.0" cy="182.0" r="8" class="dg-n-a"/>
+                  <circle cx="497.7" cy="168.2" r="8" class="dg-n-a"/>
+                  <circle cx="471.5" cy="132.2" r="8" class="dg-n-a"/>
+                  <circle cx="471.5" cy="87.8" r="8" class="dg-n-a"/>
+                  <circle cx="497.7" cy="51.8" r="8" class="dg-n-a"/>
+                  <text x="540" y="205" text-anchor="middle" class="dg-k">45 條線</text>
+                  <rect x="10" y="236" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="250" class="dg-c"><tspan class="dg-cb">Task</tspan> 局部協商 · <tspan class="dg-cb">Control</tspan> 沒有固定的協調者 · <tspan class="dg-cb">Comms</tspan> 全對全</text>
+                </svg>
+              </div>
+              <figcaption>左邊依 p.15 重畫，右邊是本文加的。線數是 n(n−1)/2：第 10 個 agent 加入時，要多接 9 條線。</figcaption>
+            </figure>
+            <p>好處是沒有協調者會卡住或掛掉，同儕來來去去，工作照常進行。但它需要一整套協定，slide 列了五件事：discovery（怎麼找到彼此）、addressing（怎麼指名對方）、synchronization（怎麼對齊狀態）、termination（怎麼知道做完了）、trust（怎麼信任對方的說法）。2.8 的 A2A 就是在標準化前兩件。代價是訊息量：n 個 agent 兩兩都要說話，線數是 n(n−1)/2。<strong>4 個 agent 6 條線，10 個 45 條，50 個 1,225 條</strong>；每一條線上的每一則訊息都進入某個 context。衝突也難解，兩個 picker 都想撿同一張訂單時，沒有人裁決。所以 slide 說它在產品裡很少用。</p>
+              <p id="i3-4"><b>Dynamic topology：執行中改接。</b>唯一一種混合的架構：agent 在任務進行中加入、移除或改接（p.16）。例子是客服 bot：</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 204" role="img" aria-label="左邊是一般工單，只有一個 support bot。工單升級之後，右邊的 support bot 底下多接了 billing agent 和 log agent。">
+                  <defs><marker id="l5c-s-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-s-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="250" height="160" rx="6" class="dg-panel"/>
+                  <text x="18" y="28" class="dg-h">一般工單</text>
+                  <rect x="44" y="66" width="170" height="44" rx="4" class="dg-n-a"/>
+                  <text x="129" y="93.0" text-anchor="middle" class="dg-l">Support bot</text>
+                  <path d="M268,88 L352,88" class="dg-link-key" marker-end="url(#l5c-s-ak)"/>
+                  <text x="310" y="78" text-anchor="middle" class="dg-k">工單升級</text>
+                  <rect x="366" y="4" width="350" height="160" rx="6" class="dg-panel"/>
+                  <text x="380" y="28" class="dg-h">升級之後</text>
+                  <path d="M462,112 L462,96 L620,96 L620,112" class="dg-link"/>
+                  <path d="M541,80 L541,96" class="dg-link"/>
+                  <rect x="456" y="40" width="170" height="40" rx="4" class="dg-n-a"/>
+                  <text x="541" y="65.0" text-anchor="middle" class="dg-l">Support bot</text>
+                  <rect x="382" y="112" width="160" height="40" rx="4" class="dg-n-b"/>
+                  <text x="462" y="137.0" text-anchor="middle" class="dg-l">Billing agent</text>
+                  <rect x="552" y="112" width="150" height="40" rx="4" class="dg-n-c"/>
+                  <text x="627" y="137.0" text-anchor="middle" class="dg-l">Log agent</text>
+                  <rect x="10" y="176" width="3" height="19" class="dg-n-focus"/>
+                  <text x="21" y="190" class="dg-c"><tspan class="dg-cb">Task</tspan> 工作變難時重拆 · <tspan class="dg-cb">Control</tspan> 隨 agent 加入而移動 · <tspan class="dg-cb">Comms</tspan> 執行時決定</text>
+                </svg>
+              </div>
+              <figcaption>依 p.16 重畫。簡單的工單維持便宜；代價是每次執行的形狀都可能不同。</figcaption>
+            </figure>
+            <p>好處是容量跟著難度走。弱點是每次執行的形狀都不同，<strong>失敗很難重現</strong>，下一段講原因與對策。</p>
               <p id="i3-5"><span class="anchor" id="x3"></span><b>本文的判斷：dynamic topology 難重現，也難除錯。</b>p.16 只說失敗很難重現，沒有說為什麼。原因有兩層。第一層，topology 由 LLM 在執行時決定，而 LLM 的輸出有隨機性：同一個 ticket 跑兩次，形狀可能不同，第一次接上 billing agent，第二次沒有，所以第一次的失敗第二次不一定出現。第二層，agent 跑在不同的 process 上，沒有全域時鐘（2.7 會講），兩個 agent 的 log 誰先誰後也說不準，除錯時排不出順序。可行的做法是把 topology 當資料記下來：每則訊息的 envelope（2.6）都 log，用 task_id 串起來，至少能照同一個形狀重跑一次。L7 做 agent 評估時會再碰到這個問題。</p>
-              <p id="i3-6"><b>真實系統是混合體。</b>Slide p.17 畫了一個生產系統的樣子：一個 supervisor 底下有一個 planner agent，planner 產生一張 dynamic task DAG，分給 coder、researcher、tester、reviewer 四個 agent，四個 agent 都接到一個共享的 git。它同時用了 hierarchy（supervisor 管 planner）、pipeline（DAG）、shared memory（git），還能在需要時重新規劃。Claude Code 的 <a class="tm" href="#n-teams">agent teams</a> 也是混合體：lead 派工是 supervisor–worker，共享的 task list 是 blackboard，teammate 之間直接傳訊是 swarm 的線。</p>
+              <p id="i3-6"><b>真實系統是混合體。</b>Slide p.17 畫了一個生產系統的樣子：</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 356" role="img" aria-label="生產系統的樣子。Supervisor 底下是 planner agent，planner 產生一張 dynamic task DAG，分給 coder、researcher、tester 三個 agent。三個 agent 都接到共享的 git，接著由 reviewer 檢查。Reviewer 需要時退回 planner 重新規劃。左側註記：同時用了 hierarchy、pipeline、shared memory。">
+                  <defs><marker id="l5c-t-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-t-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="14" y="40" class="dg-k">同時用了</text>
+                  <text x="14" y="62" class="dg-c">hierarchy</text>
+                  <text x="14" y="84" class="dg-c">pipeline</text>
+                  <text x="14" y="106" class="dg-c">shared memory</text>
+                  <path d="M360,46 L360,66" class="dg-link" marker-end="url(#l5c-t-ah)"/>
+                  <path d="M360,102 L360,122" class="dg-link" marker-end="url(#l5c-t-ah)"/>
+                  <path d="M360,158 L360,178" class="dg-link"/>
+                  <path d="M210,196 L210,178 L510,178 L510,196" class="dg-link" marker-end="url(#l5c-t-ah)"/>
+                  <path d="M360,178 L360,196" class="dg-link" marker-end="url(#l5c-t-ah)"/>
+                  <path d="M210,234 L210,252 L510,252 L510,234" class="dg-link"/>
+                  <path d="M360,234 L360,268" class="dg-link" marker-end="url(#l5c-t-ah)"/>
+                  <path d="M360,304 L360,318" class="dg-link" marker-end="url(#l5c-t-ah)"/>
+                  <path d="M450,334 L640,334 L640,84 L450,84" class="dg-link-key" marker-end="url(#l5c-t-ak)"/>
+                  <text x="650" y="200" class="dg-k">需要時</text>
+                  <text x="650" y="218" class="dg-k">重新規劃</text>
+                  <rect x="270" y="10" width="180" height="36" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="33.0" text-anchor="middle" class="dg-l-on">Supervisor</text>
+                  <rect x="270" y="66" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="360" y="89.0" text-anchor="middle" class="dg-l">Planner agent</text>
+                  <rect x="270" y="122" width="180" height="36" rx="4" class="dg-n-b"/>
+                  <text x="360" y="145.0" text-anchor="middle" class="dg-l">Dynamic task DAG</text>
+                  <rect x="148" y="196" width="124" height="38" rx="4" class="dg-n-c"/>
+                  <text x="210" y="220.0" text-anchor="middle" class="dg-l">Coder</text>
+                  <rect x="298" y="196" width="124" height="38" rx="4" class="dg-n-c"/>
+                  <text x="360" y="220.0" text-anchor="middle" class="dg-l">Researcher</text>
+                  <rect x="448" y="196" width="124" height="38" rx="4" class="dg-n-c"/>
+                  <text x="510" y="220.0" text-anchor="middle" class="dg-l">Tester</text>
+                  <rect x="270" y="268" width="180" height="36" rx="4" class="dg-n-d"/>
+                  <text x="360" y="291.0" text-anchor="middle" class="dg-l">Shared Git</text>
+                  <rect x="270" y="318" width="180" height="34" rx="4" class="dg-n-a"/>
+                  <text x="360" y="340.0" text-anchor="middle" class="dg-l">Reviewer</text>
+                </svg>
+              </div>
+              <figcaption>依 p.17 重畫。Supervisor 管 planner 是 hierarchy，DAG 是 pipeline，共享的 git 是 shared memory，紅線是重新規劃。</figcaption>
+            </figure>
+            <p>Claude Code 的 <a class="tm" href="#n-teams">agent teams</a> 也是混合體：lead 派工是 supervisor–worker，共享的 task list 是 blackboard，teammate 之間直接傳訊是 swarm 的線。</p>
               <details class="gloss" id="n-teams">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Agent teams（L3）：Claude Code 裡一個 lead 帶幾個 teammate 的做法</span></summary>
                 <div class="gloss-body prose">
@@ -665,16 +1022,82 @@ description: Review a diff for security issues
 maxTurns: 25                                        # 終止條件之一：25 圈沒做完就停
 ---</code></pre></figure>
               <p>預算（整個任務的總花費）在 Claude Code 的非互動模式用 <code>--max-budget-usd</code>，L6 的第 4 段有例子。</p>
-              <p id="i5-5"><b>六種拆錯。</b>Slide p.24–25 列了六種常見的拆錯方式，每一種都對到 2.4 的某個欄位，或流程裡的某一步：</p>
+              <p id="i5-5"><b>六種拆錯。</b>Slide p.24–25 列了六種常見的拆錯方式：</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 372" role="img" aria-label="六種拆錯。01 重疊：Agent A 和 Agent B 的範圍有一段重疊，兩個都摘要同一篇論文。02 缺口：2020–23 和 2025–26 之間沒有人做 2024。03 隱藏的相依：Pricing 要先有 Sizing，執行時才發現。04 無法合併：一個回散文，一個回 JSON，合併失敗。05 失去全局 context：三節各自都對，整份報告自相矛盾。06 Straggler：兩條短橫條是 20 秒和 25 秒，一條長橫條是 4 分鐘。">
+                  <defs><marker id="l5c-u-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-u-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="232" height="178" rx="6" class="dg-panel"/>
+                  <rect x="4" y="190" width="232" height="178" rx="6" class="dg-panel"/>
+                  <rect x="244" y="4" width="232" height="178" rx="6" class="dg-panel"/>
+                  <rect x="244" y="190" width="232" height="178" rx="6" class="dg-panel"/>
+                  <rect x="484" y="4" width="232" height="178" rx="6" class="dg-panel"/>
+                  <rect x="484" y="190" width="232" height="178" rx="6" class="dg-panel"/>
+                  <text x="16" y="29" class="dg-h">01 重疊</text>
+                  <text x="16" y="166" class="dg-c">兩個 agent 摘要同一篇論文</text>
+                  <text x="256" y="29" class="dg-h">02 缺口</text>
+                  <text x="256" y="166" class="dg-c">沒有人做 2024</text>
+                  <text x="496" y="29" class="dg-h">03 隱藏的相依</text>
+                  <text x="496" y="166" class="dg-c">Pricing 要先有 sizing</text>
+                  <text x="16" y="215" class="dg-h">04 無法合併</text>
+                  <text x="16" y="352" class="dg-c">一個回散文，一個回 JSON</text>
+                  <text x="256" y="215" class="dg-h">05 失去全局 context</text>
+                  <text x="256" y="352" class="dg-c">每節都對，整份報告矛盾</text>
+                  <text x="496" y="215" class="dg-h">06 Straggler</text>
+                  <text x="496" y="352" class="dg-c">一個拖住全部</text>
+                  <rect x="18" y="54" width="124" height="34" rx="4" class="dg-n-a"/>
+                  <text x="30" y="76" class="dg-ls">Agent A</text>
+                  <rect x="98" y="92" width="124" height="34" rx="4" class="dg-n-c"/>
+                  <text x="210" y="114" text-anchor="end" class="dg-ls">Agent B</text>
+                  <rect x="98" y="48" width="44" height="84" rx="3" class="dg-link-key dg-dash"/>
+                  <rect x="256" y="70" width="68" height="38" rx="4" class="dg-n-a"/>
+                  <text x="290" y="94.0" text-anchor="middle" class="dg-ls">2020–23</text>
+                  <rect x="328" y="70" width="64" height="38" rx="3" class="dg-link-key dg-dash"/>
+                  <text x="360" y="94" text-anchor="middle" class="dg-k">2024</text>
+                  <rect x="396" y="70" width="68" height="38" rx="4" class="dg-n-c"/>
+                  <text x="430" y="94.0" text-anchor="middle" class="dg-ls">2025–26</text>
+                  <path d="M624,89 L576,89" class="dg-link-key" marker-end="url(#l5c-u-ak)"/>
+                  <rect x="496" y="70" width="80" height="38" rx="4" class="dg-n-c"/>
+                  <text x="536" y="94.0" text-anchor="middle" class="dg-ls">Sizing</text>
+                  <rect x="624" y="70" width="80" height="38" rx="4" class="dg-n-a"/>
+                  <text x="664" y="94.0" text-anchor="middle" class="dg-ls">Pricing</text>
+                  <text x="600" y="130" text-anchor="middle" class="dg-k">執行時才發現</text>
+                  <path d="M86,256 L110,256 L110,274 L128,274" class="dg-link-key" marker-end="url(#l5c-u-ak)"/>
+                  <path d="M86,304 L110,304 L110,286 L128,286" class="dg-link-key" marker-end="url(#l5c-u-ak)"/>
+                  <rect x="16" y="239" width="70" height="34" rx="4" class="dg-n-a"/>
+                  <text x="51" y="261.0" text-anchor="middle" class="dg-ls">散文</text>
+                  <rect x="16" y="287" width="70" height="34" rx="4" class="dg-n-c"/>
+                  <text x="51" y="309.0" text-anchor="middle" class="dg-ls">JSON</text>
+                  <rect x="128" y="258" width="96" height="44" rx="3" class="dg-link-key dg-dash"/>
+                  <text x="176" y="285" text-anchor="middle" class="dg-k">Merge 失敗</text>
+                  <rect x="256" y="240" width="64" height="36" rx="4" class="dg-n-a"/>
+                  <text x="288" y="263.0" text-anchor="middle" class="dg-ls">§1 ✓</text>
+                  <rect x="328" y="240" width="64" height="36" rx="4" class="dg-n-a"/>
+                  <text x="360" y="263.0" text-anchor="middle" class="dg-ls">§2 ✓</text>
+                  <rect x="400" y="240" width="64" height="36" rx="4" class="dg-n-a"/>
+                  <text x="432" y="263.0" text-anchor="middle" class="dg-ls">§3 ✓</text>
+                  <rect x="256" y="288" width="208" height="36" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="311.0" text-anchor="middle" class="dg-l-on">整份報告 ✗</text>
+                  <rect x="496" y="240" width="12" height="24" rx="2" class="dg-n-n"/>
+                  <text x="516" y="257" class="dg-c">20 秒</text>
+                  <rect x="496" y="272" width="15" height="24" rx="2" class="dg-n-n"/>
+                  <text x="519" y="289" class="dg-c">25 秒</text>
+                  <rect x="496" y="304" width="144" height="24" rx="2" class="dg-n-focus"/>
+                  <text x="648" y="321" class="dg-k">4 分鐘</text>
+                </svg>
+              </div>
+              <figcaption>依 p.24–25 重畫。Straggler 的橫條照實際秒數比例畫。</figcaption>
+            </figure>
+            <p>每一種都對到 2.4 的某個欄位，或流程裡的某一步：</p>
               <div class="table-wrap"><table>
-                <thead><tr><th>拆錯方式</th><th>Slide 的例子</th><th>它是怎麼發生的</th><th>預防（本文的整理）</th></tr></thead>
+                <thead><tr><th>拆錯方式</th><th>它是怎麼發生的</th><th>預防（本文的整理）</th></tr></thead>
                 <tbody>
-                  <tr><td><b>01 重疊</b></td><td>兩個 agent 摘要同一篇論文</td><td>邊界沒寫，或兩個規格的範圍交錯</td><td>規格的邊界與排除；沿 data 軸拆時用互斥的切法</td></tr>
-                  <tr><td><b>02 缺口</b></td><td>「2020–2023」加「2025–2026」，沒有人做 2024</td><td>範圍沒有接起來</td><td>規格寫範圍時檢查連續；留一個「以上皆非」的 worker</td></tr>
-                  <tr><td><b>03 隱藏的相依</b></td><td>Pricing 要先有 sizing，執行時才發現</td><td>規劃時沒看出先後</td><td>規格的相依欄位；發現時重拆，不要讓 worker 自己猜輸入</td></tr>
-                  <tr><td><b>04 無法合併</b></td><td>一個回散文，一個回 JSON，merge 失敗</td><td>輸出 schema 沒統一</td><td>所有 worker 共用一份輸出 schema</td></tr>
-                  <tr><td><b>05 失去全局 context</b></td><td>每一節都對，整份報告自相矛盾</td><td>每個 worker 只看自己那一段，沒有人看全部</td><td>規格的輸入放共同的前提；合併時一個 agent 通讀全文</td></tr>
-                  <tr><td><b>06 straggler</b></td><td>六個 agent 20 秒做完，一個跑 4 分鐘</td><td>一份特別慢的子任務拖住全部</td><td>規格的預算與期限；timeout 之後用部分結果</td></tr>
+                  <tr><td><b>01 重疊</b></td><td>邊界沒寫，或兩個規格的範圍交錯</td><td>規格的邊界與排除；沿 data 軸拆時用互斥的切法</td></tr>
+                  <tr><td><b>02 缺口</b></td><td>範圍沒有接起來</td><td>規格寫範圍時檢查連續；留一個「以上皆非」的 worker</td></tr>
+                  <tr><td><b>03 隱藏的相依</b></td><td>規劃時沒看出先後</td><td>規格的相依欄位；發現時重拆，不要讓 worker 自己猜輸入</td></tr>
+                  <tr><td><b>04 無法合併</b></td><td>輸出 schema 沒統一</td><td>所有 worker 共用一份輸出 schema</td></tr>
+                  <tr><td><b>05 失去全局 context</b></td><td>每個 worker 只看自己那一段，沒有人看全部</td><td>規格的輸入放共同的前提；合併時一個 agent 通讀全文</td></tr>
+                  <tr><td><b>06 straggler</b></td><td>一份特別慢的子任務拖住全部</td><td>規格的預算與期限；timeout 之後用部分結果</td></tr>
                 </tbody>
               </table></div>
               <p>前四種是規劃時的錯，靠規格預防；後兩種是執行時才看得到的，靠最後的通讀和 timeout 處理。Straggler 還有機率的一面：拆得越細，fan-out 越大，碰到一份特別慢的機率越高。假設每份有 1% 的機率變慢，fan-out 100 時，至少一份變慢的機率是 1 − 0.99<sup>100</sup> ≈ 63%，所以 critical path 常常由最慢的那一份決定。這是 p.44 第四條原則「找出 failure-containment boundary」的一個例子：<strong>一個 worker 慢了，不能讓整個系統停下來等</strong>。</p>
@@ -694,12 +1117,55 @@ maxTurns: 25                                        # 終止條件之一：25 �
               </ul>
               <p><strong>四個維度可以分開選</strong>，因為它們各管一件事：topology 管線存不存在，medium 管線上搬的是什麼，channel 管搬的方式，format 管搬的東西長什麼樣。同一個 supervisor–worker 的 topology，可以用訊息傳規格、用檔案傳產出；也可以 worker 回報走 request/response，狀態更新走 broadcast。</p>
               <p id="i6-2"><b>Medium：三種選項。</b>Slide p.28 給了三種，各有一個例子：</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 172" role="img" aria-label="三種 medium。Message passing：coder 把結果投進 queue，orchestrator 從收件匣取出。Shared memory：同一個 process 裡，兩個 agent 讀寫同一個 task list 物件。Files：researcher 寫 notes.md，writer 打開來讀。">
+                  <defs><marker id="l5c-v-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-v-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="232" height="164" rx="6" class="dg-panel"/>
+                  <text x="16" y="28" class="dg-h">Message passing</text>
+                  <rect x="244" y="4" width="232" height="164" rx="6" class="dg-panel"/>
+                  <text x="256" y="28" class="dg-h">Shared memory</text>
+                  <rect x="484" y="4" width="232" height="164" rx="6" class="dg-panel"/>
+                  <text x="496" y="28" class="dg-h">Files 與 artifact</text>
+                  <path d="M62,82 L76,82" class="dg-link" marker-end="url(#l5c-v-ah)"/>
+                  <path d="M126,82 L140,82" class="dg-link" marker-end="url(#l5c-v-ah)"/>
+                  <rect x="12" y="64" width="50" height="36" rx="4" class="dg-n-a"/>
+                  <text x="37" y="87.0" text-anchor="middle" class="dg-ls">coder</text>
+                  <rect x="76" y="64" width="50" height="36" rx="4" class="dg-n-b"/>
+                  <text x="101" y="87.0" text-anchor="middle" class="dg-ls">queue</text>
+                  <rect x="140" y="64" width="88" height="36" rx="4" class="dg-n-c"/>
+                  <text x="184" y="87.0" text-anchor="middle" class="dg-ls">orchestrator</text>
+                  <text x="16" y="148" class="dg-c">投進收件匣</text>
+                  <path d="M304,66 L304,92" class="dg-link" marker-start="url(#l5c-v-ah)" marker-end="url(#l5c-v-ah)"/>
+                  <path d="M416,66 L416,92" class="dg-link" marker-start="url(#l5c-v-ah)" marker-end="url(#l5c-v-ah)"/>
+                  <rect x="266" y="40" width="76" height="26" rx="4" class="dg-n-a"/>
+                  <text x="304" y="58.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <rect x="378" y="40" width="76" height="26" rx="4" class="dg-n-c"/>
+                  <text x="416" y="58.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <rect x="266" y="92" width="188" height="32" rx="4" class="dg-n-b"/>
+                  <text x="360" y="113.0" text-anchor="middle" class="dg-ls">task list 物件</text>
+                  <text x="256" y="148" class="dg-c">同一個 process 裡讀寫</text>
+                  <path d="M560,82 L576,82" class="dg-link" marker-end="url(#l5c-v-ah)"/>
+                  <path d="M640,82 L656,82" class="dg-link" marker-end="url(#l5c-v-ah)"/>
+                  <text x="568" y="60" text-anchor="middle" class="dg-c">寫</text>
+                  <text x="648" y="60" text-anchor="middle" class="dg-c">讀</text>
+                  <rect x="492" y="64" width="68" height="36" rx="4" class="dg-n-a"/>
+                  <text x="526" y="87.0" text-anchor="middle" class="dg-ms">researcher</text>
+                  <rect x="576" y="64" width="64" height="36" rx="4" class="dg-n-b"/>
+                  <text x="608" y="87.0" text-anchor="middle" class="dg-ms">notes.md</text>
+                  <rect x="656" y="64" width="52" height="36" rx="4" class="dg-n-c"/>
+                  <text x="682" y="87.0" text-anchor="middle" class="dg-ms">writer</text>
+                  <text x="496" y="148" class="dg-c">交接的是檔案</text>
+                </svg>
+              </div>
+              <figcaption>依 p.28 的三個例子畫。黃色是資訊經過的地方；三種的差別在它是什麼。</figcaption>
+            </figure>
               <div class="table-wrap"><table>
-                <thead><tr><th>Medium</th><th>是什麼</th><th>Slide 的例子</th><th>代價（本文的整理）</th></tr></thead>
+                <thead><tr><th>Medium</th><th>是什麼</th><th>代價（本文的整理）</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Message passing</b></td><td>Agent 透過 queue 或 bus 送明確的訊息。Queue 是一條先進先出的訊息佇列，bus 是一條大家都接上的匯流排</td><td>Coder 把結果投進 orchestrator 的收件匣</td><td>每則訊息都進入收件者的 context；訊息會遺失、重複</td></tr>
-                  <tr><td><b>Shared memory</b></td><td>同一個 process 裡的一個狀態物件，所有 agent 都讀寫它</td><td>一份共享的 task list，工作完成時更新</td><td>要處理並行寫入；只在同一個 process 裡有效</td></tr>
-                  <tr><td><b>Files 與 artifact</b></td><td>工作產出放在檔案系統或資料庫，交接的是檔案</td><td>Researcher 寫 notes.md，writer 打開來讀</td><td>要用才讀，context 最省；但誰讀過、哪一版，要另外記</td></tr>
+                  <tr><td><b>Message passing</b></td><td>Agent 透過 queue 或 bus 送明確的訊息。Queue 是一條先進先出的訊息佇列，bus 是一條大家都接上的匯流排</td><td>每則訊息都進入收件者的 context；訊息會遺失、重複</td></tr>
+                  <tr><td><b>Shared memory</b></td><td>同一個 process 裡的一個狀態物件，所有 agent 都讀寫它</td><td>要處理並行寫入；只在同一個 process 裡有效</td></tr>
+                  <tr><td><b>Files 與 artifact</b></td><td>工作產出放在檔案系統或資料庫，交接的是檔案</td><td>要用才讀，context 最省；但誰讀過、哪一版，要另外記</td></tr>
                 </tbody>
               </table></div>
               <p>p.32 的經驗法則是一條線一種 medium：同一對 agent 之間不要同時用訊息和檔案傳同一件事，否則兩邊會不一致。大型的產出走檔案，訊息只帶路徑，原因在 2.3 的末尾講過：彙整節點會丟細節。</p>
@@ -862,13 +1328,68 @@ maxTurns: 25                                        # 終止條件之一：25 �
             <h3><span class="idea-no">2.7</span>溝通是分散式系統問題：timeout 之後，你不知道對方做了沒 <a class="ref" href="https://cs2680.com/slides/5_agent_design_2.pdf#page=33" target="_blank" rel="noopener">p.33–36</a></h3>
             <div class="prose">
               <p>Envelope 解決了「訊息長什麼樣」，沒有解決「訊息送不送得到」。只要兩個 agent 跑在不同的 process 或機器上，它們之間就是一個分散式系統，而分散式系統有一組幾十年沒變的難題。這一章從 slide 的一個購買例子開始，再列出繼承的六個老問題、多個 agent 同時跑時 runtime 要管的事，最後是 LLM 當黑盒子帶來的新問題。</p>
-              <p id="i7-1"><b>Timeout 之後，三種情況看起來一樣。</b>Slide p.33 的例子：Agent A 送一則訊息給 Agent B，「購買 8 台 GPU instance」，然後網路 timeout，沒有回覆。B 到底買了沒？從 A 這一側，三種情況長得一模一樣：</p>
+              <p id="i7-1"><b>Timeout 之後，三種情況看起來一樣。</b>Slide p.33 的例子：Agent A 送一則訊息給 Agent B，「購買 8 台 GPU instance」，然後網路 timeout，沒有回覆。B 到底買了沒？</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 256" role="img" aria-label="三張小時序圖，A 在左、B 在右，A 都等到 timeout。第一張：請求在路上遺失，B 沒收到。第二張：B 買了 8 台，回覆在路上遺失。第三張：B 還在處理，只是慢。三張從 A 這一側看都是沒有回覆。">
+                  <defs><marker id="l5c-w-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-w-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="232" height="212" rx="6" class="dg-panel"/>
+                  <text x="16" y="28" class="dg-h">請求沒送到 B</text>
+                  <path d="M48,66 L48,204" class="dg-soft-link dg-dash"/>
+                  <path d="M192,66 L192,204" class="dg-soft-link dg-dash"/>
+                  <rect x="22" y="40" width="52" height="26" rx="4" class="dg-n-a"/>
+                  <text x="48" y="58.0" text-anchor="middle" class="dg-ls">A</text>
+                  <rect x="166" y="40" width="52" height="26" rx="4" class="dg-n-c"/>
+                  <text x="192" y="58.0" text-anchor="middle" class="dg-ls">B</text>
+                  <rect x="43" y="88" width="10" height="92" rx="2" class="dg-n-d"/>
+                  <text x="60" y="196" class="dg-k">timeout</text>
+                  <path d="M53,96 L136,96" class="dg-link"/>
+                  <path d="M136,90 L148,102" class="dg-link-key"/>
+                  <path d="M136,102 L148,90" class="dg-link-key"/>
+                  <text x="60" y="88" class="dg-c">買 8 台</text>
+                  <rect x="244" y="4" width="232" height="212" rx="6" class="dg-panel"/>
+                  <text x="256" y="28" class="dg-h">B 買了，回覆遺失</text>
+                  <path d="M288,66 L288,204" class="dg-soft-link dg-dash"/>
+                  <path d="M432,66 L432,204" class="dg-soft-link dg-dash"/>
+                  <rect x="262" y="40" width="52" height="26" rx="4" class="dg-n-a"/>
+                  <text x="288" y="58.0" text-anchor="middle" class="dg-ls">A</text>
+                  <rect x="406" y="40" width="52" height="26" rx="4" class="dg-n-c"/>
+                  <text x="432" y="58.0" text-anchor="middle" class="dg-ls">B</text>
+                  <rect x="283" y="88" width="10" height="92" rx="2" class="dg-n-d"/>
+                  <text x="300" y="196" class="dg-k">timeout</text>
+                  <path d="M293,96 L432,96" class="dg-link" marker-end="url(#l5c-w-ah)"/>
+                  <text x="300" y="88" class="dg-c">買 8 台</text>
+                  <rect x="427" y="96" width="10" height="34" rx="2" class="dg-n-b"/>
+                  <path d="M427,144 L350,144" class="dg-link"/>
+                  <path d="M338,138 L350,150" class="dg-link-key"/>
+                  <path d="M338,150 L350,138" class="dg-link-key"/>
+                  <text x="424" y="136" text-anchor="end" class="dg-c">買好了</text>
+                  <rect x="484" y="4" width="232" height="212" rx="6" class="dg-panel"/>
+                  <text x="496" y="28" class="dg-h">B 還在處理，只是慢</text>
+                  <path d="M528,66 L528,204" class="dg-soft-link dg-dash"/>
+                  <path d="M672,66 L672,204" class="dg-soft-link dg-dash"/>
+                  <rect x="502" y="40" width="52" height="26" rx="4" class="dg-n-a"/>
+                  <text x="528" y="58.0" text-anchor="middle" class="dg-ls">A</text>
+                  <rect x="646" y="40" width="52" height="26" rx="4" class="dg-n-c"/>
+                  <text x="672" y="58.0" text-anchor="middle" class="dg-ls">B</text>
+                  <rect x="523" y="88" width="10" height="92" rx="2" class="dg-n-d"/>
+                  <text x="540" y="196" class="dg-k">timeout</text>
+                  <path d="M533,96 L672,96" class="dg-link" marker-end="url(#l5c-w-ah)"/>
+                  <text x="540" y="88" class="dg-c">買 8 台</text>
+                  <rect x="667" y="96" width="10" height="100" rx="2" class="dg-n-b"/>
+                  <text x="662" y="150" text-anchor="end" class="dg-c">處理中</text>
+                  <text x="360" y="244" text-anchor="middle" class="dg-k">從 A 這一側，三種情況長得一模一樣：沒有回覆</text>
+                </svg>
+              </div>
+              <figcaption>依 p.33 的例子畫，三種情況是本文拆開的。粉色直條是 A 在等，黃色直條是 B 在做。</figcaption>
+            </figure>
+            <p>每一種情況重不重試，結果都不同：</p>
               <div class="table-wrap"><table>
-                <thead><tr><th>實際發生的事</th><th>A 看到什麼</th><th>A 不重試</th><th>A 重試</th></tr></thead>
+                <thead><tr><th>實際發生的事</th><th>A 不重試</th><th>A 重試</th></tr></thead>
                 <tbody>
-                  <tr><td>請求沒送到 B</td><td>沒有回覆</td><td>一台都沒買，任務失敗</td><td>買到 8 台，正確</td></tr>
-                  <tr><td>B 買了，回覆在路上遺失</td><td>沒有回覆</td><td>買到 8 台，但 A 不知道</td><td><b>買到 16 台</b></td></tr>
-                  <tr><td>B 還在處理，只是慢</td><td>沒有回覆</td><td>可能買到 8 台</td><td>可能買到 16 台</td></tr>
+                  <tr><td>請求沒送到 B</td><td>一台都沒買，任務失敗</td><td>買到 8 台，正確</td></tr>
+                  <tr><td>B 買了，回覆在路上遺失</td><td>買到 8 台，但 A 不知道</td><td><b>買到 16 台</b></td></tr>
+                  <tr><td>B 還在處理，只是慢</td><td>可能買到 8 台</td><td>可能買到 16 台</td></tr>
                 </tbody>
               </table></div>
               <p>A 分不出三列，所以不管選哪一欄，都有一列是錯的：<strong>不重試可能一台都沒買，重試可能買 16 台</strong>。Slide 接著問三個問題：要重試還是放棄？要 at-most-once 還是 at-least-once？exactly-once 做得到嗎？後兩個問題用的名詞叫 delivery semantics，意思是傳遞層能保證什麼，下一段先把它講清楚。</p>
@@ -986,7 +1507,36 @@ maxTurns: 25                                        # 終止條件之一：25 �
   "securitySchemes": {...}                      // auth：要用哪種驗證
 }</code></pre></figure>
               <p>呼叫者從 card 學到五件事：identity、skills、endpoints、capabilities、auth。注意 skills 是對方自己宣稱的，和 2.2 market 的出價一樣：<strong>card 說會訂機票，不保證訂得好</strong>。信不信，要靠 2.3 swarm 講的 trust 那一層，A2A 本身不管。</p>
-              <p id="i8-3"><b>三個抽象：message、task、artifact。</b>A2A 只有三個核心概念（p.39）。Message 是 client 和 agent 之間的一個回合，例如「訂一張到波士頓的機票」。Task 是一個有狀態的工作單位，有 ID、有生命週期，例如 task-42 從 working 走到 completed。Artifact 是 task 產出的東西，例如一份行程 PDF 或訂位資料。三者的關係：<strong>一則 message 開啟一個 task，task 回傳 artifact</strong>；後續的追問加入同一個 task，例如 agent 反問「哪一天？」，client 回「10 月 3 日」，仍然是 task-42。</p>
+              <p id="i8-3"><b>三個抽象：message、task、artifact。</b>A2A 只有三個核心概念（p.39）：<strong>一則 message 開啟一個 task，task 回傳 artifact</strong>。</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 216" role="img" aria-label="Message、task、artifact 三個方塊。Message 是 client 和 agent 之間的一個回合，例如訂一張到波士頓的機票，它開啟 task。Task 是有 ID 和生命週期的工作單位，例如 task-42 從 working 到 completed，它回傳 artifact。Artifact 是 task 的產出，例如行程 PDF。一條線從 task 回到 message 下方，標示後續追問加入同一個 task。">
+                  <defs><marker id="l5c-x-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-x-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="8" y="10" width="192" height="136" rx="6" class="dg-n-c"/>
+                  <text x="22" y="36" class="dg-h">Message</text>
+                  <text x="22" y="60" class="dg-cb">一個回合</text>
+                  <text x="22" y="92" class="dg-c">「訂一張到波士頓</text>
+                  <text x="22" y="112" class="dg-c">的機票」</text>
+                  <rect x="264" y="10" width="192" height="136" rx="6" class="dg-n-a"/>
+                  <text x="278" y="36" class="dg-h">Task</text>
+                  <text x="278" y="60" class="dg-cb">有 ID、有生命週期</text>
+                  <text x="278" y="92" class="dg-c">task-42：</text>
+                  <text x="278" y="112" class="dg-c">working → completed</text>
+                  <rect x="520" y="10" width="192" height="136" rx="6" class="dg-n-b"/>
+                  <text x="534" y="36" class="dg-h">Artifact</text>
+                  <text x="534" y="60" class="dg-cb">task 的產出</text>
+                  <text x="534" y="92" class="dg-c">行程 PDF、</text>
+                  <text x="534" y="112" class="dg-c">訂位資料</text>
+                  <path d="M200,78 L264,78" class="dg-link" marker-end="url(#l5c-x-ah)"/>
+                  <text x="232" y="70" text-anchor="middle" class="dg-c">開啟</text>
+                  <path d="M456,78 L520,78" class="dg-link" marker-end="url(#l5c-x-ah)"/>
+                  <text x="488" y="70" text-anchor="middle" class="dg-c">回傳</text>
+                  <path d="M360,146 L360,176 L104,176 L104,146" class="dg-link-key" marker-end="url(#l5c-x-ak)"/>
+                  <text x="232" y="200" text-anchor="middle" class="dg-k">追問加入同一個 task：「哪一天？」→「10 月 3 日」</text>
+                </svg>
+              </div>
+              <figcaption>依 p.39 重畫。</figcaption>
+            </figure>
               <p id="i8-4"><b>Task 的生命週期是一個狀態機。</b>A2A 是有狀態的協定：工作可以暫停等輸入或授權，再繼續（p.40）。Task 有八個狀態，分三組：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -1028,14 +1578,96 @@ maxTurns: 25                                        # 終止條件之一：25 �
               <figcaption>依 p.40 重畫，分組是本文的整理。紅色的來回是 A2A 和一次 tool call 最大的差別：task 可以停下來等人補資料，再接著做。四個終止狀態沒有出去的箭頭。</figcaption>
             </figure>
               <p><span class="anchor" id="t5"></span>這張圖是一個狀態機（state machine）：由有限的幾個狀態和允許的轉換組成，每個狀態只能走到圖上有箭頭的下一個狀態。把生命週期寫成狀態機有兩個好處。第一，不合法的轉換由 runtime 擋下，Completed 不能回到 Working，不必問 LLM；第二，呼叫端可以用 task_id 查狀態（<code>GetTask</code>），timeout 之後不必盲目重送，這就接回 2.7 的購買例子與 partial failure。規格裡的狀態名稱前面帶 <code>TASK_STATE_</code>，例如 <code>TASK_STATE_INPUT_REQUIRED</code>，slide 用的是去掉前綴的寫法；A2A 1.0 的方法名是 <code>SendMessage</code>、<code>SendStreamingMessage</code>、<code>GetTask</code>、<code>ListTasks</code>、<code>CancelTask</code>、<code>SubscribeToTask</code>（依 2026-10 的規格）。</p>
-              <p id="i8-5"><b>追蹤一個長任務：三種方式。</b>Task 可能跑幾秒，也可能跑幾小時，呼叫端自己選怎麼追蹤（p.41）：</p>
-              <ul>
-                <li><b>Polling。</b>Client 一直重查，直到做完。適合短的工作。</li>
-                <li><b>Streaming。</b>即時收到更新。適合要互動的輸出，例如邊產生邊顯示。</li>
-                <li><b>Push notification。</b>做完時由一個 webhook 通知你。適合跑幾小時的工作，不用一直開著連線。</li>
-              </ul>
+              <p id="i8-5"><b>追蹤一個長任務：三種方式。</b>Task 可能跑幾秒，也可能跑幾小時，呼叫端自己選怎麼追蹤（p.41）。</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 232" role="img" aria-label="三種追蹤方式的小時序圖。Polling：client 一直重查，直到做完，適合短的工作。Streaming：agent 持續送更新，適合要互動的輸出。Push notification：連線可以斷開，做完時由 webhook 通知，適合跑幾小時的工作。">
+                  <defs><marker id="l5c-y-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-y-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="232" height="224" rx="6" class="dg-panel"/>
+                  <text x="16" y="28" class="dg-h">Polling</text>
+                  <text x="16" y="212" class="dg-c"><tspan class="dg-cb">適合</tspan> 短的工作</text>
+                  <path d="M54,70 L54,192" class="dg-soft-link dg-dash"/>
+                  <path d="M186,70 L186,192" class="dg-soft-link dg-dash"/>
+                  <rect x="20" y="42" width="68" height="28" rx="4" class="dg-n-a"/>
+                  <text x="54" y="61.0" text-anchor="middle" class="dg-ls">client</text>
+                  <rect x="152" y="42" width="68" height="28" rx="4" class="dg-n-c"/>
+                  <text x="186" y="61.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <path d="M54,92 L186,92" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="120" y="86" text-anchor="middle" class="dg-c">做完了嗎？</text>
+                  <path d="M54,120 L186,120" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="120" y="114" text-anchor="middle" class="dg-c">做完了嗎？</text>
+                  <path d="M54,148 L186,148" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="120" y="142" text-anchor="middle" class="dg-c">做完了嗎？</text>
+                  <path d="M186,176 L54,176" class="dg-link-key" marker-end="url(#l5c-y-ak)"/>
+                  <text x="120" y="170" text-anchor="middle" class="dg-k">做完了</text>
+                  <rect x="244" y="4" width="232" height="224" rx="6" class="dg-panel"/>
+                  <text x="256" y="28" class="dg-h">Streaming</text>
+                  <text x="256" y="212" class="dg-c"><tspan class="dg-cb">適合</tspan> 要互動的輸出</text>
+                  <path d="M294,70 L294,192" class="dg-soft-link dg-dash"/>
+                  <path d="M426,70 L426,192" class="dg-soft-link dg-dash"/>
+                  <rect x="260" y="42" width="68" height="28" rx="4" class="dg-n-a"/>
+                  <text x="294" y="61.0" text-anchor="middle" class="dg-ls">client</text>
+                  <rect x="392" y="42" width="68" height="28" rx="4" class="dg-n-c"/>
+                  <text x="426" y="61.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <path d="M426,92 L294,92" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="360" y="86" text-anchor="middle" class="dg-c">更新 1</text>
+                  <path d="M426,120 L294,120" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="360" y="114" text-anchor="middle" class="dg-c">更新 2</text>
+                  <path d="M426,148 L294,148" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="360" y="142" text-anchor="middle" class="dg-c">更新 3</text>
+                  <path d="M426,176 L294,176" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="360" y="170" text-anchor="middle" class="dg-c">更新 4</text>
+                  <rect x="484" y="4" width="232" height="224" rx="6" class="dg-panel"/>
+                  <text x="496" y="28" class="dg-h">Push notification</text>
+                  <text x="496" y="212" class="dg-c"><tspan class="dg-cb">適合</tspan> 跑幾小時的工作</text>
+                  <path d="M534,70 L534,192" class="dg-soft-link dg-dash"/>
+                  <path d="M666,70 L666,192" class="dg-soft-link dg-dash"/>
+                  <rect x="500" y="42" width="68" height="28" rx="4" class="dg-n-a"/>
+                  <text x="534" y="61.0" text-anchor="middle" class="dg-ls">client</text>
+                  <rect x="632" y="42" width="68" height="28" rx="4" class="dg-n-c"/>
+                  <text x="666" y="61.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <path d="M534,92 L666,92" class="dg-link" marker-end="url(#l5c-y-ah)"/>
+                  <text x="600" y="86" text-anchor="middle" class="dg-c">交辦，附 webhook</text>
+                  <text x="600" y="130" text-anchor="middle" class="dg-c">不用開著連線</text>
+                  <path d="M666,172 L534,172" class="dg-link-key" marker-end="url(#l5c-y-ak)"/>
+                  <text x="600" y="166" text-anchor="middle" class="dg-k">做完了</text>
+                </svg>
+              </div>
+              <figcaption>依 p.41 的三種方式畫。</figcaption>
+            </figure>
+              
               <p>Slide 在這一頁下了一個重要的註腳：<strong>A2A 標準化的是溝通，不是 orchestration</strong>。要不要委派、怎麼拆、什麼時候停，仍然由 harness（包在 model 外面、負責跑 loop 與 tool 的那層程式，L4 的 2.1）決定。協定只保證兩個 agent 說同一種語言，不替你做 2.2 到 2.5 的決定。</p>
-              <p id="i8-6"><b>MCP：agent 與服務之間。</b><a class="tm" href="#n-mcp">MCP</a>（Model Context Protocol）是另一道邊界：agent 與服務之間，一次 tool call、一個結果（p.42）。它標準化三種東西：tools（可呼叫、有型別的能力）、resources（host 可以附上的可讀資料）、prompts（可重用的互動範本）。一個 client 可以同時接很多 server，slide 畫了四個：filesystem、database、GitHub、browser。而且是 host（跑 agent 的程式）決定要讓 model 看到哪些 tool，不是 model 自己決定。</p>
+              <p id="i8-6"><b>MCP：agent 與服務之間。</b><a class="tm" href="#n-mcp">MCP</a>（Model Context Protocol）是另一道邊界：agent 與服務之間（p.42）。Host（跑 agent 的程式）決定要讓 model 看到哪些 tool，不是 model 自己決定。</p>
+            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 216" role="img" aria-label="Agent 透過 MCP 接到四個 server：filesystem、database、GitHub、browser。右側列出 MCP 標準化的三種東西：tools 可呼叫、有型別；resources 可讀的資料；prompts 可重用的範本。">
+                  <defs><marker id="l5c-z-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5c-z-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M170,108 L260,108" class="dg-link"/>
+                  <path d="M260,48 L260,186" class="dg-link"/>
+                  <path d="M260,48 L300,48" class="dg-link" marker-end="url(#l5c-z-ah)"/>
+                  <rect x="300" y="30" width="150" height="36" rx="4" class="dg-n-c"/>
+                  <text x="375" y="53.0" text-anchor="middle" class="dg-l">filesystem</text>
+                  <path d="M260,94 L300,94" class="dg-link" marker-end="url(#l5c-z-ah)"/>
+                  <rect x="300" y="76" width="150" height="36" rx="4" class="dg-n-c"/>
+                  <text x="375" y="99.0" text-anchor="middle" class="dg-l">database</text>
+                  <path d="M260,140 L300,140" class="dg-link" marker-end="url(#l5c-z-ah)"/>
+                  <rect x="300" y="122" width="150" height="36" rx="4" class="dg-n-c"/>
+                  <text x="375" y="145.0" text-anchor="middle" class="dg-l">GitHub</text>
+                  <path d="M260,186 L300,186" class="dg-link" marker-end="url(#l5c-z-ah)"/>
+                  <rect x="300" y="168" width="150" height="36" rx="4" class="dg-n-c"/>
+                  <text x="375" y="191.0" text-anchor="middle" class="dg-l">browser</text>
+                  <text x="215" y="100" text-anchor="middle" class="dg-k">MCP</text>
+                  <rect x="30" y="84" width="140" height="48" rx="4" class="dg-n-focus"/>
+                  <text x="100" y="113.0" text-anchor="middle" class="dg-l-on">Agent</text>
+                  <text x="484" y="44" class="dg-h">MCP 標準化三種東西</text>
+                  <text x="484" y="76" class="dg-c"><tspan class="dg-cb">tools</tspan> 可呼叫、有型別</text>
+                  <text x="484" y="106" class="dg-c"><tspan class="dg-cb">resources</tspan> 可讀的資料</text>
+                  <text x="484" y="136" class="dg-c"><tspan class="dg-cb">prompts</tspan> 可重用的範本</text>
+                  <text x="484" y="172" class="dg-k">一次 tool call，一個結果</text>
+                </svg>
+              </div>
+              <figcaption>依 p.42 重畫。一個 client 可以同時接很多 server。</figcaption>
+            </figure>
               <details class="gloss" id="n-mcp">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">MCP（L2、L4）：agent 與服務之間的協定</span></summary>
                 <div class="gloss-body prose">
