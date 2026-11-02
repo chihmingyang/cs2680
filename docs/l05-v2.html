@@ -54,7 +54,7 @@
     <p class="eyebrow">Lecture 05 · 試讀版：依想法重組</p>
     <h1>Multi-agent：什麼時候值得拆，拆了怎麼不壞</h1>
     <ul class="meta">
-      <li><span class="k">閱讀</span>約 21 分鐘</li>
+      <li><span class="k">閱讀</span>約 28 分鐘</li>
       <li><span class="k">現行版本</span><a href="l05.html">L5（照投影片順序）</a></li>
     </ul>
   </header>
@@ -65,7 +65,7 @@
     <ul class="core">
       <li><span><b>多數任務不該拆。</b>可以平行的任務能進步八成，循序的任務反而退步四到七成。效果由任務的形狀決定。</span></li>
       <li><span><b>讀可以平行，寫盡量留在單線。</b>這是目前最實用的一條分界，也最常被架構分類蓋過去。</span></li>
-      <li><span><b>拆了之後，風險在交接。</b>規格沒寫的事不存在，摘要會丟細節，timeout 分不出對方做了沒，傳回來的文字也可能夾帶指令。</span></li>
+      <li><span><b>拆了之後，風險在交接。</b>規格沒寫的事不存在，摘要會丟細節，timeout 分不出對方做了沒，每份 context 都是會過期的副本，傳回來的文字也可能夾帶指令。</span></li>
     </ul>
   </section>
 
@@ -77,13 +77,16 @@
           <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的限制<small>agent 之間只能傳文字</small></span><span class="map-m">約 2 分</span></a>
           <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>多數任務不該拆</small></span><span class="map-m">約 2 分</span></a>
           <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">最實用的分界<small>讀可以平行，寫留在單線（本文補的）</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">要用時會做：拆了怎麼不壞</p>
+          <p class="map-g">要用時會做：派工與回報</p>
           <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">派工<small>worker 的全部世界就是那段 prompt</small></span><span class="map-m">約 4 分</span></a>
           <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">回報<small>訊息只帶主張和證據，原文放檔案</small></span><span class="map-m">約 2 分</span></a>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">失敗<small>timeout 之後，你不知道對方做了沒</small></span><span class="map-m">約 5 分</span></a>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">安全<small>傳回來的文字也不可信（本文補的）</small></span><span class="map-m">約 2 分</span></a>
+          <p class="map-g">底層：agent 系統就是分散式系統</p>
+          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">送出去之後<small>timeout、冪等、partial failure</small></span><span class="map-m">約 5 分</span></a>
+          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">狀態與時間<small>consistency、CAP、沒有全域時鐘、tracing</small></span><span class="map-m">約 7 分</span></a>
+          <p class="map-g">要防的</p>
+          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">安全<small>傳回來的文字也不可信（本文補的）</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">需要時查</p>
-          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">目錄<small>八種架構、通訊選項、兩個協定</small></span><span class="map-m">需要時查</span></a>
+          <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">目錄<small>八種架構、通訊選項、兩個協定</small></span><span class="map-m">需要時查</span></a>
         </nav>
 
         <div class="ideas">
@@ -179,7 +182,7 @@
                   <rect x="20" y="88" width="340" height="44" rx="4" class="dg-n-b"/>
                   <text x="190" y="115.0" text-anchor="middle" class="dg-ls">子任務彼此獨立，沒有先後相依嗎？</text>
                   <rect x="440" y="88" width="270" height="44" rx="4" class="dg-n-c"/>
-                  <text x="575" y="115.0" text-anchor="middle" class="dg-ls">留在一個 agent，靠壓縮撐長任務</text>
+                  <text x="575" y="115.0" text-anchor="middle" class="dg-ls">留在一個 agent，靠 compaction 撐長任務</text>
                   <path d="M190,208 L190,240" class="dg-link" marker-end="url(#l5w-a-ah)"/>
                   <text x="198" y="229" class="dg-cb">否</text>
                   <path d="M360,186 L440,186" class="dg-link" marker-end="url(#l5w-a-ah)"/>
@@ -187,7 +190,7 @@
                   <rect x="20" y="164" width="340" height="44" rx="4" class="dg-n-b"/>
                   <text x="190" y="191.0" text-anchor="middle" class="dg-ls">子任務都只是讀和分析嗎？</text>
                   <rect x="440" y="164" width="270" height="44" rx="4" class="dg-n-a"/>
-                  <text x="575" y="191.0" text-anchor="middle" class="dg-ls">平行的唯讀 worker，回報走檔案</text>
+                  <text x="575" y="191.0" text-anchor="middle" class="dg-ls">平行的 read-only worker，回報走檔案</text>
                   <path d="M190,284 L190,316" class="dg-link" marker-end="url(#l5w-a-ah)"/>
                   <text x="198" y="305" class="dg-cb">是</text>
                   <path d="M360,262 L440,262" class="dg-link" marker-end="url(#l5w-a-ah)"/>
@@ -195,12 +198,12 @@
                   <rect x="20" y="240" width="340" height="44" rx="4" class="dg-n-b"/>
                   <text x="190" y="267.0" text-anchor="middle" class="dg-ls">要改的範圍切得開，也有測試能驗證嗎？</text>
                   <rect x="440" y="240" width="270" height="44" rx="4" class="dg-n-a"/>
-                  <text x="575" y="267.0" text-anchor="middle" class="dg-ls">寫留在單線，其他 agent 只檢查</text>
+                  <text x="575" y="267.0" text-anchor="middle" class="dg-ls">write 留在單線，其他 agent 只 review</text>
                   <rect x="20" y="316" width="340" height="44" rx="4" class="dg-n-a"/>
-                  <text x="190" y="343.0" text-anchor="middle" class="dg-ls">隔離後平行寫，合併前先驗證</text>
+                  <text x="190" y="343.0" text-anchor="middle" class="dg-ls">隔離後平行 write，merge 前先驗證</text>
                 </svg>
               </div>
-              <figcaption>本文的整理，把下面三章的判斷畫成一條路。權限隔離是另一個獨立的理由：讀不可信內容的工作，就算一個 agent 放得下，也值得拆出去（第 7 章）。</figcaption>
+              <figcaption>本文的整理，把下面三章的判斷畫成一條路。權限隔離是另一個獨立的理由：讀不可信內容的工作，就算一個 agent 放得下，也值得拆出去（第 8 章）。</figcaption>
             </figure>
               <p>這條路的第一格最重要。實務上可以問一句：<strong>拿掉一個 agent，品質掉多少？</strong>掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以評估要先於架構，這是 L7 的主題。</p>
             </div>
@@ -216,31 +219,31 @@
                   <defs><marker id="l5w-b-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5w-b-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="4" y="4" width="352" height="228" rx="6" class="dg-panel"/>
                   <rect x="364" y="4" width="352" height="228" rx="6" class="dg-panel"/>
-                  <text x="18" y="28" class="dg-h">平行讀</text>
-                  <text x="378" y="28" class="dg-h">平行寫</text>
+                  <text x="18" y="28" class="dg-h">Parallel reads</text>
+                  <text x="378" y="28" class="dg-h">Parallel writes</text>
                   <path d="M68,80 L68,124" class="dg-link" marker-end="url(#l5w-b-ah)"/>
                   <rect x="18" y="44" width="100" height="36" rx="4" class="dg-n-a"/>
-                  <text x="68" y="67.0" text-anchor="middle" class="dg-ls">查安全</text>
+                  <text x="68" y="67.0" text-anchor="middle" class="dg-ls">security</text>
                   <path d="M180,80 L180,124" class="dg-link" marker-end="url(#l5w-b-ah)"/>
                   <rect x="130" y="44" width="100" height="36" rx="4" class="dg-n-a"/>
-                  <text x="180" y="67.0" text-anchor="middle" class="dg-ls">查效能</text>
+                  <text x="180" y="67.0" text-anchor="middle" class="dg-ls">performance</text>
                   <path d="M292,80 L292,124" class="dg-link" marker-end="url(#l5w-b-ah)"/>
                   <rect x="242" y="44" width="100" height="36" rx="4" class="dg-n-a"/>
-                  <text x="292" y="67.0" text-anchor="middle" class="dg-ls">查錯誤</text>
+                  <text x="292" y="67.0" text-anchor="middle" class="dg-ls">correctness</text>
                   <rect x="18" y="124" width="324" height="36" rx="4" class="dg-n-b"/>
-                  <text x="180" y="147.0" text-anchor="middle" class="dg-ls">同一份 code，唯讀</text>
+                  <text x="180" y="147.0" text-anchor="middle" class="dg-ls">same codebase · read-only</text>
                   <text x="180" y="196" text-anchor="middle" class="dg-cb">發現可以放在一起，互不衝突</text>
-                  <rect x="378" y="44" width="154" height="50" rx="4" class="dg-n-a"/>
-                  <text x="455" y="66.0" text-anchor="middle" class="dg-l">Agent 1</text>
-                  <text x="455" y="83.0" text-anchor="middle" class="dg-c">背景：Mario 風格</text>
-                  <rect x="548" y="44" width="154" height="50" rx="4" class="dg-n-c"/>
-                  <text x="625" y="66.0" text-anchor="middle" class="dg-l">Agent 2</text>
-                  <text x="625" y="83.0" text-anchor="middle" class="dg-c">鳥：風格不搭</text>
-                  <path d="M455,94 L455,118 L560,118 L560,136" class="dg-link-key" marker-end="url(#l5w-b-ak)"/>
-                  <path d="M625,94 L625,118 L560,118" class="dg-link-key"/>
+                  <rect x="378" y="44" width="166" height="50" rx="4" class="dg-n-a"/>
+                  <text x="461" y="66.0" text-anchor="middle" class="dg-l">Agent 1</text>
+                  <text x="461" y="83.0" text-anchor="middle" class="dg-c">background · Mario style</text>
+                  <rect x="554" y="44" width="150" height="50" rx="4" class="dg-n-c"/>
+                  <text x="629" y="66.0" text-anchor="middle" class="dg-l">Agent 2</text>
+                  <text x="629" y="83.0" text-anchor="middle" class="dg-c">bird · style mismatch</text>
+                  <path d="M461,94 L461,118 L560,118 L560,136" class="dg-link-key" marker-end="url(#l5w-b-ak)"/>
+                  <path d="M629,94 L629,118 L560,118" class="dg-link-key"/>
                   <rect x="430" y="136" width="260" height="38" rx="3" class="dg-link-key dg-dash"/>
-                  <text x="560" y="160" text-anchor="middle" class="dg-k">合併時要收拾兩個誤解</text>
-                  <text x="540" y="206" text-anchor="middle" class="dg-cb">每個動作都帶著沒說出口的決定</text>
+                  <text x="560" y="160" text-anchor="middle" class="dg-k">merge 時要收拾兩個誤解</text>
+                  <text x="540" y="206" text-anchor="middle" class="dg-cb">actions carry implicit decisions</text>
                 </svg>
               </div>
               <figcaption>右邊是 Cognition 的 Flappy Bird 例子。平行寫的問題不在網路或同步，在於兩個 agent 各自替使用者做了決定。</figcaption>
@@ -255,19 +258,19 @@
                   <rect x="4" y="168" width="352" height="158" rx="6" class="dg-panel"/>
                   <rect x="364" y="4" width="352" height="158" rx="6" class="dg-panel"/>
                   <rect x="364" y="168" width="352" height="158" rx="6" class="dg-panel"/>
-                  <text x="18" y="29" class="dg-h">唯讀 subagent</text>
+                  <text x="18" y="29" class="dg-h">Read-only subagent</text>
                   <path d="M134,72 L214,72" class="dg-link" marker-start="url(#l5w-c-ah)" marker-end="url(#l5w-c-ah)"/>
-                  <text x="174" y="64" text-anchor="middle" class="dg-c">摘要</text>
+                  <text x="174" y="64" text-anchor="middle" class="dg-c">summary</text>
                   <rect x="20" y="52" width="114" height="40" rx="4" class="dg-n-focus"/>
-                  <text x="77" y="77.0" text-anchor="middle" class="dg-l-on">主 agent</text>
+                  <text x="77" y="77.0" text-anchor="middle" class="dg-l-on">main agent</text>
                   <rect x="214" y="52" width="126" height="40" rx="4" class="dg-n-a"/>
-                  <text x="277" y="77.0" text-anchor="middle" class="dg-ls">查 code、查網頁</text>
+                  <text x="277" y="77.0" text-anchor="middle" class="dg-ls">code / web search</text>
                   <text x="18" y="138" class="dg-c">最常見，其實很接近一次 tool call</text>
                   <text x="378" y="29" class="dg-h">Writer ＋ reviewer</text>
                   <path d="M494,64 L574,64" class="dg-link" marker-end="url(#l5w-c-ah)"/>
                   <path d="M574,82 L494,82" class="dg-link" marker-end="url(#l5w-c-ah)"/>
                   <text x="534" y="57" text-anchor="middle" class="dg-c">diff</text>
-                  <text x="534" y="99" text-anchor="middle" class="dg-c">問題</text>
+                  <text x="534" y="99" text-anchor="middle" class="dg-c">findings</text>
                   <rect x="380" y="52" width="114" height="40" rx="4" class="dg-n-focus"/>
                   <text x="437" y="77.0" text-anchor="middle" class="dg-l-on">Writer</text>
                   <rect x="574" y="52" width="126" height="40" rx="4" class="dg-n-a"/>
@@ -287,11 +290,11 @@
                   <text x="18" y="320" class="dg-c">拆工作、各做一塊、再彙整</text>
                   <text x="378" y="193" class="dg-h">Smart friend</text>
                   <path d="M494,236 L574,236" class="dg-link" marker-start="url(#l5w-c-ah)" marker-end="url(#l5w-c-ah)"/>
-                  <text x="534" y="228" text-anchor="middle" class="dg-c">卡住時問</text>
+                  <text x="534" y="228" text-anchor="middle" class="dg-c">escalate</text>
                   <rect x="380" y="216" width="114" height="40" rx="4" class="dg-n-focus"/>
-                  <text x="437" y="241.0" text-anchor="middle" class="dg-l-on">小 model</text>
+                  <text x="437" y="241.0" text-anchor="middle" class="dg-l-on">small model</text>
                   <rect x="574" y="216" width="126" height="40" rx="4" class="dg-n-b"/>
-                  <text x="637" y="241.0" text-anchor="middle" class="dg-l">大 model</text>
+                  <text x="637" y="241.0" text-anchor="middle" class="dg-l">large model</text>
                   <text x="378" y="302" class="dg-c">難處是小 model 要知道自己該問了</text>
                 </svg>
               </div>
@@ -326,15 +329,15 @@ depends_on: none                                          # 要等誰</code></pr
                   <rect x="244" y="190" width="232" height="178" rx="6" class="dg-panel"/>
                   <rect x="484" y="4" width="232" height="178" rx="6" class="dg-panel"/>
                   <rect x="484" y="190" width="232" height="178" rx="6" class="dg-panel"/>
-                  <text x="16" y="29" class="dg-h">01 重疊</text>
+                  <text x="16" y="29" class="dg-h">01 Overlap</text>
                   <text x="16" y="166" class="dg-c">兩個 agent 摘要同一篇論文</text>
-                  <text x="256" y="29" class="dg-h">02 缺口</text>
+                  <text x="256" y="29" class="dg-h">02 Gap</text>
                   <text x="256" y="166" class="dg-c">沒有人做 2024</text>
-                  <text x="496" y="29" class="dg-h">03 隱藏的相依</text>
+                  <text x="496" y="29" class="dg-h">03 Hidden dependency</text>
                   <text x="496" y="166" class="dg-c">Pricing 要先有 sizing</text>
-                  <text x="16" y="215" class="dg-h">04 無法合併</text>
+                  <text x="16" y="215" class="dg-h">04 Unmergeable outputs</text>
                   <text x="16" y="352" class="dg-c">一個回散文，一個回 JSON</text>
-                  <text x="256" y="215" class="dg-h">05 失去全局 context</text>
+                  <text x="256" y="215" class="dg-h">05 Lost global context</text>
                   <text x="256" y="352" class="dg-c">每節都對，整份報告矛盾</text>
                   <text x="496" y="215" class="dg-h">06 Straggler</text>
                   <text x="496" y="352" class="dg-c">一個拖住全部</text>
@@ -354,7 +357,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <text x="536" y="94.0" text-anchor="middle" class="dg-ls">Sizing</text>
                   <rect x="624" y="70" width="80" height="38" rx="4" class="dg-n-a"/>
                   <text x="664" y="94.0" text-anchor="middle" class="dg-ls">Pricing</text>
-                  <text x="600" y="130" text-anchor="middle" class="dg-k">執行時才發現</text>
+                  <text x="600" y="130" text-anchor="middle" class="dg-k">found at run time</text>
                   <path d="M86,256 L110,256 L110,274 L128,274" class="dg-link-key" marker-end="url(#l5v-u-ak)"/>
                   <path d="M86,304 L110,304 L110,286 L128,286" class="dg-link-key" marker-end="url(#l5v-u-ak)"/>
                   <rect x="16" y="239" width="70" height="34" rx="4" class="dg-n-a"/>
@@ -362,7 +365,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <rect x="16" y="287" width="70" height="34" rx="4" class="dg-n-c"/>
                   <text x="51" y="309.0" text-anchor="middle" class="dg-ls">JSON</text>
                   <rect x="128" y="258" width="96" height="44" rx="3" class="dg-link-key dg-dash"/>
-                  <text x="176" y="285" text-anchor="middle" class="dg-k">Merge 失敗</text>
+                  <text x="176" y="285" text-anchor="middle" class="dg-k">merge fails</text>
                   <rect x="256" y="240" width="64" height="36" rx="4" class="dg-n-a"/>
                   <text x="288" y="263.0" text-anchor="middle" class="dg-ls">§1 ✓</text>
                   <rect x="328" y="240" width="64" height="36" rx="4" class="dg-n-a"/>
@@ -370,7 +373,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <rect x="400" y="240" width="64" height="36" rx="4" class="dg-n-a"/>
                   <text x="432" y="263.0" text-anchor="middle" class="dg-ls">§3 ✓</text>
                   <rect x="256" y="288" width="208" height="36" rx="4" class="dg-n-focus"/>
-                  <text x="360" y="311.0" text-anchor="middle" class="dg-l-on">整份報告 ✗</text>
+                  <text x="360" y="311.0" text-anchor="middle" class="dg-l-on">whole report ✗</text>
                   <rect x="496" y="240" width="12" height="24" rx="2" class="dg-n-n"/>
                   <text x="516" y="257" class="dg-c">20 秒</text>
                   <rect x="496" y="272" width="15" height="24" rx="2" class="dg-n-n"/>
@@ -459,11 +462,11 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                 <svg viewBox="0 0 720 206" role="img" aria-label="Worker 把完整分析寫進檔案 analysis/T17.json，傳給 supervisor 的訊息只有主張、證據指標和路徑。Supervisor 要查證時才去讀檔案。">
                   <defs><marker id="l5w-d-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5w-d-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M150,62 L560,62" class="dg-link" marker-end="url(#l5w-d-ah)"/>
-                  <text x="355" y="52" text-anchor="middle" class="dg-cb">訊息：一句主張、證據指標、檔案路徑</text>
+                  <text x="355" y="52" text-anchor="middle" class="dg-cb">message: claim + evidence + artifact path</text>
                   <path d="M85,86 L85,150 L280,150" class="dg-link" marker-end="url(#l5w-d-ah)"/>
-                  <text x="95" y="140" class="dg-c">完整產出寫進檔案</text>
+                  <text x="95" y="140" class="dg-c">write full output</text>
                   <path d="M625,86 L625,150 L440,150" class="dg-link-key dg-dash" marker-end="url(#l5w-d-ak)"/>
-                  <text x="615" y="140" text-anchor="end" class="dg-k">要查證時才讀</text>
+                  <text x="615" y="140" text-anchor="end" class="dg-k">read on demand</text>
                   <rect x="20" y="38" width="130" height="48" rx="4" class="dg-n-a"/>
                   <text x="85" y="67.0" text-anchor="middle" class="dg-l">Worker</text>
                   <rect x="560" y="38" width="130" height="48" rx="4" class="dg-n-focus"/>
@@ -489,7 +492,7 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
           </div>
 
           <div class="idea" id="i6">
-            <h3><span class="idea-no">6</span>失敗：timeout 之後，你不知道對方做了沒</h3>
+            <h3><span class="idea-no">6</span>送出去之後：timeout、冪等與 partial failure</h3>
             <div class="prose">
               <p>只要 agent 不在同一個 process，它們之間就是分散式系統。最典型的情況是 A 叫 B 買 8 台 GPU，然後 timeout：</p>
               <figure class="diagram">
@@ -561,9 +564,9 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <rect x="230" y="10" width="100" height="32" rx="4" class="dg-n-c"/>
                   <text x="280" y="31.0" text-anchor="middle" class="dg-l">Agent B</text>
                   <rect x="366" y="10" width="128" height="32" rx="4" class="dg-n-b"/>
-                  <text x="430" y="31.0" text-anchor="middle" class="dg-l">B 的持久紀錄</text>
+                  <text x="430" y="31.0" text-anchor="middle" class="dg-l">B durable log</text>
                   <rect x="516" y="10" width="108" height="32" rx="4" class="dg-n-n"/>
-                  <text x="570" y="31.0" text-anchor="middle" class="dg-l">雲端 API</text>
+                  <text x="570" y="31.0" text-anchor="middle" class="dg-l">Cloud API</text>
                   <rect x="90" y="72" width="12" height="166" rx="2" class="dg-n-d"/>
                   <text x="84" y="150" text-anchor="end" class="dg-c">等回覆</text>
                   <text x="84" y="168" text-anchor="end" class="dg-c">到 timeout</text>
@@ -619,22 +622,22 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <rect x="270" y="10" width="120" height="34" rx="4" class="dg-n-c"/>
                   <text x="330" y="32.0" text-anchor="middle" class="dg-l">Worker 2</text>
                   <rect x="490" y="10" width="140" height="34" rx="4" class="dg-n-b"/>
-                  <text x="560" y="32.0" text-anchor="middle" class="dg-l">結果存放處</text>
+                  <text x="560" y="32.0" text-anchor="middle" class="dg-l">Result store</text>
                   <path d="M560,68 L111,68" class="dg-link" marker-end="url(#l5w-f-ah)"/>
-                  <text x="220" y="61" text-anchor="middle" class="dg-c">認領：拿到 #7</text>
+                  <text x="220" y="61" text-anchor="middle" class="dg-c">acquire lease #7</text>
                   <path d="M110,98 L559,98" class="dg-link" marker-end="url(#l5w-f-ah)"/>
-                  <text x="220" y="91" text-anchor="middle" class="dg-c">心跳：續約</text>
+                  <text x="220" y="91" text-anchor="middle" class="dg-c">heartbeat · renew lease</text>
                   <rect x="105" y="108" width="10" height="62" rx="2" class="dg-n-d"/>
-                  <text x="124" y="144" class="dg-k">卡住，沒有心跳</text>
-                  <text x="572" y="150" class="dg-k">租約過期</text>
+                  <text x="124" y="144" class="dg-k">stalled · no heartbeat</text>
+                  <text x="572" y="150" class="dg-k">lease expired</text>
                   <path d="M560,176 L331,176" class="dg-link" marker-end="url(#l5w-f-ah)"/>
-                  <text x="445" y="169" text-anchor="middle" class="dg-c">換人：W2 拿到 #8</text>
+                  <text x="445" y="169" text-anchor="middle" class="dg-c">failover · W2 gets #8</text>
                   <path d="M330,206 L559,206" class="dg-link" marker-end="url(#l5w-f-ah)"/>
-                  <text x="445" y="199" text-anchor="middle" class="dg-cb">寫結果，帶 #8：接受</text>
+                  <text x="445" y="199" text-anchor="middle" class="dg-cb">write result, token #8 · accepted</text>
                   <path d="M110,238 L546,238" class="dg-link-key"/>
                   <path d="M540,232 L552,244" class="dg-link-key"/>
                   <path d="M540,244 L552,232" class="dg-link-key"/>
-                  <text x="220" y="231" text-anchor="middle" class="dg-k">醒來寫結果，帶 #7：拒絕</text>
+                  <text x="220" y="227" text-anchor="middle" class="dg-k">wakes up, writes with #7 · rejected</text>
                 </svg>
               </div>
               <figcaption>本文的整理。存放處只接受最新的編號，所以就算 Worker 1 其實沒死，它的舊結果也蓋不掉 Worker 2 的。</figcaption>
@@ -655,7 +658,92 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
           </div>
 
           <div class="idea" id="i7">
-            <h3><span class="idea-no">7</span>安全：傳回來的文字也不可信</h3>
+            <h3><span class="idea-no">7</span>狀態與時間：每個 agent 的 context 都是一份會過期的副本</h3>
+            <div class="prose">
+              <p>第 6 章談的是一則訊息送出去之後的事。這一章談多個 agent 共用狀態時的事。先換一個角度看 context：agent 讀進 context 的每一個事實，都是外面那份狀態的一份副本（replica）。讀完的那一刻，它就開始過期。分散式系統花了幾十年處理副本，那些結論在這裡都用得上。</p>
+              <p><b>Consistency：兩個 agent 同時改同一份東西。</b>共享的 task list 上，Agent A 和 Agent B 同時讀到 T4 沒人認領，各自寫上自己的名字，兩個人都去做 T4。這叫 lost update：後寫的蓋掉先寫的，雙方都不知道。解法是 conditional write，也叫 compare-and-swap：寫入時附上「我讀到的版本」，版本已經變了就拒絕，要求重讀。你天天在用的 git 就是這樣：</p>
+              <figure class="file"><figcaption>terminal：git push 被拒，就是一次 conditional write 失敗</figcaption><pre><code>$ git push origin main
+ ! [rejected]        main -> main (fetch first)      # 遠端版本已經變了，你的寫入被拒
+error: failed to push some refs to 'github.com:team/repo.git'
+$ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版，再寫一次</code></pre></figure>
+              <p>所以 blackboard 用 git 當共享工作區，不只是方便：git 天生就擋住了 lost update。用一般檔案或資料庫時，認領任務這種寫入要自己加版本檢查。</p>
+              <p><b>CAP：網路斷開時，只能保住一個。</b>CAP 說的是：當網路分成兩半（partition），系統只能在 consistency（每個人看到同一份最新狀態）和 availability（每個人都能繼續做事）之間選一個。對 agent 來說，就是連不上共享狀態時，手上那份舊副本要不要用：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 268" role="img" aria-label="網路分區。上方是 shared store，裡面的 task list 最新版是 v3。Agent A 和 store 相連，讀到 v3。一道紅色虛線把 Agent B 和 store 隔開，標示 network partition。B 手上只有早先讀的 v2，必須二選一：選 C，停下來等網路恢復；選 A，用手上的 v2 繼續做，可能做錯。">
+                  <defs><marker id="l5w-g-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5w-g-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M150,108 L150,80 L300,80 L300,54" class="dg-link" marker-start="url(#l5w-g-ah)" marker-end="url(#l5w-g-ah)"/>
+                  <text x="158" y="100" class="dg-c">read v3</text>
+                  <path d="M570,108 L570,80 L420,80 L420,54" class="dg-link" marker-start="url(#l5w-g-ah)" marker-end="url(#l5w-g-ah)"/>
+                  <path d="M470,40 L470,124" class="dg-link-key dg-dash"/>
+                  <text x="462" y="104" text-anchor="end" class="dg-k">network partition</text>
+                  <rect x="240" y="10" width="240" height="44" rx="4" class="dg-n-b"/>
+                  <text x="360" y="29.0" text-anchor="middle" class="dg-l">Shared store</text>
+                  <text x="360" y="46.0" text-anchor="middle" class="dg-c">task list · latest v3</text>
+                  <rect x="80" y="108" width="140" height="44" rx="4" class="dg-n-a"/>
+                  <text x="150" y="127.0" text-anchor="middle" class="dg-l">Agent A</text>
+                  <text x="150" y="144.0" text-anchor="middle" class="dg-c">sees v3</text>
+                  <rect x="500" y="108" width="140" height="44" rx="4" class="dg-n-c"/>
+                  <text x="570" y="127.0" text-anchor="middle" class="dg-l">Agent B</text>
+                  <text x="570" y="144.0" text-anchor="middle" class="dg-c">holds stale v2</text>
+                  <path d="M570,152 L570,172 L470,172 L470,190" class="dg-link" marker-end="url(#l5w-g-ah)"/>
+                  <path d="M570,172 L640,172 L640,190" class="dg-link" marker-end="url(#l5w-g-ah)"/>
+                  <text x="580" y="166" class="dg-cb">B must choose</text>
+                  <rect x="380" y="190" width="180" height="50" rx="4" class="dg-n-n"/>
+                  <text x="470" y="212.0" text-anchor="middle" class="dg-ls">C: stop and wait</text>
+                  <text x="470" y="229.0" text-anchor="middle" class="dg-c">安全，但卡住</text>
+                  <rect x="570" y="190" width="140" height="50" rx="4" class="dg-n-d"/>
+                  <text x="640" y="212.0" text-anchor="middle" class="dg-ls">A: act on v2</text>
+                  <text x="640" y="229.0" text-anchor="middle" class="dg-c">不卡，但可能做錯</text>
+                  <text x="30" y="210" class="dg-cb">分區時只能保住一個：</text>
+                  <text x="30" y="230" class="dg-cb">consistency 或 availability</text>
+                </svg>
+              </div>
+              <figcaption>本文的整理。分區不常發生，但一發生就要事先決定好每種動作選哪一邊；沒有決定時，agent 通常會默默選 A。</figcaption>
+            </figure>
+              <p>沒有分區的時候也有取捨：每次行動前都重讀共享狀態，資料最新，但每次多一個 tool call 和一份 token；直接用 context 裡的副本，快，但可能過期。這是 latency 和 consistency 的取捨，有人把它和 CAP 合稱 PACELC。實務上可以接回第 3 章的讀寫分界：<strong>寫之前一定重讀（選 C），讀和探索可以用副本（選 A）</strong>。不可逆的動作，例如付款、刪除、對外發信，一律選 C。</p>
+              <p><b>沒有全域時鐘：時間戳排不出先後。</b>每台機器的時鐘都會漂移，即使有 NTP 同步也有毫秒級誤差，機器暫停或沒同步時更大。所以兩個 agent 的時間戳不能拿來比先後，最危險的用法是 last-write-wins：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 262" role="img" aria-label="時鐘偏差。Agent A 的時鐘快了 2 秒。真實時間上，A 先寫 price=100，B 後寫 price=120。A 的時間戳是 10:00:03，B 的是 10:00:02。Store 用時間戳做 last-write-wins，結果留下 A 的 100，B 較晚的寫入被丟掉。下方是解法：由 store 發版本號，A 是 v7、B 是 v8，留下 v8 的 120。">
+                  <defs><marker id="l5w-h-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5w-h-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M110,46 L110,196" class="dg-soft-link dg-dash"/>
+                  <path d="M360,46 L360,196" class="dg-soft-link dg-dash"/>
+                  <path d="M610,46 L610,196" class="dg-soft-link dg-dash"/>
+                  <rect x="30" y="10" width="160" height="36" rx="4" class="dg-n-a"/>
+                  <text x="110" y="33.0" text-anchor="middle" class="dg-ls">Agent A · clock +2s</text>
+                  <rect x="290" y="10" width="140" height="36" rx="4" class="dg-n-b"/>
+                  <text x="360" y="33.0" text-anchor="middle" class="dg-ls">Shared store</text>
+                  <rect x="540" y="10" width="140" height="36" rx="4" class="dg-n-c"/>
+                  <text x="610" y="33.0" text-anchor="middle" class="dg-ls">Agent B</text>
+                  <path d="M110,84 L359,84" class="dg-link" marker-end="url(#l5w-h-ah)"/>
+                  <text x="235" y="76" text-anchor="middle" class="dg-mn-ink">price=100 · ts 10:00:03</text>
+                  <path d="M610,124 L361,124" class="dg-link" marker-end="url(#l5w-h-ah)"/>
+                  <text x="485" y="116" text-anchor="middle" class="dg-mn-ink">price=120 · ts 10:00:02</text>
+                  <text x="20" y="88" class="dg-c">先寫</text>
+                  <text x="630" y="128" class="dg-c">後寫</text>
+                  <text x="370" y="162" class="dg-mn">last-write-wins by ts</text>
+                  <text x="370" y="182" class="dg-k">→ keeps 100，較晚的寫入不見了</text>
+                  <rect x="20" y="210" width="680" height="40" rx="4" class="dg-n-n"/>
+                  <text x="360" y="236" text-anchor="middle" class="dg-cb">Fix：由 store 發版本號，A 是 v7、B 是 v8，比版本不比時間 → keeps 120</text>
+                </svg>
+              </div>
+              <figcaption>本文的整理。兩台機器的時間戳不能拿來排先後；要排先後，就讓同一個地方發號碼。</figcaption>
+            </figure>
+              <p>要排先後，有兩種做法。第一種是讓同一個地方發號碼：store 替每次寫入發遞增的版本號，第 6 章的 fencing token 也是這個做法。第二種是 logical clock，例如 Lamport clock：每個 agent 帶一個計數器，每做一件事加 1，送訊息時附上計數器；收到訊息的一方把自己的計數器設成兩者較大值再加 1。這樣<strong>有因果關係的事件，順序一定排得對</strong>，不靠任何人的時鐘。</p>
+              <p><b>Observability：用 trace 把散落的 log 串起來。</b>時鐘不可靠，除錯時就不能靠時間戳把八個 agent 的 log 排在一起。做法是 distributed tracing：每個 agent 的每次工作是一個 span，帶著共同的 trace id 和自己的 parent id，事後用 parent 關係重建一棵樹，而不是用時間排一條線。L7 的延伸閱讀有完整的 trace 格式。Claude Code 也提供了這種資訊：stream-json 輸出裡，subagent 的每則訊息都帶 <code>parent_tool_use_id</code>，指向開啟它的那次呼叫：</p>
+              <figure class="file"><figcaption>terminal：看每則訊息屬於哪個 subagent（依 2026-11 的 Claude Code 文件）</figcaption><pre><code>$ claude -p "Use two subagents to review this repo" \
+    --output-format stream-json --verbose \
+  | jq -c 'select(.type == "assistant") | {parent: .parent_tool_use_id}'
+{"parent":null}                      # 主對話
+{"parent":"toolu_01A..."}            # 第一個 subagent 的訊息
+{"parent":"toolu_01B..."}            # 第二個 subagent 的訊息</code></pre></figure>
+              <p><b>不確定性：同一個任務跑兩次，結果不同。</b>傳統分散式系統的不確定性來自排程和網路；LLM agent 多了一層，model 每次的輸出都可能不同。所以「重現 bug」不能靠重跑，要靠記錄：每則訊息的 envelope 和 tool 結果都存下來，用 trace 的順序重播。這也是第 9 章 dynamic topology 難除錯的原因。</p>
+            </div>
+          </div>
+
+          <div class="idea" id="i8">
+            <h3><span class="idea-no">8</span>安全：傳回來的文字也不可信</h3>
             <div class="prose">
               <p>第 1 章說，拆開可以隔離權限：讀網頁的 agent 沒有 shell，網頁裡的指令就算騙過它，也碰不到危險的 tool。這只擋了一半，因為它的輸出還是會回到另一個 agent 的 context：</p>
               <figure class="diagram">
@@ -666,21 +754,21 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <path d="M330,62 L370,62" class="dg-link-key" marker-end="url(#l5w-e-ak)"/>
                   <path d="M510,62 L550,62" class="dg-link-key" marker-end="url(#l5w-e-ak)"/>
                   <rect x="10" y="34" width="140" height="56" rx="4" class="dg-n-d"/>
-                  <text x="80" y="59.0" text-anchor="middle" class="dg-l">網頁</text>
-                  <text x="80" y="76.0" text-anchor="middle" class="dg-c">夾帶惡意指令</text>
+                  <text x="80" y="59.0" text-anchor="middle" class="dg-l">Web page</text>
+                  <text x="80" y="76.0" text-anchor="middle" class="dg-c">prompt injection</text>
                   <rect x="190" y="34" width="140" height="56" rx="4" class="dg-n-a"/>
-                  <text x="260" y="59.0" text-anchor="middle" class="dg-l">讀取的 agent</text>
-                  <text x="260" y="76.0" text-anchor="middle" class="dg-c">沒有 shell</text>
+                  <text x="260" y="59.0" text-anchor="middle" class="dg-l">Reader agent</text>
+                  <text x="260" y="76.0" text-anchor="middle" class="dg-c">no shell</text>
                   <rect x="370" y="34" width="140" height="56" rx="4" class="dg-n-c"/>
                   <text x="440" y="59.0" text-anchor="middle" class="dg-l">Supervisor</text>
-                  <text x="440" y="76.0" text-anchor="middle" class="dg-c">有 shell</text>
+                  <text x="440" y="76.0" text-anchor="middle" class="dg-c">has shell</text>
                   <rect x="550" y="34" width="160" height="56" rx="4" class="dg-n-focus"/>
-                  <text x="630" y="67.0" text-anchor="middle" class="dg-l-on">刪檔、外傳資料</text>
+                  <text x="630" y="67.0" text-anchor="middle" class="dg-l-on">rm · exfiltrate</text>
                   <text x="170" y="122" class="dg-c">權限隔離在這裡有效：</text>
                   <text x="170" y="142" class="dg-c">它自己做不了壞事</text>
                   <text x="350" y="122" class="dg-k">但文字流回來了：</text>
                   <text x="350" y="142" class="dg-k">指令換到有權限的 agent 手上</text>
-                  <text x="360" y="186" text-anchor="middle" class="dg-cb">Agent 之間傳的文字，是另一條 prompt injection 的路</text>
+                  <text x="360" y="186" text-anchor="middle" class="dg-cb">Agent 之間傳的文字，是另一條 prompt injection 的路徑</text>
                 </svg>
               </div>
               <figcaption>本文的整理。讀網頁的 agent 只是個例子；任何吃外部內容的 worker 都一樣，例如讀 issue、讀 email、讀別人的 PR。</figcaption>
@@ -697,8 +785,8 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
             </div>
           </div>
 
-          <div class="idea" id="i8">
-            <h3><span class="idea-no">8</span>目錄：八種架構、通訊選項、兩個協定</h3>
+          <div class="idea" id="i9">
+            <h3><span class="idea-no">9</span>目錄：八種架構、通訊選項、兩個協定</h3>
             <div class="prose">
               <p>這一章不必讀完，需要時再查。架構的名字只是三個問題的答案組合：誰協調、誰和誰說話、工作怎麼拆。拿到任何系統，先把這三題各答一句，比記名字有用。</p>
               <figure class="diagram">
@@ -799,7 +887,7 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <tr><td><b>Supervisor–worker</b></td><td>可分開的子任務</td><td>中心的 context 長得最快</td><td>預設的第一選擇</td></tr>
                   <tr><td><b>Hierarchical</b></td><td>有層次的任務</td><td>錯誤層層放大</td><td>一層 supervisor 真的管不完</td></tr>
                   <tr><td><b>Pipeline / DAG</b></td><td>順序清楚的階段</td><td>錯誤往下傳</td><td>流程固定、要好除錯；記得加 retry edge</td></tr>
-                  <tr><td><b>Blackboard</b></td><td>共同的產出</td><td>狀態過期</td><td>Agent 會來來去去，要留下可檢查的紀錄</td></tr>
+                  <tr><td><b>Blackboard</b></td><td>共同的產出</td><td>狀態過期（第 7 章）</td><td>Agent 會來來去去，要留下可檢查的紀錄</td></tr>
                   <tr><td><b>Committee</b></td><td>需要判斷的題目</td><td>盲點相同</td><td>值得付多次成本，而且能讓意見獨立</td></tr>
                   <tr><td><b>Market</b></td><td>能力、成本不一的 agent</td><td>自報的出價不實</td><td>任務分配本身是問題</td></tr>
                   <tr><td><b>Swarm</b></td><td>局部協商</td><td>線數 n(n−1)/2</td><td>很少；產品中罕見</td></tr>
