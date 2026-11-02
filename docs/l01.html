@@ -656,15 +656,15 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               </div>
               <figcaption>Agent 的每個零件對到傳統電腦的哪裡？左右兩欄是課程的對照，右邊的句子是本文的整理。深紅色的 harness 是最常遭到低估的一層。</figcaption>
             </figure>
-              <p>這個對照的用處是決定東西該放哪裡。Context window 是 RAM，所以裝不下時要換出去，這是 <a href="l04.html#i7">L4</a> 的主題。Harness 是 OS，所以權限、重試、什麼能進 context 都歸它管，同一個 model 換一個 harness，結果就可能差很多（<a href="l02.html#x1">L2</a>）。兩個不同點裡，failure model 對設計的影響最大：<strong>OS 隔離 process 是因為 process 會壞，harness 隔離 LLM 的動作是因為它會錯</strong>，所以權限、sandbox（把執行環境隔離起來）、人工核准都跟著 tool 走。</p>
+              <p>這個對照的用處是決定東西該放哪裡。Context window 是 RAM，所以裝不下時要換出去，這是 <a href="l04.html#i4">L4</a> 的主題。Harness 是 OS，所以權限、重試、什麼能進 context 都歸它管，同一個 model 換一個 harness，結果就可能差很多（<a href="l02.html#x1">L2</a>）。兩個不同點裡，failure model 對設計的影響最大：<strong>OS 隔離 process 是因為 process 會壞，harness 隔離 LLM 的動作是因為它會錯</strong>，所以權限、sandbox（把執行環境隔離起來）、人工核准都跟著 tool 走。</p>
               <p id="i5-1"><b>周邊都在補 LLM 的弱項。</b>課程引 <a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ&amp;t=874" target="_blank" rel="noopener">Andrej Karpathy 2025 年的演講</a>：LLM 是奇怪的電腦，同時超人又無能。它記得大量事實、擅長語言和寫程式，卻有五個弱項，而 agent 的周邊正好一項對一項：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>LLM 的弱項</th><th>Agent 的周邊怎麼補</th><th>哪裡講</th></tr></thead>
                 <tbody>
                   <tr><td>沒有持久記憶，每次對話從零開始</td><td>Memory：harness 把筆記搬進 context</td><td><a href="l06.html#i5">L6</a></td></tr>
-                  <tr><td>不能可靠地理解 context</td><td>Context 管理：只放該放的</td><td><a href="l04.html#i7">L4</a></td></tr>
-                  <tr><td>會編出不存在的事實（hallucinate）</td><td>測試與 tool 結果：事實回到它眼前</td><td><a href="l04.html#i4">L4</a></td></tr>
-                  <tr><td>不知道自己不知道什麼</td><td>Tool：讓它查，不要猜</td><td><a href="l04.html#i2">L4</a></td></tr>
+                  <tr><td>不能可靠地理解 context</td><td>Context 管理：只放該放的</td><td><a href="l04.html#i4">L4</a></td></tr>
+                  <tr><td>會編出不存在的事實（hallucinate）</td><td>測試與 tool 結果：事實回到它眼前</td><td><a href="l04.html#i7">L4</a></td></tr>
+                  <tr><td>不知道自己不知道什麼</td><td>Tool：讓它查，不要猜</td><td><a href="l04.html#i8">L4</a></td></tr>
                   <tr><td>對 security 與對抗性輸入沒有抵抗力</td><td>權限與 sandbox：動作先過規則</td><td><a href="l02.html#i4">L2</a></td></tr>
                 </tbody>
               </table></div>
@@ -717,7 +717,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <p>NSA（native sparse attention）讓每個 token 只看前文的一部分，DeepSeek 2025 年提出。Linear attention 換掉 softmax，狀態大小固定，不隨長度成長。對 serving 的意義：KV cache 的大小與讀法各不相同，記憶體管理要各自適配。</p>
                 </div>
               </details>
-              <p>接下來三章把前四條假設講到能用的程度，它們也是 Part II 的起點：10/19–10/28 的 serving 基礎接第 7 章，11/04 和 11/16 的 prefix cache 與 KV cache 接第 8 章。</p>
+              <p>接下來三章把前四條假設講到能用的程度，它們也是 Part II 的起點：10/19–11/02 的 serving 基礎接第 7 章，11/11 和 11/16 的 prefix cache 與 KV cache 接第 8 章。</p>
             </div>
           </div>
 
@@ -1142,17 +1142,17 @@ def test_model_properties():
             <h3><span class="idea-no">10</span>目錄：九個問題、十個性質、課程範圍</h3>
             <div class="prose">
               <p>這一章不必讀完，需要時再查。只讀這一堂就要決定下一步的話，看第一張表就夠了：課程說，<strong>到學期末你應該能定量地回答這九個問題</strong>。答不出來的那幾題，就是你接下來要讀的地方。</p>
-              <p id="i10-1"><span class="anchor" id="x4"></span><b>九個問題。</b>「為什麼難」和「哪裡講」是本文的整理。Part I 碰到的多半在 stack 的上半部，剩下的在下半部，由 Part II 回答。日期依 2026-10-28 的課程網站課表，可能調整。第 2 段的進階題第 1、2 題，就從這裡的第 1、9 題出發。</p>
+              <p id="i10-1"><span class="anchor" id="x4"></span><b>九個問題。</b>「為什麼難」和「哪裡講」是本文的整理。Part I 碰到的多半在 stack 的上半部，剩下的在下半部，由 Part II 回答。日期依 2026-11-03 的課程網站課表，可能調整。第 2 段的進階題第 1、2 題，就從這裡的第 1、9 題出發。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>#</th><th>問題</th><th>為什麼難</th><th>哪裡講</th></tr></thead>
                 <tbody>
-                  <tr><td>1</td><td>為什麼 batching 提高 throughput，卻傷 agent 的 latency？</td><td>機制已知，數字要自己算</td><td><a href="#i2">第 2</a>、<a href="#i7">7 章</a>；10/28</td></tr>
+                  <tr><td>1</td><td>為什麼 batching 提高 throughput，卻傷 agent 的 latency？</td><td>機制已知，數字要自己算</td><td><a href="#i2">第 2</a>、<a href="#i7">7 章</a>；11/02</td></tr>
                   <tr><td>2</td><td>Agent 什麼時候該用更大的 model？</td><td>大 model 每次貴，但成功率高；要用每個成功任務的成本比</td><td><a href="l08.html#i3">L8</a></td></tr>
-                  <tr><td>3</td><td>KV 與 prefix 的狀態該放哪裡？</td><td>HBM 快但小，CPU 記憶體大但慢</td><td><a href="#i8">第 8 章</a>；11/04、11/16</td></tr>
-                  <tr><td>4</td><td>同一個 agent 的請求該怎麼排程？</td><td>它們共用開頭，排在同一張 GPU 才能命中 cache</td><td><a href="#i4-1">第 4 章</a>；11/04</td></tr>
-                  <tr><td>5</td><td>Tool call 能不能和 inference 重疊？</td><td>要先知道下一步會呼叫什麼，這就是 speculation</td><td><a href="l08.html#i8">L8</a>；11/30</td></tr>
+                  <tr><td>3</td><td>KV 與 prefix 的狀態該放哪裡？</td><td>HBM 快但小，CPU 記憶體大但慢</td><td><a href="#i8">第 8 章</a>；11/11、11/16</td></tr>
+                  <tr><td>4</td><td>同一個 agent 的請求該怎麼排程？</td><td>它們共用開頭，排在同一張 GPU 才能命中 cache</td><td><a href="#i4-1">第 4 章</a>；11/11</td></tr>
+                  <tr><td>5</td><td>Tool call 能不能和 inference 重疊？</td><td>要先知道下一步會呼叫什麼，這就是 speculation</td><td><a href="l08.html#i8">L8</a></td></tr>
                   <tr><td>6</td><td>什麼時候該開一個 subagent？</td><td>多一個 context 多一份成本，要換到什麼？</td><td><a href="l03.html#i1">L3</a>、<a href="l05.html#i2">L5</a></td></tr>
-                  <tr><td>7</td><td>怎麼在異質的 GPU 與 model 之間 routing？</td><td>簡單的步驟給小 model、舊 GPU，誰來判斷簡單？</td><td><a href="l08.html#i3">L8</a>；11/23</td></tr>
+                  <tr><td>7</td><td>怎麼在異質的 GPU 與 model 之間 routing？</td><td>簡單的步驟給小 model、舊 GPU，誰來判斷簡單？</td><td><a href="l08.html#i6">L8</a>；11/30</td></tr>
                   <tr><td>8</td><td>一個跑了 30 分鐘的 agent 壞了，怎麼復原？</td><td>重跑太貴，所以要 checkpoint；有副作用的步驟不能重做兩次</td><td><a href="#x2">第 9 章</a>、<a href="l06.html#i1">L6</a></td></tr>
                   <tr><td>9</td><td>怎麼優化每個成功任務的花費，而不是每秒的 token 數？</td><td>這一堂的主題，也是 A3 與 A5 排行榜的分數</td><td><a href="#i2">第 2</a>、<a href="#i3">3 章</a>、<a href="l08.html#i1">L8</a></td></tr>
                 </tbody>
@@ -1164,15 +1164,15 @@ def test_model_properties():
                   <div class="table-wrap"><table>
                 <thead><tr><th>Workload 的性質</th><th>系統課題</th><th>哪裡講</th></tr></thead>
                 <tbody>
-                  <tr><td>軌跡很長</td><td>狀態與 context 管理</td><td><a href="l04.html#i7">L4〈Context 管理〉</a>、<a href="l06.html">L6</a></td></tr>
-                  <tr><td>開頭一再重複</td><td>Prefix caching</td><td><a href="l08.html#t2">L8〈Prefix cache〉</a>；11/04</td></tr>
-                  <tr><td>Tool 之間有依賴</td><td>Dependency-aware scheduling</td><td>11/04</td></tr>
-                  <tr><td>Tool 的 latency 變化大</td><td>非同步執行</td><td><a href="l08.html#i8">L8〈完成時間〉</a>；11/30</td></tr>
+                  <tr><td>軌跡很長</td><td>狀態與 context 管理</td><td><a href="l04.html#i4">L4〈Context 管理〉</a>、<a href="l06.html">L6</a></td></tr>
+                  <tr><td>開頭一再重複</td><td>Prefix caching</td><td><a href="l08.html#i3">L8〈Prompt cache〉</a>；11/11</td></tr>
+                  <tr><td>Tool 之間有依賴</td><td>Dependency-aware scheduling</td><td>11/11</td></tr>
+                  <tr><td>Tool 的 latency 變化大</td><td>非同步執行</td><td><a href="l08.html#i8">L8〈完成時間〉</a></td></tr>
                   <tr><td>多個 agent</td><td>Orchestration 與通訊</td><td><a href="l05.html">L5</a></td></tr>
                   <tr><td>Context 很大</td><td>記憶體階層與檢索</td><td><a href="l06.html">L6</a>；11/16</td></tr>
-                  <tr><td>推理會分支</td><td>Speculative execution</td><td><a href="l08.html#i8">L8〈完成時間〉</a>；11/02</td></tr>
-                  <tr><td>不同的 model</td><td>Routing</td><td><a href="l08.html#i3">L8〈單價〉</a>；11/23</td></tr>
-                  <tr><td>對外有副作用</td><td>Security 與隔離</td><td><a href="l02.html#i4">L2〈權限〉</a>、<a href="l04.html#i4">L4〈Execution〉</a></td></tr>
+                  <tr><td>推理會分支</td><td>Speculative execution</td><td><a href="l08.html#i8">L8〈完成時間〉</a>；11/04</td></tr>
+                  <tr><td>不同的 model</td><td>Routing</td><td><a href="l08.html#i6">L8〈Model、effort 與 output〉</a>；11/30</td></tr>
+                  <tr><td>對外有副作用</td><td>Security 與隔離</td><td><a href="l02.html#i4">L2〈權限〉</a>、<a href="l04.html#i7">L4〈Execution〉</a></td></tr>
                   <tr><td>任務跑很久</td><td>Checkpointing 與 fault tolerance</td><td><a href="l06.html#i1">L6〈錯誤相乘〉</a>；本頁第 9 章</td></tr>
                 </tbody>
               </table></div>

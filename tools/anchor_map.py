@@ -10,6 +10,7 @@ anchor-map.json is a flat object {"old id": "new id"} for one lecture.
       Every coverable id of the old page must be a key, and every value must exist in the new page.
   python3 -I tools/anchor_map.py apply lXX notes/lXX/anchor-map.json docs/index.html docs/l01.html …
       Rewrites href="lXX.html#old" to the new id in the given pages, in one pass (no chaining).
+      Run it once per file: a second run chains the map (i1 -> i8 -> i3), or swaps two ids back.
 """
 import json
 import re

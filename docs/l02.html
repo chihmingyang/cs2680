@@ -594,7 +594,7 @@ $ claude
               </div>
               <figcaption>Repo 會整包送給 model 嗎？不會。Repo 留在磁碟上，model 需要什麼就用 tool 去拿，只有拿回來的片段進 context。</figcaption>
             </figure>
-<p>這種做法叫 agentic search：不事先建索引，由 model 依任務決定找什麼、讀哪一段。它和 RAG 的取捨在 <a href="l04.html#i2">L4 的 search tool</a>。對使用者最重要的後果只有一個：<strong>agent 沒讀到的檔案，它就不知道</strong>。</p>
+<p>這種做法叫 agentic search：不事先建索引，由 model 依任務決定找什麼、讀哪一段。它和 RAG 的取捨在 <a href="l04.html#i8">L4 的 search tool</a>。對使用者最重要的後果只有一個：<strong>agent 沒讀到的檔案，它就不知道</strong>。</p>
 <p id="i3-3"><span class="anchor" id="t1"></span><b>每圈都重送，靠 prefix cache 才負擔得起。</b>API 沒有狀態，所以一段文字只要進了 context，之後每一圈都要再送一次，直到 compaction 或 <code>/clear</code> 清掉它。Model 讀 prompt 時，每個 token 的計算結果只和它前面的 token 有關，所以 provider 可以把開頭那一段的結果暫存起來，這叫 prefix cache。</p>
 <figure class="diagram">
               <div class="scroll">
@@ -1916,7 +1916,7 @@ $ claude plugin details commit-commands                  # 看它每個 session 
                     <li>Repo 不會整份送出；context 變大，來自每一步的回覆、檔案內容、指令輸出。</li>
                     <li>快滿 → compaction：摘要舊過程，重新放入 CLAUDE.md 和 memory → 只在對話裡講的事，摘要時可能丟掉。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>第 3 章〈<a href="#i3-1">還沒打字，就有 10k 以上的 token</a>〉、〈<a href="#t1">每圈都重送，靠 prefix cache 才負擔得起</a>〉、〈<a href="#n-compaction">Context 只會變大，滿了就 compaction</a>〉；第 8 章〈<a href="#t3">description 常駐，body 用到才載入</a>〉；<a href="l04.html#i6">L4 Context 的成本</a>、<a href="l04.html#t6">L4 Lost in the middle</a>。</p>
+                  <p class="tk-rel"><b>相關：</b>第 3 章〈<a href="#i3-1">還沒打字，就有 10k 以上的 token</a>〉、〈<a href="#t1">每圈都重送，靠 prefix cache 才負擔得起</a>〉、〈<a href="#n-compaction">Context 只會變大，滿了就 compaction</a>〉；第 8 章〈<a href="#t3">description 常駐，body 用到才載入</a>〉；<a href="l04.html#i1">L4 Context 的成本</a>、<a href="l04.html#t6">L4 Lost in the middle</a>。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/99" target="_blank" rel="noopener">到 GitHub 回答這一題（Q2）↗</a></p>
               </div>

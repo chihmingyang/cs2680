@@ -441,7 +441,7 @@
                     <li><b>Transformation。</b>依固定規則改寫已經在裡面的內容，例如截短、遮掉。</li>
                     <li><b>Compaction。</b>請 model 把歷史摘要成一段狀態，取代原文。</li>
                   </ul>
-                  <p>前三種不呼叫 LLM，也幾乎無損。Compaction 要多一次 model call，而且不可逆。細節見 L4〈<a href="l04.html#i7">Context 管理</a>〉。</p>
+                  <p>前三種不呼叫 LLM，也幾乎無損。Compaction 要多一次 model call，而且不可逆。細節見 L4〈<a href="l04.html#i4">Context 管理</a>〉。</p>
                 </div>
               </details>
             </div>
@@ -916,7 +916,7 @@ $ python triage.py ci-logs/today/ &gt; report.txt
 
 # 只有規則分不出來的那幾筆才問 model
 $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)"</code></pre></figure>
-<p>Claude Code 的 <a href="l02.html#i2-2">hook</a> 就是這種步驟放的地方：格式化、跑測試、擋危險指令，都不必問 model。</p>
+<p>Claude Code 的 <a href="l02.html#i7">hook</a> 就是這種步驟放的地方：格式化、跑測試、擋危險指令，都不必問 model。</p>
 <p id="i5-2"><b>少回頭：減少 turn。</b>全班只有一個 prompt 的 session，Assignment 1 佔 68%，Assignment 2 佔 75%，多數同學一個任務開一個 session；少數同學跑 100 個 turn 以上的 marathon session，付的是第 2 章的平方。使用者會回來追問，通常是下面三個原因，目標是同一句話：<strong>agent 一次做完，不需要使用者中途介入</strong>。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>為什麼回來</th><th>解法</th><th>對應的工具</th></tr></thead>
@@ -980,7 +980,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
   {"type": "tool_result", "tool_use_id": "call_03", "content": "src/auth/retry.ts:12: ..."}
 ]}</code></pre></figure>
 <p>條件是這些動作互相獨立，一個的結果不影響另一個的參數。同樣的道理，任務需要的檔案在第一步一起讀進來，不要做到一半才一個一個補。</p>
-<p id="i5-4"><b>重用計畫與 skill，任務重複才回本。</b>上次做過類似的任務，就把計畫或步驟拿回來，不要每次從頭推導，L2 的 <a href="l02.html#i2-2">skill</a> 和 L6 的 <a href="l06.html#i5">memory</a> 都是放這些東西的地方。結論是一句取捨：任務重複出現時才回本，維護的成本和過期的條目可能把省下的吃掉。讓 agent 少找資料也屬於這一類：Uber 接上內部的 context graph 之後，同一個問題 38 秒答對，沒接時跑了 20 分 9 秒還答錯，這是<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">文章裡的單一案例</a>，不是對照實驗。</p>
+<p id="i5-4"><b>重用計畫與 skill，任務重複才回本。</b>上次做過類似的任務，就把計畫或步驟拿回來，不要每次從頭推導，L2 的 <a href="l02.html#i8">skill</a> 和 L6 的 <a href="l06.html#i5">memory</a> 都是放這些東西的地方。結論是一句取捨：任務重複出現時才回本，維護的成本和過期的條目可能把省下的吃掉。讓 agent 少找資料也屬於這一類：Uber 接上內部的 context graph 之後，同一個問題 38 秒答對，沒接時跑了 20 分 9 秒還答錯，這是<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">文章裡的單一案例</a>，不是對照實驗。</p>
             </div>
           </div>
 
@@ -1098,7 +1098,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
                   <tr><td>每步重試</td><td>2 次</td><td>自己數：同一個 tool call 連續失敗幾次</td></tr>
                 </tbody>
               </table></div>
-<p id="i7-3"><b>停止規則：上限之前先有進展檢查。</b>上限是最後一道防線，前面還要能發現沒有進展。<strong>停下來交摘要的任務，比失控的任務便宜</strong>。第 3 段有寫成設定檔和 Claude Code 指令的版本。可靠性的整體做法在 L6〈<a href="l06.html#i4">失敗的五層</a>〉，這裡只談數字怎麼訂。</p>
+<p id="i7-3"><b>停止規則：上限之前先有進展檢查。</b>上限是最後一道防線，前面還要能發現沒有進展。<strong>停下來交摘要的任務，比失控的任務便宜</strong>。第 3 段有寫成設定檔和 Claude Code 指令的版本。可靠性的整體做法在 L6〈<a href="l06.html#i4">失敗分層</a>〉，這裡只談數字怎麼訂。</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 262" role="img" aria-label="停止規則的流程。Model 跑完一步後依序問：verifier 通過嗎？是就完成。連續 N 步沒有新的測試通過嗎？同一個錯誤重複出現嗎？碰到任一上限嗎？這三個只要有一個是，就停下，交摘要：做了什麼、卡在哪裡、建議下一步。四個都否，就回去跑下一步。">
@@ -1685,7 +1685,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
                     <li>沒命中貴 12 到 50 倍 → 先保住命中率：不變的放前面、只在尾端加、會停頓就用長 TTL。</li>
                     <li>留在 context 的 token 每一步都再付一次 → 處理要在源頭。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i2">錢花在哪裡：大宗是重讀的 context</a>〉、〈<a href="#i3">Prompt cache：沒命中的 token 貴 12 到 50 倍</a>〉；註〈<a href="#t2">單價</a>〉；L2〈<a href="l02.html#t1">Prefix cache</a>〉；L4〈<a href="l04.html#i6">Context 的成本</a>〉。進階題第 1 題用單價算一次。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i2">錢花在哪裡：大宗是重讀的 context</a>〉、〈<a href="#i3">Prompt cache：沒命中的 token 貴 12 到 50 倍</a>〉；註〈<a href="#t2">單價</a>〉；L2〈<a href="l02.html#t1">Prefix cache</a>〉；L4〈<a href="l04.html#i1">Context 的成本</a>〉。進階題第 1 題用單價算一次。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/105" target="_blank" rel="noopener">到 GitHub 回答這一題（Q2）↗</a></p>
               </div>
@@ -1719,7 +1719,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
                     <li>Compaction 要走幾步才回本 → 長任務趁 cache 還熱時壓，快結束不要壓。</li>
                     <li>失敗的錢佔大半 → 上限訂在成功任務 p95 的 2 倍，加上進展檢查，停下交摘要。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">淨節省：每個省法都有反向成本，要在同一組任務上量</a>〉、〈<a href="#i7">上限：失控的任務要有人喊停</a>〉；註〈<a href="#n-compaction">Compaction</a>〉；L6〈<a href="l06.html#i4">失敗的五層</a>〉；L7〈<a href="l07.html#i4">雜訊</a>〉。進階題第 2 題從 trace 訂上限。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">淨節省：每個省法都有反向成本，要在同一組任務上量</a>〉、〈<a href="#i7">上限：失控的任務要有人喊停</a>〉；註〈<a href="#n-compaction">Compaction</a>〉；L6〈<a href="l06.html#i4">失敗分層</a>〉；L7〈<a href="l07.html#i4">雜訊</a>〉。進階題第 2 題從 trace 訂上限。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/105" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
               </div>
@@ -2024,7 +2024,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
           </li>
           <li>
           <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noopener">RouteLLM: Learning to Route LLMs with Preference Data</a><span class="rg-meta">arXiv 2406.18665 · 論文 · 2024 · 挑段約 20 分</span></div>
-          <p class="rg-s">用偏好資料學會把請求分流到便宜或強的模型。（11/23 routing 那一講會再用到）</p>
+          <p class="rg-s">用偏好資料學會把請求分流到便宜或強的模型。（11/30 routing 那一講會再用到）</p>
           <p class="rg-g"><b>導讀</b>它量的是單一請求的品質。Agent 裡便宜模型的早期錯誤會傳染到後面，要 end-to-end 再驗一次。</p>
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 20 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>用 Chatbot Arena 的人類偏好資料訓練 router，逐題決定送強 model 或弱 model。MT Bench 上達到 GPT-4 95% 的品質時，GPT-4 的呼叫次數只有 random router 的 1/3.66；換成別的 model 對，不用重訓也有效。</p></div>

@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-11-03（加 H：把一堂改成 v7 依想法重組）。2026-11-02（加 G：線上編輯與「問 Claude」）。2026-10-30（`assemble_ideas.py` 的側欄第三層也會抓開頭有 `span.anchor` 的小標；L3 重排用它組回，片段是用 `notes/l03/build_iN.py` 從舊頁面切出來的，大改既有頁面時可以照這個做法：先切片段、改片段、再組回）。2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
+更新：2026-11-03（L1–L8 都改完 v7；H 補上組裝工具與多堂同時改的做法；B3 的新講次寫成 v7）。2026-11-03（加 H：把一堂改成 v7 依想法重組）。2026-11-02（加 G：線上編輯與「問 Claude」）。2026-10-30（`assemble_ideas.py` 的側欄第三層也會抓開頭有 `span.anchor` 的小標；L3 重排用它組回，片段是用 `notes/l03/build_iN.py` 從舊頁面切出來的，大改既有頁面時可以照這個做法：先切片段、改片段、再組回）。2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 
@@ -61,7 +61,7 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
 
 ### B3. 寫頁面
 
-1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v5.0 版面、8 章，2026-10-29 擴寫到 v4.0 密度）。目錄（`aside.sidenav`）照抄範本即可，B5 會重建。
+1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v7，四段，核心觀念依想法的重要性排）。目錄（`aside.sidenav`）照抄範本即可；`add_lecture.py` 替新頁建的展開目錄還是舊格式，B5 跑完後再跑一次 `tools/assemble_v7.py` 重建（用法見檔頭）。
 2. 第 3 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
 3. 頁面很長，分段寫：先寫骨架和第 1–2 段，再寫第 3 段，最後第 4 段和延伸閱讀。可以把第 3 段的基礎題和進階題交給兩個 subagent 平行寫，各自回傳 HTML 片段，再接回頁面。
 
@@ -226,4 +226,6 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 
 ## H. 把一堂改成 v7：依想法重組（2026-11-03 起）
 
-照 `.claude/skills/idea-first-lecture/SKILL.md` 做，範本是 `docs/l05.html`，規則在 `STYLE_ARTICLE.md` 第 0 節。一個 session 改一堂。畫圖用 `tools/dg.py`，build script 放 `notes/lXX/`（不 commit）。
+照 `.claude/skills/idea-first-lecture/SKILL.md` 做，範本是 `docs/l05.html`，規則在 `STYLE_ARTICLE.md` 第 0 節。一個 session 改一堂，或一堂一個 subagent。每章寫成片段放 `notes/lXX/`（不 commit），用 `tools/assemble_v7.py` 組回頁面，`tools/dg.py` 畫圖，`tools/page_text.py` 讀舊頁面的文字。
+
+2026-11-03 L1–L4、L6–L8 是七個 subagent 同時改的：每堂一個 git worktree（`notes/wt/lXX`），簡報在 `.claude/skills/idea-first-lecture/subagent-brief.md`。連到別堂一律用舊錨點，每堂交一份 `anchor-map.json`。一堂做完就落地：拿它的頁面，把已落地各堂的 map 套到這一頁，再把這一堂的 map 套到其他頁（`tools/anchor_map.py apply`，一個檔案只套一次），跑全站檢查，push。每堂的取捨寫進 `guide/V7_DECISIONS.md`，外部來源寫進 `guide/sources/`。

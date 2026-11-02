@@ -164,7 +164,7 @@
               </div>
               <figcaption>這張圖回答「一個分數是怎麼產生的」。Grader 只看得到三種輸出，每個 benchmark 選的不同，這決定它量到什麼。受測的是整個青色方塊，不只是裡面的 model。</figcaption>
             </figure>
-              <p>跑一題叫一次 trial，同一題要跑很多次，因為 agent 每次的結果可能不同。Trajectory 是一次 trial 裡每一步的觀察和動作，也叫 trace 或 transcript。骨架只有幾行，和 <a href="l04.html#i1-3">L4 的 agent loop</a> 幾乎一樣，差別是外面多了重置、預算和 grader：</p>
+              <p>跑一題叫一次 trial，同一題要跑很多次，因為 agent 每次的結果可能不同。Trajectory 是一次 trial 裡每一步的觀察和動作，也叫 trace 或 transcript。骨架只有幾行，和 <a href="l04.html#i1">L4 的 agent loop</a> 幾乎一樣，差別是外面多了重置、預算和 grader：</p>
               <figure class="file"><figcaption>一次評估的骨架（課程的偽碼，註解是本文補的）</figcaption><pre><code>for task in tasks:
     env.reset(task.initial_state)              # 每題開始前恢復快照，前一題的副作用不能留下來
     history = []
@@ -231,10 +231,10 @@
               </div>
               <figcaption>這張圖回答「只換一樣東西，分數會差多少」。灰點是改之前，紅點是改之後，model 都沒換。差距比榜上相鄰兩名的差距大得多。</figcaption>
             </figure>
-              <p>第一列的 ARC-AGI-3 是一組要邊玩邊摸索規則的抽象小遊戲，數字來自 <a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">ARC Prize 2026 年 9 月的報告</a>。Standard harness 只讓 model 帶著自己寫的筆記往下走，Provider Adapter harness 保留 reasoning 狀態並做 compaction，同樣開到最高的 effort（reasoning 的強度設定），分數差 36 分。第二列是 <a href="l04.html#i7-6">L4 講過的 Lewis 實驗</a>。第三列的 <a class="tm" href="#n-tb">Terminal-Bench</a> 考在 container 裡用 shell 做完一件事，<a href="https://www.tbench.ai/news/terminal-bench-2-1" target="_blank" rel="noopener">2.1 版</a>只修了 89 題裡的 28 題，同一個 agent 就多了 12.1 分。第四列的 CORE-Bench 考重現論文的計算結果，<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic 發現</a>它原本連 96.12 和 96.124991 都判不同，修掉這類錯、放寬 scaffold 之後，從 42% 變成 95%。</p>
+              <p>第一列的 ARC-AGI-3 是一組要邊玩邊摸索規則的抽象小遊戲，數字來自 <a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">ARC Prize 2026 年 9 月的報告</a>。Standard harness 只讓 model 帶著自己寫的筆記往下走，Provider Adapter harness 保留 reasoning 狀態並做 compaction，同樣開到最高的 effort（reasoning 的強度設定），分數差 36 分。第二列是 <a href="l04.html#i2">L4 講過的 Lewis 實驗</a>。第三列的 <a class="tm" href="#n-tb">Terminal-Bench</a> 考在 container 裡用 shell 做完一件事，<a href="https://www.tbench.ai/news/terminal-bench-2-1" target="_blank" rel="noopener">2.1 版</a>只修了 89 題裡的 28 題，同一個 agent 就多了 12.1 分。第四列的 CORE-Bench 考重現論文的計算結果，<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic 發現</a>它原本連 96.12 和 96.124991 都判不同，修掉這類錯、放寬 scaffold 之後，從 42% 變成 95%。</p>
               <p>連 VM 的大小也算在內。<a href="https://www.anthropic.com/engineering/infrastructure-noise" target="_blank" rel="noopener">Anthropic 2026 年 2 月的實驗</a>只改資源設定，Terminal-Bench 2.0 的分數就差 6 分，他們的結論是：<strong>榜上差距小於 3 分的，在設定公開並對齊之前都值得懷疑</strong>（第 4 章）。</p>
               <p>Harness 的影響也不是定值。<a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">Scale 與 Reflection</a>用三種 harness 跑開放權重的 model，最強的幾個結果不變，所以他們建議「依帳單選 harness，不要依分數選」。不要記成「harness 一定差很多」，要記成<strong>每個分數都要連同它的設定一起讀</strong>：哪個 model、哪個 harness、多少資源與預算。</p>
-              <p id="i1-3"><b>所以比較時要固定其他項。</b>比 model 就固定 harness，比 harness 就固定 model 和題目（<a href="l04.html#x4">L4 的本文延伸</a>）；自己改 agent 時，<a href="l08.html#x1">一次只改一件事</a>。<a href="l05.html#i2">L5 問的「拿掉一個 agent，品質掉多少」</a>也是這樣答：同一套程序跑兩次。</p>
+              <p id="i1-3"><b>所以比較時要固定其他項。</b>比 model 就固定 harness，比 harness 就固定 model 和題目（L4〈<a href="l04.html#x4">最重要的判斷</a>〉）；自己改 agent 時，<a href="l08.html#x1">一次只改一件事</a>。<a href="l05.html#i2">L5 問的「拿掉一個 agent，品質掉多少」</a>也是這樣答：同一套程序跑兩次。</p>
             </div>
           </div>
 <div class="idea" id="i2">
@@ -1418,7 +1418,7 @@ grader  normalize("4,381") == normalize("4381")  → 1   # 正規化後 exact ma
               <details class="gloss" id="n-ast">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">AST：L4 講過的語法樹，這裡拿來比對 function call</span></summary>
                 <div class="gloss-body prose">
-                  <p><a href="l04.html#i3-5">L4 講 edit tool</a> 時介紹過 AST（abstract syntax tree）：parser 把一串字元讀成一棵樹，節點是語法單位，空格與換行不在樹上。BFCL 用它比對 call：<code>book_flight(flight_id="UA123", passenger_id=1)</code> 和參數順序不同、空格不同的寫法，樹是一樣的，所以不會因為格式扣分；但值錯了（<code>"UA124"</code>）樹就不同。</p>
+                  <p><a href="l04.html#i9-4">L4 講 edit tool</a> 時介紹過 AST（abstract syntax tree）：parser 把一串字元讀成一棵樹，節點是語法單位，空格與換行不在樹上。BFCL 用它比對 call：<code>book_flight(flight_id="UA123", passenger_id=1)</code> 和參數順序不同、空格不同的寫法，樹是一樣的，所以不會因為格式扣分；但值錯了（<code>"UA124"</code>）樹就不同。</p>
                   <p>AST 檢查不用真的執行，所以快、沒有副作用；執行檢查能抓到「語法對但結果錯」的 call。BFCL 兩種都用。</p>
                 </div>
               </details>
@@ -1862,7 +1862,7 @@ PASS</code></pre></figure>
                     <li>讀失敗 → 分類 → 寫題：從 20 到 50 題開始，正反都要有。</li>
                     <li>Grader 疊三層、題目分三堆，線上的失敗再變成新題。</li>
                   </ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i7">飽和：benchmark 是耗材</a>〉、〈<a href="#i8">建立評估：從真實失敗開始</a>〉、〈<a href="#i9">用評估做決定：題目分三堆，一次改一件事</a>〉；L6〈<a href="l06.html#i4">失敗的五層</a>〉。動手試試的第 1 題是一個評估 loop 的骨架，進階題第 2 題會替客服 agent 設計評估。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i7">飽和：benchmark 是耗材</a>〉、〈<a href="#i8">建立評估：從真實失敗開始</a>〉、〈<a href="#i9">用評估做決定：題目分三堆，一次改一件事</a>〉；L6〈<a href="l06.html#i4">失敗分層</a>〉。動手試試的第 1 題是一個評估 loop 的骨架，進階題第 2 題會替客服 agent 設計評估。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/104" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
               </div>

@@ -6,7 +6,7 @@
 - 討論在 Issues，每一堂一串、只放基礎題；進階題（每堂最多 3 題）留在頁面。開串、寫連結、匯出討論都用 `tools/discuss.py`。
 - 這個環境不能用 GitHub GraphQL，也不能改 repo 設定；用 `gh api` 的 REST endpoint。
 - 舊的 claude.ai artifact 已停用，不要再發布到它。
-- James 要把一堂改成「L5 的模式」（v7 依想法重組）→ 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂。
+- L1–L8 都已是 v7 依想法重組的版面（2026-11-03），各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。
 - James 也會在站台上直接改字（commit 訊息「網頁編輯：…」）或從頁面發問（label `ask` 的 issue），見 `guide/WORKFLOW.md` G。這些 issue 不是討論串，也不是錯誤回報。
 - 改內容直接改 HTML、跑檢查、push，在頁面上給他看；不先給純文字版等 OK（他幾乎不看）。

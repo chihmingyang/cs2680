@@ -304,7 +304,7 @@ $ python --version                  # 跑的是我以為的版本嗎？
 Python 3.12.4
 $ ls src/auth/login.py              # 記憶或文件裡的路徑還在嗎？
 ls: cannot access 'src/auth/login.py': No such file or directory</code></pre></figure>
-              <p id="i2-3"><b>不靠 model 自律。</b>寫在 prompt 裡的要求，model 可能照做，也可能不照做。要保證，就用 hook（機制在 L2〈<a href="l02.html#i9">MCP、hook 與 plugin</a>〉）：Stop hook 在 agent 要結束時跑測試，沒過就不准停。</p>
+              <p id="i2-3"><b>不靠 model 自律。</b>寫在 prompt 裡的要求，model 可能照做，也可能不照做。要保證，就用 hook（機制在 L2〈<a href="l02.html#i7">Hook</a>〉）：Stop hook 在 agent 要結束時跑測試，沒過就不准停。</p>
               <figure class="file"><figcaption>.claude/hooks/require-tests.sh（依 2026-11 的官方文件；在 settings.json 的 hooks.Stop 登記）</figcaption><pre><code class="lang-sh">#!/bin/bash
 INPUT=$(cat)                                        # hook 從 stdin 收到一段 JSON
 if [ "$(echo "$INPUT" | jq -r '.stop_hook_active')" = "true" ]; then
@@ -502,7 +502,7 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Harness 與 tool：五層裡 model 以外的兩層是什麼</span></summary>
                 <div class="gloss-body prose">
                   <p>Harness 是包在 model 外面的那層程式，例如 Claude Code 這個 CLI：它組 context 送進 model、讀 model 的回覆、執行 model 要的 tool call、把結果放回 context。Tool 是 harness 給 model 的動作：讀檔、grep、edit、跑 shell。Model 只輸出一段 JSON 說要呼叫哪個，執行的是 harness。</p>
-                  <p>所以「harness 的 context 截斷」是 harness 為了省 context 把 tool 輸出砍短，砍掉了錯誤訊息；「tool 的靜默失敗」是 tool 失敗了卻回一個看起來正常的結果。L4〈<a href="l04.html#i4">Execution 與 tool 設計原則</a>〉講怎麼修這兩層。</p>
+                  <p>所以「harness 的 context 截斷」是 harness 為了省 context 把 tool 輸出砍短，砍掉了錯誤訊息；「tool 的靜默失敗」是 tool 失敗了卻回一個看起來正常的結果。L4〈<a href="l04.html#i6">Tool 設計</a>〉講怎麼修這兩層。</p>
                 </div>
               </details>
               <p>五種情況有一個共同點：<strong>agent 都沒有報錯，它只是照著錯的輸入做下去</strong>。這是它和程式 crash 最大的差別，所以不能等錯誤訊息，要自己去找。</p>
@@ -638,13 +638,13 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
               <details class="gloss" id="n-context">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Context 與它的代價（L4）：每一條記憶都要每圈重送</span></summary>
                 <div class="gloss-body prose">
-                  <p>Context 是每一次送進 model 的全部文字：system prompt、tool 定義、對話歷史、tool 結果，上限叫 context window。L4〈<a href="l04.html#i6">Context 的成本</a>〉講過三種代價：</p>
+                  <p>Context 是每一次送進 model 的全部文字：system prompt、tool 定義、對話歷史、tool 結果，上限叫 context window。L4〈<a href="l04.html#i1">Context 的成本</a>〉講過三種代價：</p>
                   <ul>
                     <li><b>錢。</b>每一圈整份重送，一條 2,000 token 的記憶 50 圈就是 100,000 token。</li>
                     <li><b>延遲。</b>Prompt 越長，prefill 越久。</li>
                     <li><b>注意力。</b>Window 越滿，model 越難找回中間的資訊。</li>
                   </ul>
-                  <p>L4〈<a href="l04.html#i7">Context 管理</a>〉的四種策略在 memory 上一樣適用：常駐只放索引，細節要用再讀。</p>
+                  <p>L4〈<a href="l04.html#i4">Context 管理</a>〉的四種策略在 memory 上一樣適用：常駐只放索引，細節要用再讀。</p>
                 </div>
               </details>
               <p id="i5-1"><span class="anchor" id="x1"></span><b>兩種錯的代價不對稱：</b></p>
