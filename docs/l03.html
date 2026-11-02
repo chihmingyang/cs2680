@@ -441,7 +441,7 @@ $ claude plugin uninstall superpowers</code></pre></figure>
                   <tr><td><b>local</b><br><small><code>--scope local</code></small></td><td>你，只在這個 repo</td><td><code>.claude/settings.local.json</code><br><small>不會（<code>.gitignore</code>）</small></td><td>在一個專案試用，或在那個專案關掉團隊開的 plugin</td></tr>
                 </tbody>
               </table></div>
-              <p>這三層和 2.1 下面講 hook 的 <code>settings.json</code> 三個位置是同一組檔案，plugin 只是多寫一個 key。檔案裡長這樣：</p>
+              <p>這三層和本章後面〈只有 skill 還不夠〉講 hook 時列的 <code>settings.json</code> 三個位置是同一組檔案，plugin 只是多寫一個 key。檔案裡長這樣：</p>
               <figure class="file"><figcaption>.claude/settings.json（project scope 裝了 Superpowers 之後；註解是本文加的）</figcaption><pre><code>{
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true   ← 名字@marketplace：true 開、false 關
@@ -1226,7 +1226,7 @@ model: sonnet                              ← 用哪個 model
 ---
 You are a code reviewer. Analyze the       ← 本文變成這個 subagent 的 system prompt
 code and give actionable feedback.</code></pre></figure>
-              <p>放在專案的 <code>.claude/agents/</code> 就跟著 repo 走，全隊共用；放在 <code>~/.claude/agents/</code> 就是你個人的，每個專案都能用。Subagent 也可以再派 subagent（slide p.34）：在 <code>tools</code> 裡加上 <code>Agent</code>，它就能用 Agent tool 生出子 subagent。最多 5 層，slide 說 <strong>2 到 3 層最好</strong>，因為每多一層，結果就再摘要一次。常見的分層（slide p.35）：</p>
+              <p>放在專案的 <code>.claude/agents/</code> 就跟著 repo 走，全隊共用；放在 <code>~/.claude/agents/</code> 就是你個人的，每個專案都能用。Subagent 也可以再派 subagent（slide p.34）：在 <code>tools</code> 裡加上 <code>Agent</code>，它就能用 Agent tool 生出子 subagent。Slide 說最多 5 層（現行文件預設 3 層，用環境變數 <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code> 改，見第 4 段），<strong>2 到 3 層最好</strong>，因為每多一層，結果就再摘要一次。常見的分層（slide p.35）：</p>
               <figure class="diagram">
                 <div class="scroll">
                   <svg viewBox="0 0 740 230" role="img" aria-label="三層的樹。第 0 層是主 agent，持有計畫。它往下派給第 1 層的三個 subagent：implementer、debugging、code-review。第 1 層再往下派給第 2 層的 test-writer 和 verification。每條往下的線標派任務，往上的藍線標只交回摘要。右側註記：每一層都從新的 context 開始；每多一層，結果就再摘要一次，所以 2 到 3 層最好。">
@@ -1277,15 +1277,31 @@ code and give actionable feedback.</code></pre></figure>
                 <figcaption>依 p.35 重畫；第 2 層掛在哪個第 1 層底下，slide 沒有寫明，圖上的接法是本文的安排。黑線往下派任務，藍線往上只交回摘要。</figcaption>
               </figure>
               <p id="i4-5"><b>三種叫法，與什麼時候該派。</b>怎麼叫 subagent 做事，有三種方式，控制力由弱到強（slide p.36）：</p>
-              <figure class="file"><figcaption>叫 subagent 做事的三種方式（p.36）</figcaption><pre><code># 1 自然語言點名：Claude 自己決定要不要派，只管這一次
+              <figure class="file"><figcaption>叫 subagent 做事的三種方式（p.36）</figcaption><pre><code># 1 自然語言點名：Claude 自己決定要不要派；只影響這一次
 &gt; Use the test-runner subagent to fix the failing tests.
 
-# 2 @-mention：這個 subagent 一定會跑，管這一個任務
+# 2 @-mention：一定會派這個 subagent；一樣只影響這一次
 &gt; @agent-code-reviewer look at the auth changes.
 
 # 3 --agent 開 session：整個 session 都用這個 subagent 的 prompt、tool 和 model
 $ claude --agent code-reviewer</code></pre></figure>
-              <p>什麼時候該派、什麼時候留在主對話，slide p.37 給了清單。留在主對話：需要來回討論的工作、前後階段共用 context 的工作、小而明確的修改、在意延遲的時候。交給 subagent：輸出很長而且之後不會再用的工作、要限制 tool 或權限的工作、能自己做完交一段摘要的工作、可以平行的獨立工作、簡單到可以用小 model 的工作。還有一句：可重用的流程如果要在主對話裡跑，用 skill，不用 subagent。</p>
+              <p>什麼時候該派、什麼時候留在主對話？判斷的依據就是上面講過的兩個代價：subagent 從零開始，看不到對話歷史；做完只交回一段摘要。所以要來回討論、要共用前面讀過的 context 的工作，派出去反而慢又丟細節。Slide p.37 的清單依這個整理成表，左欄是情況，右欄是交給誰：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>情況</th><th>交給誰</th></tr></thead>
+                <tbody>
+                  <tr><td>要一輪一輪來回討論<br><small>subagent 做完就結束；每討論一輪，就要再派一個、再從零收集 context</small></td><td>留在主對話</td></tr>
+                  <tr><td>前後幾個階段共用同一批 context<br><small>subagent 看不到前一階段讀過的檔案和結論，要重讀一次</small></td><td>留在主對話</td></tr>
+                  <tr><td>小而明確的修改<br><small>派出去的延遲比改動本身還久</small></td><td>留在主對話</td></tr>
+                  <tr><td>在意延遲<br><small>subagent 從零收集 context 要時間</small></td><td>留在主對話</td></tr>
+                  <tr><td>輸出很長，之後不會再用<br><small>log、搜尋結果留在 subagent 的 context，主對話只多一段摘要</small></td><td>交給 subagent</td></tr>
+                  <tr><td>要限制 tool 或權限<br><small>定義檔的 <code>tools</code> 只給它讀的 tool，它就改不了檔案</small></td><td>交給 subagent</td></tr>
+                  <tr><td>能自己做完，交一段摘要就夠<br><small>不需要來回，摘要丟掉的細節不影響結果</small></td><td>交給 subagent</td></tr>
+                  <tr><td>彼此獨立，可以平行<br><small>幾個同時跑，總時間等於最慢的那一個</small></td><td>交給 subagent</td></tr>
+                  <tr><td>簡單到小 model 做得了<br><small>定義檔寫 <code>model: haiku</code>，省錢</small></td><td>交給 subagent</td></tr>
+                  <tr><td>可重用的流程，而且要在主對話裡跑<br><small>skill 載入後在主對話的 context 裡執行，看得到全部歷史；subagent 看不到</small></td><td>用 skill，不派 subagent</td></tr>
+                </tbody>
+              </table></div>
+              <p>依 p.37 整理；小字的「為什麼」是本文補的，根據是 p.31 的五個理由和 p.37 開頭那句「subagent 從零開始」。<strong>一句話記：要討論、要共用 context 的留下，只要結果的派出去</strong>。</p>
             </div>
               <div class="exlist deeplist">
                 <details class="ex deep" id="x2">
@@ -1420,7 +1436,7 @@ $ cd .claude/worktrees/feat-auth &amp;&amp; claude</code></pre></figure>
                 <li><b>中間結果存在 script 的變數裡。</b>不進主 context。</li>
                 <li><b>Script 可以重跑。</b>這正好補上手動平行做不到的「記下來」。</li>
               </ul>
-              <p>在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 讓 Claude 自己決定；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是<strong>每個任務用的 token 更多</strong>。</p>
+              <p>在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 把 effort 調到最高，之後要不要開 workflow 由 Claude 自己判斷；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是<strong>每個任務用的 token 更多</strong>。</p>
               <p id="i5-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             
               <p id="i5-4"><b>案例：implement-spec 怎麼組合 A、B、D。</b>2.2 的 mattpocock/skills 有一個 user-invoked skill <code>/implement-spec</code>，一次做整份 spec。它的 SKILL.md 只有 40 行，卻把第 1 段架構圖的 A、B、D 各用了一次：</p>
@@ -1440,7 +1456,7 @@ $ cd .claude/worktrees/feat-auth &amp;&amp; claude</code></pre></figure>
                 <li><b>B。</b>派工的是主對話。</li>
                 <li><b>A。</b>每個 worker 一個 worktree。</li>
               </ul>
-              <p>它沒有 C，implementer 之間不講話。和 2.6 的 C compiler 比，<strong>這裡不需要 lock file，因為派工的只有一個主對話</strong>；C compiler 有 16 個對等的 agent，才要用 git 裁決。Frontier 就是 2.4 註講的 critical path 的另一面：有 blocker 的 ticket 要等，沒有的才能平行。代價也有：主對話持有派工狀態，ticket 多了 context 會滿；merge conflict 和 p.50 一樣常見，只是交給 merger subagent 解。巢狀 subagent 的上限（2.4 說最多 5 層），作者明文不在 skill 裡擋，交給 harness：Claude Code 用環境變數 <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code> 設。</p>
+              <p>它沒有 C，implementer 之間不講話。和 2.6 的 C compiler 比，<strong>這裡不需要 lock file，因為派工的只有一個主對話</strong>；C compiler 有 16 個對等的 agent，才要用 git 裁決。Frontier 就是 2.4 註講的 critical path 的另一面：有 blocker 的 ticket 要等，沒有的才能平行。代價也有：主對話持有派工狀態，ticket 多了 context 會滿；merge conflict 和 p.50 一樣常見，只是交給 merger subagent 解。巢狀 subagent 的上限（2.4 說 slide 給 5 層、文件預設 3 層），作者明文不在 skill 裡擋，交給 harness：Claude Code 用環境變數 <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code> 設。</p>
             </div>
           </div>
           <div class="idea" id="i6">
@@ -2162,7 +2178,7 @@ n = agent 數            例：16
                 <p class="qctx"><b>情境：</b>（a）把 300 個檔案從 library A 換成 library B，每個檔案的改法相同、彼此獨立。（b）Review 一個大 PR，要從安全、效能、測試覆蓋三個角度看，而且三方的發現要互相挑戰。（c）追一個 flaky test，你要一邊看 log 一邊和 agent 討論假設。（d）一直修到 <code>npm run lint</code> 零錯誤，但不能動 <code>tests/</code> 底下的檔案。</p>
                 <div class="qcover"><b>回答時請涵蓋</b>
                   <ul>
-                    <li>每個任務選一種做法，並用「誰持有計畫」「結果交給誰」「要不要討論」三個問題說明理由。<span class="qh">提示：先查 p.46 的表，每種做法一句話。再看 p.37 的左欄：哪個任務要頻繁來回討論？</span></li>
+                    <li>每個任務選一種做法，並用「誰持有計畫」「結果交給誰」「要不要討論」三個問題說明理由。<span class="qh">提示：先查 p.46 的表，每種做法一句話。再看 p.37（2.4 末尾的表）：哪個任務要頻繁來回討論？</span></li>
                     <li>比較 （a） 用 subagent 和用 workflow 的差別：300 個結果各進哪裡？<span class="qh">提示：300 份摘要都回到主對話，主對話會怎樣？Workflow 由 script 持有計畫（p.46），中間結果存在哪裡？</span></li>
                     <li>替 （d） 寫出完整的 <code>/goal</code> 條件，包含檢查方法、限制條件和停止條款。<span class="qh">提示：檢查的 model 只讀對話（p.44）。分三段寫：哪個指令的輸出、哪個目錄不能動、做幾輪就停。</span></li>
                   </ul>
@@ -2177,7 +2193,7 @@ n = agent 數            例：16
                   <ul>
                     <li>（a） Workflow。300 個獨立、做法相同的檔案，計畫可以寫成 script；每個檔案一個 subagent，中間結果存在 script 變數，不進主 context（p.43）。用 subagent 也能做，但 300 份摘要都回到主對話，主對話會撐爆或頻繁 compaction。Agent team 不適合：沒有需要討論的事，token 卻隨人數成長。</li>
                     <li>（b） Agent team。題目要求三方互相挑戰，這需要 teammate 之間傳訊（p.38–40）。只要三份獨立報告的話，3 個 subagent 平行就夠，而且便宜（p.41）。從 3 到 5 個 teammate 開始，官方文件也這樣建議。</li>
-                    <li>（c） 主對話。要頻繁來回、幾個階段共用大量 context、在意延遲，三條都命中 p.37 左欄。Subagent 從零開始，每次都要重新收集 context。可以把「跑 100 次測試收集失敗 log」這類輸出很長的步驟交給 subagent，討論留在主對話。</li>
+                    <li>（c） 主對話。要頻繁來回、幾個階段共用大量 context、在意延遲，三條都命中 p.37「留在主對話」那一組（2.4 末尾的表）。Subagent 從零開始，每次都要重新收集 context。可以把「跑 100 次測試收集失敗 log」這類輸出很長的步驟交給 subagent，討論留在主對話。</li>
                     <li>（d） /goal。終點可驗證：lint 的輸出會出現在對話裡，評估 model 讀得到。條件範例：<code>/goal npm run lint exits 0; no file under tests/ is modified (git status shows no changes there); or stop after 20 turns</code>。限制條件擋住「刪測試讓 lint 過」這種捷徑；停止條款限制花費。</li>
                     <li>共同原則：先問任務切不切得開（p.50）。切不開的任務，加 agent 只會多出重複的工作。（a） 切得開，（c） 切不開。</li>
                     <li>手動平行適合的情境不在這四題裡：你同時有兩三個不相關的任務，各開一個 worktree（p.28）。超過 3 個，計畫只在你腦中就會出問題（p.30）。</li>
@@ -2358,7 +2374,7 @@ You are a code reviewer. Review the requested files or diff.
 Report only high and medium severity issues.
 For each issue give file:line, what is wrong, and a one-line fix.
 End with the list of files you did NOT review.</code></pre></figure>
-              <p>委派時寫清楚範圍和回報格式。Subagent 沒有你的對話歷史，也不一定載入 CLAUDE.md 的所有規則，所以相關規則要寫進任務訊息。</p>
+              <p>委派時寫清楚範圍和回報格式。自訂的 subagent 會讀 CLAUDE.md，內建的 Explore、Plan 不讀；但不管哪一種，都沒有你的對話歷史，所以在對話裡講好的規則要寫進任務訊息。</p>
               <figure class="file"><figcaption>在 session 裡輸入</figcaption><pre><code>Use the code-reviewer subagent to review my changes in src/auth/.
 Rule: money is an integer in cents; flag any float arithmetic.
 Report only high and medium severity issues, each with file:line.</code></pre></figure>
