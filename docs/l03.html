@@ -1436,7 +1436,18 @@ $ cd .claude/worktrees/feat-auth &amp;&amp; claude</code></pre></figure>
                 <li><b>中間結果存在 script 的變數裡。</b>不進主 context。</li>
                 <li><b>Script 可以重跑。</b>這正好補上手動平行做不到的「記下來」。</li>
               </ul>
-              <p>在 Claude Code 裡有兩種啟動方式：在 prompt 裡打「ultracode」，或是用 <code>/effort ultracode</code> 把 effort 調到最高，之後要不要開 workflow 由 Claude 自己判斷；兩種都會生出很多 subagent 去規劃、設計、實作、review。代價是<strong>每個任務用的 token 更多</strong>。</p>
+              <p>這支 script 不用你寫：你描述任務，Claude 寫 script，runtime 在背景執行，script 再去生出規劃、設計、實作、review 的 subagent。你要做的只是告訴 Claude「這件事用 workflow 做」。Claude Code 給兩種說法，差別在範圍：一種只管這一個任務，一種開了之後整個 session 的每個任務都用 workflow（slide p.43；指令依 2026-10 的官方文件）：</p>
+              <figure class="file"><figcaption>啟動 dynamic workflow 的兩種方式，在 session 裡打（p.43）</figcaption><pre><code># 1 只做這一件事：在 prompt 裡加關鍵字 ultracode（或直接說 use a workflow）
+#   Claude 替這個任務寫一支 script 跑掉，其他任務照常一步一步做
+&gt; ultracode: audit every route under src/routes/ for missing auth checks
+
+# 2 整個 session 都開：之後每個比較大的任務，Claude 都自己先寫 workflow，不用你再說
+&gt; /effort ultracode
+&gt; /effort ultracode off        ← 回到平常的工作再關掉
+
+# 跑起來之後看進度：每個階段幾個 agent、各自做到哪
+&gt; /workflows</code></pre></figure>
+              <p>代價是<strong>每個任務用的 token 更多</strong>：一個任務會變成好幾支 workflow，一支看懂 code、一支改、一支驗證，所以官方文件建議先拿一個小範圍試跑，看 <code>/workflows</code> 裡的 token 數再決定要不要擴大。</p>
               <p id="i5-3"><b>A 到 D 怎麼選。</b>把四種放在一起，選擇規則是三句：只要結果，用 subagent；需要討論，才用 team；agent 多到對話協調不了，就用 workflow。第 1 段的架構圖就是這四種做法並排，藍框標出計畫在誰手上。</p>
             
               <p id="i5-4"><b>案例：implement-spec 怎麼組合 A、B、D。</b>2.2 的 mattpocock/skills 有一個 user-invoked skill <code>/implement-spec</code>，一次做整份 spec。它的 SKILL.md 只有 40 行，卻把第 1 段架構圖的 A、B、D 各用了一次：</p>
