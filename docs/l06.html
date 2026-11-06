@@ -65,11 +65,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這堂的兩半是同一件事：agent 會出錯，錯誤會累積。一個 run 裡，錯誤逐步相乘；有了 memory，錯誤還能活過這個 run，在下個 session 再害你一次。所以要帶走的不是 26 種失敗或六站的 checklist，而是<strong>怎麼把錯攔下來，以及哪些事值得記</strong>。</p>
+    <p class="thesis">這堂講可靠性和 memory 兩半，講的是同一件事：agent 會出錯，錯誤會累積。一個 run（agent 從接到任務到停下來的一次執行）裡，錯誤逐步相乘；有了 memory，錯誤還能活過這個 run，在下個 session（下一次對話）再害你一次。所以要帶走的不是課程列的 26 種失敗、記憶從寫入到失效六站的 checklist，而是<strong>怎麼把錯攔下來，以及哪些事值得記</strong>。</p>
     <ul class="core">
       <li><span><b>長任務靠攔錯，不靠每步都對。</b>每步 95%，50 步全對只剩 8%；每步多一次檢查與重試，就升到 <strong>88%</strong>。實測也一樣：成功的 run 有七成途中修過錯。</span></li>
-      <li><span><b>先找第一個出錯的步驟，在那一層修。</b>同一個症狀有五個來源：規格、harness、model、tool、環境。檢查要真的抓得到，而且要早。</span></li>
-      <li><span><b>壞的記憶比沒有記憶更糟。</b>沒記，agent 再查一次；記錯，它照著做，下個 session 還會再犯。所以<strong>少記，記了就帶時間和來源</strong>，檢索時把 scope 和 validity 當硬過濾。</span></li>
+      <li><span><b>先找第一個出錯的步驟，在它的來源那一層修。</b>同一個症狀有五個來源：規格、harness（跑 agent 的那層程式）、model、tool、環境。檢查要真的抓得到，而且要早。</span></li>
+      <li><span><b>壞的記憶比沒有記憶更糟。</b>沒記，agent 再查一次；記錯，它照著做，下個 session 還會再犯。所以<strong>少記，記了就帶時間和來源</strong>，檢索時先用範圍（scope）和有效期（validity）過濾，不合的記憶直接丟掉，再比 query 和記憶的語意相似度。</span></li>
     </ul>
   </section>
 
@@ -262,7 +262,7 @@ run 全對       = s ^ 50</code></pre></figure>
                   <tr><td>只看單元測試</td><td><a href="https://anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Anthropic（2025-11）</a>：單元測試或 curl 過了，端對端還是壞的</td><td>照使用者的方式測一次</td></tr>
                 </tbody>
               </table></div>
-              <p>第三列有量測。<a href="https://arxiv.org/abs/2510.20270" target="_blank" rel="noopener">ImpossibleBench</a>（CMU 與 Anthropic，2025-10）把測試改成和規格矛盾，任何通過都只能靠作弊：GPT-5 在其中一種改法上作弊 76%，Claude Opus 4.1 在另一種改法上 50%，手法有改測試、讓 <code>==</code> 永遠成立、針對測試寫特例。Read-only 擋得住改測試，擋不住寫特例；給 agent 一個「回報給人」的出口，GPT-5 從 54% 降到 9%，Opus 4.1 的效果小得多。這些是當時的 model，數字會變。寫給 agent 的任務可以這樣防：</p>
+              <p>第三列有量測。<a href="https://arxiv.org/abs/2510.20270" target="_blank" rel="noopener">ImpossibleBench</a>（CMU 與 Anthropic，2025-10）把測試改成和規格矛盾，任何通過都只能靠作弊。改法有兩種：Oneoff 只改一個測試的期望值，Conflicting 讓測試和規格直接衝突。GPT-5 在 Oneoff 作弊 76%、在 Conflicting 54%；Claude Opus 4.1 在 Conflicting 50%。手法有改測試、讓 <code>==</code> 永遠成立、針對測試寫特例。Read-only 擋得住改測試，擋不住寫特例；給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 從 54% 降到 9%，Opus 4.1 降得少得多。這些是當時的 model，數字會變。寫給 agent 的任務可以這樣防：</p>
               <figure class="file"><figcaption>任務 prompt：把「完成」寫成證據（本文補的）</figcaption><pre><code class="lang-text">&gt; 修 login 的 bug：tests/auth/test_login.py::test_expired_token 目前失敗。
 &gt; 完成的定義：pytest tests/auth -q 全部通過，把指令和輸出貼給我。
 &gt; 不准改 tests/ 底下的檔案。改不動就停下來，告訴我卡在哪裡。</code></pre></figure>
@@ -363,8 +363,8 @@ exit 0</code></pre></figure>
                   <tr><td>1</td><td>50</td><td>95.0%</td><td>1.05</td><td>53</td></tr>
                 </tbody>
               </table></div>
-              <p>同一個 run、同一個 model，<strong>650 步變 84 步</strong>。再往下切，省下的越來越少，每一段卻多一次驗證的成本，所以不必切到每一步。這張表假設段尾才發現失敗；發現得更早，兩邊都會再少一些。</p>
-              <p id="i3-2"><b>存什麼：驗證過的狀態，而且 context 也要退。</b>沒驗證就存，退回去也沒用。只退檔案也不夠：<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a> 比了三種接手方式，帶著完整的失敗歷史最差，因為錯的推理會繼續帶偏下一次。所以退回時只留一句「這條路試過，為什麼失敗」。Claude Code 的 <code>/rewind</code> 能同時退 code 和對話，但它在你送出 prompt 時才存，只有 Bash 改過的檔案不追蹤，subagent 的編輯多半也不還原（<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">2026-11 的官方文件</a>）。長任務的 checkpoint 用 git：</p>
+              <p>同一個 run、同一個 model，<strong>650 步變 84 步</strong>。再往下切，省下的越來越少，每一段卻多一次驗證的成本，所以不必切到每一步。這張表假設段尾才發現失敗；發現得更早，650 和 84 都會再少一些。</p>
+              <p id="i3-2"><b>存什麼：驗證過的狀態，而且 context 也要退。</b>Context 是這一次送進 model 的全部文字，包括對話歷史（<a class="tm" href="#n-context">第 5 章的註</a>）。沒驗證就存，退回去也沒用。只退檔案也不夠：<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a> 比了三種接手方式：只給失敗後的環境、環境加一段動作摘要、環境加完整的動作歷史；帶著完整歷史的最差，因為錯的推理會繼續帶偏下一次。所以退回時只留一句「這條路試過，為什麼失敗」。Claude Code 的 <code>/rewind</code> 能同時退 code 和對話，但它在你送出 prompt 時才存；經由 Bash 指令改的檔案不在它的追蹤範圍；subagent（主 agent 派出去做子任務的另一個 agent）改的檔案多半也不還原（<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">2026-11 的官方文件</a>）。長任務的 checkpoint 用 git：</p>
               <figure class="file"><figcaption>terminal：驗證過才存，失敗就退回</figcaption><pre><code class="lang-sh">$ pytest -q &amp;&amp; git add -A &amp;&amp; git commit -m "parser: handle empty input"
 [main a1b2c3d] parser: handle empty input            # 測試過了才有這個 commit
 $ pytest -q                                          # 下一段做完，測試沒過
@@ -434,8 +434,8 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
               <div class="table-wrap"><table>
                 <thead><tr><th>上限</th><th>擋什麼</th><th>在 Claude Code 裡（<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">2026-11 的官方文件</a>）</th></tr></thead>
                 <tbody>
-                  <tr><td><b>步數</b></td><td>繞圈</td><td><code>--max-turns</code>，只在 <code>-p</code> 有效，到上限就回報錯誤；subagent 用 <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener"><code>maxTurns</code></a>，到上限時輸出標成 partial</td></tr>
-                  <tr><td><b>花費</b></td><td>帳單</td><td><code>--max-budget-usd</code>，只在 <code>-p</code> 有效，subagent 的花費也算；是估計值，可能超過，要留餘裕</td></tr>
+                  <tr><td><b>步數</b></td><td>繞圈</td><td><code>--max-turns</code>，只在 <code>-p</code>（非互動模式：一次給完 prompt 就跑）有效，到上限就回報錯誤；subagent 用 <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener"><code>maxTurns</code></a>，到上限時輸出標成 partial</td></tr>
+                  <tr><td><b>花費</b></td><td>帳單</td><td><code>--max-budget-usd</code>，一樣只在 <code>-p</code> 有效，subagent 的花費也算；是估計值，可能超過，要留餘裕</td></tr>
                   <tr><td><b>時間</b></td><td>卡住</td><td>CLI 沒有對應的 flag，用系統的 <code>timeout</code> 指令</td></tr>
                   <tr><td><b>沒有進展</b></td><td>一直修同一件事</td><td>CLI 沒有對應的 flag，自己寫規則：最近 8 步沒有新的檔案變更、也沒有新通過的測試，就停下來回報</td></tr>
                 </tbody>
@@ -561,7 +561,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
               <p id="i4-2"><b>五層各一條原則。</b>具體的失敗有 26 種（<a class="tm" href="#n-fail">查閱</a>），記這五條就夠了：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 300" role="img" aria-label="五層各一條原則。規格：把完成寫成測試，事先給驗收測試，列出什麼不能動；Claude Code 裡是任務 prompt 與 CLAUDE.md。Harness：每個 run 都有上限，步數、成本、時間，加上 checkpoint；Claude Code 裡是 flag 與 git commit。Model：要求證據，每個主張都要證明；Claude Code 裡是 Stop hook。Tool：失敗要大聲，有型別的 schema，錯誤和空結果分開；Claude Code 裡是自己寫 MCP tool 時回明確的錯誤。環境：固定並隔離，乾淨、釘好版本的 sandbox；Claude Code 裡是 sandbox 設定與 lockfile。">
+                <svg viewBox="0 0 720 300" role="img" aria-label="五層各一條原則。規格：把完成寫成測試，事先給驗收測試，列出什麼不能動；Claude Code 裡是任務 prompt 與 CLAUDE.md（專案裡每次都載入的說明檔）。Harness：每個 run 都有上限，步數、成本、時間，加上 checkpoint；Claude Code 裡是 flag 與 git commit。Model：要求證據，每個主張都要證明；Claude Code 裡是 Stop hook。Tool：失敗要大聲，有型別的 schema，錯誤和空結果分開；Claude Code 裡是自己寫 MCP tool（用 MCP 協定外接給 agent 的工具）時回明確的錯誤。環境：固定並隔離，乾淨、釘好版本的 sandbox；Claude Code 裡是 sandbox 設定與 lockfile。">
                   <defs><marker id="l6v-prin-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-prin-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="150" y="18" class="dg-cb">原則與做法</text>
                   <text x="538" y="18" class="dg-cb">在 Claude Code 裡</text>
@@ -641,7 +641,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
                   <p>Context 是每一次送進 model 的全部文字：system prompt、tool 定義、對話歷史、tool 結果，上限叫 context window。L4〈<a href="l04.html#i1">Context 的成本</a>〉講過三種代價：</p>
                   <ul>
                     <li><b>錢。</b>每一圈整份重送，一條 2,000 token 的記憶 50 圈就是 100,000 token。</li>
-                    <li><b>延遲。</b>Prompt 越長，prefill 越久。</li>
+                    <li><b>延遲。</b>Prompt 越長，prefill（model 開始回答前先讀完整個 prompt 的階段）越久。</li>
                     <li><b>注意力。</b>Window 越滿，model 越難找回中間的資訊。</li>
                   </ul>
                   <p>L4〈<a href="l04.html#i4">Context 管理</a>〉的四種策略在 memory 上一樣適用：常駐只放索引，細節要用再讀。</p>
@@ -722,7 +722,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
               <div class="table-wrap"><table>
                 <thead><tr><th>這件事</th><th>記嗎</th><th>為什麼</th></tr></thead>
                 <tbody>
-                  <tr><td>程式碼、git 讀得到的事</td><td>不記，頂多記指標</td><td>副本會過期，重讀很便宜</td></tr>
+                  <tr><td>程式碼、git 讀得到的事</td><td>不記，頂多記一個 pointer（在哪個檔案、哪個 commit）</td><td>副本會過期，重讀很便宜</td></tr>
                   <tr><td>使用者的糾正與偏好</td><td>記</td><td>別處讀不到，下次還會錯</td></tr>
                   <tr><td>讀不到的決定與理由</td><td>記，附日期與來源</td><td>理由只存在那次對話裡</td></tr>
                   <tr><td>一次性的除錯細節</td><td>不記</td><td>下次用不到，只佔位置</td></tr>
@@ -730,7 +730,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </tbody>
               </table></div>
               <p><a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code 的 auto memory</a> 就是這樣取捨：Claude 判斷下次用不用得到，程式碼讀得到的和 CLAUDE.md 寫過的都不記。怎麼使用它，在 L2〈<a href="l02.html#i6-6">Auto memory</a>〉。</p>
-              <p id="i5-3"><b>寫入 policy 是光譜上的一個點。</b>寫得越多，<a class="tm" href="#t3">recall</a> 越高，雜訊也越多：</p>
+              <p id="i5-3"><b>寫入 policy 是光譜上的一個點。</b>寫得越多，<a class="tm" href="#t3">recall</a>（該記的事裡記下了多少）越高，雜訊也越多：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 216" role="img" aria-label="由左到右的光譜。左端 high recall、雜訊多，右端 high precision、漏得多。五個做法由左到右：每次互動都寫；定期讓 LLM 回顧；小的 classifier；確定性的規則；使用者明確要求。左邊兩個歸在 write everything，右邊三個歸在 selective writing。">
@@ -853,7 +853,7 @@ Uses SGLang for model serving.
                   <p>Knowledge graph 把事實存成節點和邊：「專案 X」—使用—「vLLM」，每條邊可以帶時間和來源，也能順著邊找相關的事實。代價是寫入時要先抽出實體和關係，這一步通常靠 LLM，會出錯。第 10 章的 Graphiti 就是這種 store。</p>
                 </div>
               </details>
-              <p>第二種的問題最常見：<strong>摘要丟掉了「以前用 vLLM」</strong>，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：一條摘要給 prompt，加一個指向原始 episode 的指標。不管選哪一種格式，下面兩個欄位都要留。</p>
+              <p>四種格式裡，第二種（摘要）的問題最常見：<strong>摘要丟掉了「以前用 vLLM」</strong>，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：一條摘要給 prompt，加一個指向原始 episode（那一次互動的完整紀錄）的 pointer。不管選哪一種格式，下面兩個欄位都要留。</p>
               <p id="i6-1"><b>Valid time：新事實不刪舊的。</b>系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是每條記憶帶兩個時間欄位：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -888,7 +888,7 @@ Uses SGLang for model serving.
               </div>
               <figcaption>這張圖回答：事實改變時要怎麼存？關上舊的 valid_to，不刪除。所以「現在用什麼」和「5 月用什麼」都答得出來，也查得到是誰說的。</figcaption>
             </figure>
-              <p>Valid time 和寫入時間是兩件事。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 的 memory 檔記的是 <code>modified</code>，也就是什麼時候記下；它能提醒「這條有點舊了」，說不出事實在哪段時間成立。少了這兩個欄位，<strong>第 7 章的過濾就無從做起</strong>。</p>
+              <p>Valid time 和寫入時間是兩件事。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 的 memory 檔記的是 <code>modified</code>，也就是什麼時候記下；它能提醒「這條有點舊了」，說不出事實在哪段時間成立。少了 valid_from 和 valid_to 這兩個欄位，<strong>第 7 章的過濾就無從做起</strong>。</p>
               <p id="i6-2"><b>Provenance：這件事是誰說的。</b>圖裡的事實指回 Episode 28，所以 agent 答得出「你為什麼覺得我們用 SGLang」。來源也決定信任等級：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -925,7 +925,7 @@ Uses SGLang for model serving.
                  "ep-19 TRT-LLM", "ep-23 LLM scheduling"],  // 連回四筆觀察：可以查證，也可以撤回
   "created":    "2026-06-20"
 }</code></pre></figure>
-              <p>少了這些欄位，就是兩種典型的失敗。Memory hallucination 是把推測存成事實：「在 Harvard 唸書」變成「Harvard 的訪問學生」。Overgeneralization 是證據太少就歸納：一次事件變成長期偏好。歸納的時機是累積夠多新證據、或事實衝突的時候，而且能放背景就放背景。錯了也要能退：</p>
+              <p>少了上面 snippet 裡的 evidence 和 confidence 欄位，就是兩種典型的失敗。Memory hallucination 是把推測存成事實：「在 Harvard 唸書」變成「Harvard 的訪問學生」。Overgeneralization 是證據太少就歸納：一次事件變成長期偏好。歸納的時機是累積夠多新證據、或事實衝突的時候；歸納出來的結論要標成 inferred，當背景參考，不當事實。錯了也要能退：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 150" role="img" aria-label="歸納做成可以丟棄的一步。輸入是一個 memory store 和 1 到 100 個 session 紀錄，輸入不動。非同步的 dream 工作產出一個新的 store。人看過之後，決定換上去或丟掉。">
@@ -952,7 +952,7 @@ Uses SGLang for model serving.
                   <text x="656" y="88.0" text-anchor="middle" class="dg-c-on">換上或丟掉</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：歸納錯了怎麼辦？把它做成可以丟棄的一步。依 Claude Managed Agents 的 dreams（research preview，2026-11 查）：輸入不動，產出另一個 store，人看過再決定。</figcaption>
+              <figcaption>這張圖回答：歸納錯了怎麼辦？把它做成可以丟棄的一步。依 Claude Managed Agents（Anthropic 的託管 agent 服務）的 dreams（research preview，2026-11 查）：輸入不動，產出另一個 store，人看過再決定。</figcaption>
             </figure>
               <p id="i6-4"><b>遺忘是正式操作。</b>只進不出的 store，檢索會越來越慢、雜訊越來越多。要遺忘的理由有四個：過期、錯誤或衝突、隱私與安全、儲存與檢索的成本。做法也有四種：</p>
               <div class="table-wrap"><table>
@@ -1013,7 +1013,7 @@ Uses SGLang for model serving.
                   <text x="706" y="228" text-anchor="end" class="dg-cb">沒有 evidence 連結，就找不到要刪什麼</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：刪掉一筆原始紀錄，就算刪乾淨了嗎？還沒有。它抽出的事實、向量和歸納都是副本。深紅是要刪的那一筆，粉色是沿著 evidence 連結找到的副本（本文的整理，例子沿用課程的四筆觀察）。</figcaption>
+              <figcaption>這張圖回答：刪掉一筆原始紀錄，就算刪乾淨了嗎？還沒有。它抽出的事實、向量（embedding，記憶轉成的一串數字，給語意搜尋用）和歸納都是副本。深紅是要刪的那一筆，粉色是沿著 evidence 連結找到的副本（本文的整理，例子沿用課程的四筆觀察）。</figcaption>
             </figure>
               <p>所以 evidence 欄位還有第二個用途：沿著它找到所有副本。版本紀錄也算一份，例如 <a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents 的 memory</a> 每次修改都留版本，要真的抹掉內容還要另外 redact。<strong>只刪原始紀錄不算刪乾淨</strong>。</p>
             </div>
@@ -1109,7 +1109,7 @@ WHERE user_id = $user AND project = $project          -- scope：硬過濾，別
 ORDER BY embedding &lt;=&gt; $query_vec                     -- semantic match：&lt;=&gt; 是 pgvector 的距離運算子
          - 0.1 * confidence                           -- provenance 調分數：可信的往前排
 LIMIT 5;                                              -- top-k：k 決定要花多少 context</code></pre></figure>
-              <p>第 3 段<a href="#s-try">動手試試</a>的 recall.py 用 Python 做同一件事，可以直接跑三個查詢對照。</p>
+              <p>第 3 段<a href="#s-try">動手試試</a>的 recall.py 用 Python 做同一件事，可以直接跑，和上面 recall.sql 的查詢對照。</p>
               <p id="i7-3"><b>該常駐的不要靠檢索碰運氣。</b>「不准動 public API」這種規則，漏掉一次的代價很高，又不一定和當下的 query 相似，所以放在每次都載入的地方，例如 CLAUDE.md（L2〈<a href="l02.html#i6">CLAUDE.md</a>〉）。</p>
               <p id="i7-4"><b>k 是 context 的預算。</b>每一條取回的記憶之後每一圈都重送。設每條 200 token，任務跑 50 圈：</p>
               <figure class="file"><figcaption>一個任務多送多少 token</figcaption><pre><code class="lang-text">多送的 token = k × 每條 200 × 50 圈</code></pre></figure>
@@ -1122,7 +1122,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
                   <tr><td>20</td><td>4,000</td><td>200,000</td></tr>
                 </tbody>
               </table></div>
-              <p>這是沒有算 prompt caching 的 input 量，折扣見 L8〈<a href="l08.html#i2-5">Input token</a>〉。k 也不是越小越好，太小時對的那條排不進來，要用第 8 章的測試集量出來。</p>
+              <p>這是沒有算 prompt caching（重複的 prompt 開頭不重算、打折收費）的 input 量，折扣見 L8〈<a href="l08.html#i2-5">Input token</a>〉。k 也不是越小越好，太小時對的那條排不進來，要用第 8 章的測試集量出來。</p>
             </div>
           </div>
 
@@ -1216,7 +1216,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               <p id="i8-3"><b>誰擁有記憶。</b>課程給了兩種答案。2026 年出現第三種，把介面和存放分開：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 268" role="img" aria-label="三種擁有權。左：記憶在 harness 裡，harness 直接讀寫磁碟上的 MEMORY.md 與 topic 檔，只有這個 harness 看得到。中：獨立的 memory layer，兩個 harness 透過 API 呼叫同一個 memory layer，底下是 vector、SQL、graph store，共用，但要查才知道它記了什麼。右：檔案介面加託管的 store，harness 用一般的檔案工具讀寫掛載的目錄，底下的服務留版本、可以設成唯讀。">
+                <svg viewBox="0 0 720 268" role="img" aria-label="三種擁有權。左：記憶在 harness 裡，harness 直接讀寫磁碟上的 MEMORY.md（索引）與 topic 檔（一個主題一個 markdown 檔），只有這個 harness 看得到。中：獨立的 memory layer，兩個 harness 透過 API 呼叫同一個 memory layer，底下是 vector、SQL、graph store，共用，但要查才知道它記了什麼。右：檔案介面加託管的 store，harness 用一般的檔案工具讀寫掛載的目錄，底下的服務留版本、可以設成唯讀。">
                   <defs><marker id="l6v-own-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-own-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="6" y="6" width="228" height="256" rx="6" class="dg-panel"/>
                   <text x="120" y="28" text-anchor="middle" class="dg-h">記憶在 harness 裡</text>
@@ -1262,13 +1262,13 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               </div>
               <figcaption>這張圖回答：記憶由誰管？左邊和中間是課程的兩種，右邊是 2026 年出現的第三種（Claude Managed Agents，依 2026-11 的文件）。藍色是 harness，黃色是存放的地方。</figcaption>
             </figure>
-              <p id="i8-4"><b>本文的判斷（2026-11）：先用檔案。</b>分數幫不上忙。<a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta</a>（2025-08）只給 agent 一個檔案和 grep、search_files 等工具，GPT-4o mini 在 LoCoMo 拿到 74.0%，高於 Mem0 當時自報的 68.5%；但 Letta 自己也做 memory 系統，而 Mem0 <a href="https://docs.mem0.ai/migration/platform-v2-to-v3" target="_blank" rel="noopener">換了演算法後自報 91.6</a>。這些都是各家自報、設定不同，<strong>不能當選型的依據</strong>。選檔案的理由在別處：</p>
+              <p id="i8-4"><b>本文的判斷（2026-11）：先用檔案。</b>分數幫不上忙。<a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta</a>（一家做 agent memory 系統的公司，2025-08）只給 agent 一個檔案和 grep、search_files 等工具，GPT-4o mini 在 LoCoMo（長對話回想的 benchmark，第 10 章）拿到 74.0%，高於另一家 memory 系統 Mem0 當時自報的 68.5%；但 Letta 自己也做 memory 系統，而 Mem0 <a href="https://docs.mem0.ai/migration/platform-v2-to-v3" target="_blank" rel="noopener">換了演算法後自報 91.6</a>。這些都是各家自報、設定不同，<strong>不能當選型的依據</strong>。選檔案的理由在別處：</p>
               <ul>
                 <li><b>記錯時抓得到。</b>第 5 章說記錯的代價最高，而檔案人看得懂、改得動。獨立的 layer 要查才知道它記了什麼。</li>
                 <li><b>版本免費。</b>進 git 就有歷史，也能 diff，第 9 章的偵測要靠這個。</li>
                 <li><b>Policy 才是難的部分。</b>換 backend 不會替你決定該記什麼。</li>
               </ul>
-              <p>值得離開檔案的情況有三種：多個 agent 要共用、要依使用者隔離、要查「什麼時候變的」或「連到誰」。同一家公司的兩個產品也是這個分界：<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 用本機檔案（<a class="tm" href="#n-cc">查閱它的每個決定</a>）；<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents</a> 要服務多個 session，就換成託管的 store，但仍掛載成目錄，agent 用同一套檔案工具。</p>
+              <p>值得離開檔案的情況有三種：多個 agent 要共用、要依使用者隔離、要查「什麼時候變的」或「連到誰」。Anthropic 自己的兩個產品也是這個分界：<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 用本機檔案（<a class="tm" href="#n-cc">查閱它的每個決定</a>）；<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents</a> 要服務多個 session，就換成託管的 store，但仍掛載成目錄，agent 用同一套檔案工具。</p>
               <details class="gloss" id="n-cc">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Claude Code 的 memory，每個決定的答案</span></summary>
                 <div class="gloss-body prose">
@@ -1282,14 +1282,14 @@ LIMIT 5;                                              -- top-k：k 決定要花�
                   <tr><td>讀</td><td>索引的前 200 行或 25KB 每次自動載入（automatic）；topic 檔由 Claude 決定要不要讀（model-controlled）</td></tr>
                   <tr><td>Scope</td><td>每個 git repo 一份，worktree 共用；subagent 另有自己的目錄</td></tr>
                   <tr><td>時間</td><td><code>modified</code> 記寫入時間；沒有 valid_to</td></tr>
-                  <tr><td>來源</td><td><code>type</code> 分四種；文件沒有提到來源欄位</td></tr>
+                  <tr><td>來源</td><td>沒有來源欄位。只有 <code>type</code>（記憶的類別）分四種，記的是類別，不是誰說的</td></tr>
                   <tr><td>遺忘</td><td>索引接近上限時，提醒 Claude 合併、丟掉過期的；否則留到有人改</td></tr>
                 </tbody>
               </table></div>
                   <p>它缺 valid time 和來源，靠的是人看得到、改得動。服務很多使用者的系統就不能這樣省。</p>
                 </div>
               </details>
-              <p id="i8-5"><span class="anchor" id="x2"></span><b>分數要自己量。</b>課程列的三個 benchmark 都在考聊天歷史的回想（<a class="tm" href="#n-metric">查閱</a>），Coding agent 的記憶 2026 年才開始有人測（<a href="https://arxiv.org/html/2602.08316" target="_blank" rel="noopener">SWE-ContextBench</a>）。所以要自己做一組測試：</p>
+              <p id="i8-5"><span class="anchor" id="x2"></span><b>分數要自己量。</b>課程列的三個 benchmark（LoCoMo、LongMemEval、BEAM，<a class="tm" href="#n-metric">第 10 章有表</a>）都在考聊天歷史的回想，Coding agent 的記憶 2026 年才開始有人測：<a href="https://arxiv.org/html/2602.08316" target="_blank" rel="noopener">SWE-ContextBench</a> 量到給對的 context 只多幾個百分點、自己挑的 context 反而更差。所以要自己做一組測試：</p>
               <figure class="file"><figcaption>memory_eval.yaml（示意：三組查詢各量一件事，本文補的）</figcaption><pre><code class="lang-yaml">should_recall:                         # 量 recall：這些都該取回
   - q: "which serving engine do we use"   expect: ["mem-28"]
   - q: "how do we run tests"              expect: ["mem-07"]
@@ -1354,13 +1354,13 @@ budget:
               <div class="table-wrap"><table>
                 <thead><tr><th>案例</th><th>怎麼進 store</th><th>後果與條件</th></tr></thead>
                 <tbody>
-                  <tr><td><a href="https://unit42.paloaltonetworks.com/indirect-prompt-injection-poisons-ai-longterm-memory/" target="_blank" rel="noopener">Unit 42</a>（2025-10），Bedrock Agents 的概念驗證</td><td>網頁裡隱藏的指令進了 session 摘要，摘要自動進 memory</td><td>幾天後的 session 把訂單資料外傳。沒開內容過濾；作者說不是平台漏洞</td></tr>
-                  <tr><td><a href="https://www.microsoft.com/en-us/security/blog/2026/02/10/ai-recommendation-poisoning/" target="_blank" rel="noopener">Microsoft</a>（2026-02），真實流量</td><td>「Summarize with AI」按鈕的網址預填 prompt，叫助理 remember 某家公司是可信來源</td><td>60 天內 31 家公司、50 個例子。效果因平台而異，未報告持續率</td></tr>
-                  <tr><td><a href="https://blogs.cisco.com/ai/identifying-and-remediating-a-persistent-memory-compromise-in-claude-code" target="_blank" rel="noopener">Cisco</a>（2026-04），Claude Code</td><td>npm 套件的 postinstall（安裝時自動執行的 script）直接覆寫 <code>MEMORY.md</code> 與全域 hook</td><td>跨專案、重開機後還在。使用者要先同意安裝；v2.1.50 把 user memory 移出 system prompt</td></tr>
+                  <tr><td><a href="https://unit42.paloaltonetworks.com/indirect-prompt-injection-poisons-ai-longterm-memory/" target="_blank" rel="noopener">Unit 42</a>（Palo Alto Networks 的研究團隊，2025-10），在 AWS Bedrock Agents 平台上的概念驗證</td><td>網頁裡隱藏的指令進了 session 摘要，摘要自動進 memory</td><td>幾天後的 session 把訂單資料外傳。沒開內容過濾；作者說不是平台漏洞</td></tr>
+                  <tr><td><a href="https://www.microsoft.com/en-us/security/blog/2026/02/10/ai-recommendation-poisoning/" target="_blank" rel="noopener">Microsoft</a>（2026-02），真實流量</td><td>「Summarize with AI」按鈕的網址預填 prompt，叫助理 remember 某家公司是可信來源</td><td>助理記住後，之後的回答把那家公司當可信來源推薦。60 天內 31 家公司、50 個例子。條件是助理有跨對話的記憶功能、而且使用者按了那個按鈕；效果因平台而異，沒有報告記憶能留多久</td></tr>
+                  <tr><td><a href="https://blogs.cisco.com/ai/identifying-and-remediating-a-persistent-memory-compromise-in-claude-code" target="_blank" rel="noopener">Cisco</a>（2026-04），Claude Code</td><td>npm 套件的 postinstall（安裝時自動執行的 script）直接覆寫 <code>MEMORY.md</code> 與全域 hook</td><td>被改寫的記憶跨專案、重開機後還在。條件是使用者要先同意安裝。Claude Code v2.1.50 之後把這類 user memory 移出 system prompt，被改寫的內容不會再每一圈自動進 prompt</td></tr>
                   <tr><td><a href="https://arxiv.org/html/2503.03704v5" target="_blank" rel="noopener">MINJA</a>（2025-03，2026-02 修訂），學術實驗</td><td>一般使用者的查詢，讓 agent 自己產生的紀錄寫進共用的 memory bank</td><td>影響其他使用者。要多人共用 store</td></tr>
                 </tbody>
               </table></div>
-              <p>數字要看前提。MINJA 平均寫入成功 98.2%、攻擊成功 76.8%，<a href="https://arxiv.org/html/2601.05504v1" target="_blank" rel="noopener">後續的研究</a>（2026-01）在 store 裡先放進相關的正常記憶，同樣的攻擊在 GPT-4o-mini 上從 62% 掉到 6.67%。所以共用、空的 store 最危險，但路徑不會因此消失。</p>
+              <p>數字要看前提。MINJA 平均寫入成功 98.2%、攻擊成功 76.8%。<a href="https://arxiv.org/html/2601.05504v1" target="_blank" rel="noopener">後續的研究</a>（UMass，2026-01）另外量：store 是空的時候攻擊成功 62%；先放進相關的正常記憶，同樣的攻擊在 GPT-4o-mini 上掉到 6.67%。所以共用、空的 store 最危險，但路徑不會因此消失。</p>
               <p id="i9-2"><b>每一站一道防線，至少一道不靠 model 判斷。</b>只靠 LLM 過濾不夠：MINJA 為一種 agent 量身寫的偵測 prompt 抓到 131/135，換到另一種 agent 是 0/135，通用版也只有 53/135；那篇後續研究的過濾在 Gemini 2.0 Flash 上把 54 筆惡意內容以滿分信任存了進去。各站的做法（本文的整理）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>站</th><th>防線</th><th>靠什麼</th></tr></thead>
@@ -1372,14 +1372,14 @@ budget:
                   <tr><td><b>偵測</b></td><td>定期 diff 記憶檔；同一輪讀了外部內容又寫記憶就警示；出事時依來源批次刪除</td><td>規則</td></tr>
                 </tbody>
               </table></div>
-              <p>動作這一站最值得先做，因為不管記憶是否中毒都有效。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code 的文件</a>也這樣寫：memory 是 context，不是強制設定，要擋動作就用 PreToolUse hook。<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents 的文件</a>也提醒，一次成功的 injection 就能把惡意內容寫進 store，之後的 session 會當成可信的記憶讀回來。這一章的取捨是本文的判斷。進階題第 3 題要你替每一站設計防線。</p>
+              <p>動作這一站最值得先做，因為不管記憶是否中毒都有效。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code 的文件</a>也這樣寫：memory 是 context，不是強制設定，要擋動作就用 PreToolUse hook。<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents 的文件</a>也提醒，一次成功的 injection 就能把惡意內容寫進 store，之後的 session 會當成可信的記憶讀回來。「先做動作這一站」這個取捨是本文的判斷。進階題第 3 題要你替每一站設計防線。</p>
             </div>
           </div>
 
           <div class="idea" id="i10">
             <h3><span class="idea-no">10</span>目錄：八種記憶失敗、26 種 run 失敗、系統與指標</h3>
             <div class="prose">
-              <p>這一章不必讀完，需要時再查。課程列了八種記憶失敗和 26 種 run 的失敗，它們都是前面幾章的決定沒做好的樣子。拿到一個症狀，<strong>先對回是哪個決定</strong>，比記名字有用：</p>
+              <p>這一章不必讀完，需要時再查。課程（CS2680 這堂）列了八種記憶失敗和 26 種 run 的失敗，它們都是前面幾章的設計決定沒做好的樣子（例如 k 設多大、scope 當過濾還是當排序）。拿到一個症狀，<strong>先對回是哪個決定</strong>，比記名字有用：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>記憶失敗</th><th>長什麼樣</th><th>哪個決定沒做好</th><th>對策在</th></tr></thead>
                 <tbody>
@@ -1387,7 +1387,7 @@ budget:
                   <tr><td><b>Context pollution</b></td><td>太多無關的記憶進了 context</td><td>k 太大，或寫太多</td><td><a href="#i7-4">第 7 章</a>、<a href="#i5-3">第 5 章</a></td></tr>
                   <tr><td><b>Memory hallucination</b></td><td>把推測存成事實</td><td>歸納沒標明是推測</td><td><a href="#i6-3">第 6 章</a></td></tr>
                   <tr><td><b>Staleness</b></td><td>舊事實蓋過新資訊</td><td>沒有標記失效</td><td><a href="#i6-1">第 6 章</a>、<a href="#i7-2">第 7 章</a></td></tr>
-                  <tr><td><b>Isolation failure</b></td><td>記憶跨過使用者的邊界</td><td>Scope 只當排序分數</td><td><a href="#i7-2">第 7 章</a></td></tr>
+                  <tr><td><b>Isolation failure</b></td><td>記憶跨過使用者的邊界</td><td>scope（記憶屬於哪個使用者、專案）只當排序分數，沒當過濾條件</td><td><a href="#i7-2">第 7 章</a></td></tr>
                   <tr><td><b>Overgeneralization</b></td><td>一次事件變成長期偏好</td><td>證據太少就歸納</td><td><a href="#i6-3">第 6 章</a></td></tr>
                   <tr><td><b>Persistent prompt injection</b></td><td>不可信的內容之後以指令的身分回來</td><td>外部內容進了 store</td><td><a href="#i9">第 9 章</a></td></tr>
                   <tr><td><b>Unbounded growth</b></td><td>Store 長大，檢索變慢、變不準</td><td>沒有遺忘 policy</td><td><a href="#i6-4">第 6 章</a></td></tr>
@@ -1401,7 +1401,7 @@ budget:
 <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>規格說了什麼</th><th>Agent 做了什麼</th><th>修法</th></tr></thead>
                 <tbody>
-                  <tr><td><b>目標含糊</b></td><td>「修 login 的 bug」</td><td>三個 bug 裡修錯了一個</td><td>寫明檔案、症狀、重現步驟</td></tr>
+                  <tr><td><b>目標含糊</b></td><td>「修 login 的 bug」</td><td>三個 bug 裡挑錯了一個去修</td><td>寫明檔案、症狀、重現步驟</td></tr>
                   <tr><td><b>代理目標（proxy objective）</b></td><td>「讓測試通過」</td><td>刪掉失敗的測試</td><td>禁止改測試；review diff</td></tr>
                   <tr><td><b>沒說的限制</b></td><td>「把搜尋變快」</td><td>弄壞了 public API</td><td>寫明什麼不能動</td></tr>
                   <tr><td><b>沒有完成的定義</b></td><td>「清理一下 parser」</td><td>一直 refactor，停不下來</td><td>給一個結束的測試和停止規則</td></tr>
@@ -1412,7 +1412,7 @@ budget:
 <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>Harness 做了什麼</th><th>結果</th><th>修法</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Context 截斷</b></td><td>砍掉最舊的幾輪</td><td>忘了「不准動 API」那條規則</td><td>關鍵規則釘在 window 之外，每圈重放</td></tr>
+                  <tr><td><b>Context 截斷</b></td><td>砍掉最舊的幾輪</td><td>忘了「不准動 API」那條規則</td><td>關鍵規則不放在會被砍的對話裡，放在 system prompt 或 CLAUDE.md，每一圈（每次呼叫 model）都重新送</td></tr>
                   <tr><td><b>Memory 錯誤</b></td><td>把過期的筆記當事實回想</td><td>改了一個已經搬走的檔案</td><td>記憶標日期；用之前重新確認</td></tr>
                   <tr><td><b>狀態損壞</b></td><td>留下一個只改到一半的 edit</td><td>後面的步驟建在壞掉的檔案上</td><td>Checkpoint；失敗的步驟回滾</td></tr>
                   <tr><td><b>Control loop 錯誤</b></td><td>沒有步數或成本上限</td><td>跑了 200 步，沒有進展</td><td>限制步數、成本、時間</td></tr>
@@ -1437,7 +1437,7 @@ budget:
                 <tbody>
                   <tr><td><b>輸出截斷</b></td><td>Log 的前 100 行</td><td>漏掉第 4,000 行的錯誤</td><td>錯誤先回；允許分頁</td></tr>
                   <tr><td><b>靜默失敗</b></td><td>exit 0、空結果</td><td>以為沒有符合的東西</td><td>把「空」和「失敗」分開</td></tr>
-                  <tr><td><b>Schema 含糊</b></td><td>一個沒有時區的日期</td><td>把工作排在 8 小時之外</td><td>用有型別、寫明的 schema</td></tr>
+                  <tr><td><b>Schema 含糊</b></td><td>一個沒有時區的日期</td><td>把工作排到差了 8 小時的時間</td><td>用有型別、寫明的 schema</td></tr>
                   <tr><td><b>不穩定的呼叫</b></td><td>第一次就 timeout</td><td>宣布服務掛了</td><td>先 retry with backoff，再下結論</td></tr>
                   <tr><td><b>誤導的錯誤訊息</b></td><td>打錯字卻回「Permission denied」</td><td>改用 sudo 重試</td><td>回精確、可行動的錯誤</td></tr>
                 </tbody>
@@ -1448,7 +1448,7 @@ budget:
                 <tbody>
                   <tr><td><b>過期的狀態</b></td><td>昨天的 cached build</td><td>在舊的程式碼上通過測試</td><td>從乾淨的 cache 重新 build</td></tr>
                   <tr><td><b>版本不符</b></td><td>Python 3.8，不是 3.12</td><td>交出會 crash 的程式碼</td><td>用 lockfile 釘版本</td></tr>
-                  <tr><td><b>隨機失敗</b></td><td>成功與否取決於環境</td><td>因為閏年而失敗</td><td>重跑失敗的；隔離 flaky 的測試</td></tr>
+                  <tr><td><b>不穩定的失敗（flaky）</b></td><td>那天剛好是 2 月 29 日</td><td>把閏年才出現的測試失敗當成自己改壞了，開始亂修</td><td>重跑失敗的；隔離 flaky 的測試</td></tr>
                   <tr><td><b>網頁版面改了</b></td><td>結帳頁重新設計</td><td>按錯按鈕</td><td>動作前重新讀頁面</td></tr>
                   <tr><td><b>Rate limit</b></td><td>50 次呼叫後回 HTTP 429</td><td>Migration 做到一半停了</td><td>限速；長工作存 checkpoint</td></tr>
                 </tbody>
@@ -1481,14 +1481,14 @@ budget:
                 <thead><tr><th>系統</th><th>核心做法</th><th>輸入</th><th>檢索</th><th>例子</th></tr></thead>
                 <tbody>
                   <tr><td><b>Mem0</b></td><td>以事實為中心</td><td>對話訊息，依 user、agent 或 run 分 scope</td><td>Vector search 加過濾；可選的 graph memory</td><td>「Uses SGLang for model serving.」</td></tr>
-                  <tr><td><b>Graphiti</b></td><td>帶時間的 knowledge graph</td><td>Episode，抽出實體與帶時間的事實</td><td>混合：語意、關鍵字、graph 搜尋</td><td>uses → SGLang，valid Apr 2026 → present</td></tr>
-                  <tr><td><b>supermemory</b></td><td>Profile、memory、document 三層</td><td>對話，連回來源與時間</td><td>分別搜 profile、memory、document</td><td>一份使用者 profile 加記憶加文件</td></tr>
+                  <tr><td><b>Graphiti</b></td><td>帶時間的 knowledge graph</td><td>Episode，抽出實體與帶時間的事實</td><td>混合：語意、關鍵字、graph 搜尋</td><td>uses → SGLang，valid Jun 2026 → present</td></tr>
+                  <tr><td><b>supermemory</b></td><td>Profile、memory、document 三層</td><td>對話，連回來源與時間</td><td>分別搜 profile、memory、document</td><td>profile 存「偏好 SGLang」，memory 存「6 月換掉 vLLM」，document 存換引擎時的設計文件</td></tr>
                 </tbody>
               </table></div>
                   <p>這類服務的預設值要讀文件。<a href="https://docs.mem0.ai/core-concepts/memory-operations/add" target="_blank" rel="noopener">Mem0 的 <code>add</code></a> 預設用 LLM 抽事實，而且依 <a href="https://docs.mem0.ai/migration/platform-v2-to-v3" target="_blank" rel="noopener">2026 年的新演算法</a> 只新增、不覆蓋也不刪除，舊事實靠檢索時的排序往後放。所以第 5、6 章的寫入與失效規則，有一部分已經替你決定了。</p>
 <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 216" role="img" aria-label="兩種 stack，各三層。左邊是獨立的 memory layer：agent runtime（Claude Code、Letta、Codex）；memory management（Mem0、Letta 內建、自己寫）；storage（vector、SQL、graph、object store）。右邊是 memory 在 harness 裡：agent runtime（Claude Code、Letta、Codex）；memory management 在 runtime 裡面；storage 是 markdown 檔。">
+                <svg viewBox="0 0 720 216" role="img" aria-label="兩種 stack，各三層。左邊是獨立的 memory layer：agent runtime（Claude Code、Letta、Codex）；memory management（Mem0、Letta 內建、自己寫）；storage（vector、SQL、graph、object store）。右邊是 memory 在 harness（這裡叫 agent runtime，同一層）裡：agent runtime（Claude Code、Letta、Codex）；memory management 在 runtime 裡面；storage 是 markdown 檔。Letta 兩層都出現，因為它既是 runtime、也內建 memory management。">
                   <defs><marker id="l6v-stack-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-stack-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="6" y="6" width="348" height="204" rx="6" class="dg-panel"/>
                   <text x="180" y="28" text-anchor="middle" class="dg-h">獨立的 memory layer</text>
@@ -1539,7 +1539,7 @@ budget:
 <div class="table-wrap"><table>
                 <thead><tr><th>Benchmark</th><th>規模</th><th>出處</th><th>測什麼</th></tr></thead>
                 <tbody>
-                  <tr><td><b>LoCoMo</b></td><td>1,540 題，10 段長對話</td><td>ACL 2024</td><td>很長的對話，問早先提過的事；另有修正版 LoCoMo-Refined</td></tr>
+                  <tr><td><b>LoCoMo</b></td><td>1,540 題，10 段長對話</td><td>ACL 2024</td><td>很長的對話，問早先提過的事；LoCoMo Refined（2026）清過題組、評分改嚴，同一套系統的分數會比原版低</td></tr>
                   <tr><td><b>LongMemEval</b></td><td>500 題，5 種記憶能力</td><td>ICLR 2025</td><td>回想、時間推理、更新、偏好、該答「不知道」時能不能不答（abstention）</td></tr>
                   <tr><td><b>BEAM</b></td><td>2,000 題，最長到 10M token</td><td>ICLR 2026</td><td>同上，但對話長到任何 context window 都裝不下</td></tr>
                   <tr><td><b><a href="https://arxiv.org/html/2602.08316" target="_blank" rel="noopener">SWE-ContextBench</a></b>（本文補的）</td><td>1,476 題，51 個 repo</td><td>arXiv 2026</td><td>Coding agent 能不能重用前例：解出率、時間、成本</td></tr>

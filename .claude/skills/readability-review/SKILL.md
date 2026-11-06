@@ -18,9 +18,12 @@ python3 -I tools/review_pack.py docs/lXX.html --units                           
 - 新寫一堂或改成 v7：不加 `--since`，全部章都審（含 tldr）。
 - 只改一章或一段：`--since origin/main` 會自動只印那一章；也可以 `--chapter i2`。
 - 改了問題討論或動手試試：加 `--sections s-discuss s-try`。
-- 單位數超過 300，分兩個審查者（例如 i1–i5 一個、i6–i10 一個），不要一個審查者吞一整頁。
+- 單位數超過 300，分兩個審查者，但**每個審查者都拿整頁的 pack**，prompt 裡指定「只審第 N–M 章，其他章是你讀過的上下文」。L6 pilot 的教訓：只給半頁，R3「名詞沒解釋」會大量誤報（第 1–5 章解釋過的 run、context、harness、store，第 6–10 章的審查者全標成 BLOCK），53 個 BLOCK 裡約 15 個是這種。
+- pack 會印 code block 的內容（`codeN 內容`），因為正文會指著它說「第二種」「這些欄位」；少了它，這類句子會被誤判成 R2。
 
 ## 2. 開審查者（全新的 subagent）
+
+一堂的審查者約 9 萬 token、4–5 分鐘（L6 pilot：三個審查者各 177／164／219 個單位）。
 
 用 Agent tool 開一個 **general-purpose**（不是 fork：fork 會帶著寫作的 context，就不是另一個人了）。Prompt 是三段接起來：
 

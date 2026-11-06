@@ -19,7 +19,7 @@ Output format (one unit per line; the reviewer answers the checklist per unit):
   [#i2 圖1 說明] figcaption 的文字
   [#i2 圖1 內容] svg 的 aria-label
   [#i2 註 n-sre 標題] 收合註的 summary
-  [#i2 code 1] (程式碼或指令，不審句子，只審 figcaption)
+  [#i2 code1 內容] 程式碼或指令的文字（讀者看得到，正文會引用它；不審句子，只審 code1 說明）
 Locators are stable within one HTML revision: ¶N counts <p> and <li> inside the chapter in
 document order; 表N / 圖N count tables / figures inside the chapter.
 """
@@ -54,6 +54,10 @@ class Node:
                 continue
             elif c.tag == "br":
                 out.append(" / ")
+            elif c.tag == "sup":
+                out.append("^" + c.text())
+            elif c.tag == "sub":
+                out.append("_" + c.text())
             else:
                 out.append(c.text())
         return re.sub(r"\s+", " ", "".join(out)).strip()
@@ -127,7 +131,10 @@ def units_of(container, loc):
                     counts["code"] += 1
                     if cap:
                         out.append((f"{loc} code{counts['code']} 說明", cap.text()))
-                    out.append((f"{loc} code{counts['code']}", "(程式碼／指令，只審上面的說明)"))
+                    pre = next(c.find_all(lambda x: x.tag == "pre"), None)
+                    body = pre.text() if pre is not None else ""
+                    out.append((f"{loc} code{counts['code']} 內容",
+                                "(程式碼／指令，讀者看得到、可以被正文引用；不審句子) " + body[:600]))
                     continue
                 if cap:
                     out.append((f"{loc} 圖{k} 說明", cap.text()))

@@ -1,11 +1,11 @@
 # 可讀性審查（Readability review）
 
-2026-11-06 定。起因：L6 第 2 章的一格「Anthropic（2026-03）：穩定偏正面。單一公司的經驗」James 看不懂。七個腳本都過，因為它們檢查結構和版面，沒有一個步驟是「一個沒寫過這頁的人讀一遍」。這份文件定義那一步。做法照 code review：reviewer 不是 author、只看 diff、對照 checklist、blocker 修完才 merge、每個 incident 變成一條 checklist 項。流程見 `WORKFLOW.md` I，操作見 `.claude/skills/readability-review/SKILL.md`。
+2026-11-06 定；同日在 L6 跑第一次 pilot：三個審查者（tldr＋第 1–5 章、第 6–9 章、第 10 章）共 53 BLOCK、11 NIT。扣掉兩類誤報——半頁 pack 造成的 R3（前幾章解釋過的名詞）約 15 個、pack 沒印 code 內容造成的 R2 3 個——真的要修的約 35 個，全部修完，第二輪另開審查者只審這些定位。兩類誤報已修在工具與 skill 裡（整頁 pack、`codeN 內容`）。起因：L6 第 2 章的一格「Anthropic（2026-03）：穩定偏正面。單一公司的經驗」James 看不懂。七個腳本都過，因為它們檢查結構和版面，沒有一個步驟是「一個沒寫過這頁的人讀一遍」。這份文件定義那一步。做法照 code review：reviewer 不是 author、只看 diff、對照 checklist、blocker 修完才 merge、每個 incident 變成一條 checklist 項。流程見 `WORKFLOW.md` I，操作見 `.claude/skills/readability-review/SKILL.md`。
 
 ## 原則
 
 1. **審查者不是作者。** 審查在一個全新的 session（subagent）裡做，它沒看過寫作過程。
-2. **審查者只看讀者看得到的東西。** 給它 `tools/review_pack.py` 的輸出和這份 checklist。不給 slides、`notes/`、`guide/sources/`、`V7_DECISIONS.md`，因為讀者也沒有這些。
+2. **審查者只看讀者看得到的東西，但要看整頁。** 給它 `tools/review_pack.py` 的輸出和這份 checklist。不給 slides、`notes/`、`guide/sources/`、`V7_DECISIONS.md`，因為讀者也沒有這些。分給多個審查者時，每個都拿整頁，只審指定的章；否則 R3 會把前幾章解釋過的名詞全標成沒解釋。
 3. **重述，不評分。** 審查者對每個單位寫出它自己理解到的意思。它不能回答「看得懂」；它要回答「我讀到的是……」。重述錯了或寫不出來，就是 blocker。原因：讓 model 評「好不好」會穩定偏正面（L6 第 2 章自己講的）。
 4. **只審改過的章。** `review_pack.py --since <ref>` 只印文字有變的章。新寫一堂就是全部。
 5. **Blocker 清零才 push。** NIT 記下，不擋。最多兩輪：第一輪全審，第二輪只審被標過的單位。兩輪後還有 blocker，留給 James 決定，不要第三輪。
