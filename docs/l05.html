@@ -63,19 +63,19 @@
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/5_agent_design_2.pdf" target="_blank" rel="noopener">5_agent_design_2.pdf ↗</a></li>
       <li><span class="k">頁數</span>46</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 25 分鐘</span></li>
-      <li><span class="k">前情註</span><span class="deep-time">約 1 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 45 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 30 分鐘</span></li>
+      <li><span class="k">前情註</span><span class="deep-time">約 2 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 50 分鐘</span></li>
     </ul>
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">多一個 agent 只是多一個 loop，兩個 loop 的 context 互不相通，只能靠文字傳話。這一條限制決定了一切：拆開的好處來自隔離，代價也來自隔離。所以這堂要帶走的不是幾種架構的名字，而是<strong>判斷什麼時候值得拆，以及拆了之後把風險放在哪裡</strong>。</p>
+    <p class="thesis">一個 agent 是一個 loop：model 選下一個動作（讀檔、跑指令），看完結果再選下一個。它只看得到自己的 context，也就是每一圈送進 model 的全部文字。多一個 agent 就多一份 context，兩份互不相通，只能靠文字傳話。這一條限制決定了一切：拆開的好處來自隔離，代價也來自隔離。所以這堂要帶走的不是幾種架構的名字，而是<strong>判斷什麼時候值得拆，以及拆了之後把風險放在哪裡</strong>。</p>
     <ul class="core">
-      <li><span><b>多數任務不該拆。</b>可以平行的任務能進步八成，循序的任務反而退步四到七成。<strong>效果由任務的形狀決定</strong>。</span></li>
-      <li><span><b>讀可以平行，寫盡量留在單線。</b>這是<strong>目前最實用的一條分界</strong>，架構分類卻最常把它蓋過去。</span></li>
-      <li><span><b>拆了之後，風險在交接。</b>規格沒寫的事不存在，摘要會丟細節，timeout 分不出對方做了沒，每份 context 都是會過期的副本，傳回來的文字也可能夾帶指令。</span></li>
+      <li><span><b>多數任務不該拆。</b>拆開只在子任務能各自進行時有好處：同一組實驗裡，和單一 agent 比，能分開做的財務分析題分數高約八成，每一步都要用上一步結果的規劃題反而低四到七成。多數任務一個 agent 就做得完，或步驟彼此相依，<strong>拆了只是多付交接的代價</strong>。</span></li>
+      <li><span><b>讀可以平行，寫盡量留在單線。</b>只查資料、讀 code 的 agent 可以同時跑，各自的發現只會累積。會改檔案的工作最好只交給一個 agent，因為每次改動都帶著命名、風格這類沒說出口的決定，兩個 agent 各寫一半就會各選一套。常見的架構分類（supervisor、pipeline 這些名字）只看誰指揮誰，<strong>判斷風險時，問 agent 會不會改東西更有用</strong>。</span></li>
+      <li><span><b>拆了之後，風險在交接。</b>派工時沒寫進任務說明的事，接手的 agent 就不知道；回報的摘要會丟細節；等不到回覆（timeout）時，分不出對方做了沒。共享的資料被別人改掉之後，每個 agent 先前讀進 context 的那一份就過期了；傳回來的文字也可能夾帶指令。</span></li>
     </ul>
   </section>
 
@@ -89,15 +89,15 @@
         </header>
         <nav class="map" aria-label="章節">
           <p class="map-g">一定要會：決定要不要拆</p>
-          <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的限制<small>agent 之間只能傳文字</small></span><span class="map-m">約 1 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>多數任務不該拆</small></span><span class="map-m">約 1 分</span></a>
+          <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的限制<small>agent 之間只能傳文字</small></span><span class="map-m">約 2 分</span></a>
+          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>多數任務不該拆</small></span><span class="map-m">約 2 分</span></a>
           <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">最實用的分界<small>讀可以平行，寫留在單線（本文補的）</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">要用時會做：派工與回報</p>
           <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">派工<small>worker 的全部世界就是那段 prompt</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">回報<small>訊息只帶主張和證據，原文放檔案</small></span><span class="map-m">約 1 分</span></a>
+          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">回報<small>訊息只帶主張和證據，原文放檔案</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">底層：agent 系統就是分散式系統</p>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">送出去之後<small>timeout、冪等、partial failure</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">狀態與時間<small>consistency、CAP、沒有全域時鐘、tracing</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">送出去之後<small>timeout、冪等、partial failure</small></span><span class="map-m">約 4 分</span></a>
+          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">狀態與時間<small>consistency、CAP、沒有全域時鐘、tracing</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">要防的</p>
           <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">安全<small>傳回來的文字也不可信（本文補的）</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">需要時查</p>
@@ -148,7 +148,7 @@
                   <text x="484" y="200" text-anchor="middle" class="dg-k">不相通</text>
                 </svg>
 </div>
-<figcaption>多一個 agent，就多一個 loop、一份 tool 定義、一個 context window。兩個 context 之間只有訊息。</figcaption>
+<figcaption>多一個 agent，就多一套 model + loop、自己的 tool 和自己的 context window。兩個 context window 互不相通，中間只有「文字」這一條線：一方知道的事要寫成訊息送過去。</figcaption>
 </figure>
               <p>隔離能換到四樣東西，但不是每一樣都非拆不可：</p>
               <div class="table-wrap"><table>
@@ -156,11 +156,11 @@
                 <tbody>
                   <tr><td><b>平行</b></td><td>四個方向同時查</td><td>做不到</td></tr>
                   <tr><td><b>權限隔離</b></td><td>讀網頁的 agent 沒有 shell</td><td>做不到</td></tr>
-                  <tr><td><b>乾淨的 context</b></td><td>查資料的過程不進主對話</td><td>部分可以，靠壓縮</td></tr>
-                  <tr><td><b>專一的 prompt 與 model</b></td><td>搜尋交給便宜的 model</td><td>部分可以，靠 skill</td></tr>
+                  <tr><td><b>乾淨的 context</b></td><td>查資料的過程不進主對話</td><td>部分可以：context 快滿時把舊內容壓成摘要（compaction）；但查資料的過程已經先進過 context 一次</td></tr>
+                  <tr><td><b>專一的 prompt 與 model</b></td><td>搜尋交給便宜的 model</td><td>部分可以：skill（需要時才載入的一份指令檔）讓同一個 agent 換上專門的指令，也能指定 model；但指令是加進同一份 context</td></tr>
                 </tbody>
               </table></div>
-              <p>代價也從隔離來。每交接一次，就多三件事：資訊遺失、多一份 context、多一個會失敗的點。其中 context 的帳最容易低估，因為訊息進了 context，之後每一圈 loop 都要重送。一則 2k token 的 broadcast 發給 10 個 agent，每個 agent 再跑 20 圈，就是 2k × 10 × 20 ＝ <strong>400k token 的 input</strong>。</p>
+              <p>代價也從隔離來。每交接一次，就多三件事：資訊遺失、多一份 context、多一個會失敗的點。其中 context 的帳最容易低估。Model 不記得上一圈，所以 harness 每一圈都把整份 context 當 input 重新送給 model；訊息一旦進了 context，之後每一圈都要再付一次它的 token。一則 2k token 的 broadcast 發給 10 個 agent，每個 agent 再跑 20 圈，就是 2k × 10 × 20 ＝ <strong>400k token 的 input</strong>。</p>
               <p>所以拆開不是免費的組織方式。後面每一章都在處理同一個問題：<strong>怎麼讓該過去的資訊過去，不該進 context 的不要進去</strong>。</p>
             </div>
           </div>
@@ -168,19 +168,21 @@
           <div class="idea" id="i2">
             <h3><span class="idea-no">2</span>最重要的判斷：多數任務不該拆</h3>
             <div class="prose">
-              <p>很多人把 multi-agent 當成「更強的 agent」，實測卻是有好有壞，差距很大：</p>
+              <p>很多人把 multi-agent 當成「更強的 agent」，實測卻是有好有壞，差距很大。下表的數字都是 multi-agent 的分數相對單一 agent 的變化（相對值，不是百分點）：</p>
               <div class="table-wrap"><table>
-                <thead><tr><th>任務</th><th>和單一 agent 比</th><th>來源</th></tr></thead>
+                <thead><tr><th>任務</th><th>和單一 agent 比</th><th>來源與量法</th></tr></thead>
                 <tbody>
-                  <tr><td>可以拆開分析的任務（財務推理），中央協調</td><td><b>約 +81%</b></td><td rowspan="2"><a href="https://arxiv.org/abs/2512.08296" target="_blank" rel="noopener">Towards a Science of Scaling Agent Systems</a>，260 種設定的對照實驗</td></tr>
-                  <tr><td>嚴格循序的規劃任務（PlanCraft）</td><td><b>−39% 到 −70%</b></td></tr>
-                  <tr><td>研究類，平行查很多方向</td><td><b>+90.2%</b>，但 token 約是聊天的 15 倍</td><td><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">Anthropic 的 multi-agent research system</a>，內部評估</td></tr>
+                  <tr><td>財務分析（Finance-Agent），子任務可以分開做</td>
+                    <td>中央協調（一個 orchestrator 分派子任務、彙整結果）的分數高 <b>約 81%</b></td>
+                    <td rowspan="2"><a href="https://arxiv.org/abs/2512.08296" target="_blank" rel="noopener">Towards a Science of Scaling Agent Systems</a>（Google 等，2025-12）：5 種架構（單一 agent 加 4 種 multi-agent）、6 個 benchmark、3 家公司各幾個不同能力的 model，組合起來共 260 種設定，tool 與 token 預算相同</td></tr>
+                  <tr><td>Minecraft 的合成規劃（PlanCraft），每一步要用上一步的結果</td><td>試過的 4 種 multi-agent 架構全部退步，依架構低 <b>39% 到 70%</b></td></tr>
+                  <tr><td>研究類，平行查很多方向</td><td>一個 Opus 4 當主 agent，規劃後把搜尋分給幾個 Sonnet 4 subagent 平行做（Opus 4、Sonnet 4 都是 Anthropic 的 model；subagent 是主 agent 派出去做一部分工作的 agent）。這個系統的分數比單一 Opus 4 高 <b>90.2%</b>；token 用量約是一般聊天的 15 倍，單一 agent 約 4 倍，也就是單一 agent 的將近 4 倍</td><td><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">Anthropic 的 multi-agent research system</a>（2025-06）：自家的 research 評估（Anthropic 一家的內部數字，不是對照實驗）</td></tr>
                 </tbody>
               </table></div>
-              <p>三列的差別不在架構，在任務的形狀：子任務能不能獨立進行。<strong>循序任務一拆就退步</strong>，因為每一步都要知道上一步的細節，而細節正是交接時會掉的東西。同一篇實驗也顯示，用任務的特徵預測該選哪種架構，在沒看過的設定上有 87% 選對。</p>
+              <p>差別不在架構，在任務的形狀，也就是子任務能不能各自進行。證據在前兩列，它們出自同一篇實驗：在財務分析上進步最多的中央協調，換到 PlanCraft 也一樣退步，4 種架構無一例外。<strong>循序任務一拆就退步</strong>，因為每一步都要知道上一步的細節，而細節正是交接時會掉的東西。架構仍有影響，只是要先看任務才選得對：同一篇用任務的特徵預測該選哪種架構，在沒看過的設定上有 87% 選對。</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 372" role="img" aria-label="決定要不要拆的流程。第一問：一個 agent 做得完、context 也放得下嗎？是，就不要拆。第二問：子任務彼此獨立、沒有先後相依嗎？否，就留在一個 agent，靠壓縮撐長任務。第三問：子任務都只是讀和分析嗎？是，就用平行的唯讀 worker，回報走檔案。第四問：要改的範圍切得開，而且有測試能驗證嗎？否，就把寫留在單線，其他 agent 只檢查；是，就隔離後平行寫，合併前先驗證。">
+                <svg viewBox="0 0 720 372" role="img" aria-label="決定要不要拆的流程。第一問：一個 agent 做得完、context 也放得下嗎？是，就不要拆。第二問：子任務彼此獨立、沒有先後相依嗎？否，就留在一個 agent，靠 compaction 撐長任務。第三問：子任務都只是讀和分析嗎？是，就用平行的唯讀 worker，回報走檔案。第四問：要改的範圍切得開，而且有測試能驗證嗎？否，就把寫留在單線，其他 agent 只檢查；是，就隔離後平行寫，合併前先驗證。">
                   <defs><marker id="l5w-a-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5w-a-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M190,56 L190,88" class="dg-link" marker-end="url(#l5w-a-ah)"/>
                   <text x="198" y="77" class="dg-cb">否</text>
@@ -218,16 +220,16 @@
                   <text x="190" y="343.0" text-anchor="middle" class="dg-ls">隔離後平行 write，merge 前先驗證</text>
                 </svg>
               </div>
-              <figcaption>本文的整理，把下面三章的判斷畫成一條路。權限隔離是另一個獨立的理由：讀不可信內容的工作，就算一個 agent 放得下，也值得拆出去（第 8 章）。</figcaption>
+              <figcaption>本文的整理，把下面三章的判斷畫成一條路。「回報走檔案」是第 5 章的做法：worker 把完整結果寫進檔案，訊息只帶路徑，主 agent 的 context 才不會被塞滿。權限隔離是另一個獨立的理由：讀不可信內容的工作，就算一個 agent 放得下，也值得拆出去（第 8 章）。</figcaption>
             </figure>
-              <p>這條路的第一格最重要。實務上可以問一句：<strong>拿掉一個 agent，品質掉多少？</strong>掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以評估要先於架構，這是 L7 的主題。</p>
+              <p>這條路的第一格最重要。課程列的第一條設計原則就是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。如果任務不需要平行，也不需要把權限隔開（第 1 章表 1 那兩件一個 agent 做不到的事），一個 agent 又做得完，拆開只會付第 1 章的三種代價，換不到東西；Anthropic 也提醒，多數 coding 任務能真正平行的部分比研究少。實務上可以問一句：<strong>少了這個 agent，品質掉多少？</strong>第一次決定要不要拆時，就是拿 multi-agent 和單一 agent 比；掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以評估要先於架構，這是 L7 的主題。</p>
             </div>
           </div>
 
           <div class="idea" id="i3">
             <h3><span class="idea-no">3</span>最實用的分界：讀可以平行，寫留在單線</h3>
             <div class="prose">
-              <p>常見的架構分類看的是誰管誰。實務上更有用的問題是：<strong>這個 agent 會不會改東西</strong>。Cognition（Devin 的開發公司）2025 年的 <a href="https://cognition.com/blog/dont-build-multi-agents" target="_blank" rel="noopener">Don't Build Multi-Agents</a> 指出，動作帶著隱含的決定。寫程式時要選命名、風格、邊界條件的處理方式，這些決定多半沒有說出口。兩個 agent 各寫一半，就會各選一套。</p>
+              <p>常見的架構分類看的是誰管誰。實務上更有用的問題是：<strong>這個 agent 會不會改東西</strong>。Cognition（開發 coding agent Devin 的公司）2025 年的 <a href="https://cognition.com/blog/dont-build-multi-agents" target="_blank" rel="noopener">Don't Build Multi-Agents</a> 指出，動作帶著隱含的決定。寫程式時要選命名、風格、邊界條件的處理方式，這些決定多半沒有說出口。兩個 agent 各寫一半，就會各選一套。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="兩個對照。左邊是平行讀：三個 agent 讀同一份 code，各自的發現可以放在一起。右邊是平行寫：兩個 agent 各做一半，一個做 Mario 風格的背景，一個做風格不搭的鳥，合併的人要收拾兩個誤解。">
@@ -261,9 +263,9 @@
                   <text x="540" y="206" text-anchor="middle" class="dg-cb">actions carry implicit decisions</text>
                 </svg>
               </div>
-              <figcaption>右邊是 Cognition 的 Flappy Bird 例子。平行寫的問題不在網路或同步，在於兩個 agent 各自替使用者做了決定。</figcaption>
+              <figcaption>右邊是 Cognition 的例子：任務是做一個 Flappy Bird 遊戲，一個 subagent 把背景做成 Mario 風格，另一個做出風格不搭的鳥。平行寫的問題不在網路或同步，在於兩個 agent 各自替使用者做了決定，合併的人要收拾兩個誤解。</figcaption>
             </figure>
-              <p>讀就沒有這個問題。三個 agent 分別查安全、效能和錯誤，發現只會累積，不會互相矛盾到無法合併。這也解釋了上一章的數字：研究和分析吃得到平行的好處，而 Anthropic 也提醒，多數 coding 任務能平行的部分比研究少。</p>
+              <p>讀就沒有這個問題。三個 agent 分別查安全、效能和錯誤，發現只會累積，不會互相矛盾到無法合併。這也解釋了上一章的數字：研究和分析多半是讀，所以吃得到平行的好處；coding 要寫，所以能平行的部分少。</p>
               <p>十個月後，Cognition 在 <a href="https://cognition.com/blog/multi-agents-working" target="_blank" rel="noopener">Multi-Agents: What's Actually Working</a> 修正了自己的立場，不再一概反對，但結論更清楚：<strong>寫保持單線，其他 agent 貢獻判斷，不貢獻動作</strong>。他們列出幾種行得通的形狀：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -410,7 +412,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <text x="648" y="321" class="dg-k">4 分鐘</text>
                 </svg>
 </div>
-<figcaption>六種拆錯的樣子，紅色是出問題的地方。Straggler 的橫條照秒數比例畫，4 分鐘是 20 秒的 12 倍。</figcaption>
+<figcaption>六種拆錯的樣子，紅色是出問題的地方。Straggler 的橫條照秒數比例畫：兩條短的代表準時做完的幾份（20 秒、25 秒），長的那條是 4 分鐘，是 20 秒的 12 倍。</figcaption>
 </figure>
               <p id="i4-1"><b>拆多細。</b>拆成越多份，不一定越快。把工作拆成 n 份交給 n 個 worker，總時間由四段組成，其中只有一段會隨 n 變短：</p>
               <ul>
@@ -433,7 +435,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <tr><td>20</td><td>10</td><td>5</td><td>160</td><td>10</td><td>185</td></tr>
                 </tbody>
               </table></div>
-              <p>這張表要這樣讀。拆成 1 份最划不來：工作沒有變快，卻多付了規劃、派工和合併。拆到 4 份最快，77 秒。再往下拆，最慢那份只再少幾秒，派工卻每份多 8 秒，所以拆成 20 份要 185 秒，<strong>比一個 agent 自己做還慢</strong>。最快的點落在「再多拆一份省下的時間，剛好等於多付的 8 秒」的地方。所以派工越貴，該拆的份數越少；拆之前，先用自己的數字算一次。</p>
+              <p>這張表要這樣讀。拆成 1 份完全沒有好處：只是把整份工作交給一個 worker，工作沒有變快，卻多付了規劃、派工和合併，所以 128 秒比不拆的 100 秒還慢。拆到 4 份最快，77 秒。再往下拆，最慢那份只再少幾秒，派工卻每份多 8 秒，所以拆成 20 份要 185 秒，<strong>比一個 agent 自己做還慢</strong>，也比拆成 1 份慢。最快的點落在「再多拆一份省下的時間，剛好等於多付的 8 秒」的地方。所以派工越貴，該拆的份數越少；拆之前，先用自己的數字算一次。</p>
               <figure class="diagram">
 <div class="scroll">
 <svg viewBox="0 0 640 288" role="img" aria-label="20 個 lookup 拆成 n 份時的總時間，堆疊長條圖。每根長條由下往上是固定的 planning 加 merge 20 秒、critical path、communication。n 等於 1、2、4、5、10、20 時，總時間依序是 128、86、77、80、110、185 秒。Critical path 隨 n 變短，communication 隨 n 變長。一條虛線標出一個 agent 依序做完的 100 秒。n 等於 4 時最低。">
@@ -504,8 +506,8 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
           <div class="idea" id="i5">
             <h3><span class="idea-no">5</span>回報：訊息只帶主張和證據，原文放檔案</h3>
             <div class="prose">
-              <p>把多份輸入變成一份輸出的節點，都會丟細節，而且下游不知道丟了什麼。Supervisor 讀 8 份報告寫一份摘要，每多一層 lead 就再摘要一次。底層 agent 誤讀了一個欄位，到上面只剩「API 完成」。</p>
-              <p>但彙整節點不該拿掉。實驗量到，沒有人彙整的系統把<strong>錯誤放大 17.2 倍，中央協調只有 4.4 倍</strong>，因為有人彙整，錯誤才有機會停下來。該做的是讓彙整者看得到證據：</p>
+              <p>把多份輸入變成一份輸出的節點，都會丟細節，而且下游不知道丟了什麼。Supervisor 讀 8 份報告寫一份摘要。系統分成好幾層時（supervisor 底下再有各管一組 worker 的 lead，第 9 章的 Hierarchical），每多一層就再摘要一次。底層 agent 誤讀了一個欄位，到上面只剩「API 完成」。</p>
+              <p>但彙整節點不該拿掉，反而要讓它能檢查。第 2 章那篇實驗量了錯誤放大，也就是 multi-agent 的失敗率是單一 agent 的幾倍。各 agent 分開做、結果只合成一份、中間沒有人檢查的架構是 <strong>17.2 倍，中央協調只有 4.4 倍</strong>，因為 orchestrator 讀得到每一份回報，錯誤才有機會在它那裡停下來。所以該做的是讓彙整者看得到證據：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 206" role="img" aria-label="Worker 把完整分析寫進檔案 analysis/T17.json，傳給 supervisor 的訊息只有主張、證據指標和路徑。Supervisor 要查證時才去讀檔案。">
@@ -526,7 +528,7 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
               </div>
               <figcaption>Supervisor 的 context 只多一句話，細節仍然找得回來。Anthropic 的系統也這樣做：subagent 把成果存在外部，只回傳輕量的參考。</figcaption>
             </figure>
-              <p>這則訊息的欄位分給兩種讀者：</p>
+              <p>這則訊息的欄位分給兩種讀者。一種是 runtime，也就是在 agent 之間轉送訊息、排程、重試的那段程式；它不是 model，只看欄位。另一種是收訊息的 LLM，它讀主張和證據：</p>
               <figure class="file"><figcaption>message.json</figcaption><pre><code>{
   "task_id": "T17",                                 // 給 runtime：哪個任務
   "type": "result",                                 // 給 runtime：這是結果，不是提問
@@ -535,8 +537,8 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
   "evidence": ["log:2391", "commit:X"],             // 給 LLM：證據的指標，不是原文
   "artifact": "analysis/T17.json"                   // 完整分析在這裡
 }</code></pre></figure>
-              <p>外層欄位讓程式直接判斷。<strong>路由、重試、停止都看欄位，不要問 LLM 這段話是什麼意思</strong>，這樣更快、更便宜，每次結果也相同。自然語言只留給真正需要判斷的內容。</p>
-              <p>要選傳法時，只要先記一個問題：<strong>這則訊息會進幾個 context？</strong>點對點進一個，broadcast 進全部。第 1 章的 400k token 就是這樣來的，所以只有所有人都要知道時才 broadcast。</p>
+              <p>給 runtime 的三個欄位（<code>task_id</code>、<code>type</code>、<code>status</code>）像信封上的收件人和郵戳，常叫做 envelope；<code>claim</code> 和 <code>evidence</code> 是信的內容。Envelope 讓程式直接判斷：<strong>路由、重試、停止都看欄位，不要問 LLM 這段話是什麼意思</strong>，這樣更快、更便宜，每次結果也相同。自然語言只留給真正需要判斷的內容。</p>
+              <p>欄位決定訊息裡放什麼；另一個選擇是傳法，也就是訊息傳給誰：點對點只給一個 agent，broadcast 給所有 agent（第 9 章的查閱列了六種）。選的時候先問一個問題：<strong>這則訊息會進幾個 context？</strong>點對點進一個，broadcast 進全部。第 1 章的 400k token 就是這樣來的，所以只有所有人都要知道時才 broadcast。</p>
             </div>
           </div>
 
@@ -602,7 +604,7 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
               <p id="t1">解法分兩層：傳遞層一直重送，接收端負責認出重複的請求，不做第二次。後者叫冪等（idempotent）：做一次和做很多次，結果相同。做法是用 <code>task_id</code> 當 key，收到請求先查紀錄：</p>
               <figure class="diagram">
 <div class="scroll">
-<svg viewBox="0 0 640 436" role="img" aria-label="購買請求 timeout 後重試的時序圖。四條直線由左到右是 Agent A、Agent B、B 的持久紀錄、雲端 API。A 送出 DELEGATE，task_id 是 t-17，要買 8 台。B 先在紀錄寫入 working，再呼叫雲端 API 購買，拿到 order_id 後寫入 done。B 回給 A 的 REPORT 在途中遺失，A 等到 timeout，分不出三種情況。A 用同一個 task_id t-17 重試。B 查紀錄發現已經是 done，不再呼叫雲端 API，直接回傳同一個 order_id。底部對照：如果重試換了新的 task_id，B 查不到紀錄，會再買 8 台，共 16 台。">
+<svg viewBox="0 0 640 436" role="img" aria-label="購買請求 timeout 後重試的時序圖。四條直線由左到右是 Agent A、Agent B、B 的持久紀錄、雲端 API。A 送出 DELEGATE，task_id 是 t-17，要買 8 台。① B 先在紀錄寫入 working；② 再呼叫雲端 API 購買，購買時標上 t-17；③ 拿到 order_id 後寫入 done。B 回給 A 的 REPORT 在途中遺失，A 等到 timeout，分不出三種情況。A 用同一個 task_id t-17 重試。④ B 查紀錄發現已經是 done，不再呼叫雲端 API，直接回傳同一個 order_id。底部對照：如果重試換了新的 task_id，B 查不到紀錄，會再買 8 台，共 16 台。">
                   <defs><marker id="l5vt-4-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5vt-4-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M96,42 L96,384" class="dg-soft-link dg-dash"/>
                   <path d="M280,42 L280,384" class="dg-soft-link dg-dash"/>
@@ -648,14 +650,14 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <text x="320" y="416.0" text-anchor="middle" class="dg-l">對照：重試換了新的 task_id → B 查不到紀錄 → 再買 8 台，共 16 台</text>
                 </svg>
 </div>
-<figcaption>時間由上往下。關鍵是第 ① 步：B 在呼叫雲端 API 之前就寫下紀錄，重複的請求才查得到。</figcaption>
+<figcaption>時間由上往下。關鍵是第 ① 步：B 在呼叫雲端 API 之前就寫下 working。如果 B 先買、買完才寫紀錄，有兩種情況會查不到紀錄、再買一次：重試在 B 還在買的時候就到了，或 B 買完、還沒寫紀錄就 crash。先寫了 working，這兩種情況都查得到紀錄：還在買，就等它買完；crash 後重啟，B 知道可能已經買過，會先用 ② 標上的 t-17 去雲端確認，不直接再買。</figcaption>
 </figure>
               <p>LLM 還多一個陷阱：讓它自己決定重試，它可能產生新的 task_id，key 就對不上了。所以<strong>重試由 runtime 用同一個訊息重送</strong>，不交給 model。</p>
               <p id="t3"><b>Partial failure：分不出對方是慢，還是掛了。</b>上面的購買例子，根源是分散式系統最基本的難題。單機程式要嘛整個在跑，要嘛整個停了；分散式系統裡，一部分正常、另一部分壞掉，而且從外面看不出來。沒有回覆，可能是對方 crash、網路斷了，或只是慢。在沒有時間上限保證的網路裡，只靠等待區分不了這三種：你永遠不知道回覆會不會在下一秒到。</p>
               <p>LLM agent 讓這件事更難判斷，因為慢是常態。一圈 loop 可能跑幾分鐘，跑測試的 worker 可能十分鐘不出聲。Timeout 設短，會把正常的 worker 當成死掉；設長，真的死掉時又要等很久。所以 <strong>timeout 只代表「我不知道了」，不代表失敗</strong>。Timeout 之後要有明確的下一步：</p>
               <ul>
-                <li><b>先問狀態，不要盲目重送。</b>用 <code>task_id</code> 查對方的紀錄，查得到就照狀態處理。A2A 把 task 做成有狀態的物件、提供 <code>GetTask</code>，就是為了這一步。</li>
-                <li><b>用心跳和租約判斷存活。</b>Worker 認領任務時拿到一份有期限的租約（lease），工作中定期送心跳（heartbeat）續約。租約過期，才把任務交給別人。這樣「要等多久」就從猜測變成規則。</li>
+                <li><b>先問狀態，不要盲目重送。</b>用 <code>task_id</code> 查對方的紀錄，查得到就照狀態處理。A2A（Agent2Agent，Google 2025 年 4 月提出、現在由 Linux Foundation 管理的 agent 之間的通訊協定，第 9 章有細節）把委派出去的工作做成有 ID、有狀態的 task，並提供 <code>GetTask</code> 讓呼叫端用 ID 查狀態，就是為了這一步。</li>
+                <li><b>用心跳和租約判斷存活。</b>前面是 A 直接把工作交給 B；worker 一多，常改成由一個協調者發工作，例如下圖存放任務和結果的 result store。Worker 認領任務時，從協調者拿到一份有期限的租約（lease），工作中定期向它送心跳（heartbeat）續約。租約過期，協調者才把任務交給別的 worker。這樣「要等多久」就從猜測變成規則。</li>
                 <li><b>換人之後，舊的 worker 可能還活著。</b>它只是卡住，回來後仍會寫結果，兩個 worker 都以為任務是自己的。解法是每次換手時發一個遞增的編號，叫 fencing token。寫入時要帶上編號，存放結果的地方只接受最新的編號。</li>
                 <li><b>等不到時，先用部分結果。</b>七個 worker 回了六個，就先合併六份，並標明缺了哪一份。這是讓一個 worker 卡不住整個系統的邊界。</li>
               </ul>
@@ -689,14 +691,14 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
                   <text x="220" y="227" text-anchor="middle" class="dg-k">wakes up, writes with #7 · rejected</text>
                 </svg>
               </div>
-              <figcaption>本文的整理。存放處只接受最新的編號，所以就算 Worker 1 其實沒死，它的舊結果也蓋不掉 Worker 2 的。</figcaption>
+              <figcaption>本文的整理。圖裡的 #7、#8 是每次換手時遞增的租約編號，也就是正文說的 fencing token。存放處只接受最新的編號，所以就算 Worker 1 其實沒死，它的舊結果也蓋不掉 Worker 2 的。</figcaption>
             </figure>
-              <p>合起來看，這四步把「對方可能死了」變成可以處理的狀態：查得到就照狀態做，查不到就等租約過期，過期就換人，再用編號擋住舊的寫入。<strong>冪等處理重複的請求，fencing token 處理重複的執行者</strong>，兩個都要有。Agent 系統容易漏掉後者，因為大家常把 subagent 當成一次函式呼叫，很少有人設想它卡住之後又回來（本文的判斷）。</p>
+              <p>合起來看，前三點把「對方可能死了」變成可以處理的步驟：查得到狀態就照狀態做；查不到就等租約過期，過期就換人；換人之後用編號擋住舊 worker 的寫入。第四點讓系統在等的時候不必停下來。<strong>冪等處理重複的請求，fencing token 處理重複的執行者</strong>，兩個都要有。Agent 系統容易漏掉後者，因為大家常把 subagent 當成一次函式呼叫，很少有人設想它卡住之後又回來（本文的判斷）。</p>
               <p>其他常見的失敗，對策也都在 runtime：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>長什麼樣</th><th>對策</th></tr></thead>
                 <tbody>
-                  <tr><td><b>繞圈</b></td><td>A 問 B，B 問 C，C 問 A</td><td>訊息帶跳數上限，到 0 就報錯</td></tr>
+                  <tr><td><b>繞圈</b></td><td>A 問 B，B 問 C，C 問 A</td><td>訊息帶一個跳數上限，每轉給下一個 agent 就減 1；減到 0 時，runtime 不再轉送，改回報錯誤</td></tr>
                   <tr><td><b>沒人負責</b></td><td>每個 agent 都以為是別人的事</td><td>每個 task 一個 owner</td></tr>
                   <tr><td><b>過期的事實</b></td><td>X 已經改成 5，B 還依 X＝3 行動</td><td>事實帶版本，用之前重讀</td></tr>
                   <tr><td><b>互相矛盾</b></td><td>A 說安全，B 說有漏洞</td><td>指定裁決者，兩邊都附證據</td></tr>
@@ -715,8 +717,8 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
  ! [rejected]        main -> main (fetch first)      # 遠端版本已經變了，git 拒絕這次寫入
 error: failed to push some refs to 'github.com:team/repo.git'
 $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版，再寫一次</code></pre></figure>
-              <p>所以 blackboard 用 git 當共享工作區，不只是方便：git 天生就擋住了 lost update。用一般檔案或資料庫時，認領任務這種寫入要自己加版本檢查。</p>
-              <p id="i7-2"><b>CAP：網路斷開時，只能保住一個。</b>CAP 說的是：當網路分成兩半（partition），系統只能在 consistency（每個人看到同一份最新狀態）和 availability（每個人都能繼續做事）之間選一個。對 agent 來說，就是連不上共享狀態時，手上那份舊副本要不要用：</p>
+              <p>所以用 git 當 blackboard（多個 agent 共用、各自讀寫的工作區，第 9 章的一種架構）不只是方便：git 天生就擋住了 lost update。用一般檔案或資料庫時，認領任務這種寫入要自己加版本檢查。</p>
+              <p id="i7-2"><b>CAP：網路斷開時，只能保住一個。</b>CAP 說的是：當網路分成兩半（partition），系統只能在 consistency（簡寫 C：每個人看到同一份最新狀態）和 availability（簡寫 A：每個人都能繼續做事）之間選一個。對 agent 來說，就是連不上共享狀態時，手上那份舊副本要不要用：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 268" role="img" aria-label="網路分區。上方是 shared store，裡面的 task list 最新版是 v3。Agent A 和 store 相連，讀到 v3。一道紅色虛線把 Agent B 和 store 隔開，標示 network partition。B 手上只有早先讀的 v2，必須二選一：選 C，停下來等網路恢復；選 A，用手上的 v2 繼續做，可能做錯。">
@@ -748,7 +750,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                   <text x="30" y="230" class="dg-cb">consistency 或 availability</text>
                 </svg>
               </div>
-              <figcaption>本文的整理。分區不常發生，但一發生就要事先決定好每種動作選哪一邊；沒有決定時，agent 通常會默默選 A。</figcaption>
+              <figcaption>本文的整理。圖裡的 C、A 是 consistency、availability 的簡寫，和 Agent A 無關。分區不常發生，但一發生就要事先決定好每種動作選哪一邊。沒有決定時，agent 通常會默默選 A：runtime 沒規定行動前要重讀，agent 就不會去連 store，也不知道已經分區，只會照 context 裡的 v2 做下去。</figcaption>
             </figure>
               <p>沒有分區的時候也有取捨：每次行動前都重讀共享狀態，資料最新，但每次多一個 tool call 和一份 token；直接用 context 裡的副本，快，但可能過期。這是 latency 和 consistency 的取捨，有人把它和 CAP 合稱 PACELC。實務上可以接回第 3 章的讀寫分界：<strong>寫之前一定重讀（選 C），讀和探索可以用副本（選 A）</strong>。不可逆的動作，例如付款、刪除、對外發信，一律選 C。</p>
               <p id="i7-3"><b>沒有全域時鐘：時間戳排不出先後。</b>每台機器的時鐘都會漂移，即使有 NTP 同步也有毫秒級誤差，機器暫停或沒同步時更大。所以兩個 agent 的時間戳不能拿來比先後，最危險的用法是 last-write-wins：</p>
@@ -787,7 +789,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
 {"parent":null}                      # 主對話
 {"parent":"toolu_01A..."}            # 第一個 subagent 的訊息
 {"parent":"toolu_01B..."}            # 第二個 subagent 的訊息</code></pre></figure>
-              <p id="i7-5"><b>不確定性：同一個任務跑兩次，結果不同。</b>傳統分散式系統的不確定性來自排程和網路；LLM agent 多了一層，model 每次的輸出都可能不同。所以「重現 bug」不能靠重跑，要靠記錄：每則訊息的 envelope 和 tool 結果都存下來，用 trace 的順序重播。這也是第 9 章 dynamic topology 難除錯的原因。</p>
+              <p id="i7-5"><b>不確定性：同一個任務跑兩次，結果不同。</b>傳統分散式系統的不確定性來自排程和網路；LLM agent 多了一層，model 每次的輸出都可能不同。所以「重現 bug」不能靠重跑，要靠記錄：每則訊息的 envelope（第 5 章給 runtime 看的欄位）和內文、每次 tool 的結果都存下來，用 trace 的順序重播。第 9 章的 dynamic topology（執行中依難度加減 agent、改變誰接誰的架構）更需要這樣做，因為它每次跑出來的形狀都不同，這也是它難除錯的原因。</p>
             </div>
           </div>
 
@@ -822,13 +824,13 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
               </div>
               <figcaption>本文的整理。讀網頁的 agent 只是個例子；任何吃外部內容的 worker 都一樣，例如讀 issue、讀 email、讀別人的 PR。</figcaption>
             </figure>
-              <p>對 model 來說，worker 的報告和使用者的話都只是文字。<a href="https://arxiv.org/abs/2410.07283" target="_blank" rel="noopener">Prompt Infection</a>（2024）更進一步展示，惡意 prompt 可以像病毒一樣在 agent 之間自我複製，即使 agent 彼此並未公開所有通訊。這是 multi-agent 特有的風險：<strong>線越多，感染的路徑越多</strong>。</p>
-              <p>這個問題目前沒有根治的方法。該論文提出的標記法搭配既有防護，能大幅降低擴散，但不是消除。實務上是多層防線：</p>
+              <p>對 model 來說，worker 的報告和使用者的話都只是文字。<a href="https://arxiv.org/abs/2410.07283" target="_blank" rel="noopener">Prompt Infection</a>（2024）更進一步展示，惡意 prompt 可以像病毒一樣在 agent 之間自我複製。即使每個 agent 只看得到上游傳給它的部分訊息、看不到整段對話，感染仍然傳得下去。這是 multi-agent 特有的風險：<strong>線越多，感染的路徑越多</strong>。</p>
+              <p>這個問題目前沒有根治的方法。該論文提出 LLM Tagging：每個 agent 的回覆傳給下一個 agent 之前，開頭加上 <code>[AGENT NAME]:</code>（填這個 agent 的名稱），讓下游分得出哪些是使用者的話、哪些是別的 agent 產生的。單獨用它幾乎沒有效果：論文寫攻擊成功率只少約 5%（原文就這樣寫，沒說是百分點還是相對值），也說它試過的每一種防護單獨用都不太有效。搭配既有的防護（例如用特殊符號區分使用者和 agent 的 prompt，或在 prompt 裡要求不得改動使用者的指令），在論文的測試裡降到 0% 到 3%（作者自己設計的攻擊，換一種攻擊不一定擋得住）。所以實務上是多層防線：</p>
               <ul>
                 <li><b>把回報當資料，不當指令。</b>Worker 的內文放進固定欄位，supervisor 的 prompt 明寫裡面的內容不能當指令執行。</li>
                 <li><b>危險動作不由文字決定。</b>刪除、付款、對外傳送這類動作，由 runtime 檢查 allowlist，或要人確認。這是第 5 章「看欄位，不看內文」的延伸。</li>
-                <li><b>拆開三種能力。</b>同時能讀私密資料、會接觸不可信內容、又能對外傳送的 agent 最危險，Simon Willison 稱為 <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">lethal trifecta</a>。切到不同 agent 時，別忘了文字還是會流回來，所以兩者之間還是要有上一點講的關卡。</li>
-                <li><b>別把對方的自述當認證。</b>A2A 的 agent card 寫的 skill 是對方自己宣稱的，認證只告訴你對方是誰，不代表內容可信。</li>
+                <li><b>拆開三種能力。</b>一個 agent 同時能讀私密資料、會接觸不可信內容、又能對外傳送時最危險：<strong>不可信內容裡的指令可以叫它把私密資料送出去</strong>，三步都在它自己手上完成。Simon Willison 稱這個組合為 <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/" target="_blank" rel="noopener">lethal trifecta</a>。把三種能力切給不同 agent 時，讀不可信內容的 agent 寫的文字還是會流到另外兩種 agent 手上，所以它們之間還是要有上一點講的關卡。</li>
+                <li><b>別把對方的自述當認證。</b>A2A 的每個 agent 會公開一張 agent card：一份 JSON，寫它是誰、會做哪些事、怎麼呼叫。裡面的 skills 是對方自己宣稱的能力清單，和第 1 章說的 skill（載入的指令檔）不是同一個東西。認證只告訴你對方是誰，不代表它宣稱的能力或它傳回的內容可信。</li>
               </ul>
               <p>這一章的取捨是本文的判斷。受管制或多租戶的環境，這一章的份量應該和第 2 章一樣重。</p>
             </div>
@@ -935,11 +937,11 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                 <tbody>
                   <tr><td><b>Supervisor–worker</b></td><td>可分開的子任務</td><td>中心的 context 長得最快</td><td>預設的第一選擇</td></tr>
                   <tr><td><b>Hierarchical</b></td><td>有層次的任務</td><td>錯誤層層放大</td><td>一層 supervisor 真的管不完</td></tr>
-                  <tr><td><b>Pipeline / DAG</b></td><td>順序清楚的階段</td><td>錯誤往下傳</td><td>流程固定、要好除錯；記得加 retry edge</td></tr>
+                  <tr><td><b>Pipeline / DAG</b></td><td>順序清楚的階段</td><td>錯誤往下傳</td><td>流程固定、要好除錯時；記得加一條 retry edge，讓後面的站能把工作退回前面的站重做，因為 pipeline 本身沒有回頭路</td></tr>
                   <tr><td><b>Blackboard</b></td><td>共同的產出</td><td>狀態過期（第 7 章）</td><td>Agent 會來來去去，要留下可檢查的紀錄</td></tr>
                   <tr><td><b>Committee</b></td><td>需要判斷的題目</td><td>盲點相同</td><td>值得付多次成本，而且能讓意見獨立</td></tr>
                   <tr><td><b>Market</b></td><td>能力、成本不一的 agent</td><td>自報的出價不實</td><td>任務分配本身是問題</td></tr>
-                  <tr><td><b>Swarm</b></td><td>局部協商</td><td>線數 n(n−1)/2</td><td>很少；產品中罕見</td></tr>
+                  <tr><td><b>Swarm</b></td><td>沒有協調者、由 agent 彼此直接談好誰做哪件事的工作，例如倉庫機器人互相商量哪一台去揀哪一張訂單</td><td>線數 n(n−1)/2</td><td>很少；產品中罕見</td></tr>
                   <tr><td><b>Dynamic topology</b></td><td>結構事先未知</td><td>難重現、難除錯</td><td>簡單案件要便宜，難的才升級</td></tr>
                 </tbody>
               </table></div>
@@ -1075,10 +1077,10 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
 </figure>
                   <figure class="diagram">
 <div class="scroll">
-<svg viewBox="0 0 720 256" role="img" aria-label="GPU job router。上方公告「誰能跑這個訓練工作？」。三個節點出價：A100 node 0.20 美元、3 秒，5 秒內最便宜，得標；T4 node 0.05 美元、10 秒，更便宜但超過 5 秒；H100 node 0.40 美元、1 秒，更快但不是最便宜。工作交給 A100 node。">
+<svg viewBox="0 0 720 256" role="img" aria-label="GPU job router。上方公告「誰能跑這個訓練工作？」，規則是 5 秒內做得完的出價裡，最便宜的得標。三個節點出價：A100 node 0.20 美元、3 秒，5 秒內最便宜，得標；T4 node 0.05 美元、10 秒，更便宜但超過 5 秒；H100 node 0.40 美元、1 秒，更快但不是最便宜。工作交給 A100 node。">
                   <defs><marker id="l5v-o-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5v-o-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="10" y="8" width="700" height="38" rx="4" class="dg-n-focus"/>
-                  <text x="360" y="32.0" text-anchor="middle" class="dg-l-on">「誰能跑這個訓練工作？」</text>
+                  <text x="360" y="32.0" text-anchor="middle" class="dg-l-on">「誰能跑這個訓練工作？」規則：5 秒內做得完的出價裡，最便宜的得標</text>
                   <path d="M120,46 L120,74" class="dg-link" marker-start="url(#l5v-o-ah)" marker-end="url(#l5v-o-ah)"/>
                   <rect x="10" y="74" width="220" height="56" rx="4" class="dg-n-a"/>
                   <text x="120" y="99.0" text-anchor="middle" class="dg-l">A100 node</text>
@@ -1252,13 +1254,15 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                   <text x="360" y="340.0" text-anchor="middle" class="dg-l">Reviewer</text>
                 </svg>
 </div>
-<figcaption>真實系統是混合體：hierarchy、pipeline、shared memory，再加一條重新規劃的線。</figcaption>
+<figcaption>真實系統是混合體：hierarchy、pipeline、shared memory（這裡泛指大家共用的狀態，也就是共享的 git），再加一條重新規劃的線。</figcaption>
 </figure>
                 </div>
               </details>
               <details class="gloss" id="n-comm">
-                <summary><span class="gloss-k">查閱</span><span class="gloss-t">通訊的選項：三種 medium、六種 channel</span></summary>
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">通訊的選項：資料放在哪裡（三種 medium）、怎麼流（六種 channel）</span></summary>
                 <div class="gloss-body prose">
+                  <p>課程把通訊分成兩層，兩層分的是不同的事。Medium 分的是資料放在什麼載體上：一則訊息、一個共用的物件，或一個檔案。Channel 分的是資料怎麼流：給一個還是給全部、要不要訂閱、發問的一方要不要停下來等。</p>
+                  <p>兩層可以組合，所以名字會重疊：共享 blackboard 這種 channel 可以放在 shared memory，也可以放在檔案或 git。Artifact passing 這種 channel，用的是 files 這種 medium。這裡的 shared memory 只指同一個 process 裡的物件，git repo 和一般檔案都算 files。上面混合系統圖說的 shared memory 是泛稱。</p>
                   <figure class="diagram">
 <div class="scroll">
 <svg viewBox="0 0 720 172" role="img" aria-label="三種 medium。Message passing：coder 把結果投進 queue，orchestrator 從收件匣取出。Shared memory：同一個 process 裡，兩個 agent 讀寫同一個 task list 物件。Files：researcher 寫 notes.md，writer 打開來讀。">
@@ -1300,7 +1304,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                   <text x="496" y="148" class="dg-c">交接的是檔案</text>
                 </svg>
 </div>
-<figcaption>三種 medium。一條線只用一種，否則兩邊會不一致。</figcaption>
+<figcaption>三種 medium。課程的經驗法則是兩個 agent 之間的一條連線只用一種。同一件事有時發訊息、有時寫檔，收的一方就有兩個來源；兩個來源內容不同時，它分不出哪一份比較新（這個原因是本文的解釋）。</figcaption>
 </figure>
                   <figure class="diagram">
 <div class="scroll">
@@ -1460,7 +1464,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                 <div class="gloss-body prose">
                   <figure class="diagram">
 <div class="scroll">
-<svg viewBox="0 0 700 256" role="img" aria-label="狀態機。左邊 Submitted 指向 Working。Working 和上方的 Input required、下方的 Auth required 之間各有雙向箭頭。Working 往右指向四個終止狀態：Completed、Failed、Rejected、Canceled，終止狀態沒有出去的箭頭。底部的例子：Book a flight 進入 Working，agent 問 Which date 進入 Input required，client 回 Oct 3 回到 Working。">
+<svg viewBox="0 0 700 256" role="img" aria-label="狀態機。左邊 Submitted 指向 Working。Working 和上方的 Input required 之間是紅色的雙向箭頭（反問、回答），和下方的 Auth required 之間是灰色的雙向箭頭（要授權、給授權）。Working 往右指向四個終止狀態：Completed、Failed、Rejected、Canceled，終止狀態沒有出去的箭頭。底部的例子：Book a flight 進入 Working，agent 問 Which date 進入 Input required，client 回 Oct 3 回到 Working。">
                   <defs><marker id="l5v-j-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5v-j-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="70" y="100" text-anchor="middle" class="dg-mn">進行中</text>
                   <text x="250" y="24" text-anchor="middle" class="dg-mn">中斷：等外部輸入</text>
@@ -1495,7 +1499,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                   <text x="350" y="244" text-anchor="middle" class="dg-c">例子：「訂機票」→ Working →「哪一天？」→ Input required →「10 月 3 日」→ Working</text>
                 </svg>
 </div>
-<figcaption>Task 的生命週期。紅色的來回是它和一次 tool call 最大的差別。</figcaption>
+<figcaption>Task 的生命週期。紅色的來回（Working 和 Input required 之間的反問、回答）是它和一次 tool call 最大的差別：task 可以停下來等補資料，再接著做。</figcaption>
 </figure>
                   <figure class="diagram">
 <div class="scroll">
@@ -1691,7 +1695,7 @@ n = 20 → 10 + 5  + 160 + 10 = 185   ← 比不拆的 100 還慢</code></pre></
                 <p class="qtext">彙整節點為什麼會丟細節，又為什麼不該拿掉？timeout 之後，冪等和 fencing token 各擋哪一種重複？</p>
                 <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
                   <div class="tk-ans">
-                    <p><b>答案：</b>彙整節點把多份輸入變成一份輸出，一定會丟細節，而且下游不知道丟了什麼。但不該拿掉它：沒有人彙整的系統把錯誤放大 17.2 倍，中央協調只有 4.4 倍。該做的是讓彙整者看得到證據：訊息只帶主張、證據指標和檔案路徑，原文放在檔案裡（第 5 章）。</p>
+                    <p><b>答案：</b>彙整節點把多份輸入變成一份輸出，一定會丟細節，而且下游不知道丟了什麼。但不該拿掉它：結果只合成一份、中間沒有人檢查的系統把錯誤放大 17.2 倍，中央協調只有 4.4 倍。該做的是讓彙整者看得到證據：訊息只帶主張、證據指標和檔案路徑，原文放在檔案裡（第 5 章）。</p>
                     <p>冪等擋重複的請求：重試時帶同一個 <code>task_id</code>，B 查到做過，就回傳上次的結果。Fencing token 擋重複的執行者：換人時發一個遞增的編號，存放結果的地方只接受最新的編號（第 6 章）。</p>
                   </div>
                   <p class="tk-h">重點拆解</p>

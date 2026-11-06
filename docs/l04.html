@@ -63,19 +63,19 @@
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/4_agent_design_1.pdf" target="_blank" rel="noopener">4_agent_design_1.pdf ↗</a></li>
       <li><span class="k">頁數</span>56</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
-      <li><span class="k">名詞註</span><span class="deep-time">約 7 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 80 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 50 分鐘</span></li>
+      <li><span class="k">名詞註</span><span class="deep-time">約 8 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 90 分鐘</span></li>
     </ul>
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">Model 沒有記憶，harness 每一圈都把整份 context 重送一次。這一條事實決定了這堂的所有設計：tool 的輸出、prompt、舊的歷史，都是每一圈要再付一次的文字。所以這堂要帶走的不是四種找法、四種改法的名字，而是<strong>判斷什麼值得進 context，進來之後怎麼處理</strong>。</p>
+    <p class="thesis">Agent 是一個 loop：model 每一圈決定下一步，包在它外面的程式（harness，例如 Claude Code）去執行，再把結果接回去。Model 沒有記憶，所以 harness 每一圈都把整份 context（送進 model 的全部文字）重送一次。這一條事實決定了這堂的所有設計：tool 的輸出、prompt、舊的歷史，都是每一圈要再付一次的文字。所以這堂要帶走的不是第 8、9 章那五種找程式碼、四種改程式碼的方法名，而是<strong>判斷什麼值得進 context，進來之後怎麼處理</strong>。</p>
     <ul class="core">
-      <li><span><b>做不好，先查 harness，再換 model。</b>同一個 model，只改 context 的處理，解題數可以差 2 倍；但<strong>這個倍數只在 window 緊的時候成立</strong>，window 夠大時差距就沒了，要付的錢和舊資料的干擾還在。</span></li>
-      <li><span><b>管 context 有順序。</b>能不進來就不進來，進來了先用規則刪，<strong>有損又不可逆的摘要排最後</strong>。開頭不要動，prefix cache 才省得下來。</span></li>
-      <li><span><b>Tool 的輸出就是 context。</b>Tool 要少而專用、輸出要短、錯誤要能教、失敗要看得見。招式會隨 model 過期，這幾條不會。</span></li>
+      <li><span><b>Agent 做不好，先查 harness，再換 model。</b>同一個 model，只改 harness 處理 context 的方式，解題數可以差 2 倍；但<strong>這個倍數只在 window 小到放不下時成立</strong>（window 是 model 一次能讀的長度上限）。Window 夠大時差距就沒了，要付的錢和舊資料的干擾還在。</span></li>
+      <li><span><b>管 context 有順序。</b>能不進來就不進來，進來了先用規則刪，<strong>有損又不可逆的摘要排最後</strong>。開頭也不要動：provider 會把算過的開頭存起來（prefix cache），下一圈開頭逐字相同才能打折重用，改一個字就整份重算。</span></li>
+      <li><span><b>Tool 的輸出就是 context。</b>Tool 要少而專用、輸出要短；錯誤訊息要告訴 model 下一步怎麼改，失敗要讓 model 下一圈就看得出來，不能回成功卻改錯。Prompt 的技巧（例如叫 model 一步步想）會隨 model 過期，這幾條不會。</span></li>
     </ul>
   </section>
 
@@ -91,16 +91,16 @@
         <nav class="map" aria-label="章節">
           <p class="map-g">一定要會：context 的帳</p>
           <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的限制<small>model 沒有記憶，每一圈整份重送</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>做不好先查 context 和 harness，再換 model</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">Context 的結構<small>十格裡，開頭不動才省得下來（本文補的）</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>做不好先查 context 和 harness，再換 model</small></span><span class="map-m">約 4 分</span></a>
+          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">Context 的結構<small>十格裡，開頭不動才省得下來（本文補的）</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">要用時會做：管 context</p>
           <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">管理的順序<small>能不進來，就不要進來</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">已經進來的<small>先用規則刪，最後才摘要</small></span><span class="map-m">約 5 分</span></a>
+          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">已經進來的<small>先用規則刪，最後才摘要</small></span><span class="map-m">約 8 分</span></a>
           <p class="map-g">要用時會做：設計 tool</p>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">Tool 設計<small>tool 的輸出就是 context</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">Execution<small>shell 最強，保護全在 harness</small></span><span class="map-m">約 2 分</span></a>
+          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">Tool 設計<small>tool 的輸出就是 context</small></span><span class="map-m">約 6 分</span></a>
+          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">Execution<small>shell 最強，保護全在 harness</small></span><span class="map-m">約 3 分</span></a>
           <p class="map-g">底層：model 的眼和手</p>
-          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">Search<small>先 grep，名字猜不到才換</small></span><span class="map-m">約 6 分</span></a>
+          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">Search<small>先 grep，名字猜不到才換</small></span><span class="map-m">約 7 分</span></a>
           <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">Edit<small>失敗看不看得見，和省 token 一樣重要</small></span><span class="map-m">約 5 分</span></a>
           <p class="map-g">最會過期的</p>
           <a class="map-row" href="#i10"><span class="map-no">10</span><span class="map-t">Prompt<small>招式會過期，原則不會</small></span><span class="map-m">約 3 分</span></a>
@@ -113,7 +113,7 @@
               <p>L2 講過，一個 agent 就是 model 加一個 loop：model 每一圈只決定下一步，harness 執行 tool，再把結果放回 context，直到 model 不再提議動作。這堂換成寫 harness 的人的角度，問這個 loop 裡的四項工作怎麼做：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 262" role="img" aria-label="Agent loop 與 harness 的四項工作。Context（messages 和 tools）送進 model，model 只決定一件事：有 tool call 就由 harness 執行 tool，結果放回 context；沒有就結束。四個編號：1 組出 context，第 1、3、10 章；2 寫 tool 定義，第 6 章；3 驗證並執行 tool，第 7、8、9 章；4 整理結果、管理 context，第 4、5 章。">
+                <svg viewBox="0 0 720 262" role="img" aria-label="Agent loop 與 harness 的四項工作。Context（messages 和 tools）送進 model，model 只決定一件事：有 tool call 就由 harness 執行 tool，結果放回 context；沒有就結束。四個編號：1 組出 context，第 1、3、10 章；2 寫 tool 定義，也就是每個 tool 的名字、用途說明和參數格式，第 6 章；3 驗證並執行 tool，第 7、8、9 章；4 整理結果、管理 context，第 4、5 章。">
                   <defs><marker id="l4v-map-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-map-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M190,58 L268,58" class="dg-link" marker-end="url(#l4v-map-ah)"/>
                   <path d="M388,58 L466,58" class="dg-link" marker-end="url(#l4v-map-ah)"/>
@@ -145,7 +145,7 @@
                   <text x="370" y="248" class="dg-cb">④ 整理結果、管理 context（第 4、5 章）</text>
                 </svg>
               </div>
-              <figcaption>這堂的內容在 loop 的哪裡？紅色的 model 每一圈只做一個決定：給回答，或發出 tool call。編號的四項工作都在 harness，這堂就是逐項講它們怎麼做。</figcaption>
+              <figcaption>這堂的內容在 loop 的哪裡？紅色的 model 每一圈只做一個決定：給回答，或發出 tool call。編號的四項工作都在 harness，這堂就是逐項講它們怎麼做。② 的 tool 定義是每個 tool 的名字、用途說明和參數格式（參數格式叫 schema）；harness 每一圈都把它和訊息一起送進 model，model 才知道有哪些 tool 能用、參數怎麼填。</figcaption>
             </figure>
               <details class="gloss" id="n-loop">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Model、harness、context、token 與 ReAct：L2 講過、這堂要用的名字</span></summary>
@@ -191,19 +191,19 @@
                   <text x="316" y="91" text-anchor="middle" class="dg-l-on">讀進來的檔案</text>
                 </svg>
               </div>
-              <figcaption>每一圈送出去的東西有多長？灰色是 system prompt、tool 定義和 memory。第 2 圈讀進一份 8K 的檔案（紅色），之後每一圈都要再送一次，因為 model 不會讀過就記得。數字是假設的。</figcaption>
+              <figcaption>每一圈送出去的東西有多長？灰色是 system prompt（harness 寫給 model 的固定指令：身分、規則、輸出格式）、tool 定義和 memory。第 2 圈讀進一份 8K 的檔案（紅色），之後每一圈都要再送一次，因為 model 不會讀過就記得。數字是假設的。</figcaption>
             </figure>
               <p id="i1-1"><b>所以 context 有三種成本。</b>進了 context 的東西會一直收錢，一共三筆帳：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>成本</th><th>為什麼跟著 context 長</th><th>Prefix cache 救得了嗎</th></tr></thead>
                 <tbody>
                   <tr><td><b>錢</b></td><td>每一圈重送，進來的東西之後每圈都再付一次</td><td>救大半：重讀的部分打折（<a href="l08.html#t2">L8</a> 算帳）</td></tr>
-                  <tr><td><b>延遲</b></td><td>Model 處理 request 分兩段：prefill 先讀完整個 prompt，decode 再一個 token 一個 token 產生回答。Prompt 越長，兩段都慢</td><td>救一段：命中的部分不用 prefill，decode 照樣慢</td></tr>
-                  <tr><td><b>注意力</b></td><td>Window 越滿，model 越難從裡面找回資訊</td><td>救不了</td></tr>
+                  <tr><td><b>延遲</b></td><td>Model 處理一次 request 分兩段：prefill 先讀完整份輸入，decode 再一個 token 一個 token 產生回答。輸入越長，prefill 要讀的越多；decode 每產生一個 token，也要回頭看一遍前面所有 token 算好的中間結果，所以兩段都變慢</td><td>救一段：命中的部分不用 prefill，decode 照樣慢</td></tr>
+                  <tr><td><b>注意力</b></td><td>機制還沒有定論，量到的是現象：window 越滿，model 越難從裡面找回資訊，放在中間的最容易漏（下面兩組實驗）</td><td>救不了</td></tr>
                 </tbody>
               </table></div>
               <p>Prefix cache 是 provider 把算過的 prompt 開頭存起來，下一次開頭相同就不必重算，第 3 章會講。錢的那一筆有一個要記的形狀：每一圈多 3,000 token 的話，跑 30 圈總共送 1,395,000 token，跑 100 圈是 15,150,000，圈數多 3.3 倍，總量多 10.9 倍，因為總量隨圈數的平方成長。打折之後的實際帳單是 <a href="l08.html#t1">L8</a> 的主題，這裡只要記住：多留一筆大的 tool 結果，要付的次數等於剩下的圈數。</p>
-              <p id="i1-2"><span class="anchor" id="t6"></span><b>注意力的成本，兩組實驗量過。</b>第一組是 Chroma 的 <a href="https://www.trychroma.com/research/context-rot" target="_blank" rel="noopener">Context Rot</a>（2025）：18 個 model 做同一種查找，輸入越長結果越不可靠，多放一段干擾內容就更差。第二組是 Liu 等人的 <a href="https://arxiv.org/abs/2307.03172v3" target="_blank" rel="noopener">Lost in the Middle</a>（TACL 2024）：只移動答案所在的位置，其他都不變，<strong>放第 10 份時準確率掉到 55%</strong>：</p>
+              <p id="i1-2"><span class="anchor" id="t6"></span><b>注意力的成本，兩組實驗量過。</b>第一組是 Chroma 的 <a href="https://www.trychroma.com/research/context-rot" target="_blank" rel="noopener">Context Rot</a>（2025）：18 個 model 做同一種查找，輸入越長結果越不可靠，多放一段干擾內容就更差。第二組是 Liu 等人的 <a href="https://arxiv.org/abs/2307.03172v3" target="_blank" rel="noopener">Lost in the Middle</a>（TACL 2024）：只移動答案所在的位置，其他都不變。課程 slide 引的這張圖上，<strong>放第 10 份時準確率掉到 55%</strong>：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 640 262" role="img" aria-label="折線圖：含答案的文件放在 20 份文件中的第幾份，對回答準確率。第 1 份 76%，第 5 份 61%，第 10 份 55%，第 15 份 59%，第 20 份 71%。曲線呈 U 形，中間最低。中段的底色註記：agent 的舊 tool 結果通常堆在這一段。">
@@ -233,9 +233,9 @@
                   <text x="64.0" y="220" text-anchor="end" class="dg-c">50%</text>
                 </svg>
               </div>
-              <figcaption>答案放在哪裡，model 最容易漏掉？放在中間最差。數字是課程標的 5 個點；論文附錄裡 GPT-3.5-Turbo 是 75.8、57.2、53.8、55.4、63.2，形狀相同。底色是本文的註記。</figcaption>
+              <figcaption>答案放在哪裡，model 最容易漏掉？放在中間最差。圖上的 5 個點照課程 slide 標的數字畫，slide 沒寫是論文裡哪個 model；論文附錄裡 GPT-3.5-Turbo 在同樣 5 個位置是 75.8%、57.2%、53.8%、55.4%、63.2%，數字略有不同，形狀相同。底色是本文的註記。</figcaption>
             </figure>
-              <p>原因還沒有定論，論文也發現專為長 context 設計的 model 同樣有這個現象，所以把 window 加大解決不了。設計上的意義倒是很清楚：關鍵的指示放開頭或結尾，資料放中間。Anthropic 的<a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices" target="_blank" rel="noopener">官方指南</a>也建議長文件放前面、問題放最後，說測試裡最多提升 30%。這兩組實驗都是問答任務，真實 agent 上的結果在下一章。</p>
+              <p>原因還沒有定論，論文也發現專為長 context 設計的 model 同樣有這個現象，所以把 window 加大解決不了。設計上的意義倒是很清楚：關鍵的指示和問題放開頭或結尾，不要埋在一大段資料的中間。Anthropic 的<a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices" target="_blank" rel="noopener">官方指南</a>給的是同一個方向的具體排法：長文件放最前面，問題放最後；指南說，問題放在最後時，回答品質在他們的測試裡最多提升 30%。這兩組實驗都是問答任務，真實 agent 上的結果在下一章。</p>
             </div>
           </div>
 
@@ -247,20 +247,21 @@
                 <thead><tr><th>實驗</th><th>只改了什麼</th><th>結果</th></tr></thead>
                 <tbody>
                   <tr><td><a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">SWE-agent</a>（2024）<br><small>GPT-4 Turbo；SWE-bench Lite，300 題</small></td><td>只給 shell → 為 model 設計的介面</td><td>11.0% → <b>18.0%</b></td></tr>
-                  <tr><td><a href="https://arxiv.org/abs/2608.26218" target="_blank" rel="noopener">Lewis</a>（2026）<br><small>本地 4-bit 的 Qwen3.6；SWE-bench Verified，169 題；window 20,480 token</small></td><td>完整對話紀錄 → 縮短舊的 tool 輸出、偵測停滯</td><td>43 → <b>72</b> 題</td></tr>
-                  <tr><td>同一篇<br><small>SWE-bench Pro，316 題；window 49,152 token</small></td><td>同上</td><td>31 → <b>72</b> 題</td></tr>
+                  <tr><td><a href="https://arxiv.org/abs/2608.26218" target="_blank" rel="noopener">Lewis</a>（2026）<br><small>本地跑的 Qwen3.6，<a class="tm" href="#n-swebench">4-bit 量化</a>；SWE-bench Verified 500 題中的 169 題；window 20,480 token</small></td><td>完整對話紀錄 → 縮短舊的 tool 輸出、偵測停滯</td><td>43 → <b>72</b> 題</td></tr>
+                  <tr><td>同一篇<br><small>SWE-bench Pro 中的 316 題；window 49,152 token</small></td><td>同上</td><td>31 → <b>72</b> 題</td></tr>
                   <tr><td><a href="https://arxiv.org/abs/2606.10209" target="_blank" rel="noopener">Less Context</a>（2026）<br><small>GPT-5；報帳任務，50 題</small></td><td>全部歷史 → 只留最近 5 組 tool call → 再加一段摘要</td><td>71.0% → 79.0% → <b>91.6%</b></td></tr>
                 </tbody>
               </table></div>
               <details class="gloss" id="n-swebench">
-                <summary><span class="gloss-k">名詞</span><span class="gloss-t">SWE-bench 與消融實驗：這些數字是怎麼量出來的</span></summary>
+                <summary><span class="gloss-k">名詞</span><span class="gloss-t">SWE-bench、消融實驗與 4-bit 量化：這些數字是怎麼量出來的</span></summary>
                 <div class="gloss-body prose">
                   <p>SWE-bench 是 2023 年普林斯頓提出的 benchmark，從 12 個 Python 開源專案的 GitHub issue 出題，共 2,294 題。Agent 拿到 repo 和 issue 描述，要產出一份 patch。判分是跑該專案的測試，原本失敗、修完要通過的測試都過了才算解出。</p>
                   <p>SWE-bench Lite 是 300 題的子集，SWE-agent 的 18.0% 就是在它上面量的（54 題）。SWE-bench Verified（2024）是 OpenAI 請人逐題檢查後留下的 500 題。<a href="https://arxiv.org/abs/2509.16941" target="_blank" rel="noopener">SWE-bench Pro</a>（2025，Scale AI）換成較新、較大的專案，題目更長、更難。Benchmark 本身怎麼讀是 L7 的主題。</p>
                   <p>消融實驗（ablation）是量「某個零件有多重要」的標準做法：把一個部分拿掉或換掉，其他全部不動，看分數掉多少。</p>
+                  <p>4-bit 量化（quantization）是把 model 的每個權重從 16 bit 壓成 4 bit 存，記憶體少很多，才能在本機跑。代價是 model 的能力通常比原本的精度差一點，所以 Lewis 的數字不能直接套到雲端的大 model 上。</p>
                 </div>
               </details>
-              <p>課程由此得出結論：有些看起來是 model 的失敗，根源在 context 和 control loop，也就是 harness 怎麼決定繼續、停止、介入。它寫成 Agent = Model × Harness：model 的能力定上限，harness 決定實際發揮多少。所以 <strong>agent 做不好時，先查 harness，再換 model</strong>。</p>
+              <p>課程由此得出結論：有些看起來是 model 的失敗，根源在 context 和 control loop，也就是 harness 怎麼決定繼續、停止、介入。它寫成 Agent = Model × Harness：model 的能力定上限，harness 決定實際發揮多少。所以 <strong>agent 做不好時，先查 harness，再換 model</strong>。先查 harness 的理由是兩邊的代價不一樣：換 model 只要改一個設定，但之後每一圈都付更貴的 token，而且它不告訴你為什麼失敗；如果原因在 harness，例如對話放不下就停，換了 model 照樣停。Harness 是你自己的程式，讀一次執行紀錄就看得到哪一步出錯，改完用同一組題目重跑就能驗證。</p>
               <p id="i2-1"><b>倍數要連著條件讀。</b>課程只列了題數，下面的條件來自 <a href="https://arxiv.org/abs/2608.26218" target="_blank" rel="noopener">Lewis 的論文</a>本身。它的對照組在對話紀錄放不下 window 時，run 就直接結束，所以多解出來的題目，有一部分只是沒有中途停掉。把 window 放大，<strong>262,144 token 時是 102 比 101</strong>：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -301,7 +302,7 @@
               </div>
               <figcaption>這個差距在什麼條件下存在？Window 小的時候很大，262,144 token 時幾乎沒有。不同 window 的數字來自不同批次的 run，所以看方向，不要當成 window 大小的精確因果。依 Lewis（2026）的表。</figcaption>
             </figure>
-              <p>這個實驗還有三個限制。它用的是本地跑的 4-bit 開源 model，沒有測雲端的 frontier model。改良版也更貴：agent 跑得更久，Verified 的圈數多了一倍，prompt token 從 37.8M 變成 80.7M。論文也沒有逐項消融，分不出哪一項改動貢獻多少。</p>
+              <p>這個實驗還有三個限制。它用的是本地跑的 4-bit 開源 model，沒有測 frontier model（各家最強、在雲端跑的旗艦 model），所以看不出換成更強的 model 時，差距還在不在。改良版也更貴：agent 跑得更久，Verified 的圈數多了一倍，prompt token 從 37.8M 變成 80.7M。論文也沒有逐項消融，分不出哪一項改動貢獻多少。</p>
               <p id="i2-2"><b>本文的判斷：window 大了還是要管，理由換了。</b>2026 年主流 model 的 window 已經到 1M token，放不下的情況少了，Lewis 那種差距不一定會出現。但第 1 章的錢和延遲照付，舊內容也會誤導 model：Less Context 的全歷史組輸給修剪組，主因是舊的表單狀態還留著，agent 引用到舊值；<a href="https://arxiv.org/abs/2606.29718" target="_blank" rel="noopener">Xia 等人</a>（2026）在長時間搜尋任務上也量到，context 越長，agent 越常放棄，而 window 大小不是主要瓶頸。這兩篇各只測一類任務，所以要當成假設，在自己的任務上量。</p>
               <p id="i2-3"><b>怎麼查。</b>實際做法是讀失敗的 trajectory，也就是一次 run 的完整紀錄：每一圈 model 看到什麼、做了什麼。照下圖的順序問，<strong>前四格都答完才輪到換 model</strong>：</p>
               <figure class="diagram">
@@ -344,7 +345,7 @@
                   <text x="190" y="333.0" text-anchor="middle" class="dg-l-on">都沒問題，才考慮換 model</text>
                 </svg>
               </div>
-              <figcaption>Agent 做不好時，依什麼順序查？本文的整理，把這一章和第 5、6、8 章的判斷畫成一條路。前四格都比換 model 便宜，也比較容易驗證。</figcaption>
+              <figcaption>Agent 做不好時，依什麼順序查？本文的整理，把這一章和第 5、6、8 章的判斷畫成一條路。前四格都比換 model 便宜：回答它們只要讀一次失敗的紀錄，答案直接指出要改哪裡，改一次就好；換 model 是之後每一圈都多付錢，而且原因如果在前四格，換了照樣失敗。</figcaption>
             </figure>
               <figure class="file"><figcaption>terminal：讀最近一次 session 的 trajectory（路徑與 /context 依 2026-11 的 Claude Code 文件；輸出是本文補的）</figcaption><pre><code>$ cd ~/.claude/projects/&lt;專案目錄&gt;      # 每個 session 存成一個 JSONL，一行一則訊息
 $ f=$(ls -t *.jsonl | head -1)          # 最新的那一個
@@ -362,10 +363,10 @@ $ jq -c 'select(.type=="assistant") | .message.content[]?
           <div class="idea" id="i3">
             <h3><span class="idea-no">3</span>Context 的結構：十格裡，開頭不動才省得下來</h3>
             <div class="prose">
-              <p>前兩章講 context 為什麼貴。這一章把它打開：一次 request 裡到底有什麼，順序怎麼排。這堂和 L2、L3 講到的每一樣東西，進 context 時都在下面其中一格：</p>
+              <p>第 1 章講 context 為什麼貴，第 2 章講它為什麼值得先查。這一章把它打開：一次 request 裡到底有什麼，順序怎麼排。這堂和 L2、L3 講到的每一樣東西，進 context 時都在下面其中一格：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 546" role="img" aria-label="一個直立的 context window，由上到下十格，分四層。第一層 tools 與 system：1 system prompt，2 tool 定義，不變，除非 tool 集合改了。第二層 messages 的開頭：3 skill 索引，4 memory 檔案，5 環境資訊，6 hook 注入的文字，session 開始時定下，clear 或 compact 之後重新載入。第三層 messages：7 compaction 的摘要，8 對話歷史，最大、長得最快，9 這一圈的新訊息，每一圈都在變。第四層 max_tokens：10 預留給輸出的空間。">
+                <svg viewBox="0 0 720 546" role="img" aria-label="一個直立的 context window，由上到下十格，分四層。第一層 tools 與 system：1 system prompt，2 tool 定義，不變，除非 tool 集合改了。第二層 messages 的開頭：3 skill 索引，4 memory 檔案，5 環境資訊，6 hook 注入的文字，session 開始時定下，打 /clear 或 /compact 之後重新載入。第三層 messages：7 compaction 的摘要，8 對話歷史，最大、長得最快，9 這一圈的新訊息，每一圈都在變。第四層 max_tokens：10 預留給輸出的空間。">
                   <defs><marker id="l4v-window-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-window-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="20" class="dg-cb">API 欄位</text>
                   <text x="120" y="20" class="dg-cb">Context window：一次 request 送進 model 的全部</text>
@@ -422,8 +423,16 @@ $ jq -c 'select(.type=="assistant") | .message.content[]?
                   <text x="588" y="400" class="dg-c">每一圈都在變</text>
                 </svg>
               </div>
-              <figcaption>一次 request 裡有什麼？這是本文唯一一份完整清單，其他地方都指回這裡。分層與「什麼時候會變」依 Claude Code 的文件（2026-11）；課程列了其中幾格，其他依 L2、L3 講過的機制補上。由上到下越來越常變，這個順序是為了 prefix cache。</figcaption>
+              <figcaption>一次 request 裡有什麼？這是本文唯一一份完整清單，其他地方都指回這裡。分層與「什麼時候會變」依 Claude Code 的文件（2026-11）；課程列了其中幾格，其他依同一份文件補上。第 1 到第 9 格由上到下越來越常變，這個順序是為了 prefix cache；第 10 格不是送進去的內容，是替輸出留的空間。</figcaption>
             </figure>
+              <p>圖裡有幾個 Claude Code 的名字，後面的章才細講，這裡先各用一句話交代：</p>
+              <ul>
+                <li><b>Skill。</b>一份寫成 markdown 的做法說明，例如「怎麼寫 commit 訊息」。平常只有名字和一行說明放在第 3 格；model 決定用它時，全文才讀進第 8 格。</li>
+                <li><b>CLAUDE.md 與 auto memory。</b>CLAUDE.md 是你放在專案裡、寫給 Claude Code 的規則檔；auto memory 是 Claude Code 自己替這個專案記下的筆記檔。兩者每個 session 開頭都從硬碟讀進第 4 格。</li>
+                <li><b>Hook。</b>事件發生時 harness 自動跑的一段程式，例如 session 開始時印出 git 狀態；它印出來的文字可以放進第 6 格。第 4 章有一個實例。</li>
+                <li><b>Compaction。</b>請 LLM 把舊的對話歷史寫成一段摘要，取代原文，空出 window；摘要放在第 7 格。第 5 章細講。</li>
+                <li><code>/clear</code>、<code>/compact</code>：Claude Code 裡打的兩個指令。<code>/clear</code> 清空對話重來；<code>/compact</code> 立刻做一次 compaction。</li>
+              </ul>
               <p id="i3-1"><b>兩件事要記。</b>第一，<strong>這個 request 就是 model 看到的全部</strong>，上一圈的事它只知道 messages 裡寫了什麼。第二，messages 是 harness 的資料，不是 model 的。Harness 可以在送出前改它，第 4、5 章的四種策略就是改它的四種方式。要看自己的 session 每一格佔多少，在 Claude Code 打 <code>/context</code>。</p>
               <p id="i3-2"><b>順序不是隨便排的：cache 只認開頭。</b>Agent 每一圈的 request 幾乎都是「上一圈加一點」，所以開頭那一大段可以讀 <a class="tm" href="#n-prefix">prefix cache</a>，只付一小部分的價錢。代價是比對方式很嚴格：</p>
               <details class="gloss" id="n-prefix">
@@ -491,7 +500,7 @@ $ jq -c 'select(.type=="assistant") | .message.content[]?
               <p id="i3-3"><b>課程只提一句，正式產品把它當第一條規則（本文補的）。</b>課程只在 compaction 的提醒裡說要保留開頭。2025–2026 年，三個正式產品的團隊都寫了工程文章，把這件事放在最前面：</p>
               <ul>
                 <li><b>Manus（2025）。</b>把 KV cache（也就是 prefix cache）的命中率稱為 production agent <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus" target="_blank" rel="noopener">最重要的單一指標</a>。</li>
-                <li><b>Codex（2026）。</b>Agent loop 送出的 JSON 隨圈數平方成長，<a href="https://openai.com/index/unrolling-the-codex-agent-loop" target="_blank" rel="noopener">OpenAI 的文章</a>說 cache 命中時，model 的取樣才是線性的。</li>
+                <li><b>Codex（2026）。</b>每一圈都重送整份對話，所以整個 run 送出的 JSON 總量隨圈數的平方成長（第 1 章的算式）。<a href="https://openai.com/index/unrolling-the-codex-agent-loop" target="_blank" rel="noopener">OpenAI 的文章</a>說，cache 命中時，model 每一圈只要算新加的那一段，呼叫 model 產生輸出（文章叫 sampling）的計算量才變成隨圈數線性成長，不是平方。</li>
                 <li><b>Claude Code（2026）。</b><a href="https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything" target="_blank" rel="noopener">Anthropic 的文章</a>說他們監控命中率，掉太低就當成事故處理。</li>
               </ul>
               <p>這三篇都是各家自己的經驗，不是對照實驗，但規則一致：<strong>會變的東西一律往後放</strong>，要更新就在尾端加訊息，不要回頭改。</p>
@@ -499,13 +508,13 @@ $ jq -c 'select(.type=="assistant") | .message.content[]?
                 <thead><tr><th>想做的事</th><th>會讓 cache 失效的做法</th><th>保住 cache 的做法</th></tr></thead>
                 <tbody>
                   <tr><td>告訴 model 時間或檔案變了</td><td>改 system prompt，或在裡面放時間戳</td><td>下一則訊息附一段（Claude Code 的 <code>&lt;system-reminder&gt;</code>）</td></tr>
-                  <tr><td>限制這一階段能用的 tool</td><td>增刪 tool 清單</td><td>Tool 全留著，用訊息說規則（Claude Code 的 plan mode）；或在解碼時遮掉不許選的 token（Manus）</td></tr>
-                  <tr><td>Tool 太多，schema 太大</td><td>用到才把 schema 加進 <code>tools</code></td><td>固定留只有名字的 stub，用 tool search 載入（第 4 章）</td></tr>
+                  <tr><td>限制這一階段能用的 tool</td><td>增刪 tool 清單</td><td>Tool 全留著，用訊息說規則。Claude Code 的 plan mode（先規劃、不改檔案的模式）就這樣做：進入 plan mode 時 tool 清單不變，改由一則訊息告訴 model 這一階段不改檔案。或照 Manus 的做法：tool call 也是 model 一個 token 一個 token 寫出來的，在它寫 tool 名稱時，把不許用的那些名稱的 token 遮掉，model 就選不到</td></tr>
+                  <tr><td>Tool 太多，tool 定義（含參數的 schema）加起來太大</td><td>用到才把那個 tool 的定義加進 <code>tools</code></td><td>每個 tool 從第一圈就留一個只有名字的 stub（簡短的占位定義），完整的 schema 用 tool search 載入（第 4 章）</td></tr>
                   <tr><td>小工作想用便宜的 model</td><td>中途切換 model，cache 是每個 model 各一份</td><td>開 subagent（有自己 context 的另一個 agent，L3），由現在的 model 寫交接</td></tr>
                   <tr><td>Tool 結果序列化成文字</td><td>JSON key 順序不固定、tool 順序每次洗牌</td><td>固定順序，同樣的內容永遠序列化成同樣的文字</td></tr>
                 </tbody>
               </table></div>
-              <p>這張表也是接下來兩章的限制：管 context 的每一招，都要多問一句「它動到開頭了嗎」。實際的命中率這樣看：</p>
+              <p>這張表也是接下來兩章的限制：<strong>管 context 的每一招，都要多問一句「它動到開頭了嗎」</strong>。實際的命中率這樣看：</p>
               <figure class="file"><figcaption>terminal：Claude Code 的 /usage（官方文件的範例，2026-11；註解是本文補的）</figcaption><pre><code>&gt; /usage
 Prompt cache (main):   14 requests · 91% of input tokens from cache   ← 這個比例掉下來就要查
   · 2 misses (last 6m 10s ago, 310.2k tokens re-cached)               ← 有人動到開頭
@@ -562,11 +571,11 @@ Prompt cache (main):   14 requests · 91% of input tokens from cache   ← 這�
                   <text x="704" y="262" text-anchor="end" class="dg-c">有損：原文拿不回來</text>
                 </svg>
               </div>
-              <figcaption>四種策略各在哪裡動作？1、2 在內容進 window 之前，原文都還在外面；3、4 處理已經在 window 裡的內容，越往右越難找回。只有紅色的 compaction 要呼叫 LLM。</figcaption>
+              <figcaption>四種策略各在哪裡動作？1、2 在內容進 window 之前動作，原文都在 window 外面：admission 丟掉的部分還在來源（檔案、網頁），重新呼叫 tool 就拿得到；offloading 由 harness 把原文存在外面、只留一個 handle。3、4 處理已經在 window 裡的內容，越往右越難找回。紅色的 compaction 一定要呼叫 LLM；其他三種只有 admission 的一個做法（交給 subagent）要，下面的表會講。</figcaption>
             </figure>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 216" role="img" aria-label="三種策略能省多少，長條照比例畫。Admission：原始 DOM 48,000 token，擷取後 900，少 98%。Offloading：60 個 tool schema 42,000 token，索引加 3 個 schema 3,100，少 93%。Transformation：每個結果都留著 96,000 token，只留最新狀態 24,000，少 75%。">
+                <svg viewBox="0 0 720 216" role="img" aria-label="三種策略能省多少，長條照比例畫。Admission：原始 DOM 48,000 token，擷取後 900，少 98%。Offloading：60 個 tool schema 42,000 token，索引加 3 個 schema 3,100，少 93%。Transformation：同樣的檔案和指令結果讀了好幾次，每一次都留著 96,000 token；每個檔案只留最新一次、舊的結果遮掉，24,000，少 75%。">
                   <defs><marker id="l4v-save-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-save-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="16" y="30" class="dg-ls">Admission</text>
                   <text x="16" y="48" class="dg-c">原始 DOM → 擷取</text>
@@ -581,17 +590,17 @@ Prompt cache (main):   14 requests · 91% of input tokens from cache   ← 這�
                   <rect x="200" y="102" width="14.53125" height="20" rx="2" class="dg-n-a"/>
                   <text x="220.53125" y="117" class="dg-cb">3,100（少 93%）</text>
                   <text x="16" y="162" class="dg-ls">Transformation</text>
-                  <text x="16" y="180" class="dg-c">留全部 → 只留最新</text>
+                  <text x="16" y="180" class="dg-c">每次讀的都留 → 只留最新</text>
                   <rect x="200" y="144" width="450.0" height="20" rx="2" class="dg-n-n"/>
                   <text x="656.0" y="159" class="dg-c">96,000</text>
                   <rect x="200" y="168" width="112.5" height="20" rx="2" class="dg-n-a"/>
                   <text x="318.5" y="183" class="dg-cb">24,000（少 75%）</text>
                 </svg>
               </div>
-              <figcaption>三種策略能省多少？長條照比例畫，單位是 token，數字是課程的例子。答案都不變，省下來的是之後每一圈要重送的部分。Compaction 課程沒有給數字。</figcaption>
+              <figcaption>三種策略能省多少？長條照比例畫，單位是 token，數字是課程的例子。答案都不變，省下來的是之後每一圈要重送的部分。Transformation 那一列是第 5 章的 dedup 加 masking：agent 反覆讀同樣的檔案時，每個檔案只留最新讀到的那一次，更舊的 tool 結果換成一行占位文字。Compaction 課程沒有給數字。</figcaption>
             </figure>
               <p>這個順序的理由是原文拿不拿得回來，下一章講完四種再回頭看。這一章先處理還沒進來的東西，因為<strong>沒進來的內容不用付任何一種成本</strong>。</p>
-              <p id="i4-1"><b>Admission：在門口把關。</b>Tool 結果加進 messages 之前，先決定哪些部分值得進 window，其他的直接丟掉，要用就得重新呼叫 tool。四個做法的差別在誰決定留什麼：</p>
+              <p id="i4-1"><b>Admission：在門口把關。</b>Tool 結果加進 messages 之前，先決定哪些部分值得進 window，其他的直接丟掉，harness 不留副本。丟掉的部分還在來源（檔案、網頁），要用就得重新呼叫 tool，再拿一次。四個做法的差別在誰決定留什麼：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>做法</th><th>誰決定留什麼</th><th>代價</th></tr></thead>
                 <tbody>
@@ -611,7 +620,7 @@ fetch_page(url, fields=["title", "price"])
 "&lt;!DOCTYPE html&gt;… [46,000 token omitted; pass fields= to narrow] …&lt;/html&gt;"
 // 4 isolation：48,000 token 留在 subagent 的 context，主 agent 只看到答案
 "Lowest price: NT$1,290 (USB-C Hub 7-in-1)."</code></pre></figure>
-              <p>課程的例子<strong>從 48,000 token 縮到 900，答案卻相同</strong>，所以剩下的 47,100 token 每一圈都要重送，卻不幫忙找答案。能在設計時就丟的先丟，丟不掉的才在執行時截斷或交給別人。用現成的 harness 也做得到，Claude Code 的 hook（事件發生時自動跑的程式，L2）可以在指令執行前改寫它，下面這段讓測試指令只輸出失敗的部分：</p>
+              <p>課程的例子<strong>從 48,000 token 縮到 900，答案卻相同</strong>。所以沒有 admission 的話，多出來的那 47,100 token 每一圈都要重送，卻不幫忙找答案。能在設計時就丟的先丟，丟不掉的才在執行時截斷或交給別人。用現成的 harness 也做得到，Claude Code 的 hook（事件發生時自動跑的程式，L2）可以在指令執行前改寫它，下面這段讓測試指令只輸出失敗的部分：</p>
               <figure class="file"><figcaption>~/.claude/hooks/filter-test-output.sh（節錄；依 2026-11 Claude Code 文件的範例，註解是本文補的）</figcaption><pre><code>input=$(cat)                                          # hook 從 stdin 收到這次的 tool call
 cmd=$(echo "$input" | jq -r '.tool_input.command')    # model 想跑的指令
 if [[ "$cmd" =~ ^(npm test|pytest|go test) ]]; then   # 只處理測試指令（原範例的條件更嚴）
@@ -620,7 +629,7 @@ if [[ "$cmd" =~ ^(npm test|pytest|go test) ]]; then   # 只處理測試指令（
     '{hookSpecificOutput: {hookEventName: "PreToolUse",
                            updatedInput: (.tool_input + {command: $f})}}'
 fi</code></pre></figure>
-              <p id="i4-2"><b>Offloading：放在外面，要用再讀。</b>內容留在 window 外面，只留一個 handle（指向外部內容的參照，例如檔案路徑或 id），需要時才載入。和 admission 的差別是原文還在，隨時拿得到。做法有五個：</p>
+              <p id="i4-2"><b>Offloading：放在外面，要用再讀。</b>內容留在 window 外面，只留一個 handle（指向外部內容的參照，例如檔案路徑或 id），需要時才載入。和 admission 的差別在誰留著原文：admission 丟掉就不管了，要用得重新呼叫 tool；offloading 由 harness 自己存一份，model 照 handle 就讀得回來，不必重跑。做法有五個：</p>
               <ul>
                 <li><b>Tool 定義漸進載入。</b>一開始只放名字，用到哪個 tool 才載入它的 schema。</li>
                 <li><b>Tool search。</b>把 tool 清單做成可以搜尋的索引，model 先搜再載入。</li>
@@ -653,7 +662,7 @@ fi</code></pre></figure>
               </div>
               <figcaption>Tool 輸出太大時怎麼辦？這是 Claude Code 的 Bash tool 的做法（依 2026-11 的文件）：成功的結果超過約 30,000 字元，就存成檔案，context 只放路徑和預覽。120,000 是假設的數字。</figcaption>
             </figure>
-              <p>Tool 定義這一筆常常比想像的大。Anthropic 的<a href="https://www.anthropic.com/engineering/advanced-tool-use" target="_blank" rel="noopener">工程文章</a>（2025）說內部見過 134K，他們的 tool search 在內部測試裡把開工前佔掉的 context 從約 77K 降到約 8.7K。Claude Code 現在<a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener">預設</a>就這樣處理 MCP tool（把外部系統包成的 tool，L2）：只有名字進 context，用到才載入。</p>
+              <p>回到清單的前兩個做法：tool 定義這一筆常常比想像的大。Anthropic 的<a href="https://www.anthropic.com/engineering/advanced-tool-use" target="_blank" rel="noopener">工程文章</a>（2025）說內部見過 134K，他們的 tool search 在內部測試裡把開工前佔掉的 context 從約 77K 降到約 8.7K。Claude Code 現在<a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener">預設</a>就這樣處理 MCP tool（把外部系統包成的 tool，L2）：只有名字進 context，用到才載入。</p>
               <p>這裡有一個陷阱，來自第 3 章：<strong>把 schema 加進 <code>tools</code> 會讓整份 cache 失效</strong>。所以正確的做法是 stub 從第一圈就全部放好、順序固定，載入的 schema 接在對話裡，開頭不動。課程只寫「用到才載入」，實作時要多這一步。</p>
             </div>
           </div>
@@ -774,7 +783,7 @@ fi</code></pre></figure>
 第 32–63 筆 最多 512 字元
 更舊        最多 256 字元      # 留頭尾，中間換成省略標記；完整原文存在紀錄裡</code></pre></figure>
               <p id="i5-2"><b>不呼叫 LLM，不等於免費。</b>第 3 章說過，<strong>改了中間一筆，那一筆之後的 cache 全部失效</strong>。所以 harness 不會每圈遮一筆，而是攢到一個門檻再一次清一批，讓 cache 只重建一次；上面的 <code>clear_at_least</code> 就是這個用途。另一個風險是遮掉的結果裡可能有後面要引用的事實，所以關鍵的內容要標成不清（<code>exclude_tools</code>），或另外寫進檔案。</p>
-              <p id="i5-3"><b>本文的判斷：紀錄和 model 看到的東西要分開。</b>規則刪除之所以算「大多拿得回」，前提是完整的紀錄還留著。Lewis 保留完整紀錄，只給 model 較小的 view；<a href="https://platform.claude.com/docs/en/build-with-claude/context-editing" target="_blank" rel="noopener">Claude API</a> 在 server 端清，client 手上的歷史不變；<a href="https://developers.googleblog.com/en/architecting-efficient-context-aware-multi-agent-framework-for-production/" target="_blank" rel="noopener">Google ADK</a> 直接把 context 定義成從更完整的狀態編譯出來的 view。寫 harness 時就照這個切：</p>
+              <p id="i5-3"><b>本文的判斷：紀錄和 model 看到的東西要分開。</b>上面 masking 的占位文字叫 model「需要就再呼叫一次 tool」，但重跑拿到的是現在的結果：檔案可能已經改過，當時的測試輸出是舊版程式跑的、現在重跑會不同，有副作用的指令也不能隨便重跑。要查 model 當時為什麼那樣決定，或從那一步重來，需要的是它當時看到的那一份，所以完整的紀錄要留著。Lewis 保留完整紀錄，只給 model 較小的 view；<a href="https://platform.claude.com/docs/en/build-with-claude/context-editing" target="_blank" rel="noopener">Claude API</a> 在 server 端清，client 手上的歷史不變；<a href="https://developers.googleblog.com/en/architecting-efficient-context-aware-multi-agent-framework-for-production/" target="_blank" rel="noopener">Google ADK</a>（Google 的 agent 開發框架，Agent Development Kit）直接把 context 定義成從更完整的狀態編譯出來的 view。寫 harness 時就照這個切：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 138" role="img" aria-label="三個方塊由左到右。Session record：完整、只往後加、存在硬碟。中間：每一圈組一次 view，做 dedup、masking、摘要。右邊：request，model 這一圈看到的。View 裡少掉的內容還在左邊，只要 model 有路徑讀回，就不算真的丟掉。">
@@ -793,9 +802,9 @@ fi</code></pre></figure>
                   <text x="16" y="118" class="dg-k">View 裡少掉的內容還在左邊，只要 model 有路徑讀回，就不算真的丟掉</text>
                 </svg>
               </div>
-              <figcaption>刪掉的東西去了哪裡？本文的整理。紀錄和 model 看到的東西分開，刪除就只影響 view。</figcaption>
+              <figcaption>刪掉的東西去了哪裡？本文的整理。紀錄和 model 看到的東西分開，刪除就只影響 view。但「拿得回」還要一個條件：view 裡要留下指回紀錄的路徑（handle、檔名、call id），model 才知道少了什麼、去哪裡讀。</figcaption>
             </figure>
-              <p id="i5-4"><b>Compaction：LLM 當最後手段。</b>LLM 把舊歷史寫成一段摘要，換掉原文。Rolling summary 邊走邊摘要舊的 tool 結果，full summary 等快滿時把整段重寫一次，Claude Code 的 <code>/compact</code> 和自動 compaction 是後者。留什麼由 model 決定，<strong>原文沒有 handle 可以拿回</strong>。課程給了三個提醒：</p>
+              <p id="i5-4"><b>Compaction：LLM 當最後手段。</b>LLM 把舊歷史寫成一段摘要，換掉原文。Rolling summary 邊走邊摘要舊的 tool 結果，full summary 等快滿時把整段重寫一次，Claude Code 的 <code>/compact</code> 和自動 compaction 是後者。留什麼由 model 決定，而摘要裡<strong>沒有指回原文的 handle</strong>：就算完整紀錄還在硬碟上（上圖的 session record），model 也不知道摘要漏了什麼、該去哪裡讀，所以對 model 來說，原文拿不回來。課程給了三個提醒：</p>
               <ul>
                 <li><b>預留空間。</b>要留 buffer 給摘要本身的輸出，不能等到全滿。</li>
                 <li><b>保持開頭。</b>做摘要的那次 request 也要用相同的 system prompt 和 tool，才讀得到 cache。<a href="https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything" target="_blank" rel="noopener">Anthropic</a> 說換一個 system prompt 來做，整段歷史都要照全價重算。</li>
@@ -831,26 +840,34 @@ fi</code></pre></figure>
                   <text x="16" y="234" class="dg-c"><tspan class="dg-cb">只剩摘要裡的：</tspan>你在對話裡交代的事、hook 之前加進來的文字</text>
                 </svg>
               </div>
-              <figcaption>Compaction 之後 context 長什麼樣？依 Claude Code 的文件（2026-11）。紅色的摘要是唯一由 LLM 決定內容的部分；規則要撐過 compaction，就要寫在會重載的地方。</figcaption>
+              <figcaption>Compaction 之後 context 長什麼樣？依 Claude Code 的文件（2026-11）。圖裡的 project 指第 3 章十格圖的第 3 到第 6 格，也就是 session 開始時從硬碟讀進來的那幾格。紅色的摘要是唯一由 LLM 決定內容的部分；規則要撐過 compaction，就要寫在會重載的地方。</figcaption>
             </figure>
-              <p>它本身也不便宜，LLM 要讀完整段歷史：Claude API <a href="https://platform.claude.com/docs/en/build-with-claude/compaction-threshold" target="_blank" rel="noopener">文件</a>的範例裡，一次 compaction 是 180,000 token 的 input 加 3,500 token 的 output，而且由同一個 model 寫。所以要自己挑時機，換不相干的工作時乾脆重來：</p>
+              <p>圖下方還有兩個 Claude Code 的名字。Plan 是 plan mode（先規劃、不改檔案的模式）寫下的計畫，存在硬碟上，所以會放回來。有 paths 的 rule 是 <code>.claude/rules/</code> 底下標了適用路徑的規則檔，子目錄裡的 CLAUDE.md 也一樣只管那個目錄；它們平常就是 model 讀到那些路徑的檔案時才載入，所以 compaction 之後，也要等 model 再碰到那些檔案才回來。</p>
+              <p>回到 compaction：它本身也不便宜，LLM 要讀完整段歷史：Claude API <a href="https://platform.claude.com/docs/en/build-with-claude/compaction-threshold" target="_blank" rel="noopener">文件</a>的範例裡，一次 compaction 是 180,000 token 的 input 加 3,500 token 的 output。這次摘要由同一個 model 寫，照它的價格計費，不會換成便宜的小 model。自動 compaction 要等快滿才觸發，那時通常在任務中間，要讀的歷史也最長，所以值得自己挑時機：在自然的斷點做，並指定要留什麼；換不相干的工作時，舊歷史根本用不到，與其花 180,000 token 去摘要它，不如直接清掉重來：</p>
               <figure class="file"><figcaption>對話怎麼打：自己選時機（Claude Code，2026-11 的文件）</figcaption><pre><code>&gt; /compact focus on the auth bug fix    # 在自然的斷點做，並指定要留什麼
 &gt; /clear                                # 換不相干的工作：不花 token，整個重來</code></pre></figure>
-              <p>長時間任務還有第三條路：不摘要，開新的 session，靠檔案交接（<a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Anthropic</a>，2026），這是 L3 的主題。</p>
-              <p id="i5-5"><span class="anchor" id="x3"></span><b>為什麼是這個順序。</b>四種策略排的是原文拿不拿得回來。Admission 和 offloading 動作時原文還在外面；transformation 大多可以重跑 tool 拿回；compaction 由 model 決定留什麼，<strong>有損又不可逆</strong>。這大致也是成本的順序，前三種不用呼叫 model，但 transformation 會讓 cache 重建，清得太少反而不划算，帳在 <a href="l08.html#i4">L8</a>。</p>
+              <p>除了原地摘要（<code>/compact</code>）和整個清空（<code>/clear</code>），長時間任務還有第三條路：先把進度、做過的決定和下一步寫進檔案，再開一個新的 session，讓它一開頭就讀回那個檔案。它和 <code>/clear</code> 一樣從空的 context 開始，差別是交接的內容由檔案帶過去，不會失憶。<a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Anthropic 2026 年的 harness 文章</a>把這種做法叫 context reset，拿它和 compaction 比較。Compaction 保住連續性，但 model 還在同一個越來越長的 context 裡；reset 給它一個乾淨的開頭，代價是要多做交接。他們較早用的 Sonnet 4.5 接近 context 上限時會提早收尾（文章叫 context anxiety），光靠 compaction 不夠，所以用 reset；換到 Opus 4.5 之後這個行為大致消失，就拿掉 reset，只靠 compaction（一家公司的經驗，不是對照實驗）。所以對現在的 model，reset 是 compaction 不夠用時的退路，不是預設。多個 session 怎麼交接是 L3 的主題。</p>
+              <p id="i5-5"><span class="anchor" id="x3"></span><b>為什麼是這個順序。</b>四種策略排的是 model 失去多少：越前面，model 要的東西越拿得回來，拿回來的也越接近它原本看到的；harness 要做的事也越少：</p>
+              <ol>
+                <li><b>Admission。</b>在門口擋掉的部分，model 從沒看過，所以沒有「當時那一份」要找回；需要時重新呼叫 tool，拿到的就是它第一次看到的版本。Harness 不必存任何東西。</li>
+                <li><b>Offloading。</b>原文進過 context，現在由 harness 存著，model 照 handle 讀回來，拿到的就是原文，連 tool 都不用重跑。代價是 harness 要存一份、管 handle，model 也要多花一圈去讀。</li>
+                <li><b>Transformation。</b>Model 已經看過、也依它做了決定，遮掉之後重跑 tool 只拿到現在的版本；要拿回當時那一份，得靠 harness 留著完整紀錄（上面的本文判斷）。</li>
+                <li><b>Compaction。</b>摘要裡沒有指回原文的路徑，model 不知道漏了什麼，所以<strong>有損又不可逆</strong>。</li>
+              </ol>
+              <p>這大致也是成本的順序：前三種多半不呼叫 model，例外是 admission 交給 subagent 的那一種；compaction 每次都要。但 transformation 會讓 cache 重建，清得太少反而不划算，帳在 <a href="l08.html#i4">L8</a>。</p>
               <p>排在最後不代表不用。Less Context 只修剪時，引用舊狀態的錯誤從 34 次降到 6 次，提早結束卻從 9 次變 18 次，因為看不到任務全貌；再加一段摘要才降到 3 次。規則刪和摘要修的是不同的錯。</p>
               <p id="i5-6"><b>Context 會怎麼壞：五種失敗。</b>叫得出名字，修法就很明顯。前四種是 <a href="https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html" target="_blank" rel="noopener">Breunig</a> 2025 年的分類，drift 是課程加的，最右欄是本文的對應：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>怎麼發生</th><th>修法</th><th>對應的策略</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Poisoning</b></td><td>一個幻覺進了 window，後來 model 把它當成事實引用</td><td>刪掉那一段；寫進筆記前先驗證</td><td>Transformation</td></tr>
-                  <tr><td><b>Distraction</b></td><td>歷史越堆越長，agent 開始模仿自己過去的動作</td><td>遮掉 N 步以前的 tool 結果</td><td>Transformation</td></tr>
-                  <tr><td><b>Confusion</b></td><td>無關的 tool 或文件把答案帶偏</td><td>只放這一步需要的 tool 與文件</td><td>Admission、offloading</td></tr>
+                  <tr><td><b>Poisoning</b></td><td>一個幻覺進了 window，後來 model 把它當成事實引用</td><td>由人或檢查程式指出是哪一則訊息，harness 把它刪掉或改正；寫進筆記前先驗證</td><td>四種都不直接處理，因為固定的規則認不出哪一句是幻覺；最接近的是 harness 直接改 messages（第 3 章）</td></tr>
+                  <tr><td><b>Distraction</b></td><td>歷史越堆越長，agent 開始模仿自己過去的動作</td><td>把一長串舊步驟寫成摘要，model 看到的是結論，不是一串可以照抄的動作</td><td>Compaction；只遮 tool 結果不夠，因為 tool call 還在，動作的序列也還在</td></tr>
+                  <tr><td><b>Confusion</b></td><td>無關的 tool 或文件把答案帶偏</td><td>無關的文件在門口擋掉。Tool 清單不刪，每個 tool 只留一個名字（stub），這一步用得到的才載入完整定義：帶偏 model 的是用不到的那些長說明和參數，只剩名字，它們就不在 context 裡（第 4 章）。Anthropic 的 tool search 這樣做之後，大量 tool 的內部評估裡，Opus 4 的準確率從 49% 升到 74%（一家公司的測試）。名字重疊的 tool 仍會讓 model 猶豫，那要靠第 6 章的正交原則</td><td>Admission、offloading</td></tr>
                   <tr><td><b>Clash</b></td><td>新資訊和舊資訊矛盾，兩者都留在 window</td><td>每個物件只留最新狀態</td><td>Transformation（dedup）</td></tr>
                   <tr><td><b>Drift</b></td><td>真正的目標埋在歷史裡，model 改追附近的子目標</td><td>把目標重新放回 context 尾端</td><td>Compaction 之後放回；memory</td></tr>
                 </tbody>
               </table></div>
-              <p>有一點不要搞混：<strong>幻覺要刪，失敗的紀錄要留</strong>。Manus 的<a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus" target="_blank" rel="noopener">經驗</a>是把錯誤訊息和失敗的動作留在 context，model 才不會再犯一次；要刪的是 model 當成事實寫下來、但是錯的那句話。</p>
+              <p>有一點不要搞混：<strong>幻覺要刪，失敗的紀錄要留</strong>。Manus 的<a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus" target="_blank" rel="noopener">經驗</a>是把錯誤訊息和失敗的動作留在 context，model 才不會再犯一次；要刪的是 model 當成事實寫下來、但是錯的那句話。這和 masking 不衝突（本文的判斷）：masking 只遮 N 步以前的結果，最近的失敗還完整留著；更早的失敗，tool call 也還在，model 看得到自己試過什麼。一個教訓要撐得比 N 步久，就寫進筆記或任務清單（第 4 章的 offloading），或把那一類 tool 標成不清。</p>
             </div>
           </div>
 
@@ -860,14 +877,14 @@ fi</code></pre></figure>
               <p>Model 每一圈能做的只有一件事：選一個 tool、填好參數。所以 tool 決定它能看到什麼、能改什麼。對 context 來說，tool 進來的路只有兩條，也就是兩筆預算：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 216" role="img" aria-label="兩筆預算。固定成本是 tool 定義，每一圈都送，對應兩條原則：少且正交、專用。變動成本是 tool 輸出，每次呼叫才進來，留到清掉為止，對應三條原則：輸出省 token、錯誤要能教、預設冪等。">
+                <svg viewBox="0 0 720 216" role="img" aria-label="兩筆預算。固定成本是 tool 定義，每一圈都送，對應管定義的兩條原則：少且正交、專用。變動成本是每次呼叫，結果每次呼叫才進來、留到清掉為止，對應管呼叫的三條原則：輸出省 token、錯誤要能教、預設冪等。">
                   <defs><marker id="l4v-budget-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-budget-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="16" y="14" width="334" height="188" rx="6" class="dg-panel"/>
                   <rect x="370" y="14" width="334" height="188" rx="6" class="dg-panel"/>
                   <text x="32" y="40" class="dg-h">固定成本：tool 定義</text>
                   <text x="32" y="62" class="dg-c">每一圈都送，開了就一直付</text>
-                  <text x="386" y="40" class="dg-h">變動成本：tool 輸出</text>
-                  <text x="386" y="62" class="dg-c">每次呼叫才進來，留到清掉為止</text>
+                  <text x="386" y="40" class="dg-h">變動成本：每次呼叫</text>
+                  <text x="386" y="62" class="dg-c">結果留到清掉為止；失敗、重送也算</text>
                   <rect x="32" y="78" width="302" height="48" rx="4" class="dg-n-a"/>
                   <text x="183" y="107.0" text-anchor="middle" class="dg-ls">少且正交</text>
                   <rect x="32" y="136" width="302" height="48" rx="4" class="dg-n-a"/>
@@ -880,7 +897,7 @@ fi</code></pre></figure>
                   <text x="537" y="173.0" text-anchor="middle" class="dg-ls">預設冪等</text>
                 </svg>
               </div>
-              <figcaption>Tool 花的是哪兩筆錢？本文的整理：tool 進 context 只有兩條路，五條原則剛好分成兩組。評估一個 tool，要看它在兩筆預算上各花多少，又換回多少正確的下一步。</figcaption>
+              <figcaption>Tool 花的是哪兩筆錢？本文的整理：tool 進 context 只有兩條路，課程的五條原則依它管的是定義還是呼叫，分成兩組。「正交」指每個 tool 只管一件事，彼此功能不重疊；「冪等」指同一個呼叫做兩次，結果和做一次一樣。兩個詞下面各有一段細講。評估一個 tool，要看它在兩筆預算上各花多少，又換回多少正確的下一步。</figcaption>
             </figure>
               <p id="i6-1"><span class="anchor" id="t7"></span><b>Model 眼中的 tool 只有三段文字。</b>Name、description、input_schema，harness 每一次 request 都放進去。Model 看不到 tool 的程式碼，所以 <strong>description 就是一段 prompt</strong>，要寫什麼時候用、參數的格式、常見的誤用。Input_schema 用 <a class="tm" href="#n-jsonschema">JSON Schema</a> 寫型別和限制，model 填錯會在執行前擋下。</p>
               <figure class="file"><figcaption>一個 tool 定義，model 看到的全部（本文的例子）</figcaption><pre><code class="lang-json">{
@@ -904,10 +921,10 @@ fi</code></pre></figure>
                   <p>Tool 定義用它有兩個好處。Model 在訓練時看過大量 JSON Schema，讀得懂。Harness 也能在執行前用現成的 validator 檢查參數，缺欄位或型別錯就直接退回，不用真的跑 tool。各家 API 都用它，只是欄位名不同：Claude 叫 <code>input_schema</code>，OpenAI 叫 <code>parameters</code>。</p>
                 </div>
               </details>
-              <p id="i6-2"><span class="anchor" id="x1"></span><b>第一個問題：輸出進了 context，下一步會更好嗎？</b>SWE-agent 論文把 agent 與電腦之間的介面叫 agent-computer interface，因為 model 需要和人不同的介面：它沒有滑鼠和語法高亮，讀過的每一行都留在 context。論文把介面的零件逐一換掉，結果比「多給資訊比較好」複雜得多：</p>
+              <p id="i6-2"><span class="anchor" id="x1"></span><b>設計 tool 時最先要問的：輸出進了 context，下一步會更好嗎？</b>SWE-agent 論文把 agent 與電腦之間的介面叫 agent-computer interface，因為 model 需要和人不同的介面：它沒有滑鼠和語法高亮，讀過的每一行都留在 context。論文把介面的零件逐一換掉，結果比「多給資訊比較好」複雜得多：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 376" role="img" aria-label="橫條圖，SWE-agent 的介面消融實驗，model 是 GPT-4 Turbo，SWE-bench Lite 300 題，預設介面解出 18.0%。Shell only 11.0%。File viewer：30 行 14.3%，100 行 18.0%，整個檔案 12.7%。Search：iterative 12.0%，沒有 search 15.7%，summarized 18.0%。Editor：沒有 edit 10.3%，沒有 linting 15.0%，有 linting 18.0%。History：完整歷史 15.0%，最近 5 個 observation 18.0%。">
+                <svg viewBox="0 0 720 376" role="img" aria-label="橫條圖，SWE-agent 的介面消融實驗，model 是 GPT-4 Turbo，SWE-bench Lite 300 題，預設介面解出 18.0%。Shell only 11.0%。File viewer：30 lines 14.3%，100 lines 18.0%，full file 12.7%。Search：iterative 12.0%，no search 15.7%，summarized 18.0%。Editor：no edit 10.3%，no linting 15.0%，with linting 18.0%。History：full history 15.0%，last 5 observations 18.0%。">
                   <defs><marker id="l4v-aci-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-aci-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="16" y="38" class="dg-cb">介面</text>
                   <text x="100" y="38" class="dg-c">Shell only</text>
@@ -958,16 +975,16 @@ fi</code></pre></figure>
                   <text x="551.0" y="328" class="dg-c">舊的壓成一行</text>
                 </svg>
               </div>
-              <figcaption>介面的每個細節值多少？同一個 model（GPT-4 Turbo）、同一組 300 題，只換介面。青色是 SWE-agent 的預設，虛線是它的 18.0%。依論文的消融表重畫，比課程多畫了 30 lines、iterative、no search、no linting 四列。</figcaption>
+              <figcaption>介面的每個細節值多少？同一個 model（GPT-4 Turbo）、同一組 300 題，只換介面。青色是 SWE-agent 的預設，虛線是它的 18.0%。依論文的消融表重畫，比課程多畫了 30 lines、iterative、no search、no linting 四列。Summarized 是 SWE-agent 預設的搜尋：一次回一份摘要，列出哪些檔案有符合的結果，結果太多就不列，要 agent 換更窄的搜尋；iterative 一次只顯示一筆。</figcaption>
             </figure>
-              <p>三件事值得帶走。<strong>太少和太多都會掉分</strong>，所以 file viewer 取 100 行。Iterative search 一次顯示一筆，agent 會逐筆看完每一個結果，耗光預算，分數比完全沒有 search 還低，也就是<strong>設計差的 tool 比沒有 tool 更糟</strong>。Linter 把語法錯在進檔案前擋掉，值 3 個百分點。這些數字會隨 model 改變，推論不會。一個簡單的檢驗是：如果一個人只能透過這個 tool 看 repo，他做得到這個任務嗎？</p>
-              <p id="i6-3"><b>五條原則。</b>課程把它們收成五條，前兩條省固定成本，後三條省變動成本：</p>
+              <p>三件事值得帶走。<strong>太少和太多都會掉分</strong>，所以 file viewer 取 100 行。Iterative search 像編輯器的「下一個」，一次顯示一筆，agent 會逐筆看完每一個結果，耗光預算，分數比完全沒有 search 還低，也就是<strong>設計差的 tool 比沒有 tool 更糟</strong>。Linter 把語法錯在進檔案前擋掉，值 3 個百分點。這些數字會隨 model 改變，推論不會。一個簡單的檢驗是：如果一個人只能透過這個 tool 看 repo，他做得到這個任務嗎？</p>
+              <p id="i6-3"><b>五條原則。</b>課程把它們收成五條；本文依本章開頭的圖 1（兩筆預算）分兩組。前兩條管定義，也就是 tool 集合和介面，設計時就定了，每一圈都送。後三條管呼叫：每次回什麼、失敗或重送時怎麼辦。</p>
               <ul>
-                <li><b>少且正交。</b>功能重疊的 tool 會讓 model 猶豫。Claude Code 團隊 2026 年初說他們約 20 個 tool，<a href="https://hq-raydata-co.pages.dev/vault/06-reference/2026-02-27-trq212-seeing-like-an-agent/" target="_blank" rel="noopener">加新 tool 的門檻很高</a>（本文讀的是轉載）。</li>
-                <li><b>專用。</b><code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 則全推給 model 去猜。</li>
-                <li><b>輸出省 token。</b>用截斷、分頁、摘要。<a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener">Anthropic</a> 的例子是給一個 <code>response_format</code> 參數，同一筆 Slack 資料 detailed 要 206 token，concise 只要 72 token。</li>
-                <li><b>錯誤要能教。</b>下面有例子。</li>
-                <li><b>預設冪等。</b>下面有例子。</li>
+                <li><b>少且正交。</b>定義每一圈都送，tool 越少這筆越小。正交是每個 tool 只管一件事，功能重疊的 tool 會讓 model 每一圈都猶豫要用哪一個。Claude Code 團隊 2026 年初說他們約 20 個 tool，<a href="https://hq-raydata-co.pages.dev/vault/06-reference/2026-02-27-trq212-seeing-like-an-agent/" target="_blank" rel="noopener">加新 tool 的門檻很高</a>（本文讀的是轉載）。</li>
+                <li><b>專用。</b><code>search_orders(customer_id)</code> 把 table 結構和權限做進介面，<code>run_sql</code> 則全推給 model 去猜。介面寫好了，model 不必先花幾圈查 table 長什麼樣，也組不出越權的查詢。</li>
+                <li><b>輸出省 token。</b>每次呼叫的結果都留在 context，直到 harness 清掉它，所以要截斷、分頁、摘要。<a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener">Anthropic</a> 的例子是給一個 <code>response_format</code> 參數，同一筆 Slack 資料 detailed 要 206 token，concise 只要 72 token。</li>
+                <li><b>錯誤要能教。</b>失敗的結果也進 context；能教的錯誤讓 model 下一圈就改對，少花幾圈。下面有例子。</li>
+                <li><b>預設冪等。</b>Loop 會重送呼叫；冪等的 tool 重送也不出事，harness 才能放心自動重試。下面有例子。</li>
               </ul>
               <p id="i6-4"><b>錯誤要能教。</b>錯誤訊息是 model 唯一的回饋。同一個錯誤有三種回法，差別在 model 下一圈能不能直接動手：</p>
               <figure class="file"><figcaption>同一個 search_orders 呼叫失敗，三種 tool result（本文的例子）</figcaption><pre><code># 1 沒有用：model 只能猜
@@ -983,7 +1000,7 @@ ValueError: bad id"}
 {"error": "customer_id '10293' is not valid.
   Expected the form C-10293 (prefix C-, then digits).
   If you only have a name, call find_customer(name) first."}</code></pre></figure>
-              <p id="i6-5"><b>預設冪等。</b>冪等的意思是同一個呼叫做兩次，結果和做一次相同。讀檔、查詢、把一個值設成 5 都冪等；轉帳、送 email、在清單尾端加一筆都不冪等。Timeout、網路錯誤、model 以為上一次沒成功，都會讓 loop 再呼叫一次，所以 <code>create_refund(order_id, amount)</code> 這種 tool 很危險，<strong>重試一次就退兩次款</strong>。改法是加一個 idempotency key：每次呼叫帶一個固定的 id，tool 看到重複的 id 就不再做。</p>
+              <p id="i6-5"><b>預設冪等。</b>冪等的意思是同一個呼叫做兩次，結果和做一次相同。讀檔、查詢、把一個值設成 5 都冪等；轉帳、送 email、在清單尾端加一筆都不冪等。Timeout、網路錯誤、model 以為上一次沒成功，都會讓 loop 再呼叫一次，所以 <code>create_refund(order_id, amount)</code> 這種 tool 很危險，<strong>重試一次就退兩次款</strong>。改法是加一個 idempotency key：每一筆退款配一個 id（下圖的 <code>r-9</code>），這一筆的每次重送都帶同一個 id，新的一筆退款才換新的 id。Tool 記下做過的 id，看到重複的就不再做，直接回上一次的結果。Id 由發起這筆操作的一方產生：harness 自己重送時沿用原本的 id；model 重發時，id 要是 tool 的參數，model 才能把同一個值帶回來。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 288" role="img" aria-label="兩個並排的時序圖，都是 harness 呼叫 create_refund 退款 50，tool 做了退款，但回覆逾時沒有回到 harness，harness 於是重試一次。左圖沒有 idempotency key：第二次呼叫 tool 又退款 50，結果退了兩次。右圖帶著 request_id r-9：第二次呼叫時 tool 看到 r-9 已經做過，直接回上一次的結果，不再執行，結果只退一次。">
@@ -1032,7 +1049,7 @@ ValueError: bad id"}
               </div>
               <figcaption>回覆逾時後重試一次，會發生什麼？左邊 tool 退了兩次；右邊相同的 request_id 讓 tool 回上一次的結果，不再執行。</figcaption>
             </figure>
-              <p>有些操作做不到冪等，例如發 PR，這時要把 tool 標成不可重試，讓 harness 遇到失敗時停下來問人。Agent 之間的重試也是同一個問題，<a href="l05.html#i6">L5</a> 有完整的時序。</p>
+              <p>Key 要由真正執行動作的系統記住才有用。金流 API 多半支援，例如 Stripe 的請求可以帶 <code>Idempotency-Key</code>；用 SMTP 寄 email 就做不到：協定裡沒有這種 key，回覆逾時時，tool 也不知道上一封到底寄出去沒有。這類 tool 要標成不可重試，讓 harness 遇到失敗時停下來問人。Agent 之間的重試也是同一個問題，<a href="l05.html#i6">L5</a> 有完整的時序。</p>
               <details class="gloss" id="n-tools">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">搜尋、編輯、執行之外，常見的另外五種 tool</span></summary>
                 <div class="gloss-body prose">
@@ -1046,18 +1063,18 @@ ValueError: bad id"}
                   </ul>
                 </div>
               </details>
-              <p id="i6-6"><b>那只給 shell 行不行（本文補的）。</b>課程留給作業，只給了 GPT-4 時代的數字。2026 年的證據指向不同的方向，但各有條件：</p>
+              <p id="i6-6"><b>那只給 shell 行不行（本文補的）。</b>課程留給作業，只給了 GPT-4 時代的數字。2026 年的幾筆證據彼此方向不一致：有的支持專用介面，有的支持只給 bash，而且各有條件：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>來源</th><th>比什麼</th><th>結果</th></tr></thead>
                 <tbody>
                   <tr><td><a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">SWE-agent</a>（2024）<br><small>GPT-4 Turbo，修 bug</small></td><td>只給 shell 對為 model 設計的介面</td><td>11.0% 對 18.0%</td></tr>
-                  <tr><td><a href="https://vercel.com/blog/testing-if-bash-is-all-you-need" target="_blank" rel="noopener">Vercel 與 Braintrust</a>（2026-01）<br><small>Claude Sonnet 4.5，查 GitHub issue 資料</small></td><td>Bash 對 SQL</td><td>52.7% 對 100%，token 約 7 倍。修掉 bug 後差距「縮小很多」，但沒公布新數字</td></tr>
-                  <tr><td><a href="https://www.philschmid.de/superhuman-bash" target="_blank" rel="noopener">Schmid</a>（2026-09）<br><small>自己的 harness</small></td><td>只留 bash 和看圖的 tool</td><td>「差不多或更好」，沒有數字，是一個人的觀察</td></tr>
-                  <tr><td><a href="https://code.claude.com/docs/en/tools-reference" target="_blank" rel="noopener">Claude Code 文件</a>（2026-11）</td><td>macOS、Linux 預設拿掉專用的搜尋 tool（第 8 章的 grep、glob）</td><td>搜尋改走 Bash 內建的 <code>bfs</code>、<code>ugrep</code>；是產品決定，不是實驗</td></tr>
+                  <tr><td><a href="https://vercel.com/blog/testing-if-bash-is-all-you-need" target="_blank" rel="noopener">Vercel 與 Braintrust</a>（2026-01）<br><small>Claude Sonnet 4.5，查 GitHub issue 資料</small></td><td>讓 agent 用 bash 翻資料檔，對讓它下 SQL 查同一份資料</td><td>Bash 那組答對 52.7%，SQL 那組 100%；bash 用掉的 token 約是 SQL 的 7 倍。作者後來修掉自己實驗裡的 bug，說差距「縮小很多」，但沒有公布新數字</td></tr>
+                  <tr><td><a href="https://www.philschmid.de/superhuman-bash" target="_blank" rel="noopener">Schmid</a>（2026-09）<br><small>自己的 harness</small></td><td>把 tool 砍到只剩 bash 和看圖的 tool，對砍之前有專用 tool 的版本</td><td>他說表現和砍之前「差不多或更好」，沒有給數字（一個人的觀察）</td></tr>
+                  <tr><td><a href="https://code.claude.com/docs/en/tools-reference" target="_blank" rel="noopener">Claude Code 文件</a>（2026-11）</td><td>macOS、Linux 預設拿掉專用的搜尋 tool（第 8 章的 grep、glob）</td><td>搜尋改由 Bash tool 執行 Claude Code 附帶的 <code>bfs</code>（<code>find</code> 的替代品）和 <code>ugrep</code>（相容 grep 的搜尋程式）；這是產品決定，不是實驗</td></tr>
                 </tbody>
               </table></div>
-              <p><b>本文的判斷（2026-11）：</b>要看的是輸出和資料的形狀，shell 本身沒有問題。探索 repo 這類工作，shell 加上第 7 章的保護已經夠用；資料有清楚的 schema 時，專用介面（例如 SQL）仍然明顯省 token，也比較準。這幾項的證據都不是對照實驗，或只有單一任務的數字。</p>
-              <p id="i6-7"><b>Tool 的輸出不一定要進 context。</b>2025 年底多了一種做法：讓 model 寫一段程式去呼叫 tool，中間結果留在執行環境。<a href="https://www.anthropic.com/engineering/code-execution-with-mcp" target="_blank" rel="noopener">Anthropic</a> 的例子從 150,000 token 降到 2,000；它們的 <a href="https://www.anthropic.com/engineering/advanced-tool-use" target="_blank" rel="noopener">programmatic tool calling</a> 在內部測試裡平均少 37%（43,588 降到 27,297）。這是廠商自己的數字；單次呼叫、或每個中間結果都要 model 判斷時，就不划算。</p>
+              <p><b>本文的判斷（2026-11）：</b>要看的是輸出和資料的形狀，shell 本身沒有問題。「專用」是相對的：比起用 bash 翻檔案，SQL 已經是為結構化資料設計的查詢介面；比起 <code>search_orders</code>，它又太通用。探索 repo 這類工作，shell 加上第 7 章的保護已經夠用。資料有清楚的 schema 時，給 model 一個查詢介面，方向上比讓它用 bash 翻檔案省 token、也比較準；但唯一的數字來自 Vercel 修正前的實驗，修正後差距多大沒有公布，所以要在自己的資料上量。這幾項的證據都不是對照實驗，或只有單一任務的數字。</p>
+              <p id="i6-7"><b>Tool 的輸出不一定要進 context。</b>2025 年底多了一種做法：讓 model 寫一段程式去呼叫 tool，中間結果留在執行環境，只有程式最後印出的東西回到 context。<a href="https://www.anthropic.com/engineering/code-execution-with-mcp" target="_blank" rel="noopener">Anthropic 介紹這個做法的文章</a>裡，一個示範從 150,000 token 降到 2,000。Claude API 後來也提供同一個做法，叫 <a href="https://www.anthropic.com/engineering/advanced-tool-use" target="_blank" rel="noopener">programmatic tool calling</a>，在 Anthropic 的內部測試裡平均少 37%（43,588 降到 27,297；廠商自己的數字）。它多了一步：model 要先寫程式，再交給執行環境跑一次。只呼叫一次 tool 時沒有中間結果可省，這一步純粹是多出來的成本；每個中間結果都要 model 看過才能決定下一步時，它們終究要回到 context，也省不到。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 288" role="img" aria-label="兩種呼叫 tool 的方式。上面是直接呼叫：model 發出 tool call，tool 把整份結果送回 model，每一筆中間結果都進 context。下面是寫程式呼叫：model 寫一段程式交給 sandbox，sandbox 裡的程式呼叫 tool、過濾資料，中間結果留在 sandbox，只有最後的摘要回到 model。">
@@ -1088,7 +1105,7 @@ ValueError: bad id"}
                   <text x="363" y="258" text-anchor="middle" class="dg-c">中間結果留在這裡，不進 context</text>
                 </svg>
               </div>
-              <figcaption>Tool 的輸出一定要進 context 嗎？不一定。上面每一筆結果都經過 model；下面 model 只寫程式，資料留在執行環境。代價是要有 sandbox，第 7 章的保護一項都不能少。</figcaption>
+              <figcaption>Tool 的輸出一定要進 context 嗎？不一定。上面每一筆結果都經過 model；下面 model 只寫程式，資料留在執行環境。代價是 harness 要執行 model 寫的程式，所以要有 sandbox（一個關起來、碰不到其他檔案和網路的執行環境，第 7 章的註），第 7 章的保護一項都不能少。</figcaption>
             </figure>
             </div>
           </div>
@@ -1096,7 +1113,7 @@ ValueError: bad id"}
           <div class="idea" id="i7">
             <h3><span class="idea-no">7</span>Execution：shell 最強，保護全在 harness</h3>
             <div class="prose">
-              <p>第三類 tool 是執行，而它幾乎就是一個 shell。一次呼叫就能串接、過濾、迴圈；碰得到檔案系統、網路和套件管理員；產生的檔案與 process 在呼叫結束後還在。也就是說，blast radius（一個錯誤動作能波及的範圍）等於 shell 本身。課程列了五個執行上的考量，而 <strong>shell 自己一項都不做，全部落在 harness 身上</strong>：</p>
+              <p>課程把 tool 分成四類：搜尋與讀取、編輯、執行、其他（其他的常見五種在上一章的查閱註）。這一章先講執行，因為它錯了最難挽回。搜尋和編輯在第 8、9 章。執行類的 tool 幾乎就是一個 shell。一次呼叫就能串接、過濾、迴圈；碰得到檔案系統、網路和套件管理員；產生的檔案與 process 在呼叫結束後還在。也就是說，blast radius（一個錯誤動作能波及的範圍）等於 shell 本身。課程列了五個執行上的考量，而 <strong>shell 自己一項都不做，全部落在 harness 身上</strong>：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="一次 shell tool call 經過 harness 的五道保護，由左到右。Model 發出指令。Budget：這次還能不能試。Isolation：在哪裡跑、碰得到什麼。Duration：多久算逾時，能不能放背景。Failure signal：exit code、stderr 包成文字。Output：超過上限就截斷或存檔。最後 tool result 回到 model。">
@@ -1135,15 +1152,15 @@ ValueError: bad id"}
                   <text x="142" y="142" class="dg-k">Shell 自己一項都不做</text>
                 </svg>
               </div>
-              <figcaption>一次 shell 呼叫會經過哪些保護？本文依課程的五項考量畫成一條路。Shell 只管跑指令，這五項都要 harness 做。</figcaption>
+              <figcaption>一次 shell 呼叫會經過哪些保護？本文依課程的五項考量畫成一條路。Shell 只管跑指令，這五項都要 harness 做。這裡的 isolation 是執行隔離：指令在哪裡跑、碰得到什麼；第 4 章 admission 的 isolation 是把讀的工作交給 subagent，課程用了同一個字，指的是兩件事。</figcaption>
             </figure>
               <p id="i7-1"><b>五項各做什麼。</b>第二欄是做法和不做的後果，第三欄是一個正式產品的實際值，可以當成起點：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>項目</th><th>Harness 要做什麼</th><th>Claude Code 的做法（2026-11 文件）</th></tr></thead>
                 <tbody>
-                  <tr><td><b>失敗訊號</b></td><td>Exit code、stderr 尾端、執行時間包成文字，失敗寫在最前面，否則 model 可能當成正常輸出</td><td>Exit 1 對 <code>grep</code>、<code>find</code>、<code>diff</code> 算正常，其他指令算失敗</td></tr>
-                  <tr><td><b>輸出量</b></td><td>設上限，超過就截斷或存檔，並說怎麼縮小範圍，否則 model 只會重跑</td><td>成功的約 30,000 字元內直接回，超過回檔案路徑；失敗的約 10,000 字元內，超過留頭尾</td></tr>
-                  <tr><td><b>時間</b></td><td>要有 timeout，也要能放背景，否則會把還在跑的 build 當成失敗</td><td>預設 2 分鐘，上限 10 分鐘；到時移到背景，回 task id</td></tr>
+                  <tr><td><b>失敗訊號</b></td><td>Exit code、stderr 尾端、執行時間包成文字，失敗寫在最前面，否則 model 可能當成正常輸出</td><td><code>grep</code> 找不到符合的行、<code>diff</code> 比出兩個檔案不同時，都回 exit 1，這是結果不是錯誤；<code>find</code> 有幾個目錄讀不到時也回 1，其他結果照樣有用。所以 Claude Code 對這三個指令的 exit 1 算正常，其他指令算失敗</td></tr>
+                  <tr><td><b>輸出量</b></td><td>設上限，超過就截斷或存成檔案，並在輸出裡寫明怎麼縮小範圍（例如加 <code>-q</code>、用 grep 過濾）。少了最後這句，model 看到截斷過的輸出、又不知道怎麼拿到缺的部分，通常只會原樣重跑一次</td><td>成功的約 30,000 字元內直接回，超過回檔案路徑；失敗的約 10,000 字元內，超過留頭尾</td></tr>
+                  <tr><td><b>時間</b></td><td>要有 timeout，也要能放背景，否則會把還在跑的 build 當成失敗</td><td>每個指令的 timeout 預設 2 分鐘，model 可以替單一指令設長一點，最多 10 分鐘。指令跑到它的 timeout 時，Claude Code 不砍掉它，而是移到背景繼續跑，回一個 task id 讓 model 之後查結果</td></tr>
                   <tr><td><b>預算</b></td><td>數 retry 與 token，超過就交回使用者</td><td>非互動模式有 <code>--max-turns</code>、<code>--max-budget-usd</code></td></tr>
                   <tr><td><b>隔離</b></td><td>Container 或 VM、唯讀路徑、網路白名單，靠作業系統擋</td><td><code>/sandbox</code>（Seatbelt、bubblewrap），預設關閉；開了也讀得到大部分的機器，要自己 deny <code>~/.ssh</code> 這類路徑</td></tr>
                 </tbody>
@@ -1232,7 +1249,7 @@ E   at client.ts:88
                   <text x="466" y="245" class="dg-c">每種語言一個 server，冷啟動慢</text>
                 </svg>
               </div>
-              <figcaption>要找程式碼時用哪一種？看手上有什麼線索。紅色是預設：課程的建議是先用 grep，名字猜不到了再換索引或 LSP，下面逐一講為什麼。</figcaption>
+              <figcaption>要找程式碼時用哪一種？看手上有什麼線索。紅色是預設：課程的建議是先用 grep，名字猜不到了再換索引（semantic search 事先建好的向量索引）或 LSP。圖裡的名字下面逐一講，這裡先各用半句交代：semantic search 依意思找；repo map 是整個 repo 的大綱；extrinsic signal 是 stack trace 這類程式碼以外的線索；LSP 是編輯器和 language server 之間的協定，language server 負責回答「這個名字定義在哪、在哪裡用到」；reference 是使用一個名字的地方。</figcaption>
             </figure>
               <p id="i8-1"><b>先認識兩個字：字面與 symbol。</b>字面（lexical）是檔案裡的字串本身：grep 找 <code>charge</code>，就是逐行比對有沒有這六個字母，不管它是函式名、註解還是一段文字。Symbol 是程式語言裡有名字的東西：變數、函式、class、參數、模組。每個 symbol 有一個宣告的地方（definition）和很多個使用的地方（reference）。Grep 依字面找，semantic search 依意思找，LSP 依 symbol 找。</p>
               <p id="i8-2"><span class="anchor" id="t9"></span><b>找法 1：grep 與 glob，依字面找。</b><code>grep</code> 是 shell 指令，搜尋文字；shell 是終端機裡解讀指令的程式，例如 bash、zsh。Glob 是另一種比對，它比對檔名，用 <code>*</code> 和 <code>**</code> 當萬用字元，agent 通常把它包成一個 tool。例子是「修 login 的 timeout」，三步：</p>
@@ -1288,7 +1305,7 @@ read("src/auth/retry.ts")            # read tool：讀一個檔案，再把 RETR
                 <div class="gloss-body prose">
                   <p>RAG（retrieval-augmented generation）：model 回答前，先從一堆文件裡檢索出相關的幾段，放進 context，再生成答案。Semantic search 就是其中檢索那一步，只是文件換成程式碼。</p>
                   <p>Vector database 是專門存向量、依距離查詢的資料庫，例如 pgvector（PostgreSQL 的擴充）、Qdrant、Chroma。一般資料庫查「等於」「大於」，它查「離這個向量最近的 k 個」。</p>
-                  <p>HNSW（hierarchical navigable small world）是最常用的索引結構：把向量連成多層的圖，查詢時從最上層粗略的圖開始跳，一層一層往下逼近，不必每個向量都算距離。代價是「近似」：回傳的 k 個不保證剛好最近，但通常夠接近，速度也快很多。</p>
+                  <p>Vector database 能在幾百萬個向量裡很快找到最近的幾個，靠的是索引結構。HNSW（hierarchical navigable small world）是最常用的一種：把向量連成多層的圖，查詢時從最上層粗略的圖開始跳，一層一層往下逼近，不必每個向量都算距離。代價是「近似」：回傳的 k 個不保證剛好最近，但通常夠接近，速度也快很多。</p>
                 </div>
               </details>
               <p>課程的例子是問 <code>where do we rate-limit?</code>，第一次查詢就回 <code>throttle.ts</code>，grep 做不到。代價是索引要跟著程式碼一起同步，<strong>索引沒跟上就會回傳舊程式碼</strong>。</p>
@@ -1358,7 +1375,7 @@ aider/commands.py:
               <p>Language server 做的是 compiler 的前半段：它不產出執行檔，只建索引。它把每個檔案 parse 成語法樹（第 9 章講），再把每個使用處順著 import 連回宣告（symbol table），最後倒過來記每個 symbol 用在哪裡（反向索引）。下圖是這份索引的樣子：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 278" role="img" aria-label="字面與 symbol 的差別。七個位置：payments.ts 18:16 的 charge 是宣告，checkout.ts 1:9 的 charge 是 import，checkout.ts 40:4 的 pay 是別名，refund.ts 12:6 的 charge 是呼叫，這四個都連到第一個宣告，扣款的 function，find references 回這一組，7 個檔案 42 處。battery.ts 7:16 的 charge 是宣告，charger.ts 9:2 的 charge 是呼叫，連到第二個宣告，充電的 function。README.md 的 charge 只是文字，不是 symbol。Grep 搜 charge 會誤中第二組和 README，又漏掉 pay。">
+                <svg viewBox="0 0 720 278" role="img" aria-label="字面與 symbol 的差別。七個位置：payments.ts 18:16 的 charge 是宣告，checkout.ts 1:9 的 charge 是 import，checkout.ts 40:4 的 pay 是別名，refund.ts 12:6 的 charge 是呼叫，這四個都連到 ①，扣款的 charge，find references 回這一組，7 個檔案 42 處。battery.ts 7:16 的 charge 是宣告，charger.ts 9:2 的 charge 是呼叫，連到 ②，充電的 charge。README.md 的 charge 只是文字，不是 symbol。Grep 搜 charge 會誤中 ② 那一組和 README，又漏掉 pay。">
                   <defs><marker id="l4v-symbol-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-symbol-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="16" y="18" class="dg-cb">位置</text>
                   <text x="176" y="18" class="dg-cb">寫的字</text>
@@ -1410,13 +1427,13 @@ aider/commands.py:
                   <text x="316" y="262" class="dg-c">README 的 charge 不是 symbol</text>
                 </svg>
               </div>
-              <figcaption>Grep 和 LSP 差在哪？字面相同的 charge 連到兩個不同的宣告，字面不同的 pay 連到 ①。Grep 搜 charge 會連第二組和文件一起找到，又漏掉 pay。本文的例子；① 實際有 7 個檔案、42 處，這裡畫其中四處。</figcaption>
+              <figcaption>Grep 和 LSP 差在哪？字面相同的 charge 連到兩個不同的宣告，字面不同的 pay 連到 ① 扣款的 charge。Grep 搜 charge 會連 ② 充電那一組和 README.md 一起找到，又漏掉 pay。本文的例子；① 實際有 7 個檔案、42 處，這裡畫其中四處。</figcaption>
             </figure>
-              <p>Find references 和 rename 查的就是這份索引，不必重新掃檔案。代價是 cold start，只在兩種情況下要緊：任務很短，或每個 session 都開新的 container。它也只回答 symbol 的問題，「我們在哪裡做 rate limit」要交給別的找法。Claude Code 依 2026-11 的<a href="https://code.claude.com/docs/en/tools-reference" target="_blank" rel="noopener">文件</a>有 LSP tool，裝 code intelligence plugin 才啟用，每次編輯後還會自動回報型別錯誤。</p>
+              <p>Find references 和 rename 查的就是這份索引，不必重新掃檔案。代價是 cold start：language server 剛啟動時，要先 parse 整個專案、建好這份索引才能回答，repo 越大越久。這筆時間每次啟動只付一次，之後的查詢都用同一份索引，所以只在攤不掉時要緊：任務很短、查不了幾次，或每個 session 都開新的 container、每次都從頭建。它也只回答 symbol 的問題，「我們在哪裡做 rate limit」要交給別的找法。Claude Code 依 2026-11 的<a href="https://code.claude.com/docs/en/tools-reference" target="_blank" rel="noopener">文件</a>有 LSP tool，裝 code intelligence plugin 才啟用，每次編輯後還會自動回報型別錯誤。</p>
               <p id="i8-7"><b>為什麼先用 grep。</b>課程的建議是<strong>先用 grep，名字猜不到了再換索引或 LSP</strong>。這個順序來自兩種成本的型態不同：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 280" role="img" aria-label="兩種搜尋成本的型態，橫軸是查詢次數，縱軸是累積成本。Grep 的線從原點出發，每查一次付一次，一直往上。索引與 LSP 的線從一筆固定的建置與同步成本開始，之後幾乎持平。兩條線在中間交叉：左邊 repo 小、任務短，grep 划算；右邊 repo 大、任務長，索引與 LSP 划算。">
+                <svg viewBox="0 0 720 280" role="img" aria-label="兩種搜尋成本的型態，橫軸是查詢次數，縱軸是累積成本。Grep 的線從原點出發，每查一次付一次，一直往上。索引與 LSP 的線從一筆固定的建置成本開始，之後緩慢上升。兩條線在中間交叉：左邊查得少，例如任務短、名字好猜，grep 划算；右邊查得多，例如任務長、repo 大到名字難猜，索引與 LSP 划算。">
                   <defs><marker id="l4v-curve-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-curve-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M70,232 L696,232" class="dg-soft-link"/>
                   <path d="M70,28 L70,232" class="dg-soft-link"/>
@@ -1425,22 +1442,22 @@ aider/commands.py:
                   <circle cx="348" cy="138" r="4.5" class="dg-fill-key"/>
                   <text x="348" y="162" text-anchor="middle" class="dg-cb">攤平點</text>
                   <text x="430" y="76" text-anchor="end" class="dg-k">grep：每查一次付一次</text>
-                  <text x="692" y="112" text-anchor="end" class="dg-c">索引、LSP：先付一筆，之後幾乎免費</text>
-                  <text x="82" y="212" class="dg-c">repo 小、任務短：grep 划算</text>
-                  <text x="692" y="212" text-anchor="end" class="dg-c">repo 大、任務長：固定成本攤得掉</text>
+                  <text x="692" y="112" text-anchor="end" class="dg-c">索引、LSP：先付一筆，之後每次很少</text>
+                  <text x="82" y="212" class="dg-c">查得少（任務短）：grep 划算</text>
+                  <text x="692" y="212" text-anchor="end" class="dg-c">查得多（任務長、repo 大）：固定成本攤得掉</text>
                   <text x="383" y="256" text-anchor="middle" class="dg-c">查詢次數</text>
                   <text x="16" y="24" class="dg-c">累積成本</text>
                 </svg>
               </div>
-              <figcaption>為什麼先用 grep？本文的整理，形狀是示意。Grep 每查一次就花一圈與一段 context；索引與 LSP 先付一筆建置與同步的成本，之後每次查詢幾乎免費。查詢次數少時 grep 便宜，查詢次數多時固定成本才攤得掉。</figcaption>
+              <figcaption>為什麼先用 grep？本文的整理，形狀是示意。Grep 每查一次就花一圈與一段 context，名字猜錯還要多搜幾輪、讀進一堆不相干的行。索引與 LSP 先付一筆建置成本；之後每次查詢仍是一次 tool call，結果也進 context，但回的是精確的那幾處，所以每次的成本低得多（不是零）。同步的成本跟著程式碼改了多少走，不跟著查詢次數走，圖把它簡化在那條緩升的線裡。查詢次數少時 grep 便宜，查詢次數多時固定成本才攤得掉。Repo 大時兩邊都變貴：索引的建置成本變高（上面講的 cold start），grep 每查一次讀進的不相干行也變多，名字更難猜，同一個任務要搜的次數也多。建置成本只付一次，grep 多出來的成本每查一次付一次，所以 repo 越大，通常越落在右邊（本文的推論，沒有量測）。</figcaption>
             </figure>
-              <p id="i8-8"><b>Claude Code 選 grep，Cursor 兩個都要（本文補的）。</b>這是還在爭的題目，三家的立場都和自己的產品有關，所以要連著怎麼量的一起看：</p>
+              <p id="i8-8"><b>Claude Code 選 grep，Cursor 兩個都要（本文補的）。</b>這是還在爭的題目。下表三個來源的立場都和自家產品有關：Claude Code 不替 repo 建索引；Cursor 是一個 AI 程式編輯器，會替使用者的 repo 建 semantic search 的索引；Sourcegraph 賣的就是 code search。所以每一筆都要連著怎麼量的一起看：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>來源</th><th>說法</th><th>怎麼量的</th></tr></thead>
                 <tbody>
-                  <tr><td><a href="https://officechai.com/ai/claude-researcher-explains-how-agentic-search-performed-better-than-rag-for-code-generation/" target="_blank" rel="noopener">Boris Cherny</a>（Claude Code，2025）</td><td>早期用 RAG，改成 model 自己 grep 之後好很多；索引會脫節，放在別處也有安全與責任問題</td><td>他自己說主要靠內部 vibes，加一些 benchmark</td></tr>
-                  <tr><td><a href="https://cursor.com/blog/semsearch" target="_blank" rel="noopener">Cursor</a>（2025-11）</td><td>grep 和索引一起用最好：離線平均準 12.5%；線上 code retention 多 0.3%，1,000 個檔案以上多 2.6%</td><td>Cursor 自己的 embedding model 和 A/B test</td></tr>
-                  <tr><td><a href="https://webflow.sourcegraph.com/blog/codescalebench-testing-coding-agents-on-large-codebases-and-multi-repo-software-engineering-tasks" target="_blank" rel="noopener">Sourcegraph</a>（2026-03）</td><td>Code search 的效果不隨規模單調變化：8M–40M 行 +0.055，2M–8M 行 −0.037（reward）</td><td>廠商測自己的工具，model 是 Haiku 4.5</td></tr>
+                  <tr><td><a href="https://officechai.com/ai/claude-researcher-explains-how-agentic-search-performed-better-than-rag-for-code-generation/" target="_blank" rel="noopener">Boris Cherny</a>（Claude Code，2025）</td><td>早期用 RAG，改成 model 自己 grep 之後好很多。理由有兩個：索引會和程式碼脫節；索引是把程式碼複製一份存起來，存在哪台機器、誰負責保護它，都多了安全和責任的問題</td><td>他自己說主要靠內部 vibes，加一些 benchmark</td></tr>
+                  <tr><td><a href="https://cursor.com/blog/semsearch" target="_blank" rel="noopener">Cursor</a>（2025-11）</td><td>grep 和索引一起用最好。離線評估裡，加上 semantic search 後回答 codebase 問題的準確率平均高 12.5%（依 model 不同，6.5% 到 23.5%）。線上 A/B test 的 code retention（agent 寫的程式碼留在 codebase 裡、使用者沒有刪改的比例）多 0.3%，1,000 個檔案以上的 repo 多 2.6%（原文只寫「高 12.5%」「多 0.3%」，沒說是百分點還是相對提升；A/B test 算的是所有 agent 請求，不是每個請求都要搜尋，Cursor 說所以效果看起來小）</td><td>Cursor 自己的 embedding model 和 A/B test</td></tr>
+                  <tr><td><a href="https://webflow.sourcegraph.com/blog/codescalebench-testing-coding-agents-on-large-codebases-and-multi-repo-software-engineering-tasks" target="_blank" rel="noopener">Sourcegraph</a>（2026-03）</td><td>加上 code search 之後，任務得分（reward）的變化依 repo 規模忽正忽負，不是越大越有用：小於 400K 行 −0.080（3 題）、400K–2M 行 +0.259（8 題）、2M–8M 行 −0.037、8M–40M 行 +0.055、超過 40M 行 +0.030</td><td>廠商測自己的工具，model 是 Haiku 4.5</td></tr>
                 </tbody>
               </table></div>
               <p><b>本文的判斷（2026-11）：</b>先 grep 仍然是對的預設。程式碼裡的名字是精確的字串，所以字面比對很有效；agent 又會反覆搜尋，一次沒中就換一個字，或順著 import 往下找。索引的好處在大 repo、命名不一致、問題用自然語言問的時候才明顯，而且差距比兩邊的宣傳小，<strong>要在自己的 repo 上量</strong>。</p>
@@ -1451,9 +1468,18 @@ aider/commands.py:
             <h3><span class="idea-no">9</span>Edit：失敗看不看得見，和省 token 一樣重要</h3>
             <div class="prose">
               <p>找到之後要改。四種改法的分工相同：model 輸出一段文字，tool 把它套進檔案。差別在 model 輸出什麼，以及套不上時會怎樣。下面統一用一個例子：把 <code>src/auth/retry.ts</code> 裡的 <code>RETRY_MS = 500</code> 改成 2000。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>改法</th><th>Model 輸出什麼</th><th>Tool 做什麼</th><th>失敗時</th></tr></thead>
+                <tbody>
+                  <tr><td><b>整檔重寫</b></td><td>整個檔案</td><td>覆蓋舊檔</td><td>安靜：沒要改的行會變樣，tool 照樣回成功</td></tr>
+                  <tr><td><b>Unified diff</b></td><td>一份 patch</td><td><code>git apply</code> 依 patch 裡抄下的前後幾行（context 行）找位置</td><td>多半報錯；同樣的幾行出現兩次時可能套錯</td></tr>
+                  <tr><td><b>Search/replace</b></td><td><code>old_string</code>（檔案裡現在的那幾行）和 <code>new_string</code>（要換成的幾行）</td><td>剛好找到一次才原地換掉</td><td>報錯：找到 0 次或 2 次以上，什麼都不改</td></tr>
+                  <tr><td><b>AST 編輯</b></td><td>一個操作名和一個 symbol，例如「替 fetchUser 加一個參數」</td><td>改語法樹，再印回文字</td><td>不會套錯，但沒有對應的操作就做不了</td></tr>
+                </tbody>
+              </table></div>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 296" role="img" aria-label="兩個軸比較四種改法。橫軸是 model 要輸出多少 token，縱軸是改動會不會落在想要的位置。AST 編輯輸出最少、最穩，但只能做定義好的操作。Search/replace 輸出少、穩健度高，要剛好找到一處，是紅色標出的預設。Unified diff 輸出少，穩健度中等，行號或 context 過期就失敗。整檔重寫輸出最多，長檔會 drift，穩健度最低。">
+                <svg viewBox="0 0 720 296" role="img" aria-label="兩個軸比較四種改法。橫軸是 model 要輸出多少 token，縱軸是改動會不會落在想要的位置。AST 編輯輸出最少、最穩，但只能做定義好的操作。Search/replace 輸出少、穩健度高，要剛好找到一處，是紅色標出的預設。Unified diff 輸出少，穩健度中等，抄的舊行和檔案現在對不上就失敗。整檔重寫輸出最多，長檔會 drift，也就是重打時偏離原文，穩健度最低。">
                   <defs><marker id="l4v-edit-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l4v-edit-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M90,250 L700,250" class="dg-soft-link"/>
                   <path d="M90,18 L90,250" class="dg-soft-link"/>
@@ -1468,24 +1494,15 @@ aider/commands.py:
                   <text x="298" y="138.0" text-anchor="middle" class="dg-c-on">要剛好找到一處</text>
                   <rect x="150" y="172" width="240" height="56" rx="4" class="dg-n-b"/>
                   <text x="270" y="197.0" text-anchor="middle" class="dg-ls">Unified diff</text>
-                  <text x="270" y="214.0" text-anchor="middle" class="dg-c">行號或 context 過期就失敗</text>
+                  <text x="270" y="214.0" text-anchor="middle" class="dg-c">抄的舊行對不上就失敗</text>
                   <rect x="490" y="172" width="196" height="56" rx="4" class="dg-n-n"/>
                   <text x="588" y="197.0" text-anchor="middle" class="dg-ls">整檔重寫</text>
                   <text x="588" y="214.0" text-anchor="middle" class="dg-c">長檔會 drift，不報錯</text>
                 </svg>
               </div>
-              <figcaption>四種改法怎麼取捨？課程用兩個軸比較：token 成本，和改動會不會落在想要的位置。位置是示意，不是量出來的數字。紅色是 Aider 與 Claude Code 的預設。</figcaption>
+              <figcaption>四種改法怎麼取捨？課程用兩個軸比較：token 成本，和改動會不會落在檔案裡想要的位置。每種改法畫在圖上的哪裡是示意，不是量出來的數字。紅色是 Aider 與 Claude Code 的預設。</figcaption>
             </figure>
-              <div class="table-wrap"><table>
-                <thead><tr><th>改法</th><th>Model 輸出什麼</th><th>Tool 做什麼</th><th>失敗時</th></tr></thead>
-                <tbody>
-                  <tr><td><b>整檔重寫</b></td><td>整個檔案</td><td>覆蓋舊檔</td><td>安靜：沒要改的行會變樣，tool 照樣回成功</td></tr>
-                  <tr><td><b>Unified diff</b></td><td>一份 patch</td><td><code>git apply</code> 依 context 行定位</td><td>多半報錯；同樣的幾行出現兩次時可能套錯</td></tr>
-                  <tr><td><b>Search/replace</b></td><td><code>old_string</code>、<code>new_string</code></td><td>剛好找到一次才原地換掉</td><td>報錯：找到 0 次或 2 次以上，什麼都不改</td></tr>
-                  <tr><td><b>AST 編輯</b></td><td>一個操作名和一個 symbol</td><td>改語法樹，再印回文字</td><td>不會套錯，但沒有對應的操作就做不了</td></tr>
-                </tbody>
-              </table></div>
-              <p id="i9-1"><b>改法 1：整檔重寫。</b>沒有 patch 語法可以寫錯，但在 120 行的檔案<strong>改 1 行，model 也要重打 120 行</strong>。長檔還會 drift：重打沒要改的行時，model 會漸漸偏離原文，例如少一行註解、換一個變數名。</p>
+              <p id="i9-1"><b>改法 1：整檔重寫。</b>沒有 patch 語法可以寫錯，但在 120 行的檔案<strong>改 1 行，model 也要重打 120 行</strong>。長檔還會 drift：重打沒要改的行時，model 會漸漸偏離原文，例如少一行註解、換一個變數名。（第 5 章的 drift 是 model 換掉了目標，這裡是文字偏離原文；課程用了同一個字。）</p>
               <p id="i9-2"><span class="anchor" id="t3"></span><b>改法 2：unified diff。</b>Patch 就是 <code>git diff</code> 印出來的那種格式，人和 CI（自動跑測試與部署的系統）本來就讀它。一份 patch 由幾個 hunk 組成，一個 hunk 就是一處修改：</p>
               <figure class="file"><figcaption>一份 patch 裡的一個 hunk（git diff -U1；-U1 表示改動前後各附 1 行 context，預設是 3 行），逐行標出</figcaption><pre><code class="lang-text">--- a/src/auth/retry.ts      ← file header：改哪個檔案
 +++ b/src/auth/retry.ts
@@ -1525,7 +1542,7 @@ FunctionDeclaration                  ← 每一層縮排是一個子節點
 └── body: Block
     └── ReturnStatement ...</code></pre></figure>
               <p>AST 編輯讓 model 只點名一個操作和一個 symbol，例如 <code>add_param(fetchUser, "timeout", default: "5s")</code>。Tool 在 <code>params</code> 底下加一個節點，再印回文字，所以印回來的程式碼一定能 parse。這類工具平常叫 codemod，例如 jscodeshift、libcst。代價是每種語言、每一種操作都要有人先寫好，「改寫這段折扣邏輯」沒有對應的操作。</p>
-              <p id="i9-5"><b>Search/replace 和 unified diff 差在哪。</b>這兩種很容易看成同一件事：資訊幾乎一樣，search/replace 可以看成拿掉行號和前綴符號的 hunk。拿掉行號帶來兩個差別。第一，diff 的 model 要先數對行數，否則 <code>git apply</code> 直接回 corrupt patch。第二，定位的方式不同，這在同樣的幾行出現兩次時最明顯，例如設定檔裡 dev 和 prod 各有一段一樣的區塊：</p>
+              <p id="i9-5"><b>Search/replace 和 unified diff 差在哪。</b>這兩種很容易看成同一件事：資訊幾乎一樣，search/replace 可以看成拿掉行號和前綴符號的 hunk。拿掉行號帶來兩個差別。第一，寫 diff 的 model 要先數對 hunk header 裡的行數，也就是 <code>@@ -11,3 +11,3 @@</code> 的那兩個 3：這一處舊的有幾行、新的有幾行。數錯了，<code>git apply</code> 直接回 corrupt patch；search/replace 沒有這個欄位可以數錯。第二，定位的方式不同，這在同樣的幾行出現兩次時最明顯，例如設定檔裡 dev 和 prod 各有一段一樣的區塊：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 260" role="img" aria-label="同樣的幾行出現兩次。cfg.ts 有兩段一樣的區塊。Model 要改第二段，patch 寫 @@ -20,3 +20,3 @@。前一次修改在上方插了 12 行，第二段移到第 33 行，第一段還在第 11 行。Git apply 從行號 20 往外找，第一段差 10 行，第二段差 12 行，所以套到第一段，回成功。Search/replace 不看行號，在全檔找 old_string，找到 2 處，報錯，什麼都不改。">
@@ -1578,7 +1595,7 @@ $ grep -n retryMs cfg.ts
                   <tr><td>適合誰</td><td>人 review、CI、一次提交一整組改動</td><td>Agent：一圈改一處，改完馬上讀回</td></tr>
                 </tbody>
               </table></div>
-              <p id="i9-6"><b>為什麼失敗的方式這麼要緊。</b>Diff 為人設計，人會 review 結果，所以 <code>git apply</code> 容許一點偏移。Agent 沒有人在旁邊看每一處改動，tool 越早報錯越好。Search/replace 成為 Aider 和 Claude Code 的預設，靠的就是這一點：找不到時 model 下一圈重讀再試，失敗只花一圈；整檔重寫的失敗卻很安靜，要等測試壞掉才會發現。所以選 edit tool 時，<strong>失敗看不看得見，和成功率一樣重要</strong>。</p>
+              <p id="i9-6"><b>為什麼失敗的方式這麼要緊。</b>Diff 為人設計，人會 review 結果，所以 <code>git apply</code> 容許一點偏移。Agent 沒有人在旁邊看每一處改動，tool 越早報錯越好。Search/replace 成為 Aider 和 Claude Code 的預設，靠的就是這一點：找不到時 model 下一圈重讀再試，失敗只花一圈；整檔重寫的失敗卻很安靜，要等測試壞掉才會發現。所以選 edit tool 時，<strong>失敗看不看得見，和省 token、成功率一樣重要</strong>。</p>
               <p id="i9-7"><b>另一派：沒有行號的 diff（本文補的）。</b>OpenAI 的 <a href="https://developers.openai.com/api/docs/guides/tools-apply-patch" target="_blank" rel="noopener"><code>apply_patch</code></a> 也是 diff，但用文字和 context 行定位，不靠行號，套不上時回 <code>failed</code> 和一句說明。它的<a href="https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide" target="_blank" rel="noopener">指南</a>強烈建議照用，理由是 model 就是照這個格式訓練的。所以現在是兩派，共同點才是帶得走的結論：<strong>用內容定位，對不上就報錯</strong>。自己寫 harness 時，先查你用的 model 是照哪一種格式訓練的。</p>
             </div>
           </div>
@@ -1586,7 +1603,12 @@ $ grep -n retryMs cfg.ts
           <div class="idea" id="i10">
             <h3><span class="idea-no">10</span>Prompt：招式會過期，原則不會</h3>
             <div class="prose">
-              <p>Prompt 只是 context 裡的一小塊，也就是第 3 章十格圖的第 1 格和第 9 格。所以它排在最後：改錯的代價最低，過時最快。課程列了八種技巧，依成本分成三層，<strong>從上往下試，夠用就停</strong>：</p>
+              <p>Prompt 只是 context 裡的一小塊，也就是第 3 章十格圖的第 1 格和第 9 格。這堂把它排在最後一章，理由有兩個。改錯的代價最低：改一句話、重跑一次就知道，不像 harness 或 tool 要改程式。過時也最快：prompt 的技巧補的是 model 當下的弱點，新 model 一出來就可能用不著，本章最後一段細講。課程列了八種技巧，依成本分成三層，<strong>從上往下試，夠用就停</strong>：</p>
+              <ul>
+                <li><b>第一層只改指令。</b>Zero-shot 只給指令；few-shot 再加幾個輸入和答案的範例；role／persona 給 model 一個身分和讀者，例如「你是資深 SRE，寫給主管看」。</li>
+                <li><b>第二層要 model 寫出推理。</b>Chain-of-thought 要它先寫步驟、最後才給答案；tree-of-thought 要它列幾條路、各打分、只展開好的；self-consistency 同一題問好幾次，再投票。</li>
+                <li><b>第三層把工作拆成系統。</b>Prompt chaining 一次呼叫只做一件事，前一次的輸出接到下一次；meta prompting 讓 model 依測試結果替你改 prompt。</li>
+              </ul>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 320" role="img" aria-label="三層的階梯圖，由上往下成本增加，每種技巧標出現在的狀態。第一層只改指令：zero-shot 與 few-shot 沒過期，role 與 persona 大半過期。第二層讓 model 推理：chain-of-thought 過期，tree-of-thought 與 self-consistency 大半過期。第三層設計成系統：prompt chaining、meta prompting 變成 harness 的一部分。每層之間標出往下走的訊號：任務有真的步驟；工作能拆成可驗證的階段。右側標示 token 與呼叫次數往下增加。">
@@ -1671,7 +1693,7 @@ C lazy-load assets       impact 4, effort 1
 # Self-consistency：同一題問 5 次（T = 0.7），投票
 "Is this invoice a duplicate?" × 5 → yes, yes, no, yes, yes
 4/5 = 0.8 ≥ 門檻 → accept；3/5 → route to a human</code></pre></figure>
-                  <p>第三層把工作拆開。Prompt chaining 一次呼叫只做一件事：第一次從 email 抽出 <code>{vendor, amount, date}</code>，第二次驗證並補上 <code>vendor_id</code>，第三次寫回信；哪一段不合格式就只重跑那一段。Meta prompting 讓 model 替你改 prompt：給它現在的 prompt、10 個測試案例和失敗的那 3 個，要它修好這 3 個又不弄壞另外 7 個。課程的例子從 8 比 10 改到 10 比 10。它的前提是有 eval：固定的輸入加上標準答案，改一版就重跑一次看分數。</p>
+                  <p>第三層把工作拆開。Prompt chaining 一次呼叫只做一件事：第一次從 email 抽出 <code>{vendor, amount, date}</code>，第二次驗證並補上 <code>vendor_id</code>，第三次寫回信；哪一段不合格式就只重跑那一段。Meta prompting 讓 model 替你改 prompt：給它現在的 prompt、10 個測試案例和失敗的那 3 個，要它修好這 3 個又不弄壞另外 7 個。課程的例子裡，新版加了一條明確的拒絕規則，分數從 8 比 10 到 10 比 10（slide 的情境寫失敗 3 個，結果卻從 8 比 10 起算，原文的兩個數字就對不上）。它的前提是有 eval：固定的輸入加上標準答案，改一版就重跑一次看分數。</p>
                 </div>
               </details>
               <details class="gloss" id="t5">
@@ -1685,9 +1707,9 @@ C lazy-load assets       impact 4, effort 1
               <div class="table-wrap"><table>
                 <thead><tr><th>技巧</th><th>狀態</th><th>原因</th></tr></thead>
                 <tbody>
-                  <tr><td>Chain-of-thought<br><small>think step by step</small></td><td>過期</td><td><a class="tm" href="#t8">Reasoning model</a> 自己會先想。OpenAI 針對 o 系列的<a href="https://developers.openai.com/api/docs/guides/reasoning-best-practices" target="_blank" rel="noopener">指南</a>說叫它一步步想沒有必要，有時還有害。Anthropic 的<a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices" target="_blank" rel="noopener">指南</a>說「想徹底一點」常比手寫的步驟好，最新的 model 可能拒絕寫出推理。只有 thinking 關著時才有用。</td></tr>
+                  <tr><td>Chain-of-thought<br><small>think step by step</small></td><td>過期</td><td><a class="tm" href="#t8">Reasoning model</a>（回答前會先在一段 thinking 裡推理的 model，見表下的註）自己會先想。OpenAI 針對 o 系列（它的 reasoning model，例如 o1、o3）的<a href="https://developers.openai.com/api/docs/guides/reasoning-best-practices" target="_blank" rel="noopener">指南</a>說，叫它一步步想沒有必要，有時還有害。Anthropic 的<a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices" target="_blank" rel="noopener">指南</a>說，只叫它「想徹底一點」，常比手寫的步驟好。手寫步驟只在 thinking 關著時才有用。</td></tr>
                   <tr><td>Tree-of-thought、self-consistency</td><td>大半過期</td><td>多走幾條路，model 在 thinking 裡自己做了。只剩答錯代價很高時，用程式投票、設門檻、交給人，成本是 N 倍。</td></tr>
-                  <tr><td>Role / persona<br><small>你是資深 SRE</small></td><td>大半過期</td><td>Wharton <a href="https://gail.wharton.upenn.edu/research-and-insights/playing-pretend-expert-personas/" target="_blank" rel="noopener">2025 年</a>測 6 個 model，專家身分對事實題的正確率沒有幫助。Anthropic 的指南說它影響行為和語氣；要語氣就直接寫語氣和讀者是誰。</td></tr>
+                  <tr><td>Role / persona<br><small>你是資深 SRE</small></td><td>大半過期</td><td>Wharton <a href="https://gail.wharton.upenn.edu/research-and-insights/playing-pretend-expert-personas/" target="_blank" rel="noopener">2025 年</a>測 6 個 model，專家身分對事實題的正確率沒有幫助，外行的身分反而拉低。所以拿 role 提升正確率已經過期。剩下的用途是語氣：Anthropic 的指南也說，role 影響的是行為和語氣。本文的判斷是，這時把語氣和讀者直接寫出來，比只給一個身分更具體，model 不必從身分去猜你要什麼。</td></tr>
                   <tr><td>Zero-shot、few-shot</td><td>沒過期</td><td>Few-shot 仍是教輸出格式的好方法。數量各家不同：OpenAI 說 reasoning model 先試不給，Anthropic 建議 3–5 個。</td></tr>
                   <tr><td>Prompt chaining、meta prompting</td><td>變成 harness 的一部分</td><td>Chaining 就是由程式決定路徑的 workflow；meta prompting 就是 prompt optimizer（例如 DSPy），前提是要有 eval。</td></tr>
                   <tr><td>課程沒列的：給小費、威脅</td><td>過期</td><td>Wharton <a href="https://gail.wharton.upenn.edu/research-and-insights/techreport-threaten-or-tip/" target="_blank" rel="noopener">2025 年</a>測 5 個 model，對表現沒有有意義的影響，個別題目會亂跳，無法預測。</td></tr>
@@ -1705,7 +1727,7 @@ C lazy-load assets       impact 4, effort 1
               <p id="i10-2"><b>不會過期的四條原則。</b>課程給的是溝通本身的原則，和 model 的世代無關：</p>
               <ul>
                 <li><b>從簡單開始。</b>先寫簡單的，需要時才加。</li>
-                <li><b>分段。</b>把 prompt 分成 context、指令、tool、輸出格式幾個區塊，用 markdown 或 XML 標籤隔開。</li>
+                <li><b>分段。</b>把 prompt 分成背景資料、指令、tool、輸出格式幾個區塊，用 markdown 或 XML 標籤隔開。背景資料 slide 寫作 context，指的是 prompt 裡的這一段，不是整個 context window。</li>
                 <li><b>具體精簡。</b>花俏的措辭換不到東西。</li>
                 <li><b>拆任務。</b>大任務拆成小任務。</li>
               </ul>

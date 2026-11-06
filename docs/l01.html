@@ -62,19 +62,19 @@
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/1_intro.pdf" target="_blank" rel="noopener">1_intro.pdf ↗</a></li>
       <li><span class="k">頁數</span>50</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 30 分鐘</span></li>
-      <li><span class="k">註</span><span class="deep-time">約 5 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 55 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
+      <li><span class="k">註</span><span class="deep-time">約 7 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 60 分鐘</span></li>
     </ul>
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這門課前半講 agent 怎麼設計，後半講 LLM 怎麼 serve，主體是後半。把兩半接起來的是一個觀察：agent 把一次 inference 拉成一條跨過 GPU、tool 和人的鏈，所以傳統 serving 在意的數字，不再代表任務變好。這堂要帶走的是<strong>目標要從 tokens/sec 換成每個成功任務的成本</strong>，以及問題出在哪一層時怎麼看。</p>
+    <p class="thesis">這門課前半講 agent（會自己呼叫工具、連跑很多步的 AI 程式）怎麼設計，後半講 LLM 怎麼在 GPU 上 serve 給很多人用，主體是後半。把兩半接起來的觀察是：聊天跑一次 model 就回答，agent 卻要跑很多次，中間還要執行工具、等人，連成一條鏈。Serving 常看的數字，例如 GPU 每秒生成幾個 token（tokens/sec；token 是 model 處理文字的單位），只量到鏈上 model 那一段，所以它們變好，不代表任務變好。這堂要帶走的是<strong>目標要從 tokens/sec 換成每個成功任務的成本</strong>，以及怎麼判斷問題出在系統的哪一層，從 agent 程式到 GPU 硬體。</p>
     <ul class="core">
-      <li><span><b>Agent 是另一種 workload。</b>GitHub Copilot 的 production trace 裡，一個 session 中位數 15 次 LLM call，每次輸入 68K token、輸出 247 token；聊天是 1 次、750 token、105 token。<strong>延遲、狀態和失敗沿著整條鏈累積</strong>。</span></li>
-      <li><span><b>目標要換，而且要把人算進去。</b>Tokens/sec 高，agent 仍可能又慢又貴。要看成功率和每個成功任務的成本；<strong>同一個 batching，有人等和沒人等，答案相反</strong>。</span></li>
-      <li><span><b>問題會跨層，底下的假設也不一樣了。</b>Harness 怎麼組 context，決定 serving 層的 cache 能不能命中；LLM 的 workload 打破傳統系統的五個假設，Part II 就從這裡開始。</span></li>
+      <li><span><b>Agent 是另一種 workload。</b>GitHub Copilot 線上流量的紀錄裡，一段對話中位數呼叫 model 15 次，每次輸入 68K token、輸出 247 token；聊天是 1 次、750 token、105 token。<strong>延遲、狀態和失敗沿著整條鏈累積</strong>：每一步等上一步，送進 model 的前文和它佔的 GPU 記憶體越滾越大，每一步都可能出錯重試。</span></li>
+      <li><span><b>目標要換，而且要把人的時間算進成本。</b>Tokens/sec 高，agent 仍可能又慢又貴：把很多請求併成一批算（batching），GPU 總產量變高，每個請求卻變慢；繞遠路多生成的 token 也照樣算進產量。要看成功率和每個成功任務的成本；要不要用大 batch，<strong>有人等和沒人等，答案相反</strong>。</span></li>
+      <li><span><b>問題會跨層，底下的假設也不一樣了。</b>例如 serving 層把算過的前文存起來，下一次開頭完全相同才能重用（prefix cache），所以 agent 的外層程式（harness）怎麼排送給 model 的文字，決定 cache 能不能命中。LLM 也打破傳統系統的五個假設：處理時間可預測、狀態很小、同樣輸入給同樣輸出、機器很少壞、系統穩定不變。課程的後半就從這五條講起。</span></li>
     </ul>
   </section>
 
@@ -90,14 +90,14 @@
         <nav class="map" aria-label="章節">
           <p class="map-g">一定要會：agent 是另一種 workload，目標要換</p>
           <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的差別<small>一次 inference 變成一條鏈（實測數字是本文補的）</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>throughput 是錯的目標，要算每個成功任務的成本</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">目標少算的一項<small>人的時間（本文補的）</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>throughput 是錯的目標，要算每個成功任務的成本</small></span><span class="map-m">約 4 分</span></a>
+          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">目標少算的一項<small>人的時間（本文補的）</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">整張地圖：問題出在哪一層</p>
-          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">Stack<small>每一層動目標的一項，問題會跨層，靠 trace 才看得到</small></span><span class="map-m">約 4 分</span></a>
+          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">Stack<small>每一層動目標的一項，問題會跨層，靠 trace 才看得到</small></span><span class="map-m">約 5 分</span></a>
           <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">Agent 這一層<small>一台會出錯的新電腦，harness 是它的 OS</small></span><span class="map-m">約 2 分</span></a>
           <p class="map-g">底層：LLM 的 workload 打破的假設，Part II 的起點</p>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">五個假設<small>零件和傳統系統相同，workload 不同</small></span><span class="map-m">約 2 分</span></a>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">時間<small>prefill 和 decode 瓶頸不同，長度事先不知道（部分本文補的）</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">五個假設<small>零件和傳統系統相同，workload 不同</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">時間<small>prefill 和 decode 瓶頸不同，長度事先不知道（部分本文補的）</small></span><span class="map-m">約 4 分</span></a>
           <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">狀態<small>KV cache 放哪裡，變成首要決定（部分本文補的）</small></span><span class="map-m">約 4 分</span></a>
           <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">不確定與故障<small>測試和長任務都要換寫法</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">需要時查</p>
@@ -166,9 +166,9 @@
                   <text x="14" y="220" class="dg-cb">Context 與 KV cache 每一圈變大，等 tool 時也留在 GPU memory</text>
                 </svg>
               </div>
-              <figcaption>一次 inference 和一條鏈差在哪裡？聊天跑一次 inference 就結束。Agent 的 inference（青色）和 tool、retrieval（黃色）輪流進行；粉色是 context 和它在 GPU 上的中間結果 KV cache（第 8 章），每一圈都變大。</figcaption>
+              <figcaption>一次 inference 和一條鏈差在哪裡？聊天跑一次 inference 就結束。Agent 的 inference（青色）和 tool、retrieval（黃色）輪流進行；retrieval 是去 storage 找資料，例如搜尋文件，它和 tool 一樣是 model 以外的步驟，所以同色。深紅線是 critical path，也就是決定總時間的那條最長的相依鏈。粉色是 context 和它在 GPU 上的中間結果 KV cache（第 8 章），每一圈都變大。</figcaption>
             </figure>
-              <p>因為每一步都等上一步，<strong>整條鏈都在 critical path 上</strong>。Critical path 是決定總時間的那條最長的相依鏈；這裡任何一段慢，整個任務就慢，而這條鏈同時跨過 GPU、CPU、storage、網路和外部服務，沒有一個元件單獨負責。</p>
+              <p>因為每一步都等上一步，<strong>整條鏈都在 critical path 上</strong>：這裡任何一段慢，整個任務就慢，而這條鏈同時跨過 GPU、CPU、storage、網路和外部服務，沒有一個元件單獨負責。</p>
               <p>這和聊天差多少？課程只有定性的描述，2026 年才有大規模的實測。Microsoft Azure Research 分析了 <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2026/08/ghcp_traces-6.pdf" target="_blank" rel="noopener">GitHub Copilot 的 production trace</a>，也就是線上真實流量的紀錄，樣本是 2026 年 6 月第一週的美國區，320 萬名使用者、1,350 萬個 session（一段對話從開始到結束）：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -200,19 +200,19 @@
               </div>
               <figcaption>一次互動要跑幾次 LLM call？一次 call 多大？Coding agent 的輸入約是聊天的 90 倍，輸出只有約 2.4 倍。下半部用同一把尺，所以輸出短到幾乎看不見。聊天的數字是這篇論文引用的先前 production 研究。</figcaption>
             </figure>
-              <p>一個 session 有很多 turn，turn 是你打一句話、agent 跑完再回來的那一段。同一份 trace 裡，87% 的 LLM call 由 agent 自己發起，中間沒有人看著。課程列了這條鏈帶來的六個挑戰，下表把每一個對上實測的樣子；數字來自這份 trace 和 <a href="https://arxiv.org/abs/2606.30560" target="_blank" rel="noopener">TraceLab</a>（華盛頓大學團隊收集的 43 位開發者、4,265 個 Claude Code 與 Codex session，是他們自己的研究工作，不代表所有人）：</p>
+              <p>一個 session 有很多 turn，turn 是你打一句話、agent 跑完再回來的那一段。同一份 trace 裡，<strong>87% 的 LLM call 由 agent 自己發起</strong>，中間沒有人看著。課程列了這條鏈帶來的六個挑戰，下表把每一個對上實測的樣子（有一項沒有實測）。數字來自這份 trace 和 <a href="https://arxiv.org/abs/2606.30560" target="_blank" rel="noopener">TraceLab</a>：華盛頓大學團隊收集了 43 位開發者的 4,265 個 Claude Code 與 Codex session（這些 session 是團隊成員做自己的研究時留下的，不代表所有開發者）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>挑戰</th><th>實際長什麼樣</th></tr></thead>
                 <tbody>
                   <tr><td><b>步驟之間有依賴</b></td><td>下一次 inference 要等 tool 的結果。LLM call 和 tool call 的數量接近 1:1。</td></tr>
                   <tr><td><b>每一步的 latency 差很多</b></td><td>Tool 的中位數 0.3 秒，平均 16.8 秒。Claude Code 裡超過 1 分鐘的 call 只佔 4.9%，卻佔 92% 的 tool 時間。</td></tr>
-                  <tr><td><b>等 tool 時卡住</b></td><td>這段時間 agent 用不到 GPU，它的 KV cache 卻還佔著 GPU 記憶體（第 8 章）。</td></tr>
+                  <tr><td><b>等 tool 時卡住</b></td><td>這段時間 agent 用不到 GPU，它的 KV cache 卻還佔著 GPU 記憶體。放掉的話，tool 回來後要把整段前文重算一次，更貴（第 8 章）。</td></tr>
                   <tr><td><b>狀態一直變大</b></td><td>Claude Code 99.6% 的 step 讓 context 變長，平均每步多約 1,700 token。</td></tr>
-                  <tr><td><b>能不能同時跑、先猜</b></td><td>哪些步驟可以平行？能不能在結果回來前先猜下一步（speculation）？<a href="l08.html#i8">L8</a> 算它划不划算。</td></tr>
-                  <tr><td><b>任何一步都可能失敗</b></td><td>9% 的 turn 有 tool 失敗，agent 會自動重試，運算量最多放大 4 倍。</td></tr>
+                  <tr><td><b>能不能同時跑、先猜</b></td><td>這一項本文沒有找到實測數字。課程問的是：哪些步驟可以平行？能不能在 tool 結果回來前先猜下一步（speculation）？<a href="l08.html#i8">L8</a> 算它划不划算。</td></tr>
+                  <tr><td><b>任何一步都可能失敗</b></td><td>9% 的 turn 有 tool 失敗。Agent 會自動重試，每次重試都帶著更長的 context，所以和沒失敗相比，這些 turn 的運算量最多放大 4 倍。</td></tr>
                 </tbody>
               </table></div>
-              <p>對照傳統的 serving，這條鏈讓每個老問題都更難：時間更不可預測，因為連步數也未知；狀態更大、活得更久，因為 context 跨過幾十步一直在；失敗點更多，因為每一步都可能碰外界。所以 <strong>agent 把 serving 的問題乘上步數</strong>，傳統 serving 在意的那些數字，也不再代表任務變好了。</p>
+              <p>對照傳統的 serving，這條鏈讓每個老問題都更難：時間更不可預測，因為連步數也未知；狀態更大、活得更久，因為 context 跨過幾十步一直在；失敗點更多，因為每一步都可能碰外界。所以 <strong>agent 把 serving 的問題乘上步數</strong>。傳統 serving 在意的數字，例如第一個 token 多快出現、GPU 每秒生成幾個 token，都只量鏈上 inference 那幾段，不含 tool、重試和等待，所以它們變好，也不代表任務變好了。</p>
             </div>
           </div>
 
@@ -222,7 +222,7 @@
               <p>Serving 系統的儀表板上通常是這幾個數字。TTFT（time to first token）是送出請求到第一個 token 出現的時間，TPOT（time per output token）是之後每個 token 的間隔，tool-call latency 是一次 tool 來回的時間，GPU utilization 是 GPU 忙的比例，throughput 是整張 GPU 每秒生成幾個 token（tokens/sec）。它們都有用，但每一個只量到鏈上的一小段，沒有一個能告訴你任務有沒有變好：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 296" role="img" aria-label="上方是一條鏈：inference 和 tool 輪流。下方每個指標畫出它量到的範圍。TTFT 和 TPOT 只量第一次 inference；tool-call latency 只量一次 tool；GPU utilization 和 tokens/sec 只看 inference 的部分。最下面紅色的長條是任務層級的指標，涵蓋整條鏈：task success、end-to-end latency、tokens per task、每個成功任務的花費與能耗。">
+                <svg viewBox="0 0 720 296" role="img" aria-label="上方是一條鏈：inference 和 tool 輪流。下方每個指標畫出它量到的範圍。TTFT 和 TPOT 每次 inference 各有一個值，一個值只量那一次 inference，圖上畫在第一次當例子；tool-call latency 只量一次 tool；GPU utilization 和 tokens/sec 只看 inference 的部分。最下面紅色的長條是任務層級的指標，涵蓋整條鏈：task success、end-to-end latency、tokens per task、每個成功任務的花費與能耗。">
                   <defs><marker id="l1v-metric-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-metric-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="176" y="10" width="90" height="36" rx="4" class="dg-n-a"/>
                   <text x="221" y="33.0" text-anchor="middle" class="dg-ls">Infer</text>
@@ -262,7 +262,7 @@
               <figcaption>每個指標量到鏈上多長的一段？灰色是元件指標，各量一小段，tokens/sec 甚至把別人的請求也算進去。深紅色是任務層級的指標，量整條鏈。</figcaption>
             </figure>
               <p>所以課程的關鍵句是 <strong>throughput 對 agent 來說是錯的目標</strong>。正確的寫法是一個帶限制的最佳化：在 latency、cost、resources、reliability、security 的限制下，讓任務成功率最高。限制的意思是不能超過上限；成功率再高，等太久的設計還是不合格。</p>
-              <p id="i2-1"><b>每個成功任務的成本。</b>目標要算得出來。一個任務可能試好幾次才成功，失敗的那幾次也要付錢，所以成本要除以成功率。式子裡有三項：</p>
+              <p id="i2-1"><b>每個成功任務的成本。</b>目標要算得出來。一個任務可能試好幾次才成功：成功率 50% 時，平均要試 2 次才成功 1 次，也就是 1 ÷ 成功率 次。失敗的那幾次也要付錢，所以成本要除以成功率。式子裡有三項：</p>
               <ul>
                 <li><b>每次嘗試的 token 數。</b>由 agent 繞不繞路決定。</li>
                 <li><b>每個 token 的單價。</b>由 model 和 serving 決定。</li>
@@ -277,12 +277,10 @@
                   <tr><td>B：更貴的設定</td><td>$60</td><td>90</td><td>$0.60</td><td><b>$0.67</b></td></tr>
                 </tbody>
               </table></div>
-              <p><strong>B 每次較貴，每個成功任務反而便宜</strong>，使用者拿到結果的次數還幾乎是兩倍。只看每次請求的成本或 tokens/sec，你會選 A。要把這個數字算準，成功率得量得對，這是 <a href="l07.html#i3">L7</a> 的主題；token 數和單價再怎麼拆，是 <a href="l08.html#i1">L8</a> 的主題。</p>
-              <p id="i2-2"><span class="anchor" id="x3"></span><b>本文的判斷：tokens/sec 會把優化帶錯方向。</b>它有三個盲點，每一個都會讓數字變好、agent 變差：</p>
+              <p><strong>B 每次較貴，每個成功任務反而便宜</strong>，使用者拿到結果的次數還幾乎是兩倍。只看每次嘗試的花費，你會選 A。要把這個數字算準，成功率得量得對，這是 <a href="l07.html#i3">L7</a> 的主題；token 數和單價再怎麼拆，是 <a href="l08.html#i1">L8</a> 的主題。</p>
+              <p id="i2-2"><span class="anchor" id="x3"></span><b>本文的判斷：tokens/sec 會把優化帶錯方向。</b>它有三個盲點，每一個都讓 tokens/sec 變好或不動，agent 卻變差：</p>
               <ul>
-                <li><b>大 batch 讓鏈上的每一步變慢。</b>Batching 把多個請求併成一步算，整張 GPU 的 tokens/sec 升高，每個請求卻變慢（下圖）。一步生成 500 個 token、跑 40 步的 agent，batch 從 1 加到 32，生成時間從約 3.4 分鐘變成約 6.9 分鐘。</li>
-                <li><b>繞遠路的 agent 生成更多 token。</b>每秒 200 個、共 20,000 個 token 要 100 秒；每秒 100 個、共 5,000 個只要 50 秒。數字好看的那個慢一倍。</li>
-                <li><b>Tool 的時間和大部分的錢不在裡面。</b><a href="https://arxiv.org/abs/2606.30560" target="_blank" rel="noopener">TraceLab</a> 的 session 裡，tool 執行花的時間比 LLM 生成還多（21.2% 對 14.5%，第 3 章有圖）；依 API 定價，output token 只佔成本 11.2%，59.5% 是每一步重讀前文的 input token。</li>
+                <li><b>大 batch 讓鏈上的每一步變慢。</b>Batching 把多個請求放進同一次 GPU 運算一起算。整張 GPU 每秒產出的 token 變多，但每次運算要讀的資料也變多，因為每個請求各有自己的中間結果，所以每個請求等下一個 token 的時間變長（第 7 章算給你看）。一個跑 40 圈、每圈生成 500 個 token 的 agent，batch 從 1 加到 32，生成時間從約 3.4 分鐘變成約 6.9 分鐘（下圖）。</li>
               </ul>
               <figure class="diagram">
               <div class="scroll">
@@ -310,9 +308,13 @@
                   <text x="628.0" y="135" class="dg-cb">1,543 tok/s</text>
                 </svg>
               </div>
-              <figcaption>Batch 加大時，兩個數字往哪裡走？儀表板上的 tokens/sec 升到約 16 倍，agent 感受到的速度掉到一半，而鏈上每一步都吃到這個變慢。數字是第 7 章的算式，只算讀記憶體的時間（8B model，context 4K）。</figcaption>
+              <figcaption>Batch 加大時，兩個數字往哪裡走？儀表板上的 tokens/sec 升到約 16 倍，agent 感受到的速度掉到一半，而鏈上每一步都吃到這個變慢。數字是第 7 章的算式，只算讀記憶體的時間（8B model，也就是有 80 億個參數的 model；context 4K）。</figcaption>
             </figure>
-              <p>這不表示 throughput 沒有用。GPU 每秒生成的 token 多 16 倍，每個 token 的單價就低 16 倍，所以它動的是目標式裡「單價」這一項，拿來做容量規劃（要買幾張 GPU）也很合適。錯的是把它當成目標。指標一旦變成目標，團隊就會去優化它，不管它還代不代表原本的目的，這叫 Goodhart's law。所以<strong>儀表板最上面放任務層級的指標</strong>，tokens/sec 留在 serving 的分頁。第 2 段進階題第 2 題請你替一個團隊設計這組指標。</p>
+              <ul>
+                <li><b>繞遠路的 agent 生成更多 token。</b>Tokens/sec 只算每秒生成幾個 token，不管這些 token 該不該生成，多繞的路照樣算進產量，所以它看不出 agent 在繞路。拿它來挑設定，就可能挑錯。假設同一個任務有兩種設定：甲用比較小、比較快的 model，每秒生成 200 個 token，但它繞路，總共生成 20,000 個，要 100 秒；乙用比較大的 model，每秒只生成 100 個，但它直接做，生成 5,000 個，只要 50 秒。<strong>照 tokens/sec 會選好看一倍的甲，任務卻慢一倍</strong>。</li>
+                <li><b>Tool 的時間和大部分的錢不在裡面。</b>Tokens/sec 只量 GPU 生成 token 的速度，tool 跑多久、每一步重讀前文花多少錢，它都看不到，所以這兩項變差時數字不會動。這兩項還很大：<a href="https://arxiv.org/abs/2606.30560" target="_blank" rel="noopener">TraceLab</a> 的 session 裡，tool 執行花的時間比 LLM 生成還多（21.2% 對 14.5%，第 3 章有圖）；依 API 定價，output token 只佔成本 11.2%，59.5% 是每一步重讀前文的 input token。</li>
+              </ul>
+              <p>這不表示 throughput 沒有用。GPU 按時間計費，一小時的費用固定；同樣一小時裡生成的 token 多 16 倍，每個 token 分到的費用就低 16 倍。所以它動的是目標式裡「單價」這一項，拿來做容量規劃（要買幾張 GPU）也很合適。錯的是把它當成目標。指標一旦變成目標，團隊就會去優化它，不管它還代不代表原本的目的，這叫 Goodhart's law。所以<strong>儀表板最上面放任務層級的指標</strong>，tokens/sec 留在 serving 的分頁。頁面第 2 段「問題討論」的進階題第 2 題，請你替一個團隊設計這組指標。</p>
             </div>
           </div>
 
@@ -349,8 +351,8 @@
               <div class="table-wrap"><table>
                 <thead><tr><th>來源與樣本</th><th>結果</th><th>要注意</th></tr></thead>
                 <tbody>
-                  <tr><td><a href="https://www.faros.ai/blog/ai-productivity-paradox-report-2025" target="_blank" rel="noopener">Faros AI</a>（2025）：1,255 個 team、超過 10,000 位開發者的工具紀錄</td><td>AI 用得多的 team，合併的 PR 多 98%，PR 大 154%，<b>review 時間多 91%</b>；公司層級沒有顯著相關</td><td>觀察資料，不是對照實驗；來源是賣這類分析工具的公司</td></tr>
-                  <tr><td><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR</a>（2025）：16 位資深開源開發者、246 個 issue，隨機分派</td><td>事前預估快 24%，做完相信快 20%，<b>實測慢 19%</b></td><td>樣本小，工具是 2025 年初的。<a href="https://metr.org/blog/2026-02-24-uplift-update/" target="_blank" rel="noopener">2026 年的新資料</a>轉成快 18% 與 4%，信賴區間都跨 0，METR 自己說選樣有偏差、不可靠</td></tr>
+                  <tr><td><a href="https://www.faros.ai/blog/ai-productivity-paradox-report-2025" target="_blank" rel="noopener">Faros AI</a>（2025）：1,255 個 team、超過 10,000 位開發者的工具紀錄</td><td>AI 用得多的 team，合併的 PR 多 98%，PR 大 154%，<b>review 時間多 91%</b>。放到整間公司看，AI 用量和公司整體的改善沒有顯著相關</td><td>觀察資料，不是對照實驗；來源是賣這類分析工具的公司</td></tr>
+                  <tr><td><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR</a>（2025）：16 位資深開源開發者做 246 個 issue，每個 issue 隨機決定能不能用 AI</td><td>開發者事前預估用 AI 會快 24%，做完相信快了 20%，<b>實測比不用 AI 慢 19%</b></td><td>樣本小，工具是 2025 年初的。<a href="https://metr.org/blog/2026-02-24-uplift-update/" target="_blank" rel="noopener">2026 年的新資料</a>裡，原班開發者快 18%、新招募的開發者快 4%，但兩者的信賴區間都同時包含變快和變慢（跨 0），量不出方向；METR 自己說選樣有偏差、不可靠</td></tr>
                 </tbody>
               </table></div>
               <p>這些資料都不能解讀成 AI 讓人變慢，METR 也把 2025 年的結果標成過時。要帶走的是兩件事：人的時間比機器的時間多，而且感覺不能代替量測，所以判斷一個優化有沒有用時，<strong>覺得變快了，不算數</strong>，要量。</p>
@@ -380,7 +382,7 @@
               <p id="i3-3"><b>怎麼壓低人這一項。</b>讓驗證變便宜：自動測試、CI（每次改動自動跑測試的流程）、agent 能自己檢查的完成條件。課程有一把尺，量你現在怎麼用 AI 寫程式，從 0 級到 5 級：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 236" role="img" aria-label="六級的階梯，由左到右。0 No AI：全部手寫。1 Assist：AI 補一行，你看每一行。2 Supervised：AI 寫整個 function，你逐段 review。3 Scoped：你交出一個任務，AI 做完，你 review 程式碼。4 Goal-driven：AI 寫全部，測試驗證，你看結果。5 Parallel agents：多個 subagent 分工，你看目標與結果。底部箭頭：你驗證的對象從每一行移到測試與目標。">
+                <svg viewBox="0 0 720 236" role="img" aria-label="六級的階梯，由左到右。每一級的框裡由上到下是等級名稱、AI 做什麼、誰驗證。0 No AI：全部手寫。1 Assist：AI 補一行，你看每一行。2 Supervised：AI 寫整個 function，你逐段 review。3 Scoped：你交出一個任務，AI 做完，你 review 程式碼。4 Goal-driven：AI 寫全部，測試驗證，你看結果。5 Parallel agents：多個 subagent 分工，你看目標與結果。底部箭頭：你驗證的對象從每一行移到測試與目標。">
                   <defs><marker id="l1v-levels-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-levels-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="8" y="84" width="114" height="90" rx="2" class="dg-n-n"/>
                   <text x="65" y="106" text-anchor="middle" class="dg-ls">0 · No AI</text>
@@ -411,7 +413,7 @@
                   <text x="360" y="222" text-anchor="middle" class="dg-k">你驗證的對象：從每一行，移到測試與目標</text>
                 </svg>
               </div>
-              <figcaption>AI 寫程式的等級升高時，人的時間花在哪裡？等級和第二行來自課程；第三行「誰驗證」是本文的整理。</figcaption>
+              <figcaption>AI 寫程式的等級升高時，人的時間花在哪裡？每一級框裡的等級名稱和中間那行「AI 做什麼」來自課程；最下面那行粗體「誰驗證」是本文的整理。第 5 級的 subagent 是主 agent 另外開出來、分擔子任務的 agent。</figcaption>
             </figure>
               <p>等級越高，你驗證的對象越往上游移。可是沒有能信任的測試就往上走，只是把沒人檢查的東西做得更快。人的角色怎麼變，<a href="l03.html#i3">L3</a> 有田野證據；成功怎麼量，是 <a href="l07.html#i3">L7</a> 的主題。時間有限的話，讀到這裡可以先跳到<a href="#i10">第 10 章</a>的九個問題，決定接下來讀什麼。</p>
             </div>
@@ -423,7 +425,7 @@
               <p>目標定了，下一個問題是要動哪裡。整個系統可以畫成六層，課程從最上面的 agent 一路往下講到硬體。每一層都有人在優化，但它們動的是目標式裡不同的項：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 424" role="img" aria-label="六層 stack，由上到下：Application / User、Agent / Harness、Model、Serving System、Runtime / Kernels、Hardware。右欄是每一層動目標的哪一項：Application 動人的時間與成功的定義；Agent / Harness 動 tokens per task、成功率、cache 命中；Model 動成功率與單價；Serving 動單價、latency、cache 命中；Runtime 動單價與 latency；Hardware 動單價、故障與能耗。上面兩層是 Part I，L2 到 L8；model 以下是 Part II，serving，10/19 起。左邊的外部環境和 Agent / Harness 之間有雙向箭頭。一條紅線從 Agent / Harness 連到 Serving System，標著 prefix cache：harness 怎麼組 context，決定 serving 能不能命中。底部寫課程不講 training、cluster management、model architecture design、power 與新硬體。">
+                <svg viewBox="0 0 720 424" role="img" aria-label="六層 stack，由上到下：Application / User、Agent / Harness、Model、Serving System、Runtime / Kernels、Hardware。右欄是每一層動目標的哪一項：Application 動人的時間與成功的定義；Agent / Harness 動 tokens per task、成功率、cache 命中；Model 動成功率與單價；Serving 動單價、latency、cache 命中；Runtime 動單價與 latency；Hardware 動單價、故障與能耗。上面兩層是 Part I，L2 到 L8；model 以下是 Part II，serving，10/19 起。左邊的外部環境和 Agent / Harness 之間有雙向箭頭。一條紅線從 Agent / Harness 連到 Serving System，標著 prefix cache：harness 怎麼組 context，決定 serving 能不能命中。底部寫課程不講 training、cluster management、model architecture design、communication、power 與新硬體。">
                   <defs><marker id="l1v-stack-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-stack-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="118" y="18" class="dg-cb">六層</text>
                   <text x="430" y="18" class="dg-cb">它動目標的哪一項</text>
@@ -487,17 +489,17 @@
                   <text x="8" y="207" class="dg-c">組 context，</text>
                   <text x="8" y="224" class="dg-c">決定 serving</text>
                   <text x="8" y="241" class="dg-c">能不能命中</text>
-                  <text x="14" y="414" class="dg-c">課程不講：training、cluster management、model architecture design、power 與新硬體設計</text>
+                  <text x="14" y="414" class="dg-c">課程不講：training、cluster management、model architecture design、communication、power 與新硬體設計</text>
                 </svg>
               </div>
-              <figcaption>六層各動目標的哪一項？青色是 tokens per task，黃色是成功率，藍色是單價（$/token，cache hit 也算在這裡），粉色是人的時間，灰色是限制條件；左邊的 External 是外部環境，tool 通往的地方。分層來自課程；右欄和紅線是本文的整理。</figcaption>
+              <figcaption>六層各動目標的哪一項？青色是 tokens per task，黃色是成功率，藍色是單價（$/token），粉色是人的時間，灰色是限制條件；左邊的 External 是外部環境，tool 通往的地方。紅線標的 prefix cache 是 serving 把算過的前文存起來、下一次開頭相同就重用的機制（本章後面細講）。Cache hit 也是藍色，因為命中的 token 比較便宜，動的是單價。分層來自課程；右欄和紅線是本文的整理。</figcaption>
             </figure>
-              <p>這張圖也是這門課的範圍。Part I 的 L2–L8 講上面兩層，之後大多數的課都在 serving 這一側，從 batching、scheduling、KV cache 一路講到 GPU kernel，所以<strong>這門課的主體是 serving，agent 是它的 workload</strong>。傳統的 LLM serving 只看 model 以下三層；agent 把上面兩層接進來，問題就開始跨層，課程把這塊叫 agent serving。</p>
+              <p>這張圖也是這門課的範圍。Part I 的 L2–L8 講上面兩層，之後大多數的課都在 serving 這一側，從 batching、scheduling、KV cache 一路講到 GPU kernel（在 GPU 上執行運算的小程式），所以<strong>這門課的主體是 serving，agent 是它的 workload</strong>。傳統的 LLM serving 只看下面四層，也就是 Model 和它底下的 Serving、Runtime、Hardware；agent 把上面兩層接進來，問題就開始跨層，課程把這塊叫 agent serving。</p>
               <p>這張圖的用法是：agent 太貴時，先分清是哪一項。例如一個任務用 200K token、每百萬 token $3、成功率 40%，每個成功任務 $1.50。Token 數減半、單價減半、成功率提高到 80%，三條路都能降到 $0.75，但它們在不同的層，歸不同的人管，而 throughput 只碰得到單價那一條。</p>
               <p id="i4-1"><b>問題會跨層：prefix cache。</b>Prefix cache 把算過的中間結果存起來，下一個請求的開頭和上一個完全相同時，那一段就不必重算。Agent 每一圈都重送前面的全部，所以最依賴它。它住在 serving 層，能不能命中卻由上面的 harness 決定：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 252" role="img" aria-label="兩個例子，各畫連續兩步送給 model 的內容。上：時間戳放在 system prompt 開頭。第 N+1 步的第一段就和第 N 步不同，後面全部沒有命中，要重新 prefill 約 127K token。下：穩定的內容放前面，新內容只往後加。第 N+1 步的開頭全部命中，只要 prefill 新增的約 857 token。">
+                <svg viewBox="0 0 720 252" role="img" aria-label="兩個例子，各畫連續兩步送給 model 的內容。上：時間戳放在 system prompt 開頭，而時間每一步都不同。第 N+1 步的第一段就和第 N 步不同，後面全部沒有命中，要重新 prefill 約 127K token。下：穩定的內容放前面，新內容只往後加。第 N+1 步的開頭全部命中，只要 prefill 新增的約 857 token。">
                   <defs><marker id="l1v-prefix-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-prefix-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="18" class="dg-h">時間戳放在 system prompt 開頭</text>
                   <text x="14" y="46" class="dg-c">第 N 步</text>
@@ -545,10 +547,11 @@
                   <text x="84" y="236" class="dg-cb">開頭完全相同，全部命中：只 prefill 新增的約 857 token</text>
                 </svg>
               </div>
-              <figcaption>Harness 的一個小決定，怎麼影響 serving？Prefix cache 從第一個 token 開始比對，遇到不同就停。粉色是要重算的，青色是命中的，黃色是真的新增的。127K 和 857 是 TraceLab 裡 Claude Code 每一步的中位數。</figcaption>
+              <figcaption>Harness 的一個小決定，怎麼影響 serving？System prompt 是 harness 放在每次請求最前面的固定說明（角色、規則），後面接 tool 的定義和對話歷史。上例把現在的時間寫進它的開頭，時間每一步都不同，所以第一段就對不上。Prefix cache 從第一個 token 開始比對，遇到不同就停。粉色是要重算的，青色是命中的，黃色是真的新增的。127K 是重讀的 126K 加上新增的 857，都是 TraceLab 裡 Claude Code 每一步的中位數。</figcaption>
             </figure>
-              <p>差距有多大？Claude Code 每一步的中位數是重讀 126K token、新增 857 token，沒有命中就要多算約 148 倍。<a href="https://www.manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus" target="_blank" rel="noopener">Manus</a> 2025 年的經驗文章把這個命中率稱為 production agent 最重要的單一指標：他們用的 model，命中的 input 每百萬 token $0.30，沒命中 $3，<strong>同樣的 token 差 10 倍</strong>（這是一家公司的經驗，不是對照實驗）。Copilot 的 trace 也看得到上層的行為怎麼改變命中率：一個 turn 內平均 90%，跨 turn 掉到 55%，換 model 之後只剩 8%。這筆錢怎麼算，見 <a href="l08.html#t2">L8〈Prefix cache 與單價〉</a>。</p>
-              <p>反過來，serving 也要知道上面在做什麼。傳統的 scheduler 看到的是一堆互不相關的請求，它不知道這些請求屬於同一條鏈。<a href="https://www.arxiv.org/abs/2502.13965" target="_blank" rel="noopener">Autellix</a>（2025）讓 serving engine 認得哪些請求屬於同一個 agent，依整個 agent 已經用掉的時間排程；作者的實驗裡，同樣的 latency 下，throughput 是 vLLM（常見的開源 serving engine）的 4 到 15 倍。Copilot 那篇得到同樣的結論：優化和排程的單位，要從單一請求移到整個 session。</p>
+              <p>差距有多大？Claude Code 每一步的中位數是重讀 126K token、新增 857 token，沒有命中就要多算約 148 倍。<a href="https://www.manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus" target="_blank" rel="noopener">Manus</a> 2025 年的經驗文章把這個命中率稱為 production agent 最重要的單一指標（這是一家公司的經驗，不是對照實驗）。他們給的理由是價差：他們用的 model，命中的 input 每百萬 token $0.30，沒命中 $3，<strong>同樣的 token 差 10 倍</strong>。</p>
+              <p>Copilot 的 trace 也看得到上層的行為怎麼改變命中率：一個 turn 內平均 90%，跨 turn 掉到 55%，<strong>換 model 之後只剩 8%</strong>。跨 turn 時中間隔著人讀結果、想下一步的時間（第 8 章：中位數約 3 分鐘），別的請求可能已經把 cache 擠掉；換 model 時，舊 model 算出的中間結果新 model 用不上，幾乎全部要重算。這筆錢怎麼算，見 <a href="l08.html#i3">L8〈Prompt cache〉</a>（API 計價時對 prefix cache 的叫法）。</p>
+              <p>反過來，serving 也要知道上面在做什麼。傳統的 scheduler 一個請求一個請求排，例如先到先做，它不知道哪些請求屬於同一條鏈。一個跑很久的 agent 一圈接一圈送請求，它的 context 已經很大，每個請求都算得久；短 agent 的請求只要排在它後面，就得等它算完。短 agent 只要跑幾圈就能結束，可是每一圈都可能再等一次，短任務只能乾等（head-of-line blocking）。<a href="https://www.arxiv.org/abs/2502.13965" target="_blank" rel="noopener">Autellix</a>（2025）讓 serving engine 認得哪些請求屬於同一個 agent，依整個 agent 已經用掉的服務時間排程：用得越多的 agent，下一個請求排得越後面，短 agent 的請求就先過。短 agent 不再乾等，平均等待變短，所以負載要加得更重，latency 才會漲到原本的水準。作者的實驗把 latency 固定在同一個水準來比：這時每秒跑完的 agent 程式是 vLLM（常見的開源 serving engine）的 4 到 15 倍。Copilot 那篇得到同樣的結論：優化和排程的單位，要從單一請求移到整個 session。</p>
               <p id="i4-2"><b>看不到就不能優化：trace。</b>要知道問題在哪一層，得看到同一個任務穿過每一層的時間。微服務的做法是 distributed trace：每個服務記下自己處理請求的起訖時間和上一層是誰，這一段叫 span，同一個請求的 span 串起來就是一條 trace。Agent 的 trace 多了巢狀，變成一棵樹：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -605,9 +608,10 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                 <tbody>
                   <tr><td>Batching 傷了 latency 多少？</td><td>每個 <code>llm_request</code> 的 <code>ttft_ms</code> 與 <code>duration_ms</code></td></tr>
                   <tr><td>Harness 有沒有弄壞 cache？</td><td><code>cache_read_tokens</code> 和 <code>input_tokens</code> 的比例</td></tr>
-                  <tr><td>時間花在 tool，還是等人？</td><td><code>tool.execution</code> 和 <code>tool.blocked_on_user</code> 各自的 <code>duration_ms</code></td></tr>
+                  <tr><td>Tool 的時間是在跑，還是在等人核准？</td><td><code>tool.execution</code> 和 <code>tool.blocked_on_user</code> 各自的 <code>duration_ms</code></td></tr>
+                  <tr><td>人讀結果、想下一步花多久（第 3 章的人的時間）？</td><td>前一個 <code>interaction</code> 結束到下一個 <code>interaction</code> 開始的空檔</td></tr>
                   <tr><td>錢花在哪？</td><td>每個 <code>llm_request</code> 的 token 乘單價，加總到 turn</td></tr>
-                  <tr><td>這個 subagent 值不值得？</td><td>Agent tool 底下那棵子樹的 token 與時間</td></tr>
+                  <tr><td>這個 subagent 值不值得？</td><td>開 subagent 的那個 tool（Claude Code 裡叫 Agent tool）底下那棵子樹的 token 與時間</td></tr>
                 </tbody>
               </table></div>
               <p>課程的口號是<strong>你無法優化你看不到的東西</strong>。這棵樹要趁早裝，因為事後補不回過去的 run。它也有界線：trace 告訴你時間和錢花在哪裡，不告訴你任務有沒有成功。成功率要另外量，這是 <a href="l07.html#i3">L7</a> 的主題。</p>
@@ -662,16 +666,16 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               </div>
               <figcaption>Agent 的每個零件對到傳統電腦的哪裡？左右兩欄是課程的對照，右邊的句子是本文的整理。深紅色的 harness 是最常遭到低估的一層。</figcaption>
             </figure>
-              <p>這個對照的用處是決定東西該放哪裡。Context window 是 RAM，所以裝不下時要換出去，這是 <a href="l04.html#i4">L4</a> 的主題。Harness 是 OS，所以權限、重試、什麼能進 context 都歸它管，同一個 model 換一個 harness，結果就可能差很多（<a href="l02.html#x1">L2</a>）。兩個不同點裡，failure model 對設計的影響最大：<strong>OS 隔離 process 是因為 process 會壞，harness 隔離 LLM 的動作是因為它會錯</strong>，所以權限、sandbox（把執行環境隔離起來）、人工核准都跟著 tool 走。</p>
-              <p id="i5-1"><b>周邊都在補 LLM 的弱項。</b>課程引 <a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ&amp;t=874" target="_blank" rel="noopener">Andrej Karpathy 2025 年的演講</a>：LLM 是奇怪的電腦，同時超人又無能。它記得大量事實、擅長語言和寫程式，卻有五個弱項，而 agent 的周邊正好一項對一項：</p>
+              <p>這個對照的用處是決定東西該放哪裡。Context window 是 RAM，所以裝不下時要換出去，這是 <a href="l04.html#i4">L4</a> 的主題。Harness 是 OS，所以權限、重試、什麼能進 context 都歸它管，同一個 model 換一個 harness，結果就可能差很多（<a href="l02.html#x1">L2</a>）。兩個不同點改的東西不一樣：programming model 改的是你怎麼寫指令，用自然語言寫 prompt；failure model 改的是整個系統怎麼搭。<strong>OS 隔離 process 是因為 process 會壞，harness 隔離 LLM 的動作是因為它會錯</strong>，所以權限、sandbox（把執行環境隔離起來）、人工核准都跟著 tool 走。</p>
+              <p id="i5-1"><b>周邊都在補 LLM 的弱項。</b>課程引 <a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ&amp;t=874" target="_blank" rel="noopener">Andrej Karpathy 2025 年的演講</a>：LLM 是奇怪的電腦，同時超人又無能。它記得大量事實、擅長語言和寫程式，卻有五個弱項。Agent 的周邊，指 harness 在 LLM 外面加的元件（memory、context 管理、tool、權限與 sandbox），正好一項對一項：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>LLM 的弱項</th><th>Agent 的周邊怎麼補</th><th>哪裡講</th></tr></thead>
                 <tbody>
                   <tr><td>沒有持久記憶，每次對話從零開始</td><td>Memory：harness 把筆記搬進 context</td><td><a href="l06.html#i5">L6</a></td></tr>
                   <tr><td>不能可靠地理解 context</td><td>Context 管理：只放該放的</td><td><a href="l04.html#i4">L4</a></td></tr>
                   <tr><td>會編出不存在的事實（hallucinate）</td><td>測試與 tool 結果：事實回到它眼前</td><td><a href="l04.html#i7">L4</a></td></tr>
-                  <tr><td>不知道自己不知道什麼</td><td>Tool：讓它查，不要猜</td><td><a href="l04.html#i8">L4</a></td></tr>
-                  <tr><td>對 security 與對抗性輸入沒有抵抗力</td><td>權限與 sandbox：動作先過規則</td><td><a href="l02.html#i4">L2</a></td></tr>
+                  <tr><td>不知道自己不知道什麼</td><td>Tool：harness 給它搜尋、讀檔這類查資料的 tool，也可以在指令裡要求先查再答。要不要查仍由 model 判斷，所以這一項只補得到一部分</td><td><a href="l04.html#i8">L4</a></td></tr>
+                  <tr><td>對 security 與對抗性輸入沒有抵抗力（對抗性輸入是攻擊者刻意寫來騙 model 的文字，例如藏在網頁裡的「忽略之前的指示」）</td><td>權限與 sandbox：動作先過規則</td><td><a href="l02.html#i4">L2</a></td></tr>
                 </tbody>
               </table></div>
               <p>所以 <strong>agent 不是把 LLM 變聰明，是替它記、替它查、替它擋</strong>。Agent 出問題時，先問是哪個弱項沒補上，就知道該改 harness 的哪一塊。</p>
@@ -691,7 +695,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                 <thead><tr><th></th><th>AI agent</th><th>AI assistant</th><th>Bot</th></tr></thead>
                 <tbody>
                   <tr><td>目的</td><td>自主、主動地完成任務</td><td>協助使用者做任務</td><td>自動化簡單的任務或對話</td></tr>
-                  <tr><td>能力</td><td>複雜的多步動作；會學、會調整；自己決定</td><td>回應 prompt；可以建議，由使用者決定</td><td>照預先定義的規則；學得少</td></tr>
+                  <tr><td>能力</td><td>複雜的多步動作；會依結果調整（原文 learns and adapts。LLM 本身不記得上一次，跨任務的「學」靠 harness 的 memory，見本章的弱項表）；自己決定</td><td>回應 prompt；可以建議，由使用者決定</td><td>照預先定義的規則；學得少</td></tr>
                   <tr><td>互動</td><td>主動、以目標為導向</td><td>反應式，回應使用者的請求</td><td>反應式，回應觸發條件或指令</td></tr>
                 </tbody>
               </table></div>
@@ -703,24 +707,26 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
           <div class="idea" id="i6">
             <h3><span class="idea-no">6</span>五個假設：零件和傳統系統相同，workload 不同</h3>
             <div class="prose">
-              <p>Stack 的下半部變的是什麼？一個 AI 系統有七種會動的零件：scheduling 與 orchestration、state management、communication、caching、fault tolerance、security、observability。這張清單和一本作業系統或分散式系統教科書的目錄幾乎一樣，所以 <strong>AI 系統沒有新零件，新的是 workload</strong>。同一個 model，ML 研究者問該用哪個、怎麼設計，優化 accuracy；系統工程師問怎麼在大規模下 serve 它，優化 GPU 使用率、資源浪費、停機時間和碳排。課程說這裡是能力變成產品的地方，而且比 AI 本身更難。</p>
+              <p>Stack 的下半部變的是什麼？一個 AI 系統有七種會動的零件：scheduling 與 orchestration、state management、communication、caching、fault tolerance、security、observability。這張清單和一本作業系統或分散式系統教科書的目錄幾乎一樣，所以 <strong>AI 系統沒有新零件，新的是 workload</strong>。零件既然相同，系統這一側在做什麼？課程拿同一個 model 對比兩種人：ML 研究者問該用哪個、怎麼設計，優化 accuracy；系統工程師問怎麼在大規模下 serve 它，優化 GPU 使用率、資源浪費、停機時間和碳排。課程說系統工程這一側是能力變成產品的地方，而且比 AI 本身更難。</p>
               <p>寫一個 web 服務時，你多半默認五件事，scheduler、cache、測試和容量規劃都建在這些假設上。LLM 的 workload 把五條都打破。下表是本文的整理，第三欄是這個差別會改掉你的哪個決定：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>傳統的假設</th><th>LLM 的現實</th><th>要改的決定</th><th>哪裡講</th></tr></thead>
                 <tbody>
-                  <tr><td>處理時間可以預測</td><td>取決於輸出幾個 token，開始前沒人知道；prefill 受算力限制，decode 受記憶體頻寬限制</td><td>Scheduler 不能先估時間再排；batch 大小是 throughput 和 latency 的取捨</td><td><a href="#i7">第 7 章</a></td></tr>
-                  <tr><td>每個請求的狀態很小</td><td>權重幾 GB 到幾 TB；KV cache 每個 token 幾十到幾百 KB</td><td>KV cache 放哪裡、留多久，變成首要決定</td><td><a href="#i8">第 8 章</a></td></tr>
-                  <tr><td>同樣的輸入給同樣的輸出</td><td>浮點加總的順序隨 batch size 改變，temperature 0 也不保證</td><td>測試不能比對字串</td><td><a href="#i9">第 9 章</a></td></tr>
-                  <tr><td>機器很少壞，一台 server 幾百瓦</td><td>16K 張 GPU 每 3 小時壞一張；一台 server 從 800 W 到 6,000 W</td><td>故障當常態設計；長任務要能復原</td><td><a href="#t4">第 9 章</a></td></tr>
+                  <tr><td>處理時間可以預測</td><td>時間取決於輸出幾個 token，而輸出長度要生成完才知道。每多一個輸出 token，就多一步 decode，每一步都要把整個 model 從記憶體讀一遍</td><td>Scheduler 不能先估時間再排；batch 大小是 throughput 和 latency 的取捨</td><td><a href="#i7">第 7 章</a></td></tr>
+                  <tr><td>伺服器要存的狀態很小</td><td>權重（weights，model 訓練出來的參數，所有請求共用）幾 GB 到幾 TB。每個請求還各有一份 KV cache（前文每個 token 的中間結果），每個 token 幾十到幾百 KB，100K token 的請求就要約 13 GB</td><td>KV cache 放哪裡、留多久，變成首要決定</td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td>同樣的輸入給同樣的輸出</td><td>浮點數每做一次運算就捨入一次，加總順序一變，結果的最後幾位就不同；GPU 的加總順序又隨 batch size 改變。分數最高的兩個 token 很接近時，最後幾位的差就夠讓第一名換人，後面的輸出跟著不同。所以關掉隨機取樣（temperature 0，每一步都選分數最高的 token）也不保證輸出相同</td><td>測試不能比對字串</td><td><a href="#i9">第 9 章</a></td></tr>
+                  <tr><td>機器很少壞，一台 server 幾百瓦</td><td>16K 張 GPU 的叢集平均每 3 小時壞一張。一台 server 的功耗從傳統 CPU server 的約 800 W，升到裝 4–8 張 GPU 的約 6,000 W</td><td>故障當常態設計；長任務要能復原</td><td><a href="#t4">第 9 章</a></td></tr>
                   <tr><td>系統穩定不變</td><td>Model 架構與 workload 一年換好幾輪</td><td>別把假設寫死</td><td><a href="#i6-1">下一段</a></td></tr>
                 </tbody>
               </table></div>
-              <p id="i6-1"><b>變化快：別把假設寫死。</b>Model 架構一年換好幾輪，課程列了 MHA、GQA、MLA、NSA、linear attention。每一種改的都是 attention 這一層，也就是 model 讓每個新 token 參考前文的機制，而它決定 KV cache 的大小與形狀，所以 serving 的記憶體管理要跟著改。名字的差別收在下面的註。Workload 也在變，從多輪聊天到 reasoning、RAG，再到 agent，每一種吃緊的地方都不同（第 7 章的表）。課程的原則是雙向的：<strong>model 要配合硬體，硬體也要為 model 架構設計</strong>。對你的意義是，今天量到的瓶頸只對今天的 model 與 workload 成立；這些名字會過時，量測的方法不會。</p>
+              <p id="i6-1"><b>變化快：別把假設寫死。</b>Model 架構一年換好幾輪，課程列了 MHA、GQA、MLA、NSA、linear attention。每一種改的都是 attention 這一層，也就是 model 讓每個新 token 參考前文的機制。Attention 要用到前文每個 token 算出的兩組向量 key 與 value，model 把它們存起來不重算，這就是 KV cache。Attention 的做法一改，要存幾組、每組多大就跟著變，所以 serving 的記憶體管理要跟著改。名字的差別收在下面的註。Workload 也在變，從多輪聊天到 reasoning（model 先寫出很長的推理過程再回答）、RAG（先檢索文件再回答），再到 agent，每一種吃緊的地方都不同（第 7 章的表）。課程的原則是雙向的：<strong>model 要配合硬體，硬體也要為 model 架構設計</strong>。對你的意義是，今天量到的瓶頸只對今天的 model 與 workload 成立；這些名字會過時，量測的方法不會。</p>
               <details class="gloss" id="n-attn">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">MHA、GQA、MLA、NSA、linear attention：五個名字差在 KV cache</span></summary>
                 <div class="gloss-body prose">
-                  <p>MHA（multi-head attention）每個 head 各有自己的 key 與 value。GQA（grouped-query attention）讓幾個 query head 共用一組 key 與 value，KV cache 縮小好幾倍，Llama 3 用它。MLA（multi-head latent attention）把 key 與 value 壓成一個低維向量存，DeepSeek-V2 起用它。</p>
-                  <p>NSA（native sparse attention）讓每個 token 只看前文的一部分，DeepSeek 2025 年提出。Linear attention 換掉 softmax，狀態大小固定，不隨長度成長。對 serving 的意義：KV cache 的大小與讀法各不相同，記憶體管理要各自適配。</p>
+                  <p>先看 attention 怎麼做。新 token 算出一個 query，表示它要找什麼。前文每個 token 各有一個 key 和一個 value：key 用來和 query 比對打分，value 是參考它時取出的內容。新 token 依分數把前文的 value 加權取出來。</p>
+                  <p>KV cache 存的就是前文每個 token 的 key 與 value。Model 會把 attention 平行做好幾份，每一份叫一個 head，各看不同的關係。下面五個名字，差在要存幾份 key 與 value、存多大。</p>
+                  <p>MHA（multi-head attention）每個 head 各有自己的 key 與 value，KV cache 最大。GQA（grouped-query attention）讓幾個 query head（只算 query 的 head）共用一組 key 與 value。要存的組數變少，KV cache 縮小好幾倍，Llama 3 用它。MLA（multi-head latent attention）把 key 與 value 壓成一個低維向量存，DeepSeek-V2 起用它。</p>
+                  <p>NSA（native sparse attention）讓每個 token 只挑前文的一部分來比對，DeepSeek 2025 年提出。一般的 attention 用 softmax 把分數換成權重，要先拿 query 和前文每個 key 都算完分數，所以前文的 key 與 value 一個都不能丟。Linear attention 換掉 softmax，改成可以把前文先累加成一個固定大小的矩陣，用這個狀態取代 KV cache，所以不隨長度成長。對 serving 的意義：各種架構要存的東西大小與讀法不同，記憶體管理要各自適配。</p>
                 </div>
               </details>
               <p>接下來三章把前四條假設講到能用的程度，它們也是 Part II 的起點：10/19–11/02 的 serving 基礎接第 7 章，11/11 和 11/16 的 prefix cache 與 KV cache 接第 8 章。</p>
@@ -770,21 +776,22 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <text x="440" y="208" text-anchor="middle" class="dg-k">步數 = 輸出長度，生成完才知道</text>
                 </svg>
               </div>
-              <figcaption>一個請求在 GPU 上怎麼跑？Prefill 只有一步，decode 的步數由輸出長度決定。兩段的瓶頸不同，也對應兩個使用者感受得到的指標。</figcaption>
+              <figcaption>一個請求在 GPU 上怎麼跑？上方是 GPU memory 裡的兩樣東西：weights（權重）和 KV cache。Prefill 只有一步，decode 的步數由輸出長度決定。兩段的瓶頸不同，也對應兩個使用者感受得到的指標。</figcaption>
             </figure>
               <p>Prefill 是 model 一次讀完整段 prompt：所有 token 同時算，權重（weights，model 訓練出來的參數）每讀一次就用在幾千個 token 上，所以瓶頸在算力，GPU 的運算單元是忙的。接著是 decode：一次生成一個 token，每生成一個都要把全部權重和前面所有 token 的中間結果再讀一遍，卻只算一個 token，所以瓶頸在記憶體頻寬，運算單元大多在等資料。Decode 一直重複到 model 輸出結束 token。同樣 2,000 token 的 prompt，回答可能只有 50 token，也可能有 5,000 token，所以<strong>執行時間要等生成完才知道</strong>，scheduler 不能像排傳統的 job 那樣先估時間再排。</p>
               <details class="gloss" id="t1">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Prefill 與 decode：怎麼判斷瓶頸在算力還是頻寬（arithmetic intensity）</span></summary>
                 <div class="gloss-body prose">
-                  <p>判斷方法：比較每讀 1 byte 做幾次運算（arithmetic intensity），和 GPU 的算力 ÷ 頻寬。H100 的比值約 295（989 TFLOPS ÷ 3.35 TB/s）。Decode 在 batch 1 時只有約 1，遠低於 295，所以受頻寬限制；2,000 token 的 prefill 約 2,000，高於 295，所以受算力限制。Batching 就是把 decode 的比值往上推。</p>
-                  <p>運算也是異質的。CPU 負責 tokenization（把文字切成 token）、發起 kernel（GPU 上跑的小程式）、搬資料和跑 tool，GPU 只負責矩陣乘法；叢集裡還常混著不同世代的 GPU，所以 routing 也要知道每張卡的差別。</p>
+                  <p>判斷方法：比較每讀 1 byte 做幾次運算（arithmetic intensity），和 GPU 的算力 ÷ 頻寬。H100 的比值約 295（989 TFLOPS ÷ 3.35 TB/s）。比值低於 295，GPU 算得比讀得快，瓶頸在頻寬；高於 295，瓶頸在算力。</p>
+                  <p>Model 的比值這樣估：每個參數佔 2 byte，每個 token 用到一個參數約做 2 次運算（一次乘、一次加）。Decode 在 batch 1 時，讀一個參數只替 1 個 token 算，比值約 2 ÷ 2 = 1，所以受頻寬限制。2,000 token 的 prefill 讀一次參數就替 2,000 個 token 算，比值約 2,000，所以受算力限制。Batch 有 n 個請求時，讀一次參數替 n 個 token 算，比值約 n，所以 batching 就是把 decode 的比值往上推。</p>
+                  <p>瓶頸也不只在 GPU 裡，因為運算是異質的。CPU 負責 tokenization（把文字切成 token）、發起 kernel（GPU 上跑的小程式）、搬資料和跑 tool，GPU 只負責矩陣乘法；叢集裡還常混著不同世代的 GPU，所以 routing 也要知道每張卡的差別。</p>
                 </div>
               </details>
               <p id="i7-1"><b>Batching：整張 GPU 變快，每個請求變慢。</b>既然 decode 卡在讀記憶體，把多個請求併成一步算，同一份權重讀一次就能分給所有請求，這是 serving 系統一定要做 batching 的原因。但每個請求的 KV cache（前面所有 token 的中間結果，下一章細講）各是一份，不能分攤。算一次，只算讀記憶體的時間，所以是速度的上限。式子裡有四項：</p>
               <ul>
                 <li><b>W：權重。</b>8B（80 億參數）的 model，每個參數 2 byte，共 16 GB。</li>
                 <li><b>K：一個請求的 KV cache。</b>Context 4,096 token 時約 0.54 GB。</li>
-                <li><b>B：記憶體頻寬。</b>假設 1.6 TB/s。</li>
+                <li><b>B：記憶體頻寬。</b>假設 1.6 TB/s，比上面註裡 H100 的 3.35 TB/s 慢一半；換成 3.35，下表每一列約快 2.1 倍。</li>
                 <li><b>n：batch size。</b>同時算幾個請求。</li>
               </ul>
               <figure class="file"><figcaption>一步 decode</figcaption><pre><code class="lang-text">一步的時間 = (W + n × K) ÷ B
@@ -821,21 +828,21 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <text x="545.2" y="139" class="dg-cb">33.2 GB · 20.7 ms</text>
                 </svg>
               </div>
-              <figcaption>為什麼整張 GPU 只快 16 倍，不是 32 倍？藍色的 weights 只讀一次，全部請求共用；KV cache 每個請求各一份，不能分攤（粉色與深紅色）。Batch 32 時，KV 已經比 weights 還大。</figcaption>
+              <figcaption>為什麼整張 GPU 只快 16 倍，不是 32 倍？藍色的 weights 只讀一次，全部請求共用；KV cache 每個請求各一份，不能分攤（粉色；batch 32 那一段標深紅，是這張圖要看的地方）。Batch 32 時，KV 已經比 weights 還大。</figcaption>
             </figure>
-              <p>Batch 加到 32，<strong>整張 GPU 約 16 倍，每個請求只剩一半</strong>，這就是第 2 章那張圖的來源。第 3 段的 <code>decode_bound.py</code> 可以自己改數字。</p>
+              <p>Batch 加到 32，<strong>整張 GPU 約 16 倍，每個請求只剩一半</strong>，這就是第 2 章那張圖的來源。頁面第 3 段<a href="#s-try">「動手試試」</a>有一支照這個算式寫的 Python 小程式 <code>decode_bound.py</code>，可以自己改數字。</p>
               <p id="i7-2"><b>哪一段吃緊，看 workload。</b>課程列了四種 workload，它們對系統的要求不同：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Workload</th><th>長什麼樣</th><th>最吃緊的地方</th></tr></thead>
                 <tbody>
                   <tr><td>多輪聊天</td><td>互動式，對延遲敏感</td><td>第一個 token 要快（TTFT）</td></tr>
-                  <tr><td>解題（reasoning）</td><td>輸出很長</td><td>Decode 要快（TPOT）</td></tr>
+                  <tr><td>解題（reasoning：先寫出推理過程再給答案）</td><td>輸出很長，因為推理過程也是一個一個生成的 token</td><td>Decode 要快（TPOT）</td></tr>
                   <tr><td>RAG（先檢索文件再回答）</td><td>Context 很長</td><td>Prefill 要快</td></tr>
                   <tr><td><b>Agent</b></td><td>Context 長、輸出短、一條鏈</td><td>Cache 要命中，否則 prefill 暴增</td></tr>
                 </tbody>
               </table></div>
               <p>Agent 這一列有點反直覺：prompt 最長，prefill 卻不一定重，因為有 cache 時只要 prefill 新增的部分。在自架 GPU 上跑 agent benchmark 的<a href="https://arxiv.org/abs/2605.26297" target="_blank" rel="noopener">一份量測</a>（2026）裡，decode 佔 LLM 時間的 91.0% 到 98.6%，prefill 只佔 1.4% 到 9.0%。所以 agent 的 prefill 便不便宜，完全看下一章的 cache。</p>
-              <p id="i7-3"><b>本文補的：瓶頸不同，就拆到不同的 GPU。</b>Prefill 和 decode 放在同一張 GPU 上會互相干擾。<a href="https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin" target="_blank" rel="noopener">DistServe</a>（OSDI 2024）提出把兩段拆到不同的 GPU，prefill 算完再把 KV cache 傳給 decode 的機器；作者的實驗裡，同樣的延遲目標下能多服務 7.4 倍的請求。NVIDIA 的 serving framework <a href="https://docs.nvidia.com/dynamo/v1.1.1/user-guides/disaggregated-serving" target="_blank" rel="noopener">Dynamo</a> 現在把它當成內建選項：</p>
+              <p id="i7-3"><b>本文補的：瓶頸不同，就拆到不同的 GPU。</b>Prefill 和 decode 放在同一張 GPU 上會互相干擾。GPU 在算一個長 prompt 的 prefill 時，同一批正在 decode 的請求要等它算完才能生成下一個 token，TPOT 就突然變長；反過來，為了讓 decode 順，prefill 只能切碎或延後，TTFT 又變長。兩段缺的資源不同，一個缺算力、一個缺頻寬，拆開之後才能各自配 GPU 數量和設定，不必互相遷就。<a href="https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin" target="_blank" rel="noopener">DistServe</a>（OSDI 2024）提出把兩段拆到不同的 GPU，prefill 算完再把 KV cache 傳給 decode 的機器；作者的實驗裡，同樣的延遲目標下能<strong>多服務 7.4 倍的請求</strong>。NVIDIA 的 serving framework <a href="https://docs.nvidia.com/dynamo/v1.1.1/user-guides/disaggregated-serving" target="_blank" rel="noopener">Dynamo</a> 現在把它當成內建選項：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 200" role="img" aria-label="兩種部署。上：prefill 和 decode 放在同一張 GPU，一個長 prefill 會卡住所有正在 decode 的請求。下：disaggregated，request 先到 prefill pool，算完後把 KV cache 透過 RDMA 傳給 decode pool，由 decode pool 生成 token。Prefill pool 的瓶頸是 compute，decode pool 的瓶頸是 memory bandwidth，兩邊可以各自擴充。">
@@ -859,9 +866,9 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <text x="14" y="192" class="dg-c">兩邊可以各自擴充，但多了一段要搬的資料</text>
                 </svg>
               </div>
-              <figcaption>Prefill 和 decode 瓶頸不同，能不能分開放？拆開之後兩邊不再互相卡住，代價是多了深紅色那一段：KV cache 要從一台機器搬到另一台。</figcaption>
+              <figcaption>Prefill 和 decode 瓶頸不同，能不能分開放？拆開之後兩邊不再互相卡住，代價是多了深紅色那一段：KV cache 要從一台機器搬到另一台。圖上的 RDMA 是網卡直接讀寫對方機器記憶體的傳輸方式，繞過 CPU 和 OS。</figcaption>
             </figure>
-              <p>拆開不是免費的。Dynamo 的文件寫得很直接：輸入很長、輸出很短的 workload 才划算，輸入輸出比在 2:1 到 10:1 之間時，不拆常常比較好；KV cache 的傳輸要靠 RDMA（網卡直接讀寫對方機器的記憶體，繞過 CPU 和 OS），沒有 RDMA 時 TTFT 從 355 ms 變成 10 秒以上。本文的判斷：agent 的 prompt 雖然長，命中 cache 時真的要 prefill 的只有新增的部分，Claude Code 的中位數是新增 857 token、輸出 252 token，約 3.4:1。所以要不要拆，<strong>先看 cache 命中後的長度，不是 prompt 的長度</strong>。</p>
+              <p>拆開不是免費的。Dynamo 的文件寫得很直接：輸入很長、輸出很短的 workload 才划算，輸入輸出比在 2:1 到 10:1 之間時，不拆常常比較好；KV cache 的傳輸要靠 RDMA，沒有 RDMA 時 TTFT 從 355 ms 變成 10 秒以上。本文的判斷：agent 的 prompt 雖然長，命中 cache 時真的要 prefill 的只有新增的部分。Claude Code 的中位數是新增 857 token、輸出 252 token，約 3.4:1，落在 Dynamo 說不拆常常比較好的 2:1 到 10:1 之間。改用整段 prompt 算，重讀的 126K 加新增的 857，對輸出 252，約 504:1，看起來是最該拆的那種。兩種算法的結論相反，所以要不要拆，<strong>先看 cache 命中後的長度，不是 prompt 的長度</strong>。</p>
             </div>
           </div>
 
@@ -875,7 +882,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <div class="table-wrap"><table>
                 <thead><tr><th>Context 長度</th><th>KV cache</th><th>對照</th></tr></thead>
                 <tbody>
-                  <tr><td>4K token</td><td>0.5 GB</td><td>第 7 章的例子</td></tr>
+                  <tr><td>4K token</td><td>0.54 GB</td><td>第 7 章的例子</td></tr>
                   <tr><td>68K token</td><td>8.9 GB</td><td>Copilot 每次 LLM call 輸入的中位數</td></tr>
                   <tr><td><b>100K token</b></td><td><b>13.1 GB</b></td><td>和 16 GB 的權重同一個量級</td></tr>
                   <tr><td>126K token</td><td>16.5 GB</td><td>Claude Code 每一步的 prefix 中位數</td></tr>
@@ -886,7 +893,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <p id="i8-2"><b>搬資料才是瓶頸。</b>KV cache 可以搬出去，但離運算單元越遠，路越窄：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 232" role="img" aria-label="照比例的長條：把 13 GB 的 KV cache 從不同地方搬回來要多久，以 H100 為例。HBM 約 3.35 TB/s，約 4 毫秒。NVLink 合計約 900 GB/s，約 15 毫秒。PCIe 5.0 x16 單向約 64 GB/s，約 0.2 秒，對應放在 CPU memory。100 Gbps 網卡約 12.5 GB/s，約 1 秒，對應放在別台機器。丟掉重做 prefill，100K token，至少約 1.6 秒，而且佔用 GPU 算力。">
+                <svg viewBox="0 0 720 232" role="img" aria-label="照比例的長條：把 13 GB 的 KV cache 從不同地方搬回來要多久，以 H100 為例。HBM 約 3.35 TB/s，約 4 毫秒，對應放在 GPU 自己的記憶體。NVLink 合計約 900 GB/s，約 15 毫秒，對應放在同一台機器的另一張 GPU。PCIe 5.0 x16 單向約 64 GB/s，約 0.2 秒，對應放在 CPU memory。100 Gbps 網卡約 12.5 GB/s，約 1 秒，對應放在別台機器。丟掉重做 prefill，100K token，至少約 1.6 秒，而且佔用 GPU 算力。">
                   <defs><marker id="l1v-ladder-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-ladder-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="20" class="dg-h">離運算單元越遠，路越窄（H100，長條照比例）</text>
                   <text x="706" y="20" text-anchor="end" class="dg-cb">13 GB 要多久</text>
@@ -915,9 +922,9 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <text x="706" y="224" text-anchor="end" class="dg-k">至少 1.6 秒</text>
                 </svg>
               </div>
-              <figcaption>KV cache 放在哪裡，要回來時等多久？用 13 GB（100K token 的 session）算。規格是 H100 SXM；最後一列是本文的上限估算，真實的 prefill 更慢。</figcaption>
+              <figcaption>KV cache 放在哪裡，要回來時等多久？用 13 GB（100K token 的 session）算。HBM 是 GPU 自己的記憶體；NVLink 是同一台機器裡 GPU 與 GPU 之間的直連線路；PCIe 是 GPU 接到 CPU 的匯流排。規格是 H100 SXM；最後一列是本文的估算，用的是理論算力，真實的 prefill 更慢。</figcaption>
             </figure>
-              <p>課程的結論是<strong>搬資料是瓶頸，不是算</strong>。這張圖也給出搬不搬的門檻：只要搬回來比重算快，存著就划算。重做 100K token 的 prefill 上限約 1.6 秒（8B 參數、每個參數約 2 次運算，H100 的理論算力 989 TFLOPS），13 GB 要在 1.6 秒內搬完，頻寬要約 8 GB/s。<a href="https://www.usenix.org/conference/fast25/presentation/qin" target="_blank" rel="noopener">Mooncake</a> 算出的門檻在同一個量級：LLaMA3-70B、8 張 A800、8,192 token 的 prefix，至少要 6 GB/s。</p>
+              <p>課程的結論是<strong>搬資料是瓶頸，不是算</strong>：GPU 算得夠快，慢的是把資料送到運算單元。第 7 章的 decode 每一步都在等讀記憶體；KV cache 存到 GPU 外面之後，拿回來的時間又看路有多寬，上圖從 4 ms 到 1 秒差了兩百多倍。這張圖也給出搬不搬的門檻：只要搬回來比重算快，存著就划算。重做 100K token 的 prefill，用理論算力估最快也要約 1.6 秒（8B 參數、每個 token 每個參數約 2 次運算，H100 的理論算力 989 TFLOPS）。所以 13 GB 只要在 1.6 秒內搬得回來就划算，頻寬要約 8 GB/s；圖上連最慢的 100 Gbps 網卡都超過這個門檻。Mooncake（月之暗面 Kimi 的 serving 平台，本章最後一節細講）的論文算出的門檻在同一個量級：LLaMA3-70B、8 張 A800、8,192 token 的 prefix，至少要 6 GB/s。</p>
               <p>Model 大到要切到多張 GPU 時，GPU 之間也要通訊，切法和通訊零件收在下面的註。</p>
               <details class="gloss" id="t5">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">一張 GPU 放不下時：平行化的切法與通訊零件</span></summary>
@@ -936,7 +943,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <p id="i8-3"><b>本文補的：agent 的 KV cache 什麼時候閒著。</b>課程問 KV 與 prefix 的狀態該放哪裡，直覺的答案是等 tool 時就搬走。GitHub Copilot 的 trace 改了這個問題的重點：閒置分成兩種，長度差兩個量級。</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 206" role="img" aria-label="一段 session 的時間軸。左右兩段是 turn，裡面 inference 和 tool 交替，中間的閒置很短：turn 內的閒置佔 90% 以上，KV cache 閒置的中位數 1.2 秒，P95 37 秒，所以留在 GPU memory。中間一大段是人在想：跨 turn 的閒置佔 8 到 9%，中位數 172 秒，P95 4,500 秒，所以搬到 CPU memory 或 SSD。">
+                <svg viewBox="0 0 720 206" role="img" aria-label="一段 session 的時間軸。左右兩段是 turn，裡面 inference 和 tool 交替，中間的閒置很短：turn 內的閒置佔閒置次數的 90% 以上，KV cache 閒置的中位數 1.2 秒，P95 37 秒，所以留在 GPU memory。中間一大段是人在想：跨 turn 的閒置只佔閒置次數的 8 到 9%，但每一段很長，中位數 172 秒，P95 4,500 秒，所以搬到 CPU memory 或 SSD。">
                   <defs><marker id="l1v-idle-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-idle-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="14" y="30" width="46" height="34" rx="1" class="dg-n-a"/>
                   <rect x="62" y="30" width="14" height="34" rx="1" class="dg-n-b"/>
@@ -968,7 +975,8 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               </div>
               <figcaption>Agent 的 KV cache 什麼時候閒著？青色是 inference，黃色是 tool，寬度不照比例。閒置分成兩種，長度差兩個量級，該搬的時機是 turn 的邊界。數字來自 GitHub Copilot 的 production trace；P95 是 95% 的閒置短於這個值。</figcaption>
             </figure>
-              <p>Tool 造成的閒置多半很短，下一次 call 馬上就來，搬出去再搬回來不划算；真正長的閒置來自人。所以<strong>該搬的時機是 turn 的邊界</strong>，不是每次等 tool。這是第 3 章的人的時間在 serving 層留下的影子。至於搬出去之後留多久，又是一個取捨。下表來自 TraceLab，R 是暫停中的請求佔的 KV 存量，除以正在 decode 的請求佔的 KV 存量：</p>
+              <p>Tool 造成的閒置多半很短，中位數 1.2 秒，下一次 call 馬上就來。100K token 的 KV cache 經 PCIe 搬到 CPU memory 再搬回來，來回約 0.4 秒（見〈搬資料才是瓶頸〉那張圖），已經是這段閒置的三分之一，空出來的位置又很快要還回去，不划算。真正長的閒置來自人，中位數 172 秒。所以<strong>該搬的時機是 turn 的邊界</strong>，不是每次等 tool。這是第 3 章的人的時間在 serving 層留下的影子。</p>
+              <p>至於搬出去之後留多久，又是一個取捨。下表來自 TraceLab，R 是暫停中的請求佔的 KV 存量，除以正在 decode 的請求佔的 KV 存量：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>KV cache 留多久</th><th>Cache 命中率</th><th>R</th></tr></thead>
                 <tbody>
@@ -1007,8 +1015,8 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               </div>
               <figcaption>同時跑的 agent 多幾個，會發生什麼事？命中率一次掉下去，沒有慢慢變差的過程。原因是 GPU memory 放不下，新的 prefix 一直擠掉有用的舊 prefix（thrashing）。這是 benchmark，不是 production。</figcaption>
             </figure>
-              <p>追 tokens/sec 的直覺是多塞一點請求，但塞過 KV cache 的容量，擠出去的 prefix 要重新 prefill，多出來的 prefill 又拖慢正在 decode 的請求，<strong>命中率和速度一起掉</strong>。所以 concurrency 的上限要看 KV cache 的容量，不能只看 GPU 使用率。</p>
-              <p id="i8-5"><b>本文補的：KV cache 變成一層儲存。</b>既然重算這麼貴，業界的方向是把 KV cache 當成值得存的資料，GPU 放不下就放 CPU memory 和 SSD。<a href="https://www.usenix.org/conference/fast25/presentation/qin" target="_blank" rel="noopener">Mooncake</a>（月之暗面 Kimi 的 serving 平台，FAST 2025）的論文標題就是「用更多儲存換更少計算」，報告每天處理超過 1,000 億 token，和他們先前的系統比，多處理 115%（A800）與 107%（H800）的請求；這是自家的歷史統計，不是對照實驗。<a href="https://arxiv.org/abs/2510.09665" target="_blank" rel="noopener">LMCache</a>（2025）把這一層做成 vLLM、SGLang（兩個開源 serving engine）都能接的函式庫，報告多輪問答等 workload 的 throughput 最高 15 倍。前提都是頻寬夠，Mooncake 在低於 100 Gbps 時效能明顯變差，這又回到搬資料的問題。</p>
+              <p>追 tokens/sec 的直覺是多塞一點請求，但塞過 KV cache 的容量，擠出去的 prefix 要重新 prefill，多出來的 prefill 又拖慢正在 decode 的請求，<strong>命中率和速度一起掉</strong>。這時 GPU 忙著重算擠出去的 prefix，使用率不會因此下降，儀表板上看不出問題。所以 concurrency（同時跑的請求數）的上限要看 KV cache 的容量，不能只看 GPU 使用率。</p>
+              <p id="i8-5"><b>本文補的：KV cache 變成一層儲存。</b>既然重算這麼貴，業界的方向是把 KV cache 當成值得存的資料，GPU 放不下就放 CPU memory 和 SSD。<a href="https://www.usenix.org/conference/fast25/presentation/qin" target="_blank" rel="noopener">Mooncake</a>（月之暗面 Kimi 的 serving 平台，FAST 2025）的論文標題就是「用更多儲存換更少計算」，報告每天處理超過 1,000 億 token，和他們先前的系統比，多處理 115%（A800）與 107%（H800）的請求；這是自家的歷史統計，不是對照實驗。<a href="https://arxiv.org/abs/2510.09665" target="_blank" rel="noopener">LMCache</a>（2025）把這一層做成 vLLM、SGLang（兩個開源 serving engine）都能接的函式庫。作者的實驗裡，vLLM 接上 LMCache 之後，多輪問答等 workload 的 throughput 最高是只用 vLLM 的 15 倍。前提都是頻寬夠，Mooncake 在低於 100 Gbps 時效能明顯變差，這又回到搬資料的問題。</p>
             </div>
           </div>
 
@@ -1019,7 +1027,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <p id="i9-1"><b>同一個 prompt，輸出為什麼不同。</b>浮點數每做一次運算就捨入一次，所以加總的順序會改變結果。GPU 把一個矩陣乘法切成很多小塊平行算，再把部分和加起來，切法由 kernel（GPU 上跑的小程式）決定，kernel 又依 batch size 選：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 202" role="img" aria-label="同一個 prompt、temperature 0，送到伺服器兩次。第一次伺服器閒，batch 1，kernel 用切法 A，候選 token A 的 logit 是 45.4947968，大於 B 的 45.49479，選 A。第二次伺服器忙，batch 64，kernel 用切法 B，A 的 logit 是 45.4947853，小於 B，選 B。之後每一步的 context 都不同，整段文字分岔。">
+                <svg viewBox="0 0 720 202" role="img" aria-label="同一個 prompt、temperature 0，送到伺服器兩次。第一次伺服器閒，batch 1，kernel 用切法 1，候選 token A 的 logit 是 45.4947968，大於候選 token B 的 45.49479，選 A。第二次伺服器忙，batch 64，kernel 用切法 2，token A 的 logit 是 45.4947853，小於 token B，選 B。之後每一步的 context 都不同，整段文字分岔。">
                   <defs><marker id="l1v-fp-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l1v-fp-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M120,58 L136,58" class="dg-link" marker-end="url(#l1v-fp-ah)"/>
                   <path d="M252,58 L268,58" class="dg-link" marker-end="url(#l1v-fp-ah)"/>
@@ -1039,38 +1047,38 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <rect x="136" y="32" width="116" height="52" rx="4" class="dg-n-c"/>
                   <text x="194" y="63.0" text-anchor="middle" class="dg-ls">閒：batch 1</text>
                   <rect x="268" y="32" width="116" height="52" rx="4" class="dg-n-c"/>
-                  <text x="326" y="55.0" text-anchor="middle" class="dg-ls">切法 A</text>
+                  <text x="326" y="55.0" text-anchor="middle" class="dg-ls">切法 1</text>
                   <text x="326" y="72.0" text-anchor="middle" class="dg-c">分組加總</text>
                   <rect x="400" y="32" width="176" height="52" rx="4" class="dg-n-b"/>
                   <text x="488" y="55.0" text-anchor="middle" class="dg-ls">45.4947968</text>
-                  <text x="488" y="72.0" text-anchor="middle" class="dg-c">> B 的 45.49479</text>
+                  <text x="488" y="72.0" text-anchor="middle" class="dg-c">> token B 的 45.49479</text>
                   <rect x="592" y="32" width="114" height="52" rx="4" class="dg-n-a"/>
                   <text x="649" y="63.0" text-anchor="middle" class="dg-l">選 A</text>
                   <rect x="136" y="100" width="116" height="52" rx="4" class="dg-n-c"/>
                   <text x="194" y="131.0" text-anchor="middle" class="dg-ls">忙：batch 64</text>
                   <rect x="268" y="100" width="116" height="52" rx="4" class="dg-n-c"/>
-                  <text x="326" y="123.0" text-anchor="middle" class="dg-ls">切法 B</text>
+                  <text x="326" y="123.0" text-anchor="middle" class="dg-ls">切法 2</text>
                   <text x="326" y="140.0" text-anchor="middle" class="dg-c">一次加完</text>
                   <rect x="400" y="100" width="176" height="52" rx="4" class="dg-n-b"/>
                   <text x="488" y="123.0" text-anchor="middle" class="dg-ls">45.4947853</text>
-                  <text x="488" y="140.0" text-anchor="middle" class="dg-c">&lt; B 的 45.49479</text>
+                  <text x="488" y="140.0" text-anchor="middle" class="dg-c">&lt; token B 的 45.49479</text>
                   <rect x="592" y="100" width="114" height="52" rx="4" class="dg-n-focus"/>
                   <text x="649" y="131.0" text-anchor="middle" class="dg-l-on">選 B</text>
                   <text x="360" y="186" text-anchor="middle" class="dg-k">之後每一步的 context 都不同，整段文字從這裡分岔</text>
                 </svg>
               </div>
-              <figcaption>同一個 prompt 為什麼可能得到不同輸出？Batch size 由伺服器當下的負載決定，你控制不了。logit 是 model 替每個候選 token 打的分數；數字取自第 3 段的 fp_order.py，B 的分數為了看清楚固定不變。</figcaption>
+              <figcaption>同一個 prompt 為什麼可能得到不同輸出？Batch size 由伺服器當下的負載決定，你控制不了。logit 是 model 替每個候選 token 打的分數；兩種切法編號 1、2，候選 token 叫 A、B。數字取自第 3 段「動手試試」的 fp_order.py，token B 的分數為了看清楚固定不變。</figcaption>
             </figure>
-              <p>差距只在第 7 位小數，但前兩名很接近時，這就夠讓最高分換人；一個 token 換了，後面的句子就全部不同。課程叫它蝴蝶效應。Temperature 是控制隨機取樣的參數，0 表示每一步都選最高分，所以 <strong>temperature 0 只固定了選法，不保證可重現</strong>。課程的結論看另一面：近似計算可以接受，FP8（8 位元浮點數）與 quantization（用較少的 bit 存權重）都是用精度換速度。延伸閱讀裡的 <a href="#wrap">Thinking Machines</a> 則示範它修得掉：改用不隨 batch size 變的 kernel 後，1,000 次輸出完全相同，代價是時間變成 1.6 到 2.1 倍，而且只在你控制 serving stack 時才做得到。</p>
+              <p>兩次的 logit 從第 7 位有效數字才開始不同（45.49479… 對 45.49478…，差約 0.00001），但前兩名很接近時，這就夠讓最高分換人；一個 token 換了，後面的句子就全部不同。課程叫它蝴蝶效應。Temperature 是控制隨機取樣的參數，0 表示每一步都選最高分，所以 <strong>temperature 0 只固定了選法，不保證可重現</strong>。既然捨入誤差免不了，課程的結論是近似計算可以接受：FP8（8 位元浮點數）與 quantization（用較少的 bit 存權重）都是刻意用精度換速度。要可重現也做得到，延伸閱讀裡的 <a href="#wrap">Thinking Machines</a> 示範了修法：改用不隨 batch size 變的 kernel 後，1,000 次輸出完全相同，代價是時間變成 1.6 到 2.1 倍，而且只在你控制 serving stack 時才做得到。</p>
               <details class="gloss" id="t2">
                 <summary><span class="gloss-k">背景</span><span class="gloss-t">浮點數沒有結合律：同一個 prompt 為什麼有不同輸出</span></summary>
                 <div class="gloss-body prose">
                   <p>浮點數每做一次運算就捨入一次，所以 <code>(a + b) + c</code> 和 <code>a + (b + c)</code> 可能不相等。GPU 把 matmul 切成小塊平行加總，切法由 kernel 決定。Batch size 一變，kernel 可能換，加總順序跟著改變。</p>
                   <p>課程把不確定性的來源分三層：</p>
                   <ul>
-                    <li><b>Runtime。</b>Warp 與 block 的排程、記憶體順序、非同步的 stream、batch size。</li>
-                    <li><b>軟體。</b>Fused multiply-add 一次算完 a × b + c，只捨入一次，和分兩步算的結果不同；autotuning 依輸入形狀換 kernel；subnormal 的處理方式。</li>
-                    <li><b>硬體。</b>CUDA core 與 tensor core 的累加方式不同；Hopper 的 FP8 和 Blackwell 的 micro-scaling tile 捨入的位置也不同。</li>
+                    <li><b>Runtime。</b>GPU 把執行緒 32 個編成一組（warp），好幾組再編成一個 block 來排程；哪一組先算完、先把部分和加回去，每次可能不同。多個執行緒加到同一個記憶體位置時，誰先加也不固定（記憶體順序）。Stream 是 GPU 上可以同時執行的工作佇列，非同步的 stream 也會改變運算的先後。最後是 batch size。</li>
+                    <li><b>軟體。</b>Fused multiply-add 一次算完 a × b + c，只捨入一次，和分兩步算的結果不同。Autotuning 依輸入形狀換 kernel。Subnormal 是比最小的一般浮點數還接近 0、精度較低的數；有的設定直接把它當成 0，有的照算，結果就不同。</li>
+                    <li><b>硬體。</b>NVIDIA GPU 有兩種運算單元：一般的 CUDA core 和專做矩陣乘法的 tensor core，兩者累加的方式不同。Hopper 是 H100 那一代，Blackwell 是下一代（B200）。Blackwell 的 micro-scaling 格式讓每一小塊數字（tile）共用一個縮放係數，Hopper 的 FP8 沒有這種硬體的區塊縮放，所以捨入的位置也不同。</li>
                   </ul>
                 </div>
               </details>
@@ -1118,7 +1126,7 @@ def test_model_properties():
         t = to_ticket(call_model(BUG_123))
         passed += t.severity in SEVERITIES and bool(t.steps)   # 檢查性質，不比對字串
     assert passed &gt;= 18                            # 門檻依自己的基準線定；20 次的誤差很大</code></pre></figure>
-              <p>第 2 段進階題第 3 題請你替這個功能訂出判定退步的規則。<a href="l07.html#i3">L7</a> 的 pass^k（同一題 k 次都成功才算過）是同一個想法，用在 agent 上更重要，因為一個 token 不同，就可能換掉整個 tool call。</p>
+              <p>頁面第 2 段「問題討論」的進階題第 3 題，請你替這個功能訂出判定退步的規則。<a href="l07.html#i3">L7</a> 的 pass^k（同一題 k 次都成功才算過）也是「同一題跑多次、看整體結果」，只是門檻更嚴：上面的測試 20 次過 18 次就算過，pass^k 要 k 次全過。這個想法用在 agent 上更重要，因為一個 token 不同，就可能換掉整個 tool call。</p>
               <p id="i9-3"><span class="anchor" id="t4"></span><b>故障是常態。</b>GPU 的 MTBF（mean time between failures，單一元件平均多久故障一次）約 50,000 小時，單張看很可靠。但 N 張一起用，只要每張獨立故障，叢集平均每 MTBF ÷ N 就壞一張：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>GPU 數</th><th>多久壞一張</th><th>換算</th></tr></thead>
@@ -1129,18 +1137,24 @@ def test_model_properties():
                   <tr><td><b>16,384（16K）</b></td><td><b>3.05 小時</b></td><td>一天約 8 次</td></tr>
                 </tbody>
               </table></div>
-              <p>課程也給了年故障率（AFR，一年內壞掉的比例）9%，換算是約 5.9 小時一張，量級相同。實測也對得上：<a href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">Meta 訓練 Llama 3</a> 的 16K 張 H100，54 天內有 419 次非預期中斷，平均約 3.1 小時一次，約 78% 確認或疑似是硬體問題，有效訓練時間仍維持在 90% 以上。所以<strong>故障是常態，不是例外</strong>：訓練要靠 checkpoint 和快速重啟，serving 要能把請求搬走。電力也超出傳統的假設：一張 GPU 700–1,000 W，一台 server 裝 4–8 張，整台從 800 W 升到 6,000 W，上千台同時從閒置跳到滿載時，機房和電網都要承受得住。</p>
-              <p id="i9-4"><span class="anchor" id="x2"></span><b>本文的判斷：單一個 run，先怕 tool，不是 GPU。</b>上面是整個叢集的視角。換成單一個 agent run 看，風險的排序就不同了，<strong>tool 和 API 的失敗遠比 GPU 故障常見</strong>：</p>
+              <p>課程也給了年故障率（AFR，一年內壞掉的比例）9%，換算成同樣 16K 張 GPU 的叢集，是約 5.9 小時壞一張，和上表的 3.05 小時量級相同。實測也對得上：<a href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">Meta 訓練 Llama 3</a> 的 16K 張 H100，54 天內有 419 次非預期中斷，平均約 3.1 小時一次，約 78% 確認或疑似是硬體問題，有效訓練時間仍維持在 90% 以上。所以<strong>故障是常態，不是例外</strong>：訓練要靠 checkpoint 和快速重啟，serving 要能把請求搬走。電力也超出傳統的假設：一張 GPU 700–1,000 W，一台 server 裝 4–8 張，整台功耗從傳統 CPU server 的約 800 W 升到約 6,000 W，上千台同時從閒置跳到滿載時，機房和電網都要承受得住。</p>
+              <p id="i9-4"><span class="anchor" id="x2"></span><b>本文的判斷：單一個 run，先怕 tool，不是 GPU。</b>上面是整個叢集的視角。換成單一個 agent run 看，風險的排序就不同了，<strong>tool 和 API 的失敗遠比 GPU 故障常見</strong>。下表假設一個 run 用一台 8 張 GPU 的 server、跑 30 分鐘（0.5 小時），每一步出錯的機率是 1%，三個數字都是假設：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>風險</th><th>算法</th><th>結果</th></tr></thead>
                 <tbody>
-                  <tr><td>一個 run 遇到 GPU 故障</td><td>8 張 × 0.5 小時 ÷ 50,000 小時</td><td>0.008%</td></tr>
+                  <tr><td>一個 run 遇到 GPU 故障</td><td>8 張 GPU × 0.5 小時 ÷ 50,000 小時（每張的 MTBF）</td><td>0.008%</td></tr>
                   <tr><td>一天 10 萬個 run，幾個遇到</td><td>100,000 × 0.008%</td><td>約 8 個</td></tr>
-                  <tr><td>每步 1% 出錯，40 步全部順利</td><td>0.99<sup>40</sup></td><td><b>約 67%</b></td></tr>
-                  <tr><td>每步 1% 出錯，60 步全部順利</td><td>0.99<sup>60</sup></td><td><b>約 55%</b></td></tr>
+                  <tr><td>每步 1% 出錯，40 步裡至少錯一次</td><td>1 − 0.99<sup>40</sup></td><td><b>約 33%</b></td></tr>
+                  <tr><td>每步 1% 出錯，60 步裡至少錯一次</td><td>1 − 0.99<sup>60</sup></td><td><b>約 45%</b></td></tr>
                 </tbody>
               </table></div>
-              <p>每步 1% 只是一個假設，但方向有實測支持：Copilot 的 trace 裡，9% 的 turn 有 tool 失敗。所以<strong>長的 run 要用分散式系統的老方法</strong>：每一步存 checkpoint，有副作用的 tool 要冪等（idempotent，重做一次結果不變，<a href="l05.html#t1">重試才安全</a>），重試要有上限。錯誤怎麼相乘、怎麼切短，是 <a href="l06.html#i1">L6</a> 的主題；第 3 段的 <code>fleet.py</code> 可以自己改這些數字。</p>
+              <p>每步 1% 只是一個假設，但方向有實測支持：Copilot 的 trace 裡，9% 的 turn 有 tool 失敗。所以<strong>長的 run 要用分散式系統的老方法</strong>，有三個：</p>
+              <ul>
+                <li><b>每一步存 checkpoint。</b>出錯時從上一步接著做，不必把前面幾十步重跑一次。</li>
+                <li><b>有副作用的 tool 要冪等。</b>冪等（idempotent）是重做一次結果不變，<a href="l05.html#t1">重試才安全</a>。</li>
+                <li><b>重試要有上限。</b>有些錯誤重試也不會好；第 1 章的 Copilot trace 裡，每次重試都帶著更長的 context，運算量最多放大 4 倍。</li>
+              </ul>
+              <p>錯誤怎麼相乘、怎麼切短，是 <a href="l06.html#i1">L6</a> 的主題；第 3 段「動手試試」的 <code>fleet.py</code> 可以自己改這些數字。</p>
             </div>
           </div>
 
@@ -1148,19 +1162,19 @@ def test_model_properties():
             <h3><span class="idea-no">10</span>目錄：九個問題、十個性質、課程範圍</h3>
             <div class="prose">
               <p>這一章不必讀完，需要時再查。只讀這一堂就要決定下一步的話，看第一張表就夠了：課程說，<strong>到學期末你應該能定量地回答這九個問題</strong>。答不出來的那幾題，就是你接下來要讀的地方。</p>
-              <p id="i10-1"><span class="anchor" id="x4"></span><b>九個問題。</b>「為什麼難」和「哪裡講」是本文的整理。Part I 碰到的多半在 stack 的上半部，剩下的在下半部，由 Part II 回答。日期依 2026-11-03 的課程網站課表，可能調整。第 2 段的進階題第 1、2 題，就從這裡的第 1、9 題出發。</p>
+              <p id="i10-1"><span class="anchor" id="x4"></span><b>九個問題。</b>「為什麼難」和「哪裡講」是本文的整理。Part I 碰到的多半在 stack 的上半部，剩下的在下半部，由 Part II 回答。日期依 2026-11-03 的課程網站課表，可能調整。頁面第 2 段「問題討論」的進階題第 1、2 題，就從這裡的第 1、9 題出發。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>#</th><th>問題</th><th>為什麼難</th><th>哪裡講</th></tr></thead>
                 <tbody>
                   <tr><td>1</td><td>為什麼 batching 提高 throughput，卻傷 agent 的 latency？</td><td>機制已知，數字要自己算</td><td><a href="#i2">第 2</a>、<a href="#i7">7 章</a>；11/02</td></tr>
                   <tr><td>2</td><td>Agent 什麼時候該用更大的 model？</td><td>大 model 每次貴，但成功率高；要用每個成功任務的成本比</td><td><a href="l08.html#i3">L8</a></td></tr>
                   <tr><td>3</td><td>KV 與 prefix 的狀態該放哪裡？</td><td>HBM 快但小，CPU 記憶體大但慢</td><td><a href="#i8">第 8 章</a>；11/11、11/16</td></tr>
-                  <tr><td>4</td><td>同一個 agent 的請求該怎麼排程？</td><td>它們共用開頭，排在同一張 GPU 才能命中 cache</td><td><a href="#i4-1">第 4 章</a>；11/11</td></tr>
+                  <tr><td>4</td><td>同一個 agent 的請求該怎麼排程？</td><td>它們共用開頭，排在同一張 GPU 才能命中 cache；但全部塞同一張 GPU，那張卡又會過載，cache 命中和負載平衡互相拉扯</td><td><a href="#i4-1">第 4 章</a>；11/11</td></tr>
                   <tr><td>5</td><td>Tool call 能不能和 inference 重疊？</td><td>要先知道下一步會呼叫什麼，這就是 speculation</td><td><a href="l08.html#i8">L8</a></td></tr>
                   <tr><td>6</td><td>什麼時候該開一個 subagent？</td><td>多一個 context 多一份成本，要換到什麼？</td><td><a href="l03.html#i1">L3</a>、<a href="l05.html#i2">L5</a></td></tr>
                   <tr><td>7</td><td>怎麼在異質的 GPU 與 model 之間 routing？</td><td>簡單的步驟給小 model、舊 GPU，誰來判斷簡單？</td><td><a href="l08.html#i6">L8</a>；11/30</td></tr>
                   <tr><td>8</td><td>一個跑了 30 分鐘的 agent 壞了，怎麼復原？</td><td>重跑太貴，所以要 checkpoint；有副作用的步驟不能重做兩次</td><td><a href="#x2">第 9 章</a>、<a href="l06.html#i1">L6</a></td></tr>
-                  <tr><td>9</td><td>怎麼優化每個成功任務的花費，而不是每秒的 token 數？</td><td>這一堂的主題，也是 A3 與 A5 排行榜的分數</td><td><a href="#i2">第 2</a>、<a href="#i3">3 章</a>、<a href="l08.html#i1">L8</a></td></tr>
+                  <tr><td>9</td><td>怎麼優化每個成功任務的花費，而不是每秒的 token 數？</td><td>成本要除以成功率才算數，所以成功率、token 數、單價三項要一起量（第 2 章），只看 tokens/sec 會帶錯方向。課程的第 3 個作業 A3 用排行榜同時比 accuracy、cost 和 latency（作業見本章最後的註）</td><td><a href="#i2">第 2</a>、<a href="#i3">3 章</a>、<a href="l08.html#i1">L8</a></td></tr>
                 </tbody>
               </table></div>
               <details class="gloss" id="n-ten">
@@ -1170,13 +1184,13 @@ def test_model_properties():
                   <div class="table-wrap"><table>
                 <thead><tr><th>Workload 的性質</th><th>系統課題</th><th>哪裡講</th></tr></thead>
                 <tbody>
-                  <tr><td>軌跡很長</td><td>狀態與 context 管理</td><td><a href="l04.html#i4">L4〈Context 管理〉</a>、<a href="l06.html">L6</a></td></tr>
-                  <tr><td>開頭一再重複</td><td>Prefix caching</td><td><a href="l08.html#i3">L8〈Prompt cache〉</a>；11/11</td></tr>
+                  <tr><td>軌跡很長（trajectory：agent 一次任務走過的整條鏈，就是第 1 章的鏈）</td><td>狀態與 context 管理</td><td><a href="l04.html#i4">L4〈Context 管理〉</a>、<a href="l06.html">L6</a></td></tr>
+                  <tr><td>開頭一再重複</td><td>Prefix caching</td><td><a href="l08.html#i3">L8〈Prompt cache〉</a>（就是第 4 章的 prefix cache，API 計價時的叫法）；11/11</td></tr>
                   <tr><td>Tool 之間有依賴</td><td>Dependency-aware scheduling</td><td>11/11</td></tr>
                   <tr><td>Tool 的 latency 變化大</td><td>非同步執行</td><td><a href="l08.html#i8">L8〈完成時間〉</a></td></tr>
                   <tr><td>多個 agent</td><td>Orchestration 與通訊</td><td><a href="l05.html">L5</a></td></tr>
                   <tr><td>Context 很大</td><td>記憶體階層與檢索</td><td><a href="l06.html">L6</a>；11/16</td></tr>
-                  <tr><td>推理會分支</td><td>Speculative execution</td><td><a href="l08.html#i8">L8〈完成時間〉</a>；11/04</td></tr>
+                  <tr><td>推理會分支（下一步有好幾種可能，例如要叫哪個 tool；系統可以先猜一條提前開跑，就是第 1 章的 speculation）</td><td>Speculative execution</td><td><a href="l08.html#i8">L8〈完成時間〉</a>；11/04</td></tr>
                   <tr><td>不同的 model</td><td>Routing</td><td><a href="l08.html#i6">L8〈Model、effort 與 output〉</a>；11/30</td></tr>
                   <tr><td>對外有副作用</td><td>Security 與隔離</td><td><a href="l02.html#i4">L2〈權限〉</a>、<a href="l04.html#i7">L4〈Execution〉</a></td></tr>
                   <tr><td>任務跑很久</td><td>Checkpointing 與 fault tolerance</td><td><a href="l06.html#i1">L6〈錯誤相乘〉</a>；本頁第 9 章</td></tr>
@@ -1188,16 +1202,16 @@ def test_model_properties():
               <details class="gloss" id="n-scope">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">這門課教什麼：範圍與五個作業</span></summary>
                 <div class="gloss-body prose">
-                  <p>CS2680 的正式名稱是 Agentic AI Systems，一門研究所等級的計算機系統課，預設修過一門研究所的系統課（作業系統、網路、資料庫或計算機結構），而且碰過真實的系統。內容分兩塊：agent 怎麼設計，以及 LLM 與 agent 怎麼 serve。課程不講 training（資料管線、checkpoint、pre-training、fine-tuning、RL rollout），理由是 inference 已經是算力需求的大宗；也不講叢集管理、model 架構設計、通訊、電力與新硬體設計。</p>
+                  <p>CS2680 的正式名稱是 Agentic AI Systems，一門研究所等級的計算機系統課，預設修過一門研究所的系統課（作業系統、網路、資料庫或計算機結構），而且碰過真實的系統。內容分兩塊：agent 怎麼設計，以及 LLM 與 agent 怎麼 serve。課程不講 training（資料管線、checkpoint、pre-training、fine-tuning、RL rollout），理由是 inference 已經是算力需求的大宗。也不講叢集管理和 model 架構設計。Inference 相關的題目裡，課程也把通訊、電力與新硬體設計列為不講。這不表示系統沒有通訊（第 6 章的七種零件之一）：這一堂只列出通訊零件的名字（第 8 章的註），不教它們怎麼設計。</p>
                   <p>五個作業從「用 agent」走到「自己 serve agent」，每一個都站在前一個上面。這條線也是本站的順序：L2 用 Claude Code（A1），L4 講 agent loop 與 tool（A2），L4–L8 講 context、memory、評估、成本（A3），Part II 講 serving（A4、A5）。</p>
                   <div class="table-wrap"><table>
                 <thead><tr><th>作業</th><th>做什麼</th><th>課程寫的目標</th><th>比重</th></tr></thead>
                 <tbody>
                   <tr><td>A1</td><td>替 Claude Code 做一個 web UI；解一組簡單的題目，並替 A3 的排行榜出新題</td><td>體驗 coding agent 的「魔法」</td><td>10%</td></tr>
                   <tr><td>A2</td><td>自己寫一個簡單的 coding agent</td><td>懂 coding agent 的生命週期</td><td>10%</td></tr>
-                  <tr><td>A3</td><td>優化你的 coding agent：context、memory、test-time scaling、routing、subagent、tool call</td><td>開放式；上排行榜</td><td>20%</td></tr>
-                  <tr><td>A4</td><td>Serve 你的 agent：從商用 API 換成自己跑的小 model</td><td>最難的一個</td><td>10%</td></tr>
-                  <tr><td>A5</td><td>優化整個 stack：quantization、routing、finetuning、serving engine 與 agent 一起設計</td><td>開放式；上排行榜</td><td>20%</td></tr>
+                  <tr><td>A3</td><td>優化你的 coding agent：context、memory、test-time scaling（推論時多花算力換更好的答案，例如多跑幾次挑最好的）、routing、subagent、tool call</td><td>開放式；上排行榜</td><td>20%</td></tr>
+                  <tr><td>A4</td><td>Serve 你的 agent：從商用 API 換成自己跑的小 model</td><td>課程沒寫目標，只說這是最難的作業，題目也更難</td><td>10%</td></tr>
+                  <tr><td>A5</td><td>優化整個 stack：quantization、routing、finetuning、serving engine 與 agent 一起設計（課堂不教 training，但作業可以自己選 fine-tuning 當優化手段）</td><td>開放式；上排行榜</td><td>20%</td></tr>
                 </tbody>
               </table></div>
                 </div>
@@ -1205,7 +1219,7 @@ def test_model_properties():
               <details class="gloss" id="n-slurm">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">成績、期限與計算資源（修課才需要）</span></summary>
                 <div class="gloss-body prose">
-                  <p>作業佔 70%，project 16%（做一個自己會用的工具，或先找 TF 談研究題目），presentation 10%（一篇論文加 A1 的分享），participation 4%，另有 10% 的 bonus。遲交整學期有 4 天的額度，超過每天扣 20%。採 20% 拿 A 的政策，每週預期 10 小時以上。要到場，課不錄影。</p>
+                  <p>作業佔 70%，project 16%（做一個自己會用的工具，或先找 TF，也就是助教，談研究題目），presentation 10%（一篇論文加 A1 的分享），participation 4%，另有 10% 的 bonus。遲交整學期有 4 天的額度，超過每天扣 20%。採 20% 拿 A 的政策，每週預期 10 小時以上。要到場，課不錄影。</p>
                   <p>計算資源有四種：Claude Code 的 API 額度、GitHub 的 private repo、課程的 HPC、AWS（不用時關機）。HPC 用 SLURM 排程：SLURM 是學術叢集常用的排程器，你用 <code>sbatch</code> 送一份 job 描述（要幾張 GPU、跑多久、跑哪個 script），它排隊、分配節點，時間到就收回資源。它以跑完就結束的 job 為單位，和 Kubernetes 管長駐的 service 不同；GPU 都在用時，job 在 queue 裡等，所以截止日當天可能拿不到 GPU。</p>
                 </div>
               </details>

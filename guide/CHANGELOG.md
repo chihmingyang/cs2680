@@ -5,6 +5,7 @@
 
 ## README.md
 
+- 2026-11-07（**L1–L8 可讀性審查跑完**（WORKFLOW I）：第一輪 L1–L8 共 506 個 BLOCK（76／48／97／68／37／39／76／65），作者修完；第二輪剩 41 個（3／4／8／8／4／5／6／3），主線修，沒有審第三輪。修改中順手更正的事實、各堂第二輪修了什麼記在 `guide/V7_DECISIONS.md` 各堂最後一條。首頁八堂的閱讀時間同步成審查後的數字（多數多 5–10 分鐘）；`guide/sources/l07.md` 的 ABC 一行與 OSWorld 2.1 一行照核對結果更新。）
 - 2026-11-06（`tools/verify.sh` 支援兩份 deck 的講次：頁數改讀頁面的 `data-pages-total`，PDF 取頁面裡所有 slides 檔名的共同前綴；L10 原本會 FAIL。L1–L11 都 ALL OK。新講次簡報註明接線前不要用 verify.sh）。
 - 2026-11-06（**新增 L9、L10、L11**，課程網站到 11/02 為止的 slides 都有頁面。編號 James 定：L9 是 10/19 LLM 入門；L10 是 10/21 GPU 入門，11/02 的 2b 是同一堂的後半，兩份 deck 合成一篇（`data-pdf` 是 2a、`data-pages-total` 96）；L11 是 11/02 的作業回饋與十個陷阱（課程排在 Part II，內容接 Part I）。10/26、10/28 的 `_protected` PDF 讀不到內容，沒有頁面。三堂由三個 subagent 同時寫，共用 checkout、各寫各的檔案，簡報是新的 `.claude/skills/idea-first-lecture/new-lecture-brief.md`；骨架用新的 `tools/new_lecture.py`，`assemble_v7.py` 多收 `discuss.html`、`try.html`、`wrap.html`，`add_lecture.py` 直接建 v7 側欄，`discuss.py` 會填新頁的 `#s-submit` 空殼，`insert_digest.py` 在 v7 新頁寫「它和本文哪幾章有關」。每堂的取捨在 `guide/V7_DECISIONS.md`，來源在 `guide/sources/l09–l11.md`。Issue：L9 #107、L10 #108、L11 #109。首頁：課程地圖加 chip、「還沒有 slides 的講次」依 2026-11-06 的時程重寫（batching 改到 11/04、speculative decoding 11/11、scheduling 11/23）、「怎麼讀」加 Part II 的順序。L2、L4 的 token 註依 L9 的實測更正：繁體中文一個字約 0.7–0.9 個 token，不是 1–2 個。push 前跑了可讀性審查（WORKFLOW I）：第一輪 L9 33、L10 71、L11 21 個 BLOCK，作者修完；第二輪剩 2、12、5 個，主線修，沒有審第三輪；細節在 `guide/V7_DECISIONS.md`）
 - 2026-11-06（**省 context 與步數**：各檔第 3 行的「更新：」搬到 `guide/CHANGELOG.md`（設 `merge=union`，不再衝突；README 原本 72% 是這一行）；新增 `tools/verify.sh`，一輪檢查一步跑完；截圖改成一則訊息平行 Read 6 張；寫題目的 subagent 改成寫檔、只回報路徑；`register_repo_root` 在 claude.ai session 實測可用，repo 的 CLAUDE.md 與 skill 自動載入。Project 裡的 `guide/README.md` 換成三行指標。）
@@ -117,4 +118,5 @@
 
 ## REVIEW_READABILITY.md
 
+- 2026-11-07（L1–L8 第一次整批跑：一堂 1–3 個審查者，每個都拿整頁 pack。第二輪剩的 BLOCK 多是 R9（推理少一步）和數字的讀法（百分點還是相對值、比例算反）；後者要回原文確認，原文本身沒寫清楚時，頁面寫明「原文沒說」。這次 WebFetch 直接開網址要等核准、沒人回，改用 WebSearch，結果裡就讀得到原文的句子（Cursor、Prompt Infection、ABC 附錄 E.2）。）
 - 2026-11-06（第一次用在新講次：L9–L11，10 個審查者，第一輪 33／71／21 BLOCK，第二輪剩 2／12／5，主線修完、沒有第三輪。「作者怎麼用報告」加兩條：第二輪的定位附第一輪的「我讀到的」（作者加段落後定位會移動）；新頁接到全站後就地改 HTML、不從片段重組。skill 第 4 步同步。十個審查者加三個作者修改碰到一次 5 小時的用量上限，大堂分給審查者時留意）。
