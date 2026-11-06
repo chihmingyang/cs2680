@@ -423,79 +423,64 @@ depends_on: none                                          # 要等誰</code></pr
               </ul>
               <p>用一個例子算：20 個 lookup，每個 5 秒，一個 agent 依序做完是 100 秒。拆成 n 份後，最慢那份是 100 ÷ n 秒；每份的派工加回報算 8 秒，n 份就是 8 × n 秒。四段加起來：</p>
               <figure class="file"><figcaption>總時間（秒）</figcaption><pre><code class="lang-text">總時間 = 規劃 10 + 最慢那份 (100 ÷ n) + 派工與回報 (8 × n) + 合併 10</code></pre></figure>
-              <div class="table-wrap"><table>
-                <thead><tr><th>拆成幾份</th><th>規劃</th><th>最慢那份</th><th>派工與回報</th><th>合併</th><th>總時間</th></tr></thead>
-                <tbody>
-                  <tr><td>不拆，一個 agent 做</td><td>0</td><td>100</td><td>0</td><td>0</td><td>100</td></tr>
-                  <tr><td>1</td><td>10</td><td>100</td><td>8</td><td>10</td><td>128</td></tr>
-                  <tr><td>2</td><td>10</td><td>50</td><td>16</td><td>10</td><td>86</td></tr>
-                  <tr><td><b>4</b></td><td>10</td><td>25</td><td>32</td><td>10</td><td><b>77（最快）</b></td></tr>
-                  <tr><td>5</td><td>10</td><td>20</td><td>40</td><td>10</td><td>80</td></tr>
-                  <tr><td>10</td><td>10</td><td>10</td><td>80</td><td>10</td><td>110</td></tr>
-                  <tr><td>20</td><td>10</td><td>5</td><td>160</td><td>10</td><td>185</td></tr>
-                </tbody>
-              </table></div>
-              <p>這張表要這樣讀。拆成 1 份完全沒有好處：只是把整份工作交給一個 worker，工作沒有變快，卻多付了規劃、派工和合併，所以 128 秒比不拆的 100 秒還慢。拆到 4 份最快，77 秒。再往下拆，最慢那份只再少幾秒，派工卻每份多 8 秒，所以拆成 20 份要 185 秒，<strong>比一個 agent 自己做還慢</strong>，也比拆成 1 份慢。最快的點落在「再多拆一份省下的時間，剛好等於多付的 8 秒」的地方。所以派工越貴，該拆的份數越少；拆之前，先用自己的數字算一次。</p>
-              <figure class="diagram">
-<div class="scroll">
-<svg viewBox="0 0 640 288" role="img" aria-label="20 個 lookup 拆成 n 份時的總時間，堆疊長條圖。每根長條由下往上是固定的 planning 加 merge 20 秒、critical path、communication。n 等於 1、2、4、5、10、20 時，總時間依序是 128、86、77、80、110、185 秒。Critical path 隨 n 變短，communication 隨 n 變長。一條虛線標出一個 agent 依序做完的 100 秒。n 等於 4 時最低。">
+                            <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 366" role="img" aria-label="橫條圖：20 個 lookup、一個 agent 依序做完要 100 秒，拆成 n 份時的總時間。拆開的每條長條由左到右三段：灰色是規劃加合併（10 ＋ 10 ＝ 20 秒），青色是最慢那一份（100 ÷ n 秒），黃色是派工與回報（8 × n 秒）。「不拆」那條只有青色 100 秒，沒有規劃、合併和派工。不拆，一個 agent：100 秒。拆成 1 份：20 + 100 + 8，共 128 秒。拆成 2 份：20 + 50 + 16，共 86 秒。拆成 3 份：20 + 33.3 + 24，共 77.3 秒。拆成 4 份：20 + 25 + 32，共 77 秒，最快。拆成 5 份：20 + 20 + 40，共 80 秒。拆成 10 份：20 + 10 + 80，共 110 秒。拆成 20 份：20 + 5 + 160，共 185 秒。一條直虛線標出 100 秒。拆成 4 份最快，77 秒。拆成 1 份和拆到 9 份以上都超過 100 秒（圖上的 1、10、20 份），比不拆還慢。">
                   <defs><marker id="l5vt-3-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l5vt-3-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <path d="M56,236 L56,44" class="dg-link"/>
-                  <path d="M56,236 L424,236" class="dg-link"/>
-                  <text x="50" y="240" text-anchor="end" class="dg-mn">0</text>
-                  <text x="50" y="190" text-anchor="end" class="dg-mn">50</text>
-                  <text x="50" y="140" text-anchor="end" class="dg-mn">100</text>
-                  <text x="50" y="90" text-anchor="end" class="dg-mn">150</text>
-                  <text x="50" y="36" text-anchor="end" class="dg-c">秒</text>
-                  <rect x="72" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="72" y="116" width="36" height="100" class="dg-n-a"/>
-                  <rect x="72" y="108" width="36" height="8" class="dg-n-b"/>
-                  <rect x="132" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="132" y="166" width="36" height="50" class="dg-n-a"/>
-                  <rect x="132" y="150" width="36" height="16" class="dg-n-b"/>
-                  <rect x="192" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="192" y="191" width="36" height="25" class="dg-n-a"/>
-                  <rect x="192" y="159" width="36" height="32" class="dg-n-b"/>
-                  <rect x="252" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="252" y="196" width="36" height="20" class="dg-n-a"/>
-                  <rect x="252" y="156" width="36" height="40" class="dg-n-b"/>
-                  <rect x="312" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="312" y="206" width="36" height="10" class="dg-n-a"/>
-                  <rect x="312" y="126" width="36" height="80" class="dg-n-b"/>
-                  <rect x="372" y="216" width="36" height="20" class="dg-n-n"/>
-                  <rect x="372" y="211" width="36" height="5" class="dg-n-a"/>
-                  <rect x="372" y="51" width="36" height="160" class="dg-n-b"/>
-                  <path d="M60,136 L420,136" class="dg-link-key dg-dash"/>
-                  <text x="210" y="128" text-anchor="middle" class="dg-k">一個 agent 依序做完：100 秒</text>
-                  <text x="50" y="256" text-anchor="end" class="dg-mn">n</text>
-                  <text x="90" y="256" text-anchor="middle" class="dg-cb">1</text>
-                  <text x="90" y="276" text-anchor="middle" class="dg-mn">128</text>
-                  <text x="150" y="256" text-anchor="middle" class="dg-cb">2</text>
-                  <text x="150" y="276" text-anchor="middle" class="dg-mn">86</text>
-                  <text x="210" y="256" text-anchor="middle" class="dg-cb">4</text>
-                  <text x="210" y="276" text-anchor="middle" class="dg-k">77</text>
-                  <text x="270" y="256" text-anchor="middle" class="dg-cb">5</text>
-                  <text x="270" y="276" text-anchor="middle" class="dg-mn">80</text>
-                  <text x="330" y="256" text-anchor="middle" class="dg-cb">10</text>
-                  <text x="330" y="276" text-anchor="middle" class="dg-mn">110</text>
-                  <text x="390" y="256" text-anchor="middle" class="dg-cb">20</text>
-                  <text x="390" y="276" text-anchor="middle" class="dg-mn">185</text>
-                  <text x="50" y="276" text-anchor="end" class="dg-c">總計</text>
-                  <rect x="446" y="44" width="14" height="12" class="dg-n-b"/>
-                  <text x="466" y="54" class="dg-mn">communication</text>
-                  <text x="466" y="72" class="dg-c">每份 8 秒，隨 n 變長</text>
-                  <rect x="446" y="88" width="14" height="12" class="dg-n-a"/>
-                  <text x="466" y="98" class="dg-mn">critical path</text>
-                  <text x="466" y="116" class="dg-c">最長一份：100 ÷ n 秒</text>
-                  <rect x="446" y="132" width="14" height="12" class="dg-n-n"/>
-                  <text x="466" y="142" class="dg-mn">planning + merge</text>
-                  <text x="466" y="160" class="dg-c">固定 10 ＋ 10 秒</text>
-                  <text x="446" y="198" class="dg-k">n = 4 最低：77 秒</text>
-                  <text x="446" y="218" class="dg-c">n = 20 比不拆慢 85 秒</text>
+                  <rect x="14" y="14" width="14" height="14" rx="2" class="dg-n-n"/>
+                  <text x="34" y="26" class="dg-mn">planning + merge</text>
+                  <text x="34" y="44" class="dg-c">規劃加合併，固定 10 ＋ 10 秒</text>
+                  <rect x="250" y="14" width="14" height="14" rx="2" class="dg-n-a"/>
+                  <text x="270" y="26" class="dg-mn">critical path</text>
+                  <text x="270" y="44" class="dg-c">最慢那一份，100 ÷ n 秒</text>
+                  <rect x="486" y="14" width="14" height="14" rx="2" class="dg-n-b"/>
+                  <text x="506" y="26" class="dg-mn">communication</text>
+                  <text x="506" y="44" class="dg-c">派工與回報，每份 8 秒</text>
+                  <text x="130" y="80" text-anchor="end" class="dg-ls">不拆，一個 agent</text>
+                  <rect x="142" y="68" width="220.0" height="20" class="dg-n-a"/>
+                  <text x="370.0" y="83" class="dg-cb">100</text>
+                  <text x="130" y="114" text-anchor="end" class="dg-ls">拆成 1 份</text>
+                  <rect x="142" y="102" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="102" width="220.0" height="20" class="dg-n-a"/>
+                  <rect x="406.0" y="102" width="17.6" height="20" class="dg-n-b"/>
+                  <text x="431.6" y="117" class="dg-cb">128<tspan class="dg-c">（20 + 100 + 8）</tspan></text>
+                  <text x="130" y="148" text-anchor="end" class="dg-ls">拆成 2 份</text>
+                  <rect x="142" y="136" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="136" width="110.0" height="20" class="dg-n-a"/>
+                  <rect x="296.0" y="136" width="35.2" height="20" class="dg-n-b"/>
+                  <text x="370.0" y="151" class="dg-cb">86<tspan class="dg-c">（20 + 50 + 16）</tspan></text>
+                  <text x="130" y="182" text-anchor="end" class="dg-ls">拆成 3 份</text>
+                  <rect x="142" y="170" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="170" width="73.3" height="20" class="dg-n-a"/>
+                  <rect x="259.3" y="170" width="52.8" height="20" class="dg-n-b"/>
+                  <text x="370.0" y="185" class="dg-cb">77.3<tspan class="dg-c">（20 + 33.3 + 24）</tspan></text>
+                  <text x="130" y="216" text-anchor="end" class="dg-l-key">拆成 4 份</text>
+                  <rect x="142" y="204" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="204" width="55.0" height="20" class="dg-n-a"/>
+                  <rect x="241.0" y="204" width="70.4" height="20" class="dg-n-b"/>
+                  <text x="370.0" y="219" class="dg-k">77<tspan class="dg-c">（20 + 25 + 32）</tspan> 最快</text>
+                  <text x="130" y="250" text-anchor="end" class="dg-ls">拆成 5 份</text>
+                  <rect x="142" y="238" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="238" width="44.0" height="20" class="dg-n-a"/>
+                  <rect x="230.0" y="238" width="88.0" height="20" class="dg-n-b"/>
+                  <text x="370.0" y="253" class="dg-cb">80<tspan class="dg-c">（20 + 20 + 40）</tspan></text>
+                  <text x="130" y="284" text-anchor="end" class="dg-ls">拆成 10 份</text>
+                  <rect x="142" y="272" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="272" width="22.0" height="20" class="dg-n-a"/>
+                  <rect x="208.0" y="272" width="176.0" height="20" class="dg-n-b"/>
+                  <text x="392.0" y="287" class="dg-cb">110<tspan class="dg-c">（20 + 10 + 80）</tspan></text>
+                  <text x="130" y="318" text-anchor="end" class="dg-ls">拆成 20 份</text>
+                  <rect x="142" y="306" width="44.0" height="20" class="dg-n-n"/>
+                  <rect x="186.0" y="306" width="11.0" height="20" class="dg-n-a"/>
+                  <rect x="197.0" y="306" width="352.0" height="20" class="dg-n-b"/>
+                  <text x="557.0" y="321" class="dg-cb">185<tspan class="dg-c">（20 + 5 + 160）</tspan></text>
+                  <path d="M362.0,60 L362.0,336" class="dg-link-key dg-dash"/>
+                  <text x="362.0" y="354" text-anchor="middle" class="dg-k">一個 agent 依序做完：100 秒</text>
                 </svg>
-</div>
-<figcaption>上表畫成長條圖。青色是最慢那份（critical path），黃色是派工與回報（communication），灰色是規劃加合併。數字是假設的，形狀才是重點。</figcaption>
-</figure>
+              </div>
+              <figcaption>這張圖回答：拆成幾份最快？灰色是規劃加合併，固定 20 秒；拆得越多，青色（最慢那一份）越短，黃色（派工與回報）越長。拆成 4 份最快，77 秒，3 份差不多。5 份以後總時間一路變長，所以只再畫 10 和 20 份。拆成 1 份、或拆到 9 份以上，長條都越過虛線，比一個 agent 自己做還慢（圖上是 1、10、20 份）。數字是假設的，形狀才是重點。</figcaption>
+            </figure>
+              <p>這張圖要這樣讀。拆成 1 份沒有好處：只是把整份工作交給一個 worker，工作沒有變快，卻多付了規劃、派工和合併，比不拆多 28 秒。再往下拆，每多拆一份，最慢那份省下的秒數越來越少：1 份拆成 2 份省 50 秒，2 份拆成 3 份省約 17 秒，3 份拆成 4 份省約 8.3 秒，4 份拆成 5 份只省 5 秒。派工卻固定每份多 8 秒。省下的比 8 秒多，總時間就變短；省下的比 8 秒少，就變長。所以拆到 4 份最快，77 秒，而且只比 3 份快一點，因為 3 份拆成 4 份省的 8.3 秒只比 8 秒多一點。拆到 9 份以上，總時間就超過 100 秒，<strong>比一個 agent 自己做還慢</strong>，20 份要 185 秒。派工越貴，省下的秒數越早追不上它，該拆的份數就越少；拆之前，先用自己的數字算一次。</p>
               <p id="i4-2"><b>沿什麼切。</b>依資料切最獨立，例如一批檔案一個 worker，合併也最簡單。依專業角度切（安全、效能）要在合併時去重。依階段切有先後順序，回到第 2 章要小心的循序問題。Debug 時可以依假設切，每個 agent 驗證一個互斥的解釋。</p>
               <p id="i4-3"><b>一定要設上限。</b>Worker 可以再開 worker 時，每層開 3 個，到第 4 層就是 120 個 agent，每個都有自己的帳單。要限制寬度、深度、預算和終止條件：</p>
               <figure class="file"><figcaption>terminal：Claude Code 的兩個上限（依 2026-10 的官方文件）</figcaption><pre><code>$ export CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1   # 深度：subagent 不能再開 subagent
