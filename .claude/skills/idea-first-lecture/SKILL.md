@@ -84,17 +84,13 @@ grep -o 'lXX\.html#[A-Za-z0-9_-]*' docs/*.html | grep -v '^docs/lXX' | sort | un
 ## 6. 檢查
 
 ```bash
-python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-time   # 要 OK；warn 看一次
-python3 -I tools/check_discuss.py docs/lXX.html     # 要 OK
-python3 -I tools/check_diagrams.py docs/lXX.html    # 圖的文字不超框、不重疊
-python3 -I tools/audit.py                           # 要 NO PROBLEMS（連進來的錨點也在這裡檢查）
-python3 -I tools/add_lecture.py --check             # 要 nothing (in sync)
-python3 -I tools/punct.py docs/lXX.html --diff      # 只看，不要盲跑寫回
+python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-time   # 第一次跑：寫回閱讀時間
+bash tools/verify.sh lXX     # 之後每一輪都用這個：check_article、check_discuss、check_diagrams、audit（連進來的錨點也查）、add_lecture --check 一次跑完，全過只印 ALL OK；punct 只提示
 python3 -I tools/discuss.py docs/lXX.html --sync-body --dry   # issue 內文的「站台第 N 段」會變，看過再去掉 --dry
 ```
 
 - `nav.map` 每章的分鐘數用 WORKFLOW B4 的公式算，和頁首的閱讀時間同一套。
-- 用 playwright 截圖，亮、暗、390px 各看一次。
+- 用 playwright 截圖，亮、暗、390px 各看一次。一則訊息平行 Read 6 張，不要一張一則（每一則都要重讀整個 context）。
 - 新增了 `styles.css` 的 class，就把這頁的 `styles.css?v=` 版本號往上改。
 - push 之後在線上版再跑一次 `check_diagrams` 的 JS（真字型的寬度不同）。
 
@@ -104,6 +100,6 @@ python3 -I tools/discuss.py docs/lXX.html --sync-body --dry   # issue 內文的�
 
 ## 7. 收尾
 
-- `guide/README.md` 第 3 行「更新：」加一句。規則變了就寫進 STYLE_ARTICLE 第 0 節。
+- `guide/CHANGELOG.md` 的「README.md」一節最上面加一行。規則變了就寫進 STYLE_ARTICLE 第 0 節，並在 CHANGELOG 的「STYLE_ARTICLE.md」一節加一行。
 - commit、push（WORKFLOW D）。
 - 回覆 James：先講決策的邏輯（份量怎麼排、補了什麼和為什麼、刪了什麼和為什麼），再貼可讀性審查的 BLOCK 清單與修法，再列要他確認的地方。不重貼全文。

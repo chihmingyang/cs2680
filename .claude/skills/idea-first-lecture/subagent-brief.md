@@ -13,19 +13,13 @@ James 要把 CS2680 讀書會站台（https://chihmingyang.github.io/cs2680/ ）
 ## 先讀（依序）
 
 1. `.claude/skills/idea-first-lecture/SKILL.md`：流程。第 1–6 步照做；第 7 步（README、commit、push）和第 6 步的 `discuss.py` 由主線做。第 1 步的「照 WORKFLOW A 開工」已經做好，不要再 clone。第 4 步的組裝改用下面「組裝」這一節的工具，第 5 步的側欄由工具重建。
-2. `guide/STYLE_ARTICLE.md`：第 0 節（`sed -n 10,22p`）是 v7 規則，衝突時它優先。再讀第 4 節裡的名詞註 `details.gloss`、`a.tm`，第 5 節語言，第 6 節圖的 v6.0 畫法，第 6b 節 code snippet，第 6c 節紅字。第 3 行是很長的更新紀錄，不用讀，只用下面的指令抓和這堂有關的部分。
+2. `guide/STYLE_ARTICLE.md`：第 0 節（`sed -n 10,22p`）是 v7 規則，衝突時它優先。再讀第 4 節裡的名詞註 `details.gloss`、`a.tm`，第 5 節語言，第 6 節圖的 v6.0 畫法，第 6b 節 code snippet，第 6c 節紅字。更新紀錄在 `guide/CHANGELOG.md`，不用整份讀，用下面第 6 項的指令抓和這堂有關的部分。
 3. 範本：`python3 -I tools/page_text.py docs/l05.html s-ideas` 看文字與章法；markup 用 `Grep`／`Read` 看 `docs/l05.html` 的 `tldr`、`header.part-head`、`nav.map`、第 3、4 章。
 4. `slides/lXX-notes.md` 全文：事實的來源。
 5. 舊頁面：`python3 -I tools/page_text.py docs/lXX.html`（全文，圖印成 aria-label）。
 6. 這堂過去的決定（James 親自要求過的內容在這裡，不要默默丟掉）：
    ```bash
-   python3 -I - <<'EOF'
-   import re
-   for f in ['guide/README.md', 'guide/STYLE_ARTICLE.md']:
-       line = open(f, encoding='utf-8').read().split('\n')[2]
-       for seg in re.split(r'(?=2026-\d\d-\d\d（)', line):
-           if 'LX' in seg: print(f[6:12], seg[:1500], '\n')
-   EOF
+   grep -n 'LX' guide/CHANGELOG.md | cut -c1-1500   # 一則一行，行號落在哪一節就是哪份文件的紀錄
    sed -n 9,12p guide/README.md
    git log --oneline --grep='網頁編輯' -- docs/lXX.html   # James 在站台上手改的字要保留
    ```
@@ -66,7 +60,7 @@ James 要把 CS2680 讀書會站台（https://chihmingyang.github.io/cs2680/ ）
 - 用 `tools/dg.py`（v6 畫法：填色方塊無外框、灰色直角線、深紅只標重點）。marker 前綴用 `l{N}v-` 加圖名，例如 `G(720, 216, 'l6v-life', aria)`，全站不能重複。
 - 舊頁面核心觀念與架構段的圖多半是舊畫法（`dg-box`、`dg-t`…）。要用就照新畫法重畫，不要直接搬，因為 James 要和 L5 同樣的 UI。數據圖照比例重畫，標實際數值。問題討論、動手試試裡的舊圖不動。
 - 一張圖只講一件事。放不下就拆，或把說明移到 figcaption，不要縮字。Figcaption 先說這張圖回答什麼問題，再說結論。
-- 新圖都要截圖用 Read 看過（`figure.diagram` 的 element screenshot，亮色）；挑幾張複雜的看暗色；整頁看一次 390px。James 說過圖也可能看不懂，看的時候問自己：沒看正文的人讀得懂這張圖嗎？
+- 新圖都要截圖用 Read 看過（`figure.diagram` 的 element screenshot，亮色；一則訊息平行 Read 6 張，不要一張一則）；挑幾張複雜的看暗色；整頁看一次 390px。James 說過圖也可能看不懂，看的時候問自己：沒看正文的人讀得懂這張圖嗎？
 
 ## 組裝
 
@@ -119,13 +113,12 @@ python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-t
 
 ```bash
 python3 -I tools/anchor_map.py apply lXX notes/lXX/anchor-map.json docs/index.html docs/l0[1-8].html docs/l02-readings.html   # 只影響你 worktree 裡別頁的連結，讓 audit 能過；主線不會拿這些檔案
-python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-time   # 要 OK；warn 看一次，紅字數量依 warn 調
-python3 -I tools/check_discuss.py docs/lXX.html     # 要 OK
-python3 -I tools/check_diagrams.py docs/lXX.html    # 核心觀念的圖要乾淨；保留段落的舊圖報問題就列在回報，不用修
-python3 -I tools/audit.py                           # 要 NO PROBLEMS
-python3 -I tools/add_lecture.py --check             # 要 nothing (in sync)
+python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-time   # 第一次跑：寫回閱讀時間
+bash tools/verify.sh lXX                            # 之後每一輪：六個檢查一次跑完，全過只印 ALL OK
 python3 -I tools/punct.py notes/lXX/i1.html --diff  # 只看新片段，不要對整頁寫回
 ```
+
+`verify.sh` 報 `check_diagrams` 的問題時，核心觀念的圖要修乾淨；保留段落的舊圖報問題就列在回報，不用修。
 
 `nav.map` 的分鐘數由 `__iN__` 自動算。最後把 `page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？這是自我檢查，會穩定偏正面（L6 第 2 章）；真正的可讀性審查由主線在落地時用 `.claude/skills/readability-review/SKILL.md` 開另一個 agent 做，所以你不必自己審完，但表格格子要寫成有主詞的完整句、引用要帶結論、保留語放句尾括號（`guide/REVIEW_READABILITY.md` R4–R6）。
 

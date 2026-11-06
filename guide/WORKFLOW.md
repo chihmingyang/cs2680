@@ -1,6 +1,6 @@
 # 工作流程
 
-更新：2026-11-03（L1–L8 都改完 v7；H 補上組裝工具與多堂同時改的做法；B3 的新講次寫成 v7）。2026-11-03（加 H：把一堂改成 v7 依想法重組）。2026-11-02（加 G：線上編輯與「問 Claude」）。2026-10-30（`assemble_ideas.py` 的側欄第三層也會抓開頭有 `span.anchor` 的小標；L3 重排用它組回，片段是用 `notes/l03/build_iN.py` 從舊頁面切出來的，大改既有頁面時可以照這個做法：先切片段、改片段、再組回）。2026-10-30（A1 註明 `register_repo_root` 只有 Claude Code 的 session 有；B3 的範本從 l02 改成 l05）。2026-10-29（C 加「大改一堂的核心觀念」的片段組裝法，`tools/assemble_ideas.py`）。2026-10-28（L1、L7、L8 改成 v5.0，全站 5 段）。2026-10-27（L4 改成 5 段的 v5.0 版面；B4 加一步算各章分鐘數）。2026-10-21（討論改為每堂一串、只放基礎題）。
+更新紀錄在 `guide/CHANGELOG.md`。
 
 適用於綁在 CS2680 Project 的 session（有 shell、`gh`、WebFetch 工具）。
 
@@ -27,7 +27,7 @@
 1. 把 repo 加進 session，再 clone：
    - 呼叫 `add_repo`（owner `chihmingyang`、repo `cs2680`、access `push`）。
    - `git clone --depth 1 https://github.com/chihmingyang/cs2680 /home/claude/cs2680`（timeout 給 10 分鐘）。
-   - 有 `register_repo_root` 工具（Claude Code 的 session）就呼叫，directory 是 `/home/claude/cs2680`；claude.ai 的 session 沒有這個工具（2026-10-30 實測，`add_repo` 之後也沒有），改成自己 Read `CLAUDE.md`，要用 skill 時 Read `.claude/skills/<name>/SKILL.md`。
+   - clone 完呼叫 `register_repo_root`（owner `chihmingyang`、repo `cs2680`、directory `/home/claude/cs2680`）。2026-11-06 起 claude.ai 的 session 也有這個工具（10-30 時還沒有），實測下一步就生效：`CLAUDE.md` 以 system-reminder 自動載入，`.claude/skills/` 的 skill 進到 skill 清單，用 Skill 工具載入，不必自己 Read。呼叫失敗才改成自己 Read `CLAUDE.md` 和 `.claude/skills/<name>/SKILL.md`。
 2. 確認 `gh` 可以用：
    ```bash
    gh api user --jq .login        # 應該印出 chihmingyang
@@ -63,7 +63,7 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
 
 1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v7，四段，核心觀念依想法的重要性排）。目錄（`aside.sidenav`）照抄範本即可；`add_lecture.py` 替新頁建的展開目錄還是舊格式，B5 跑完後再跑一次 `tools/assemble_v7.py` 重建（用法見檔頭）。
 2. 第 3 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
-3. 頁面很長，分段寫：先寫骨架和第 1–2 段，再寫第 3 段，最後第 4 段和延伸閱讀。可以把第 3 段的基礎題和進階題交給兩個 subagent 平行寫，各自回傳 HTML 片段，再接回頁面。
+3. 頁面很長，分段寫：先寫骨架和第 1–2 段，再寫第 3 段，最後第 4 段和延伸閱讀。可以把第 3 段的基礎題和進階題交給兩個 subagent 平行寫：每個 subagent 把 HTML 片段寫進檔案（`notes/l09/qset-basic.html`、`notes/l09/qset-adv.html`），只回報路徑和要主線確認的事，不要把 HTML 貼在回報裡；主線用 script 把檔案接回頁面。HTML 貼在回報裡，同一段就會生成兩次（subagent 一次、主線 Edit 一次），而生成是 session 裡最慢的部分。
 
 ### B4. 驗證這一頁
 
@@ -92,7 +92,8 @@ python3 -I tools/shot_article.py docs/l09.html
   EOF
   ```
 - `check_discuss.py` 在 B5 跑完 `discuss.py` 之前，會回報每一題基礎題 `no GitHub issue link`。其他問題要先修好。
-- 用 Read 看每一張截圖一次：文字重疊、超出框、箭頭沒接好、手機版跑版。發現問題修一次。
+- 用 Read 看每一張截圖一次：文字重疊、超出框、箭頭沒接好、手機版跑版。發現問題修一次。**一則訊息平行呼叫 6 次 Read**（6 張一起看），不要一張一則：每一則訊息都要重讀整個 context，L3 的 63 張截圖一張一則是 63 次，6 張一則是 11 次。
+- 頁面寫好之後，每一輪檢查用 `bash tools/verify.sh l09` 一次跑完（check_article、check_discuss、check_diagrams、audit、add_lecture --check、punct 提示），全部通過只印 `ALL OK`。上面的指令還是要先跑一次，因為 `add_anchors.py`、`punct.py`（寫回）、`--fix-time`、`shot_article.py` 會改檔或產生截圖，`verify.sh` 不做這些。
 
 ### B5. 接到全站、開討論串
 
@@ -137,7 +138,7 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
    python3 -I tools/discuss.py docs/l03.html --sync-body
    ```
    成員的留言不受影響。
-5. 對改過的講次頁跑 B4 的檢查，再跑 `audit.py`。
+5. 對改過的講次頁跑 `bash tools/verify.sh lXX`（B4 的檢查加 `audit.py`，一次跑完）。
 6. 發布（D）。
 
 大改一堂的核心觀念（2026-10-29 L5、L6 的做法）：每章寫成一個片段 `notes/lXX/iN.html`（開一組的那章把 `p.idea-group` 放在最前面），`head.html` 放 `section#s-ideas` 的開頭到 `<div class="ideas">`（`nav.map` 的分鐘數寫 `__iN__`），要改 tldr 或架構的讀圖重點就再放 `tldr.html`、`arch.html`，然後：
@@ -172,7 +173,7 @@ git push origin main
 
 ## E. 收尾
 
-1. 這次定下的新規則，寫回 `guide/` 裡對應的文件，跟頁面一起 commit。
+1. 這次定下的新規則，寫回 `guide/` 裡對應的文件，跟頁面一起 commit。更新紀錄寫進 `guide/CHANGELOG.md` 對應那一節的最上面，一則一行；不要再寫在各文件的第 3 行（2026-11-06 起）。
 2. 腳本有改，也一起 commit。
 3. 回覆 James：只列改了什麼、哪裡要他確認。不要寫長報告；他的閱讀時間有限。
 

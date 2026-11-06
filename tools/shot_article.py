@@ -5,7 +5,9 @@ Usage: python3 -I shot_article.py docs/lXX.html
 Writes shots/<name>-arch<i>-light.png and -dark.png (every figure.diagram in #s-arch and #s-ideas,
 opening a collapsed 深入 block if needed), -basic.png (first basic question, answer open), -discuss.png
 (first 進階 card, all details open) and -phone.png into the folder next to tools/;
-prints horizontal overflow at 1280px and 390px. Open each PNG with Read once.
+prints horizontal overflow at 1280px and 390px. Open each PNG with Read once, six per message:
+call Read on six PNGs in parallel in one message, not one PNG per message. Every message re-reads the
+whole context, so L3's 63 PNGs cost 11 re-reads this way instead of 63.
 """
 import sys
 from pathlib import Path
