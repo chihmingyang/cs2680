@@ -164,6 +164,7 @@ git push origin main
 ```
 
 - commit 訊息用中文，一行說改了什麼。
+- **改了正文就先過 I 的可讀性審查**（2026-11-06 起）：BLOCK 清零才 push。
 - push 後 GitHub Pages 約 1–2 分鐘更新。用 WebFetch 打開 `https://chihmingyang.github.io/cs2680/l09.html` 抽查一次。
 - 直接 push 到 `main`，不開 PR（只有 James 一個維護者）。
 
@@ -229,3 +230,21 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 照 `.claude/skills/idea-first-lecture/SKILL.md` 做，範本是 `docs/l05.html`，規則在 `STYLE_ARTICLE.md` 第 0 節。一個 session 改一堂，或一堂一個 subagent。每章寫成片段放 `notes/lXX/`（不 commit），用 `tools/assemble_v7.py` 組回頁面，`tools/dg.py` 畫圖，`tools/page_text.py` 讀舊頁面的文字。
 
 2026-11-03 L1–L4、L6–L8 是七個 subagent 同時改的：每堂一個 git worktree（`notes/wt/lXX`），簡報在 `.claude/skills/idea-first-lecture/subagent-brief.md`。連到別堂一律用舊錨點，每堂交一份 `anchor-map.json`。一堂做完就落地：拿它的頁面，把已落地各堂的 map 套到這一頁，再把這一堂的 map 套到其他頁（`tools/anchor_map.py apply`，一個檔案只套一次），跑全站檢查，push。每堂的取捨寫進 `guide/V7_DECISIONS.md`，外部來源寫進 `guide/sources/`。
+
+---
+
+## I. 可讀性審查：另一個 agent 讀一遍（2026-11-06 起）
+
+改了 `docs/lXX.html` 的正文（新寫、v7、rewrite-with-example、fact-check-extension）之後、D 發布之前做。規則與 checklist 在 `REVIEW_READABILITY.md`，操作在 `.claude/skills/readability-review/SKILL.md`。
+
+起因：L6 第 2 章一格「Anthropic（2026-03）：穩定偏正面。單一公司的經驗」James 看不懂，七個腳本都過。腳本檢查結構和版面，沒有一步是「一個沒寫過這頁的人讀一遍」。
+
+做法照 code review：
+
+1. `python3 -I tools/review_pack.py docs/lXX.html --since origin/main > notes/review/lXX-pack.md`：只印文字有變的章，讀者視角的純文字，表格格子帶欄名與列名。
+2. 開一個**全新的** subagent 當審查者（general-purpose，不是 fork），只給它 `reviewer-prompt.md` 和這個 pack。它對每個單位寫「我讀到的」，照 R1–R8 標 BLOCK／NIT，最後列「最難讀的三處」。
+3. 作者修 BLOCK（照 `rewrite-with-example`），跑 `check_article.py`（表格格子現在有 R5、R6 的 lint）。
+4. 第二輪只審被標過的單位。最多兩輪；還有 BLOCK 就留給 James。
+5. push。回覆 James 貼 BLOCK 清單和修法，不貼全文。
+
+`notes/review/` 不 commit。James 說「看不懂」而審查沒抓到，先改 checklist 或 `reviewer-prompt.md`，見 `REVIEW_READABILITY.md` 末段。

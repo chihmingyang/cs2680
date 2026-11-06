@@ -128,8 +128,9 @@ diff /tmp/before.txt /tmp/after.txt                    # 只能差行號和句�
 
 版面：用 playwright 在 390px 和 1280px 打開該 `details`，截圖看一眼，確認 `scrollWidth <= clientWidth` 且沒有 page error。沒裝瀏覽器先 `python3 -m playwright install chromium`。
 
-### 8. 寫回規則、commit、push
+### 8. 可讀性審查、寫回規則、commit、push
 
+- 先照 `.claude/skills/readability-review/SKILL.md` 跑一次審查：`review_pack.py --since origin/main` 只會印你改的那一章，開一個全新的 subagent 讀，BLOCK 修完才往下。這一步是 2026-11-06 加的：你改順的段落，要由一個沒看過原段的人確認真的順了。
 - `guide/README.md` 第 3 行「更新：」最前面加一句，說改了哪一段、為什麼。
 - 新的寫法（例如「名詞註可以放表和 code」）寫進 `guide/STYLE_ARTICLE.md` 對應的節。
 - commit 訊息用中文，一句說改了什麼。push 到 `main`。

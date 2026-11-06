@@ -98,8 +98,12 @@ python3 -I tools/discuss.py docs/lXX.html --sync-body --dry   # issue 內文的�
 - 新增了 `styles.css` 的 class，就把這頁的 `styles.css?v=` 版本號往上改。
 - push 之後在線上版再跑一次 `check_diagrams` 的 JS（真字型的寬度不同）。
 
+## 6b. 可讀性審查（2026-11-06 起，push 前必做）
+
+照 `.claude/skills/readability-review/SKILL.md`：`review_pack.py docs/lXX.html`（新寫的一堂全部章都審，單位超過 300 就分兩個審查者），開全新的 subagent 讀，BLOCK 修完、第二輪過了才收尾。七個 subagent 一天改七堂的時候沒有這一步，L6 的「穩定偏正面」就是這樣漏出去的。
+
 ## 7. 收尾
 
 - `guide/README.md` 第 3 行「更新：」加一句。規則變了就寫進 STYLE_ARTICLE 第 0 節。
 - commit、push（WORKFLOW D）。
-- 回覆 James：先講決策的邏輯（份量怎麼排、補了什麼和為什麼、刪了什麼和為什麼），再列要他確認的地方。不重貼全文。
+- 回覆 James：先講決策的邏輯（份量怎麼排、補了什麼和為什麼、刪了什麼和為什麼），再貼可讀性審查的 BLOCK 清單與修法，再列要他確認的地方。不重貼全文。

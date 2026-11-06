@@ -127,7 +127,7 @@ python3 -I tools/add_lecture.py --check             # 要 nothing (in sync)
 python3 -I tools/punct.py notes/lXX/i1.html --diff  # 只看新片段，不要對整頁寫回
 ```
 
-`nav.map` 的分鐘數由 `__iN__` 自動算。最後把 `page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？
+`nav.map` 的分鐘數由 `__iN__` 自動算。最後把 `page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？這是自我檢查，會穩定偏正面（L6 第 2 章）；真正的可讀性審查由主線在落地時用 `.claude/skills/readability-review/SKILL.md` 開另一個 agent 做，所以你不必自己審完，但表格格子要寫成有主詞的完整句、引用要帶結論、保留語放句尾括號（`guide/REVIEW_READABILITY.md` R4–R6）。
 
 ## 不要做
 

@@ -13,6 +13,9 @@ figure/svg/table/nav/aside/details.gloss and no <b> inside them (problems); one 
 main chapter prose outside any <details> (target = round(units / 200), 1..5; target-1 is fine),
 plus at most 1 inside 深入/本文延伸 blocks per chapter, tldr exactly 3, #s-arch exactly 1, each mark <= 30 units (warnings);
 inline lists (STYLE_ARTICLE 4, v5.6): a <p> with 4+ items joined by ； warns (skips p.lede, 相關：, p[data-inline]).
+table cells (REVIEW_READABILITY R5/R6, 2026-11-06): a <td> whose text is a source (link, or 公司／年月) + ：
++ fewer than 12 units warns "引用只有出處"; a hedge (單一公司／單方／不是對照實驗／數字會變) outside
+parentheses warns "保留語不在括號裡". Both are the mechanical half of the readability review.
 
 Reading times (400 text units per minute; a CJK character or an English word is 1 unit;
 under 15 min: round up; 15 min or more: nearest 5):
@@ -235,6 +238,40 @@ def inline_lists(html):
     return out
 
 
+HEDGES = ("單一公司", "單方經驗", "單方的經驗", "不是對照實驗", "數字會變", "一家的經驗")
+SOURCE_HEAD = re.compile(r"^(?:[A-Za-z][\w .&'-]{1,40}|[一-鿿]{2,12})?[（(]?(?:20\d\d(?:[-–]\d\d)?)[)）]?[：:]")
+
+
+def table_cells(html):
+    """(line, text) for every <td> in div.table-wrap tables, tags stripped."""
+    out = []
+    for m in re.finditer(r"<td\b[^>]*>(.*?)</td>", html, flags=re.S):
+        txt = re.sub(r"<[^>]+>", "", m.group(1))
+        txt = re.sub(r"\s+", " ", txt).strip()
+        out.append((html.count("\n", 0, m.start()) + 1, txt, 'href="http' in m.group(1)))
+    return out
+
+
+def cell_warnings(html):
+    for line, txt, has_link in table_cells(html):
+        if not txt:
+            continue
+        head, sep, tail = txt.partition("：")
+        tail = tail.split("。")[0]
+        if sep and (has_link or SOURCE_HEAD.match(txt)) and units(tail) < 12:
+            yield f"line {line}: 格子只有出處，沒說量到什麼 (R5): {txt[:50]}"
+        for h in HEDGES:
+            i = txt.find(h)
+            if i < 0:
+                continue
+            before = txt[:i]
+            if not re.search(r"[。：]", before):
+                continue  # the hedge is the cell's own statement (e.g. a 可信度 column), not an appendix
+            if before.count("（") + before.count("(") <= before.count("）") + before.count(")"):
+                yield f"line {line}: 保留語「{h}」不在括號裡，讀起來像第二個原因 (R6): {txt[:50]}"
+                break
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("path")
@@ -309,6 +346,8 @@ def main():
             print(f"  warn: long red mark ({units(m['text'])}): {m['text'][:40]}")
     for line, txt in inline_lists(html):
         print(f"  warn: line {line}: {txt.count('；') + 1} items joined by ；, use ul/ol: {txt[:40]}")
+    for w in cell_warnings(html):
+        print(f"  warn: {w}")
     if args.fix_time:
         new = html
         for k, v in t.items():

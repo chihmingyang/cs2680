@@ -69,7 +69,7 @@ grep -o 'lXX.html#x[0-9]*' docs/*.html   # 別頁連進來的 x 錨點，逐一�
 
 ## 8. 檢查、寫回、push
 
-照 `.claude/skills/rewrite-with-example/SKILL.md` 第 7、8 步：`check_article.py` 前後 diff 不能多 warn、加了圖跑 `audit.py`、390px 與 1280px 截圖、`guide/README.md` 更新一行、push 被拒就 rebase。
+先照 `.claude/skills/readability-review/SKILL.md` 跑可讀性審查（本文延伸引用多，R5「引用只有出處」、R6「保留語不在括號裡」最容易中），BLOCK 清零再往下。然後照 `.claude/skills/rewrite-with-example/SKILL.md` 第 7、8 步：`check_article.py` 前後 diff 不能多 warn、加了圖跑 `audit.py`、390px 與 1280px 截圖、`guide/README.md` 更新一行、push 被拒就 rebase。
 
 push 後回覆 James，不重貼全文：
 
