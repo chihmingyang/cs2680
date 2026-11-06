@@ -111,6 +111,15 @@ def section_html(s, sid):
 def here_block(m):
     """Expanded sidenav block for a lecture page, built from its own sections."""
     s = read(m["path"])
+    hdr = (f'<li class="sn-lec is-here"><a class="sn-row" href="{m["key"]}.html" aria-current="page">'
+           f'<span class="sn-no">L{m["no"]}</span><span class="sn-t">{H.escape(m["title"], quote=False)}</span>'
+           f'<span class="sn-ck" data-read-key="{m["key"]}" title="已讀" hidden>✓</span></a><ol class="sn-secs">')
+    if 'id="s-arch"' not in s:
+        # 2026-11-06: v7 pages (no 架構 section) get the same block assemble_v7.py builds, so a new
+        # lecture needs no second assemble run after wiring
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import assemble_v7
+        return hdr + assemble_v7.v7_secs(s) + "</ol></li>"
     ideas = section_html(s, "s-ideas")
     idea_items, starts, ends = [], [], []
     for iid, h3 in re.findall(r'<div class="idea" id="(i\d+)">\s*<h3>(.*?)</h3>', ideas, re.S):

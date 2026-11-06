@@ -20,6 +20,7 @@
 - **刪減的準則**：不改變決定的、能從主線推出來的、很快會過時的、和別處重複的，刪掉或收進最後一章「目錄」或 `details.gloss`（`gloss-k` 寫「查閱」）。
 - **錨點**：別頁連進來的錨點要接到新章節，或在相同內容的段落保留同一個 id；基礎題的「相關：」整句重寫。`h1` 不改。
 - **跨堂引用**：文字裡不寫別堂的章號（「L4 2.6」），寫 L4〈概念名〉再放連結，章號會變。別堂是主場的主題，一兩句帶過再連過去，頁面仍要能單獨讀懂。
+- **新講次（L9 起，2026-11-06）**：沒有舊頁面，骨架用 `tools/new_lecture.py`。基礎題和進階題的 `qtag` 都連到本頁的章（`<a class="ref" href="#i4">第 4 章</a>`），進階題的提示指到章節、表或數字，不寫 slide 頁碼。延伸閱讀摘要的「跟這堂課的關係」連到本頁的章。一堂有兩份 deck 時（L10）合成一篇，meta 一份一行。
 
 
 ## 1. 定位
@@ -271,25 +272,27 @@
 | l06.html | 6_agent_design_3.pdf | 31 | 2026-09-28 | Agents design III: agent memory and reliability | Agent memory 與可靠性 |
 | l07.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 |
 | l08.html | 8_agent_design_5.pdf | 54 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 |
+| l09.html | 9_llm_serving_basics_1.pdf | 51 | 2026-10-19 | Efficient LLM serving basics I: intro to LLMs | LLM 的結構與 serving 的帳 |
+| l10.html | 10_llm_serving_basics_2a.pdf ＋ 10_llm_serving_basics_2b.pdf | 41 ＋ 55 | 2026-10-21（2b 是 11-02） | Efficient LLM serving basics II: intro to GPUs | GPU 入門與 kernel 最佳化 |
+| l11.html | feedback_assignment.pdf | 72 | 2026-11-02 | Assignments feedback and agent pitfalls | 作業回饋與 agent 的十個陷阱 |
 
-Part II（依課程網站 2026-11-03 的時程，可能調整；PDF 檔名等 slides 公開後再填）：
+Part II 還沒有頁面的講次（依課程網站 2026-11-06 的時程，可能調整；PDF 檔名等 slides 公開後再填）：
 
 | 日期 | 英文標題 | 備註 |
 |---|---|---|
-| 10-19 | Efficient LLM serving basics I: intro to LLMs | |
-| 10-21 | Efficient LLM serving basics II: intro to GPUs | |
-| 10-26 | Assignment 3 student sharing | 學生分享 |
-| 10-28 | Assignment 3 feedback | |
-| 11-02 | Efficient LLM serving basics III: batching, paging, and parallelism | |
-| 11-04 | Efficient LLM serving: speculative decoding | |
+| 10-26 | Student sharing II: Harness optimization | 學生分享；`assignment3_sharing_protected.pdf` 讀不到內容 |
+| 10-28 | Assignment 3 feedback | `assignment3_feedback_protected.pdf` 讀不到內容 |
+| 11-04 | Efficient LLM serving basics III: Batching, paging, and parallelism | |
 | 11-09 | Guest lecture: Why Infrastructure sets the pace of AI (Meta) | 客座 |
-| 11-11 | Efficient agentic systems: scheduling and prefix caching | |
+| 11-11 | Efficient LLM serving: speculative decoding | |
 | 11-16 | Efficient LLM serving: KV-cache optimization and model architectures | 學生主講 |
 | 11-18 | Efficient LLM serving: pruning and quantization | |
-| 11-23 | Student sharing III: engine optimizations and agent-engine co-design | 學生主講 |
+| 11-23 | Efficient agentic systems: scheduling and prefix caching | |
 | 11-25 | No class（Thanksgiving recess） | |
-| 11-30 | Efficient agentic system: routing and load balancing | |
-| 12-02 | Student sharing IV | 學生主講 |
+| 11-30 | Efficient agentic systems: routing and load balancing | |
+| 12-02 | Student sharing III: Showcase your full stack optimizations (Assignment 5) | 學生主講 |
 | 12-07 | Final project poster and demo | |
+
+11/02 那一堂有兩份 slides：`feedback_assignment.pdf` 編成 L11，`10_llm_serving_basics_2b.pdf` 是 10/21 GPU 入門的後半，併進 L10（2026-11-06 James 定）。L11 在課程網站排在 Part II，內容是用 agent 的實務，可以接在 Part I 後面讀。
 
 10/05 客座（Snowflake）沒有公開 slides；10/14 Advanced agent design II 是學生主講。兩堂目前都沒有頁面。

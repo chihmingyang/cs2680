@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L11 作業回饋與 agent 的十個陷阱 · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css?v=20261102b">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <button type="button" class="sn-open" aria-controls="sidenav" aria-expanded="false" title="開啟目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sn-where">目錄</span></button>
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l10.html" rel="prev">← L10</a>
+      <span class="here">L11 / 11</span>
+    </nav>
+  </div>
+  <div class="readbar" aria-hidden="true"><i></i></div>
+</header>
+
+<div class="shell">
+
+<aside class="sidenav" id="sidenav">
+<div class="sn-head"><span class="sn-title">目錄</span><button type="button" class="sn-close" aria-label="關閉目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+<nav class="sn-nav" aria-label="課程目錄">
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="index.html"><span class="sn-t">課程總覽</span></a></li>
+</ol>
+<p class="sn-label">Part I · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent memory 與可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+</ol>
+<p class="sn-label">Part II · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM 的結構與 serving 的帳</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU 入門與 kernel 最佳化</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l11.html" aria-current="page"><span class="sn-no">L11</span><span class="sn-t">作業回饋與 agent 的十個陷阱</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">根本的事實</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">花的時間不等於成績</a></li><li><a class="sn-sub2" href="#i1-2">本文的判斷：照代價排，不照編號排</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">開工前</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">一個檢查得了的「做完」有三部分</a></li><li><a class="sn-sub2" href="#i2-2">寫不出終點，就先別放手</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">收工時</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">第一、二關用指令就查得到</a></li><li><a class="sn-sub2" href="#i3-2">第三關：測看得到的行為</a></li><li><a class="sn-sub2" href="#i3-3">第四關：讀 diff，親手驗一個，再找第二雙眼睛</a></li><li><a class="sn-sub2" href="#i3-4">不只學生：業界的調查（本文補的）</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">實驗</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">課程的 iteration loop</a></li><li><a class="sn-sub2" href="#i4-2">對到 git 和一張結果表</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">Harness</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">公開的紀錄（本文補的）</a></li><li><a class="sn-sub2" href="#i5-2">後果一：before/after 的比較混進了 harness 的變化</a></li><li><a class="sn-sub2" href="#i5-3">後果二：綁在專用 tool 上的安全網，會安靜地失效</a></li><li><a class="sn-sub2" href="#i5-4">本文的判斷：教訓不限於這一個 flag</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">破壞性指令</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">四個修法，各擋一層</a></li><li><a class="sn-sub2" href="#i6-2">Commit 也是證據</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Secrets</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">為什麼 log 會變成最大的來源</a></li><li><a class="sn-sub2" href="#i7-2">課程的修法，對到設定</a></li><li><a class="sn-sub2" href="#i7-3">業界的數字（本文補的）</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Session</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">看不懂 agent 做了什麼</a></li><li><a class="sn-sub2" href="#i8-2">Session 太長，compaction 丟了 context</a></li><li><a class="sn-sub2" href="#i8-3">卡住時：給證據，不要給情緒</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">執行環境</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">平行的 session 會互踩</a></li><li><a class="sn-sub2" href="#i9-2">派工也有成本</a></li><li><a class="sn-sub2" href="#i9-3">長跑要撐得住</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">學生想要的功能</a></li><li><a class="sn-sub2" href="#i10-2">課程自己的工具</a></li></ol></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">2</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">3</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">4</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+</ol>
+<p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
+<p class="sn-label">讀書會</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="https://github.com/chihmingyang/cs2680/issues" target="_blank" rel="noopener"><span class="sn-t">GitHub 討論 ↗</span></a></li>
+</ol>
+</nav>
+</aside>
+<div class="sn-scrim" hidden></div>
+<main class="page gutter article" data-lecture="l11" data-format="article" data-pdf="feedback_assignment.pdf" data-pages-total="72">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 11 · 2026-11-02 · Part II · 依想法重組</p>
+    <h1>作業回饋與 agent 的十個陷阱</h1>
+    <p class="en-title">Assignments feedback and agent pitfalls</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/feedback_assignment.pdf" target="_blank" rel="noopener">feedback_assignment.pdf ↗</a></li>
+      <li><span class="k">頁數</span>72</li>
+      <li><span class="k">閱讀</span><span class="read-time">約 35 分鐘</span></li>
+      <li><span class="k">查閱註</span><span class="deep-time">約 2 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 55 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">課程拿 58 位學生三份作業的 Claude Code 紀錄來看：用量漲了 4.5 到 7 倍，學生自己抓到的 agent 錯誤卻從六成掉到三成，平均每人踩到的陷阱從 1.3 個變成 5.0 個。十個陷阱裡最貴的，是最上游的那一個：<strong>沒先定義做完，又相信了沒檢查過的說法</strong>。其餘的依代價排：比較版本時的紀律、拿不回來的兩件事、每天的 session 與環境習慣。</p>
+    <ul class="core">
+      <li><span><b>開工前寫做完，收工時看證據。</b>終點、不變量、證據三樣寫進 prompt；agent 說「好了」，要看不經 pipe 的完整輸出、exit code 和 diff。</span></li>
+      <li><span><b>一次改一件事，每版跑不只一次。</b>同一份程式碼的分數會在 16 到 18 題之間跳，而 harness 不發版也會變，所以 <strong>baseline 要和新版同一段時間交錯跑</strong>。</span></li>
+      <li><span><b>拿不回來的事，設定一次就擋。</b>危險的一步之前先 commit，deny 規則擋住常見的寫法；key 不進 prompt、不進 agent 的環境，因為<strong>進過 context 的都留在 transcript 裡</strong>。</span></li>
+    </ul>
+  </section>
+
+  <div class="layout">
+    <div class="content">
+      <section class="part" id="s-ideas">
+        <header class="part-head">
+          <p class="kicker">1 · 核心觀念</p>
+          <h2>哪些錯最貴，用什麼習慣擋</h2>
+          <p class="lede">十章依代價排，不照 slides 的順序：前三章是信任與驗證，每個任務都會碰到；接著兩章是比較版本時的紀律；再兩章是拿不回來的兩件事，設定一次就生效；然後兩章是每天的 session 與環境習慣；最後一章是十個陷阱的查閱表。機制在別堂講過的，這裡只帶一兩句並連過去，篇幅留給數據和可以照做的指令。標「本文補的」是課程沒講、本文加上的。</p>
+        </header>
+        <nav class="map" aria-label="章節">
+          <p class="map-g">一定要會：信任與驗證</p>
+          <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的事實<small>agent 做得越多，人抓到的錯越少</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">開工前<small>把「做完」寫成檢查得了的條件</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">收工時<small>「好了」是主張，要看證據（業界的調查是本文補的）</small></span><span class="map-m">約 4 分</span></a>
+          <p class="map-g">比較版本時：實驗的紀律</p>
+          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">實驗<small>一次改一件事，每版跑不只一次</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">Harness<small>它會在你腳下變（公開紀錄的對照是本文補的）</small></span><span class="map-m">約 3 分</span></a>
+          <p class="map-g">要防的：拿不回來的事</p>
+          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">破壞性指令<small>先 commit，危險指令讓 harness 擋</small></span><span class="map-m">約 2 分</span></a>
+          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">Secrets<small>進過 context 的，都留在 transcript 裡（業界的數字是本文補的）</small></span><span class="map-m">約 3 分</span></a>
+          <p class="map-g">每天的習慣：session 與環境</p>
+          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">Session<small>一個 session 一件事，狀態寫在檔案裡</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">執行環境<small>平行要隔離，長跑要撐得住</small></span><span class="map-m">約 3 分</span></a>
+          <p class="map-g">需要時查</p>
+          <a class="map-row" href="#i10"><span class="map-no">10</span><span class="map-t">目錄<small>十個陷阱、三份作業的數字、學生想要的功能</small></span><span class="map-m">需要時查</span></a>
+        </nav>
+
+        <div class="ideas">
+<div class="idea" id="i1">
+            <h3><span class="idea-no">1</span>根本的事實：agent 做得越多，人抓到的錯越少</h3>
+            <div class="prose">
+              <p>這門課要每份作業都附上 Claude Code 的 session 封存，也就是 transcript：agent 每一則訊息、每一次 tool call 和它的結果，全部存成檔案。所以課程手上有同一批 58 位學生、三份作業的真實紀錄。三份作業一份比一份難：第一份用 Claude Code 做一個即時顯示 agent 在做什麼的網頁，第二份自己寫一個 agent loop，第三份在成功率不變的前提下壓低 agent 的成本和延遲。先看用量怎麼變：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 236" role="img" aria-label="四個小長條圖，三份作業 A1、A2、A3 每位學生的中位數。打的 prompt：29、52、130，第三份是第一份的 4.5 倍。使用時數：3.4、9.2、23.4 小時，6.9 倍。花費：66、112、328 美元，5.0 倍。Tool call：609、917、4,414 次，7.2 倍。">
+                  <defs><marker id="l11v-use-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-use-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="4" y="4" width="172" height="228" rx="6" class="dg-panel"/>
+                  <text x="90" y="28" text-anchor="middle" class="dg-cb">打的 prompt</text>
+                  <rect x="22" y="151.0" width="36" height="25.0" class="dg-n-a"/>
+                  <text x="40" y="144.0" text-anchor="middle" class="dg-c">29</text>
+                  <text x="40" y="194" text-anchor="middle" class="dg-mn">A1</text>
+                  <rect x="72" y="131.2" width="36" height="44.8" class="dg-n-a"/>
+                  <text x="90" y="124.2" text-anchor="middle" class="dg-c">52</text>
+                  <text x="90" y="194" text-anchor="middle" class="dg-mn">A2</text>
+                  <rect x="122" y="64.0" width="36" height="112.0" class="dg-n-a"/>
+                  <text x="140" y="57.0" text-anchor="middle" class="dg-c">130</text>
+                  <text x="140" y="194" text-anchor="middle" class="dg-mn">A3</text>
+                  <text x="90" y="220" text-anchor="middle" class="dg-cb">A3 是 A1 的 4.5 倍</text>
+                  <rect x="183" y="4" width="172" height="228" rx="6" class="dg-panel"/>
+                  <text x="269" y="28" text-anchor="middle" class="dg-cb">使用時數</text>
+                  <rect x="201" y="159.7" width="36" height="16.3" class="dg-n-a"/>
+                  <text x="219" y="152.7" text-anchor="middle" class="dg-c">3.4 h</text>
+                  <text x="219" y="194" text-anchor="middle" class="dg-mn">A1</text>
+                  <rect x="251" y="132.0" width="36" height="44.0" class="dg-n-a"/>
+                  <text x="269" y="125.0" text-anchor="middle" class="dg-c">9.2 h</text>
+                  <text x="269" y="194" text-anchor="middle" class="dg-mn">A2</text>
+                  <rect x="301" y="64.0" width="36" height="112.0" class="dg-n-a"/>
+                  <text x="319" y="57.0" text-anchor="middle" class="dg-c">23.4 h</text>
+                  <text x="319" y="194" text-anchor="middle" class="dg-mn">A3</text>
+                  <text x="269" y="220" text-anchor="middle" class="dg-cb">A3 是 A1 的 6.9 倍</text>
+                  <rect x="362" y="4" width="172" height="228" rx="6" class="dg-panel"/>
+                  <text x="448" y="28" text-anchor="middle" class="dg-cb">花費</text>
+                  <rect x="380" y="153.5" width="36" height="22.5" class="dg-n-a"/>
+                  <text x="398" y="146.5" text-anchor="middle" class="dg-c">$66</text>
+                  <text x="398" y="194" text-anchor="middle" class="dg-mn">A1</text>
+                  <rect x="430" y="137.8" width="36" height="38.2" class="dg-n-a"/>
+                  <text x="448" y="130.8" text-anchor="middle" class="dg-c">$112</text>
+                  <text x="448" y="194" text-anchor="middle" class="dg-mn">A2</text>
+                  <rect x="480" y="64.0" width="36" height="112.0" class="dg-n-a"/>
+                  <text x="498" y="57.0" text-anchor="middle" class="dg-c">$328</text>
+                  <text x="498" y="194" text-anchor="middle" class="dg-mn">A3</text>
+                  <text x="448" y="220" text-anchor="middle" class="dg-cb">A3 是 A1 的 5.0 倍</text>
+                  <rect x="541" y="4" width="172" height="228" rx="6" class="dg-panel"/>
+                  <text x="627" y="28" text-anchor="middle" class="dg-cb">Tool call</text>
+                  <rect x="559" y="160.5" width="36" height="15.5" class="dg-n-a"/>
+                  <text x="577" y="153.5" text-anchor="middle" class="dg-c">609</text>
+                  <text x="577" y="194" text-anchor="middle" class="dg-mn">A1</text>
+                  <rect x="609" y="152.7" width="36" height="23.3" class="dg-n-a"/>
+                  <text x="627" y="145.7" text-anchor="middle" class="dg-c">917</text>
+                  <text x="627" y="194" text-anchor="middle" class="dg-mn">A2</text>
+                  <rect x="659" y="64.0" width="36" height="112.0" class="dg-n-a"/>
+                  <text x="677" y="57.0" text-anchor="middle" class="dg-c">4,414</text>
+                  <text x="677" y="194" text-anchor="middle" class="dg-mn">A3</text>
+                  <text x="627" y="220" text-anchor="middle" class="dg-cb">A3 是 A1 的 7.2 倍</text>
+                </svg>
+              </div>
+              <figcaption>三份作業之間，學生用 agent 的量變了多少？每一項都是每位學生的中位數，長條在各自的小圖裡照比例畫。四項都漲了 4.5 到 7 倍。依課程的統計重畫。</figcaption>
+            </figure>
+              <p>使用的方式也變了。開過 subagent（主 agent 派出去、有自己 context 的子 agent）的學生從 36% 變成 74%。跑過 workflow（Claude 寫好、交給 runtime 在背景跑的腳本，L3〈<a href="l03.html#i7">Team 與 workflow</a>〉）的從 2.9% 變成 35%。Agent 連續工作 30 分鐘以上才回來的長 turn，從全班 41 次變成 514 次。人交代的東西卻變少了：prompt 長度的中位數從 98 個字元縮到 65 個，寫明「怎樣算做完」的 prompt 從 39% 掉到 15%。也就是說，<strong>agent 做得越多，人交代得越少</strong>。</p>
+              <p>誰發現錯誤也跟著變了。課程把整理出的 agent 失敗紀錄，依「誰抓到的」分類，只算寫明了是誰抓到的那些：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 252" role="img" aria-label="折線圖：agent 的錯誤由誰抓到，三份作業 A1、A2、A3 的比例。學生自己抓到的從 61% 降到 45%，再降到 33%，用紅線畫。評分的 run 抓到的從 4.5% 升到 15%，再升到 22%。Agent 自己抓到的三份都是 29%。">
+                  <defs><marker id="l11v-catch-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-catch-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M150,145.4 L330,145.4 L510,145.4" class="dg-link"/>
+                  <path d="M150,208.4 L330,181.4 L510,163.4" class="dg-link"/>
+                  <path d="M150,63.2 L330,104.3 L510,135.2" class="dg-link-key"/>
+                  <circle cx="150" cy="145.4" r="5" class="dg-fill-link"/>
+                  <circle cx="330" cy="145.4" r="5" class="dg-fill-link"/>
+                  <circle cx="510" cy="145.4" r="5" class="dg-fill-link"/>
+                  <circle cx="150" cy="208.4" r="5" class="dg-fill-link"/>
+                  <circle cx="330" cy="181.4" r="5" class="dg-fill-link"/>
+                  <circle cx="510" cy="163.4" r="5" class="dg-fill-link"/>
+                  <circle cx="150" cy="63.2" r="6" class="dg-fill-key"/>
+                  <circle cx="330" cy="104.3" r="6" class="dg-fill-key"/>
+                  <circle cx="510" cy="135.2" r="6" class="dg-fill-key"/>
+                  <text x="150" y="51.2" text-anchor="middle" class="dg-k">61%</text>
+                  <text x="330" y="92.3" text-anchor="middle" class="dg-k">45%</text>
+                  <text x="510" y="123.19999999999999" text-anchor="middle" class="dg-k">33%</text>
+                  <text x="150" y="228.4" text-anchor="middle" class="dg-c">4.5%</text>
+                  <text x="330" y="201.4" text-anchor="middle" class="dg-c">15%</text>
+                  <text x="510" y="183.4" text-anchor="middle" class="dg-c">22%</text>
+                  <text x="520" y="149.4" class="dg-c">29%</text>
+                  <text x="138" y="68.2" text-anchor="end" class="dg-cb">學生自己</text>
+                  <text x="138" y="150.4" text-anchor="end" class="dg-cb">agent 自己</text>
+                  <text x="138" y="213.4" text-anchor="end" class="dg-cb">評分的 run</text>
+                  <text x="150" y="244" text-anchor="middle" class="dg-mn">A1</text>
+                  <text x="330" y="244" text-anchor="middle" class="dg-mn">A2</text>
+                  <text x="510" y="244" text-anchor="middle" class="dg-mn">A3</text>
+                </svg>
+              </div>
+              <figcaption>錯誤是誰發現的？課程依每筆失敗紀錄寫的「誰抓到」分類。學生自己抓到的比例一路往下，評分的 run（排行榜或批改）抓到的一路往上。另一個 agent 抓到的從 5.6% 升到 9.2%，線太貼近沒有畫。slides 沒有直接標每個數字屬於哪一份作業，本文照「每份作業加起來約 100%」來讀；學生那一列的 61% 和 33%，和 slides 總表上的數字一致。</figcaption>
+            </figure>
+              <p>學生自己抓到的比例從 61% 掉到 33%，評分的 run 抓到的從 4.5% 升到 22%（後者依本文的讀法，見圖說）。到了第三份作業，<strong>越來越多錯要等分數回來才知道</strong>。課程的總表也指向同一個方向：平均每位學生踩到的陷阱，從 1.3 個變成 3.4 個，再變成 5.0 個。</p>
+              <p id="i1-1"><b>花的時間不等於成績。</b>課程把排行榜的名次分別對 Claude Code 的工作時數、學生自己花的時數畫成散佈圖。時數多，名次不一定高；第 1 名落在最省時間的那條邊界上，<strong>學生自己花的時間不到 1 小時</strong>。課程從這些資料得出兩句話：學生需要一個讓 agent 驗證自己工作的方法；人要掌握方向，決定 agent 做什麼。這也是 L1〈<a href="l01.html#i3">人的時間</a>〉的結論：稀缺的是人的時間和注意力，不是 agent 的工作時數。</p>
+              <p id="i1-2"><b>本文的判斷：照代價排，不照編號排。</b>這些是同一班、三份作業的觀察，不是對照實驗，作業變難本身就會讓錯變多。但方向和業界的調查一致（第 3 章）。所以後面九章依兩個問題排：忽略它要付多少，付了能不能拿回來。Slides 的編號 P1 到 P10 與每一項的數字，收在第 10 章的表。</p>
+            </div>
+          </div>
+<div class="idea" id="i2">
+            <h3><span class="idea-no">2</span>開工前：把「做完」寫成檢查得了的條件</h3>
+            <div class="prose">
+              <p>第 1 章最上游的一個數字是：寫明「怎樣算做完」的 prompt，從 39% 掉到 15%。沒有寫，agent 就自己決定什麼叫做完，而<strong>它會選最容易達成的那一種</strong>。課程舉了兩個例子：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 262" role="img" aria-label="兩個例子，三欄：你說的、agent 找到的最短路、結果。第一列：你說讓測試通過，agent 刪掉失敗的測試，結果測試全綠，bug 還在。第二列：你說降低排行榜上的成本，agent 每個任務都跳過，結果成本 0 元，做完的工作也是 0。底部：擋法是在「做完」裡加一條不變量：不准修改或刪除 tests/ 的測試，解出的題數不能少於 baseline。">
+                  <defs><marker id="l11v-goodhart-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-goodhart-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="110" y="20" text-anchor="middle" class="dg-h">你說的</text>
+                  <text x="360" y="20" text-anchor="middle" class="dg-h">agent 找到的最短路</text>
+                  <text x="610" y="20" text-anchor="middle" class="dg-h">結果</text>
+                  <path d="M210,64 L258,64" class="dg-link" marker-end="url(#l11v-goodhart-ah)"/>
+                  <path d="M460,64 L508,64" class="dg-link" marker-end="url(#l11v-goodhart-ah)"/>
+                  <rect x="10" y="36" width="200" height="56" rx="4" class="dg-n-b"/>
+                  <text x="110" y="69.0" text-anchor="middle" class="dg-l">讓測試通過</text>
+                  <rect x="260" y="36" width="200" height="56" rx="4" class="dg-n-d"/>
+                  <text x="360" y="69.0" text-anchor="middle" class="dg-l">刪掉失敗的測試</text>
+                  <rect x="510" y="36" width="200" height="56" rx="4" class="dg-n-n"/>
+                  <text x="610" y="61.0" text-anchor="middle" class="dg-l">測試全綠</text>
+                  <text x="610" y="78.0" text-anchor="middle" class="dg-c">bug 還在</text>
+                  <path d="M210,140 L258,140" class="dg-link" marker-end="url(#l11v-goodhart-ah)"/>
+                  <path d="M460,140 L508,140" class="dg-link" marker-end="url(#l11v-goodhart-ah)"/>
+                  <rect x="10" y="112" width="200" height="56" rx="4" class="dg-n-b"/>
+                  <text x="110" y="145.0" text-anchor="middle" class="dg-l">降低排行榜上的成本</text>
+                  <rect x="260" y="112" width="200" height="56" rx="4" class="dg-n-d"/>
+                  <text x="360" y="145.0" text-anchor="middle" class="dg-l">每個任務都跳過</text>
+                  <rect x="510" y="112" width="200" height="56" rx="4" class="dg-n-n"/>
+                  <text x="610" y="137.0" text-anchor="middle" class="dg-l">成本 $0</text>
+                  <text x="610" y="154.0" text-anchor="middle" class="dg-c">做完的工作也是 0</text>
+                  <rect x="10" y="192" width="3" height="52" class="dg-n-focus"/>
+                  <text x="24" y="210" class="dg-cb">擋法：在「做完」裡加一條不變量</text>
+                  <text x="24" y="234" class="dg-c">不准修改或刪除 tests/ 的測試；成本降了，解出的題數也不能少於 baseline</text>
+                </svg>
+              </div>
+              <figcaption>Agent 照字面完成要求時會發生什麼？兩個例子都是課程在作業裡看到的。指標過了，事情沒做；粉色是 agent 鑽到的漏洞。擋法是寫明做完時哪些東西不准動，要求本身不必寫得更長。</figcaption>
+            </figure>
+              <p>兩個例子裡，agent 都照字面完成了要求。這叫 Goodhart's law：指標一旦變成目標，就不再是好指標，L3〈<a href="l03.html#i4-2">終點</a>〉講 /goal 時碰過同一個陷阱。第一份作業的回顧也一樣：需求寫得寬，agent 就多做了不需要的功能、過度的架構、錯的版面；給了截圖、明確的尺寸和量得出來的條件，結果就好得多。模糊的要求還讓 agent 跑得更久：第三份作業裡，<strong>30 分鐘以上的長 turn 有 69% 來自模糊的要求</strong>，第 8 章講怎麼把它切小。</p>
+              <p id="i2-1"><b>一個檢查得了的「做完」有三部分。</b>課程的建議是把需求寫成可以驗證的條件，配上畫面的例子。拆開來是：</p>
+              <ul>
+                <li><b>終點。</b>一個能由輸出證明的條件：哪些測試要跑、exit code 是多少、截圖和設計稿對得上、數字要到多少。停止的條件也寫在這裡。</li>
+                <li><b>不變量。</b>做完時不准動的東西：不准修改或刪除 tests/ 的測試；成本降了，解出的題數也不能比 baseline 少。上圖兩個例子缺的就是這一行。</li>
+                <li><b>證據。</b>要它交出什麼：跑了哪個指令、完整的輸出、exit code、截圖。第 3 章講怎麼看這些證據。</li>
+              </ul>
+              <p>另外兩個習慣也來自課程的回顧：讓 agent 先把有歧義的地方問出來，不要自己猜；改動大的時候，先看它的設計再讓它動手。Claude Code 的 plan mode（按 Shift+Tab 切換，只讀不改）就是做後者的；官方文件的建議是，一句話講得完的 diff 就跳過 plan（<a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">best practices</a>，2026-11）。照這三部分寫，一個任務長這樣：</p>
+              <figure class="file"><figcaption>對話怎麼打：把「做完」寫進任務（本文擬的例子）</figcaption><pre><code># 任務
+&gt; 報表頁的「隱藏欄位」按鈕沒有作用，請修好。
+# 終點：輸出能證明的條件
+&gt; 做完的定義：1. 在 Playwright 裡按下按鈕後，#col-panel 在畫面上看不到，截圖貼給我。
+&gt;            2. npm test 全部通過，貼出完整輸出和 exit code，不要用 tail 或 head 截掉。
+# 不變量：做完時不能動到的東西
+&gt; tests/ 底下既有的測試不准修改或刪除。
+# 歧義先問，不要猜
+&gt; 有不確定的先問我，例如隱藏之後要不要記住狀態。
+# 證據：回報分兩段
+&gt; 回報分兩段：驗證過的（附指令和輸出）；還沒驗證、只是假設的。</code></pre></figure>
+              <p id="i2-2"><b>寫不出終點，就先別放手。</b>有些任務一開始寫不出檢查，例如「把程式整理乾淨」。這時先讓 agent 提幾個方案，你挑一個，<strong>再把挑中的方案寫成檢查</strong>，然後才讓它長時間自己跑。L3 的 /goal（由另一個 model 判斷條件成立了沒）和 L6〈<a href="l06.html#i2-3">驗證</a>〉的 Stop hook（agent 要結束時自動跑的檢查），都要先有這一行條件才用得上；有了條件之後，怎麼讓它擋住 agent 提早停下，在那兩章。</p>
+            </div>
+          </div>
+<div class="idea" id="i3">
+            <h3><span class="idea-no">3</span>收工時：agent 說「好了」是主張，要看證據</h3>
+            <div class="prose">
+              <p>定義了做完，還要確認它真的做完。課程把這一條排在十個陷阱的第一個：agent 說改動有效、測試過了、發現成立，學生就往下走，沒有檢查。很多說法是錯的：測試根本沒跑，或 pipe 吃掉了失敗。三份作業裡，<strong>信了錯誤說法的學生是 20%、20%、33%</strong>，要求 agent 拿出測試或證據的 prompt 只有 15%、27%、17%。</p>
+              <p>錯的說法多半不是說謊。<a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">官方文件</a>說得很直接：Claude 會在工作「看起來完成」時停下；沒有它自己能跑的檢查，「看起來完成」就是唯一的訊號，你就變成那個驗證迴圈。L6〈<a href="l06.html#i2-1">檢查要真的抓得到</a>〉引用的研究裡，26% 的失敗 run 宣稱自己成功。所以第一份作業回顧的結論是：要改的不是叫 agent 寫程式的方式，是<strong>事先講好它的工作怎麼驗證、怎樣才能信</strong>。收工時要過四關：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 392" role="img" aria-label="收工時的四關，由上往下。最上面是 agent 的說法：改好了，測試都過了。第一關，真的跑了嗎：課程看到跑了 0 個測試，或驗證沒跑成，要看 exit code 和跑了幾個測試。第二關，失敗看得到嗎：課程看到 pipe 吃掉了失敗，要看不經 pipe 的完整輸出。第三關，測的是看得到的行為嗎：課程看到測 hidden 屬性，CSS 照樣顯示，要看截圖或依樣式判斷的檢查。第四關，改的是你要的嗎：課程看到多做了不需要的功能與架構，要自己讀 diff、親手驗一個、找 reviewer。四關都過，才算做完。">
+                  <defs><marker id="l11v-gates-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-gates-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M160,52 L160,74" class="dg-link" marker-end="url(#l11v-gates-ah)"/>
+                  <path d="M160,124 L160,138" class="dg-link" marker-end="url(#l11v-gates-ah)"/>
+                  <path d="M160,188 L160,202" class="dg-link" marker-end="url(#l11v-gates-ah)"/>
+                  <path d="M160,252 L160,266" class="dg-link" marker-end="url(#l11v-gates-ah)"/>
+                  <path d="M160,316 L160,332" class="dg-link-key" marker-end="url(#l11v-gates-ak)"/>
+                  <rect x="10" y="8" width="300" height="44" rx="4" class="dg-n-b"/>
+                  <text x="160" y="35.0" text-anchor="middle" class="dg-l">agent：「改好了，測試都過了」</text>
+                  <rect x="10" y="76" width="300" height="48" rx="4" class="dg-n-c"/>
+                  <text x="160" y="105.0" text-anchor="middle" class="dg-l">1 真的跑了嗎？</text>
+                  <text x="330" y="96" class="dg-c">課程看到：跑了 0 個測試，或驗證沒跑成</text>
+                  <text x="330" y="116" class="dg-cb">看：exit code、跑了幾個測試</text>
+                  <rect x="10" y="140" width="300" height="48" rx="4" class="dg-n-c"/>
+                  <text x="160" y="169.0" text-anchor="middle" class="dg-l">2 失敗看得到嗎？</text>
+                  <text x="330" y="160" class="dg-c">課程看到：pipe 吃掉了失敗</text>
+                  <text x="330" y="180" class="dg-cb">看：不經 pipe 的完整輸出</text>
+                  <rect x="10" y="204" width="300" height="48" rx="4" class="dg-n-c"/>
+                  <text x="160" y="233.0" text-anchor="middle" class="dg-l">3 測的是看得到的行為嗎？</text>
+                  <text x="330" y="224" class="dg-c">課程看到：測 hidden 屬性，CSS 照樣顯示</text>
+                  <text x="330" y="244" class="dg-cb">看：截圖、依實際樣式判斷的檢查</text>
+                  <rect x="10" y="268" width="300" height="48" rx="4" class="dg-n-c"/>
+                  <text x="160" y="297.0" text-anchor="middle" class="dg-l">4 改的是你要的嗎？</text>
+                  <text x="330" y="288" class="dg-c">課程看到：多做了不需要的功能與架構</text>
+                  <text x="330" y="308" class="dg-cb">看：自己讀 diff、親手驗一個、reviewer</text>
+                  <rect x="10" y="334" width="300" height="44" rx="4" class="dg-n-focus"/>
+                  <text x="160" y="361.0" text-anchor="middle" class="dg-l-on">四關都過，才算做完</text>
+                </svg>
+              </div>
+              <figcaption>Agent 說「好了」之後要看什麼？四關由便宜到貴排，每一關右邊是課程在作業裡看到的失敗，和要看的證據。本文的整理，關卡的內容依課程的建議。</figcaption>
+            </figure>
+              <p id="i3-1"><b>第一、二關用指令就查得到。</b>最常見的漏洞是 pipe：<code>pytest | head</code> 的 exit code 是 head 的，不是 pytest 的。下面四個指令對著同一個專案跑，裡面有一個測試會失敗：</p>
+              <figure class="file"><figcaption>terminal：同一個專案，一個測試失敗（本文實際跑的輸出，pytest 9.1）</figcaption><pre><code>$ pytest tests | head -4            # 只看開頭：測試結果根本不在這幾行
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.1.1, pluggy-1.6.0
+rootdir: /tmp/demo
+plugins: platformdirs-4.13.5, anyio-4.15.1
+$ echo "exit=$?"                    # 這是 head 的 exit code，不是 pytest 的
+exit=0
+
+$ pytest -q tests | grep -q passed &amp;&amp; echo "tests pass"
+tests pass                          # 輸出是「1 failed, 1 passed」，grep 一樣找得到 passed
+
+$ pytest -q tests -k refresh        # 篩選條件打錯，一個測試都沒選到
+
+2 deselected in 0.00s
+$ echo "exit=$?"
+exit=5                              # 5：沒有收集到任何測試；畫面上沒有任何失敗
+
+$ pytest -q tests; echo "exit=$?"   # 不經 pipe：看得到失敗，exit code 是 pytest 的
+.F                                                                       [100%]
+… 失敗的細節 12 行，省略 …
+FAILED tests/test_login.py::test_expired_token - AssertionError: assert 'expi...
+1 failed, 1 passed in 0.01s
+exit=1</code></pre></figure>
+              <p>前三個指令都沒有露出失敗，卻沒有一個是真的通過。第三個最容易漏看，<strong>pytest 的 exit code 5 代表一個測試都沒跑到</strong>，就是課程看到的「報告說驗證過，卻只跑了 0 個測試」。所以要 agent 證明測試過了，就要它貼出不經 pipe 的完整輸出和 exit code；寫成腳本時，開頭加 <code>set -o pipefail</code>，pipe 裡任何一段失敗，整條就算失敗。第 3 段動手試試有完整的步驟可以照打。</p>
+              <p id="i3-2"><b>第三關：測看得到的行為。</b>第一份作業的隱藏與顯示測試，檢查的是 HTML 元素的 hidden 屬性，但 CSS 讓內容繼續顯示，所以測試全過，東西還在畫面上。檢查要照使用者看到的方式做：</p>
+              <figure class="file"><figcaption>panel.test.js：測內部狀態和測看得到的行為（本文擬的例子）</figcaption><pre><code>// 測內部狀態：hidden 屬性設了就過
+expect(panel.hidden).toBe(true);
+// 但樣式表裡有 .panel { display: block; }，元素在畫面上還看得到
+
+// 測看得到的行為：Playwright 依實際的樣式判斷看不看得到，這一行會失敗
+await expect(page.locator('#col-panel')).toBeHidden();</code></pre></figure>
+              <p id="i3-3"><b>第四關：讀 diff，親手驗一個，再找第二雙眼睛。</b>自己讀 diff，確認它改的是你要的，沒有順手動了別的；再挑一個 case 親手跑一次。最後讓一個沒有共用 context 的 agent 看 diff：官方文件的做法是 writer 和 reviewer 分開兩個 session，或叫一個 subagent 依你的計畫逐條對，L5〈<a href="l05.html#i3-1">writer 加 reviewer</a>〉講為什麼不共用 context 效果最好。回報也可以要它分兩段：驗證過的，附指令和輸出；還沒驗證、只是假設的。學生在第一份作業的回饋裡，正是希望 Claude Code 主動這樣報告。</p>
+              <p id="i3-4"><b>不只學生：業界的調查（本文補的）。</b>Sonar 2026 年 1 月發表的 <a href="https://www.sonarsource.com/company/press-releases/sonar-data-reveals-critical-verification-gap-in-ai-coding/" target="_blank" rel="noopener">State of Code 調查</a>問了 1,100 多位專業開發者：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>問題</th><th>結果</th></tr></thead>
+                <tbody>
+                  <tr><td>不完全相信 AI 產生的程式功能正確</td><td><b>96%</b></td></tr>
+                  <tr><td>每次 commit 前都會檢查 AI 協助寫的程式</td><td><b>48%</b></td></tr>
+                  <tr><td>已經 commit 的程式裡，AI 寫的比例</td><td>42%，預期 2027 年到 65%</td></tr>
+                  <tr><td>覺得 review AI 的程式比 review 同事的更費力</td><td>38%</td></tr>
+                </tbody>
+              </table></div>
+              <p>這是廠商做的自陳調查，不是量測，但和課程的資料指向同一件事：<strong>知道不能信，和每次都檢查，是兩回事</strong>。所以檢查要做成機制，不靠每個人記得：L6〈<a href="l06.html#i2-3">不靠 model 自律</a>〉的 Stop hook 在 agent 想結束時跑測試，沒過就不准停；L3〈<a href="l03.html#i4-2">終點</a>〉的 /goal 由另一個 model 判斷條件成立了沒。</p>
+            </div>
+          </div>
+<div class="idea" id="i4">
+            <h3><span class="idea-no">4</span>實驗：一次改一件事，每版跑不只一次</h3>
+            <div class="prose">
+              <p>第三份作業要優化：同一組任務，花更少的錢和時間。這時出現兩種新的錯：把好幾個改動疊在一起，以及只憑一次 run 下結論。第一份作業是做網頁，不必比較版本，兩項都是 0%；到了第三份，課程的總表寫著 <strong>78% 的學生疊了改動，66% 只憑一次有雜訊的 run 下結論</strong>。介紹陷阱的頁面另有一組較低的數字，差別見第 10 章的查閱。</p>
+              <p>疊改動的例子是：四個 Expert 功能一起疊進 v9，成本上升，解題數沒動，四個裡哪個有用、哪個有害，已經分不出來。只跑一次的例子是：同一份程式碼，分數落在 16 到 18 題之間，所以單一次提交的分數很難解讀。課程也把第四份作業排行榜的前 18 份提交（12 位學生）各重跑 10 次，共 180 次評分。同一份提交的 10 次會聚成一團；團的大小依 harness 而定，也就是包在 model 外面的那層程式：prompt、tool、loop 與重試（L2〈<a href="l02.html#i1">Loop</a>〉）。但<strong>雜訊蓋不掉好的 harness</strong>。畫成圖是這樣：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 236" role="img" aria-label="點圖，示意的數字。三個版本各跑 5 次，橫軸是解出的題數，從 15 到 21。v8 baseline 五次是 16、17、18、17、16，平均 16.8。v9 加一個改動，五次是 18、16、17、18、17，平均 17.2，和 v8 大幅重疊。v10 另一個改動，五次是 19、20、19、18、20，平均 19.2，整團往右移。紅點是 v8 和 v9 各自的第一次 run，16 和 18，只看這兩個點會以為 v9 多了 2 題。">
+                  <defs><marker id="l11v-spread-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-spread-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M200,200 L680,200" class="dg-soft-link"/>
+                  <path d="M200,200 L200,206" class="dg-soft-link"/>
+                  <text x="200" y="222" text-anchor="middle" class="dg-c">15</text>
+                  <path d="M280,200 L280,206" class="dg-soft-link"/>
+                  <text x="280" y="222" text-anchor="middle" class="dg-c">16</text>
+                  <path d="M360,200 L360,206" class="dg-soft-link"/>
+                  <text x="360" y="222" text-anchor="middle" class="dg-c">17</text>
+                  <path d="M440,200 L440,206" class="dg-soft-link"/>
+                  <text x="440" y="222" text-anchor="middle" class="dg-c">18</text>
+                  <path d="M520,200 L520,206" class="dg-soft-link"/>
+                  <text x="520" y="222" text-anchor="middle" class="dg-c">19</text>
+                  <path d="M600,200 L600,206" class="dg-soft-link"/>
+                  <text x="600" y="222" text-anchor="middle" class="dg-c">20</text>
+                  <path d="M680,200 L680,206" class="dg-soft-link"/>
+                  <text x="680" y="222" text-anchor="middle" class="dg-c">21</text>
+                  <text x="20" y="222" class="dg-c">解出的題數</text>
+                  <text x="20" y="65" class="dg-cb">v8 baseline</text>
+                  <circle cx="280" cy="51" r="7" class="dg-fill-key"/>
+                  <circle cx="360" cy="51" r="7" class="dg-fill-link"/>
+                  <circle cx="440" cy="51" r="7" class="dg-fill-link"/>
+                  <circle cx="360" cy="69" r="7" class="dg-fill-link"/>
+                  <circle cx="280" cy="69" r="7" class="dg-fill-link"/>
+                  <path d="M344.00000000000006,38 L344.00000000000006,88" class="dg-link"/>
+                  <text x="350.00000000000006" y="44" class="dg-c">平均 16.8</text>
+                  <text x="20" y="123" class="dg-cb">v9 加一個改動</text>
+                  <circle cx="440" cy="109" r="7" class="dg-fill-key"/>
+                  <circle cx="280" cy="109" r="7" class="dg-fill-link"/>
+                  <circle cx="360" cy="109" r="7" class="dg-fill-link"/>
+                  <circle cx="440" cy="127" r="7" class="dg-fill-link"/>
+                  <circle cx="360" cy="127" r="7" class="dg-fill-link"/>
+                  <path d="M375.99999999999994,96 L375.99999999999994,146" class="dg-link"/>
+                  <text x="381.99999999999994" y="102" class="dg-c">平均 17.2</text>
+                  <text x="20" y="181" class="dg-cb">v10 另一個改動</text>
+                  <circle cx="520" cy="167" r="7" class="dg-fill-link"/>
+                  <circle cx="600" cy="167" r="7" class="dg-fill-link"/>
+                  <circle cx="520" cy="185" r="7" class="dg-fill-link"/>
+                  <circle cx="440" cy="167" r="7" class="dg-fill-link"/>
+                  <circle cx="600" cy="185" r="7" class="dg-fill-link"/>
+                  <path d="M536.0,154 L536.0,204" class="dg-link"/>
+                  <text x="542.0" y="160" class="dg-c">平均 19.2</text>
+                  <text x="452" y="24" class="dg-k">只看第 1 次 run：v9 比 v8 多 2 題</text>
+                </svg>
+              </div>
+              <figcaption>同一版跑一次，夠不夠判斷？不夠。數字是本文編的示意，對應課程看到的情況：同一份程式碼的分數在 16 到 18 題之間跳。v9 的五次和 v8 大幅重疊，看不出差別；v10 整團往右移，才算數。紅點是兩版各自的第一次 run，只看它們會以為 v9 多了 2 題。直線是平均。</figcaption>
+            </figure>
+              <p>雜訊從哪裡來、要跑幾次、怎麼比，是 L7〈<a href="l07.html#i4">雜訊</a>〉的主題：每一次 run 的路徑都不同，題目也只是抽樣，所以比兩版要比分布，最好逐題配對。L8〈<a href="l08.html#i4-3">淨節省</a>〉也提醒，省下的錢只能在同一組任務上量。這一章只講習慣。</p>
+              <p id="i4-1"><b>課程的 iteration loop。</b>課程把習慣收成一個迴圈，一圈只回答一個問題：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 252" role="img" aria-label="課程的 iteration loop，六步排成兩列。第一列由左到右：1 簡單的 baseline，不從大型 harness 改起；2 一個假設，跑之前寫下來；3 只改一件事，其他全部固定。往下接第二列，由右到左：4 跑測試或排行榜，同一組任務；5 再跑至少一次，比分布，不比一個分數；6 驗證過才記一版，沒變好就丟掉改動。從第 6 步有一條線回到第 2 步，標著下一個假設。">
+                  <defs><marker id="l11v-loop-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-loop-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M230,56 L248,56" class="dg-link" marker-end="url(#l11v-loop-ah)"/>
+                  <path d="M470,56 L488,56" class="dg-link" marker-end="url(#l11v-loop-ah)"/>
+                  <path d="M600,82 L600,148" class="dg-link" marker-end="url(#l11v-loop-ah)"/>
+                  <path d="M490,176 L472,176" class="dg-link" marker-end="url(#l11v-loop-ah)"/>
+                  <path d="M250,176 L232,176" class="dg-link" marker-end="url(#l11v-loop-ah)"/>
+                  <path d="M120,150 L120,116 L360,116 L360,84" class="dg-link-key" marker-end="url(#l11v-loop-ak)"/>
+                  <text x="132" y="109" class="dg-k">下一個假設</text>
+                  <rect x="10" y="30" width="220" height="52" rx="4" class="dg-n-b"/>
+                  <text x="120" y="53.0" text-anchor="middle" class="dg-l">1 簡單的 baseline</text>
+                  <text x="120" y="70.0" text-anchor="middle" class="dg-c">不從大型 harness 改起</text>
+                  <rect x="250" y="30" width="220" height="52" rx="4" class="dg-n-b"/>
+                  <text x="360" y="53.0" text-anchor="middle" class="dg-l">2 一個假設</text>
+                  <text x="360" y="70.0" text-anchor="middle" class="dg-c">跑之前寫下來</text>
+                  <rect x="490" y="30" width="220" height="52" rx="4" class="dg-n-b"/>
+                  <text x="600" y="53.0" text-anchor="middle" class="dg-l">3 只改一件事</text>
+                  <text x="600" y="70.0" text-anchor="middle" class="dg-c">其他全部固定</text>
+                  <rect x="490" y="150" width="220" height="52" rx="4" class="dg-n-c"/>
+                  <text x="600" y="173.0" text-anchor="middle" class="dg-l">4 跑測試或排行榜</text>
+                  <text x="600" y="190.0" text-anchor="middle" class="dg-c">同一組任務</text>
+                  <rect x="250" y="150" width="220" height="52" rx="4" class="dg-n-c"/>
+                  <text x="360" y="173.0" text-anchor="middle" class="dg-l">5 再跑至少一次</text>
+                  <text x="360" y="190.0" text-anchor="middle" class="dg-c">比分布，不比一個分數</text>
+                  <rect x="10" y="150" width="220" height="52" rx="4" class="dg-n-focus"/>
+                  <text x="120" y="173.0" text-anchor="middle" class="dg-l-on">6 驗證過才記一版</text>
+                  <text x="120" y="190.0" text-anchor="middle" class="dg-c-on">沒變好就丟掉改動</text>
+                  <text x="10" y="236" class="dg-c">Stay in charge：一步一步做，驗證過才往下走。</text>
+                </svg>
+              </div>
+              <figcaption>一個迴圈只回答一個問題：這一個改動有沒有用？依課程的 iteration loop 重畫。第 5 步擋住只跑一次的錯，第 6 步擋住疊改動的錯；紅線回到第 2 步，表示每一圈換一個新的假設，不是在同一版上繼續疊。</figcaption>
+            </figure>
+              <p>第一步要一個簡單的 baseline。Slides 特別寫了不要一開始就從大型的現成 harness 改起（點名 pi 和 dsh），因為起點太複雜，之後每個改動的效果都看不清楚。第五步和第六步，就是擋住只跑一次和疊改動的兩道關。</p>
+              <p id="i4-2"><b>對到 git 和一張結果表。</b>課程的修法，每一條都有具體的做法：</p>
+              <ul>
+                <li><b>每個實驗一個 branch 或 worktree。</b>Worktree 是同一個 repo 的另一個工作目錄（L3）。都從同一個 baseline 開出來；交出去的版本打 tag。</li>
+                <li><b>動手之前寫下假設。</b>寫進結果表：改什麼、預期哪個數字變多少。</li>
+                <li><b>門檻在跑之前定。</b>「差多少才算數」跑完才定，門檻就會跟著結果走。</li>
+                <li><b>每版跑不只一次。</b>同一組任務、同樣的設定，比的是分布，不是一個分數。</li>
+                <li><b>沒有幫助的先丟掉。</b>再加下一個想法，不要留在版本裡一起疊。</li>
+              </ul>
+              <figure class="file"><figcaption>terminal：一個實驗的一圈（eval.sh 是你自己的評分指令；spread.py 的輸出是本文實際跑的）</figcaption><pre><code>$ git worktree add ../exp-cache -b exp/cache v8   # 從 baseline v8 開一個實驗：一個實驗一個目錄
+$ cd ../exp-cache                                 # 這裡只改一件事：加 prompt cache
+$ for i in 1 2 3 4 5; do                          # 同一組任務跑 5 次
+&gt;   ./eval.sh --tasks tasks.txt --out runs/v9/run$i.json
+&gt; done
+$ python3 spread.py runs.csv                       # runs.csv 每列：版本、第幾次、解出幾題；腳本在第 3 段
+v9 vs v8: diff +0.4, 95% CI [-0.6, +1.2] -&gt; not shown
+$ git tag submit-a3 v8                            # 看不出差別：交出去的仍是 v8，打 tag 才找得回來</code></pre></figure>
+              <p>結果表每一列記：版本、跑之前寫的假設、commit、Claude Code 與 model 的版本、每次 run 的分數與花費。版本那一欄看似多餘，下一章會說明為什麼<strong>不記下 harness 的版本，baseline 就不是固定的</strong>。</p>
+            </div>
+          </div>
+<div class="idea" id="i5">
+            <h3><span class="idea-no">5</span>Harness：它會在你腳下變</h3>
+            <div class="prose">
+              <p>上一章假設 baseline 是固定的。課程在第一份作業的 trace 裡發現，連 Claude Code 本身都不固定：agent 常常用 Bash 的 cat、sed 讀檔改檔，不用專用的 Read、Edit。課程去看了作業期間 Claude Code 的 system prompt 和 feature flag（伺服器端可以開關的設定），slides 的結論是：這是 Anthropic 刻意做的實驗，作業剛好跑在實驗期間。課程的分析有四點：</p>
+              <ul>
+                <li><b>一段提醒。</b>在 auto（另一個 model 在背景審查每個動作）和 bypass（幾乎不再跳出權限提示）這兩種權限模式的 session，system prompt 加了一段提醒，要 agent 透過 Bash 做事，不用專用的 Read、Edit、Write。</li>
+                <li><b>Tool 的說明也改了。</b>Bash tool 的說明拿掉了「不要用它做 cat、head、tail、sed、awk、echo」的警告；幾乎每個 session 都沒有 Grep 和 Glob，agent 試著用時，會收到改用 Bash 的 grep 的提示。</li>
+                <li><b>幾乎全班都在實驗組。</b>由一個 feature flag 控制，除了一位學生都在組內，只套用在部分 model，不含 Sonnet 和 Haiku。Flag 在 8 月 12 日加入，作業在 9 月 2 日到 22 日；一位學生自己找到並測試了它。</li>
+                <li><b>效果明顯，而且不必發新版就能改。</b>課程的圖顯示，加了提醒之後 Bash 的使用明顯增加；flag 快取在 ~/.claude.json，Anthropic 不必發新版就能改。</li>
+              </ul>
+              <details class="gloss" id="n-bashfirst">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">課程的流程圖：Claude Code 怎麼決定加不加這段提醒（2026-09 的分析）</span></summary>
+                <div class="gloss-body prose">
+                  <p>這是課程 slides 對作業期間（2026 年 9 月）Claude Code 的分析，之後可能已經改了。Claude Code 依序做三個判斷：</p>
+                  <ol>
+                    <li><b>這個 session 在不在 Bash 優先的組。</b>每個 session 判斷一次，subagent 跟著主 session。Opus 5.5 和 Fable 5.1 一律在組內；Opus 5 要看 flag；Sonnet 5 和 Haiku 不在。</li>
+                    <li><b>這次 request 要不要加提醒。</b>每次 request 前判斷，四個條件都成立才加：auto 或 bypass 模式、有 Bash 也有 Edit 或 Write、在組內、還沒加過。</li>
+                    <li><b>用哪一段文字。</b>第一個符合的勝出：帳號層級的設定；Opus 5.5 用放寬的版本；另一個 flag 用嚴格的版本。</li>
+                  </ol>
+                  <p>Flag 的名字是 tengu_thrifty_sonic 與 cozy_teapot，快取在 ~/.claude.json。放寬的版本說：Bash 比較簡單時可以用；shell 的改法容易壞時，例如精確或多行的取代、GNU 和 BSD／macOS 參數不同的 sed、awk，用 Edit 或 Write。課程的圖也顯示，提醒在 session 中途才加入一樣有效果；兩張圖都沒有標數字。</p>
+                </div>
+              </details>
+              <p id="i5-1"><b>公開的紀錄（本文補的）。</b>上面是課程的分析。公開的資料裡，Claude Code 的 GitHub issue <a href="https://github.com/anthropics/claude-code/issues/87575" target="_blank" rel="noopener">#87575</a> 和 <a href="https://github.com/anthropics/claude-code/issues/87971" target="_blank" rel="noopener">#87971</a> 有使用者貼出同一段提醒的原文，也提到同一個 flag 名稱；到 2026-11-06 為止，兩串都沒有 Anthropic 的回覆，官方的 permission modes 文件也沒有提到 auto mode 會改變用哪個 tool。本文不推測原因，只看它對使用者的兩個後果。</p>
+              <p id="i5-2"><b>後果一：before/after 的比較混進了 harness 的變化。</b>你以為只改了 prompt，harness 可能也換了，而 system prompt、tool 的說明、flag 都在你的控制之外。L7〈<a href="l07.html#i1-2">分數是整個 stack 的函數</a>〉看過，同一個 model 換一個 harness，分數可以差幾十分。所以比較兩版時，結果表要記下 Claude Code 和 model 的版本，實驗期間關掉自動更新；官方文件寫明 native 安裝會在背景更新、下次啟動生效。但 flag 不發版也會變，所以<strong>baseline 和新版要在同一段時間交錯跑</strong>，不要拿上週的分數來比：</p>
+              <figure class="file"><figcaption>terminal：比較兩版之前（eval.sh 是你自己的評分指令；版本號是本文環境 2026-11-06 的輸出）</figcaption><pre><code>$ claude --version                      # 記進結果表
+2.1.318 (Claude Code)
+$ cat ~/.claude/settings.json            # 實驗期間不自動更新（依 2026-11 的官方文件）
+{ "env": { "DISABLE_AUTOUPDATER": "1" } }
+$ for i in 1 2 3 4 5; do                 # baseline 和新版交錯跑：同一段時間、同一組任務
+&gt;   ./eval.sh v8 runs/v8/$i
+&gt;   ./eval.sh v9 runs/v9/$i
+&gt; done</code></pre></figure>
+              <p id="i5-3"><b>後果二：綁在專用 tool 上的安全網，會安靜地失效。</b>Claude Code 有幾個安全網只看專用的檔案 tool，agent 改走 Bash，它們就看不到：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 300" role="img" aria-label="兩條改檔的路，由上往下經過三個安全網。左邊的路是 Edit 或 Write tool，三個安全網都看得到：checkpoint 讓 /rewind 退得回來、matcher 是 Edit|Write 的 hook 會觸發、子目錄的 CLAUDE.md 和 paths rule 會載入。右邊的路是 Bash，用 sed -i 或 cat 加重導向改檔，三個安全網都看不到。最下面一條橫跨兩條路，用紅色標出：git commit 和 Stop hook，兩條路都看得到。">
+                  <defs><marker id="l11v-nets-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-nets-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M415,58 L415,248" class="dg-link" marker-end="url(#l11v-nets-ah)"/>
+                  <path d="M615,58 L615,248" class="dg-link" marker-end="url(#l11v-nets-ah)"/>
+                  <rect x="330" y="10" width="170" height="48" rx="4" class="dg-n-c"/>
+                  <text x="415" y="39.0" text-anchor="middle" class="dg-l">Edit / Write tool</text>
+                  <rect x="530" y="10" width="170" height="48" rx="4" class="dg-n-b"/>
+                  <text x="615" y="39.0" text-anchor="middle" class="dg-l">Bash：sed -i、cat &gt;</text>
+                  <text x="10" y="99" class="dg-ls">checkpoint：/rewind 退得回來</text>
+                  <text x="10" y="117" class="dg-c">官方文件</text>
+                  <rect x="345" y="78" width="140" height="40" rx="4" class="dg-n-a"/>
+                  <text x="415" y="103.0" text-anchor="middle" class="dg-l">看得到</text>
+                  <rect x="545" y="78" width="140" height="40" rx="4" class="dg-n-d"/>
+                  <text x="615" y="103.0" text-anchor="middle" class="dg-l">看不到</text>
+                  <text x="10" y="155" class="dg-ls">hook：matcher 是 Edit|Write</text>
+                  <text x="10" y="173" class="dg-c">issue 回報</text>
+                  <rect x="345" y="134" width="140" height="40" rx="4" class="dg-n-a"/>
+                  <text x="415" y="159.0" text-anchor="middle" class="dg-l">看得到</text>
+                  <rect x="545" y="134" width="140" height="40" rx="4" class="dg-n-d"/>
+                  <text x="615" y="159.0" text-anchor="middle" class="dg-l">看不到</text>
+                  <text x="10" y="211" class="dg-ls">子目錄的 CLAUDE.md、paths rule</text>
+                  <text x="10" y="229" class="dg-c">issue 回報</text>
+                  <rect x="345" y="190" width="140" height="40" rx="4" class="dg-n-a"/>
+                  <text x="415" y="215.0" text-anchor="middle" class="dg-l">看得到</text>
+                  <rect x="545" y="190" width="140" height="40" rx="4" class="dg-n-d"/>
+                  <text x="615" y="215.0" text-anchor="middle" class="dg-l">看不到</text>
+                  <text x="10" y="276" class="dg-cb">改成</text>
+                  <rect x="330" y="250" width="370" height="44" rx="4" class="dg-n-focus"/>
+                  <text x="515" y="277.0" text-anchor="middle" class="dg-l-on">git commit、Stop hook：兩條路都看得到</text>
+                </svg>
+              </div>
+              <figcaption>Agent 改用 Bash 改檔時，哪些安全網會漏掉？只看專用檔案 tool 的那幾個。第一列依官方的 checkpointing 文件（2026-11），後兩列是公開 issue 裡使用者的回報。粉色是漏掉的地方；紅色是不管 agent 用哪個 tool 都看得到的做法。</figcaption>
+            </figure>
+              <p>第一列是官方文件寫明的。Checkpoint 是 Claude Code 在你每次送出 prompt 時存的快照，/rewind 用它退回；它只追蹤檔案編輯 tool 的改動，<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">Bash 指令改的檔案 /rewind 退不回來</a>，而且它不能取代 git。後兩列是上面兩串 issue 裡使用者的回報：matcher 寫 Edit|Write 的 hook，不會因 Bash 的寫入觸發；子目錄的 CLAUDE.md 和有 paths 的 rule 靠讀檔的路徑觸發載入，用 cat 讀就不會。所以<strong>真正的 checkpoint 是 git commit</strong>（下一章），一定要跑的檢查掛在 Stop hook 或 git 的 pre-commit，不掛在 Edit|Write。</p>
+              <p id="i5-4"><b>本文的判斷：教訓不限於這一個 flag。</b>Harness 是你系統的一部分，而它會變。所以<strong>任何依賴 agent「用哪個 tool」的保護，都要假設它會換 tool</strong>；任何 before/after 的數字，都要附上兩邊的 harness 版本。</p>
+            </div>
+          </div>
+<div class="idea" id="i6">
+            <h3><span class="idea-no">6</span>破壞性指令：先 commit，危險指令讓 harness 擋</h3>
+            <div class="prose">
+              <p>前面的錯多半能重來：重跑一次、重寫 prompt。這一章和下一章的錯拿不回來。第二份作業裡，一個 agent 覆寫了 prompts.py，跑出那個結果的 prompt 就此消失，那個分數再也對不回產生它的設定。同時，學生放手的程度一路升高：<strong>用 bypass 權限模式送出的 prompt，從 8.6% 升到 11%、16%</strong>；學生、deny 規則或 auto mode 擋下的 tool call，從 167 次升到 233 次、484 次。</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 236" role="img" aria-label="兩條時間線，本文的示意。上面一條沒有 commit：run 1 得到分數 A；agent 覆寫 prompts.py；run 2 得到分數 B；最後問分數 A 是哪一版 prompt 跑的，查不到，用紅色標出。下面一條每次跑分前 commit：先 commit a1b2；run 1 得到分數 A，結果表記下 a1b2；agent 覆寫 prompts.py；之後用 git show a1b2:prompts.py 拿得回來。">
+                  <defs><marker id="l11v-evidence-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-evidence-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="10" y="20" class="dg-cb">沒有 commit</text>
+                  <text x="10" y="136" class="dg-cb">每次跑分前 commit</text>
+                  <path d="M170,60 L188,60" class="dg-link" marker-end="url(#l11v-evidence-ah)"/>
+                  <path d="M350,60 L368,60" class="dg-link" marker-end="url(#l11v-evidence-ah)"/>
+                  <path d="M530,60 L548,60" class="dg-link" marker-end="url(#l11v-evidence-ah)"/>
+                  <path d="M170,176 L188,176" class="dg-link" marker-end="url(#l11v-evidence-ah)"/>
+                  <path d="M350,176 L368,176" class="dg-link" marker-end="url(#l11v-evidence-ah)"/>
+                  <path d="M530,176 L548,176" class="dg-link" marker-end="url(#l11v-evidence-ah)"/>
+                  <rect x="10" y="34" width="160" height="52" rx="4" class="dg-n-a"/>
+                  <text x="90" y="57.0" text-anchor="middle" class="dg-l">run 1</text>
+                  <text x="90" y="74.0" text-anchor="middle" class="dg-c">分數 A</text>
+                  <rect x="190" y="34" width="160" height="52" rx="4" class="dg-n-d"/>
+                  <text x="270" y="57.0" text-anchor="middle" class="dg-l">agent 覆寫</text>
+                  <text x="270" y="74.0" text-anchor="middle" class="dg-c">prompts.py</text>
+                  <rect x="370" y="34" width="160" height="52" rx="4" class="dg-n-a"/>
+                  <text x="450" y="57.0" text-anchor="middle" class="dg-l">run 2</text>
+                  <text x="450" y="74.0" text-anchor="middle" class="dg-c">分數 B</text>
+                  <rect x="550" y="34" width="160" height="52" rx="4" class="dg-n-focus"/>
+                  <text x="630" y="57.0" text-anchor="middle" class="dg-l-on">分數 A 是哪一版？</text>
+                  <text x="630" y="74.0" text-anchor="middle" class="dg-c-on">查不到</text>
+                  <rect x="10" y="150" width="160" height="52" rx="4" class="dg-n-c"/>
+                  <text x="90" y="173.0" text-anchor="middle" class="dg-l">commit</text>
+                  <text x="90" y="190.0" text-anchor="middle" class="dg-c">a1b2</text>
+                  <rect x="190" y="150" width="160" height="52" rx="4" class="dg-n-a"/>
+                  <text x="270" y="173.0" text-anchor="middle" class="dg-l">run 1：分數 A</text>
+                  <text x="270" y="190.0" text-anchor="middle" class="dg-c">結果表記 a1b2</text>
+                  <rect x="370" y="150" width="160" height="52" rx="4" class="dg-n-d"/>
+                  <text x="450" y="173.0" text-anchor="middle" class="dg-l">agent 覆寫</text>
+                  <text x="450" y="190.0" text-anchor="middle" class="dg-c">prompts.py</text>
+                  <rect x="550" y="150" width="160" height="52" rx="4" class="dg-n-a"/>
+                  <text x="630" y="173.0" text-anchor="middle" class="dg-l">git show</text>
+                  <text x="630" y="190.0" text-anchor="middle" class="dg-c">a1b2:prompts.py</text>
+                </svg>
+              </div>
+              <figcaption>Commit 擋住的是什麼？第二份作業的例子畫成兩條時間線（本文的示意）。上面沒有 commit，agent 覆寫檔案之後，分數 A 和產生它的 prompt 對不起來，證據沒了。下面每次跑分前 commit，舊版隨時拿得回來；git 也不管 agent 是用 Edit 還是 Bash 改的。</figcaption>
+            </figure>
+              <p id="i6-1"><b>四個修法，各擋一層。</b>權限怎麼運作是 L2〈<a href="l02.html#i4">權限</a>〉的主題：規則依 deny、ask、allow 的順序比對指令的文字，都沒有符合才看 mode。規則只比文字，不是安全邊界；真正限制行程的是 sandbox，也就是作業系統層級的隔離（L2〈<a href="l02.html#i4-4">sandbox</a>〉）。課程的四個修法，對到它們擋得住和擋不住的：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>修法</th><th>擋得住</th><th>擋不住</th></tr></thead>
+                <tbody>
+                  <tr><td><b>危險的一步之前先 commit</b></td><td>repo 裡的檔案，git 退得回來</td><td>資料庫、遠端、已經送出去的東西</td></tr>
+                  <tr><td><b>deny 規則</b><br><small>rm -rf、git reset --hard、force push</small></td><td>agent 平常的那種寫法</td><td>換個寫法：<code>/bin/rm</code>、<code>bash -c</code>、<code>git -C . push</code></td></tr>
+                  <tr><td><b>ask 規則</b><br><small>刪除、reset、kill 不是 agent 建的東西</small></td><td>動手前停下來問你</td><td>你習慣性地按同意</td></tr>
+                  <tr><td><b>bypass 只在隔離的環境</b><br><small>container 或 VM</small></td><td>出事時整台丟掉</td><td>你掛進去的 credential 和網路</td></tr>
+                </tbody>
+              </table></div>
+              <p>照這張表寫，一份可以放進 repo 的設定是：</p>
+              <figure class="file"><figcaption>.claude/settings.json 的 permissions 段（依 2026-11 的官方文件；規則的寫法見 L2）</figcaption><pre><code class="lang-json">"permissions": {
+  "disableBypassPermissionsMode": "disable",   ← 這台機器開不了 bypass；要用就去 container
+  "deny": [                                    ← 最先比：符合就不執行
+    "Bash(rm -rf *)",
+    "Bash(git reset --hard *)",
+    "Bash(git push --force *)",
+    "Bash(git push -f *)"
+  ],
+  "ask": [                                     ← 其次：符合就停下來問你，auto mode 也一樣
+    "Bash(rm *)",
+    "Bash(git reset *)",
+    "Bash(git clean *)",
+    "Bash(git push *)",
+    "Bash(kill *)",
+    "Bash(pkill *)"
+  ]
+}</code></pre></figure>
+              <p>兩個細節。deny 先比，所以 <code>rm -rf build/</code> 直接拒絕，其他的 rm 走 ask 問你；<code>git push origin main --force</code> 這種把 flag 放在後面的寫法比對不到 deny，會落到 ask。<code>disableBypassPermissionsMode</code> 可以寫在自己的設定裡，把自己鎖在 bypass 外面，官方文件說只該在 container 或 VM 這類隔離的環境用 bypass。付款、刪資料這類 git 也救不回來的動作，在 L6〈<a href="l06.html#i3-3">回不去的動作</a>〉。</p>
+              <p id="i6-2"><b>Commit 也是證據。</b>prompts.py 的例子丟掉的不只是檔案，是「哪個設定得到哪個分數」的對應。所以<strong>每次跑分之前 commit</strong>，結果表記下 commit，agent 覆寫過的版本隨時用 <code>git show &lt;commit&gt;:prompts.py</code> 拿回來。第 5 章說過 /rewind 不追蹤 Bash 改的檔案，git 則不管 agent 用的是哪個 tool。</p>
+            </div>
+          </div>
+<div class="idea" id="i7">
+            <h3><span class="idea-no">7</span>Secrets：進過 context 的，都留在 transcript 裡</h3>
+            <div class="prose">
+              <p>第二份作業有 <strong>23% 的學生曝露過 key 或登入憑證</strong>，第三份有 19%（第一份是 3%）。課程的例子是一位學生把登入憑證打進 prompt，請 agent 在他離開時替他提交作業。課程把每一件依來源分成三類，畫成一條路是這樣：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 214" role="img" aria-label="Key 流出去的路，由左到右三欄。左邊兩個來源：你打或貼進 prompt，三份作業依序 1、10、6 件；agent 讀檔或印出來，1、6、6 件。兩個來源匯到中間：session 的 jsonl 檔，明文，預設保留 30 天。再往右：有人把 transcript 或 log commit 進去，就到了 git repo，用紅色標出，依序 1、2、15 件，是第三份作業最大的來源。">
+                  <defs><marker id="l11v-leak-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-leak-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="125" y="18" text-anchor="middle" class="dg-h">key 從哪裡進來</text>
+                  <text x="390" y="18" text-anchor="middle" class="dg-h">寫在哪裡</text>
+                  <text x="625" y="18" text-anchor="middle" class="dg-h">最後在哪裡</text>
+                  <path d="M240,62 L265,62 L265,134 L240,134" class="dg-link"/>
+                  <path d="M265,98 L288,98" class="dg-link" marker-end="url(#l11v-leak-ah)"/>
+                  <path d="M490,98 L538,98" class="dg-link-key" marker-end="url(#l11v-leak-ak)"/>
+                  <text x="514" y="88" text-anchor="middle" class="dg-k">commit</text>
+                  <rect x="10" y="34" width="230" height="56" rx="4" class="dg-n-b"/>
+                  <text x="125" y="59.0" text-anchor="middle" class="dg-l">你打或貼進 prompt</text>
+                  <text x="125" y="76.0" text-anchor="middle" class="dg-c">1 · 10 · 6 件</text>
+                  <rect x="10" y="106" width="230" height="56" rx="4" class="dg-n-b"/>
+                  <text x="125" y="131.0" text-anchor="middle" class="dg-l">agent 讀檔或印出來</text>
+                  <text x="125" y="148.0" text-anchor="middle" class="dg-c">1 · 6 · 6 件</text>
+                  <rect x="290" y="70" width="200" height="56" rx="4" class="dg-n-c"/>
+                  <text x="390" y="95.0" text-anchor="middle" class="dg-l">session 的 .jsonl</text>
+                  <text x="390" y="112.0" text-anchor="middle" class="dg-c">明文，預設留 30 天</text>
+                  <rect x="540" y="70" width="170" height="56" rx="4" class="dg-n-focus"/>
+                  <text x="625" y="95.0" text-anchor="middle" class="dg-l-on">git repo</text>
+                  <text x="625" y="112.0" text-anchor="middle" class="dg-c-on">1 · 2 · 15 件</text>
+                  <text x="10" y="194" class="dg-c">件數依序是 A1 · A2 · A3。最右邊那一類是 slides 的「留在 commit 的 log 裡」。</text>
+                </svg>
+              </div>
+              <figcaption>Key 怎麼流出去？左邊兩個來源都會寫進 session 的 transcript；有人把 transcript 或 log commit 進去，就到了 repo。件數是課程對三份作業的統計，本文把三類畫成一條路。你打的 prompt 另外還存在 history.jsonl，見正文。</figcaption>
+            </figure>
+              <p id="i7-1"><b>為什麼 log 會變成最大的來源。</b>Claude Code 把每一則訊息、每一次 tool call 和它的結果，寫進 <code>~/.claude/projects/&lt;專案&gt;/&lt;session&gt;.jsonl</code>。官方文件寫明這些檔案是純文字、沒有加密，tool 讀了 .env 或指令印出認證，值就寫進這個檔案（<a href="https://code.claude.com/docs/zh-TW/claude-directory" target="_blank" rel="noopener">.claude 目錄</a>，2026-11）。你打的每一個 prompt 還另外存在 <code>~/.claude/history.jsonl</code>，它不在自動清理的範圍內，<strong>留到你自己刪</strong>。這門課要每份作業把 session 封存 commit 進 repo，所以前兩類的 key 也會跟著進 git。你的團隊如果會分享 transcript、拿它除錯或寫事後檢討，是同一個風險。</p>
+              <p id="i7-2"><b>課程的修法，對到設定。</b>四條修法，每一條都有一個具體的做法：</p>
+              <ul>
+                <li><b>Key 放環境變數或 .env。</b>.env 寫進 .gitignore，也排除在 session 封存之外。</li>
+                <li><b>永遠不要貼進 prompt。</b>要 agent 用 key 時，告訴它環境變數的名字，不給值。</li>
+                <li><b>不讓 key 進 agent 的環境。</b>權限規則禁止讀 .env；開 claude 的 shell 不 export 正式環境的 key，測試用範圍小、可以隨時作廢的 key。</li>
+                <li><b>Commit 或封存之前掃一次。</b>課程的說明建議封存前先 grep 常見的 key 格式，並提醒那只是 smoke test；第 3 段動手試試有一個掃描的腳本。</li>
+              </ul>
+              <figure class="file"><figcaption>三個檔案：.gitignore、權限、MCP 設定（依 2026-11 的官方文件；← 是本文的註解）</figcaption><pre><code># .gitignore
+.env
+.env.*
+
+# .claude/settings.json 的 permissions 段：Claude 的檔案 tool 不准讀這些路徑
+"deny": ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)"]
+
+# .mcp.json：key 用環境變數的參照，啟動 server 時才從你的 shell 讀進來
+{
+  "mcpServers": {
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": { "NOTION_TOKEN": "${NOTION_TOKEN}" }      ← 檔案裡沒有 token 的值
+    }
+  }
+}</code></pre></figure>
+              <p>Read 的 deny 規則擋得住 Claude 的檔案 tool，也擋得住 Bash 裡它認得的 cat、head、sed；擋不住自己開檔的 Python 腳本，要完全擋住得開 sandbox。已經寫進 transcript 的，可以把保存期限 <code>cleanupPeriodDays</code>（預設 30 天）調短，或用 <code>claude project purge</code> 刪掉一個專案的紀錄。Key 一旦外洩，確定有效的處理只有一個：作廢，重發。</p>
+              <p id="i7-3"><b>業界的數字（本文補的）。</b>GitGuardian 的 <a href="https://dev.to/gitguardian/the-state-of-secrets-sprawl-2026-ai-service-leaks-surge-81-and-29m-secrets-hit-public-github-2bgj" target="_blank" rel="noopener">State of Secrets Sprawl 2026</a> 分析公開的 GitHub commit：署名有 Claude Code 的 commit，<strong>3.2% 外洩了 secret，全體 commit 是 1.5%</strong>，約 2 倍。MCP 是把外部系統接成 tool 的協定（L2），報告在公開的 MCP 設定檔裡找到 24,008 個不重複的 secret，其中 2,117 個仍然有效。原因之一是熱門的設定教學直接叫你把 key 寫進設定檔，上面的 .mcp.json 就是反過來的寫法。報告自己提醒，這不能讀成工具的失敗：接受、修改、push 都是人做的決定。它沒有說明怎麼辨識有 Claude Code 參與的 commit，而且是廠商的相關分析，不是對照實驗；<a href="https://www.scworld.com/news/ai-coding-assistants-twice-as-likely-to-leak-secrets-as-overall-leaks-rise-34" target="_blank" rel="noopener">SC Media 的報導</a>也提到，兩者每千個 commit 的外洩數在 2025 年 9 月以後開始接近。方向和課程一致：agent 讓 key 多了幾條出口，出口要在設定裡關。</p>
+            </div>
+          </div>
+<div class="idea" id="i8">
+            <h3><span class="idea-no">8</span>Session：一個 session 一件事，狀態寫在檔案裡</h3>
+            <div class="prose">
+              <p>這一章的錯都拿得回來，代價是時間，而且每天都會碰到。課程的三個陷阱是：看不懂 agent 做了什麼、session 太長讓 compaction（context 快滿時，由 LLM 把舊對話寫成摘要）丟了 context、發洩情緒而不是修正方向。三個的解法都是同一個形狀：讓每一步小到看得完，讓該記住的東西留在檔案裡，讓給 agent 的每一句話都帶著資訊。</p>
+              <p id="i8-1"><b>看不懂 agent 做了什麼。</b>三份作業裡 18%、37%、21% 的學生失去了對程式的掌握。第 1 章看過，長 turn 從 41 次變成 514 次，第 2 章看過其中 69% 來自模糊的要求：agent 一次跑半小時，回來時改了一大片，人已經跟不上。課程的修法是<strong>讓每一步都小到看得完</strong>：</p>
+              <ul>
+                <li><b>一個 turn 一件事。</b>一個功能或一個實驗，做完讀 diff，再 commit。</li>
+                <li><b>要短的回報。</b>讀得懂的幾句話，不是一長串 log。</li>
+                <li><b>一份 agent 會更新的筆記。</b>NOTES.md 或 CLAUDE.md，記計畫、決定、狀態、測試結果。</li>
+                <li><b>中途看進度、修方向。</b>按 Esc 停下，已經做的保留；或直接打字，訊息會排隊，等這一批 tool call 做完就送進同一個 turn（依 2026-11 的官方文件）。</li>
+              </ul>
+              <p id="i8-2"><b>Session 太長，compaction 丟了 context。</b>做過 compaction 的學生從 16% 變成 69%，全班的 compaction 次數從 20 次變成 201 次。課程的例子：一個開了 13 天、壓縮過兩次的 session，學生得一再提醒 agent 之前的測試結果；另一位學生在 compaction 之後，五小時前貼進去的回饋就不見了。原因是 compaction 有損：摘要之後，只有 CLAUDE.md、memory 這類從硬碟重載的東西完整回來，只在對話裡說過的事，<strong>摘要沒留就沒了</strong>（L4〈<a href="l04.html#i5-4">compaction</a>〉）。所以：</p>
+              <ul>
+                <li><b>一個任務一個新 session。</b>不相干的工作不要接在同一段對話後面。</li>
+                <li><b>狀態寫進檔案。</b>計畫、決定、狀態寫在 CLAUDE.md，或從它匯入的 NOTES.md，不留在對話裡。</li>
+                <li><b>大範圍的搜尋和長 log 交給 subagent。</b>主對話只收摘要。</li>
+                <li><b>在自然的斷點自己壓縮。</b>跑 /compact，並寫明要留什麼。</li>
+              </ul>
+              <figure class="file"><figcaption>NOTES.md：agent 每做完一步就更新（CLAUDE.md 裡寫一行 @NOTES.md 匯入；內容是本文擬的例子）</figcaption><pre><code class="lang-md"># NOTES.md
+## Goal
+Cut cost per task by 20% without solving fewer tasks (baseline v8: 16-18 solved).
+## Decisions
+- 10/12: keep tool output under 2,000 chars; full output goes to files/.
+## Status
+- v9 (prompt cache): 5 runs, solved 16-18, cost -18%. Not merged yet.
+## Test results to remember
+- tests/test_retry.py fails only on Windows (path separator). Known, not a bug in v9.</code></pre></figure>
+              <p id="i8-3"><b>卡住時：給證據，不要給情緒。</b>發洩的學生從 7%、5% 升到 21%。課程的例子：第一份作業裡，一句要它清乾淨、把 bug 修好的命令之後，agent 做了 93 次 tool call、61 分鐘；第二份作業裡，一串情緒化的全大寫要求之後，agent 只做了 5 次 tool call、18 分鐘。兩種都沒給 agent 新的資訊。課程的修法是把情緒換成資訊：</p>
+              <ul>
+                <li><b>第二次修不好，先要診斷。</b>附證據：log 的哪一行、確切的錯誤訊息。</li>
+                <li><b>貼確切的錯誤或截圖。</b>並說你預期看到什麼。</li>
+                <li><b>分數一直低，先問時間花在哪。</b>失敗的 run 把時間花在哪裡，問完再要新點子。</li>
+                <li><b>退回上一個好的狀態。</b>用 /rewind 或 git，不要在壞掉的狀態上疊修補。</li>
+              </ul>
+              <p>官方文件說得更直接：同一個問題糾正超過兩次，context 裡就塞滿失敗的嘗試，<strong>/clear 之後用更好的 prompt 重來</strong>，通常勝過在長 session 裡繼續改。</p>
+              <figure class="file"><figcaption>對話怎麼打：卡住時，給證據不給情緒（本文擬的例子；/compact 的寫法依 2026-11 的官方文件）</figcaption><pre><code># 第二次修不好：先要診斷，不要第三次修
+&gt; 先不要改程式。告訴我失敗的原因，附證據：log 的哪一行、確切的錯誤訊息。
+&gt; 我預期 /report 在 2 秒內回 200，實際是 504（截圖附上）。
+
+# 分數一直上不去：先問時間花在哪，再要新點子
+&gt; 列出最慢的 5 個失敗 run，每個 run 的時間花在哪幾個 tool call。
+
+# 到了斷點，自己壓縮，並寫明要留什麼
+&gt; /compact keep the decisions and test results in NOTES.md, drop the exploration</code></pre></figure>
+              <p>什麼時候清、壓、退，可以照這個順序問：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 376" role="img" aria-label="什麼時候清、壓、退的判斷流程，由上往下四個問題。第一問：換了不相干的任務嗎？是，就開新 session 或 /clear。第二問：同一個問題修了兩次還不對嗎？是，就先要診斷和證據，必要時 /clear，重寫 prompt。第三問：前一個狀態比現在好嗎？是，就 /rewind，Bash 改的檔案用 git 退。第四問：context 快滿、到了斷點嗎？是，就 /compact，寫明要留什麼。四個都否：繼續，一個 turn 一件事，讀 diff、commit、更新 NOTES.md，用紅色標出。">
+                  <defs><marker id="l11v-session-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-session-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M360,34 L438,34" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="399" y="26" text-anchor="middle" class="dg-cb">是</text>
+                  <path d="M190,56 L190,86" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="198" y="76" class="dg-cb">否</text>
+                  <path d="M360,110 L438,110" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="399" y="102" text-anchor="middle" class="dg-cb">是</text>
+                  <path d="M190,132 L190,162" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="198" y="152" class="dg-cb">否</text>
+                  <path d="M360,186 L438,186" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="399" y="178" text-anchor="middle" class="dg-cb">是</text>
+                  <path d="M190,208 L190,238" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="198" y="228" class="dg-cb">否</text>
+                  <path d="M360,262 L438,262" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="399" y="254" text-anchor="middle" class="dg-cb">是</text>
+                  <path d="M190,284 L190,314" class="dg-link" marker-end="url(#l11v-session-ah)"/>
+                  <text x="198" y="304" class="dg-cb">否</text>
+                  <rect x="20" y="12" width="340" height="44" rx="4" class="dg-n-b"/>
+                  <text x="190" y="39.0" text-anchor="middle" class="dg-ls">換了不相干的任務嗎？</text>
+                  <rect x="440" y="12" width="270" height="44" rx="4" class="dg-n-a"/>
+                  <text x="575" y="39.0" text-anchor="middle" class="dg-l">開新 session，或 /clear</text>
+                  <rect x="20" y="88" width="340" height="44" rx="4" class="dg-n-b"/>
+                  <text x="190" y="115.0" text-anchor="middle" class="dg-ls">同一個問題修了兩次還不對嗎？</text>
+                  <rect x="440" y="84" width="270" height="52" rx="4" class="dg-n-a"/>
+                  <text x="575" y="107.0" text-anchor="middle" class="dg-l">先要診斷和證據</text>
+                  <text x="575" y="124.0" text-anchor="middle" class="dg-c">必要時 /clear，重寫 prompt</text>
+                  <rect x="20" y="164" width="340" height="44" rx="4" class="dg-n-b"/>
+                  <text x="190" y="191.0" text-anchor="middle" class="dg-ls">前一個狀態比現在好嗎？</text>
+                  <rect x="440" y="160" width="270" height="52" rx="4" class="dg-n-a"/>
+                  <text x="575" y="183.0" text-anchor="middle" class="dg-l">/rewind</text>
+                  <text x="575" y="200.0" text-anchor="middle" class="dg-c">Bash 改的檔案用 git 退</text>
+                  <rect x="20" y="240" width="340" height="44" rx="4" class="dg-n-b"/>
+                  <text x="190" y="267.0" text-anchor="middle" class="dg-ls">context 快滿、到了斷點嗎？</text>
+                  <rect x="440" y="236" width="270" height="52" rx="4" class="dg-n-a"/>
+                  <text x="575" y="259.0" text-anchor="middle" class="dg-l">/compact</text>
+                  <text x="575" y="276.0" text-anchor="middle" class="dg-c">寫明要留什麼</text>
+                  <rect x="20" y="316" width="690" height="48" rx="4" class="dg-n-focus"/>
+                  <text x="365" y="345.0" text-anchor="middle" class="dg-l-on">繼續：一個 turn 一件事 → 讀 diff → commit → 更新 NOTES.md</text>
+                </svg>
+              </div>
+              <figcaption>這個 session 該清、該壓、該退，還是繼續？由上往下問，第一個答「是」的就照做。本文的整理，依課程的修法與官方 best practices（2026-11）：「同一個問題糾正超過兩次就 /clear」也是官方的建議。</figcaption>
+            </figure>
+            </div>
+          </div>
+<div class="idea" id="i9">
+            <h3><span class="idea-no">9</span>執行環境：平行要隔離，長跑要撐得住</h3>
+            <div class="prose">
+              <p>最後兩個陷阱和 agent 本身無關，和它跑在哪裡有關。第三份作業裡，<strong>54% 的學生有兩個以上的 session 重疊跑了 15 分鐘以上</strong>，最長的重疊是 21 小時（前兩份作業是 9%、22%，最長 1.7 和 15 小時）；65% 的學生曾因為機器本身損失時間（前兩份是 12%、50%）。</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 262" role="img" aria-label="三個平行的 session，各一欄。Session A 做實驗 cache：worktree exp-cache、PORT=4001、輸出目錄 runs/v9-cache。Session B 做實驗 routing：worktree exp-routing、PORT=4002、runs/v9-route。Session C 是 main 上交出去的版本：PORT=4000、runs/v8。上面三列每個 session 一份，要在開工時分好。最下面一條橫跨三欄，用紅色標出：分不開的東西，資料庫、CPU 與 GPU、磁碟、這台機器會不會睡著。">
+                  <defs><marker id="l11v-share-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l11v-share-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M120,50 L120,200" class="dg-soft-link"/>
+                  <path d="M360,50 L360,200" class="dg-soft-link"/>
+                  <path d="M600,50 L600,200" class="dg-soft-link"/>
+                  <rect x="10" y="10" width="220" height="40" rx="4" class="dg-n-c"/>
+                  <text x="120" y="35.0" text-anchor="middle" class="dg-ls">session A：實驗 cache</text>
+                  <rect x="30" y="62" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="120" y="85.0" text-anchor="middle" class="dg-ls">worktree exp-cache</text>
+                  <rect x="30" y="108" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="120" y="131.0" text-anchor="middle" class="dg-ls">PORT=4001</text>
+                  <rect x="30" y="154" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="120" y="177.0" text-anchor="middle" class="dg-ls">runs/v9-cache/</text>
+                  <rect x="250" y="10" width="220" height="40" rx="4" class="dg-n-c"/>
+                  <text x="360" y="35.0" text-anchor="middle" class="dg-ls">session B：實驗 routing</text>
+                  <rect x="270" y="62" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="360" y="85.0" text-anchor="middle" class="dg-ls">worktree exp-routing</text>
+                  <rect x="270" y="108" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="360" y="131.0" text-anchor="middle" class="dg-ls">PORT=4002</text>
+                  <rect x="270" y="154" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="360" y="177.0" text-anchor="middle" class="dg-ls">runs/v9-route/</text>
+                  <rect x="490" y="10" width="220" height="40" rx="4" class="dg-n-c"/>
+                  <text x="600" y="35.0" text-anchor="middle" class="dg-ls">session C：交出去的版本</text>
+                  <rect x="510" y="62" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="600" y="85.0" text-anchor="middle" class="dg-ls">main</text>
+                  <rect x="510" y="108" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="600" y="131.0" text-anchor="middle" class="dg-ls">PORT=4000</text>
+                  <rect x="510" y="154" width="180" height="36" rx="4" class="dg-n-a"/>
+                  <text x="600" y="177.0" text-anchor="middle" class="dg-ls">runs/v8/</text>
+                  <rect x="10" y="206" width="700" height="48" rx="4" class="dg-n-focus"/>
+                  <text x="360" y="235.0" text-anchor="middle" class="dg-l-on">分不開的：資料庫、CPU 與 GPU、磁碟、這台機器會不會睡著</text>
+                </svg>
+              </div>
+              <figcaption>三個平行的 session，各自要分好什麼？青色三列每個 session 一份：worktree、port、輸出目錄，在開工時就分好。最下面那條分不開，只能排時間，例如量延遲時不要同時跑別的。本文的整理，對到課程的三個碰撞例子。</figcaption>
+            </figure>
+              <p id="i9-1"><b>平行的 session 會互踩。</b>課程的三個例子，剛好對到三種沒隔離的東西：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>撞到什麼</th><th>課程的例子</th><th>隔離的方法</th></tr></thead>
+                <tbody>
+                  <tr><td><b>工作目錄與 git 狀態</b></td><td>第三份作業：一個 git reset 弄壞了另一個 run 的程式碼</td><td>一個 session 一個 worktree、一個 branch</td></tr>
+                  <tr><td><b>網路 port</b></td><td>第一份作業：兩個 session 搶 port 4000</td><td>每個 session 自己的 PORT</td></tr>
+                  <tr><td><b>輸出的檔案</b></td><td>第二份作業：一批舊的結果覆寫了新的</td><td>每個 run 有名字，也有自己的輸出目錄</td></tr>
+                  <tr><td><b>CPU 與計時</b></td><td>沒有舉例；課程的修法寫了「量時間時不要有干擾」</td><td>量延遲時，不要同時跑別的 session</td></tr>
+                </tbody>
+              </table></div>
+              <p>Worktree 只隔離檔案，port、資料庫、CPU 都還是共用的，這是 L3〈<a href="l03.html#i5-1">worktree 只隔離檔案</a>〉的結論。其他幾樣要在開工時自己分好：</p>
+              <figure class="file"><figcaption>terminal：三個 session 各自分開（claude -w 依 2026-11 的官方文件；npm run dev、eval.sh 是你自己的指令）</figcaption><pre><code>$ claude -w exp-cache        # 建 .claude/worktrees/exp-cache，branch 是 worktree-exp-cache
+$ claude -w exp-routing      # 另一個 terminal：另一個 worktree，碰不到上一個的檔案
+$ PORT=4001 npm run dev      # 每個 worktree 自己的 port
+$ RUN=v9-cache-r3; mkdir -p runs/$RUN &amp;&amp; ./eval.sh --out runs/$RUN   # run 有名字和自己的目錄</code></pre></figure>
+              <p id="i9-2"><b>派工也有成本。</b>第一份作業的回顧裡，一個六個 agent、委派三層深的 run，<strong>花了 10 分鐘以上、將近 15 美元</strong>；之前一個相近的任務不到 2 分鐘、1 美元。Subagent 幫得上忙的是互不相干的 review 和各自獨立的實作；幫倒忙的是好幾個 agent 重讀同一個小 repo、重做主 agent 已經做過的事，或一邊改檔、一邊有人測同一批檔案。所以每個 agent 要有清楚的責任和互不重疊的改動範圍，沒把握的點子先用小的委派試。規格怎麼寫、深度和寬度怎麼設上限，在 L5〈<a href="l05.html#i4">派工</a>〉。</p>
+              <p id="i9-3"><b>長跑要撐得住。</b>第三份作業的例子是 42 GB 的 task image 塞滿了一台筆電的磁碟，整個基礎設施跟著失敗。課程的修法有三條：</p>
+              <ul>
+                <li><b>先讀寫明的需求。</b>第一次跑之前，確認平台、磁碟、Docker 的要求。</li>
+                <li><b>筆電不夠就換機器。</b>用 CloudLab 或 AWS 這類雲端機器。</li>
+                <li><b>長的工作放在不會睡著的機器上。</b>用 tmux 或 nohup 跑，斷線也不會停。</li>
+              </ul>
+              <figure class="file"><figcaption>terminal：長的工作放在不會睡著的機器上</figcaption><pre><code>$ df -h . &amp;&amp; docker system df      # 開跑前看磁碟，和 Docker image 佔了多少
+$ tmux new -s eval                 # 在遠端機器開一個 tmux session
+$ ./eval.sh --all &gt; eval.log 2&gt;&amp;1   # 在 tmux 裡跑；按 Ctrl-b 再按 d 離開，工作不會停
+$ tmux attach -t eval              # 之後回來接上
+$ nohup ./eval.sh --all &gt; eval.log 2&gt;&amp;1 &amp;   # 不用 tmux：登出之後也繼續跑</code></pre></figure>
+            </div>
+          </div>
+<div class="idea" id="i10">
+            <h3><span class="idea-no">10</span>目錄：十個陷阱、三份作業的數字、學生想要的功能</h3>
+            <div class="prose">
+              <p>這一章不必讀完，需要時再查。第一張表是 slides 原本的十個陷阱，依 slides 的編號排；平均每位學生踩到的陷阱是 1.3、3.4、5.0 個。<strong>表的順序是 slides 的，代價的順序是本文的</strong>，兩者的差別就是這篇文章的章序。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>陷阱<br>（slides 的編號）</th><th>數字<br>A1／A2／A3</th><th>slides 的一句話修法</th><th>本文</th></tr></thead>
+                <tbody>
+                  <tr><td><b>P1 盲信 agent 的說法</b></td><td>信了錯的說法：20%／20%／33%</td><td>要證據；親手驗一個</td><td><a href="#i2">第 2</a>、<a href="#i3">3 章</a></td></tr>
+                  <tr><td><b>P2 看不懂 agent 做了什麼</b></td><td>18%／37%／21%</td><td>小步走；讀 diff；commit</td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td><b>P3 Session 太長，丟了 context</b></td><td>做過 compaction：16%／40%／69%</td><td>一個任務一個 session；筆記寫在檔案</td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td><b>P4 疊改動</b></td><td>0%／47%／78%（總表）</td><td>一次改一件，和 baseline 比</td><td><a href="#i4">第 4 章</a></td></tr>
+                  <tr><td><b>P5 平行 session 互踩</b></td><td>重疊 15 分鐘以上：9%／22%／54%</td><td>一個 session 一個 worktree 和 branch</td><td><a href="#i9">第 9 章</a></td></tr>
+                  <tr><td><b>P6 破壞性指令</b></td><td>bypass 佔 prompt：8.6%／11%／16%</td><td>先 commit；deny rm -rf 和 reset</td><td><a href="#i6">第 6 章</a></td></tr>
+                  <tr><td><b>P7 Secrets 外洩</b></td><td>3%／23%／19%</td><td>Key 放環境變數，不放 prompt</td><td><a href="#i7">第 7 章</a></td></tr>
+                  <tr><td><b>P8 只看一次有雜訊的 run</b></td><td>0%／48%／66%（總表）</td><td>跑好幾次，比分布</td><td><a href="#i4">第 4 章</a></td></tr>
+                  <tr><td><b>P9 發洩，不修正方向</b></td><td>7%／5%／21%</td><td>貼錯誤；要診斷</td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td><b>P10 平台問題與筆電睡著</b></td><td>12%／50%／65%</td><td>先查需求；用 tmux</td><td><a href="#i9">第 9 章</a></td></tr>
+                </tbody>
+              </table></div>
+              <details class="gloss" id="n-data">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">數據怎麼讀：58 位學生、哪些數字對應不清楚</span></summary>
+                <div class="gloss-body prose">
+                  <ul>
+                    <li><b>樣本。</b>同一批 58 位學生的三份作業：A1 做看 agent 工作的網頁，A2 寫 agent loop，A3 在成功率不變下壓低成本與延遲。</li>
+                    <li><b>單位。</b>用量是每位學生的中位數；陷阱多半是「有幾 % 的學生」；長 turn、compaction、擋下的 tool call 是全班的次數；secret 的來源是件數。</li>
+                    <li><b>本文沒有用的。</b>permission mode 的比例、失敗類型（改壞原本能用的程式、很有把握地診斷錯）的六個比例、Claude 與學生時數的兩個中位數，slides 上對不清楚是哪一份作業或哪一類。</li>
+                    <li><b>兩組不同的數字。</b>介紹陷阱的頁面寫疊改動 0%／5%／37%、只看一次 run 0%／30%／73%（後者的順序是推的）；總表寫 0%／47%／78%、0%／48%／66%。兩處的標籤不同，slides 沒有說明差別，本文用總表。</li>
+                    <li><b>誰抓到錯。</b>slides 沒有直接標每個數字屬於哪一份作業，本文照每份作業加起來約 100% 來讀；學生那一列和總表的 61%、33% 一致。</li>
+                    <li><b>排行榜重跑 10 次。</b>那兩頁標的是第四份作業（自己架 serving engine，排行榜依解題數與端到端時間排名），當時還沒截止。</li>
+                  </ul>
+                </div>
+              </details>
+              <p id="i10-1"><b>學生想要的功能。</b>第一份作業的回饋裡，學生希望 Claude Code 更看得見、更能控制。課程整理成兩句：看得到更多、雜訊更少；放手讓它做，但留著介入的機會。多數願望現在已經有對應的做法：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>學生想要 Claude Code 做的</th><th>現在可以怎麼做（2026-11）</th></tr></thead>
+                <tbody>
+                  <tr><td><b>及時講出計畫和決定，讓人能介入</b></td><td>Esc 停下、直接打字排隊（第 8 章）；改動大時先用 plan mode 看計畫（第 2 章）</td></tr>
+                  <tr><td><b>報告寫明哪些驗證過、哪些是假設</b></td><td>寫進 prompt（第 3 章）；用 /goal 或 Stop hook 擋住提早停下（L3、L6）</td></tr>
+                  <tr><td><b>選擇性地刪掉錯的假設</b></td><td>/rewind 選一則訊息，Summarize from here；/compact 加上要留什麼</td></tr>
+                  <tr><td><b>更容易改記憶</b></td><td>/memory 打開 CLAUDE.md 和 auto memory（L2〈<a href="l02.html#i6">記憶</a>〉）</td></tr>
+                  <tr><td><b>即時看到花費，能設預算</b></td><td>自訂 status line，L8〈<a href="l08.html#i7-4">上限</a>〉有一家公司這樣即時顯示花費；-p 模式的 --max-budget-usd（L6〈<a href="l06.html#i3-5">上限</a>〉）</td></tr>
+                  <tr><td><b>委派看得到、控制得了</b></td><td>subagent 的深度與同時數量上限（L5〈<a href="l05.html#i4-3">一定要設上限</a>〉）</td></tr>
+                  <tr><td><b>留住對程式的理解</b></td><td>逐檔讀 diff；請 agent 寫一份逐段的程式導覽（延伸閱讀的 Agentic Engineering Patterns）</td></tr>
+                </tbody>
+              </table></div>
+              <p id="i10-2"><b>課程自己的工具。</b>課程把這些統計做成一個實驗性的回饋平台 <a href="https://how-i-used-claude.cs2680.com" target="_blank" rel="noopener">how-i-used-claude.cs2680.com</a>：每位學生有一份隨作業更新的「agentability portrait」，可以和同學比較，附半個人化的建議和助教的回饋。它是課程的工具，不是延伸閱讀；平台還在開發中，課程歡迎回饋。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 2 問題討論 ===================== -->
+      <section class="part" id="s-discuss">
+        <header class="part-head">
+          <p class="kicker">2 · 問題討論</p>
+          <h2>讀書會討論題</h2>
+          <p class="lede">分兩組。基礎題在讀文章之前看，帶著問題讀，答案都在文章裡；卡住的地方，按題目下面的連結，到這堂的 GitHub 討論串隨手寫。進階題讀完文章後先想一想，讀書會當天一起討論。</p>
+        </header>
+        <div class="qtabs" role="tablist" aria-label="題目分組">
+          <button type="button" class="qtab" role="tab" id="tab-basic" aria-controls="qset-basic" aria-selected="true">基礎<span>帶著問題讀文章</span></button>
+          <button type="button" class="qtab" role="tab" id="tab-adv" aria-controls="qset-adv" aria-selected="false">進階<span>讀書會討論</span></button>
+        </div>
+        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
+          <p class="qset-lede">讀文章之前先看一遍這 5 題。它們依核心觀念的章節排列，每題標了答案在哪幾章。讀到那幾章時，把答案記下來；讀完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。卡住的地方，按題目下面的「到 GitHub 回答這一題」留言。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L11 基礎題（帶著問題讀文章）：作業回饋與 agent 的十個陷阱 https://chihmingyang.github.io/cs2680/l11.html">複製基礎題</button>
+            <span class="copyhint">只複製題目與章節，方便貼到群組。</span>
+          </div>
+          <ol class="qlist qlist-basic">
+            <li class="bq" id="b1">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="#i1">第 1 章</a> · 用量與誰抓到錯</p>
+                <p class="qtext">三份作業之間，學生用 agent 的量和「誰抓到錯」各怎麼變？兩個變化合起來說明什麼？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>用量每一項都漲了 4.5 到 7 倍：prompt 從 29 到 130 個，使用時數從 3.4 到 23.4 小時，花費從 $66 到 $328，tool call 從 609 到 4,414 次。學生自己抓到的 agent 錯誤卻從 61% 掉到 33%；依第 1 章對 slides 的讀法，評分的 run 抓到的從 4.5% 升到 22%。</p>
+                    <p>合起來說明：委派放大了，檢查沒有跟著放大。越來越多錯要等分數回來才發現，平均每人踩到的陷阱也從 1.3 個變成 5.0 個。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>變多的是 agent 做的事：開 subagent 的學生從 36% 到 74%，跑過 workflow 的從 2.9% 到 35%，30 分鐘以上的長 turn 從 41 次到 514 次。變少的是人交代的事：prompt 長度的中位數從 98 縮到 65 個字元，寫明「怎樣算做完」的 prompt 從 39% 掉到 15%。</p>
+                  <p>課程也點名了兩種最常見的失敗：改壞原本能用的程式，以及很有把握地給出錯的診斷。兩種都不會自己露出來，要有人或程式去檢查才看得到；slides 給了各自的比例，但對不清楚是哪一份作業，所以本文不引用數字。</p>
+                  <p>花的時間也不等於成績：排行榜第 1 名的學生，自己花的時間不到 1 小時。課程的結論是學生需要一個讓 agent 驗證自己工作的方法，人要掌握方向。這些是同一班的觀察，不是對照實驗；作業變難，本身也會讓錯變多（第 1 章）。</p>
+                  <p class="tk-h">背景補充</p>
+                  <p>人因工程很早就研究過這個現象。Parasuraman 與 Manzey 2010 年在 Human Factors 的回顧，把它分成兩種：automation complacency，同時要顧好幾件事時，人會少看自動化的那一塊；automation bias，人照著有錯的建議做，或漏掉它沒提醒的錯。兩種在專家身上都會發生。回顧的結論是，complacency 光靠練習克服不了，automation bias 也沒辦法靠訓練或指示防止。</p>
+                  <p>所以課程的資料可以這樣讀：學生不是變懶，是注意力分給了更多同時進行的工作。解法要從流程下手，讓檢查不靠人記得（第 3 章）。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「agent 開得越多、跑得越久，成績就越好。」課程的散佈圖上，時數和名次沒有這種關係，第 1 名落在最省時間的邊界上。多出來的工作沒有人檢查，只會變成多出來的錯。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>用量漲 4.5 到 7 倍 → 人交代的變少 → 錯誤留到分數回來才發現。</li>
+                    <li>學生抓到的 61% → 33% → 委派放大了，檢查要做成機制跟上。</li>
+                    <li>時數不等於名次 → 力氣花在定義做完和看證據。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i1">根本的事實：agent 做得越多，人抓到的錯越少</a>〉、〈<a href="#i3">收工時</a>〉；L1〈<a href="l01.html#i3">人的時間</a>〉。進階題第 3 題在你的團隊量同一個數字。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/109" target="_blank" rel="noopener">到 GitHub 回答這一題（Q1）↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b2">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="#i2">第 2、3 章</a> · 做完與證據</p>
+                <p class="qtext">「讓測試通過」為什麼會得到刪掉測試的結果？agent 說測試過了，你要看哪些證據？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Agent 照字面完成要求：刪掉失敗的測試，就沒有測試失敗。這是 Goodhart's law，擋法是在「做完」裡加不變量，例如不准修改或刪除 tests/ 的測試（第 2 章）。</p>
+                    <p>證據要過四關：真的跑了嗎、失敗看得到嗎、測的是看得到的行為嗎、改的是你要的嗎。依序看 exit code 與測試數、不經 pipe 的完整輸出、截圖或依實際樣式判斷的檢查，最後讀 diff、親手驗一個、找 reviewer（第 3 章）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>一個檢查得了的「做完」有三部分：終點，一個能由輸出證明的條件；不變量，做完時不准動的東西；證據，要它交出的指令、輸出、exit code、截圖。三份作業裡，寫明做完的 prompt 從 39% 掉到 15%，信了錯誤說法的學生是 20%、20%、33%。</p>
+                  <p>Pipe 是最常見的漏洞。Shell 的 pipeline 預設回傳最後一個指令的 exit code，所以 pytest 失敗、head 成功，整條就回 0：</p>
+                  <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 196" role="img" aria-label="兩列對照。第一列是預設：pytest 有測試失敗，exit 1；接到 head -4，exit 0；整條 pipeline 的 $? 是 0，看起來通過，用紅色標出。第二列開了 set -o pipefail：同樣的 pytest exit 1 和 head exit 0，整條的 $? 是 1，失敗看得到。">
+                  <defs><marker id="tk11-2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk11-2-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="10" y="60" class="dg-cb">預設</text>
+                  <path d="M300,56 L348,56" class="dg-link" marker-end="url(#tk11-2-ah)"/>
+                  <text x="324" y="48" text-anchor="middle" class="dg-mn">|</text>
+                  <path d="M500,56 L548,56" class="dg-link" marker-end="url(#tk11-2-ah)"/>
+                  <text x="10" y="148" class="dg-cb">set -o pipefail</text>
+                  <path d="M300,144 L348,144" class="dg-link" marker-end="url(#tk11-2-ah)"/>
+                  <text x="324" y="136" text-anchor="middle" class="dg-mn">|</text>
+                  <path d="M500,144 L548,144" class="dg-link" marker-end="url(#tk11-2-ah)"/>
+                  <rect x="150" y="30" width="150" height="52" rx="4" class="dg-n-d"/>
+                  <text x="225" y="53.0" text-anchor="middle" class="dg-l">pytest</text>
+                  <text x="225" y="70.0" text-anchor="middle" class="dg-c">exit 1：有測試失敗</text>
+                  <rect x="350" y="30" width="150" height="52" rx="4" class="dg-n-a"/>
+                  <text x="425" y="53.0" text-anchor="middle" class="dg-l">head -4</text>
+                  <text x="425" y="70.0" text-anchor="middle" class="dg-c">exit 0</text>
+                  <rect x="550" y="30" width="160" height="52" rx="4" class="dg-n-focus"/>
+                  <text x="630" y="53.0" text-anchor="middle" class="dg-l-on">$? = 0</text>
+                  <text x="630" y="70.0" text-anchor="middle" class="dg-c-on">整條算成功</text>
+                  <rect x="150" y="118" width="150" height="52" rx="4" class="dg-n-d"/>
+                  <text x="225" y="141.0" text-anchor="middle" class="dg-l">pytest</text>
+                  <text x="225" y="158.0" text-anchor="middle" class="dg-c">exit 1：有測試失敗</text>
+                  <rect x="350" y="118" width="150" height="52" rx="4" class="dg-n-a"/>
+                  <text x="425" y="141.0" text-anchor="middle" class="dg-l">head -4</text>
+                  <text x="425" y="158.0" text-anchor="middle" class="dg-c">exit 0</text>
+                  <rect x="550" y="118" width="160" height="52" rx="4" class="dg-n-a"/>
+                  <text x="630" y="141.0" text-anchor="middle" class="dg-l">$? = 1</text>
+                  <text x="630" y="158.0" text-anchor="middle" class="dg-c">整條算失敗</text>
+                </svg>
+              </div>
+              <figcaption>Pipeline 的 exit code 是誰的？預設是最後一個指令的，所以 pytest 失敗、head 成功，整條回 0。開了 pipefail，整條回傳最後一個非 0 的值。紅色是看起來通過、其實失敗的那一格。</figcaption>
+            </figure>
+                  <p>第一份作業還有一個例子：測試檢查 HTML 的 hidden 屬性，CSS 卻讓內容繼續顯示，測試全過，畫面不對。所以檢查要照使用者看到的方式做（第 3 章）。</p>
+                  <div class="callout example"><span class="tag">例子</span><div>
+                    <figure class="file"><figcaption>對話怎麼打：三部分各一行（第 2 章的完整版）</figcaption><pre><code># 終點：輸出能證明的條件
+&gt; npm test 全部通過，貼出完整輸出和 exit code，不要用 tail 或 head 截掉。
+# 不變量：做完時不准動的東西
+&gt; tests/ 底下既有的測試不准修改或刪除，要改先問我。
+# 證據：回報分兩段
+&gt; 回報分兩段：驗證過的（附指令和輸出）；還沒驗證、只是假設的。</code></pre></figure>
+                  </div></div>
+                  <p class="tk-h">背景補充</p>
+                  <p>Goodhart 1975 年談英國的貨幣政策時提出這個觀察；常有人引用的那句「指標一旦變成目標，就不再是好指標」，是人類學家 Marilyn Strathern 1997 年的寫法。pytest 的 exit code：0 是全部通過，1 是有測試失敗，5 是一個測試都沒收集到。Bash 的 set -o pipefail 讓 pipeline 回傳最後一個非 0 的 exit code。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「agent 說測試過了，就代表它跑過，也過了。」它可能一個測試都沒跑（exit code 5），可能用 grep 找到 passed 就宣布通過，也可能測的是內部狀態。要它貼出不經 pipe 的完整輸出和 exit code。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>沒寫做完 → agent 選最容易的路 → 加不變量。</li>
+                    <li>Pipeline 回傳最後一段的 exit code → 不經 pipe，或 set -o pipefail。</li>
+                    <li>證據看四關：跑了、看得到失敗、測的是行為、改的是你要的。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i2">開工前</a>〉、〈<a href="#i3">收工時</a>〉；第 3 段<a href="#s-try">動手試試</a>的 exit code 實驗；L6〈<a href="l06.html#i2">驗證</a>〉。進階題第 2 題把它寫成團隊的範本。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/109" target="_blank" rel="noopener">到 GitHub 回答這一題（Q2）↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b3">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="#i4">第 4、5 章</a> · 實驗與 harness</p>
+                <p class="qtext">同一份程式碼在 16 到 18 題之間跳，新版跑一次得 18 題，算變好了嗎？為什麼 baseline 要和新版同時跑？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>不算。18 題還在同一份程式碼的範圍裡，一次 run 分不出是改動還是雜訊。要每版在同一組任務上跑不只一次、比分布，「差多少才算數」在跑之前定（第 4 章）。</p>
+                    <p>同時跑，是因為 harness 不發版也會變：課程發現，作業期間 Claude Code 的一段 system prompt 由 feature flag 控制，flag 快取在本機，不必發新版就能改。拿上週的 baseline 比這週的新版，差別裡可能混著 harness 的變化（第 5 章）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>課程的總表：第三份作業 78% 的學生疊了改動，66% 只憑一次 run 下結論。Iteration loop 一圈只回答一個問題：簡單的 baseline、一個假設、只改一件事、跑一次、再跑至少一次、驗證過才記一版，沒變好就丟掉（第 4 章）。</p>
+                  <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 214" role="img" aria-label="兩條時間軸，中間一條紅色虛線標著 flag 改變，不發版。上面是前後比：v8 的四次 run 都在虛線之前，v9 的四次都在之後，差別等於改動加上 harness 的變化。下面是交錯跑：v8 和 v9 輪流，虛線前後各兩組，兩邊都碰到同樣的變化，差別只剩改動。">
+                  <defs><marker id="tk11-3-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk11-3-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M405,30 L405,176" class="dg-link-key dg-dash"/>
+                  <text x="405" y="20" text-anchor="middle" class="dg-k">flag 改變（不發版）</text>
+                  <text x="10" y="62" class="dg-cb">前後比</text>
+                  <text x="10" y="140" class="dg-cb">交錯跑</text>
+                  <rect x="120" y="42" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="150" y="63.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="190" y="42" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="220" y="63.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="260" y="42" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="290" y="63.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="330" y="42" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="360" y="63.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="440" y="42" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="470" y="63.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="510" y="42" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="540" y="63.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="580" y="42" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="610" y="63.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="650" y="42" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="680" y="63.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="120" y="120" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="150" y="141.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="190" y="120" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="220" y="141.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="260" y="120" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="290" y="141.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="330" y="120" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="360" y="141.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="440" y="120" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="470" y="141.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="510" y="120" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="540" y="141.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <rect x="580" y="120" width="60" height="32" rx="4" class="dg-n-n"/>
+                  <text x="610" y="141.0" text-anchor="middle" class="dg-ls">v8</text>
+                  <rect x="650" y="120" width="60" height="32" rx="4" class="dg-n-c"/>
+                  <text x="680" y="141.0" text-anchor="middle" class="dg-ls">v9</text>
+                  <text x="120" y="96" class="dg-c">差別 = 改動 + harness 的變化</text>
+                  <text x="120" y="174" class="dg-c">兩邊碰到同樣的變化，差別只剩改動</text>
+                  <text x="10" y="204" class="dg-c">灰色是 baseline v8，藍色是新版 v9，每一格是一次 run。</text>
+                </svg>
+              </div>
+              <figcaption>為什麼 baseline 要和新版同時跑？Harness 可以不發版就變。前後比時，v9 全部跑在變化之後，分數的差別混進了 harness；交錯跑時，兩邊各有一半在變化前後，差別只剩改動本身。本文的示意。</figcaption>
+            </figure>
+                  <p>交錯跑就是 v8、v9、v8、v9 輪流，讓兩邊碰到同一段時間的 harness。結果表也要記 Claude Code 與 model 的版本，實驗期間關掉自動更新（第 5 章）。</p>
+                  <p>課程把排行榜前 18 份提交各重跑 10 次：同一份提交的 10 次聚成一團，團的大小依 harness 而定，但雜訊蓋不掉好的 harness。所以結論不是「分數不可信」，而是一次的分數只是那一團裡的一個點，要看整團（第 4 章）。</p>
+                  <div class="callout example"><span class="tag">例子</span><div>
+                    <figure class="file"><figcaption>results.csv：每次 run 一列（欄位依第 4、5 章；數字是示意）</figcaption><pre><code class="lang-text">version,hypothesis,commit,claude_code,model,run,solved,cost_usd
+v8,baseline,a1b2c3d,2.1.318,opus-5.5,1,16,6.10
+v9,cache cuts cost 20% with same solves,9f8e7d6,2.1.318,opus-5.5,1,18,4.90
+v8,baseline,a1b2c3d,2.1.318,opus-5.5,2,17,6.05
+v9,cache cuts cost 20% with same solves,9f8e7d6,2.1.318,opus-5.5,2,16,5.02</code></pre></figure>
+                    <p>v8 和 v9 交錯排列；假設在跑之前就寫好，版本欄讓之後查得到兩邊用的是不是同一個 harness。</p>
+                  </div></div>
+                  <p class="tk-h">背景補充</p>
+                  <p>這在實驗設計裡叫 confounding：結果的差別同時來自兩個原因，分不開。對策是讓兩組暴露在同樣的條件下，交錯和隨機排序都是這個用意。要跑幾次，看雜訊多大、要分辨的差距多小；L7〈雜訊〉有標準誤的算法和逐題配對的比法。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「固定 Claude Code 的版本號，harness 就固定了。」版本號固定得住程式，固定不住伺服器端的 flag。課程看到的那段提醒，就是由 flag 控制、快取在 ~/.claude.json 的。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>一次 run 落在雜訊裡 → 每版跑多次，比分布。</li>
+                    <li>疊改動 → 分不出功勞 → 一次改一件事。</li>
+                    <li>Harness 會自己變 → baseline 和新版同時、交錯跑。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i4">實驗</a>〉、〈<a href="#i5">Harness</a>〉；第 3 段<a href="#s-try">動手試試</a>的 spread.py；L7〈<a href="l07.html#i4">雜訊</a>〉。進階題第 1 題算要跑幾次。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/109" target="_blank" rel="noopener">到 GitHub 回答這一題（Q3）↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b4">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="#i6">第 6、7 章</a> · 拿不回來的事</p>
+                <p class="qtext">deny 規則擋得住所有的 rm -rf 嗎？Key 只要不寫進程式碼，就不會外洩嗎？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>擋不住所有的。規則比對的是指令的文字，擋得住 agent 平常寫的 rm -rf build/，擋不住 /bin/rm 或 bash -c 這類換個寫法；所以危險的一步之前先 commit，bypass 只在隔離的 container 或 VM 用（第 6 章）。</p>
+                    <p>Key 不寫進程式碼也會外洩。進過 context 的都寫進 session 的 transcript，你打的 prompt 還存在 history.jsonl；有人把 transcript 或 log commit 進去，key 就到了 repo。第三份作業最大的來源，正是 commit 進去的 log（第 7 章）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>課程的四個修法各擋一層：</p>
+                  <ul>
+                    <li><b>先 commit。</b>退得回 repo 裡的檔案。</li>
+                    <li><b>deny 規則。</b>擋 agent 平常的那種寫法。</li>
+                    <li><b>ask 規則。</b>刪除、reset、kill 之前先問你。</li>
+                    <li><b>bypass 只在隔離的環境。</b>出事時整台丟掉。</li>
+                  </ul>
+                  <p>第二份作業裡 agent 覆寫 prompts.py，丟掉的是「哪個設定得到哪個分數」的證據，所以每次跑分之前都要 commit（第 6 章）。</p>
+                  <p>Secret 的來源依件數：打或貼進 prompt 1、10、6 件，agent 印出來 1、6、6 件，留在 commit 的 log 裡 1、2、15 件。修法是 key 放環境變數或 .env、不貼進 prompt、不讓 key 進 agent 的環境，commit 或封存之前掃一次（第 7 章）。</p>
+                  <p>為什麼 log 是最大的來源：Claude Code 把每一則訊息、每一次 tool call 和結果寫進 session 的 .jsonl，純文字、沒有加密；你打的 prompt 還另外存在 history.jsonl，不會自動清。這門課要求把 session 封存 commit 進 repo，所以前兩類的 key 也會跟著進 git（第 7 章）。</p>
+                  <div class="callout example"><span class="tag">例子</span><div>
+                    <figure class="file"><figcaption>.claude/settings.json 的 permissions 段（節錄第 6、7 章）</figcaption><pre><code class="lang-json">"deny": [
+  "Bash(rm -rf *)", "Bash(git reset --hard *)", "Bash(git push --force *)",
+  "Read(./.env)", "Read(./secrets/**)"
+],
+"ask": ["Bash(rm *)", "Bash(git push *)", "Bash(kill *)"]</code></pre></figure>
+                  </div></div>
+                  <p class="tk-h">背景補充</p>
+                  <p>.gitignore 只管還沒追蹤的檔案。一個檔案 commit 過之後才加進 .gitignore，舊的 commit 裡還留著它；push 出去的就要當成已經外洩。業界的做法是 credential rotation：作廢舊的 key、發新的，這比從 git 歷史裡刪乾淨可靠。GitGuardian 2026 的報告追蹤 2022 年偵測到的有效 secret，四年後還有 64% 可以用。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「把 .env 加進 .gitignore，就安全了。」它擋不住已經 commit 過的、貼進 prompt 的，也擋不住 agent 印出來、寫進 transcript 的那一份。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>Deny 規則比的是文字 → 擋常見的寫法 → 真正的退路是 commit 和隔離的環境。</li>
+                    <li>進過 context 的 → 都在 transcript 裡 → 不貼、不印、不 commit log。</li>
+                    <li>Key 外洩 → 作廢重發 → 刪 git 歷史不可靠。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i6">破壞性指令</a>〉、〈<a href="#i7">Secrets</a>〉；第 3 段<a href="#s-try">動手試試</a>的掃描腳本；L2〈<a href="l02.html#i4">權限</a>〉。進階題第 2 題寫成團隊的設定。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/109" target="_blank" rel="noopener">到 GitHub 回答這一題（Q4）↗</a></p>
+              </div>
+            </li>
+            <li class="bq" id="b5">
+              <div class="qbody">
+                <p class="qtag"><a class="ref" href="#i8">第 8、9 章</a> · session 與環境</p>
+                <p class="qtext">一個 session 開 13 天會出什麼問題？三個平行的 session，除了檔案還會在哪裡互踩？</p>
+                <details class="tk"><summary>參考答案與重點複習</summary><div class="hint takeaway">
+                  <div class="tk-ans">
+                    <p><b>答案：</b>Compaction 會丟東西。課程的例子：一個開了 13 天、壓縮過兩次的 session，學生得一再提醒 agent 之前的測試結果；另一位學生五小時前貼的回饋，compaction 之後就不見了。所以一個任務一個新 session，計畫、決定、測試結果寫進檔案（第 8 章）。</p>
+                    <p>平行的 session 還會撞 port、輸出目錄、資料庫和 CPU。課程的例子是兩個 session 搶 port 4000、一批舊的結果覆寫新的、一個 git reset 弄壞另一個 run 的程式碼。Worktree 只隔離檔案，其他要自己分（第 9 章）。</p>
+                  </div>
+                  <p class="tk-h">重點拆解</p>
+                  <p>Compaction 由 LLM 把舊對話寫成摘要。摘要之後，從硬碟重載的 CLAUDE.md 和它匯入的 NOTES.md 完整回來；只在對話裡說過的事，摘要沒留就沒了：</p>
+                  <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 214" role="img" aria-label="左右兩欄。左邊是 compaction 之前：硬碟上的 CLAUDE.md 和 NOTES.md；只在對話裡的、五小時前貼的回饋；只在對話裡的、之前的測試結果。中間一個箭頭標著 compaction。右邊是之後：CLAUDE.md 和 NOTES.md 從硬碟重載，完整回來；一段摘要，由 LLM 決定留什麼，用紅色標出；回饋和測試結果，摘要沒寫就沒了。">
+                  <defs><marker id="tk11-5-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="tk11-5-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="155" y="20" text-anchor="middle" class="dg-h">compaction 之前</text>
+                  <text x="565" y="20" text-anchor="middle" class="dg-h">之後</text>
+                  <path d="M300,114 L418,114" class="dg-link" marker-end="url(#tk11-5-ah)"/>
+                  <text x="359" y="104" text-anchor="middle" class="dg-cb">compaction</text>
+                  <rect x="10" y="36" width="290" height="48" rx="4" class="dg-n-c"/>
+                  <text x="155" y="57.0" text-anchor="middle" class="dg-l">CLAUDE.md、NOTES.md</text>
+                  <text x="155" y="74.0" text-anchor="middle" class="dg-c">硬碟上的檔案</text>
+                  <rect x="10" y="92" width="290" height="48" rx="4" class="dg-n-b"/>
+                  <text x="155" y="113.0" text-anchor="middle" class="dg-l">五小時前貼的回饋</text>
+                  <text x="155" y="130.0" text-anchor="middle" class="dg-c">只在對話裡</text>
+                  <rect x="10" y="148" width="290" height="48" rx="4" class="dg-n-b"/>
+                  <text x="155" y="169.0" text-anchor="middle" class="dg-l">之前的測試結果</text>
+                  <text x="155" y="186.0" text-anchor="middle" class="dg-c">只在對話裡</text>
+                  <rect x="420" y="36" width="290" height="48" rx="4" class="dg-n-a"/>
+                  <text x="565" y="57.0" text-anchor="middle" class="dg-l">CLAUDE.md、NOTES.md</text>
+                  <text x="565" y="74.0" text-anchor="middle" class="dg-c">從硬碟重載，完整回來</text>
+                  <rect x="420" y="92" width="290" height="48" rx="4" class="dg-n-focus"/>
+                  <text x="565" y="113.0" text-anchor="middle" class="dg-l-on">一段摘要</text>
+                  <text x="565" y="130.0" text-anchor="middle" class="dg-c-on">LLM 決定留什麼</text>
+                  <rect x="420" y="148" width="290" height="48" rx="4" class="dg-n-d"/>
+                  <text x="565" y="169.0" text-anchor="middle" class="dg-l">回饋、測試結果</text>
+                  <text x="565" y="186.0" text-anchor="middle" class="dg-c">摘要沒寫，就沒了</text>
+                </svg>
+              </div>
+              <figcaption>Compaction 之後還在的是什麼？從硬碟重載的檔案完整回來；只在對話裡說過的事，要看摘要有沒有留。課程的兩個例子都是右下那一格。依 Claude Code 的文件（2026-11），本文的示意。</figcaption>
+            </figure>
+                  <p>平行的 session 要在開工時分好三樣：一個 worktree 和 branch、一個 port、一個有名字的輸出目錄。資料庫、CPU、磁碟分不開，只能排時間，例如量延遲時不要同時跑別的。長的工作放在不會睡著的機器上，用 tmux 或 nohup 跑（第 9 章）。</p>
+                  <p>同一章的第三個陷阱是卡住時發洩。第一份作業裡，一句要它清乾淨、把 bug 修好的命令之後，agent 做了 93 次 tool call、61 分鐘。修法是換成資訊：第二次修不好就先要診斷和證據，貼確切的錯誤，說你預期什麼；官方文件也建議，糾正超過兩次就 /clear 重寫 prompt（第 8 章）。</p>
+                  <div class="callout example"><span class="tag">例子</span><div>
+                    <figure class="file"><figcaption>terminal：三個 session 各自分開（第 9 章）</figcaption><pre><code>$ claude -w exp-cache        # 自己的 worktree 和 branch
+$ PORT=4001 npm run dev      # 自己的 port
+$ mkdir -p runs/v9-cache-r3  # 自己的輸出目錄，run 有名字</code></pre></figure>
+                  </div></div>
+                  <p class="tk-h">背景補充</p>
+                  <p>兩個行程搶同一個資源，作業系統叫 contention：搶同一個 port，後來的那個綁不上；寫同一個檔案，後寫的蓋掉先寫的。Worktree 是 git 的功能，一份 .git 掛好幾個工作目錄，所以只隔離 git 管的檔案。tmux 是 terminal multiplexer：工作跑在 tmux 的 server 裡，你斷線或關掉 terminal，它照樣跑。</p>
+                  <div class="callout caution"><span class="tag">常見誤解</span><div><p>「開了 worktree，平行的 session 就互不干擾。」Worktree 只隔離檔案；port、資料庫、CPU、輸出目錄還是共用的，課程的三個碰撞例子有兩個和檔案無關。</p></div></div>
+                  <div class="tk-keys"><b>帶走這幾點</b><ol>
+                    <li>Compaction 有損 → 該記住的寫進檔案 → 一個任務一個 session。</li>
+                    <li>平行的 session → 分好 worktree、port、輸出目錄 → 共用的只能排時間。</li>
+                    <li>長的工作 → 不會睡的機器加 tmux → 斷線也不停。</li>
+                  </ol></div>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i8">Session</a>〉、〈<a href="#i9">執行環境</a>〉；L4〈<a href="l04.html#i5-4">compaction</a>〉、L3〈<a href="l03.html#i5-1">worktree 只隔離檔案</a>〉。</p>
+                </div></details>
+                <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/109" target="_blank" rel="noopener">到 GitHub 回答這一題（Q5）↗</a></p>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
+          <p class="qset-lede">這 3 題留到讀書會當天一起討論，不用先寫在 GitHub。讀完文章後，先挑一題想一想。每個回答要點下面有一行提示。不用每點都答，挑一點想清楚就可以。不知道怎麼開頭，就展開「作答範本」，照著填空。「參考觀點與追問」建議討論後再展開。</p>
+          <div class="copyrow">
+            <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L11 進階題（讀書會討論）：作業回饋與 agent 的十個陷阱" data-slides="https://cs2680.com/slides/feedback_assignment.pdf">複製進階題</button>
+            <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
+          </div>
+          <ol class="qlist">
+            <li class="dq" id="q1">
+              <div class="qbody">
+                <p class="qtag">估算 · 要跑幾次 · <a class="ref" href="#i4">第 4 章</a></p>
+                <p class="qtext">你在優化一個 agent。要分得出「多解 1 題」的進步，每一版要跑幾次？一天的機器時間和預算夠比幾組？</p>
+                <p class="qctx"><b>情境：</b>同一份程式碼在同一組任務上跑 5 次，解出 16、17、18、17、16 題。每次 run 要 40 分鐘、6 美元。你一天有 8 小時的機器時間和 150 美元。兩版都在同一台機器上依序交錯跑，避免互相干擾計時。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>先算一次 run 的雜訊有多大，再算兩版各跑 n 次時，差值的 95% 範圍有多寬。<span class="qh">提示：用 5 次的樣本標準差 σ；兩版各 n 次時，差值的標準誤是 σ × √（2 ÷ n），95% 範圍約 ±1.96 倍。</span></li>
+                    <li>找出讓範圍小於 1 題的 n，再換成時間和錢。<span class="qh">提示：一組比較是 2 × n 次 run；每次 40 分鐘、6 美元。時間和錢哪一個先用完？</span></li>
+                    <li>預算不夠時，你會先動哪一個：多跑、降低雜訊，還是換比法？<span class="qh">提示：第 4 章的迴圈、L7〈雜訊〉的逐題配對；想一下「只看翻盤的題」能省多少。</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">σ ＝ ＿＿ 題；只跑 1 次時，差值的 95% 範圍約 ±＿＿ 題，所以 ＿＿。</p>
+                  <p class="tpl">要小於 1 題，每版要 ＿＿ 次，一組比較是 ＿＿ 次 run、＿＿ 小時、＿＿ 美元；先用完的是 ＿＿。</p>
+                  <p class="tpl">預算不夠時，我會先 ＿＿，因為 ＿＿。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>σ：16、17、18、17、16 的樣本標準差是 0.84 題。只跑 1 次時，差值的標準誤是 0.84 × √2 ＝ 1.18 題，95% 範圍約 ±2.3 題，所以 16 對 18 這種差距完全在雜訊裡。</li>
+                    <li>n：要 1.96 × 0.84 × √（2 ÷ n）＜ 1，n ≥ 5.4，每版 6 次（範圍 ±0.95 題）。一組比較 12 次 run：12 × 40 ＝ 480 分鐘，正好 8 小時；12 × 6 ＝ 72 美元。先用完的是時間，一天只能比一組。</li>
+                    <li>這只保證「真的多 1 題時，觀察到的差值剛好跨過門檻」的機率約一半。要有八成把握看出 1 題的進步，n ＝ 2 × （（1.96 ＋ 0.84）× 0.84）² ≈ 11 次：22 次 run、約 14.7 小時、132 美元，要兩天。數字用 python 算過；這是常態近似，n 小的時候偏樂觀。</li>
+                    <li>先換比法再多跑。逐題配對時，兩版都過、都不過的題不帶資訊，只看翻盤的題（L7〈雜訊〉），雜訊小得多。再來是降低雜訊：固定題目、固定 harness 版本、交錯跑。最後才是多跑。</li>
+                    <li>第 4 章的提醒在這裡變成數字：只跑一次就下結論，等於接受 ±2.3 題的誤差。</li>
+                  </ul>
+                  <p><b>追問：</b>如果兩版的成本差很多（v9 每次只要 3 美元），「多解 1 題」還是唯一的判斷標準嗎？你會怎麼把成功率和成本放進同一個決定（L8〈成本公式〉）？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q2">
+              <div class="qbody">
+                <p class="qtag">設計 · 團隊的 agent 設定 · <a class="ref" href="#i2">第 2、3、6、7 章</a></p>
+                <p class="qtext">替團隊寫一份共用的 Claude Code 設定與任務範本，讓新人第一天就避開最貴的幾個陷阱。</p>
+                <p class="qctx"><b>情境：</b>團隊 8 人共用一個 monorepo，有 CI。大家都用 Claude Code，其中兩個人習慣在筆電上開 bypass。正式環境的 key 放在 repo 根目錄的 .env，沒有進 git。上個月有一個 agent 為了讓 CI 變綠，刪了兩個失敗的測試，review 時沒人發現。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>一份進 git 的 settings.json：哪些 deny、哪些 ask、Read 擋哪些路徑，bypass 怎麼處理。<span class="qh">提示：第 6 章的表與設定、第 7 章的 Read deny；哪些設定要放在個人改不掉的那一層？</span></li>
+                    <li>一份任務範本：終點、不變量、證據各一行，指出擋住上個月事故的是哪一行。<span class="qh">提示：第 2 章的三部分；「CI 變綠」為什麼不夠當終點？</span></li>
+                    <li>兩道不靠人記得的檢查：一道在 agent 結束前，一道在 merge 前。<span class="qh">提示：第 3 章最後一段的 Stop hook；CI 裡怎麼偵測 tests/ 底下有檔案刪掉或改了？</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl" data-inline>settings.json：deny ＿＿；ask ＿＿；Read 擋 ＿＿；bypass ＿＿，這幾行放在 ＿＿ 那一層。</p>
+                  <p class="tpl">任務範本：終點 ＿＿；不變量 ＿＿；證據 ＿＿。擋住上個月事故的是 ＿＿ 那一行。</p>
+                  <p class="tpl">Agent 結束前用 ＿＿ 檢查 ＿＿；merge 前在 CI 用 ＿＿ 檢查 ＿＿。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>設定：deny 放 rm -rf、git reset --hard、git push --force；ask 放其他的 rm、git push、git clean、kill；Read deny 放 ./.env、./.env.*、./secrets/**；加 disableBypassPermissionsMode。官方文件說這類設定放在 managed settings 時個人改不掉，團隊規則就該放那裡。</li>
+                    <li>Key：正式環境的 key 從開發用的 .env 移出去，開發只用範圍小、可以隨時作廢的測試 key；.env 不進 git，也不進 session 封存。</li>
+                    <li>範本：終點寫「指定的測試通過，貼出不經 pipe 的完整輸出和 exit code」；不變量寫「tests/ 既有的測試不准修改或刪除，要改先問」；證據寫「指令、輸出、diff 摘要，回報分驗證過與假設」。擋住上個月事故的是不變量那一行，因為「CI 變綠」本身就是可以鑽的指標。</li>
+                    <li>機制：Stop hook 在 agent 結束前跑測試，並用 git diff --name-status 檢查 tests/，有刪除或修改就 exit 2，不准結束（L6〈驗證〉的寫法）。CI 加一個 job：git diff --diff-filter=DM --name-only origin/main...HEAD -- tests/ 有輸出時，要一位人類核准才能 merge。</li>
+                    <li>Pre-commit 加一道 secret 掃描（第 3 段動手試試的腳本，或 gitleaks 這類工具），它也只是第一道網。</li>
+                  </ul>
+                  <p><b>追問：</b>需求真的變了、測試本來就該改時，誰核准？這個例外流程本身會不會變成新的漏洞？</p>
+                </div></details>
+              </div>
+            </li>
+
+            <li class="dq" id="q3">
+              <div class="qbody">
+                <p class="qtag">團隊實務 · 誰抓到錯 · <a class="ref" href="#i1">第 1、3 章</a></p>
+                <p class="qtext">在你的團隊量一個月：agent 造成的錯，最後是誰抓到的？用這個數字決定先補哪一道檢查。</p>
+                <p class="qctx"><b>情境：</b>團隊大部分的 PR 由 coding agent 起草。你想知道錯誤在哪一關抓到：寫的人自己、agent 自己（跑測試發現）、另一個 agent（review 的 subagent）、CI、人工 review、上線後的使用者。現在沒有任何紀錄。</p>
+                <div class="qcover"><b>回答時請涵蓋</b>
+                  <ul>
+                    <li>怎麼記：在哪裡記、記哪些欄位，讓記錄的成本低到大家願意填。<span class="qh">提示：課程只分四類，你的團隊多了 CI 和上線後；PR template 的一個欄位，或 incident 的 label。</span></li>
+                    <li>怎麼讀：一個月後，哪一類的比例上升代表什麼。<span class="qh">提示：第 1 章：學生 61% → 33%、評分的 run 4.5% → 22%；越往後抓到，修的成本越高。</span></li>
+                    <li>怎麼用：抓到最多的那一關，要往前移一關，該補什麼。<span class="qh">提示：第 3 章的四關、第 2 章的不變量；能做成機制的優先。</span></li>
+                  </ul>
+                </div>
+                <details class="qstart"><summary>作答範本</summary><div class="hint">
+                  <p class="tpl">我們在 ＿＿ 記，欄位是 ＿＿、＿＿、＿＿。</p>
+                  <p class="tpl">如果 ＿＿ 的比例上升，代表 ＿＿；如果 ＿＿ 上升，代表 ＿＿。</p>
+                  <p class="tpl">目前最多的是 ＿＿，我們先補 ＿＿，讓它在 ＿＿ 就抓得到。</p>
+                </div></details>
+                <details><summary>參考觀點與追問</summary><div class="hint">
+                  <ul>
+                    <li>記：PR template 加一個選填欄位「這個 PR 修了 agent 的哪個錯？誰發現的？」，選項是自己、agent 的測試、review agent、CI、人工 review、上線後；incident 的事後檢討加同樣的 label。只在有錯時填，成本最低。</li>
+                    <li>讀：CI 和上線後的比例上升，代表檢查往後移了，課程裡評分的 run 從 4.5% 升到 22% 是同一個訊號。Agent 自己抓到的比例上升是好事，代表終點和測試寫得好。人工 review 抓到的最多，代表機器篩不掉，review 會變成瓶頸（L3〈人〉）。</li>
+                    <li>用：CI 抓到最多，就把同一個檢查搬進 agent 的 Stop hook，提早到它結束之前。上線後抓到最多，多半缺測「看得到的行為」的檢查（第 3 章第三關）。人工 review 抓到最多，把重複出現的那類錯寫成不變量或 lint。</li>
+                    <li>記下 model 和 Claude Code 的版本：一個月內換了 harness，比例的變化可能來自它，不是來自你的流程（第 5 章）。</li>
+                  </ul>
+                  <p><b>追問：</b>這個比例會不會變成新的 Goodhart 指標？大家為了讓「自己抓到」好看而少報，要怎麼設計才不會？</p>
+                </div></details>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <textarea class="copybox" id="copy-fallback" rows="8" readonly hidden aria-label="討論題文字，可手動複製"></textarea>
+
+        <h3 class="subhead">自我檢查</h3>
+        <div class="quiz">
+          <details>
+            <summary>pytest -q | tail -5 的 exit code 是誰的？怎麼讓失敗不會在 pipe 裡消失？</summary>
+            <div class="answer"><p>是 tail 的，所以 pytest 失敗時通常還是 0。不經 pipe 直接跑；寫成腳本時開頭加 set -o pipefail，或讀 ${PIPESTATUS[0]} 拿到 pytest 自己的 exit code（第 3 章）。</p></div>
+          </details>
+          <details>
+            <summary>Agent 用 sed -i 改壞了一個檔案。按兩次 Esc 開 rewind 選單、選 Restore code，檔案會回來嗎？</summary>
+            <div class="answer"><p>不會。Checkpoint 只追蹤檔案編輯 tool 的改動；那段時間如果只有 Bash 改過檔案，選單連 Restore code 都不會出現（官方文件，2026-11）。要靠事先的 git commit（第 5、6 章）。</p></div>
+          </details>
+          <details>
+            <summary>同一份程式碼跑三次得 16、17、18 題；新版跑一次得 18 題。可以說新版比較好嗎？</summary>
+            <div class="answer"><p>不行。18 題還在舊版自己的範圍裡。每版在同一組任務上跑不只一次、比分布，門檻在跑之前定，兩版交錯跑（第 4、5 章）。</p></div>
+          </details>
+        </div>
+        <div class="submit" id="s-submit">
+          <h3 class="subhead">到 GitHub 寫你的答案</h3>
+          <p class="lede">這堂一串，放在 GitHub Issues。讀完文章後，把上面的 5 題基礎題寫成一則留言，用 Q1 到 Q5 當小標。進階題不用先寫，讀書會當天一起討論。</p>
+          <div class="copyrow gh-row">
+            <a class="copybtn" href="https://github.com/chihmingyang/cs2680/issues/109" target="_blank" rel="noopener">到這堂的討論串 ↗</a>
+            <a class="ghostbtn" href="https://github.com/chihmingyang/cs2680/issues" target="_blank" rel="noopener">全部講次的討論串 ↗</a>
+          </div>
+          <ul class="limits gh-how">
+            <li>留言要先登入 GitHub。看討論不用登入。</li>
+            <li>一人一則：討論串裡有回覆範本，複製後填上 Q1 到 Q5。要補充就編輯自己那一則。</li>
+            <li>回應別人：按那一則「⋯」裡的 Quote reply，或寫 @對方的帳號。附件直接拖進留言框。</li>
+            <li>討論是公開的：任何人都看得到內容和你的 GitHub 帳號。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ===================== 3 動手試試 ===================== -->
+      <section class="part" id="s-try">
+        <header class="part-head">
+          <p class="kicker">3 · 動手試試</p>
+          <h2>照著做一次</h2>
+          <p class="lede">三個練習都在本文的環境實際跑過，輸出照實貼上；Claude Code 的部分依 2026 年 11 月的官方文件。點開才會展開。</p>
+        </header>
+        <div class="exlist">
+          <details class="ex">
+            <summary>讓 pipe 吃掉一個失敗，再把它找回來</summary>
+            <div class="exbody">
+              <p>第 3 章的第一、二關。先建一個有一個失敗測試的專案。需要 Python 和 pytest。</p>
+              <figure class="file"><figcaption>terminal：建一個有一個失敗測試的專案</figcaption><pre><code>$ mkdir -p demo/tests &amp;&amp; cd demo
+$ cat &gt; tests/test_login.py &lt;&lt;'EOF'
+def test_valid_token():
+    assert True
+
+def test_expired_token():
+    assert "expired" == "valid"
+EOF</code></pre></figure>
+              <figure class="file"><figcaption>terminal：四個指令，輸出照實貼上（bash 5.2、pytest 9.1.1，2026-11-06）</figcaption><pre><code>$ pytest -q tests | tail -1; echo "exit=$?"
+1 failed, 1 passed in 0.01s
+exit=0                                  # tail 的 exit code：失敗消失了
+$ pytest -q tests | tail -1; echo "pytest exit=${PIPESTATUS[0]}"
+1 failed, 1 passed in 0.01s
+pytest exit=1                           # PIPESTATUS[0] 是 pipe 第一段的 exit code
+$ set -o pipefail
+$ pytest -q tests | tail -1; echo "exit=$?"
+1 failed, 1 passed in 0.01s
+exit=1                                  # pipefail：任何一段失敗，整條就失敗
+$ pytest -q tests -k refresh; echo "exit=$?"
+
+2 deselected in 0.00s
+exit=5                                  # 篩選打錯：一個測試都沒跑，也沒有任何 FAILED</code></pre></figure>
+              <p>第一行看得到「1 failed」，exit code 卻是 0。Agent 只看 exit code 時，這一次就算通過。最後一行最危險：畫面上沒有失敗，但一個測試都沒跑。</p>
+              <p>把這個習慣寫進 CLAUDE.md，agent 每個 session 都會讀到。真正要保證的事，再交給 Stop hook（L6〈<a href="l06.html#i2-3">驗證</a>〉）：</p>
+              <figure class="file"><figcaption>CLAUDE.md：把這個習慣交代給 agent（本文擬的寫法）</figcaption><pre><code class="lang-md">## Testing
+- Run tests as `pytest -q tests` with no pipe. Report the full output and the exit code.
+- Exit code 5 means no tests ran. Treat it as a failure, not a pass.</code></pre></figure>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>每版跑 5 次，比分布，不比一個分數</summary>
+            <div class="exbody">
+              <p>第 4 章的習慣。把每次 run 的分數記成一張表，再比兩版的差。差值的 95% 範圍用 bootstrap 估：從每版的 5 次裡重抽 5 次，算一次平均的差，重複一萬次，取中間的 95%。</p>
+              <figure class="file"><figcaption>runs.csv：三個版本各跑 5 次（示意的數字，同第 4 章的圖）</figcaption><pre><code>version,run,solved
+v8,1,16
+v8,2,17
+v8,3,18
+v8,4,17
+v8,5,16
+v9,1,18
+v9,2,16
+v9,3,17
+v9,4,18
+v9,5,17
+v10,1,19
+v10,2,20
+v10,3,19
+v10,4,18
+v10,5,20</code></pre></figure>
+              <figure class="file"><figcaption>spread.py</figcaption><pre><code class="lang-py">import csv, random, statistics, sys
+
+THRESHOLD = 1.0          # decided before the runs: a gain under 1 task does not count
+runs = {}
+for row in csv.DictReader(open(sys.argv[1])):
+    runs.setdefault(row["version"], []).append(int(row["solved"]))
+
+for v, xs in runs.items():
+    print(f"{v:4s} n={len(xs)} mean={statistics.mean(xs):.1f} "
+          f"min={min(xs)} max={max(xs)} runs={xs}")
+
+def compare(base, new, reps=10000, seed=0):
+    rng = random.Random(seed)
+    a, b = runs[base], runs[new]
+    diffs = sorted(statistics.mean(rng.choices(b, k=len(b))) -
+                   statistics.mean(rng.choices(a, k=len(a))) for _ in range(reps))
+    lo, hi = diffs[int(0.025 * reps)], diffs[int(0.975 * reps)]
+    d = statistics.mean(b) - statistics.mean(a)
+    ok = lo &gt; 0 and d &gt;= THRESHOLD
+    print(f"{new} vs {base}: diff {d:+.1f}, 95% CI [{lo:+.1f}, {hi:+.1f}] -&gt; "
+          + ("keep" if ok else "not shown"))
+
+compare("v8", "v9")
+compare("v8", "v10")</code></pre></figure>
+              <figure class="file"><figcaption>terminal：python3 spread.py runs.csv 的輸出（本文實際跑的，Python 3.13）</figcaption><pre><code>$ python3 spread.py runs.csv
+v8   n=5 mean=16.8 min=16 max=18 runs=[16, 17, 18, 17, 16]
+v9   n=5 mean=17.2 min=16 max=18 runs=[18, 16, 17, 18, 17]
+v10  n=5 mean=19.2 min=18 max=20 runs=[19, 20, 19, 18, 20]
+v9 vs v8: diff +0.4, 95% CI [-0.6, +1.2] -&gt; not shown
+v10 vs v8: diff +2.4, 95% CI [+1.4, +3.2] -&gt; keep</code></pre></figure>
+              <p>只看第一次 run，v9 比 v8 多 2 題。看 5 次，差值的範圍跨過 0，看不出差別。v10 的範圍整段大於 0，平均也多過事先定的 1 題，才算數。</p>
+              <p>這裡重抽的是同一組任務的不同 run，量的是每次執行的雜訊。課程的筆記提醒，題目不夠多是另一種不確定，多跑同一組任務補不了它。逐題配對的比法在 L7〈<a href="l07.html#i4">雜訊</a>〉。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>Commit 或封存之前，掃一次 key</summary>
+            <div class="exbody">
+              <p>第 7 章的最後一道網。下面的腳本找五種常見的 key 格式，印出檔名、行號和前 10 個字元，不印整個 key。</p>
+              <figure class="file"><figcaption>scan_secrets.py</figcaption><pre><code class="lang-py">import re, sys
+from pathlib import Path
+
+PATTERNS = {
+    "anthropic": r"sk-ant-[A-Za-z0-9_-]{20,}",
+    "openai":    r"sk-proj-[A-Za-z0-9_-]{20,}",
+    "github":    r"gh[pousr]_[A-Za-z0-9]{30,}",
+    "aws":       r"AKIA[0-9A-Z]{16}",
+    "pem":       r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+}
+hits = 0
+for root in sys.argv[1:]:
+    for f in Path(root).rglob("*"):
+        if not f.is_file():
+            continue
+        for n, line in enumerate(f.read_text(errors="ignore").splitlines(), 1):
+            for kind, pat in PATTERNS.items():
+                for m in re.finditer(pat, line):
+                    hits += 1
+                    print(f"{f}:{n}: {kind}: {m.group()[:10]}...")   # never print the whole key
+print(f"{hits} possible secret(s)")
+sys.exit(1 if hits else 0)</code></pre></figure>
+              <p>本文做了一份假的 transcript：第 1 行是使用者把 key 打進 prompt，第 3 行是 agent 跑 cat .env 的結果。另外放一個假的 log。</p>
+              <figure class="file"><figcaption>terminal：對一份假的 transcript 和一個 log 掃一次（key 都是假的；輸出是本文實際跑的）</figcaption><pre><code>$ python3 scan_secrets.py proj repo; echo "exit=$?"
+proj/-home-me-a3/5f2c.jsonl:1: anthropic: sk-ant-api...
+proj/-home-me-a3/5f2c.jsonl:3: openai: sk-proj-FA...
+proj/-home-me-a3/5f2c.jsonl:3: github: ghp_FAKEFA...
+repo/assignment3/run.log:1: aws: AKIAFAKEFA...
+4 possible secret(s)
+exit=1</code></pre></figure>
+              <p>找到就回 exit 1，可以接在 pre-commit 或封存的腳本前面。在自己的機器上，對 transcript 和 repo 各掃一次：</p>
+              <figure class="file"><figcaption>terminal：在自己的機器上，封存或 commit 之前</figcaption><pre><code>$ python3 scan_secrets.py ~/.claude/projects/-home-you-myrepo    # 這個專案的 transcript
+$ python3 scan_secrets.py .                                       # 準備 commit 的 repo</code></pre></figure>
+              <p>它只是 smoke test：格式沒列到的 key、登入憑證、內部網址都掃不到。掃到之後，先作廢那把 key，再處理檔案。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 4 延伸閱讀 ===================== -->
+      <section class="wrap" id="wrap" aria-label="延伸閱讀">
+        <p class="kicker">4 · 延伸閱讀</p>
+        <h2>延伸閱讀</h2>
+        <p class="rg-intro">課程網站 11/02 這一堂沒有列 readings（2026-11-06 查）。下面五篇取自其他講次的官方清單，和這堂的陷阱直接相關：三篇來自 9/9（<a href="https://cs2680.com/readings/sep-09.html" target="_blank" rel="noopener">官方清單 9/9 ↗</a>），一篇是 9/30 的課程筆記，一篇是 10/14 列的 OWASP 清單。課程自己的回饋平台是工具，不是讀物，見第 10 章。「必讀」與「推薦」的 3 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和本文哪幾章有關，以及原文哪幾節值得看。</p>
+        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
+        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 30 分鐘：讀官方 best practices 的 Give Claude a way to verify its work 和 Manage your session 兩節，再讀 Agentic Engineering Patterns 的 Testing and QA 三章。一個講要檢查什麼，一個講怎麼檢查。</p></div></div>
+        <h3 class="rg-h">怎麼用 coding agent <small>9/9 · A first operating loop</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">Best practices for Claude Code</a><span class="rg-meta">Anthropic · 官方文件 · 2026-11 查 · 約 25 分</span></div>
+          <p class="rg-s">官方的使用手冊。第一節就是這堂的主題：給 Claude 一個它自己能跑的檢查，並要它交出證據。</p>
+          <p class="rg-g"><b>導讀</b>對照第 2、3、8 章讀驗證與 session 管理兩節。問：你上一次交給 agent 的任務，它停下來的訊號是什麼？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>官方的使用手冊。第一節就是這堂的主題：給 Claude 一個它自己能跑的檢查，並要它交出證據，不要只宣稱成功；其餘多數建議都來自 context window 很快就滿這個限制。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>第 2、3 章〈<a href="#i2">開工前</a>〉〈<a href="#i3">收工時</a>〉可以當這份文件第一節的實測：課程看到的模糊需求、刪測試、跑 0 個測試，都是文件說的「看起來完成就停」。第 8 章〈<a href="#i8">Session</a>〉的 /clear、/compact 加指示、糾正兩次就重來，以及第 5 章引用的 checkpoint 警告，也都來自這裡。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>給 Claude 一個能跑的檢查。</b>沒有檢查，「看起來完成」是唯一的訊號，你就變成驗證迴圈。測試、build 的 exit code、linter、截圖都算。</li>
+              <li><b>檢查擋住停止的強度有四級。</b>prompt 裡要求、/goal 條件、Stop hook、新 context 的 subagent 試著推翻結果；越往後越不需要你在場。</li>
+              <li><b>先 explore、plan，再 implement、commit。</b>一句話講得完的 diff 就跳過 plan。</li>
+              <li><b>Session 要主動管理。</b>Esc 中途停下；/rewind 退回或摘要一段；不相干的任務之間 /clear；同一個問題糾正超過兩次，就 /clear 用更好的 prompt 重來。</li>
+              <li><b>Checkpoint 不能取代 git。</b>它只追蹤檔案編輯 tool 的改動，Bash 和外部程序改的不算。</li>
+              <li><b>五種常見的失敗。</b>什麼都塞的 session、一再糾正、過長的 CLAUDE.md、先信任後驗證、沒有邊界的探索。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>Configure your environment 裡 MCP、skill、plugin 的小節，L2 講過；Develop your intuition。</li>
+              <li><b>值得看原文：</b>Give Claude a way to verify its work 的 before/after 表；Manage your session 整節；Avoid common failure patterns。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「有 checkpoint，就可以放心讓 agent 亂試。」文件自己警告：Bash 和外部程序的改動不在 checkpoint 裡，它不能取代 git。Agent 改走 Bash 時會怎樣，見第 5 章。</p></div></div>
+          </div></details>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://simonwillison.net/guides/agentic-engineering-patterns/" target="_blank" rel="noopener">Agentic Engineering Patterns</a><span class="rg-meta">Simon Willison · 實務指南 · 2026 · 挑 6 章約 25 分</span></div>
+          <p class="rg-s">把「怎麼證明 agent 的程式能跑」和「怎麼看懂它寫了什麼」寫成可以照做的 pattern。</p>
+          <p class="rg-g"><b>導讀</b>把 red/green TDD 和第 2 章的不變量放在一起看。問：agent 同時寫測試和實作時，誰保證測試是對的？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>Simon Willison 把 coding agent 的做法整理成有名字的 pattern，持續更新。這堂最用得上的是 Testing and QA 三章、Linear walkthroughs 和 anti-pattern：怎麼證明 agent 的程式能跑，怎麼看懂它寫了什麼。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>第 3 章〈<a href="#i3">收工時</a>〉的四關，這份指南給了做法：先看測試失敗、照使用者的方式測、證據要是跑出來的。第 8 章〈<a href="#i8">Session</a>〉的「看不懂 agent 做了什麼」，對應它的 Linear walkthroughs。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>寫程式便宜了，好程式沒有。</b>要能跑、有證據證明能跑、解對問題，責任仍在開 agent 的人身上。</li>
+              <li><b>Red/green TDD。</b>先寫測試、看它失敗，再實作到通過。跳過「看它失敗」，測試可能本來就會過。</li>
+              <li><b>新 session 第一句：First run the tests。</b>Agent 因此知道測試怎麼跑，之後更可能自己再跑。</li>
+              <li><b>測試過了不等於能用。</b>用 python -c、curl、Playwright 截圖親手操作；找到的問題再變成測試。</li>
+              <li><b>證據要是跑出來的。</b>Showboat 的 exec 記下指令和真正的輸出，agent 很難把希望發生的事寫成結果。</li>
+              <li><b>Linear walkthroughs。</b>請 agent 讀原始碼、寫一份逐段的導覽，用來看懂自己沒讀過的程式。</li>
+              <li><b>不要開自己沒 review 過的 PR。</b>好的 agentic PR 要能跑、小、有脈絡，附你自己測過的證據。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>How coding agents work，L2 講過；Annotated prompts、Appendix。</li>
+              <li><b>值得看原文：</b>Testing and QA 三章全文；Linear walkthroughs 的兩段 prompt；Anti-patterns 的五個條件。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「叫 agent 用 TDD，測試就能當標準答案。」Agent 同時寫測試和實作，兩邊可能一起錯；red 只保證測試檢查了新行為，不保證檢查對了。所以作者把手動測試和你自己的 review 放在旁邊。</p></div></div>
+          </div></details>
+          </li>
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://www.youtube.com/watch?v=EWvNQjAaOHw" target="_blank" rel="noopener">How I use LLMs</a><span class="rg-meta">Andrej Karpathy · 影片 · 2025 · 挑段約 20 分</span></div>
+          <p class="rg-s">一位重度使用者把各種 LLM 產品的用法走一遍，包含 Cursor 與 vibe coding。天天用 agent 的人當背景看。</p>
+          <p class="rg-g"><b>導讀</b>挑 1:14 前後談 Cursor 與 vibe coding 的一段。問：他在哪裡放手讓 model 做，哪裡自己看結果？</p>
+          </li>
+        </ol>
+        <h3 class="rg-h">怎麼量 <small>9/30 · Agent evaluation</small></h3>
+        <ol class="rg">
+          <li>
+          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">Agent evaluation and benchmarks</a><span class="rg-meta">CS2680 課程筆記 · 2026 · 前半約 25 分</span></div>
+          <p class="rg-s">課程自己的評估筆記：前半講怎麼評估一個 agent 系統、怎麼報告不確定性，後半是 48 個 benchmark 的目錄。</p>
+          <p class="rg-g"><b>導讀</b>只讀前半的四節，對照第 4、5 章。問：你們比較兩版 prompt 的報告裡，寫了 harness 的版本嗎？</p>
+          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
+            <div class="dg-one"><p><b>一句話：</b>課程自己的評估筆記，前半是怎麼評估一個 agent 系統，後半是 48 個 benchmark 的目錄。對這堂有用的是前半：重複跑只量得到執行的雜訊，比兩版要配對、報差值的範圍，報告要寫 harness 的版本。</p></div>
+            <p class="tk-h">跟這堂課的關係</p>
+            <p>第 4 章〈<a href="#i4">實驗</a>〉的每版跑多次、比分布，和第 5 章〈<a href="#i5">Harness</a>〉的記下版本、兩版同時跑，這份筆記給了原則。第 8 章「卡住時要證據」也呼應它的提醒：model 對自己錯誤的解釋，不是因果診斷。</p>
+            <p class="tk-h">壓縮後的重點</p>
+            <ol>
+              <li><b>分數量的是整個系統。</b>改 tool 的介面或重試的預算，分數就會動。</li>
+              <li><b>pass@k 與 pass^k 不同。</b>p ＝ 0.8、k ＝ 3 時，pass@3 是 99.2%，pass^3 是 51.2%；要逐題算再平均。</li>
+              <li><b>兩種不確定。</b>重複跑量執行的雜訊，更多不同的題目量覆蓋；同一組題目跑再多次，補不了題目的缺口。</li>
+              <li><b>比兩版要配對。</b>逐題配對做 bootstrap，報差值的範圍；兩個分數的範圍重疊，不等於檢定過差值。</li>
+              <li><b>用 trace 決定改什麼。</b>先確認題目和 grader 沒錯，保留原始的錯誤與時間戳，一次改一個原因再重跑。</li>
+              <li><b>報告要寫齊。</b>題目版本、model、prompt、harness 的 revision、預算、grader、每題跑幾次、差值的不確定性。</li>
+            </ol>
+            <p class="tk-h">原文怎麼讀</p>
+            <ul>
+              <li><b>可以跳過：</b>後半的 benchmark 目錄，當字典查；L7 整理過常見的幾個。</li>
+              <li><b>值得看原文：</b>What does the uncertainty describe?、Designing an evaluation for your agent、Use the trace to decide what to change、What to report 四節。</li>
+              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
+            </ul>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「跑得夠多次，結論就可靠。」重複跑只縮小執行的雜訊；題目太少或不像真實的任務，多跑幾次也補不回來。要推論到別的任務，得有更多、更像的題目。</p></div></div>
+          </div></details>
+          </li>
+        </ol>
+        <h3 class="rg-h">要防的 <small>10/14 · Agent safety</small></h3>
+        <ol class="rg">
+          <li>
+          <!-- PDF 下載失敗（2026-11-06，client_error），本文沒有讀到全文；發布日期依 genai.owasp.org 的資源頁，十項名稱依 Giskard 2025-12-18 的整理 -->
+          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://genai.owasp.org/download/52117/?tmstv=1765059207" target="_blank" rel="noopener">OWASP Top 10 for Agentic Applications for 2026</a><span class="rg-meta">OWASP GenAI Security Project · 風險清單 · 2025-12 · 挑段約 30 分</span></div>
+          <p class="rg-s">業界對 agentic 應用的十大風險清單。和這堂最接近的是 ASI02 tool 的誤用、ASI03 身分與權限的濫用、ASI05 非預期的程式執行、ASI09 利用人對 agent 的信任。</p>
+          <p class="rg-g"><b>導讀</b>把 ASI09 對到第 3 章，把 ASI02、ASI05 對到第 6 章。問：盲信 agent 的說法，換成安全的語言是什麼風險？</p>
+          </li>
+        </ol>
+
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與總覽">
+        <a class="prev" href="l10.html"><span>← 上一堂 L10</span>GPU 入門與 kernel 最佳化</a>
+        <a class="next" href="index.html"><span>回總覽 →</span>CS2680 觀念導讀</a>
+      </nav>
+      <p class="fineprint">本文取材自 CS2680 L11 的 slides 與下列來源，但不照 slides 的順序；標明「本文」的段落是本文的判斷，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。學生的數據是課程對同一班三份作業的統計，不是對照實驗。示意圖的數字是本文編的，圖說有標。Claude Code 的指令與設定依 2026 年 11 月的官方文件（<a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">best practices</a>、<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">checkpointing</a>、<a href="https://code.claude.com/docs/en/permissions" target="_blank" rel="noopener">permissions</a>、<a href="https://code.claude.com/docs/en/worktrees" target="_blank" rel="noopener">worktrees</a>、<a href="https://code.claude.com/docs/en/interactive-mode" target="_blank" rel="noopener">interactive mode</a>、<a href="https://code.claude.com/docs/zh-TW/claude-directory" target="_blank" rel="noopener">.claude 目錄</a>、<a href="https://code.claude.com/docs/en/install" target="_blank" rel="noopener">install</a>）。作業的內容依<a href="https://cs2680.com/assignments/index.html" target="_blank" rel="noopener">課程網站</a>。其他來源：Sonar 的 <a href="https://www.sonarsource.com/company/press-releases/sonar-data-reveals-critical-verification-gap-in-ai-coding/" target="_blank" rel="noopener">State of Code 調查</a>、GitGuardian 的 <a href="https://dev.to/gitguardian/the-state-of-secrets-sprawl-2026-ai-service-leaks-surge-81-and-29m-secrets-hit-public-github-2bgj" target="_blank" rel="noopener">State of Secrets Sprawl 2026</a> 與 <a href="https://www.scworld.com/news/ai-coding-assistants-twice-as-likely-to-leak-secrets-as-overall-leaks-rise-34" target="_blank" rel="noopener">SC Media 的報導</a>、Claude Code 的 GitHub issue <a href="https://github.com/anthropics/claude-code/issues/87575" target="_blank" rel="noopener">#87575</a> 與 <a href="https://github.com/anthropics/claude-code/issues/87971" target="_blank" rel="noopener">#87971</a>（使用者的回報）。</p>
+    </div>
+  </div>
+</main>
+</div>
+<script src="app.js"></script>
+<script src="code.js"></script>
+</body>
+</html>

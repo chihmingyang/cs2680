@@ -7,6 +7,8 @@ description: James 要把某一堂（docs/lXX.html）改成「L5 的模式」「
 
 範本是 `docs/l05.html`（2026-11-03 完成）。規則在 `guide/STYLE_ARTICLE.md` 第 0 節。L1–L8 都已改完（2026-11-03），各堂的取捨在 `guide/V7_DECISIONS.md`，之後用於新講次或重做一堂。一個 session 只改一堂，做完再開下一個；要同時改多堂，一堂一個 subagent，簡報是同目錄的 `subagent-brief.md`，整合方法見 `guide/WORKFLOW.md` H。
 
+**新講次**（沒有舊頁面，2026-11-06 L9–L11 起）：骨架用 `tools/new_lecture.py` 建，問題討論、動手試試、延伸閱讀也寫成片段（`discuss.html`、`try.html`、`wrap.html`）由 `assemble_v7.py` 一起組；第 5 步的錨點與保留段落不適用。好幾堂同時寫，一堂一個 subagent，簡報是同目錄的 `new-lecture-brief.md`，接線照 `guide/WORKFLOW.md` B5。
+
 James 的期待（2026-11-02、11-03）：
 
 - 讀完能判斷、能設計，不是記住 slides 的分類。Slides 是素材，順序和頁碼都可以不管。

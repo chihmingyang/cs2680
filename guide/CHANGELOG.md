@@ -5,6 +5,7 @@
 
 ## README.md
 
+- 2026-11-06（**新增 L9、L10、L11**，課程網站到 11/02 為止的 slides 都有頁面。編號 James 定：L9 是 10/19 LLM 入門；L10 是 10/21 GPU 入門，11/02 的 2b 是同一堂的後半，兩份 deck 合成一篇（`data-pdf` 是 2a、`data-pages-total` 96）；L11 是 11/02 的作業回饋與十個陷阱（課程排在 Part II，內容接 Part I）。10/26、10/28 的 `_protected` PDF 讀不到內容，沒有頁面。三堂由三個 subagent 同時寫，共用 checkout、各寫各的檔案，簡報是新的 `.claude/skills/idea-first-lecture/new-lecture-brief.md`；骨架用新的 `tools/new_lecture.py`，`assemble_v7.py` 多收 `discuss.html`、`try.html`、`wrap.html`，`add_lecture.py` 直接建 v7 側欄，`discuss.py` 會填新頁的 `#s-submit` 空殼，`insert_digest.py` 在 v7 新頁寫「它和本文哪幾章有關」。每堂的取捨在 `guide/V7_DECISIONS.md`，來源在 `guide/sources/l09–l11.md`。Issue：L9 #107、L10 #108、L11 #109。首頁：課程地圖加 chip、「還沒有 slides 的講次」依 2026-11-06 的時程重寫（batching 改到 11/04、speculative decoding 11/11、scheduling 11/23）、「怎麼讀」加 Part II 的順序。L2、L4 的 token 註依 L9 的實測更正：繁體中文一個字約 0.7–0.9 個 token，不是 1–2 個）
 - 2026-11-06（**省 context 與步數**：各檔第 3 行的「更新：」搬到 `guide/CHANGELOG.md`（設 `merge=union`，不再衝突；README 原本 72% 是這一行）；新增 `tools/verify.sh`，一輪檢查一步跑完；截圖改成一則訊息平行 Read 6 張；寫題目的 subagent 改成寫檔、只回報路徑；`register_repo_root` 在 claude.ai session 實測可用，repo 的 CLAUDE.md 與 skill 自動載入。Project 裡的 `guide/README.md` 換成三行指標。）
 - 2026-11-06（**新增可讀性審查流程**：WORKFLOW I、`guide/REVIEW_READABILITY.md`（checklist R1–R8、報告格式）、skill `.claude/skills/readability-review/`（含 `reviewer-prompt.md`）、`tools/review_pack.py`（把改過的章印成讀者視角的純文字，表格格子帶欄名與列名）。起因：L6 第 2 章一格「Anthropic（2026-03）：穩定偏正面。單一公司的經驗」James 看不懂，七個腳本都過；原因是腳本只檢查結構與版面，表格文字從未被任何可讀性檢查讀過，而「單一公司要寫明」的規則只說要標、沒說怎麼寫。做法照 code review：另一個 session 的 agent 只拿讀者看得到的文字，逐單位重述、標 BLOCK／NIT，BLOCK 清零才 push，最多兩輪。`check_article.py` 加表格格子的 R5「引用只有出處」、R6「保留語不在括號裡」兩條 warn；STYLE_ARTICLE 第 5 節加「表格格子也是句子」；rewrite-with-example、fact-check-extension、idea-first-lecture 三個 skill 的 push 前都接上這一步。L6 當天跑了第一次 pilot）。
 - 2026-11-03（**L1–L8 全部換成 v7**。L4 最後落地：10 章，context 的帳、管 context、設計 tool、search 與 edit、最會過期的 prompt；本文補的是 cache 穩定的排法、Lewis 倍數的條件、只給 shell 行不行、edit 的第二派；基礎題 issue #101 有留言，題目未動。全站：七堂各由一個 subagent 在 worktree 改，做法寫進 WORKFLOW H 與 skill 的 `subagent-brief.md`；每堂的取捨在 `guide/V7_DECISIONS.md`，來源查證在 `guide/sources/`。首頁改寫（開頭、怎麼讀、寫法、地圖 chip、每堂一句話與閱讀時間）；跨堂連結文字對上新章名；Part II 日期依 2026-11-03 的 cs2680.com 更新（首頁、L1、L8、STYLE 第 9 節）；L5 問題討論的說明改成讀文章）。
@@ -53,6 +54,7 @@
 
 ## WORKFLOW.md
 
+- 2026-11-06（B3 新講次改成先用 `tools/new_lecture.py` 建骨架、片段組裝；好幾堂同時寫用 `new-lecture-brief.md`，共用 checkout；B5 的 `add_lecture.py` 直接建 v7 側欄）
 - 2026-11-06（A1：claude.ai 的 session 也有 `register_repo_root`，實測可用；B3：subagent 寫檔、只回報路徑；B4、C5：用 `tools/verify.sh`，截圖一則訊息 Read 6 張；E1：更新紀錄寫進 CHANGELOG。）
 - 2026-11-03（L1–L8 都改完 v7；H 補上組裝工具與多堂同時改的做法；B3 的新講次寫成 v7）。
 - 2026-11-03（加 H：把一堂改成 v7 依想法重組）。
@@ -66,6 +68,7 @@
 
 ## STYLE_ARTICLE.md
 
+- 2026-11-06（第 0 節加「新講次」一條：L9–L11 的問題討論與摘要都連到本頁的章；第 9 節加 L9–L11，Part II 時程依 2026-11-06 的課程網站）
 - 2026-11-06（第 5 節加第 5 條「表格格子也是句子」；新增 `REVIEW_READABILITY.md` 與 skill `readability-review`：改正文後、push 前由另一個 agent 讀一遍，見 WORKFLOW I）。
 - 2026-11-03（**L1–L8 全部改完 v7**：各堂的決定見 `guide/V7_DECISIONS.md`；第 0 節加「文字裡不寫別堂的章號」；第 6 節的 v6.0 畫法現在是全站核心觀念的畫法；第 9 節 Part II 的日期依 2026-11-03 的課程網站更新）。
 - 2026-11-03（**v7.0：依想法的重要性重組**，L5 先行，見第 0 節；做法寫成 skill `.claude/skills/idea-first-lecture/SKILL.md`，畫圖用 `tools/dg.py`。James：「以最適合的方式吸收投影片的內容，不需要在文章特別寫投影片第幾頁講了什麼」。L1–L4、L6–L8 還是 v5.9／v6 的版面，逐堂改）。
@@ -108,4 +111,5 @@
 
 ## STYLE_DIGEST.md
 
+- 2026-11-06（v1.3：L9 起的新講次，「跟這堂課的關係」連到本頁的章〈`#iN`〉，不寫 slides 頁碼；`insert_digest.py` 在這種頁面把 rg-intro 那一句寫成「它和本文哪幾章有關」）
 - 2026-10-21（v1.2：「推薦」也附摘要；新增 `tools/insert_digest.py`）。對照的是 L1–L8 的 42 段摘要。

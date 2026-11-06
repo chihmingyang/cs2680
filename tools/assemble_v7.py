@@ -14,6 +14,10 @@ Fragments in the folder (notes/ is git-ignored):
   i1.html …       one <div class="idea" id="iN"> per file; h3 = <span class="idea-no">N</span>主題：主張, no a.ref
   tldr.html       the whole <section class="tldr"> … </section>
   fineprint.html  optional: the whole <p class="fineprint"> … </p>
+  discuss.html    optional (new pages, 2026-11-06): the whole <section class="part" id="s-discuss"> … </section>
+  try.html        optional: the whole <section class="part" id="s-try"> … </section>
+  wrap.html       optional: the whole <section class="wrap" id="wrap"> … </section>
+                  A new lecture starts from tools/new_lecture.py's skeleton and fills all of these.
 
 What it does:
   - replaces the tldr and #s-ideas, removes #s-arch
@@ -40,6 +44,14 @@ def clean(html):
 
 def sidenav_line(s):
     """The page's own li.sn-lec.is-here, rebuilt from the chapters. Shared with the check in test mode."""
+    line = re.search(r'<li class="sn-lec is-here">.*?</li>\n', s).group(0)
+    hdr = re.search(r'(<li class="sn-lec is-here">.*?<ol class="sn-secs">)', line, re.S).group(1)
+    return hdr + v7_secs(s) + "</ol></li>\n", line
+
+
+def v7_secs(s):
+    """The four sections of a v7 page for the sidenav: 先看這裡, 1 核心觀念 (chapters and their 小標), 2–4.
+    add_lecture.py uses it too, so a new v7 page gets this block on its first wiring (2026-11-06)."""
     ideas = s[s.index('id="s-ideas"'):s.index('id="s-discuss"')]
     parts = re.split(r'(?=<div class="idea" id="i\d+">)', ideas)[1:]
     subs = []
@@ -54,17 +66,26 @@ def sidenav_line(s):
         items = "".join(f'<li><a class="sn-sub2" href="#{sid}">{clean(st).rstrip("。")}</a></li>' for sid, st in sub2)
         nested = f'<ol class="sn-sub2s">{items}</ol>' if items else ""
         subs.append(f'<li><a class="sn-sub" href="#{iid}"><span class="sn-n">{no}</span><span class="sn-t">{short}</span></a>{nested}</li>')
-    line = re.search(r'<li class="sn-lec is-here">.*?</li>\n', s).group(0)
-    hdr = re.search(r'(<li class="sn-lec is-here">.*?<ol class="sn-secs">)', line, re.S).group(1)
 
     def sec(href, n, label):
         return f'<li><a class="sn-sec" href="#{href}" data-spy data-short="{label}"><span class="sn-n">{n}</span><span class="sn-t">{label}</span></a>'
 
-    return (hdr + sec("tldr-h", "", "先看這裡") + "</li>"
+    return (sec("tldr-h", "", "先看這裡") + "</li>"
             + sec("s-ideas", 1, "核心觀念") + f'<ol class="sn-subs">{"".join(subs)}</ol></li>'
             + sec("s-discuss", 2, "問題討論") + "</li>"
             + sec("s-try", 3, "動手試試") + "</li>"
-            + sec("wrap", 4, "延伸閱讀") + "</li></ol></li>\n"), line
+            + sec("wrap", 4, "延伸閱讀") + "</li>")
+
+
+def replace_section(s, sid, frag_text):
+    """Swap one whole <section …id="sid">…</section> for a fragment holding the same section (new pages)."""
+    a = s.index(f'id="{sid}"')
+    a = s.rfind("<section", 0, a)
+    b = s.index("</section>", a) + len("</section>")
+    frag_text = frag_text.strip()
+    if f'id="{sid}"' not in frag_text[:300] or not frag_text.startswith("<section"):
+        sys.exit(f"fragment for #{sid} must be the whole <section … id=\"{sid}\"> … </section>")
+    return s[:a] + frag_text + s[b:]
 
 
 def main():
@@ -123,6 +144,12 @@ def main():
     t = frag / "fineprint.html"
     if t.exists():
         s = re.sub(r'<p class="fineprint">.*?</p>', lambda _: t.read_text(encoding="utf-8").strip(), s, count=1, flags=re.S)
+
+    # new pages (tools/new_lecture.py): the other three sections can come from fragments too
+    for name, sid in (("discuss.html", "s-discuss"), ("try.html", "s-try"), ("wrap.html", "wrap")):
+        t = frag / name
+        if t.exists():
+            s = replace_section(s, sid, t.read_text(encoding="utf-8"))
 
     new, old = sidenav_line(s)
     s = s.replace(old, new)

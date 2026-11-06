@@ -6,9 +6,9 @@
 
 - 讀書會站台「CS2680 觀念導讀」：https://chihmingyang.github.io/cs2680/
 - 課程：Harvard CS2680 Modern AI Systems: Agents and System Optimizations（Fall 2026，Juncheng Yang）。課程沒有錄影，讀書會讀 slides。
-- 每一堂有四段（2026-11-03 起 L1–L8 全部如此）：核心觀念、問題討論（含 GitHub 討論串連結）、動手試試、延伸閱讀。核心觀念依想法的重要性排，不照 slides 的順序，不寫頁碼（STYLE_ARTICLE 第 0 節），課程漏掉的主題查原始來源補上，標「本文補的」。名詞在正文裡解釋，或用收合註 `details.gloss`；最多 5 題基礎題（附重點複習）、最多 3 題進階題（附提示與作答範本）、延伸閱讀導讀（必讀與推薦的每一篇附摘要；選讀、查閱不附）。
-- 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分、L7 10 章 35 分、L8 10 章 35 分。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
-- 事實會過時的地方，要改就重抓：L2、L3、L4、L6、L8 的 Claude Code 細節依 2026-11 的官方文件；L3 的 repo 依 2026-11-03（Superpowers v7.0.1、mattpocock/skills 1.3.2、Caveman 4.0.1、`deepseek-ai/dsh-superagent-prototype` 2026-10-31）；L7 的 benchmark 現況與 L8 的單價依 2026-11-03。L3 的 `#x1`（Caveman 評論查證）、`#x2`（SWE-Shift 查證）是 James 要留的本文延伸。
+- 每一堂有四段（2026-11-03 起 L1–L8 全部如此，L9 起的新講次也是）：核心觀念、問題討論（含 GitHub 討論串連結）、動手試試、延伸閱讀。核心觀念依想法的重要性排，不照 slides 的順序，不寫頁碼（STYLE_ARTICLE 第 0 節），課程漏掉的主題查原始來源補上，標「本文補的」。名詞在正文裡解釋，或用收合註 `details.gloss`；最多 5 題基礎題（附重點複習）、最多 3 題進階題（附提示與作答範本）、延伸閱讀導讀（必讀與推薦的每一篇附摘要；選讀、查閱不附）。
+- 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分、L7 10 章 35 分、L8 10 章 35 分；L9 10 章 40 分、L10 10 章 50 分、L11 10 章 35 分（2026-11-06）。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
+- 事實會過時的地方，要改就重抓：L2、L3、L4、L6、L8 的 Claude Code 細節依 2026-11 的官方文件；L3 的 repo 依 2026-11-03（Superpowers v7.0.1、mattpocock/skills 1.3.2、Caveman 4.0.1、`deepseek-ai/dsh-superagent-prototype` 2026-10-31）；L7 的 benchmark 現況與 L8 的單價依 2026-11-03。L3 的 `#x1`（Caveman 評論查證）、`#x2`（SWE-Shift 查證）是 James 要留的本文延伸。L9 的每 token KV 表依 2026-11-06 的 config.json，中文 token 數是本文用六個 tokenizer 實測（重現方法在 `guide/sources/l09.md`）；L10 的 GPU 規格與 AI 寫 kernel 的案例依 2026-11-06；L11 的 Claude Code 細節依 2026-11 的官方文件，第 5 章引的兩串 GitHub issue 到 2026-11-06 都沒有官方回覆，有變化就重抓。
 - Part I 的建議閱讀順序是 L2 → L4 → L3 → L5（2026-10-21 定）：L2、L3 會先用到 L4 才解釋的 context 代價、subagent。順序寫在首頁「怎麼讀」和 L2、L4 頁尾的 `.pager-note`。講次編號、檔名、issue label 不跟著改。
 - 成員的討論在這個 repo 的 Issues：每一堂一串，只放基礎題（2026-10-21 起；之前每一題一串，太散）。每人一則留言，`### Q1`…`### Q5` 當小標。進階題不上 GitHub，留在頁面給讀書會當天討論。
 
@@ -16,13 +16,13 @@
 
 | 東西 | 位置 | 說明 |
 |---|---|---|
-| 站台檔案 | `docs/`（index、l01–l08、l02-readings、styles.css、app.js、code.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
+| 站台檔案 | `docs/`（index、l01–l11、l02-readings、styles.css、app.js、code.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
 | 撰寫規範 | `guide/STYLE_ARTICLE.md`、`guide/STYLE_BASIC.md`、`guide/STYLE_DIGEST.md` | 寫新講次或改內容前先讀。DIGEST 是延伸閱讀裡必讀與推薦摘要的規範。 |
 | 可讀性審查 | `guide/REVIEW_READABILITY.md` | 改正文後、push 前，另一個 agent 讀一遍的 checklist 與報告格式。James 說看不懂就先回來改這份。 |
 | v7 的決定與來源 | `guide/V7_DECISIONS.md`、`guide/sources/lXX.md` | 每堂怎麼排、補、刪；外部事實的來源與查證紀錄。 |
 | 工作流程 | `guide/WORKFLOW.md` | 開工、新講次、修改、發布、讀討論。 |
 | 更新紀錄 | `guide/CHANGELOG.md` | `guide/` 各文件的更新紀錄，依文件分節，新的在最上面、一則一行。開工不必讀；要查某堂的來龍去脈就 `grep L3 guide/CHANGELOG.md`。設了 `merge=union`，不會衝突（2026-11-06 以前寫在各檔第 3 行）。 |
-| Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
+| Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
 | 成員的討論 | repo 的 Issues（每堂一串，label `L01`…） | `tools/discuss.py --digest lXX` 依題號匯出成 Markdown。 |
@@ -47,7 +47,8 @@
 | `audit.py` | 全站連結、SVG 無障礙屬性、marker id 重複、390px 與 1280px 版面、JS 錯誤。 |
 | `dg.py` | 畫圖的 helper（v6／v7 的配色與元件、重用舊圖），給 `notes/` 裡的 build script 用。 |
 | `check_diagrams.py` | 圖的幾何檢查：文字超出方塊或 viewBox、文字互相重疊、連接線穿過文字。 |
-| `assemble_v7.py` | 把 `notes/lXX/` 的章片段組回 v7 頁面：換掉 tldr 與 `#s-ideas`、拿掉 `#s-arch`、改段號、eyebrow、meta、CSS 版本，重建本頁側欄。 |
+| `assemble_v7.py` | 把 `notes/lXX/` 的章片段組回 v7 頁面：換掉 tldr 與 `#s-ideas`、拿掉 `#s-arch`、改段號、eyebrow、meta、CSS 版本，重建本頁側欄。新講次還可以給 `discuss.html`、`try.html`、`wrap.html`，整段換掉（2026-11-06）。 |
+| `new_lecture.py` | 新講次的 v7 骨架（2026-11-06）：head、topbar、本頁側欄、meta、問題討論外框（複製按鈕的 data-title、data-slides 已填好）、延伸閱讀的 legend、pager。一堂兩份 deck 時給兩次 `--pdf`、`--pages`。 |
 | `page_text.py` | 把頁面印成純文字，圖印成 aria-label，連結印出目標；也能印全部 id。讀大頁面用。 |
 | `anchor_map.py` | 錨點對照表：`list` 哪些 id 有別頁連進來，`check` 對照表是否完整，`apply` 改別頁的連結（一個檔案只套一次）。 |
 | `shot_article.py` | 截圖：架構圖（亮／暗）、第一題基礎題、第一題進階題、手機版。看的時候一則訊息平行 Read 6 張。 |

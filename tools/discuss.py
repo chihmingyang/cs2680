@@ -223,6 +223,10 @@ def write_links(lec, url):
     s, n = re.subn(r'<div class="submit" id="s-submit">.*?</ul>\s*</div>',
                    lambda _: submit_section(lec, url), s, count=1, flags=re.S)
     if n != 1:
+        # a new page has only the empty shell (STYLE_ARTICLE「到 GitHub 寫你的答案」; first hit 2026-11-06, L9)
+        s, n = re.subn(r'<div class="submit" id="s-submit">\s*<h3 class="subhead">[^<]*</h3>\s*</div>',
+                       lambda _: submit_section(lec, url), s, count=1)
+    if n != 1:
         raise SystemExit(f"{path.name}: no div.submit#s-submit inside #s-discuss")
     if s != s0:
         path.write_text(s, encoding="utf-8")

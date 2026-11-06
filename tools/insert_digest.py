@@ -94,6 +94,10 @@ def fix_intro(html: str) -> str:
     n = len(levels)
     who = "「必讀」與「推薦」" if {"3", "2"} <= set(levels) else ("「推薦」" if "2" in levels else "「必讀」")
     sent = who + INTRO_SENT.format(n=n)
+    # 2026-11-06: new v7 pages (L9–) tie each digest to the article's chapters, not to slide pages
+    digests = "".join(re.findall(r'<details class="rg-dg">.*?</details>', html, re.S))
+    if 'id="s-arch"' not in html and not re.search(r"slides? ?p\.\d", re.sub(r"<[^>]+>", "", digests)):
+        sent = sent.replace("它和 slides 重疊的部分", "它和本文哪幾章有關")
     m = re.search(r'(<p class="rg-intro">)(.*?)(</p>)', html, re.S)
     if not m or n == 0:
         return html

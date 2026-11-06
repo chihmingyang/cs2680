@@ -58,3 +58,31 @@ L1–L8 改成 v7 時，每一堂怎麼排份量、補了什麼、刪了什麼�
 - **排法。** 一定要會（1 公式與分母、2 重讀、3 prompt cache、4 淨節省）：都改變先動哪裡，算錯了後面每個決定都錯；cache 無損，沒開差 8.5 倍以上，所以排在所有槓桿前。要用時會做（5 少走幾步、6 model／effort／output）：先無損後有損；要不要 LLM 最上游，排第一；output 只佔 8–22%，降到最後。要防的（7 上限）：失敗的錢可佔大半，花了拿不回來。另一本帳（8 時間）：另一個目標，能從重送推出的槓桿併成一張表。底層（9 harness 邊界）：不常改，改起來貴。需要時查（10）：不改變決定，又會過時。
 - **補。** 分母與邊際成本（Voss 2026-07）：課程公式只算花費；依它的表，每次便宜三成的 model 每個成功任務貴約 1.9 倍（本文算的比例）。Cache 的帳與 TTL（TraceLab 2026-06、Don't Break the Cache 2026-01；官方定價 cache read 降到 0.05×、0.025×）：課程只給單價和一條建議；結論從先縮 context 改成先保命中。Harness 的三個問題（Managed Agents 2026-04，單一公司）：課程用 agent 數量選架構，這是反例。
 - **刪。** 論文逐條說明、speculation 分類、八個 harness 全表收成查閱。單價與 model 價目收進 `#t2`，寫查詢日期。加速四類槓桿的條列換成一張時間 × 錢的表。全班 turn／step 分布只留數字。架構比較表 8 列縮成 5 列。
+
+## 新講次（2026-11-06 起）
+
+L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫（簡報 `.claude/skills/idea-first-lecture/new-lecture-brief.md`），主場表多了三列：L9 model 的帳、L10 GPU 的帳、L11 用 agent 的證據與習慣。新講次的基礎題與進階題都連到本頁的章，不寫 slide 頁碼。
+
+## L9 LLM 的結構與 serving 的帳（10 章，40 分）
+
+- **排法。** 一定要會（1 request 的一生、2 骨架與參數、3 attention 與 KV cache、4 三個數字）：每個 serving 與買 GPU 的決定都從這裡算，算錯就是買錯硬體、答應錯的 SLA，難挽回也推不出來；章內照依賴排，先兩段，再零件，最後算帳。選 model 時看的（5 MoE、6 改 KV 的架構、7 現在的 model、8 tokenizer）：機制能從第 4 章推，但要有數字才能選；model 名會過時，原則寫正文、表格標查詢日。自己架時會調的（9 sampling）：改錯便宜、託管 model 已經不給調。需要時查（10）：looped、diffusion、MTP 能從三個數字推出，也還不是主流。
+- **補。** 每 token 的 KV（第 7 章）：課程只算 Llama 3 70B；六個 open-weight model 依官方 config.json 算出 24 到 320 KiB，差 13 倍，結論變成「參數多的 model 可能放得下更多長 context 的人」（計算，不是量測）。中文的 token 數（第 8 章）：slides 的「3–4 字元一個 token」是英文；本文用六個 tokenizer 實測本站 50,315 個繁體字，0.71–0.91 token／字（GPT-4 的 cl100k 是 1.36），繁體比同段簡體多 6–23%，和 DeepSeek、Qwen 的官方經驗值與 Bailong（2024）一致。Token 預算併進第 4 章，不標本文補的（方法來自延伸閱讀的 kipply）。
+- **刪。** RMSNorm、pre-norm、√dk 收成名詞註。690 GB 的 S、FlashAttention、roofline 一句帶過連 L10。Continuous batching 只寫 slides 講的（11/04 的主場）。Temperature 0 不保證相同連 L1，不重講。
+- **更正 slides。** 320 KB 實際是 327,680 byte，所以 64 個 request 是 1,819 GB，不是 1,779 GB（頁面註明）；「Serving is hard」的 token ID 是示意，改用 Llama 3 tokenizer 的實際輸出。
+
+## L10 GPU 入門與 kernel 最佳化（10 章，50 分）
+
+- **兩份 deck 一篇。** 10/21 的 2a 與 11/02 的 2b 封面是同一堂，James 定合成一篇。
+- **排法。** 一定要會（1 GPU 的設計、2 roofline、3 decode、4 量測）：瓶頸在 bytes 還是 FLOP，決定之後每種改法有沒有用；拿 nvidia-smi 做容量規劃會買錯 GPU，代價大又看不出來；第 1 章是第一次接觸 GPU 的讀者的前提。底層（5 晶片裡面）：解釋 peak 只屬於矩陣乘法、頻寬靠 bytes in flight，不改變多數人的決定，但第 7、8 章要用；規格會過時，收成查閱。要用時會做（6 程式、7 kernel 之內、8 kernel 之間）：只有要寫或選 kernel 的人用到；先講抽象層回答要不要往下寫，手法的名字會過時，結論收成「選有這些手法的 engine」。要防的（9 AI 寫的 kernel、10 一張卡之外）：錯了事後才發現，代價大。
+- **補。** AI 寫的 kernel 怎麼量錯（第 9 章整章）：課程只有一句提醒；METR、Sakana 與 robust-kbench（加速從 3.13x 降到 1.49x）、CUDA-L1（另開 stream 騙過計時）、KernelBench v0.1、Hacker-fixer loop（2025-02 到 2026-06），收成五個驗收檢查，第一個是 roofline 的 speed of light。MoE 把 batch 分給各 expert（第 3 章一節）：slides 的 batching 結論只對 dense 成立；DeepSeek 2025-02 的推論系統說明（EP144）與 2025-12 的 A100 量測。
+- **刪。** 課務；GPU 世代、各精度 ridge 表、TMA／TMEM、其他晶片、編譯到 SASS 收成查閱（會過時）；最佳化清單併成第 7 章開頭的四個目標；batching、quantization、speculative decoding 各一句（後面的講次）。
+- **更正 slides。** Little's law 那頁是 4 KB 不是 512 B；A100 到 Rubin 的頻寬是 10.8 倍不是約 9 倍，BF16 的 ridge 也沒有一路右移；MFU 22% 的分母是 FP8 peak，換成 BF16 是 43%；故障原因的 8%／17%／30% 用 Llama 3 論文 Table 5 確認。
+- **待決定。** 50 分鐘比其他堂長；要縮的話，第 5 章可以整章改成查閱（約省 4 分）。
+
+## L11 作業回饋與 agent 的十個陷阱（10 章，35 分）
+
+- **排法。** 一定要會（1 數據、2 開工前定義做完、3 收工時看證據）：最上游，每個任務都碰到，錯了沒有警告；學生自己抓到的錯從 61% 掉到 33%。比較版本時（4 實驗、5 harness 會變）：第三份作業最多人踩，錯了白做好幾天、結論相反，但只在比較時發生。要防的（6 破壞性指令、7 secrets）：拿不回來，但設定一次就生效，所以排在每天的習慣前面（依「能不能挽回」，和 slides 的 P 編號不同）。每天的習慣（8 session、9 執行環境）：能挽回，代價是時間；P9 併進第 8 章，P10 與派工成本併進第 9 章。需要時查（10）：P1–P10 一覽、數據的讀法、學生想要的功能對到現在的做法。機制在 Part I 講過的都只帶一兩句再連過去。
+- **補。** Sonar 2026-01（1,100 多位開發者，96% 不完全信任、48% 每次都檢查）：課程只有學生的資料，補上後結論從「要小心」變成「檢查要做成機制」（廠商的自陳調查）。GitGuardian 2026 與官方文件：Claude Code 署名的 commit 外洩率 3.2% 對全體 1.5%，transcript 是明文、history.jsonl 不會自動清（相關分析，不是對照實驗）。Bash 優先的公開紀錄：GitHub issue #87575、#87971 是使用者回報，沒有官方回覆；加上 checkpointing 文件，補出第二個後果：綁在 Edit／Write 的安全網會安靜失效，真正的 checkpoint 是 git。
+- **刪。** 對應不清楚的數字不用（permission mode 比例、失敗類型比例、兩個中位數、P8 的順序）；疊改動與只看一次 run 只用總表的數字。學生的願望清單收進目錄；flag 名、model 範圍、流程圖收成查閱（會過時）；課務刪掉。
+- **語氣。** 第 5 章寫成「slides 的結論是 Anthropic 刻意做的實驗」，公開紀錄另段寫，不推測原因。
+- **延伸閱讀。** 課程沒有列 readings；五篇取自 9/9、9/30、10/14 的官方清單，rg-intro 寫明。OWASP 的 PDF 抓不到，只列選讀。

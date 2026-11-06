@@ -61,9 +61,16 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
 
 ### B3. 寫頁面
 
-1. 依 `STYLE_ARTICLE.md` 寫 `docs/l09.html`。範本是 `docs/l05.html`（v7，四段，核心觀念依想法的重要性排）。目錄（`aside.sidenav`）照抄範本即可；`add_lecture.py` 替新頁建的展開目錄還是舊格式，B5 跑完後再跑一次 `tools/assemble_v7.py` 重建（用法見檔頭）。
-2. 第 3 段的基礎題依 `STYLE_BASIC.md`，直接寫在同一個檔案裡。
-3. 頁面很長，分段寫：先寫骨架和第 1–2 段，再寫第 3 段，最後第 4 段和延伸閱讀。可以把第 3 段的基礎題和進階題交給兩個 subagent 平行寫：每個 subagent 把 HTML 片段寫進檔案（`notes/l09/qset-basic.html`、`notes/l09/qset-adv.html`），只回報路徑和要主線確認的事，不要把 HTML 貼在回報裡；主線用 script 把檔案接回頁面。HTML 貼在回報裡，同一段就會生成兩次（subagent 一次、主線 Edit 一次），而生成是 session 裡最慢的部分。
+1. 先建骨架（2026-11-06 起）：
+   ```bash
+   python3 -I tools/new_lecture.py l09 --date 2026-10-19 --part "Part II" \
+       --title "中文標題" --en "英文原標題" --pdf 9_llm_serving_basics_1.pdf --pages 51
+   # 一堂有兩份 deck（L10）：--pdf、--pages 各給兩次；data-pdf 是第一份，data-pages-total 是總和
+   cp docs/l09.html notes/l09/base.html
+   ```
+   骨架從 `docs/l05.html`（v7 範本）複製 head、topbar、側欄、問題討論的外框、延伸閱讀的 legend、pager。
+2. 依 `STYLE_ARTICLE.md` 寫片段放 `notes/l09/`：`head.html`、`i1.html`…、`tldr.html`、`fineprint.html`，以及整段的 `discuss.html`（基礎題依 `STYLE_BASIC.md` 的 v7 一節）、`try.html`、`wrap.html`。組回頁面：`python3 -I tools/assemble_v7.py docs/l09.html notes/l09 --base notes/l09/base.html`。
+3. 頁面很長，分章寫。交給 subagent 時（基礎題和進階題各一個，或好幾堂同時寫、一堂一個），每個 subagent 把 HTML 寫進檔案（片段放 `notes/lXX/`），只回報路徑和要主線確認的事，不要把 HTML 貼在回報裡：HTML 貼在回報裡，同一段就會生成兩次（subagent 一次、主線 Edit 一次），而生成是 session 裡最慢的部分。好幾堂同時寫時，簡報是 `.claude/skills/idea-first-lecture/new-lecture-brief.md`：共用同一個 checkout（新頁面不改既有檔案，所以不需要 worktree），每個 subagent 只寫自己的 `docs/lXX.html`、`notes/lXX/`、`guide/sources/lXX.md`；跨新講次的連結先只連頁面，主線整合時補錨點（2026-11-06 L9–L11 這樣做）。
 
 ### B4. 驗證這一頁
 
@@ -103,7 +110,7 @@ python3 -I tools/discuss.py docs/l09.html --dry   # 看要開哪幾串
 python3 -I tools/discuss.py docs/l09.html         # 開 issue，把連結寫進頁面
 ```
 
-`add_lecture.py` 會改：每一頁的目錄、`LX / N`、L8 的下一堂連結、首頁「已公開的講次」、首頁「還沒有 slides 的講次」。
+`add_lecture.py` 會改：每一頁的目錄、`LX / N`、上一堂的下一堂連結、首頁「已公開的講次」、首頁「還沒有 slides 的講次」（刪掉同日期的那一列）。v7 頁面的展開目錄直接建成 v7 格式（2026-11-06），不必再跑 `assemble_v7.py`。好幾堂一起接時依講次順序跑，每堂一次。
 
 `discuss.py` 會：替這堂開一個 issue（label `L09`；內文是基礎題 Q1–Q5、每題的參考答案與 slide 連結、回覆範本）；在每題基礎題下面寫「到 GitHub 回答這一題（Qn）」連結，進階題不寫；重建第 3 段末尾的「到 GitHub 寫你的答案」區塊。跑第二次不會重開。
 
