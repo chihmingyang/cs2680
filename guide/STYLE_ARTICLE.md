@@ -214,6 +214,7 @@
 - 舊 class（L1–L4 基礎題答案裡的圖還在用，不要用在新圖）：`dg-box`、`dg-box-soft`、`dg-box-accent`、`dg-frame`、`dg-line`、`dg-soft`、`dg-dash`、`dg-accent`、`dg-fill-ink`、`dg-fill-accent`、`dg-fill-soft`、`dg-t`、`dg-tb`、`dg-ts`、`dg-tm`、`dg-ta`。
 - marker id 加前綴，全站不能重複：文章本文用 `lNc-`（L9 → `l9c-ah`），基礎題答案用 `tkN-<題號>-`（L9 第 2 題 → `tk9-2-ah`）。
 - 箭頭要有標籤。舊畫法的文字 11–13px。viewBox 寬 600–760。數據圖照比例畫，標籤寫實際數值。
+- **數字表換成圖（2026-11-06）**：要讀者看出一組數字的趨勢、轉折或最佳點（「省下的越來越少」「最划算」），用照比例的橫條圖代替表：一列一個選項，標籤寫實際數值，最佳的那列用 `dg-l-key`／`dg-k`。結論說「最划算」時，兩邊的成本都要畫進圖（疊成兩色），不然圖上最短的那條會和結論相反。中間值（每段全對、平均跑幾次）放在列名下一行的 `dg-c`。例子：L6 3.1〈每段切幾步最划算〉。
 
 ## 6b. Code snippet（`figure.file`）
 
