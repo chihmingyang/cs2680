@@ -63,7 +63,7 @@
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/6_agent_design_3.pdf" target="_blank" rel="noopener">6_agent_design_3.pdf ↗</a></li>
       <li><span class="k">頁數</span>31</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 30 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 35 分鐘</span></li>
       <li><span class="k">註與延伸</span><span class="deep-time">約 8 分鐘</span>，收合</li>
       <li><span class="k">全部展開</span><span class="full-time">約 60 分鐘</span></li>
     </ul>
@@ -303,7 +303,7 @@ run 全對       = s ^ 50</code></pre></figure>
               </div>
               <figcaption>這張圖回答：等症狀出現再修來得及嗎？多半來不及。決定失敗的錯誤（decisive error）比症狀早很多，而救不回來的時間點（lock-in）也比第一個症狀早。依 Failure as a Process（2026-07）。</figcaption>
             </figure>
-              <p>Failure as a Process 也發現，最大的單一起因是錯的前提（30.7%）。它的案例裡，第 2 步的 <code>cd</code> 靜默失敗，agent 把空輸出當成功，到第 23 步才看到 <code>not a git repository</code>。所以<strong>最划算的檢查放在動手之前</strong>，一個 tool call 就能確認前提：</p>
+              <p>Failure as a Process 也發現，失敗的 run 裡最常見的單一起因是<b>錯的前提</b>（false premise，30.7% 的失敗 run 有它）：agent 以為某件事成立，就照著做，其實不成立。它的案例裡，agent 第 2 步 <code>cd</code> 進一個不存在的目錄；tool 回給它的輸出是空的，錯誤訊息沒有傳回來，agent 把「沒有錯誤」讀成「成功」，之後 21 步都在錯的目錄裡做事，到第 23 步才看到 <code>not a git repository</code>。這 21 步全部白做，而且要退回去。確認前提只要一個 tool call、成本固定；錯誤每多走一步，要退的就多一步。所以<strong>最划算的檢查放在動手之前</strong>，像下面這樣：</p>
               <figure class="file"><figcaption>terminal：動手之前先確認前提（本文補的）</figcaption><pre><code class="lang-sh">$ git rev-parse --show-toplevel     # 我在對的 repo 嗎？
 /home/me/billing
 $ python --version                  # 跑的是我以為的版本嗎？
