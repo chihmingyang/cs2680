@@ -55,6 +55,7 @@
 | `verify.sh` | 一次跑完一堂的檢查：`bash tools/verify.sh l03`。check_article、check_discuss、check_diagrams、audit、add_lecture --check，全過只印 `ALL OK`；punct 只提示。不寫回檔案。 |
 | `assemble_ideas.py` | （v5 頁面用，v7 改用 `assemble_v7.py`）把 `notes/lXX/` 的章片段（`head.html`、`i1.html`…、選用的 `tldr.html`、`arch.html`）組回頁面的核心觀念：換掉 `#s-ideas`、填閱讀地圖的分鐘數、重建本頁的三層目錄。大改一堂的核心觀念時用（L5、L6 的擴寫）。 |
 | `review_pack.py` | 把一頁（或 `--since <ref>` 之後文字有變的章）印成讀者視角的純文字審查包：一行一個單位、帶定位，表格格子帶欄名與列名，數字列併成一行。給可讀性審查的 subagent 讀。 |
+| `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
 | `insert_digest.py` | 把 `notes/digests/lXX-rN.html` 的摘要片段插進該篇的 `li`、重寫 `rg-intro` 的篇數，並檢查錨點、頁碼、長度與「別誤讀」。`--check` 只驗證。 |
 
 以上腳本在 2026-10-19 對 L1–L8 全部通過。

@@ -4,7 +4,8 @@
 # 用法：bash tools/verify.sh l03
 #
 # 為什麼：分開跑是六個 tool call，每個 call 都要重讀整個 context；合成一個，每輪檢查只花一步。
-# 跑的是：check_article、check_discuss、check_diagrams、audit、add_lecture --check、punct --diff（只提示）。
+# 跑的是：check_article、check_discuss、check_diagrams、audit、add_lecture --check、punct --diff（只提示）、
+# find_figure_spots（只提示：可能該畫成圖、或表和圖重複的地方）。
 # 不寫回任何檔案（check_article 不帶 --fix-time，punct 只用 --diff）。
 # 不包含 discuss.py --sync-body：它要連 GitHub、改的是 issue，改了基礎題才另外跑。
 # 通過但有 warn 的檢查，會印出 warn 讓你看一次。
@@ -52,6 +53,12 @@ pd=$(python3 -I tools/punct.py "$P" --diff 2>&1)
 if ! printf '%s\n' "$pd" | head -1 | grep -q ': 0 text nodes would change$'; then
   echo "note punct（只看自己這次改的；引用原文或算式的半形標點要保留）"
   printf '%s\n' "$pd" | head -20
+fi
+# find_figure_spots 只提示：結論是形狀才改成圖，圖要取代表或段落；判斷要留的，在那個元素加 data-no-figure。
+fs=$(python3 -I tools/find_figure_spots.py "$P" 2>&1)
+if [ "$fs" != "no candidates" ]; then
+  echo "note figure-spots（看一次：結論是趨勢、轉折或最佳點才改成圖，圖要取代表或段落；決定留著的加 data-no-figure）"
+  printf '%s\n' "$fs" | tail -n +2 | head -20
 fi
 
 [ $fail -eq 0 ] && echo "ALL OK" || exit 1

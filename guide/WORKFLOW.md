@@ -100,7 +100,7 @@ python3 -I tools/shot_article.py docs/l09.html
   ```
 - `check_discuss.py` 在 B5 跑完 `discuss.py` 之前，會回報每一題基礎題 `no GitHub issue link`。其他問題要先修好。
 - 用 Read 看每一張截圖一次：文字重疊、超出框、箭頭沒接好、手機版跑版。發現問題修一次。**一則訊息平行呼叫 6 次 Read**（6 張一起看），不要一張一則：每一則訊息都要重讀整個 context，L3 的 63 張截圖一張一則是 63 次，6 張一則是 11 次。
-- 頁面寫好之後，每一輪檢查用 `bash tools/verify.sh l09` 一次跑完（check_article、check_discuss、check_diagrams、audit、add_lecture --check、punct 提示），全部通過只印 `ALL OK`。上面的指令還是要先跑一次，因為 `add_anchors.py`、`punct.py`（寫回）、`--fix-time`、`shot_article.py` 會改檔或產生截圖，`verify.sh` 不做這些。
+- 頁面寫好之後，每一輪檢查用 `bash tools/verify.sh l09` 一次跑完（check_article、check_discuss、check_diagrams、audit、add_lecture --check、punct 提示、figure-spots 提示），全部通過只印 `ALL OK`。figure-spots 列出可能該畫成圖的數字表和段落，以及表和圖畫同一組數字的地方；逐條看一次，照 `STYLE_ARTICLE.md` 第 6 節〈數字表換成圖〉決定，決定留著的加 `data-no-figure`（2026-11-07）。上面的指令還是要先跑一次，因為 `add_anchors.py`、`punct.py`（寫回）、`--fix-time`、`shot_article.py` 會改檔或產生截圖，`verify.sh` 不做這些。
 
 ### B5. 接到全站、開討論串
 
