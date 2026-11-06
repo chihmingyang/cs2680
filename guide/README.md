@@ -7,7 +7,7 @@
 - 讀書會站台「CS2680 觀念導讀」：https://chihmingyang.github.io/cs2680/
 - 課程：Harvard CS2680 Modern AI Systems: Agents and System Optimizations（Fall 2026，Juncheng Yang）。課程沒有錄影，讀書會讀 slides。
 - 每一堂有四段（2026-11-03 起 L1–L8 全部如此，L9 起的新講次也是）：核心觀念、問題討論（含 GitHub 討論串連結）、動手試試、延伸閱讀。核心觀念依想法的重要性排，不照 slides 的順序，不寫頁碼（STYLE_ARTICLE 第 0 節），課程漏掉的主題查原始來源補上，標「本文補的」。名詞在正文裡解釋，或用收合註 `details.gloss`；最多 5 題基礎題（附重點複習）、最多 3 題進階題（附提示與作答範本）、延伸閱讀導讀（必讀與推薦的每一篇附摘要；選讀、查閱不附）。
-- 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分、L7 10 章 35 分、L8 10 章 35 分；L9 10 章 40 分、L10 10 章 50 分、L11 10 章 35 分（2026-11-06）。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
+- 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分、L7 10 章 35 分、L8 10 章 35 分；L9 10 章 40 分、L10 10 章 55 分、L11 10 章 35 分（2026-11-06）。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
 - 事實會過時的地方，要改就重抓：L2、L3、L4、L6、L8 的 Claude Code 細節依 2026-11 的官方文件；L3 的 repo 依 2026-11-03（Superpowers v7.0.1、mattpocock/skills 1.3.2、Caveman 4.0.1、`deepseek-ai/dsh-superagent-prototype` 2026-10-31）；L7 的 benchmark 現況與 L8 的單價依 2026-11-03。L3 的 `#x1`（Caveman 評論查證）、`#x2`（SWE-Shift 查證）是 James 要留的本文延伸。L9 的每 token KV 表依 2026-11-06 的 config.json，中文 token 數是本文用六個 tokenizer 實測（重現方法在 `guide/sources/l09.md`）；L10 的 GPU 規格與 AI 寫 kernel 的案例依 2026-11-06；L11 的 Claude Code 細節依 2026-11 的官方文件，第 5 章引的兩串 GitHub issue 到 2026-11-06 都沒有官方回覆，有變化就重抓。
 - Part I 的建議閱讀順序是 L2 → L4 → L3 → L5（2026-10-21 定）：L2、L3 會先用到 L4 才解釋的 context 代價、subagent。順序寫在首頁「怎麼讀」和 L2、L4 頁尾的 `.pager-note`。講次編號、檔名、issue label 不跟著改。
 - 成員的討論在這個 repo 的 Issues：每一堂一串，只放基礎題（2026-10-21 起；之前每一題一串，太散）。每人一則留言，`### Q1`…`### Q5` 當小標。進階題不上 GitHub，留在頁面給讀書會當天討論。

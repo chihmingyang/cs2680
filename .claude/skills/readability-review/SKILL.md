@@ -57,7 +57,7 @@ Agent(subagent_type="general-purpose", run_in_background=false,
 python3 -I tools/review_pack.py docs/lXX.html --chapter i2 i5 > notes/review/lXX-pack2.md
 ```
 
-再開一個全新的審查者，prompt 多一句：「只審這些定位：[#i2 表2 列2 ‹為什麼抓不到›]、[#i5 ¶4]……其他單位略過。」報告寫到 `lXX-YYYYMMDD-r2.md`。兩輪後還有 BLOCK，留給 James，不開第三輪。
+再開一個全新的審查者，prompt 多一句：「只審這些定位：[#i2 表2 列2 ‹為什麼抓不到›]（第一輪讀到：……）、[#i5 ¶4]（第一輪讀到：……）……其他單位略過。作者加了段落時定位會移動，依『第一輪讀到』的內容找到對應的單位。」報告寫到 `lXX-YYYYMMDD-r2.md`。兩輪後還有 BLOCK，留給 James，不開第三輪。
 
 ## 5. push 與回報
 

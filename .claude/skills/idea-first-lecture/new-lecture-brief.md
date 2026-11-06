@@ -111,7 +111,7 @@ cd /home/claude/cs2680 && python3 -I tools/audit.py                           # 
 cd /home/claude/cs2680 && python3 -I tools/punct.py notes/lXX/i1.html --diff  # 只看新片段，看過再決定要不要寫回片段
 ```
 
-不要跑 `add_lecture.py`（`--check` 在主線接線前一定會報 sidenav 不同步）、`discuss.py`、`anchor_map.py apply`。最後把 `python3 -I tools/page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？數字和 slides、來源一致嗎？
+不要跑 `add_lecture.py`（`--check` 在主線接線前一定會報 sidenav 不同步）、`discuss.py`、`anchor_map.py apply`。也不要用 `tools/verify.sh`：它跑的就是上面幾條加 `add_lecture --check`，接線前一定 FAIL；主線接線之後才用它。最後把 `python3 -I tools/page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？數字和 slides、來源一致嗎？
 
 ## 跨堂連結
 

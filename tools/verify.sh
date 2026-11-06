@@ -13,8 +13,11 @@ cd "$(dirname "$0")/.."
 L=${1:?用法：bash tools/verify.sh lXX}
 P=docs/$L.html
 [ -f "$P" ] || { echo "找不到 $P"; exit 2; }
-PDF=$(grep -o 'slides/[^"#]*\.pdf' "$P" | head -1)
-PAGES=$(sed -n 4p "slides/$L-notes.md" 2>/dev/null | grep -o '[0-9]\+' | head -1)
+# 頁數用頁面的 data-pages-total（兩份 deck 的 L10 是總和），沒有才讀 slides 筆記第 4 行。
+# PDF 取頁面裡所有 slides/*.pdf 的共同前綴：一份 deck 就是檔名，L10 的 2a、2b 是 10_llm_serving_basics_2。
+PDF=$(grep -o 'slides/[^"#]*\.pdf' "$P" | sort -u | python3 -I -c 'import os,sys; print(os.path.commonprefix(sys.stdin.read().split()))')
+PAGES=$(grep -o 'data-pages-total="[0-9]*"' "$P" | head -1 | grep -o '[0-9]\+')
+[ -n "$PAGES" ] || PAGES=$(sed -n 4p "slides/$L-notes.md" 2>/dev/null | grep -o '[0-9]\+' | head -1)
 fail=0
 
 run() {   # run 名稱 乾淨時最後一行要符合的-regex 指令...

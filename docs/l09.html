@@ -44,7 +44,7 @@
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec is-here"><a class="sn-row" href="l09.html" aria-current="page"><span class="sn-no">L9</span><span class="sn-t">LLM 的結構與 serving 的帳</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">一個 request 的一生</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Model 一次只算出下一個 token</a></li><li><a class="sn-sub2" href="#i1-2">Prefill 的副產品：KV cache</a></li><li><a class="sn-sub2" href="#i1-3">Schedule：每一步重新決定誰上車</a></li><li><a class="sn-sub2" href="#i1-4">什麼時候停</a></li><li><a class="sn-sub2" href="#i1-5">Agent 的每一圈，都是一次完整的 request</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Model 的骨架</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Vector：一個 token 變成一串數字</a></li><li><a class="sn-sub2" href="#i2-2">矩陣乘法：model 幾乎所有的計算</a></li><li><a class="sn-sub2" href="#i2-3">一疊相同的 block</a></li><li><a class="sn-sub2" href="#i2-4">參數放在哪裡</a></li><li><a class="sn-sub2" href="#i2-5">三個數字裡，兩個已經出來了</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Attention</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">每個 token 產生三個 vector</a></li><li><a class="sn-sub2" href="#i3-2">分數、mask、softmax</a></li><li><a class="sn-sub2" href="#i3-3">成本：n 個 token，n² 個分數</a></li><li><a class="sn-sub2" href="#i3-4">為什麼要存 KV cache</a></li><li><a class="sn-sub2" href="#i3-5">Multi-head：64 個小 attention 一起跑</a></li><li><a class="sn-sub2" href="#i3-6">GQA：讓好幾個 query head 共用一組 K、V</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">三個數字</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">FLOPs → prefill 要多久</a></li><li><a class="sn-sub2" href="#i4-2">Weights → decode 一步至少多久</a></li><li><a class="sn-sub2" href="#i4-3">KV cache → 記憶體裝得下幾個人、多長</a></li><li><a class="sn-sub2" href="#i4-4">Agent 的帳：算力省得下，記憶體省不下</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">MoE</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">兩個參數數，各管一本帳</a></li><li><a class="sn-sub2" href="#i5-2">什麼時候選 MoE</a></li><li><a class="sn-sub2" href="#i5-3">Decode 時讀幾個 expert：batch 越大越多</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">改 KV cache 的架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">做法 1：Sliding window，讓大多數層只看最近 w 個 token</a></li><li><a class="sn-sub2" href="#i6-2">做法 2：MLA，每個 token 只存一個壓縮過的 vector</a></li><li><a class="sn-sub2" href="#i6-3">做法 3：Linear attention，用固定大小的 state 取代越長越大的 cache</a></li><li><a class="sn-sub2" href="#i6-4">做法 4：State-space model，每個 channel 一個小 state</a></li><li><a class="sn-sub2" href="#i6-5">做法 5：Sparse attention，每個 query 只讀 top-k 個 token</a></li><li><a class="sn-sub2" href="#i6-6">本文的判斷：方向是混合，不是二選一</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">現在的 open-weight model</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">同一條公式，代入 config.json 的幾個欄位</a></li><li><a class="sn-sub2" href="#i7-2">表上沒有的：固定大小的部分</a></li><li><a class="sn-sub2" href="#i7-3">本文的判斷：選 model 時，每個 token 的 KV 和參數一樣重要</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Tokenizer</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">BPE：從 byte 開始，把最常一起出現的兩塊合併</a></li><li><a class="sn-sub2" href="#i8-2">詞彙越大，token 越少，embedding 也越大</a></li><li><a class="sn-sub2" href="#i8-3">中文：一個字 3 個 byte，切成幾個 token 要看詞彙表</a></li><li><a class="sn-sub2" href="#i8-4">本文實測：繁體中文一個字約 0.7 到 0.9 個 token</a></li><li><a class="sn-sub2" href="#i8-5">這改變三件事</a></li><li><a class="sn-sub2" href="#i8-6">串流時的半個字</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Sampling</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">從分數到機率：temperature</a></li><li><a class="sn-sub2" href="#i9-2">只從前幾名裡抽：top-k 與 top-p</a></li><li><a class="sn-sub2" href="#i9-3">設定也改變輸出有多長</a></li><li><a class="sn-sub2" href="#i9-4">Temperature 0 也不保證每次相同</a></li><li><a class="sn-sub2" href="#i9-5">託管的 model 開始不讓你調</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">2</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">3</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">4</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l09.html" aria-current="page"><span class="sn-no">L9</span><span class="sn-t">LLM 的結構與 serving 的帳</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">一個 request 的一生</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Model 一次只算出下一個 token</a></li><li><a class="sn-sub2" href="#i1-2">Prefill 的副產品：KV cache</a></li><li><a class="sn-sub2" href="#i1-3">Schedule：每一步重新決定誰上車</a></li><li><a class="sn-sub2" href="#i1-4">什麼時候停</a></li><li><a class="sn-sub2" href="#i1-5">Agent 的每一圈，都是一次完整的 request</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Model 的骨架</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Vector：一個 token 變成一串數字</a></li><li><a class="sn-sub2" href="#i2-2">矩陣乘法：model 幾乎所有的計算</a></li><li><a class="sn-sub2" href="#i2-3">一疊相同的 block</a></li><li><a class="sn-sub2" href="#i2-4">參數放在哪裡</a></li><li><a class="sn-sub2" href="#i2-5">三個數字裡，兩個已經出來了</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Attention</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">每個 token 產生三個 vector</a></li><li><a class="sn-sub2" href="#i3-2">分數、mask、softmax</a></li><li><a class="sn-sub2" href="#i3-3">成本：n 個 token，n² 個分數</a></li><li><a class="sn-sub2" href="#i3-4">為什麼要存 KV cache</a></li><li><a class="sn-sub2" href="#i3-5">Multi-head：64 個小 attention 一起跑</a></li><li><a class="sn-sub2" href="#i3-6">GQA：讓好幾個 query head 共用一組 K、V</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">三個數字</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">FLOPs → prefill 要多久</a></li><li><a class="sn-sub2" href="#i4-2">Weights → decode 一步至少多久</a></li><li><a class="sn-sub2" href="#i4-3">KV cache → 記憶體裝得下幾個人、多長</a></li><li><a class="sn-sub2" href="#i4-4">Agent 的帳：算力省得下，記憶體省不下</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">MoE（混合專家）</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">兩個參數數，各管一本帳</a></li><li><a class="sn-sub2" href="#i5-2">什麼時候選 MoE</a></li><li><a class="sn-sub2" href="#i5-3">Decode 時讀幾個 expert：batch 越大越多</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">改 KV cache 的架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">做法 1：Sliding window，讓大多數層只看最近 w 個 token</a></li><li><a class="sn-sub2" href="#i6-2">做法 2：MLA，每個 token 只存一個壓縮過的 vector</a></li><li><a class="sn-sub2" href="#i6-3">做法 3：Linear attention，用固定大小的 state 取代越長越大的 cache</a></li><li><a class="sn-sub2" href="#i6-4">做法 4：State-space model，每個 channel 一個小 state</a></li><li><a class="sn-sub2" href="#i6-5">做法 5：Sparse attention，每個 query 只讀 top-k 個 token</a></li><li><a class="sn-sub2" href="#i6-6">本文的判斷：方向是混合，不是二選一</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">能自己架的 model</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">同一條公式，代入 config.json 的幾個欄位</a></li><li><a class="sn-sub2" href="#i7-2">表上沒有的：固定大小的部分</a></li><li><a class="sn-sub2" href="#i7-3">本文的判斷：選 model 時，每個 token 的 KV 和參數一樣重要</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Tokenizer</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">BPE：從 byte 開始，把最常一起出現的兩塊合併</a></li><li><a class="sn-sub2" href="#i8-2">詞彙越大，token 越少，embedding 也越大</a></li><li><a class="sn-sub2" href="#i8-3">中文：一個字 3 個 byte，切成幾個 token 要看詞彙表</a></li><li><a class="sn-sub2" href="#i8-4">本文實測：繁體中文一個字約 0.7 到 0.9 個 token</a></li><li><a class="sn-sub2" href="#i8-5">這改變三件事</a></li><li><a class="sn-sub2" href="#i8-6">串流時的半個字</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Sampling</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">從分數到機率：temperature</a></li><li><a class="sn-sub2" href="#i9-2">只從前幾名裡抽：top-k 與 top-p</a></li><li><a class="sn-sub2" href="#i9-3">設定也改變輸出有多長</a></li><li><a class="sn-sub2" href="#i9-4">Temperature 0 也不保證每次相同</a></li><li><a class="sn-sub2" href="#i9-5">託管的 model 開始不讓你調</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-discuss" data-spy data-short="問題討論"><span class="sn-n">2</span><span class="sn-t">問題討論</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">3</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">4</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU 入門與 kernel 最佳化</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">作業回饋與 agent 的十個陷阱</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
@@ -65,18 +65,18 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/9_llm_serving_basics_1.pdf" target="_blank" rel="noopener">9_llm_serving_basics_1.pdf ↗</a></li>
       <li><span class="k">頁數</span>51</li>
       <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
-      <li><span class="k">註與查閱</span><span class="deep-time">約 2 分鐘</span>，收合</li>
+      <li><span class="k">註與查閱</span><span class="deep-time">約 3 分鐘</span>，收合</li>
       <li><span class="k">全部展開</span><span class="full-time">約 60 分鐘</span></li>
     </ul>
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">LLM 一次只算出下一個 token，所以一個 request 分成兩段：prefill 一次算完整段 prompt，decode 每一步只產生一個 token。兩段的成本都由 model 的形狀決定，歸結成三個數字：權重的 byte 數、每個 token 的運算量、每個 token 的 KV cache。這堂要帶走的是：用這三個數字，<strong>算出一個 model 在你的 GPU 上能服務幾個人、每人多長</strong>，第一個字又要等多久。</p>
+    <p class="thesis">LLM 一次只算出下一個 token（model 讀寫文字的單位，大約一個中文字），所以一個 request 分成兩段：prefill 一次算完整段 prompt，decode 每一步只產生一個 token。兩段的成本都由 model 的形狀決定，歸結成三個數字：權重（訓練好的參數）的 byte 數、每個 token 的運算量、每個 token 的 KV cache（留在 GPU 記憶體裡的中間結果）。這堂要帶走的是：用這三個數字，<strong>算出一個 model 在你的 GPU 上能同時服務幾人、每人的對話能多長</strong>，第一個字又要等多久。</p>
     <ul class="core">
-      <li><span><b>三個數字各卡一件事。</b>運算量卡 prefill，權重卡 decode 的每一步，KV cache 卡「人數 × 長度」。Llama 3 70B 在 2 張 H200 上，扣掉權重只剩約 43 萬個 token 的預算。</span></li>
-      <li><span><b>Agent 的 context 省得下算力，省不下記憶體。</b>Prefix cache 讓重送的 token 不用重算，但它們的 KV cache 照樣佔著 GPU，所以<strong>能服務幾個 agent，多半先卡在 KV cache</strong>。</span></li>
-      <li><span><b>選 model 要看每個 token 的 KV 和 tokenizer。</b>GQA、sliding window、MLA、linear attention 讓每個 token 的 KV <strong>差到 13 倍</strong>；繁體中文一個字約 0.7 到 0.9 個 token，課程的「3 到 4 個字元一個 token」只適用英文。</span></li>
+      <li><span><b>三個數字各卡一件事。</b>運算量卡 prefill，權重卡 decode 的每一步，KV cache 卡「同時的人數 × 每人的對話長度」。以 Llama 3 70B（Meta 的 700 億參數 model）跑在 2 張 H200（NVIDIA 的 GPU）上為例：GPU 記憶體扣掉權重，只放得下約 43 萬個 token 的 KV cache，由同時在跑的對話一起分。</span></li>
+      <li><span><b>Agent 的長對話省得下算力，省不下記憶體。</b>Agent 每呼叫一次 model，都把到目前為止的整段輸入（context）重送一次；prefix cache 讓重送的部分不用重算，但它的 KV cache 照樣佔著 GPU，所以<strong>能同時服務幾個 agent，多半先卡在 KV cache</strong>。</span></li>
+      <li><span><b>選 model 要看每個 token 的 KV，和它怎麼切字。</b>現在的 model 用不同方法縮小每個 token 的 KV：每一層裡的幾組計算共用一份 KV、壓縮後再存、只存最近一段，或換成固定大小的狀態，每個 token 的 KV 因此<strong>差到 13 倍</strong>。切字的規則（tokenizer）也不同：繁體中文一個字約 0.7 到 0.9 個 token，課程的「3 到 4 個字元一個 token」只適用英文。</span></li>
     </ul>
   </section>
 
@@ -95,9 +95,9 @@
           <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">Attention<small>每個新 token 都要讀前面全部的 K 和 V</small></span><span class="map-m">約 4 分</span></a>
           <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">三個數字<small>weights、FLOPs、KV cache 各卡住一件事</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">選 model 時看的：同一份工作，帳差多少</p>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">MoE<small>記憶體跟總參數，運算跟 active 參數</small></span><span class="map-m">約 3 分</span></a>
+          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">MoE（混合專家）<small>記憶體看全部參數，運算看每個 token 用到的部分</small></span><span class="map-m">約 3 分</span></a>
           <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">改 KV cache 的架構<small>縮小、封頂，或換成固定大小的 state</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">現在的 open-weight model<small>每個 token 的 KV 差到 13 倍（本文補的）</small></span><span class="map-m">約 2 分</span></a>
+          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">能自己架的 model<small>每個 token 的 KV 差到 13 倍（本文補的）</small></span><span class="map-m">約 2 分</span></a>
           <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">Tokenizer<small>繁體中文一個字約 0.7 到 0.9 個 token（本文補的）</small></span><span class="map-m">約 4 分</span></a>
           <p class="map-g">自己架 model 時會調的</p>
           <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">Sampling<small>設定改的是答案，也改輸出有多長</small></span><span class="map-m">約 2 分</span></a>
@@ -113,7 +113,7 @@
               <p>從送出一段 prompt，到畫面上一個字一個字冒出回答，serving 系統（把 model 放在 GPU 上、替很多使用者回答 request 的程式）做了六件事：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 262" role="img" aria-label="一個 request 的六個階段，排成兩列。第一列由左到右：① Tokenize，把文字換成 token ID；② Schedule，排進這一步的 batch；③ Prefill，整段 prompt 算一次。第一個 token 在 prefill 結束時出來。第二列由右到左：④ Decode，一步產生一個 token，下方有一條紅色的迴圈箭頭，每個 output token 跑一次；⑤ Detokenize，把 token ID 換回文字；⑥ Stream，一個一個送給使用者。左側註記：TTFT 等於 ① 加 ② 加 ③；每個字的間隔等於一次 ④。">
+                <svg viewBox="0 0 720 262" role="img" aria-label="一個 request 的六個階段，排成兩列。第一列由左到右：① Tokenize，灰色，把文字換成 token ID；② Schedule，灰色，排進這一步的 batch；③ Prefill，青色，整段 prompt 算一次。第一個 token 在 prefill 結束時出來。第二列由右到左：④ Decode，黃色，一步產生一個 token，下方有一條紅色的迴圈箭頭，每個 output token 跑一次；⑤ Detokenize，灰色，把 token ID 換回文字；⑥ Stream，灰色，一個一個送給使用者。左側註記：第一個字要等多久（TTFT）等於 ① 加 ② 加 ③；每個字的間隔等於一次 ④。">
                   <defs><marker id="l9v-life-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-life-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M222,62 L256,62" class="dg-link" marker-end="url(#l9v-life-ah)"/>
                   <path d="M464,62 L498,62" class="dg-link" marker-end="url(#l9v-life-ah)"/>
@@ -140,14 +140,14 @@
                   <text x="118" y="175.0" text-anchor="middle" class="dg-l">⑥ Stream</text>
                   <text x="118" y="192.0" text-anchor="middle" class="dg-c">一個一個送給使用者</text>
                   <text x="612" y="124" class="dg-cb">第 1 個 token</text>
-                  <text x="14" y="124" class="dg-cb">TTFT = ① + ② + ③</text>
+                  <text x="14" y="124" class="dg-cb">第一個字等多久（TTFT）= ① + ② + ③</text>
                   <text x="602" y="250" text-anchor="middle" class="dg-k">每個 output token 跑一次</text>
                   <text x="14" y="250" class="dg-cb">每個字的間隔 = 一次 ④</text>
                 </svg>
               </div>
-              <figcaption>從送出 prompt 到看到回答，中間經過哪幾段？灰色在 CPU 上做，青色和黃色是 GPU 上的 model 在算。紅色的迴圈是重點：④ 要重複，次數等於回答的 token 數。</figcaption>
+              <figcaption>從送出 prompt 到看到回答，中間經過哪幾段？灰色的四段（①②⑤⑥）不用 GPU；青色的 prefill 和黃色的 decode 是 GPU 上的 model 在算。紅色的迴圈是重點：回答的第一個 token 由 ③ 產生，之後每多一個 token，④ 就多跑一次。</figcaption>
             </figure>
-              <p>① 和 ⑤ 在 CPU 上做。Tokenize 把文字切成 token，每個 token 換成一個整數 ID，例如 Llama 3 的 tokenizer 把「 is」換成 374；detokenize 反過來，把 ID 換回文字。Model 只看得到這串整數，怎麼切、中文為什麼特別，留到第 8 章。② 決定這一步要算哪幾個 request。③ 和 ④ 才是 GPU 上的 model 在算。</p>
+              <p>圖上灰色的四段不用 GPU。Tokenize（①）把文字切成 token，每個 token 換成一個整數 ID，例如 Llama 3 的 tokenizer 把「 is」換成 374；detokenize（⑤）反過來，把 ID 換回文字。Model 只看得到這串整數，怎麼切、中文為什麼特別，留到第 8 章。Schedule（②）決定這一步要算哪幾個 request，stream（⑥）把字送給使用者。只有 ③ 和 ④ 是 GPU 上的 model 在算。</p>
               <p id="i1-1"><b>Model 一次只算出下一個 token。</b>Model 的輸出是一張表：詞彙裡的每個 token 一個機率，代表它接在後面的可能性。挑一個 token 接上去，再把加長的序列送回 model，才能算下一個。所以生成一段回答是一個 loop，<strong>回答有幾個 token，loop 就跑幾圈</strong>。</p>
               <p>Prompt 和 output 在這個 loop 裡的待遇不同。Prompt 的 token 一開始就全部知道，可以一起算，這一段叫 prefill；output 的 token 要等上一個算完才知道，只能一個一個算，這一段叫 decode：</p>
               <figure class="diagram">
@@ -243,7 +243,7 @@
                 <li><b>每個字的間隔。</b>之後每個字都要等一步 decode，常用每秒幾個 token（tokens/s）表示。回答越長，總時間越長。</li>
               </ul>
               <p>兩段的瓶頸也不同。課程的說法是 prefill 吃算力、decode 吃記憶體頻寬：prefill 一次算幾千個 token，GPU 的運算單元是忙的；decode 每一步只替每個 request 算 1 個 token，卻要把整個 model 的權重從記憶體讀一遍，運算單元多半在等資料。第 4 章用數字算這件事，GPU 為什麼算得快、讀得慢，見 L10〈<a href="l10.html#i2">Roofline</a>〉。所以<strong>prefill 決定第一個字多快，decode 決定之後每個字多快</strong>，優化前要先知道使用者在等哪一段。</p>
-              <p id="i1-2"><b>Prefill 的副產品：KV cache。</b>Prefill 除了產生第一個 token，還會把 prompt 每個 token 在每一層算出的兩組中間結果存起來，這兩組叫 key 和 value，合稱 KV cache。之後每一步 decode 都要讀它，也在後面加一格。它為什麼存在、有多大，是第 3、4 章的主題；這裡先記住兩件事：它跟著 context 長度變大，而且一直佔著 GPU 記憶體，直到 request 結束。</p>
+              <p id="i1-2"><b>Prefill 的副產品：KV cache。</b>Prefill 除了產生第一個 token，還會把 prompt 每個 token 在每一層算出的兩組中間結果存起來，這兩組叫 key 和 value，合稱 KV cache。之後每一步 decode 都要讀它，也在後面加一格。它為什麼存在、有多大，是第 3、4 章的主題；這裡先記住兩件事：它跟著 context 的長度變大，而且一直佔著 GPU 記憶體，直到 request 結束。Context 指到目前為止的整段輸入：prompt，加上已經產生的 token。</p>
               <p id="i1-3"><b>Schedule：每一步重新決定誰上車。</b>Request 一個一個獨立地來，GPU 卻要一次算一批才有效率，理由在第 4 章。所以 scheduler 每一步都重新組一次 batch：做完的 request 立刻離開，新的 request 不用等整批結束就能加入，這叫 continuous batching：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -335,7 +335,7 @@
             <div class="prose">
 
               <p>上一章把 model 當成黑盒子：輸入一串 token ID，輸出下一個 token 的機率。這一章打開它，看裡面有哪些零件、參數放在哪裡。後面的帳都從這裡算起，例子一律用課程選的 Llama 3 70B。</p>
-              <p id="i2-1"><b>Vector：一個 token 變成一串數字。</b>Model 不能直接拿整數 ID 做運算，所以第一步是查表。Embedding table 是一張 128,256 列、8,192 欄的表，每個 token ID 對應一列；查到的那一列有 8,192 個數字，叫這個 token 的 vector，可以想成一個長度 8,192 的 <code>list[float]</code>。這些數字是訓練出來的，意思相近的 token，vector 也相近：</p>
+              <p id="i2-1"><b>Vector：一個 token 變成一串數字。</b>Model 不能直接拿整數 ID 做運算，所以第一步是查表。Embedding table 是一張 128,256 列、8,192 欄的表，每個 token ID 對應一列；查到的那一列有 8,192 個數字，叫這個 token 的 vector，可以想成一個長度 8,192 的 <code>list[float]</code>。這些數字是訓練出來的，意思相近的 token，vector 也相近。查表的過程如下：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="左邊是一個 token ID，374，代表「 is」。箭頭指到中間的 embedding table，一個 128,256 列、8,192 欄的表，第 374 列是紅色。箭頭再指到右邊：查到的那一列就是這個 token 的 vector，一串 8,192 個數字，畫成一排小格，標示為示意的數值。">
@@ -470,7 +470,7 @@
               <p id="i2-3"><b>一疊相同的 block。</b>整個 model 長這樣：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 410" role="img" aria-label="左邊是整個 model 由下往上：token IDs，n 個整數；Embedding 查表，得到 n 乘 8,192；Transformer block 重複 80 次，紅色；RMSNorm；LM head，乘上 8,192 乘 128,256 的矩陣，得到每個 token 128,256 個分數；softmax 變成機率。右邊放大一個 block：輸入 x 先經過 RMSNorm 和 Attention，結果加回 x；再經過 RMSNorm 和 FFN，結果再加回去，交給下一個 block。左側一條直線代表 residual stream，繞過兩個子層，只在加號處接收修正。">
+                <svg viewBox="0 0 720 410" role="img" aria-label="左邊是整個 model 由下往上：token IDs，n 個整數；Embedding 查表，得到 n 乘 8,192；Transformer block 重複 80 次，紅色；RMSNorm，把數值的大小拉齊；LM head，乘上 8,192 乘 128,256 的矩陣，給詞彙表裡每個候選 token 一個分數；softmax 把分數變成機率。右邊放大一個 block：輸入 x 先經過 RMSNorm 和 Attention（token 之間交換資訊），結果加回 x；再經過 RMSNorm 和 FFN（每個 token 各自運算），結果再加回去，交給下一個 block。放大圖左側直立的那條線代表 residual stream，它繞過兩個子層，只在加號處接收修正。">
                   <defs><marker id="l9v-stack-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-stack-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M140,352 L140,334" class="dg-link" marker-end="url(#l9v-stack-ah)"/>
                   <path d="M140,290 L140,270" class="dg-link" marker-end="url(#l9v-stack-ah)"/>
@@ -487,7 +487,8 @@
                   <text x="140" y="239.0" text-anchor="middle" class="dg-l-on">Transformer block × 80</text>
                   <text x="140" y="256.0" text-anchor="middle" class="dg-c-on">每個 block 結構相同</text>
                   <rect x="20" y="152" width="240" height="44" rx="4" class="dg-n-n"/>
-                  <text x="140" y="179.0" text-anchor="middle" class="dg-l">RMSNorm</text>
+                  <text x="140" y="171.0" text-anchor="middle" class="dg-l">RMSNorm</text>
+                  <text x="140" y="188.0" text-anchor="middle" class="dg-c">把數值的大小拉齊</text>
                   <rect x="20" y="96" width="240" height="44" rx="4" class="dg-n-c"/>
                   <text x="140" y="115.0" text-anchor="middle" class="dg-l">LM head</text>
                   <text x="140" y="132.0" text-anchor="middle" class="dg-c">× (8,192 × 128,256)</text>
@@ -501,7 +502,8 @@
                   <text x="430" y="34" class="dg-c">給下一個 block</text>
                   <path d="M420,340 L575,340 L575,322" class="dg-link" marker-end="url(#l9v-stack-ah)"/>
                   <rect x="470" y="278" width="210" height="44" rx="4" class="dg-n-n"/>
-                  <text x="575" y="305.0" text-anchor="middle" class="dg-l">RMSNorm</text>
+                  <text x="575" y="297.0" text-anchor="middle" class="dg-l">RMSNorm</text>
+                  <text x="575" y="314.0" text-anchor="middle" class="dg-c">把數值的大小拉齊</text>
                   <path d="M575,278 L575,262" class="dg-link" marker-end="url(#l9v-stack-ah)"/>
                   <rect x="470" y="218" width="210" height="44" rx="4" class="dg-n-a"/>
                   <text x="575" y="237.0" text-anchor="middle" class="dg-l">Attention</text>
@@ -511,7 +513,8 @@
                   <text x="420" y="211" text-anchor="middle" class="dg-h">+</text>
                   <path d="M420,182 L575,182 L575,168" class="dg-link" marker-end="url(#l9v-stack-ah)"/>
                   <rect x="470" y="124" width="210" height="44" rx="4" class="dg-n-n"/>
-                  <text x="575" y="151.0" text-anchor="middle" class="dg-l">RMSNorm</text>
+                  <text x="575" y="143.0" text-anchor="middle" class="dg-l">RMSNorm</text>
+                  <text x="575" y="160.0" text-anchor="middle" class="dg-c">把數值的大小拉齊</text>
                   <path d="M575,124 L575,112" class="dg-link" marker-end="url(#l9v-stack-ah)"/>
                   <rect x="470" y="68" width="210" height="44" rx="4" class="dg-n-a"/>
                   <text x="575" y="87.0" text-anchor="middle" class="dg-l">FFN</text>
@@ -523,14 +526,14 @@
                   <text x="346" y="316" class="dg-mn">stream</text>
                 </svg>
               </div>
-              <figcaption>Model 裡面有什麼？左邊由下往上讀：紅色的 block 重複 80 次，是 model 的主體。右邊是一個 block：兩個子層各自算出一筆修正，加回中間那條一路往上的 vector（residual stream），不取代它。依 slides 的圖重畫，形狀是 Llama 3 70B。</figcaption>
+              <figcaption>Model 裡面有什麼？左邊由下往上讀：紅色的 block 重複 80 次，是 model 的主體。右邊放大一個 block：兩個子層各自算出一筆修正，加回左側直立的那條線（residual stream），不取代它。依 slides 的圖重畫，形狀是 Llama 3 70B。</figcaption>
             </figure>
               <p>每個 block 有兩個子層，分工不同：</p>
               <ul>
                 <li><b>Attention。</b>讓 token 之間交換資訊，例如處理「它」這個字時，去前文找「它」指的是誰。這是 token 唯一看得到其他 token 的地方，下一章專門講。</li>
                 <li><b>FFN（feed-forward network）。</b>對每個 token 各自運算，不看其他 token。Llama 3 用的 SwiGLU 有三個矩陣：兩個 d × dff 把 vector 從 8,192 撐到 28,672 維，再用一個 dff × d 壓回來。</li>
               </ul>
-              <p>每個子層的輸出不取代輸入，而是加回去：h = x + Attention(RMSNorm(x))。所以有一條 vector 從第一層流到最後一層，叫 residual stream，每個子層只在上面加一筆修正。最後一層的 vector 交給 LM head，乘上 d × V 的矩陣，得到 128,256 個分數，每個 token 一個，叫 logits；softmax 再把分數變成加總為 1 的機率。</p>
+              <p>每個子層的輸出不取代輸入，而是加回去：h = x + Attention(RMSNorm(x))。所以有一條 vector 從第一層流到最後一層，叫 residual stream，每個子層只在上面加一筆修正。最後一層的 vector 乘上 LM head（一個 d × V 的矩陣，V = 128,256 是詞彙表的大小），得到 128,256 個分數，每個候選 token 一個，叫 logits；softmax 再把分數變成加總為 1 的機率。</p>
               <details class="gloss" id="n-norm">
   <summary><span class="gloss-k">名詞</span><span class="gloss-t">RMSNorm、pre-norm、residual：讓 80 層疊得起來的三個設計</span></summary>
   <div class="gloss-body prose">
@@ -540,7 +543,7 @@
     <p>這三樣對 serving 的帳幾乎沒有影響：norm 每層只有 2 × 8,192 個參數，80 層合計不到總數的萬分之一。</p>
   </div>
 </details>
-              <p id="i2-4"><b>參數放在哪裡。</b>把每個矩陣的形狀乘起來，就是參數的數量。下表是課程的表，本文用 python 驗算過；norm 的參數太少，表上略去。符號的定義見第 10 章：</p>
+              <p id="i2-4"><b>參數放在哪裡。</b>把每個矩陣的形狀乘起來，就是參數的數量。下表是課程的表，本文用 python 驗算過；norm 的參數太少，表上略去。公式裡的 d、dff、V 上面都出現過；H = 64、Hkv = 8、dk = 128 是 attention 的 head 數、KV head 數和每個 head 的寬度，head 是什麼見下一章。全部符號的定義見第 10 章：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>零件</th><th>公式</th><th>參數</th></tr></thead>
                 <tbody>
@@ -580,7 +583,7 @@
             <div class="prose">
 
               <p>FFN 對每個 token 各自運算，看不到別的 token。要知道「它」指的是誰，「它」必須能讀前文，這就是 attention 的工作。這一章先講 attention 怎麼讀，再講為什麼要存 KV cache，最後講 GQA 怎麼把 cache 變小。</p>
-              <p id="i3-1"><b>每個 token 產生三個 vector。</b>每一層的 attention 先把每個 token 的 vector 乘上三個 weight 矩陣，各得到一個長度 dk = 128 的 vector：query（q）、key（k）、value（v）。可以把它想成一次搜尋：q 是搜尋的字串，每份文件有自己的關鍵字 k 和內文 v；先拿 q 和每個 k 比對出分數，再依分數把各份內文 v 混在一起。整段 prompt 一起算時，就是三次矩陣乘法：</p>
+              <p id="i3-1"><b>每個 token 產生三個 vector。</b>每一層的 attention 先把每個 token 的 vector 乘上三個 weight 矩陣，得到三個 vector：query（q）、key（k）、value（v）。Llama 3 70B 把這件事拆成 64 份平行做，每一份叫一個 head，每個 head 的 q、k、v 各長 dk = 128；64 × 128 = 8,192，剛好是 d（head 的細節在本章後面）。可以把它想成一次搜尋：q 是搜尋的字串，每份文件有自己的關鍵字 k 和內文 v；先拿 q 和每個 k 比對出分數，再依分數把各份內文 v 混在一起。整段 prompt 一起算時，就是三次矩陣乘法：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 244" role="img" aria-label="三列，各是一次矩陣乘法。第一列：X，n 乘 d，乘上 W_Q，d 乘 dk，得到 Q，n 乘 dk，代表每個 token 在找什麼。第二列：X 乘 W_K 得到 K，每個 token 有什麼。第三列：X 乘 W_V 得到 V，每個 token 交出去的內容。X 是同一個矩陣。">
@@ -690,7 +693,7 @@
     <p>除以 √dk（√128 ≈ 11.3）把分數拉回穩定的範圍。這是 2017 年 Attention Is All You Need 的設計，見延伸閱讀。</p>
   </div>
 </details>
-              <p id="i3-3"><b>成本：n 個 token，n² 個分數。</b>每一層、每個 head 都要算 n × n 個分數，所以 <strong>context 加倍，分數變 4 倍</strong>。課程估每一層約 4n²d 次運算（QKᵀ 與 AV 各 2n²d），causal mask 讓實際要算的約少一半。如果把 S 整個存下來，n = 8,192 時是 8,192² × 64 個 head × 80 層 × 2 byte，約 690 GB，比 model 本身還大。所以實作上用 FlashAttention 一塊一塊算 softmax，從不存下完整的 S；它怎麼做到，見 L10〈<a href="l10.html#i7-3">FlashAttention</a>〉。</p>
+              <p id="i3-3"><b>成本：n 個 token，n² 個分數。</b>每一層、每個 head 都要替每一對 token 算一個分數，n 個 token 就是 n × n 個，所以 <strong>context 加倍，分數變 4 倍</strong>。課程估每一層約 4n²d 次運算，QKᵀ 和 AV 各佔一半：一個 head 的一個分數是 128 個乘積的和，約 2 × 128 次運算，64 個 head 合起來是 2 × 8,192 = 2d，n² 對 token 就是 2n²d；AV 依權重加總 v，也是 2n²d。Causal mask 讓實際要算的約少一半。如果把 S 整個存下來，n = 8,192 時是 8,192² × 64 個 head × 80 層 × 2 byte，約 690 GB，比 model 本身還大。所以實作上用 FlashAttention 一塊一塊算 softmax，從不存下完整的 S；它怎麼做到，見 L10〈<a href="l10.html#i7-3">FlashAttention</a>〉。</p>
               <p id="i3-4"><b>為什麼要存 KV cache。</b>回到第 1 章的 decode。新的 token 要讀前面全部的 token，需要它自己的 q，加上前面每個 token 的 k 和 v。<strong>前面 token 的 k、v 不會變</strong>，因為 causal mask 讓 token j 只受 j 之前的 token 影響，後來的 token 改變不了它。所以算過一次就存起來：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -744,7 +747,7 @@
               <figcaption>Decode 每一步，在每一層的 attention 裡做什麼？只替新的 token 算 q、k、v，把 k、v 接到 cache 最後（深紅），再讀整份 cache。前面的 n 格不重算，代價是一直佔著記憶體。</figcaption>
             </figure>
               <p>有了 cache，每一步 decode 只替 1 個新的 token 算 q、k、v，再讀整份 cache。沒有 cache，每一步都要把前面所有 token 重算一遍，生成 n 個 token 的總工作量隨 n² 成長。<strong>KV cache 是用記憶體換掉重算</strong>：每個 token 在每一層都留下一組 k 和 v，直到 request 結束。第 3 段動手試試有一段 numpy，驗證兩種算法的輸出相同。</p>
-              <p id="i3-5"><b>Multi-head：64 個小 attention 一起跑。</b>Llama 3 70B 把 d = 8,192 切成 H = 64 個 head，每個 head 有自己的 128 維 q、k、v，各自做一次上面的 attention；64 個輸出接起來，再乘上 WO 混回 8,192 維。64 × 128 = 8,192，所以切成 head 不增加運算量，只改變 model 學到什麼。課程的例子裡，有的 head 專看前一個 token，有的看第一個 token，有的看整段 context。</p>
+              <p id="i3-5"><b>Multi-head：64 個小 attention 一起跑。</b>回到本章開頭的 head：Llama 3 70B 把 d = 8,192 切成 H = 64 個 head，每個 head 有自己的 128 維 q、k、v，各自做一次上面的 attention；64 個輸出接起來，再乘上 WO 混回 8,192 維。64 × 128 = 8,192，所以切成 head 不增加運算量，只改變 model 學到什麼。課程的例子裡，有的 head 專看前一個 token，有的看第一個 token，有的看整段 context。</p>
               <p id="i3-6"><b>GQA：讓好幾個 query head 共用一組 K、V。</b>KV cache 的大小和 KV head 的數量成正比。GQA（grouped-query attention）讓一組 query head 共用一份 k 和 v：query head 的數量不變，存的 k、v 變少。MQA（multi-query attention）更極端，所有 query head 共用一份：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -963,7 +966,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <li><b>把用不到的 KV 搬出 GPU。</b>見 L1〈<a href="l01.html#i8">KV cache 放哪裡</a>〉。</li>
               </ul>
               <p>記憶體怎麼分頁管理、多張 GPU 怎麼分工，後面的講次會講。</p>
-              <p id="i4-4"><b>Agent 的帳：算力省得下，記憶體省不下。</b>回到第 1 章的 agent。假設 context 已經有 100K token 命中 prefix cache，這一圈新增 3K token（tool 的結果加上新的指令）：</p>
+              <p id="i4-4"><b>Agent 的帳：算力省得下，記憶體省不下。</b>回到第 1 章的 agent。假設 context 已經有 100K token 命中 prefix cache，這一圈再加進 3K 個新 token：agent 上一圈呼叫工具（tool，例如讀檔、跑測試）得到的輸出，加上新的指令。這一圈的帳：</p>
               <ul>
                 <li><b>Prefill。</b>只算新的 3K：每個新 token 走過所有參數，還要讀前面 100K 個 token 的 K、V，合計約 1.22 PFLOP，0.62 秒。沒有 cache 時整段 103K 重算，是 28.4 PFLOP、14.4 秒，差 23 倍。</li>
                 <li><b>記憶體。</b>Decode 時 103K 個 token 的 KV cache 都要在 GPU 上，33.8 GB，有沒有命中都一樣，約是權重的四分之一。</li>
@@ -990,11 +993,11 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               </div>
               <figcaption>命中 prefix cache，省下什麼？上面的運算差 23 倍，下面的記憶體一樣多：103K token 的 KV cache 在 decode 時都要在 GPU 上。依本章的設定算，上下兩組的單位不同，各自照比例。</figcaption>
             </figure>
-              <p>L1〈<a href="l01.html#t3">KV cache 有多大</a>〉列過，Claude Code 每一步的 prefix 中位數約 126K token；換成這個 model，就是每個 session 41.3 GB 的 KV cache。所以本文的判斷是：<strong>跑 agent 的 serving，能同時服務幾個 session，多半先卡在 KV cache</strong>，不是算力。塞過頭的後果，L1〈<a href="l01.html#i8-4">記憶體塞滿時會掉下懸崖</a>〉看過：命中率和速度一起掉。</p>
+              <p>L1〈<a href="l01.html#t3">KV cache 有多大</a>〉列過，Claude Code 每一圈（每呼叫一次 model）重送的開頭（prefix），中位數約 126K token。換成這個 model，一個 agent 光是這一段就佔 41.3 GB 的 KV cache，同時在跑的 agent 各佔一份。所以本文的判斷是：<strong>服務 agent 時，能同時跑幾個，多半先卡在 KV cache</strong>，不是算力。塞過頭的後果，L1〈<a href="l01.html#i8-4">記憶體塞滿時會掉下懸崖</a>〉看過：命中率和速度一起掉。</p>
             </div>
           </div>
 <div class="idea" id="i5">
-            <h3><span class="idea-no">5</span>MoE：記憶體跟著總參數，運算跟著 active 參數</h3>
+            <h3><span class="idea-no">5</span>MoE（混合專家）：記憶體看全部的參數，運算只看每個 token 用到的部分</h3>
             <div class="prose">
 
               <p>第 2 章說 FFN 佔了八成的參數，而且每個 token 都要走過整個 FFN。MoE（mixture of experts）改掉這一點：把一個大 FFN 換成好幾個小 FFN，每個叫一個 expert，每個 token 只用其中幾個：</p>
@@ -1060,7 +1063,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               <figcaption>MoE 換掉了什麼？只換掉 FFN：一個大 FFN 變成 8 個小 expert，router 替每個 token 挑 2 個（深紅）。下一個 token 可能挑另外兩個，所以 8 個都要常駐在記憶體。依 slides 的圖重畫，是 Mixtral 的 2 of 8。</figcaption>
             </figure>
               <p>Router 是一個小矩陣，替每個 token 給每個 expert 一個分數，挑分數最高的 2 個（top-2），兩個 expert 的輸出再依分數加權相加。同一個 token 在不同層、不同 token 在同一層，都可能挑到不同的 expert。</p>
-              <p id="i5-1"><b>兩個參數數，各管一本帳。</b>第 4 章的三個數字，在 MoE 上要分開算：權重的記憶體看總參數（total），每個 token 的運算看 active 參數，也就是每個 token 實際用到的那一部分。課程的表：</p>
+              <p id="i5-1"><b>兩個參數數，各管一本帳。</b>第 4 章的三個數字，在 MoE 上分開看：權重的記憶體看總參數（total）；每個 token 的運算看 active 參數，也就是這個 token 實際用到的幾個 expert，加上每個 token 都要走的 attention 等部分；KV cache 不受影響，因為 MoE 只換掉 FFN，attention 照舊，第 3 章的公式照用。課程的表：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Model</th><th>Expert</th><th>Total</th><th>Active／token</th><th>權重（BF16）</th><th>GFLOP／token</th></tr></thead>
                 <tbody>
@@ -1072,7 +1075,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               </table></div>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 300" role="img" aria-label="四個 model 各兩條照比例的橫條，上面是總參數，灰色，決定權重的記憶體；下面是每個 token 用到的 active 參數，決定運算。Llama 2 70B 兩條都是 69B。Mixtral 8x7B 總共 46.7B，active 12.9B。Llama 3.1 405B 兩條都是 405B。DeepSeek-V3 總共 671B，最長；active 只有 37B，紅色。">
+                <svg viewBox="0 0 720 300" role="img" aria-label="四個 model 各兩條照比例的橫條，上面是總參數，灰色，決定權重的記憶體；下面是每個 token 用到的 active 參數，青色，決定運算。Llama 2 70B 兩條都是 69B。Mixtral 8x7B 總共 46.7B，active 12.9B。Llama 3.1 405B 兩條都是 405B。DeepSeek-V3 總共 671B，最長；active 只有 37B，這一條改用深紅標出。">
                   <defs><marker id="l9v-active-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-active-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="160" y="22" class="dg-c">灰色：總參數（記憶體）　青色：active 參數（運算）</text>
                   <text x="14" y="58" class="dg-cb">Llama 2 70B</text>
@@ -1101,10 +1104,10 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                   <text x="190.2" y="270" class="dg-k">37B · 74 GFLOP／token</text>
                 </svg>
               </div>
-              <figcaption>兩個參數數，各管哪一本帳？灰色的總參數決定權重佔多少記憶體（BF16，每個參數 2 byte），青色的 active 參數決定每個 token 要算多少（約 2 × active）。照比例畫，數字是課程的表。</figcaption>
+              <figcaption>兩個參數數，各管哪一本帳？灰色的總參數決定權重佔多少記憶體（BF16，每個參數 2 byte），青色的 active 參數決定每個 token 要算多少（約 2 × active），兩者差最多的 DeepSeek-V3 改用深紅標出。照比例畫，數字是課程的表。</figcaption>
             </figure>
               <p>Mixtral 的品質和 Llama 2 70B 差不多，<strong>運算只要約五分之一</strong>，記憶體也少三成；DeepSeek-V3 和 Llama 3.1 405B 不相上下，運算約十一分之一，<strong>記憶體卻是 1.7 倍</strong>。Mixtral 的論文也寫明這個分工：active 參數決定推論的運算，總參數決定記憶體。DeepSeek-V3 的 9 of 257 是 1 個每次都跑的 shared expert，加上從 256 個裡挑 8 個。</p>
-              <p id="i5-2"><b>什麼時候選 MoE。</b>MoE 是用記憶體換運算。記憶體夠、要的是每個 token 算得快，例如 prefill 很重、要高 throughput 時，它划算；GPU 記憶體有限、必須放進固定幾張卡時，總參數就是門檻，active 再小也幫不上。KV cache 不受影響：MoE 只換掉 FFN，attention 照舊，第 3 章的公式照用。</p>
+              <p id="i5-2"><b>什麼時候選 MoE。</b>說 MoE 拿記憶體換運算，是和每個 token 運算量相同的 dense model 比：同樣的運算，MoE 要放的參數是它的 3.6 倍（Mixtral）到 18 倍（DeepSeek-V3）。和品質相近的 dense model 比，運算少很多，記憶體則有多有少，就是上一段的 Mixtral 和 DeepSeek-V3。所以記憶體夠、要的是每個 token 算得快，例如 prefill 很重、要高 throughput 時，它划算；GPU 記憶體有限、必須放進固定幾張卡時，總參數就是門檻，active 再小也幫不上。</p>
               <p id="i5-3"><b>Decode 時讀幾個 expert：batch 越大越多。</b>第 4 章說 decode 每一步都要讀權重。Batch 裡只有 1 個 request 時，這一步只有 1 個 token，每一層只讀它挑中的 expert；但 batch 裡的 token 各挑各的，挑中的 expert 加起來會變多。假設 router 平均分配，每一層至少有一個 token 挑中的 expert 比例如下（本文的推算）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>batch 裡的 token 數</th><th>Mixtral（8 選 2）</th><th>DeepSeek-V3（256 選 8）</th></tr></thead>
@@ -1122,10 +1125,10 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
             <h3><span class="idea-no">6</span>改 KV cache 的架構：縮小、封頂，或換成固定大小的 state</h3>
             <div class="prose">
 
-              <p>第 4 章的帳裡，最難擴充的是 KV cache：它跟著 context 長度和人數一起長。所以近年的架構多半在改它的長法。課程列了五類，差別在每個 request 要存什麼：</p>
+              <p>第 4 章的帳裡，最難擴充的是 KV cache：它跟著 context 長度和人數一起長。所以近年的架構多半在改它的長法。課程列了五類做法：sliding window（只存最近一段）、MLA（壓縮之後再存）、linear attention 和 SSM（state-space model；兩者都改存一個固定大小的 state），以及 sparse attention（照樣全存，每一步只讀挑中的一部分）。下圖把它們和完整的 attention 並排，linear attention 和 SSM 併成一格：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 252" role="img" aria-label="五個小圖並排，橫軸是 context 長度，縱軸是每個 request 存的量；每格都有一條灰色虛線，是完整 attention 的參考線。第一格 Full attention（GQA）：紅線就是那條斜線，存的量和長度成正比。第二格 Sliding window：紅線先跟著斜線上升，到 w 之後只剩 global 層在長，斜率變小。第三格 MLA：紅線是一條斜率小很多的直線。第四格 Linear attention 與 SSM：紅線是水平線，存的量固定。第五格 Sparse attention：存的量仍是斜線，紅色的水平線是每一步讀的量，封頂在 k。">
+                <svg viewBox="0 0 720 252" role="img" aria-label="五個小圖並排，橫軸是 context 長度，縱軸是每個 request 存的量；每格都有一條灰色虛線，是完整 attention 的參考線。第一格 Full attention（GQA）：紅線就是那條斜線，存的量和長度成正比。第二格 Sliding window：大多數層（local 層）只存最近的 w 個 token，紅線先跟著斜線上升，到 w 之後只剩少數讀全部 token 的層（global 層）在長，斜率變小。第三格 MLA：紅線是一條斜率小很多的直線。第四格 Linear attention 與 SSM（state-space model）：紅線是水平線，存的量固定。第五格 Sparse attention：存的量仍是斜線，紅色的水平線是每一步讀的量，封頂在固定的個數（DeepSeek-V3.2 是 2,048 個 token）。">
                   <defs><marker id="l9v-five-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-five-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="14" y="10" width="132" height="232" rx="6" class="dg-panel"/>
                   <text x="24" y="32" class="dg-cb">Full（GQA）</text>
@@ -1169,10 +1172,10 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                   <text x="614" y="70" class="dg-c">存的量</text>
                   <text x="584" y="176" class="dg-c">context 長度 →</text>
                   <text x="584" y="206" class="dg-c">全部都存</text>
-                  <text x="584" y="224" class="dg-cb">每步只讀 top-k</text>
+                  <text x="584" y="224" class="dg-cb">每步只讀前幾名</text>
                 </svg>
               </div>
-              <figcaption>五類做法，各讓 KV cache 怎麼長？橫軸是 context 長度，縱軸是每個 request 存的量；灰色虛線是完整 attention，紅線是這一類。只有 sparse 的紅線畫的是「每一步讀的量」，它存的量照樣沿著斜線長。本文的示意，沒有照比例。</figcaption>
+              <figcaption>五類做法，各讓 KV cache 怎麼長？第一格是完整 attention，當對照。橫軸是 context 長度，縱軸是每個 request 存的量；灰色虛線是完整 attention，紅線是這一格的做法。只有最後一格 sparse 的紅線畫的是「每一步讀的量」，它存的量照樣沿著斜線長。本文的示意，沒有照比例。</figcaption>
             </figure>
               <p id="i6-1"><b>做法 1：Sliding window，讓大多數層只看最近 w 個 token。</b>一般的 attention 讓最後一個 token 讀前面全部 n 個；sliding window 只讓它讀最近 w 個，所以這一層的 KV cache 最多存 w 個 token，不再隨 n 成長：</p>
               <figure class="diagram">
@@ -1223,7 +1226,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               <p id="i6-2"><b>做法 2：MLA，每個 token 只存一個壓縮過的 vector。</b>MLA（multi-head latent attention）不存每個 head 的 k 和 v，改存一個短的 latent vector c，要做 attention 時再從 c 還原出 K、V：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 236" role="img" aria-label="左右對照一個 token 在一層存什麼。左邊 MHA 或 GQA：每個 KV head 各存一個 k 和一個 v，畫成好幾對黃色小格。右邊 MLA：只存一個壓縮過的 latent c，512 個數，紅色，加上一個 64 個數的位置 key；要做 attention 時，再從 c 還原出 K 和 V，還原的 K、V 畫成虛線，不存。">
+                <svg viewBox="0 0 720 236" role="img" aria-label="左右對照一個 token 在一層存什麼。左邊 GQA：畫了 4 個 KV head，每個各存一個 k 和一個 v，黃色小格；底下寫 Llama 3 70B 每層 2 × 8 × 128 = 2,048 個數。右邊 MLA：只存一個壓縮過的 latent c，512 個數，紅色，加上一個 64 個數的位置 key；要做 attention 時，再從 c 還原出 K 和 V，還原的 K、V 是灰色，不存；底下寫 DeepSeek-V3 每層 576 個數，還原用的矩陣在 decode 時併進 q 和輸出。">
                   <defs><marker id="l9v-mla-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-mla-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="14" y="10" width="330" height="216" rx="6" class="dg-panel"/>
                   <text x="28" y="34" class="dg-h">GQA：每個 KV head 存 k、v</text>
@@ -1262,8 +1265,8 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               </div>
               <figcaption>MLA 每個 token 每層存什麼？只存一個壓縮過的 latent（深紅）和一小段位置用的 key；K 和 V 要用時才算出來（灰色），不放進 cache。左邊只畫了 4 個 head，Llama 3 70B 有 8 個 KV head。</figcaption>
             </figure>
-              <p>Decode 時，還原用的矩陣可以事先併進 query 和輸出的矩陣，所以不必真的把 K、V 算出來。DeepSeek-V3 每層每 token 存 512 + 64 = 576 個數，那 64 個是位置資訊用的 key（RoPE，把 token 的位置編進 q、k 的方法）；對照 Llama 3 70B 每層每 token 的 K 加 V 是 2,048 個數。課程引用的結果：DeepSeek-V2 比 DeepSeek 67B 的 <strong>KV cache 少 93%</strong>，生成的 throughput 是 5.8 倍。</p>
-              <p id="i6-3"><b>做法 3：Linear attention，用固定大小的 state 取代越長越大的 cache。</b>Softmax attention 每多一個 token，cache 就多一筆，一直到 request 結束。Linear attention 改成維護一個 dk × dv 的矩陣 S：每個新 token 把它的 key 和 value 的乘積寫進 S，query 直接讀 S，所以不論讀過多少 token，S 都一樣大：</p>
+              <p>Decode 時，還原用的矩陣可以事先併進 query 和輸出的矩陣，所以不必真的把 K、V 算出來；代價是每一步 decode 都直接拿 latent 算分數，比讀現成的 K、V 多算一些。DeepSeek-V3 每層每 token 存 512 + 64 = 576 個數，那 64 個是位置資訊用的 key（RoPE，把 token 的位置編進 q、k 的方法）；對照 Llama 3 70B 每層每 token 的 K 加 V 是 2,048 個數。課程引用的結果：DeepSeek-V2 比 DeepSeek 67B 的 <strong>KV cache 少 93%</strong>，生成的 throughput 是 5.8 倍。</p>
+              <p id="i6-3"><b>做法 3：Linear attention，用固定大小的 state 取代越長越大的 cache。</b>Softmax attention 每多一個 token，cache 就多一筆，一直到 request 結束。Linear attention 改成維護一個固定大小的 state，寫成矩陣 S（和第 3 章 n × n 的分數矩陣 S 是兩回事），大小是 dk × dv：key 的長度乘 value 的長度，例如 128 × 128。每個新 token 把它的 k 和 v 做外積（k 的每一格乘 v 的每一格，得到一個 dk × dv 的矩陣），加進 S；要輸出時，用 q 乘 S，得到一個長度 dv 的 vector。所以不論讀過多少 token，S 都一樣大：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 262" role="img" aria-label="左邊是 softmax attention 的 KV cache，每多一個 token 多一格，一排越來越長的青色格子。右邊是 linear attention 的 state S，一個 dk 乘 dv 的方陣，紅色，大小固定。新的 token 進來時做三件事：一，用 decay gate alpha 讓舊的 S 淡掉；二，用 write gate beta 把新的 key 和 value 寫進 S；三，query 讀 S，得到輸出。">
@@ -1336,8 +1339,8 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               </div>
               <figcaption>固定大小的 state 怎麼取代越長越大的 cache？每個新 token 對 S 做三件事，S 的大小不變（深紅）。三步依 slides 對 Gated DeltaNet 的描述，是示意，不是完整的公式。</figcaption>
             </figure>
-              <p>Gated DeltaNet 是其中一種：先用 decay gate α<sub>t</sub> 讓舊的 state 淡掉，再用 write gate β<sub>t</sub> 改寫新 key 指到的內容。固定大小的代價是記不住全部細節，所以實際的 model 混著用：Qwen3-Next 的 48 層裡，36 層是 Gated DeltaNet、12 層是一般的 attention（3:1），只有那 12 層存 KV cache。課程說 Kimi Linear、Qwen3.5 也是同一種配方。</p>
-              <p id="i6-4"><b>做法 4：State-space model，每個 channel 一個小 state。</b>SSM（例如 Mamba）也維護固定大小的 state，差別在形狀：gated linear attention 更新一個 dk × dv 的矩陣，Mamba 替每個 channel 更新一個小 vector h。Selective 的意思是更新用的參數 Ā、B̄ 隨每個 token 改變，讓這一層自己決定要記住什麼。課程引用 Mamba 的結果：生成的 throughput 最高是 Transformer 的 5 倍。</p>
+              <p>Gated DeltaNet 是其中一種，它把「加進 S」改成兩步，就是圖中的 ① 和 ②。第一步，用 decay gate α<sub>t</sub>（0 到 1 之間的一個數）把整個 S 乘小一點，讓舊的內容淡掉。第二步，先用新 token 的 k 從 S 讀出它原本記的 value，再依 write gate β<sub>t</sub> 決定換掉多少，換成新的 v；所以同一個 key 再寫一次，會更新它記的值，不會再疊一份上去。固定大小的代價是記不住全部細節，所以實際的 model 混著用：Qwen3-Next 的 48 層裡，36 層是 Gated DeltaNet、12 層是一般的 attention（3:1），只有那 12 層存 KV cache。課程說 Kimi Linear、Qwen3.5 也是同一種配方。</p>
+              <p id="i6-4"><b>做法 4：State-space model，每個 channel 一個小 state。</b>SSM（例如 Mamba）也維護固定大小的 state，差別在形狀：gated linear attention 的 state 是一個 dk × dv 的矩陣；Mamba 替 vector 的每一維各留一個很短的 vector h，每一維叫一個 channel，所以 d 維的 vector 有 d 個 channel。Mamba 屬於 selective SSM：決定「舊的 h 留多少、新的輸入寫多少」的兩個係數 Ā、B̄，由每個 token 的內容算出來，所以這一層能自己決定記住什麼。這兩個係數和第 2 章的參數不同：參數是訓練完就固定的權重，Ā、B̄ 是每個 token 用那些權重算出來的值。課程引用 Mamba 的結果：生成的 throughput 最高是 Transformer 的 5 倍。</p>
               <p id="i6-5"><b>做法 5：Sparse attention，每個 query 只讀 top-k 個 token。</b>DeepSeek-V3.2 的 DSA 先用一個便宜的 indexer 替前面每個 token 打分數，挑出分數最高的 2,048 個，attention 只讀這些：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -1393,18 +1396,18 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               </div>
               <figcaption>Sparse attention 省的是什麼？每一步只讀 indexer 挑出的 k 個（深紅），讀的量封頂；但每個 token 之後都可能再挑中，所以全部照存。依 slides 的例子畫成 16 選 4。</figcaption>
             </figure>
-              <p>讀的量封頂在 2,048，<strong>存的量照樣全部存</strong>，因為這一步沒讀的 token，下一步可能又挑中。所以它省的是每一步的運算和讀取，不是 KV cache 的容量。五類並排：</p>
+              <p>讀的量封頂在 2,048，<strong>存的量照樣全部存</strong>，因為這一步沒讀的 token，下一步可能又挑中。所以它省的是每一步的運算和讀取，不是 KV cache 的容量。下表把完整 attention 當對照，和五類做法並排，linear attention 和 SSM 併成一列：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>做法</th><th>每個 request 存什麼</th><th>存的量隨長度</th><th>放棄什麼</th><th>例子</th></tr></thead>
                 <tbody>
-                  <tr><td>Full（GQA）</td><td>每層每 token 的 K、V</td><td>線性成長</td><td>—</td><td>Llama 3、Qwen3</td></tr>
-                  <tr><td>Sliding window</td><td>local 層只存最近 w 個</td><td>local 層封頂</td><td>local 層看不到 w 以外</td><td>Gemma 3、gpt-oss</td></tr>
-                  <tr><td>MLA</td><td>每層每 token 一個 latent</td><td>線性，斜率小</td><td>多一步還原的運算</td><td>DeepSeek-V3</td></tr>
-                  <tr><td>Linear、SSM</td><td>每層一個固定的 state</td><td>不變</td><td>記不住全部細節</td><td>Qwen3-Next、Mamba</td></tr>
-                  <tr><td>Sparse</td><td>全部的 K、V，加 indexer key</td><td>線性</td><td>多一個 indexer；存的沒有變少</td><td>DeepSeek-V3.2</td></tr>
+                  <tr><td>Full（GQA）</td><td>每層每 token 的 K、V</td><td>線性成長</td><td>什麼都不放棄，但 KV cache 最大</td><td>Llama 3、Qwen3</td></tr>
+                  <tr><td>Sliding window</td><td>local 層只存最近 w 個</td><td>local 層封頂</td><td>local 層讀不到最近 w 個以外的 token，遠處只靠少數 global 層</td><td>Gemma 3、gpt-oss</td></tr>
+                  <tr><td>MLA</td><td>每層每 token 一個 latent</td><td>線性，斜率小</td><td>每一步 decode 都多算一些：分數要從壓縮過的 latent 算出來</td><td>DeepSeek-V3</td></tr>
+                  <tr><td>Linear、SSM</td><td>每層一個固定的 state</td><td>不變</td><td>記不住全部細節：舊的內容會淡掉，新的寫入也會蓋過舊的</td><td>Qwen3-Next、Mamba</td></tr>
+                  <tr><td>Sparse</td><td>全部的 K、V，加 indexer key</td><td>線性</td><td>每一步只讀 indexer 挑中的 2,048 個 token，挑漏的這一步讀不到；另外多一個 indexer 要算</td><td>DeepSeek-V3.2</td></tr>
                 </tbody>
               </table></div>
-              <p id="i6-6"><b>本文的判斷：方向是混合，不是二選一。</b>五類都拿一部分長距離的精確記憶，去換記憶體或運算。所以新的 model 幾乎都留一部分完整的 attention，其餘的層換成便宜的做法：</p>
+              <p id="i6-6"><b>本文的判斷：方向是混合，不是二選一。</b>表上的取捨分兩種。Sliding window、linear 與 SSM、sparse attention 放棄的是「每一步都完整讀到前面每一個 token」：local 層讀不到遠處，固定的 state 只留壓縮過的摘要，sparse 每一步只讀挑中的。MLA 每一步仍讀全部，付的是多一點運算。只有完整的 attention 什麼都不放棄，但 KV cache 最大。所以走第一種的 model，幾乎都留一部分完整 attention 的層負責遠處，其餘的層換成便宜的做法，如下圖；MLA 走的是第二種，每一層都還讀得到全部，不需要這樣混合，DeepSeek-V3 每一層都用 MLA。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 248" role="img" aria-label="四個 model 的層，從左到右排成一排小格。紅色是存完整 KV cache 的層，青色是只存一小段或固定 state 的層。Gemma 3：每 6 層 5 層 sliding window（w 等於 1,024）、1 層 global。gpt-oss-120b：sliding window（w 等於 128）和 full attention 一層一層交替。Qwen3-Next：每 4 層 3 層 Gated DeltaNet、1 層 attention。Llama 3：每一層都是 full attention。">
@@ -1522,10 +1525,10 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
             </div>
           </div>
 <div class="idea" id="i7">
-            <h3><span class="idea-no">7</span>現在的 open-weight model：每個 token 的 KV cache 差到 13 倍</h3>
+            <h3><span class="idea-no">7</span>能自己架的 model：每個 token 的 KV cache 差到 13 倍</h3>
             <div class="prose">
 
-              <p>課程用 Llama 3 70B 算帳，其他架構只給了方向。選 model 時需要具體的數字，所以本文把第 3 章的公式套到幾個現在常用的 open-weight model 上。參數取自各 model 官方的 config.json 或論文，查詢日是 2026-11-06；Gemma 3 的官方 config 要先同意授權條款才看得到，所以不列。</p>
+              <p>課程用 Llama 3 70B 算帳，其他架構只給了方向。選 model 時需要具體的數字，所以本文把第 3 章的公式套到幾個現在常用的 open-weight model（權重公開、可以下載到自己的 GPU 上跑的 model）上。公式要的形狀數字（層數、KV head 數、head 的寬度）取自各 model 官方的設定檔 config.json 或論文，查詢日是 2026-11-06；Gemma 3 的官方 config 要先同意授權條款才看得到，所以不列。</p>
               <p id="i7-1"><b>同一條公式，代入 config.json 的幾個欄位。</b>GQA 的 model 只需要 config 裡的層數、KV head 數和 head 維度：</p>
               <figure class="file"><figcaption>Qwen3-32B 的 config.json（節錄，2026-11-06 查詢）</figcaption><pre><code class="lang-json">{
   "num_hidden_layers": 64,       // L：層數
@@ -1544,13 +1547,13 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                   <tr><td>Qwen3-32B<br><small>GQA</small></td><td>2 × 64 × 8 × 128 × 2</td><td>256 KiB</td><td>34.4 GB</td></tr>
                   <tr><td>DeepSeek-V3.2<br><small>MLA ＋ sparse</small></td><td>(512 + 64) × 61 × 2</td><td>68.6 KiB</td><td>9.2 GB</td></tr>
                   <tr><td>gpt-oss-120b<br><small>一半 sliding（w = 128）</small></td><td>2 × 18 × 8 × 64 × 2</td><td>36 KiB</td><td>4.8 GB</td></tr>
-                  <tr><td>Qwen3-Next-80B-A3B<br><small>3:1 linear</small></td><td>2 × 12 × 2 × 256 × 2</td><td>24 KiB</td><td>3.3 GB</td></tr>
+                  <tr><td>Qwen3-Next-80B-A3B<br><small>3:1 linear</small></td><td>2 × 12 × 2 × 256 × 2</td><td>24 KiB</td><td>3.2 GB</td></tr>
                   <tr><td>（對照）Llama 3 70B<br><small>假設用 MHA</small></td><td>2 × 80 × 64 × 128 × 2</td><td>2.5 MiB</td><td>344 GB</td></tr>
                 </tbody>
               </table></div>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 300" role="img" aria-label="照比例的橫條：每個 token 的 KV cache，BF16。Llama 3 70B 320 KiB，每 100 GB 放 31 萬個 token。Qwen3-32B 256 KiB，38 萬。Llama 3.1 8B 128 KiB，76 萬。DeepSeek-V3.2 68.6 KiB，142 萬。gpt-oss-120b 36 KiB，271 萬。Qwen3-Next-80B-A3B 24 KiB，407 萬，紅色。">
+                <svg viewBox="0 0 720 300" role="img" aria-label="照比例的橫條：每個 token 的 KV cache，BF16。藍色是 GQA：Llama 3 70B 320 KiB，每 100 GB 放 31 萬個 token；Qwen3-32B 256 KiB，38 萬；Llama 3.1 8B 128 KiB，76 萬。黃色是 MLA：DeepSeek-V3.2 68.6 KiB，142 萬。青色：gpt-oss-120b 36 KiB，271 萬。深紅：Qwen3-Next-80B-A3B 24 KiB，407 萬。">
                   <defs><marker id="l9v-models-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-models-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="22" class="dg-h">每個 token 的 KV cache（BF16，照比例）</text>
                   <text x="14" y="50" class="dg-cb">Llama 3 70B</text>
@@ -1585,9 +1588,9 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               <ul>
                 <li><b>gpt-oss-120b。</b>另外 18 層 sliding window 的 cache 封頂在 128 個 token，每個 request 固定約 4.5 MiB。</li>
                 <li><b>Qwen3-Next-80B-A3B。</b>36 層 Gated DeltaNet 各有一個固定的 state（32 個 value head × 128 × 128），每個 request 約 36 MiB（BF16），等於它的 attention 層 1,536 個 token 的 KV。所以 context 很短時，它的優勢不明顯。</li>
-                <li><b>DeepSeek-V3.2。</b>表中以 BF16 計；vLLM 的 FP8 格式是每層每 token 656 byte，61 層約 39 KiB。DSA 的 indexer 另有一份 FP8 的 key cache，表中沒算。</li>
+                <li><b>DeepSeek-V3.2。</b>表中每個數字以 BF16（2 byte）計。開源的 serving engine vLLM（把 model 跑成服務的軟體）可以改用 FP8 存；依 <a href="https://vllm.ai/blog/2025-09-29-deepseek-v3-2" target="_blank" rel="noopener">vLLM 2025-09 的說明</a>，每層每 token 是 656 byte：512 個 latent 數各 1 byte，共 512 byte；每 128 個數共用一個 4 byte 的縮放係數（scale），共 16 byte；64 個位置用的數維持 BF16，共 128 byte。61 層合計約 39 KiB。DSA 的 indexer 另有一份 FP8 的 key cache，表中沒算。</li>
               </ul>
-              <p id="i7-3"><b>本文的判斷：選 model 時，每個 token 的 KV 和參數一樣重要。</b>每 100 GB 的空閒記憶體，Llama 3 70B 放得下 31 萬個 token，Qwen3-Next 放得下 407 萬個，<strong>差 13 倍</strong>。這會改變選擇：Qwen3-32B 的權重 65.6 GB（BF16），比 Qwen3-Next-80B-A3B 的約 160 GB 小得多，但一個 128K 的 request 要 34.4 GB 對 3.3 GB。<strong>要同時跑很多長 context 的 agent，比較大的 model 反而放得下比較多人</strong>。</p>
+              <p id="i7-3"><b>本文的判斷：選 model 時，每個 token 的 KV 和參數一樣重要。</b>每 100 GB 的空閒記憶體，Llama 3 70B 放得下 31 萬個 token，Qwen3-Next 放得下 407 萬個，<strong>差 13 倍</strong>。這會改變選擇：Qwen3-32B 的權重 65.6 GB（BF16），比 Qwen3-Next-80B-A3B 的約 160 GB 小得多，但一個 128K 的 request 要 34.4 GB 對 3.2 GB（Qwen3-Next 另加固定的 36 MiB）。<strong>要同時跑很多長 context 的 agent，比較大的 model 反而放得下比較多人</strong>。</p>
               <p>這張表只算記憶體，不是對照實驗：品質、serving engine 對新架構的支援、固定 state 的開銷，都要另外驗證。表格會過時，公式不會。第 3 段動手試試有一段 python，貼上任何 model 的 config.json 數字就能算。</p>
             </div>
           </div>
@@ -1599,7 +1602,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               <p id="i8-1"><b>BPE：從 byte 開始，把最常一起出現的兩塊合併。</b>現在的 model 多半用 byte-level BPE（byte pair encoding）建詞彙表：先把文字轉成 UTF-8 的 byte，256 種 byte 各是一個基本單位；接著在大量文字裡找最常相鄰出現的一對，合併成一個新單位，重複幾十萬次。因為最底層是 byte，任何文字都切得出來，不會有不認得的字：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 236" role="img" aria-label="三列。第一列：Serving is hard 的 15 個 byte，每個 byte 一格，空白標成一個點。第二列註記：從 256 種 byte 開始，把最常相鄰的一對合併，重複幾十萬次。第三列：Llama 3 的 tokenizer 切成 4 個 token：S、erving、空白加 is、空白加 hard，ID 是 50、20073、374、2653。第四列：GPT-4o 用的 o200k_base 切成 3 個：Serving、空白加 is、空白加 hard。">
+                <svg viewBox="0 0 720 236" role="img" aria-label="四列。第一列：Serving is hard 的 15 個 byte，每個 byte 一格，空白標成一個點。第二列註記：從 256 種 byte 開始，把最常相鄰的一對合併，重複幾十萬次。第三列：Llama 3 的 tokenizer 切成 4 個 token：S、erving、空白加 is、空白加 hard，ID 是 50、20073、374、2653。第四列：GPT-4o 用的 o200k_base 切成 3 個：Serving、空白加 is、空白加 hard。">
                   <defs><marker id="l9v-bpe-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-bpe-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="22" class="dg-cb">① 先變成 byte</text>
                   <rect x="150" y="8" width="33" height="26" rx="2" class="dg-n-n"/>
@@ -1726,7 +1729,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                   <text x="14" y="258" class="dg-c">深紅：不是完整的字，只是 UTF-8 的 byte 片段（一個中文字 3 個 byte）</text>
                 </svg>
               </div>
-              <figcaption>同一個中文字，不同 tokenizer 切成幾個 token？詞彙表收了這個字或這個詞，就是 1 個 token；沒收，就拆成 byte 片段（深紅）。每列最右邊的數字是 token 數。本文實際用各 model 的 tokenizer 跑出來的結果。</figcaption>
+              <figcaption>同一個中文字或詞，不同 tokenizer 切成幾個 token？詞彙表收了這個字或這個詞，就是 1 個 token；沒收，就拆成 byte 片段（深紅）。每一欄切完後面的數字，是那個字或詞的 token 數。本文實際用各 model 的 tokenizer 跑出來的結果。</figcaption>
             </figure>
               <p id="i8-4"><b>本文實測：繁體中文一個字約 0.7 到 0.9 個 token。</b>本文拿這個站 L1 到 L8 的正文，拿掉英文和數字後剩 50,315 個中文字，用六個 tokenizer 各切一次；同一段再用 OpenCC 轉成簡體，比較繁簡的差別：</p>
               <figure class="diagram">
@@ -1791,7 +1794,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <li><b>選 model。</b>Tokenizer 的效率乘在每一本帳上：prefill 的運算、KV cache、decode 的步數、API 的帳單都和 token 數成正比。同一段繁體中文，<strong>Llama 3 比 DeepSeek-V3 多 25% 的 token</strong>。專門擴充繁體詞彙的 model 差得更多：聯發科的 <a href="https://arxiv.org/abs/2403.02712" target="_blank" rel="noopener">Breeze-7B</a>（2024）在 Mistral 7B 的詞彙上加了約 3 萬個繁體中文 token，報告說中文的壓縮率約 2 倍，推論也快約 2 倍。</li>
                 <li><b>同一件事用中文寫，不會比較省。</b>中文字的資訊密度高，但一個字的 token 也多。2026-04 一篇<a href="https://arxiv.org/abs/2604.14210" target="_blank" rel="noopener">初步研究</a>（Scam.ai，SWE-bench Lite 50 題、3 個 model）量到中文 prompt 的 token 數是英文的 0.92 到 1.15 倍，看 tokenizer 而定；解題率反而低 4.5 到 9.9 個百分點。作者自己說樣本小、沒有做顯著性檢定。</li>
               </ul>
-              <p>Token 數是 tokenizer 的性質，不是文字的性質，換一代 model 就可能變。Claude 的<a href="https://platform.claude.com/docs/en/build-with-claude/token-counting" target="_blank" rel="noopener">官方文件</a>說，Claude 4.7 之後的 model 換了新的 tokenizer，<strong>同一段文字約多 30% 的 token</strong>。所以要估自己的帳，用你要用的那個 model 實際數一次：open-weight model 用它的 tokenizer.json（第 3 段動手試試有程式），Claude 用 API 的 <code>count_tokens</code> 端點（2026-11 查官方文件）。</p>
+              <p>三件事之外，估帳時還要記得一個前提：token 數是 tokenizer 的性質，不是文字的性質，換一代 model 就可能變。Claude 的<a href="https://platform.claude.com/docs/en/build-with-claude/token-counting" target="_blank" rel="noopener">官方文件</a>說，Claude 4.7 之後的 model 換了新的 tokenizer，<strong>同一段文字約多 30% 的 token</strong>。所以要估自己的帳，用你要用的那個 model 實際數一次：open-weight model 用它的 tokenizer.json（第 3 段動手試試有程式），Claude 用 API 的 <code>count_tokens</code> 端點（2026-11 查官方文件）。</p>
               <p id="i8-6"><b>串流時的半個字。</b>Tokenizer 把一個字拆成 byte 片段時，detokenize 會遇到一個問題。Llama 3 把「帳」切成兩個 token，第一個只帶來 E5 B8 兩個 byte，還不是一個完整的字，印不出來：</p>
               <figure class="file"><figcaption>python：串流時的半個字（輸出是實際跑出來的）</figcaption><pre><code class="lang-py">&gt;&gt;&gt; '帳'.encode('utf-8')                    # 一個中文字是 3 個 byte
 b'\xe5\xb8\xb3'
@@ -1938,7 +1941,7 @@ UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-1: unexpected
               </div>
               <figcaption>Top-k 和 top-p 各留下幾個？同一張 T = 1 的機率表：top-k 固定留 3 個；top-p 從高到低累加到 0.9，這裡要到第 4 個（深紅）。灰色的不會抽到。</figcaption>
             </figure>
-              <p id="i9-3"><b>設定也改變輸出有多長。</b>每一步都可能抽到 stop token，也可能抽到別的，所以設定會改變回答在第幾步結束，也就改變 decode 的步數、時間和成本。Greedy 有一個已知的陷阱：Qwen3 的<a href="https://huggingface.co/Qwen/Qwen3-32B" target="_blank" rel="noopener">官方 model card</a> 說 thinking mode <strong>不要用 greedy decoding</strong>，會讓表現變差，還可能無止境地重複；它建議 thinking mode 用 Temperature 0.6、TopP 0.95、TopK 20，non-thinking mode 用 0.7、0.8、20。所以不論設定是什麼，都要設 <code>max_tokens</code>，讓第 1 章的長度上限替你停下來。</p>
+              <p id="i9-3"><b>設定也改變輸出有多長。</b>每一步都可能抽到 stop token，也可能抽到別的，所以設定會改變回答在第幾步結束，也就改變 decode 的步數、時間和成本。Greedy 有一個已知的陷阱。Qwen3 有兩種模式：thinking mode 先寫出一段推理再回答，non-thinking mode 直接回答；它的<a href="https://huggingface.co/Qwen/Qwen3-32B" target="_blank" rel="noopener">官方 model card</a> 說 thinking mode <strong>不要用 greedy decoding</strong>，會讓表現變差，還可能無止境地重複。它建議 thinking mode 用 Temperature 0.6、TopP 0.95、TopK 20，non-thinking mode 用 0.7、0.8、20。所以不論設定是什麼，都要設 <code>max_tokens</code>，讓第 1 章的長度上限替你停下來。</p>
               <p id="i9-4"><b>Temperature 0 也不保證每次相同。</b>同一個 prompt 在 serving 系統裡，每一步和不同的 request 排在同一個 batch；batch 的大小一變，GPU 的加總順序可能跟著變，浮點數的結果差一點點。碰到兩個 token 分數很接近時，就會挑到不同的 token，之後整段都不一樣。原因與量測見 L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉。</p>
               <p id="i9-5"><b>託管的 model 開始不讓你調。</b>2026-11 查 Claude Opus 5.5 的 <a href="https://platform.claude.com/docs/en/models/opus-5-5/migration-guide" target="_blank" rel="noopener">migration guide</a>：request 要拿掉 <code>temperature</code>、<code>top_p</code>、<code>top_k</code>，改用 prompt 引導行為；文件也提醒，舊 model 上設 temperature = 0 也從來不保證相同的輸出。所以<strong>這一章的設定，主要用在自己架的 open-weight model</strong>：先照 model card 的建議值，再用自己的 eval 驗證（L7〈<a href="l07.html#i8">建立評估</a>〉）。</p>
             </div>
@@ -2004,11 +2007,11 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
                   <text x="14" y="138" class="dg-c">每一圈要等上一圈算完，所以延遲隨 K 增加。</text>
                 </svg>
               </div>
-              <figcaption>Looped transformer 把什麼重複？中間的 block R（深紅）重複 K 次，深度變成推論時可以調的參數。依 slides 的圖重畫。</figcaption>
+              <figcaption>Looped transformer 把什麼重複？中間的 block R（深紅）重複 K 次，所以 model 實際跑幾層，變成推論時才決定的一個設定。依 slides 的圖重畫。</figcaption>
             </figure>
     <p>結構是 prelude P、block R 重複 K 次、coda C。多跑幾圈不增加參數，K 圈的運算是 R 的 K 倍。</p>
-    <p>Geiping 等人（2025）訓練了 3.5B 參數、800B token 的 recurrent-depth model。推理題的表現隨 K 變大而提升，最多到等同 50B 參數的運算量。</p>
-    <p>用三個數字看：weights 不變，每個 token 的 FLOPs 乘上 K，延遲也跟著 K 增加。</p>
+    <p>Geiping 等人（2025）訓練了 3.5B 參數、800B token 的 recurrent-depth model。他們把 K 一路加大，直到每個 token 的運算量和一個 50B 參數的 model 一樣多；在這段範圍裡，推理題的表現隨 K 變大而提升，有時提升很多（摘要比的是運算量，沒有說表現追上 50B 的 model）。</p>
+    <p>用三個數字看：weights 不變；每個 token 的 FLOPs 乘上 K；KV cache 看實作，每一圈的 attention 如果各存一份，也跟著乘上 K（課程沒有談這一項）。每一圈要等上一圈算完，所以延遲也跟著 K 增加。</p>
   </div>
 </details>
               <details class="gloss" id="n-diffusion">
@@ -2017,7 +2020,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
 
     <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 216" role="img" aria-label="四列，是 diffusion LM 生成同一段 6 個 token 的四步。第 0 步全部是 [M]。第 1 步填入 The 和 sat。第 2 步再填入 cat 和 on。第 3 步填入 the 和 mat，全部填完：The cat sat on the mat。每一步新填的格子是紅色。右側註記：每一步都是一次完整的 forward pass，要重讀全部權重。">
+                <svg viewBox="0 0 720 216" role="img" aria-label="四列，是 diffusion LM 生成同一段 6 個 token 的四步。第 0 步全部是 [M]。第 1 步填入 The 和 sat。第 2 步再填入 cat 和 on。第 3 步填入 the 和 mat，全部填完：The cat sat on the mat。每一步新填的格子是紅色。右側註記：每一步都把整個 model 從頭跑一次，要重讀全部權重。">
                   <defs><marker id="l9v-diff-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l9v-diff-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="36" class="dg-cb">第 0 步</text>
                   <rect x="90" y="14" width="64" height="32" rx="2" class="dg-n-n"/>
@@ -2072,7 +2075,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
                   <rect x="440" y="158" width="64" height="32" rx="2" class="dg-n-focus"/>
                   <text x="472" y="179" text-anchor="middle" class="dg-mn-on">mat</text>
                   <text x="530" y="36" class="dg-cb">每一步：</text>
-                  <text x="530" y="56" class="dg-c">一次完整的 forward pass，</text>
+                  <text x="530" y="56" class="dg-c">整個 model 跑一次，</text>
                   <text x="530" y="74" class="dg-c">重讀全部權重，</text>
                   <text x="530" y="92" class="dg-c">一次填好幾個 token</text>
                   <text x="530" y="140" class="dg-cb">步數少：快，但品質會掉</text>
@@ -2090,7 +2093,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
   <div class="gloss-body prose">
 
     <p>Slides 的進階清單也列了 multi-token prediction：訓練時讓 model 除了下一個 token，也預測再後面的 token。</p>
-    <p>DeepSeek-V3 用它當訓練目標。技術報告說推論時可以直接丟掉這些模組，也可以拿來做 speculative decoding，加速生成。Speculative decoding 是後面講次的主題。</p>
+    <p>DeepSeek-V3 用它當訓練目標：在主 model 後面多接預測用的小模組，每個模組多預測後面一個 token。技術報告說，推論時可以直接丟掉這些模組，也可以拿它們來做 speculative decoding（先猜幾個 token，再讓 model 一次驗證），加速生成；speculative decoding 是後面講次的主題。</p>
   </div>
 </details>
             </div>
@@ -2277,7 +2280,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
                   <p>新的 model 多半混著用：保留一部分完整 attention 的層，負責長距離的精確記憶，其餘換成便宜的做法。</p>
                   <div class="callout caution"><span class="tag">常見誤解</span><div><p>「MoE 比 dense 省記憶體。」MoE 省的是運算。DeepSeek-V3 的運算約是 Llama 3.1 405B 的 1/11，記憶體卻是 1.7 倍，因為 671B 個參數都要放著。</p></div></div>
                   <div class="tk-keys"><b>帶走這幾點</b><ol><li>MoE：記憶體看總參數，運算看 active。</li><li>改 KV 的五類：封頂、縮小、固定 state、只封頂讀的量。</li><li>選 model 看兩件事：存完整 KV 的層數，和每層每 token 存多少。</li></ol></div>
-                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">MoE</a>〉、〈<a href="#i6">改 KV cache 的架構</a>〉、〈<a href="#i7">現在的 open-weight model</a>〉。進階題第 2 題用它選 model。</p>
+                  <p class="tk-rel"><b>相關：</b>核心觀念〈<a href="#i5">MoE</a>〉、〈<a href="#i6">改 KV cache 的架構</a>〉、〈<a href="#i7">能自己架的 model</a>〉。進階題第 2 題用它選 model。</p>
                 </div></details>
                 <p class="gh-talk"><a href="https://github.com/chihmingyang/cs2680/issues/107" target="_blank" rel="noopener">到 GitHub 回答這一題（Q4）↗</a></p>
               </div>

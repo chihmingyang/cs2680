@@ -69,15 +69,17 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 - **補。** 每 token 的 KV（第 7 章）：課程只算 Llama 3 70B；六個 open-weight model 依官方 config.json 算出 24 到 320 KiB，差 13 倍，結論變成「參數多的 model 可能放得下更多長 context 的人」（計算，不是量測）。中文的 token 數（第 8 章）：slides 的「3–4 字元一個 token」是英文；本文用六個 tokenizer 實測本站 50,315 個繁體字，0.71–0.91 token／字（GPT-4 的 cl100k 是 1.36），繁體比同段簡體多 6–23%，和 DeepSeek、Qwen 的官方經驗值與 Bailong（2024）一致。Token 預算併進第 4 章，不標本文補的（方法來自延伸閱讀的 kipply）。
 - **刪。** RMSNorm、pre-norm、√dk 收成名詞註。690 GB 的 S、FlashAttention、roofline 一句帶過連 L10。Continuous batching 只寫 slides 講的（11/04 的主場）。Temperature 0 不保證相同連 L1，不重講。
 - **更正 slides。** 320 KB 實際是 327,680 byte，所以 64 個 request 是 1,819 GB，不是 1,779 GB（頁面註明）；「Serving is hard」的 token ID 是示意，改用 Llama 3 tokenizer 的實際輸出。
+- **可讀性審查（push 前，WORKFLOW I）。** 第一輪 33 BLOCK：tldr 的名詞（KV cache、context、GQA 這類先用後講）、head 在第 3 章先用後講、linear attention 的 S 和第 3 章的分數矩陣同名、表格格子沒回答欄名；也抓到一個錯：Qwen3-Next 那格 3.3 GB 應是 3.2 GB。第二輪剩 2 BLOCK、1 NIT，主線修，沒有審第三輪。
 
-## L10 GPU 入門與 kernel 最佳化（10 章，50 分）
+## L10 GPU 入門與 kernel 最佳化（10 章，55 分）
 
 - **兩份 deck 一篇。** 10/21 的 2a 與 11/02 的 2b 封面是同一堂，James 定合成一篇。
 - **排法。** 一定要會（1 GPU 的設計、2 roofline、3 decode、4 量測）：瓶頸在 bytes 還是 FLOP，決定之後每種改法有沒有用；拿 nvidia-smi 做容量規劃會買錯 GPU，代價大又看不出來；第 1 章是第一次接觸 GPU 的讀者的前提。底層（5 晶片裡面）：解釋 peak 只屬於矩陣乘法、頻寬靠 bytes in flight，不改變多數人的決定，但第 7、8 章要用；規格會過時，收成查閱。要用時會做（6 程式、7 kernel 之內、8 kernel 之間）：只有要寫或選 kernel 的人用到；先講抽象層回答要不要往下寫，手法的名字會過時，結論收成「選有這些手法的 engine」。要防的（9 AI 寫的 kernel、10 一張卡之外）：錯了事後才發現，代價大。
 - **補。** AI 寫的 kernel 怎麼量錯（第 9 章整章）：課程只有一句提醒；METR、Sakana 與 robust-kbench（加速從 3.13x 降到 1.49x）、CUDA-L1（另開 stream 騙過計時）、KernelBench v0.1、Hacker-fixer loop（2025-02 到 2026-06），收成五個驗收檢查，第一個是 roofline 的 speed of light。MoE 把 batch 分給各 expert（第 3 章一節）：slides 的 batching 結論只對 dense 成立；DeepSeek 2025-02 的推論系統說明（EP144）與 2025-12 的 A100 量測。
 - **刪。** 課務；GPU 世代、各精度 ridge 表、TMA／TMEM、其他晶片、編譯到 SASS 收成查閱（會過時）；最佳化清單併成第 7 章開頭的四個目標；batching、quantization、speculative decoding 各一句（後面的講次）。
 - **更正 slides。** Little's law 那頁是 4 KB 不是 512 B；A100 到 Rubin 的頻寬是 10.8 倍不是約 9 倍，BF16 的 ridge 也沒有一路右移；MFU 22% 的分母是 FP8 peak，換成 BF16 是 43%；故障原因的 8%／17%／30% 用 Llama 3 論文 Table 5 確認。
-- **待決定。** 50 分鐘比其他堂長；要縮的話，第 5 章可以整章改成查閱（約省 4 分）。
+- **待決定。** 55 分鐘比其他堂長（可讀性審查補了約 20 個名詞的解釋，從 50 分變 55 分）；要縮的話，第 5 章可以整章改成查閱（約省 4 分）。
+- **可讀性審查（push 前，WORKFLOW I）。** 第一輪 71 BLOCK：tldr 約 20 個先用後講的名詞、查閱表的硬體名詞與「–」、幾個對不起來的數字（Llama 3 故障 58.7% 對圖上加起來的 55.9%，差的是沒畫出的兩個小類；NVLink 900 是兩個方向合計，每個方向 450；EP144 × 2 = 288 是 256 個 expert 加 32 份備份）。作者另外更正兩處沒被標的：Llama 3 8B 的 GQA 是 g = 4，不是 8；slides 列的是三個 GPU 丟時間的地方，第四個是人的時間。第二輪剩 12 BLOCK、1 NIT，主線修，沒有審第三輪。
 
 ## L11 作業回饋與 agent 的十個陷阱（10 章，35 分）
 
@@ -86,3 +88,4 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 - **刪。** 對應不清楚的數字不用（permission mode 比例、失敗類型比例、兩個中位數、P8 的順序）；疊改動與只看一次 run 只用總表的數字。學生的願望清單收進目錄；flag 名、model 範圍、流程圖收成查閱（會過時）；課務刪掉。
 - **語氣。** 第 5 章寫成「slides 的結論是 Anthropic 刻意做的實驗」，公開紀錄另段寫，不推測原因。
 - **延伸閱讀。** 課程沒有列 readings；五篇取自 9/9、9/30、10/14 的官方清單，rg-intro 寫明。OWASP 的 PDF 抓不到，只列選讀。
+- **可讀性審查（push 前，WORKFLOW I）。** 第一輪 21 BLOCK，最大的一個是結構問題：第 4、5 章都叫 harness，一個是學生交出去的程式，一個是 Claude Code。作者查了作業說明：排行榜跑的是學生自己的 agent，Claude Code 的 flag 不會直接改 v8、v9 的分數，原文暗示會，是錯的；第 5 章改成「Claude Code：它也會在你腳下變」，只對經過 Claude Code 量出的數字成立。第二輪剩 5 BLOCK、3 NIT，主線修，沒有審第三輪。
