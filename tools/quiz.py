@@ -7,9 +7,9 @@ app.js 讀它，在每一節後面放小測、在範圍最後一章後面放整�
 
   python3 -I tools/quiz.py check docs/l06.html              # 題庫和頁面對得上嗎（verify.sh 會跑）
   python3 -I tools/quiz.py units docs/l06.html              # 每個單位屬於哪一節（除錯用）
-  python3 -I tools/quiz.py exam docs/l06.html > exam.md     # 作答包：讀者文字＋題目，不含答案
-  python3 -I tools/quiz.py grade docs/l06.html answers.json > judge.md
-        # 對定位（程式判斷），並產出評分包給評分的 agent
+  python3 -I tools/quiz.py exam docs/l06.html [k14b …] > exam.md   # 作答包：讀者文字＋題目，不含答案；列題號就只出那幾題
+  python3 -I tools/quiz.py grade docs/l06.html answers.json [k1b k14b …] > judge.md
+        # 對定位（程式判斷），並產出評分包給評分的 agent；後面列題號就只評那幾題（改了 key 之後重評）
   python3 -I tools/quiz.py report docs/l06.html answers.json verdicts.json [更多 answers verdicts 對]
         # 彙整：每題過不過、每一節的結果；給兩組以上就比較各次是否一致
 
@@ -159,7 +159,7 @@ def resolve(cite, units):
     return hit
 
 
-def exam(path):
+def exam(path, only=()):
     src, q = load(path)
     units = unit_map(src, q)
     titles = {}
@@ -167,7 +167,8 @@ def exam(path):
     for cid in q["scope"]:
         h = next(by_id(root, cid).find_all(lambda x: x.tag == "h3"), None)
         titles[cid] = h.text() if h is not None else cid
-    print(f"# 作答包：{Path(path).name}　{len(q['unit']) + len(q.get('integration', []))} 題")
+    items = [x for x in q["unit"] + q.get("integration", []) if not only or x["id"] in only]
+    print(f"# 作答包：{Path(path).name}　{len(items)} 題")
     print("""
 你是讀者，只讀過下面這份文字。依序回答最後的每一題。
 
@@ -187,9 +188,7 @@ def exam(path):
             print(f"\n### {g}　{name}")
         print(f"[{lc}] {tx}")
     print("\n## 題目\n")
-    for u in q["unit"]:
-        print(f"- {u['id']}：{u['q']}")
-    for x in q.get("integration", []):
+    for x in items:
         print(f"- {x['id']}：{x['q']}")
     return 0
 
@@ -217,7 +216,7 @@ def locate(q, units, answers):
     return res
 
 
-def grade(path, answers_path):
+def grade(path, answers_path, only=()):
     src, q = load(path)
     units = unit_map(src, q)
     answers = json.loads(Path(answers_path).read_text(encoding="utf-8"))
@@ -232,6 +231,8 @@ def grade(path, answers_path):
 只輸出一個 JSON 物件，不要其他文字：{"k1a": {"points": [1, 0], "why": "一句話：哪個要點沒答到或沒有出處"}, …}
 """)
     for qid, r in loc.items():
+        if only and qid not in only:
+            continue
         it = r["item"]
         kind = "整合" if qid.startswith("x") else KINDS.get(it.get("kind"), "")
         print(f"\n## {qid}（{kind}；節：{'、'.join(names[k] for k in r['need'])}）")
@@ -310,9 +311,9 @@ def main(argv):
             print(f"{ks or '-':4} [{lc}] {tx[:50]}")
         return 0
     if cmd == "exam":
-        return exam(path)
-    if cmd == "grade" and len(argv) == 4:
-        return grade(path, argv[3])
+        return exam(path, set(argv[3:]))
+    if cmd == "grade" and len(argv) >= 4:
+        return grade(path, argv[3], set(argv[4:]))
     if cmd == "report" and len(argv) >= 5 and len(argv) % 2 == 1:
         return report(path, list(zip(argv[3::2], argv[4::2])))
     sys.exit(__doc__)

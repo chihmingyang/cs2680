@@ -2339,8 +2339,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "q": "換一個任務：每步 97%、共 30 步。全對的機率約多少？要讓這 30 步有 90% 全對，每步至少要多準？（可以用計算機）",
    "key": [
     "0.97 的 30 次方 ≈ 40%",
-    "每步要約 99.65%，也就是 0.9 的 1/30 次方",
-    "用的是 p 的 n 次方：每步都要對、各步互不影響"
+    "每步要約 99.65%，也就是 0.9 的 1/30 次方"
    ]
   },
   {
@@ -2515,11 +2514,11 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k14b",
    "ks": "k14",
    "kind": "apply",
-   "q": "新的 trajectory：step 8 model 要跑 pytest；step 9 pytest 輸出 2,000 行，最後一行是 FAILED test_auth；step 10 harness 為了騰出 context，只把前 100 行放回 context（全是 PASSED），也沒附上 exit code；step 11 model 說「All tests pass.」。依本文定位第一個出錯步驟的問法，來源在哪一層？為什麼不是 tool 或 model？該修在哪裡？",
+   "q": "新的 trajectory：step 8 model 要跑 pytest；step 9 pytest 輸出 2,000 行，最後一行是 FAILED test_auth；step 10 harness 為了騰出 context，只把前 100 行放回 context（全是 PASSED），也沒附上 exit code；step 11 model 說「All tests pass.」。依本文定位第一個出錯步驟的問法，來源在哪一層？為什麼不是 tool 或 model？該修在哪一層，為什麼不是在這次對話裡補一句提醒？",
    "key": [
     "來源在 harness：出錯那一步送進 model 的 context，少了需要的資訊（失敗的那一行被砍掉）",
     "不是 tool：pytest 回的是對的；不是 model：照它看到的 100 行，判斷是合理的",
-    "修在 harness：截斷時保留錯誤的那幾行與 exit code，而不是在這次對話補一句提醒"
+    "修在來源的 harness 那一層；在這次對話補一句提醒，只救這一個 run，下次照樣再犯"
    ]
   },
   {
