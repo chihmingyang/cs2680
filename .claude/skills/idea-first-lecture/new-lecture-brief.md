@@ -72,7 +72,7 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 每章一個片段 `notes/lXX/i1.html`、`i2.html`…（可以由 `notes/lXX/chN.py` 產生，方便重跑），加上：
 
 - `head.html`：`section#s-ideas` 開頭、`header.part-head`（kicker「1 · 核心觀念」、h2、`p.lede`）、`nav.map`（分鐘數寫 `__i1__`）、`<div class="ideas">`。
-- `tldr.html`：整個 `section.tldr`（thesis 3–4 句、`ul.core` 3 條，紅字剛好 3 處）。
+- `tldr.html`：整個 `section.tldr`（thesis 一段、`ul.core` 3 條，紅字剛好 3 處；句數不設上限，只讀 tldr 的人要讀得懂每一條，見 STYLE_ARTICLE 第 3 節第 6 點）。
 - `fineprint.html`：整個 `p.fineprint`，句型照 L5，列出外部來源。
 - `discuss.html`：整個 `section#s-discuss`，從骨架複製外框再填題目（見下一節）。
 - `try.html`：整個 `section#s-try`；`wrap.html`：整個 `section#wrap`。
