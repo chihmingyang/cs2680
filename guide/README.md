@@ -24,6 +24,7 @@
 | 更新紀錄 | `guide/CHANGELOG.md` | `guide/` 各文件的更新紀錄，依文件分節，新的在最上面、一則一行。開工不必讀；要查某堂的來龍去脈就 `grep L3 guide/CHANGELOG.md`。設了 `merge=union`，不會衝突（2026-11-06 以前寫在各檔第 3 行）。 |
 | Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
+| CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是「問 Claude」。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
 | 成員的討論 | repo 的 Issues（每堂一串，label `L01`…） | `tools/discuss.py --digest lXX` 依題號匯出成 Markdown。 |
 | L2 readings 的逐篇導讀 | `docs/l02-readings.html` | 只有 L2 有，10 篇全寫；l02.html 的延伸閱讀連到它。其他講次用頁內的必讀摘要。 |
@@ -52,7 +53,7 @@
 | `page_text.py` | 把頁面印成純文字，圖印成 aria-label，連結印出目標；也能印全部 id。讀大頁面用。 |
 | `anchor_map.py` | 錨點對照表：`list` 哪些 id 有別頁連進來，`check` 對照表是否完整，`apply` 改別頁的連結（一個檔案只套一次）。 |
 | `shot_article.py` | 截圖：架構圖（亮／暗）、第一題基礎題、第一題進階題、手機版。看的時候一則訊息平行 Read 6 張。 |
-| `verify.sh` | 一次跑完一堂的檢查：`bash tools/verify.sh l03`。check_article、check_discuss、check_diagrams、audit、add_lecture --check，全過只印 `ALL OK`；punct 只提示。不寫回檔案。 |
+| `verify.sh` | 一次跑完一堂的檢查：`bash tools/verify.sh l03`；`all` 是每一堂的頁面檢查加全站檢查各一次，CI 用（WORKFLOW J）。check_article、check_discuss、check_diagrams、audit、add_lecture --check，全過只印 `ALL OK`；punct 只提示。不寫回檔案。 |
 | `assemble_ideas.py` | （v5 頁面用，v7 改用 `assemble_v7.py`）把 `notes/lXX/` 的章片段（`head.html`、`i1.html`…、選用的 `tldr.html`、`arch.html`）組回頁面的核心觀念：換掉 `#s-ideas`、填閱讀地圖的分鐘數、重建本頁的三層目錄。大改一堂的核心觀念時用（L5、L6 的擴寫）。 |
 | `review_pack.py` | 把一頁（或 `--since <ref>` 之後文字有變的章，tldr 也算）印成讀者視角的純文字審查包：一行一個單位、帶定位，表格格子帶欄名與列名，數字列併成一行。給可讀性審查的 subagent 讀。`--prefix` 把要審的章前面的章當上下文印出、後面的章不印（2026-11-07 起一律這樣給，tldr 用 `--chapter tldr` 單獨一包）。 |
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |

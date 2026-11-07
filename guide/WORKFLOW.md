@@ -175,6 +175,7 @@ git push origin main
 - **改了正文就先過 I 的可讀性審查**（2026-11-06 起）：BLOCK 清零才 push。
 - push 後 GitHub Pages 約 1–2 分鐘更新。用 WebFetch 打開 `https://chihmingyang.github.io/cs2680/l09.html` 抽查一次。
 - 直接 push 到 `main`，不開 PR（只有 James 一個維護者）。
+- push 後 CI（J）自動對全站跑 `verify.sh all`，約 2 分鐘：`gh run list -R chihmingyang/cs2680 -w verify.yml -L 1`。紅的就修，不要等 James 收到信。
 
 ---
 
@@ -212,7 +213,7 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 - 按「儲存」先出現 commit message 欄，已帶好摘要（「L3 改 2 段、刪 1 處」），可改；送出時自動加上前綴「網頁編輯：」，所以 `git log` 認得出來。
 - 往上捲時右下角立刻出現浮動鉛筆（`.ed-fab`），不等捲過多少距離。頂端的鉛筆一直都在。
 - 存檔不序列化整頁：用 GitHub Contents API 抓最新原始碼，用「tag＋原本的內容＋相同內容裡的第幾個」找到那一段，只換那幾個位元組，再 PUT 一個 commit。圖、表、code 這類區塊用文字找（`code.js` 會在執行時改寫 code，但字元不變）。那一段在 GitHub 上已被改過就標紅、不覆蓋。
-- 網頁編輯直接進 `main`，**不跑 `check_article.py`**。所以每個 session 開工前先 `git pull`（D 的 rebase 已涵蓋）；James 手改的文字是他的決定，不要順手改回來。紅字數量超過規則只是 warn，下次碰到那一頁再看。
+- 網頁編輯直接進 `main`，存檔時**不跑 `check_article.py`**；push 後 J 的 CI 會對全站跑一次，沒過 James 會收到信。所以每個 session 開工前先 `git pull`（D 的 rebase 已涵蓋）；James 手改的文字是他的決定，不要順手改回來。紅字數量超過規則只是 warn，下次碰到那一頁再看。
 
 **問 Claude（`.github/workflows/ask.yml`、`tools/ask_prompt.py`）**
 
@@ -256,3 +257,23 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 5. push。回覆 James 貼 BLOCK 清單和修法，不貼全文。
 
 `notes/review/` 不 commit。James 說「看不懂」而審查沒抓到，先改 checklist 或 `reviewer-prompt.md`，見 `REVIEW_READABILITY.md` 末段。
+
+---
+
+## J. CI：push 後自動檢查（2026-11-07 起）
+
+James 問：每次改一章，能不能像 CI 的 regression test 一樣，確保每次修改都往好的方向。CI 證明不了「更好」，只證明測試寫到的地方沒有變壞，所以分三層，由便宜到貴：
+
+| 層 | 對應 code CI | 檢查什麼 | 狀態 |
+|---|---|---|---|
+| 1 機械檢查 | build＋lint | `verify.sh all`：每一堂的 check_article、check_discuss、check_diagrams，全站的 audit、add_lecture --check | 2026-11-07 上線：`.github/workflows/verify.yml` |
+| 2 理解測試 | regression test suite | 題庫：一個沒看過寫作過程的 agent 只拿頁面作答，每個答案附定位，定位真的寫了答案才算過 | 設計討論中 |
+| 3 前後對照 | 和 baseline 比的 benchmark | 改過的章，舊版和新版並排重述，哪一版讀得懂 | 等第 2 層與雜訊數字 |
+
+第 1 層：
+
+- 觸發：push 到 `main` 且動到 `docs/`、`tools/`；「問 Claude」跑完（它用 `GITHUB_TOKEN` push，GitHub 不會因此觸發 `on: push`，所以改掛 `workflow_run`，main 沒動就跳過）；手動 `gh workflow run verify.yml -R chihmingyang/cs2680`。
+- 只亮燈、不擋。push 已經進 `main`，Pages 照常部署；沒過時 commit 旁打 ✗，GitHub 寄信給觸發的人。不擋的原因：網頁編輯存檔後若檢查沒過、頁面不更新，James 會以為沒存到。
+- 輸出在該次 run 的 summary。本機重現：`bash tools/verify.sh all`（約 30 秒）。
+- 雜訊實驗（第 2、3 層能不能擋的前提）：同一份沒改過的頁面，三個新審查者各審一次，比 BLOCK 數與定位重疊。結果寫在 `REVIEW_READABILITY.md`。
+

@@ -5,6 +5,7 @@
 
 ## README.md
 
+- 2026-11-07（`tools/verify.sh` 加 `all` 模式，「東西放在哪裡」加 CI 一列；見 WORKFLOW J。）
 - 2026-11-07（L1 tldr 第 2 條改寫：James 問「聊天是 1 次、750 token、105 token」在寫什麼、為什麼可讀性審查會過。三個數字沒標籤、聊天的數字放在 Copilot 底下像是 Copilot 的、一段對話對一問一答單位不同；改成兩個數字加倍數，聊天的來源用括號標出。照新規則把 tldr 單獨審：第一輪 4 BLOCK、1 NIT，第二輪仍 4 BLOCK（每輪都是新的問題），主線修完、沒有第三輪；tldr 四條都改了，細節在 V7_DECISIONS L1 最後一條。`review_pack.py` 加 `--prefix`、`--since` 也抓 tldr，README 腳本表同步。）
 - 2026-11-07（**L1–L8 可讀性審查跑完**（WORKFLOW I）：第一輪 L1–L8 共 506 個 BLOCK（76／48／97／68／37／39／76／65），作者修完；第二輪剩 41 個（3／4／8／8／4／5／6／3），主線修，沒有審第三輪。修改中順手更正的事實、各堂第二輪修了什麼記在 `guide/V7_DECISIONS.md` 各堂最後一條。首頁八堂的閱讀時間同步成審查後的數字（多數多 5–10 分鐘）；`guide/sources/l07.md` 的 ABC 一行與 OSWorld 2.1 一行照核對結果更新。）
 - 2026-11-07（L5 4.1〈拆多細〉：同一組數字原本有一張表、又有一張「上表畫成長條圖」，讀者要讀兩次。表拿掉，數字寫進圖的標籤；圖改成橫條，一列一種拆法，「不拆」也是一列，100 秒畫成直虛線，加一列「拆成 3 份」證明 4 份真的最快。圖下的段落補上「每多拆一份，省下的秒數越來越少，比 8 秒少就變慢」這一步，並寫出拆到 9 份以上就比不拆慢。figure-spots 第一個抓到的表圖重複；可讀性審查兩輪，第一輪 4 BLOCK，第二輪 0 BLOCK、3 NIT 已修）
@@ -59,6 +60,7 @@
 
 ## WORKFLOW.md
 
+- 2026-11-07（新增 J：CI 三層設計；第 1 層 `.github/workflows/verify.yml` 上線，push 與「問 Claude」跑完後對全站跑 `verify.sh all`，只亮燈不擋。D、G 各加一句。起因：James 問改一章時能不能有 regression test。）
 - 2026-11-07（verify.sh 多一段 figure-spots 提示：`tools/find_figure_spots.py` 列出結論是形狀的數字表和段落、以及表和圖重複的地方；決定留著的加 `data-no-figure`。James 問要不要另開一個找圖的流程；掃過 L1–L11，典型的地方多半已經有圖，所以併進現有檢查，不另開流程）
 - 2026-11-07（I：審查包改用 `--prefix`（前文當上下文、後文不給），改到 tldr 時 tldr 單獨一個審查者；checklist 範圍改成 R1–R14，報告每條多一行「靠：」。）
 - 2026-11-06（B3 新講次改成先用 `tools/new_lecture.py` 建骨架、片段組裝；好幾堂同時寫用 `new-lecture-brief.md`，共用 checkout；B5 的 `add_lecture.py` 直接建 v7 側欄）

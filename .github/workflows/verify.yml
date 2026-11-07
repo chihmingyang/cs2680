@@ -1,0 +1,59 @@
+# 第 1 層 CI：每次內容或工具有變，對全站跑一次機械檢查（tools/verify.sh all）。
+# 只亮燈、不擋：push 已經進 main、Pages 照常部署；沒過時 commit 旁打 ✗，GitHub 寄信給觸發的人。
+# 為什麼有 workflow_run：「問 Claude」用 GITHUB_TOKEN push，GitHub 不會因為那種 push 觸發 on: push，
+# 所以改在 Ask Claude 跑完時檢查一次（main 沒動就跳過）。設計與後兩層見 guide/WORKFLOW.md J。
+name: Verify
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'tools/**', '.github/workflows/verify.yml']
+  workflow_run:
+    workflows: ['Ask Claude']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-main
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Ask Claude 沒有 push 就跳過
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = workflow_run ] && [ "$(git rev-parse HEAD)" = "${{ github.event.workflow_run.head_sha }}" ]; then
+            echo "main 沒有新 commit，不用檢查"; echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.skip != '1'
+        with:
+          python-version: '3.12'
+
+      - name: 裝 playwright 與中文字型（audit 量 390px／1280px 版面要用）
+        if: steps.gate.outputs.skip != '1'
+        run: |
+          pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+
+      - name: verify.sh all
+        if: steps.gate.outputs.skip != '1'
+        run: |
+          set -o pipefail
+          bash tools/verify.sh all 2>&1 | tee verify.txt
+          rc=${PIPESTATUS[0]}
+          { echo '```'; cat verify.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
