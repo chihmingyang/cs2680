@@ -249,8 +249,8 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 
 做法照 code review：
 
-1. `python3 -I tools/review_pack.py docs/lXX.html --since origin/main > notes/review/lXX-pack.md`：只印文字有變的章，讀者視角的純文字，表格格子帶欄名與列名。
-2. 開一個**全新的** subagent 當審查者（general-purpose，不是 fork），只給它 `reviewer-prompt.md` 和這個 pack。它對每個單位寫「我讀到的」，照 R1–R8 標 BLOCK／NIT，最後列「最難讀的三處」。
+1. `python3 -I tools/review_pack.py docs/lXX.html --since origin/main --prefix > notes/review/lXX-pack.md`：只審文字有變的章，讀者視角的純文字，表格格子帶欄名與列名；前面的章標「上下文」，後面的章不給（2026-11-07）。改到 tldr 時，tldr 另開一個審查者，只給 `--chapter tldr`。
+2. 開一個**全新的** subagent 當審查者（general-purpose，不是 fork），只給它 `reviewer-prompt.md` 和這個 pack。它對每個單位寫「我讀到的」和「靠：」，照 R1–R14 標 BLOCK／NIT，最後列「最難讀的三處」。
 3. 作者修 BLOCK（照 `rewrite-with-example`），跑 `check_article.py`（表格格子現在有 R5、R6 的 lint）。
 4. 第二輪只審被標過的單位。最多兩輪；還有 BLOCK 就留給 James。
 5. push。回覆 James 貼 BLOCK 清單和修法，不貼全文。

@@ -12,6 +12,12 @@ Usage:
   python3 -I tools/review_pack.py docs/l06.html --since HEAD~1   # only chapters whose text changed since that git ref
   python3 -I tools/review_pack.py docs/l06.html --since HEAD --sections s-discuss s-try   # other sections too
   python3 -I tools/review_pack.py docs/l06.html --units          # just count the units (for the time budget)
+  python3 -I tools/review_pack.py docs/l06.html --chapter i3 i4 --prefix   # tldr, i1, i2 as context; i3, i4 reviewed; nothing after i4
+  python3 -I tools/review_pack.py docs/l06.html --chapter tldr   # the tldr alone: its reader has read nothing else
+
+--since also notices a changed tldr (2026-11-07). Always give the reviewer a --prefix pack (or the
+tldr alone), never the whole page: with the whole page the reviewer understands a unit through a
+chapter the reader has not reached yet, and passes it (L1 tldr, 2026-11-07).
 
 Output format (one unit per line; the reviewer answers the checklist per unit):
   [#i2 ¶3] 一段正文……
@@ -199,21 +205,46 @@ def chapters(root):
     return [n for n in ideas.find_all(lambda x: x.tag == "div" and "idea" in x.cls())]
 
 
-def pack(root, chapter_ids=None, sections=()):
-    groups = []
-    tldr = next(root.find_all(lambda x: x.tag == "section" and "tldr" in x.cls()), None)
-    if tldr is not None and (not chapter_ids or "tldr" in chapter_ids):
-        groups.append(("先看這裡", "#tldr", units_of(tldr, "#tldr")))
+def tldr_of(root):
+    return next(root.find_all(lambda x: x.tag == "section" and "tldr" in x.cls()), None)
+
+
+def pack(root, chapter_ids=None, sections=(), prefix=False):
+    """Groups in reading order: (title, locator, units, under_review).
+
+    prefix=False: only the selected groups. prefix=True: everything from the top of the page
+    up to the last selected group; groups before it that were not selected come back as
+    context (under_review=False). Nothing after the last selected group is printed, so the
+    reviewer cannot lean on text the reader has not reached yet (2026-11-07, L1 tldr).
+    """
+    items = []
+    tldr = tldr_of(root)
+    if tldr is not None:
+        items.append(("tldr", "先看這裡", "#tldr", tldr))
     for ch in chapters(root):
         cid = ch.attrs.get("id", "?")
-        if chapter_ids and cid not in chapter_ids:
-            continue
         h = next(ch.find_all(lambda x: x.tag == "h3"), None)
-        groups.append((h.text() if h else cid, f"#{cid}", units_of(ch, f"#{cid}")))
+        items.append((cid, h.text() if h else cid, f"#{cid}", ch))
     for sid in sections:
         sec = by_id(root, sid)
         if sec is not None:
-            groups.append((sid, f"#{sid}", units_of(sec, f"#{sid}")))
+            items.append((sid, sid, f"#{sid}", sec))
+    picked = [i for i, (key, *_) in enumerate(items)
+              if key in sections or not chapter_ids or key in chapter_ids]
+    if not picked:
+        return []
+    last = picked[-1] if prefix else None
+    groups = []
+    # The page title sits above the tldr and every reader sees it first; without it "這堂" in the
+    # tldr has no referent (L1 tldr review, 2026-11-07). Always context, never reviewed.
+    head = [n for n in root.find_all(lambda x: (x.tag == "p" and "eyebrow" in x.cls()) or x.tag == "h1")][:2]
+    if head:
+        groups.append(("頁首", "#top", [("#top 頁首", " ／ ".join(n.text() for n in head))], False))
+    for i, (key, title, loc, node) in enumerate(items):
+        if i in picked:
+            groups.append((title, loc, units_of(node, loc), True))
+        elif prefix and i < last:
+            groups.append((title, loc, units_of(node, loc), False))
     return groups
 
 
@@ -222,8 +253,14 @@ def changed_chapters(path, ref):
                          text=True, cwd=path.parent.parent if path.parent.name == "docs" else None)
     if old.returncode != 0:
         sys.exit(f"git show {ref}:{path} failed: {old.stderr.strip()}")
-    o = {c.attrs.get("id"): [t for _, t in units_of(c, "")] for c in chapters(parse(old.stdout))}
-    n = {c.attrs.get("id"): [t for _, t in units_of(c, "")] for c in chapters(parse(path.read_text(encoding="utf-8")))}
+    def text_by_group(root):
+        d = {c.attrs.get("id"): [t for _, t in units_of(c, "")] for c in chapters(root)}
+        t = tldr_of(root)
+        if t is not None:  # before 2026-11-07 a tldr-only edit came back as "no chapter changed"
+            d["tldr"] = [x for _, x in units_of(t, "")]
+        return d
+    o = text_by_group(parse(old.stdout))
+    n = text_by_group(parse(path.read_text(encoding="utf-8")))
     return [cid for cid in n if o.get(cid) != n[cid]]
 
 
@@ -234,6 +271,9 @@ def main():
     ap.add_argument("--since", help="git ref; only chapters whose text changed since it")
     ap.add_argument("--sections", nargs="*", default=[], help="extra section ids: s-discuss s-try wrap")
     ap.add_argument("--units", action="store_true", help="only count units")
+    ap.add_argument("--prefix", action="store_true",
+                    help="also print, as unreviewed context, every group before the last selected one; "
+                         "nothing after it (the reader has not reached it yet)")
     a = ap.parse_args()
     path = Path(a.page)
     root = parse(path.read_text(encoding="utf-8"))
@@ -244,17 +284,23 @@ def main():
             print(f"# {path.name}: no chapter text changed since {a.since}")
             return
         ids |= set(ch)
-    groups = pack(root, ids or None, a.sections)
-    total = sum(len(u) for _, _, u in groups)
+    groups = pack(root, ids or None, a.sections, a.prefix)
+    total = sum(len(u) for _, _, u, r in groups if r)
+    ctx = sum(len(u) for _, _, u, r in groups if not r)
     if a.units:
-        for title, loc, u in groups:
-            print(f"{loc}\t{len(u)}\t{title}")
-        print(f"total\t{total}")
+        for title, loc, u, r in groups:
+            print(f"{loc}\t{len(u)}\t{title}" + ("" if r else "\t(context)"))
+        print(f"total\t{total}" + (f"\tcontext\t{ctx}" if ctx else ""))
         return
-    print(f"# 審查包：{path.name}　{len(groups)} 組　{total} 個單位" + (f"　（自 {a.since} 起有改的章）" if a.since else ""))
+    n_rev = sum(1 for g in groups if g[3])
+    print(f"# 審查包：{path.name}　審 {n_rev} 組　{total} 個單位" + (f"　（自 {a.since} 起有改的章）" if a.since else "")
+          + (f"　另有上下文 {ctx} 個單位" if ctx else ""))
     print("# 每一行是一個單位：[定位] 文字。表格格子帶欄名 ‹…› 與列名。請照 guide/REVIEW_READABILITY.md 逐單位審。")
-    for title, loc, u in groups:
-        print(f"\n## {loc}　{title}")
+    if ctx:
+        print("# 標「上下文」的組是讀者在審查範圍之前讀過的文字：讀，但不審。審查範圍之後的文字不在這份審查包裡，"
+              "因為讀者讀到這裡時還沒看到它。")
+    for title, loc, u, r in groups:
+        print(f"\n## {loc}　{title}" + ("" if r else "　〔上下文：讀過，不審〕"))
         for lc, tx in u:
             print(f"[{lc}] {tx}")
 

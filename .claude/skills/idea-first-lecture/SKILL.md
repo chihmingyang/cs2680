@@ -98,7 +98,7 @@ python3 -I tools/discuss.py docs/lXX.html --sync-body --dry   # issue 內文的�
 
 ## 6b. 可讀性審查（2026-11-06 起，push 前必做）
 
-照 `.claude/skills/readability-review/SKILL.md`：`review_pack.py docs/lXX.html`（新寫的一堂全部章都審，單位超過 300 就分兩個審查者），開全新的 subagent 讀，BLOCK 修完、第二輪過了才收尾。七個 subagent 一天改七堂的時候沒有這一步，L6 的「穩定偏正面」就是這樣漏出去的。
+照 `.claude/skills/readability-review/SKILL.md`：新寫的一堂全部章都審：tldr 一個審查者（`--chapter tldr`），各章用 `--chapter … --prefix`，單位超過 300 就分成兩段各一個審查者，開全新的 subagent 讀，BLOCK 修完、第二輪過了才收尾。七個 subagent 一天改七堂的時候沒有這一步，L6 的「穩定偏正面」就是這樣漏出去的。
 
 ## 7. 收尾
 

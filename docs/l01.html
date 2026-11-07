@@ -70,11 +70,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這門課前半講 agent（會自己呼叫工具、連跑很多步的 AI 程式）怎麼設計，後半講 LLM 怎麼在 GPU 上 serve 給很多人用，主體是後半。把兩半接起來的觀察是：聊天跑一次 model 就回答，agent 卻要跑很多次，中間還要執行工具、等人，連成一條鏈。Serving 常看的數字，例如 GPU 每秒生成幾個 token（tokens/sec；token 是 model 處理文字的單位），只量到鏈上 model 那一段，所以它們變好，不代表任務變好。這堂要帶走的是<strong>目標要從 tokens/sec 換成每個成功任務的成本</strong>，以及怎麼判斷問題出在系統的哪一層，從 agent 程式到 GPU 硬體。</p>
+    <p class="thesis">這門課前半講 agent（會自己呼叫工具、連跑很多步的 AI 程式）怎麼設計，後半講 LLM 怎麼在 GPU 上 serve 給很多人用，主體是後半。把兩半接起來的觀察是：聊天跑一次 model 就回答，agent 卻要跑很多次，中間還要執行工具、等人，連成一條鏈。Serving 常看的數字，例如 GPU 每秒生成幾個 token（tokens/sec；token 是 model 處理文字的單位），只量到鏈上 model 那一段，所以它們變好，任務不一定更快、更便宜，甚至不一定做成。這堂是課程總覽，要帶走的是<strong>目標要從 tokens/sec 換成每個成功任務的成本</strong>，也就是連失敗的嘗試一起付的錢，攤到每個做成的任務上，以及怎麼判斷問題出在哪一層，從 agent 程式到 GPU 硬體。</p>
     <ul class="core">
-      <li><span><b>Agent 是另一種 workload。</b>GitHub Copilot 線上流量的紀錄裡，一段對話中位數呼叫 model 15 次，每次輸入 68K token、輸出 247 token；聊天是 1 次、750 token、105 token。<strong>延遲、狀態和失敗沿著整條鏈累積</strong>：每一步等上一步，送進 model 的前文和它佔的 GPU 記憶體越滾越大，每一步都可能出錯重試。</span></li>
-      <li><span><b>目標要換，而且要把人的時間算進成本。</b>Tokens/sec 高，agent 仍可能又慢又貴：把很多請求併成一批算（batching），GPU 總產量變高，每個請求卻變慢；繞遠路多生成的 token 也照樣算進產量。要看成功率和每個成功任務的成本；要不要用大 batch，<strong>有人等和沒人等，答案相反</strong>。</span></li>
-      <li><span><b>問題會跨層，底下的假設也不一樣了。</b>例如 serving 層把算過的前文存起來，下一次開頭完全相同才能重用（prefix cache），所以 agent 的外層程式（harness）怎麼排送給 model 的文字，決定 cache 能不能命中。LLM 也打破傳統系統的五個假設：處理時間可預測、狀態很小、同樣輸入給同樣輸出、機器很少壞、系統穩定不變。課程的後半就從這五條講起。</span></li>
+      <li><span><b>Agent 是另一種 workload。</b>Microsoft 分析 GitHub Copilot 線上流量的論文裡，agent 一段對話中位數呼叫 model 15 次，每次都把前面的對話和工具輸出整段再送一次。所以每次送進的前文中位數是 68K token，約是聊天一次送進 750 token 的 90 倍（750 是這篇論文引用的更早研究）。<strong>延遲、狀態和失敗沿著整條鏈累積</strong>：每一步等上一步；前文的中間結果留在 GPU 記憶體裡省得重算，等工具時也佔著；每一步都可能出錯重試。</span></li>
+      <li><span><b>目標要換，而且要把人等結果、驗結果的時間算進成本。</b>Tokens/sec 高，agent 仍可能又慢又貴：把很多請求併成一批算（batching），GPU 總產量變高，每個請求卻變慢；繞遠路多生成的 token 也照樣算進產量。失敗的嘗試也要付錢，成功率越低，每個成功任務越貴；大 batch 拖慢的時間，有人坐著等就是人的成本，所以<strong>有人等用小 batch，沒人等用大 batch</strong>。</span></li>
+      <li><span><b>問題會跨層，底下的假設也不一樣了。</b>例如 serving 層把算過的前文存起來，下一次開頭完全相同才能重用（prefix cache），所以 agent 的外層程式（harness）怎麼排送給 model 的文字，決定 cache 能不能命中。寫 web 服務時默認的五件事，跑 LLM 時都反過來了：算多久無法預測，狀態不小（一個請求可達好幾 GB），同樣輸入可能給不同輸出，機器常壞，model 架構一年換好幾輪。課程的後半就從這五條講起，第 6 章逐條對照。</span></li>
     </ul>
   </section>
 

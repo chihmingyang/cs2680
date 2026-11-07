@@ -192,7 +192,7 @@
 1. 主動語態，不寫「被」。
 2. 標準術語保留英文：context window、harness、subagent、prefix cache、KV cache、prefill、decode、batching、compaction、benchmark、throughput、latency 等。第一次出現可加一句中文說明。
 3. 不用填充詞（其實、基本上、非常、相當、可以說、事實上、簡單來說）、成語、破折號插入語、「不是 X，而是 Y」句型。
-4. 數字用阿拉伯數字，保留單位。
+4. 數字用阿拉伯數字，保留單位。每個數字前面寫它量的是什麼，有對照就把倍數或差距算好，並讓讀者看得出它撐起哪個結論；兩組以上並排就做成表或圖，不要把一張表塞進一句話。Tldr 和摘要只留撐起論點的一兩個數字（2026-11-07，起因 L1 tldr「聊天是 1 次、750 token、105 token」；審查時是 `REVIEW_READABILITY.md` 的 R12）。
 5. 全形標點；中英文之間半形空格。新寫的檔案或片段先跑 `tools/punct.py FILE --diff` 看它會改什麼，再不帶 `--diff` 執行。**不要對既有頁面整頁跑**：頁面裡的數學式與英文片語（`× (1 + 2)`、`Fail?`）要維持 ASCII，2026-10-19 的規則版本已經避開大多數，但仍先看 diff。
 6. HTML 特殊字元要跳脫（`&lt;`、`&amp;`）。
 
