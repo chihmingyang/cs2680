@@ -88,7 +88,7 @@
   /* ---------- which elements can be edited ---------- */
   var BLOCK_TAGS = { P: 1, LI: 1, H1: 1, H2: 1, H3: 1, H4: 1, H5: 1, TD: 1, TH: 1, FIGCAPTION: 1, BLOCKQUOTE: 1, DT: 1, DD: 1, DIV: 1 };
   var NOT_LEAF = 'p,ul,ol,li,div,table,pre,figure,details,section,h1,h2,h3,h4,h5,blockquote,svg,button,input,textarea,dl';
-  var OFF_LIMITS = 'svg,pre,nav,button,summary,label,textarea,.qtabs,.swipe-hint,.pager,.readmark,.map-row';
+  var OFF_LIMITS = 'svg,pre,nav,button,summary,label,textarea,.qtabs,.swipe-hint,.pager,.readmark,.map-row,.ks-quiz';
   function isBlock(el) {
     if (!BLOCK_TAGS[el.tagName] || el.closest(OFF_LIMITS)) return false;
     if (el.querySelector(NOT_LEAF)) return false;
@@ -205,7 +205,7 @@
     var boxes = main.querySelectorAll(BOX_SEL);
     for (var b = 0; b < boxes.length; b++) {
       var box = boxes[b];
-      if (box.classList.contains('swipe-hint') || box.closest('.ed-ui')) continue;
+      if (box.classList.contains('swipe-hint') || box.closest('.ed-ui') || box.closest('.ks-quiz')) continue;
       var text = box.textContent;
       /* app.js adds the swipe hint at runtime; it is not in the source */
       var hints = box.querySelectorAll('.swipe-hint');

@@ -19,6 +19,160 @@
     else if (mq.addListener) mq.addListener(fn);
   }
 
+  /* 小測與整合題: the page's question bank (<script type="application/json" id="quiz">,
+     guide/QUIZ.md) becomes a collapsed quiz after each knowledge section and the
+     integration questions after the last chapter in scope. The reader's draft answers
+     and self-checks stay in this browser. Runs before the rest, so the hash reveal
+     below can open a quiz that a link points into. */
+  (function () {
+    var data = document.getElementById('quiz');
+    var lecture = document.querySelector('main[data-lecture]');
+    if (!data || !lecture) return;
+    var q;
+    try { q = JSON.parse(data.textContent); } catch (e) { return; }
+    var page = lecture.getAttribute('data-lecture');
+    var KIND = { recall: '回想', apply: '應用' };
+    var secs = q.sections || [];
+    var title = {}, startOf = {}, byKs = {};
+    secs.forEach(function (s) { title[s.id] = s.title; startOf[s.id] = s.from; });
+    (q.unit || []).forEach(function (u) { (byKs[u.ks] = byKs[u.ks] || []).push(u); });
+    var counters = [];
+
+    function mk(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text) n.textContent = text;
+      return n;
+    }
+    function k(id, part) { return 'cs2680.quiz.' + page + '.' + id + '.' + part; }
+    function chapterOf(n) { return n && n.closest ? n.closest('.idea') : null; }
+    function refresh() { counters.forEach(function (f) { f(); }); }
+
+    function item(u, uses) {
+      var li = mk('li', 'ksq-item');
+      li.id = 'q-' + u.id;
+      var qp = mk('p', 'ksq-q');
+      qp.appendChild(mk('span', 'ksq-kind', uses ? '整合' : (KIND[u.kind] || '')));
+      qp.appendChild(document.createTextNode(u.q));
+      li.appendChild(qp);
+      if (uses) {
+        var up = mk('p', 'ksq-uses', '用到：');
+        uses.forEach(function (ks, i) {
+          if (i) up.appendChild(document.createTextNode('、'));
+          var a = mk('a', null, title[ks]);
+          a.href = '#' + startOf[ks];
+          up.appendChild(a);
+        });
+        li.appendChild(up);
+      }
+      var ta = mk('textarea', 'ksq-ans');
+      ta.rows = 3;
+      ta.placeholder = '先寫下你的答案，再看要點（只存在這個瀏覽器）';
+      ta.setAttribute('aria-label', '你的答案');
+      ta.value = get(k(u.id, 'a')) || '';
+      ta.addEventListener('input', function () { set(k(u.id, 'a'), ta.value || null); });
+      li.appendChild(ta);
+      var row = mk('div', 'ksq-row');
+      var show = mk('button', 'ksq-show', '看答案要點');
+      show.type = 'button';
+      show.setAttribute('aria-expanded', 'false');
+      var mark = mk('span', 'ksq-mark');
+      row.appendChild(show);
+      row.appendChild(mark);
+      li.appendChild(row);
+      var box = mk('div', 'ksq-key');
+      box.hidden = true;
+      var ul = mk('ul');
+      u.key.forEach(function (t) { ul.appendChild(mk('li', null, t)); });
+      box.appendChild(ul);
+      var self = mk('div', 'ksq-self');
+      self.appendChild(mk('span', null, '對照之後：'));
+      var ok = mk('button', null, '都答到');
+      var miss = mk('button', null, '有漏');
+      ok.type = miss.type = 'button';
+      ok.setAttribute('data-v', 'ok');
+      miss.setAttribute('data-v', 'miss');
+      self.appendChild(ok);
+      self.appendChild(miss);
+      if (!uses) {
+        var back = mk('a', 'ksq-back', '回到這一節');
+        back.href = '#' + startOf[u.ks];
+        self.appendChild(back);
+      }
+      box.appendChild(self);
+      li.appendChild(box);
+      function paint() {
+        var v = get(k(u.id, 'v'));
+        ok.setAttribute('aria-pressed', v === 'ok' ? 'true' : 'false');
+        miss.setAttribute('aria-pressed', v === 'miss' ? 'true' : 'false');
+        mark.textContent = v === 'ok' ? '✓ 都答到' : v === 'miss' ? '有漏，回去讀這一節' : '';
+        mark.className = 'ksq-mark' + (v ? ' is-' + v : '');
+      }
+      function choose(v) {
+        set(k(u.id, 'v'), get(k(u.id, 'v')) === v ? null : v);
+        paint();
+        refresh();
+      }
+      show.addEventListener('click', function () {
+        box.hidden = !box.hidden;
+        show.textContent = box.hidden ? '看答案要點' : '收起要點';
+        show.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+      });
+      ok.addEventListener('click', function () { choose('ok'); });
+      miss.addEventListener('click', function () { choose('miss'); });
+      paint();
+      return li;
+    }
+
+    function block(id, cls, label, name, items, note) {
+      var d = mk('details', 'ks-quiz' + (cls ? ' ' + cls : ''));
+      d.id = id;
+      var s = mk('summary');
+      s.appendChild(mk('span', 'ksq-k', label));
+      s.appendChild(mk('span', 'ksq-t', name));
+      var n = mk('span', 'ksq-n');
+      s.appendChild(n);
+      d.appendChild(s);
+      if (note) d.appendChild(mk('p', 'ksq-note', note));
+      var ol = mk('ol', 'ksq-list');
+      items.forEach(function (li) { ol.appendChild(li); });
+      d.appendChild(ol);
+      var ids = items.map(function (li) { return li.id.slice(2); });
+      counters.push(function () {
+        var done = 0, good = 0;
+        ids.forEach(function (x) {
+          var v = get(k(x, 'v'));
+          if (v) done++;
+          if (v === 'ok') good++;
+        });
+        n.textContent = done ? '對照 ' + done + '／' + ids.length + '・都答到 ' + good : ids.length + ' 題';
+      });
+      return d;
+    }
+
+    secs.forEach(function (s, i) {
+      var start = document.getElementById(s.from);
+      var ch = chapterOf(start);
+      var prose = ch && ch.querySelector('.prose');
+      if (!prose || !byKs[s.id]) return;
+      var nb = block('quiz-' + s.id, '', '小測', s.title, byKs[s.id].map(function (u) { return item(u); }));
+      var next = secs[i + 1] && document.getElementById(secs[i + 1].from);
+      if (next && chapterOf(next) === ch && next.parentNode === prose) prose.insertBefore(nb, next);
+      else prose.appendChild(nb);
+    });
+    var scope = q.scope || [];
+    var last = document.getElementById(scope[scope.length - 1]);
+    var lastProse = last && last.querySelector('.prose');
+    if (lastProse && (q.integration || []).length) {
+      var nums = scope.map(function (c) { return c.replace(/^i/, ''); });
+      var span = nums.length > 1 ? '第 ' + nums[0] + '–' + nums[nums.length - 1] + ' 章' : '第 ' + nums[0] + ' 章';
+      lastProse.appendChild(block('quiz-int', 'ksq-int', '整合題', span + '合起來用',
+        q.integration.map(function (x) { return item(x, x.ks); }),
+        '每一題要把幾節的觀念合起來答。各節的小測都會、這裡卻答不出來，通常是節和節之間怎麼接起來還沒讀通，可以從「用到」的連結回去讀。'));
+    }
+    refresh();
+  })();
+
   /* 淺色 / 深色: the viewer's own choice (data-mode on <html>) wins over the
      claude.ai theme (data-theme) and the system setting. Choosing the theme the
      page would show anyway clears the choice, so the page follows the system

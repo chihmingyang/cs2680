@@ -48,6 +48,8 @@ page() {   # 一堂的頁面檢查：check_article、check_discuss、check_diagr
   fi
   run check_discuss  '^OK$'                 python3 -I tools/check_discuss.py "$P"
   run check_diagrams '^OK$'                 python3 -I tools/check_diagrams.py "$P"
+  # 有題庫（<script id="quiz">）的頁面：題庫的節和頁面的小節對得上（guide/QUIZ.md）
+  if grep -q 'id="quiz"' "$P"; then run quiz '^ok ' python3 -I tools/quiz.py check "$P"; fi
   # punct 只提示、不算失敗：頁面裡有故意保留的半形標點（算式、引用原文的標題）。
   pd=$(python3 -I tools/punct.py "$P" --diff 2>&1)
   if ! printf '%s\n' "$pd" | head -1 | grep -q ': 0 text nodes would change$'; then
