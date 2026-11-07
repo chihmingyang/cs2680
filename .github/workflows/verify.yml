@@ -42,12 +42,17 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: 裝 playwright 與中文字型（audit 量 390px／1280px 版面要用）
+      # 字型要和本機（Claude 的工作環境）一樣：check_diagrams 在瀏覽器裡量字寬，頁面擋掉 Google Fonts，
+      # 英文落到 Inter、中文落到 Noto Sans CJK。runner 預設的英文字型比較寬，第一次跑 10 堂都報 overflow。
+      - name: 裝 playwright 與字型（Inter＋Noto Sans CJK，和本機一樣）
         if: steps.gate.outputs.skip != '1'
         run: |
           pip install playwright==1.63.0
           python -m playwright install --with-deps chromium
-          sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+          sudo apt-get install -y -qq fonts-noto-cjk fonts-inter >/dev/null
+          sudo cp .github/fonts/56-prefer-inter.conf /etc/fonts/conf.d/
+          fc-cache -f >/dev/null
+          fc-match sans-serif; fc-match 'Noto Sans TC'
 
       - name: verify.sh all
         if: steps.gate.outputs.skip != '1'
