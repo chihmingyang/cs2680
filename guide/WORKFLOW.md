@@ -275,5 +275,5 @@ James 問：每次改一章，能不能像 CI 的 regression test 一樣，確�
 - 觸發：push 到 `main` 且動到 `docs/`、`tools/`；「問 Claude」跑完（它用 `GITHUB_TOKEN` push，GitHub 不會因此觸發 `on: push`，所以改掛 `workflow_run`，main 沒動就跳過）；手動 `gh workflow run verify.yml -R chihmingyang/cs2680`。
 - 只亮燈、不擋。push 已經進 `main`，Pages 照常部署；沒過時 commit 旁打 ✗，GitHub 寄信給觸發的人。不擋的原因：網頁編輯存檔後若檢查沒過、頁面不更新，James 會以為沒存到。
 - 輸出在該次 run 的 summary。本機重現：`bash tools/verify.sh all`（約 30 秒）。
-- 雜訊實驗（第 2、3 層能不能擋的前提）：同一份沒改過的頁面，三個新審查者各審一次，比 BLOCK 數與定位重疊。結果寫在 `REVIEW_READABILITY.md`。
+- 雜訊實驗（第 2、3 層能不能擋的前提，2026-11-07）：L6 第 2–4 章沒改，三個新審查者各審一次，BLOCK 13／17／15；21 個單位被標過，11 個三次都標。結論：不比總數，比多數決的單位集合。細節在 `REVIEW_READABILITY.md`〈審查者的雜訊〉，比對用 `tools/review_noise.py`。
 

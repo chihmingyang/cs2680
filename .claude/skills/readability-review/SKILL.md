@@ -27,7 +27,7 @@ python3 -I tools/review_pack.py docs/lXX.html --chapter tldr > notes/review/lXX-
 
 ## 2. 開審查者（全新的 subagent）
 
-一堂的審查者約 9 萬 token、4–5 分鐘（L6 pilot：三個審查者各 177／164／219 個單位）。
+一堂的審查者約 9 萬 token、4–5 分鐘（L6 pilot：三個審查者各 177／164／219 個單位）；加了 R11–R14 與「靠：」之後，100 個單位就要 15 萬 token、10–14 分鐘（2026-11-07）。同一包審兩次，BLOCK 數會差 ±2，見 `REVIEW_READABILITY.md`〈審查者的雜訊〉。
 
 用 Agent tool 開一個 **general-purpose**（不是 fork：fork 會帶著寫作的 context，就不是另一個人了）。Prompt 是三段接起來：
 
