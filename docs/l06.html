@@ -499,7 +499,7 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
               <figcaption>這張圖回答：每段切幾步最划算？預設是本文的假設：一次驗證 5 步、每步 95%，圖下的兩個滑桿可以換。灰色是步數：切得越細，失敗時重跑的越少，灰色越短，但到每段 10 步以下就短得很慢。黃色是驗證：從不分段切到每段 25 步，重跑變少，驗證也跟著變少；再往下切，段數增加的效果占上風，黃色越來越長。結果：每段 10 步最省，每段 5 步只多一點。（本文的整理）</figcaption>
             </figure>
               <p>同一個 run、同一個 model，只看灰色，從不分段切到每段 10 步，要跑的步數就從 <strong>650 步降到 84 步</strong>。再往下切，步數只剩每段 5 步 65、每段 2 步 55、每段 1 步 53，因為一步都不錯也要 50 步。黃色卻越來越長：每段 10 步共驗證約 8.4 次，成本 42；每段 1 步是 50 段，要驗證約 52.6 次，成本 263。兩筆加起來，每段 10 步的總成本 126（84 + 42）最省，每段 5 步是 130（65 + 65），只多 4 步。</p>
-              <p>最省的段長取決於兩個假設，圖下的兩個滑桿各管一個。第一個是驗證有多貴：一次驗證只算 1 步時，最省的從每段 10 步換成每段 5 步；驗證完全不花成本時，總成本只剩步數，最省的是每段 1 步，總成本 53 步，也就是第 2 章每一步都檢查的情況。第二個是每步多可靠：每步 95% 等於平均每 20 步錯一次。升到 99%，平均每 100 步才錯一次。切短是為了少重跑；重跑本來就少，切短省下的步數不多，驗證次數就成了主要的帳，所以少驗證幾次比較划算，最省的變成每段 25 步；降到 90%，最省的變成每段 5 步。合起來是一條規則：<strong>驗證越貴、每步越可靠，段就切得越長</strong>。這張圖還假設段尾才發現失敗。如果段中途就有便宜的檢查先抓到錯，灰色還會再短一些。</p>
+              <p>最省的段長取決於兩個假設，圖下的兩個滑桿各管一個。第一個是驗證有多貴：一次驗證只算 1 步時，最省的從每段 10 步換成每段 5 步。驗證完全不花成本時，總成本只剩步數，最省的是每段 1 步，總成本 53 步，也就是第 2 章每一步都檢查的情況。第二個是每步多可靠：每步 95% 等於平均每 20 步錯一次。升到 99%，平均每 100 步才錯一次。切短是為了少重跑，重跑本來就少，切短省下的步數不多，驗證次數就成了主要的帳，所以少驗證幾次比較划算，最省的變成每段 25 步。降到 90%，最省的變成每段 5 步。合起來是一條規則：<strong>驗證越貴、每步越可靠，段就切得越長</strong>。這張圖還假設段尾才發現失敗。如果段中途就有便宜的檢查先抓到錯，灰色還會再短一些。</p>
               <p id="i3-2"><b>存什麼：驗證過的狀態，而且 context 也要退。</b>Context 是這一次送進 model 的全部文字，包括對話歷史（<a class="tm" href="#n-context">第 5 章的註</a>）。沒驗證就存，退回去也沒用。只退檔案也不夠：<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a> 比了三種接手方式：只給失敗後的環境、環境加一段動作摘要、環境加完整的動作歷史。帶著完整歷史的最差，因為錯的推理會繼續帶偏下一次。本文的做法是折衷：退回時不帶原本的對話，只留一句「這條路試過，為什麼失敗」。完整的對話已經量到會帶偏，什麼都不留，下一次又可能重走同一條路（本文的判斷）。</p>
               <p>工具能不能替你退？Claude Code 的 <code>/rewind</code> 能同時退 code 和對話，但有三個限制（<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">2026-11 的官方文件</a>）：</p>
               <ul>
@@ -513,7 +513,7 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
 $ pytest -q                                          # 下一段做完，測試沒過
 FAILED tests/test_parser.py::test_nested
 $ git reset --hard a1b2c3d                           # 退回驗證過的版本，重做這一段</code></pre></figure>
-              <p id="i3-3"><b>回不去的動作。</b>Checkpoint 只退得了自己的檔案。付款、刪資料、對外發信，<strong>退不回來，也不能靠重試</strong>，要在發生之前把關。做法是由 harness 在執行前比對 allowlist（事先列好、可以自動執行的動作清單），不在清單上的就請人確認（L2〈<a href="l02.html#i4">權限</a>〉）；或把環境切開，讓 agent 碰不到正式環境。<a href="https://www.theregister.com/2025/07/22/replit_saastr_response/" target="_blank" rel="noopener">Replit 2025 年的事故</a>是例子：agent 在 code freeze 期間刪了 production 資料庫，Replit 事後推出 dev、prod 資料庫自動分離（單一案例，依當事人的說法）。</p>
+              <p id="i3-3"><b>回不去的動作。</b>Checkpoint 只退得了自己的檔案。付款、刪資料、對外發信，<strong>退不回來，也不能靠重試</strong>，要在發生之前把關。做法是由 harness 在執行前比對 allowlist（事先列好、可以自動執行的動作清單），不在清單上的就請人確認（L2〈<a href="l02.html#i4">權限</a>〉）；或把環境切開，讓 agent 碰不到正式環境。<a href="https://www.theregister.com/2025/07/22/replit_saastr_response/" target="_blank" rel="noopener">Replit 2025 年的事故</a>是例子：使用 Replit agent 的 SaaStr 創辦人 Jason Lemkin 說，agent 在 code freeze 期間刪了他的 production 資料庫；Replit 事後推出 dev、prod 資料庫自動分離（單一案例，事故經過是 Lemkin 一方的說法）。</p>
               <p id="i3-4"><b>把長任務切成短 session。</b><a href="https://anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Anthropic 2025 年的長時間 harness</a>把前面幾件事接在一起。每個 session 從新的 context 開始，做一個 feature，驗證過就 commit，再把進度寫回檔案：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -570,29 +570,29 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
                   <text x="360" y="262" text-anchor="middle" class="dg-mn-ink">feature_list.json（全部從 failing 開始，只能改 passes） · progress.txt · git log</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：前面幾件事接起來長什麼樣？一個 session 只做一個 feature（減少每段的步數），段尾做端對端驗證（錯誤攔在這一段裡，不帶到下一段），驗證過才 commit（checkpoint）。圖只畫段尾這一次驗證；它不取代第 2 章每一步之後的檢查，兩者並用（本章 3.1 開頭）。依 Anthropic 2025-11 的 harness（一家公司的經驗）。藍色是跨 session 的狀態，黃色是驗證，青色是 checkpoint。</figcaption>
+              <figcaption>這張圖回答：前面幾件事接起來長什麼樣？一個 session 只做一個 feature（減少每段的步數），段尾做端對端驗證（錯誤攔在這一段裡，不帶到下一段），驗證過才 commit（checkpoint）。圖只畫段尾這一次驗證；它不取代第 2 章每一步之後的檢查，兩者並用（本章〈退回多遠〉那一段的開頭：便宜的檢查每步跑，貴的驗證才分段）。依 Anthropic 2025-11 的 harness（一家公司的經驗）。藍色是跨 session 的狀態，黃色是驗證，青色是 checkpoint。</figcaption>
             </figure>
-              <p>這種形狀也會過時：同一家公司 2026 年寫道，<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">harness 的每個元件都是對 model 能力的假設</a>，新 model 讓他們拿掉了 context reset。怎麼當使用者跑長任務，在 L3〈<a href="l03.html#i4">終點</a>〉。圖裡那份進度檔就是 memory，第 5 章接著講它會出什麼錯。</p>
-              <p id="i3-5"><b>上限：一直錯的時候什麼時候停。</b>課程的例子是跑了 200 步沒有進展。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 也量到，只有 18% 的失敗 run 在救不回來之後很快停下；修復成功的中位數是 5 步，失敗的是 12 步，所以<strong>修太久就該停</strong>。上限有四種：</p>
+              <p>這種形狀也會過時：同一家公司 2026 年寫道，<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">harness 的每個元件都是對 model 能力的假設</a>。例子是 context reset：每個 session 從空的 context 開始、靠檔案交接，原因是他們較早用的 Sonnet 4.5 接近 context 上限時會提早收尾；換到 Opus 4.5 之後這個行為大致消失，他們就拿掉定期清空，只靠壓縮對話（L4〈<a href="l04.html#i5">先用規則刪，最後才摘要</a>〉）。所以要不要照圖切成短 session，看你用的 model：它接近 context 上限時還會提早收尾，就照圖切；不會，一個 session 可以做不只一個 feature。不管哪一種，每段驗證過才 commit、失敗退回時 context 也要退，這兩件照做，因為它們是為了不讓錯的推理帶偏下一次，不是因為 context 快滿（本文的判斷）。怎麼當使用者跑長任務，在 L3〈<a href="l03.html#i4">終點</a>〉。圖裡那份進度檔就是 memory，第 5 章接著講它會出什麼錯。</p>
+              <p id="i3-5"><b>上限：一直錯的時候什麼時候停。</b>課程的例子是跑了 200 步沒有進展。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 也量到兩件事。第一，agent 很少自己停：失敗的 run 裡，只有 18% 在錯誤已經救不回來之後很快停下，其他的繼續做下去。第二，一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修好通常很快，修了遠超過 5 步還沒好，就比典型的修好長很多，再修下去的價值變低，<strong>修太久就該停</strong>（本文的判斷；論文沒給兩組的比例）。Agent 自己不停，上限就要從外面加。上限有四種：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>上限</th><th>擋什麼</th><th>在 Claude Code 裡（<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">2026-11 的官方文件</a>）</th></tr></thead>
                 <tbody>
                   <tr><td><b>步數</b></td><td>繞圈</td><td><code>--max-turns</code>，只在 <code>-p</code>（非互動模式：一次給完 prompt 就跑）有效，到上限就回報錯誤；subagent 用 <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener"><code>maxTurns</code></a>，到上限時輸出標成 partial</td></tr>
                   <tr><td><b>花費</b></td><td>帳單</td><td><code>--max-budget-usd</code>，一樣只在 <code>-p</code> 有效，subagent 的花費也算；是估計值，可能超過，要留餘裕</td></tr>
                   <tr><td><b>時間</b></td><td>卡住</td><td>CLI 沒有對應的 flag，用系統的 <code>timeout</code> 指令</td></tr>
-                  <tr><td><b>沒有進展</b></td><td>一直修同一件事</td><td>CLI 沒有對應的 flag，自己寫規則：最近 8 步沒有新的檔案變更、也沒有新通過的測試，就停下來回報</td></tr>
+                  <tr><td><b>沒有進展</b></td><td>一直修同一件事</td><td>CLI 沒有對應的 flag，自己寫一支 PostToolUse hook（每次 tool 跑完都會執行的 script，L2〈<a href="l02.html#i7">hook</a>〉）。它每次執行時，在一個檔案裡記一行：這一步有沒有改檔、有沒有新通過的測試（從 hook 收到的 tool 輸出判斷）。最後 8 行都是「沒有」，script 就在 stdout 印出 <code>{"continue": false}</code>，Claude Code 讀到就停下 agent。8 步是本文取的值，比修好一個錯的中位數 5 步多留一點。一直在改檔卻修不好的情況，這條擋不到，要靠步數上限</td></tr>
                 </tbody>
               </table></div>
-              <p>這四種上限，加上本章的 checkpoint 和第 2 章的重試，都是 SRE 處理「下游會失敗」的老習慣（<a class="tm" href="#n-sre">查閱</a>）。差別是服務的失敗大多能偵測，<strong>agent 的失敗常常安靜</strong>，上限只在它錯很久之後才停下它，所以第 2 章的檢查排在前面。第 2 段<a href="#s-try">動手試試</a>有指令可以照打；subagent 的深度與寬度在 L5〈<a href="l05.html#i4-3">派工</a>〉，上限設多少在 L8〈<a href="l08.html#i4">反向成本與上限</a>〉。</p>
+              <p>這四種上限，加上第 2 章的重試，都是 SRE（site reliability engineering，Google 提出的服務維運方法）處理「下游會失敗」的老習慣（<a class="tm" href="#n-sre">查閱</a>）。差別是服務的失敗大多能偵測，<strong>agent 的失敗常常安靜</strong>，上限只在它錯很久之後才停下它，所以第 2 章的檢查排在前面。本頁核心觀念之後的第 2 段〈<a href="#s-try">動手試試</a>〉有指令可以照打；subagent 的深度與寬度在 L5〈<a href="l05.html#i4-3">派工</a>〉，上限設多少在 L8〈<a href="l08.html#i4">反向成本與上限</a>〉。</p>
               <details class="gloss" id="n-sre">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">SRE 的四個習慣：timeout、retry with backoff、circuit breaker、error budget</span></summary>
                 <div class="gloss-body prose">
                   <span class="anchor" id="x3"></span><p>SRE（site reliability engineering）是 Google 提出的服務維運方法。四個習慣：</p>
                   <ul>
                     <li><b>Timeout。</b>一個呼叫等多久就放棄，不讓卡住的下游拖住整個系統。對應 agent 的步數與時間上限。</li>
-                    <li><b>Retry with backoff。</b>失敗後重試，每次等更久（1 秒、2 秒、4 秒），避免大家同時重試壓垮下游。對應 tool 失敗先重試再下結論。</li>
+                    <li><b>Retry with backoff。</b>失敗後重試，每次等更久（1 秒、2 秒、4 秒），避免許多呼叫端同時重試，壓垮同一個下游。對應第 2 章的重試：檢查抓到錯就重做這一步。Backoff 在 agent 這邊少用：agent 的錯多半不是下游太忙，等久一點也不會變對（本文的判斷）。</li>
                     <li><b>Circuit breaker。</b>連續失敗到門檻就斷路，一段時間內直接回錯，讓下游有機會恢復。對應「沒有進展就停」。</li>
-                    <li><b>Error budget。</b>先定可接受的失敗率（例如一個月 0.1%），沒用完就可以冒險發版，用完就只修不加。對應每種任務有可接受的失敗率。</li>
+                    <li><b>Error budget。</b>先定可接受的失敗率（例如一個月 0.1%），沒用完就可以冒險發版，用完就只修不加。對應花費上限：先定一個 run 可以花多少，用完就停。</li>
                   </ul>
                 </div>
               </details>
