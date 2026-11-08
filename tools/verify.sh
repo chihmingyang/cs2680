@@ -5,7 +5,7 @@
 #       bash tools/verify.sh all    # 每一堂的頁面檢查＋全站檢查各一次（CI 用，.github/workflows/verify.yml）
 #
 # 為什麼：分開跑是六個 tool call，每個 call 都要重讀整個 context；合成一個，每輪檢查只花一步。
-# 跑的是：check_article、check_discuss、check_diagrams、audit、add_lecture --check、punct --diff（只提示）、
+# 跑的是：check_article、check_discuss、check_diagrams、audit、add_lecture --check、dag --check、punct --diff（只提示）、
 # find_figure_spots（只提示：可能該畫成圖、或表和圖重複的地方）。
 # 不寫回任何檔案（check_article 不帶 --fix-time，punct 只用 --diff）。
 # 不包含 discuss.py --sync-body：它要連 GitHub、改的是 issue，改了基礎題才另外跑。
@@ -77,5 +77,6 @@ else
 fi
 run audit          '^NO PROBLEMS$'        python3 -I tools/audit.py
 run add_lecture    'nothing \(in sync\)'  python3 -I tools/add_lecture.py --check
+run dag            '^OK'                  python3 -I tools/dag.py --check
 
 [ $fail -eq 0 ] && echo "ALL OK" || exit 1

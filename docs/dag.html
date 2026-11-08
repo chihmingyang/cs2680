@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>觀念 DAG · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css?v=20261102b">
+<script>try{var m=localStorage.getItem('cs2680.mode');if(m==='light'||m==='dark')document.documentElement.setAttribute('data-mode',m)}catch(e){}</script>
+<style>
+/* 這一頁自己的樣式；配色全部用 styles.css 的 token，暗色才正常 */
+.dag-page { max-width: 76rem; }
+.dag-head { max-width: var(--measure); display: grid; gap: .45rem; padding-block: .5rem 1.25rem; }
+.dag-head p { margin: 0; }
+.dag-bar { display: flex; flex-wrap: wrap; gap: .6rem 1.25rem; align-items: center; margin: 1rem 0 .6rem; font-size: .875rem; }
+.dag-bar fieldset { border: 0; padding: 0; margin: 0; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.dag-bar legend { float: left; padding: 0; margin-right: .2rem; color: var(--ink-soft); }
+.dag-bar label { display: inline-flex; gap: .3rem; align-items: center; cursor: pointer; }
+.dag-bar select { font: inherit; font-size: .875rem; padding: .15rem .4rem; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); color: var(--ink); }
+.dag-bar .spacer { flex: 1; }
+.dag-bar button { font: inherit; font-size: .8125rem; padding: .2rem .7rem; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); color: var(--ink); cursor: pointer; }
+.dag-bar button:hover { border-color: var(--signal); color: var(--signal); }
+.dag-badge { display: inline-block; font-family: var(--font-mono); font-size: .6875rem; line-height: 1.5; padding: 0 .45rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink); white-space: nowrap; }
+.dag-badge.tier-a { background: var(--dg-a); }
+.dag-badge.tier-c { background: var(--dg-c); }
+.dag-badge.tier-d { background: var(--dg-d); }
+.dag-fig .scroll { padding: .5rem .25rem .75rem; }
+.dag-fig svg { width: 1178px; min-width: 1178px; max-width: none; height: auto; }
+@media (min-width: 1100px) { .dag-fig.fit svg { width: 100%; min-width: 0; } }
+.dag-lane { fill: transparent; }
+.dag-lane.alt { fill: var(--dg-panel); }
+.dag-lane-t { fill: var(--ink-soft); font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .02em; }
+.dag-col-t { fill: var(--ink-soft); font-family: var(--font-mono); font-size: 10.5px; }
+.dag-e { fill: none; stroke: var(--dg-link); stroke-width: 1.2; opacity: .45; transition: opacity .12s, stroke-width .12s; }
+.dag-n { cursor: pointer; outline: none; }
+.dag-box { fill: var(--sheet); stroke: var(--rule); stroke-width: 1; transition: opacity .12s; }
+.dag-n.tier-a .dag-box { fill: var(--dg-a); }
+.dag-n.tier-c .dag-box { fill: var(--dg-c); }
+.dag-n.tier-d .dag-box { fill: var(--dg-d); }
+.dag-tier { fill: var(--ink-soft); opacity: .0; }
+.dag-n.tier-c .dag-tier { opacity: .35; }
+.dag-n.tier-d .dag-tier { opacity: .8; }
+.dag-t { fill: var(--ink); font-family: var(--font-body); font-size: 12.5px; pointer-events: none; }
+.dag-tag { fill: var(--ink-soft); font-family: var(--font-mono); font-size: 9.5px; pointer-events: none; }
+.dag-n:hover .dag-box, .dag-n:focus-visible .dag-box { stroke: var(--signal); stroke-width: 1.6; }
+/* 高亮狀態：has-focus 時沒被點名的都淡掉 */
+.has-focus .dag-n:not(.is-sel):not(.is-anc):not(.is-desc) { opacity: .22; }
+.has-focus .dag-e:not(.is-anc):not(.is-desc) { opacity: .06; }
+.dag-n.is-sel .dag-box { stroke: var(--key); stroke-width: 2.2; }
+.dag-n.is-anc .dag-box { stroke: var(--signal); stroke-width: 1.8; }
+.dag-n.is-desc .dag-box { stroke: var(--caution); stroke-width: 1.8; stroke-dasharray: 4 3; }
+.dag-e.is-anc { stroke: var(--signal); opacity: .95; stroke-width: 1.8; }
+.dag-e.is-desc { stroke: var(--caution); opacity: .9; stroke-width: 1.6; stroke-dasharray: 4 3; }
+/* 篩選：不符合的淡掉 */
+.dag-n.is-off { opacity: .15; }
+.dag-e.is-off { opacity: .04; }
+.dag-legend { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin: .5rem 0 0; padding: 0; list-style: none; font-size: .8125rem; color: var(--ink-soft); }
+.dag-legend li { display: inline-flex; align-items: center; gap: .4rem; }
+.dag-legend i { display: inline-block; width: 1.4rem; height: 0; border-top: 2px solid var(--signal); }
+.dag-legend i.desc { border-top-style: dashed; border-color: var(--caution); }
+.dag-legend i.sel { width: .9rem; height: .9rem; border: 2px solid var(--key); border-radius: 3px; }
+/* 詳細面板 */
+.dag-detail { margin-top: 1rem; border: 1px solid var(--rule); border-left: 4px solid var(--signal); border-radius: var(--radius); background: var(--sheet); padding: 1rem 1.1rem; display: grid; gap: .6rem; max-width: 52rem; }
+.dag-detail .hint { color: var(--ink-soft); margin: 0; }
+.dag-detail h2 { margin: 0; font-size: 1.15rem; font-family: var(--font-display); display: flex; flex-wrap: wrap; gap: .5rem .6rem; align-items: center; }
+.dag-detail h2 small { font-family: var(--font-mono); font-weight: 400; font-size: .75rem; color: var(--ink-soft); }
+.dag-detail .claim { margin: 0; font-weight: 500; }
+.dag-detail .why { margin: 0; color: var(--ink); }
+.dag-detail dl { margin: 0; display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .35rem .8rem; font-size: .9rem; }
+.dag-detail dt { color: var(--ink-soft); }
+.dag-detail dd { margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .5rem; align-items: baseline; }
+.dag-detail dd .none { color: var(--ink-soft); }
+@media (max-width: 520px) { .dag-detail dl { grid-template-columns: 1fr; gap: .15rem; } .dag-detail dt { margin-top: .3rem; } }
+.dag-ref { font: inherit; padding: 0 .1rem; border: 0; border-bottom: 1px dashed var(--signal); background: none; color: var(--signal); cursor: pointer; text-align: left; }
+.dag-ref:hover { border-bottom-style: solid; }
+.dag-ref.strong { font-weight: 600; color: var(--ink); border-bottom-color: var(--ink-soft); }
+/* 下半：分析與清單 */
+.dag-sec { margin-top: 2.5rem; display: grid; gap: .9rem; max-width: 52rem; }
+.dag-sec > h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; }
+.dag-sec > p, .dag-sec li { max-width: var(--measure); }
+.dag-sec > p { margin: 0; }
+.dag-sec h3 { margin: 1rem 0 .3rem; font-size: 1.05rem; font-family: var(--font-display); }
+.dag-sec h3 small { margin-left: .5rem; font-family: var(--font-mono); font-size: .75rem; font-weight: 400; color: var(--ink-soft); }
+.dag-table { border-collapse: collapse; font-size: .875rem; width: 100%; }
+.dag-table th, .dag-table td { padding: .4rem .6rem; border-bottom: 1px solid var(--rule); text-align: left; white-space: nowrap; }
+.dag-table thead th { color: var(--ink-soft); font-weight: 500; border-bottom: 2px solid var(--ink); }
+.dag-table td { font-variant-numeric: tabular-nums; }
+.dag-table .dag-sum th, .dag-table .dag-sum td { font-weight: 600; border-bottom: 0; }
+.dag-fw { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.dag-fw > li > ul { margin: .25rem 0 0; padding-left: 1.2rem; display: grid; gap: .2rem; }
+.dag-fw small { color: var(--ink-soft); }
+.dag-layers { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
+.dag-layer > h3 { margin: .8rem 0 .4rem; }
+.dag-olist { list-style: none; padding: 0; margin: 0; display: grid; gap: .45rem; }
+.dag-olist > li { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: .25rem .7rem; align-items: start; padding: .35rem 0; border-bottom: 1px solid var(--rule); }
+.dag-olist .dag-badge { justify-self: start; margin-top: .15rem; }
+.dag-o-main { display: grid; gap: .15rem; min-width: 0; }
+.dag-o-main > .dag-ref { justify-self: start; }
+.dag-o-name { font-size: .9rem; color: var(--ink); }
+.dag-o-meta { font-size: .8125rem; color: var(--ink-soft); }
+.dag-rules { margin: 0; padding-left: 1.2rem; display: grid; gap: .35rem; }
+.dag-tiers { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.dag-tiers li { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: .6rem; align-items: start; }
+.dag-tiers .dag-badge { margin-top: .2rem; justify-self: start; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="回首頁"><a href="index.html">← 課程總覽</a><a href="#rules-h">規則</a></nav>
+  </div>
+</header>
+
+<main class="page gutter dag-page">
+  <header class="dag-head">
+    <p class="eyebrow">課程地圖 · 觀念 DAG · 草稿 2026-11-08</p>
+    <h1>觀念 DAG：每個觀念從哪裡來</h1>
+    <p>這門課現在是用一小時的 slides 切成一堂一堂，但觀念之間的依賴不照堂次走。這張圖把 11 堂的核心觀念拆成 <b>100 個觀念</b>、<b>164 條「要先懂」的邊</b>，每個觀念都從別的觀念延伸出來，只有 4 個起點：<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button>、<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button>、<button type="button" class="dag-ref" data-id="prefill-decode">Prefill 與 decode</button>、<button type="button" class="dag-ref" data-id="gpu-throughput">GPU 換 throughput</button>。</p>
+    <p>怎麼讀：<b>由左到右是依賴深度</b>（第 k 層的前置都在前 k 層，所以從左往右讀就是一個合法的順序）；<b>每一列是一個主題</b>；<b>顏色是難度</b>。點一個觀念，看它往左的前置和往右的延伸；選一堂講次，看那一堂的章散在圖的哪裡。</p>
+  </header>
+
+  <div class="dag-bar" role="group" aria-label="篩選">
+    <fieldset><legend>難度</legend>
+      <label><input type="checkbox" class="dag-f-tier" value="基礎" checked> <span class="dag-badge tier-a">基礎</span></label>
+      <label><input type="checkbox" class="dag-f-tier" value="進階" checked> <span class="dag-badge tier-c">進階</span></label>
+      <label><input type="checkbox" class="dag-f-tier" value="專家" checked> <span class="dag-badge tier-d">專家</span></label>
+    </fieldset>
+    <label>講次 <select id="dag-f-lec"><option value="">全部</option><option value="L1">L1 課程總覽與 AI 系統</option><option value="L2">L2 Claude Code 怎麼運作</option><option value="L3">L3 用多個 agent 放大產能</option><option value="L4">L4 Context 管理與 tool 設計</option><option value="L5">L5 Multi-agent 架構與溝通</option><option value="L6">L6 Agent memory 與可靠性</option><option value="L7">L7 Agent 評估</option><option value="L8">L8 成本、速度與 harness 架構</option><option value="L9">L9 LLM 的結構與 serving 的帳</option><option value="L10">L10 GPU 入門與 kernel 最佳化</option><option value="L11">L11 作業回饋與 agent 的十個陷阱</option></select></label>
+    <span class="spacer"></span>
+    <label><input type="checkbox" id="dag-fit"> 縮到螢幕寬</label>
+    <button type="button" id="dag-clear">清除選取</button>
+  </div>
+
+  <figure class="diagram dag-fig" id="dag-fig">
+    <div class="scroll"><svg viewBox="0 0 1178 2508" width="1178" height="2508" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="觀念 DAG：100 個觀念，依依賴深度由左到右分成 8 層，依主題分成 10 列；顏色是難度">
+<rect class="dag-lane" x="0" y="30" width="1178" height="314"/>
+<text class="dag-lane-t" x="14" y="46">Agent 的機制</text>
+<rect class="dag-lane alt" x="0" y="344" width="1178" height="314"/>
+<text class="dag-lane-t" x="14" y="360">Context 與 tool</text>
+<rect class="dag-lane" x="0" y="658" width="1178" height="258"/>
+<text class="dag-lane-t" x="14" y="674">放大與人</text>
+<rect class="dag-lane alt" x="0" y="916" width="1178" height="258"/>
+<text class="dag-lane-t" x="14" y="932">Multi-agent 溝通</text>
+<rect class="dag-lane" x="0" y="1174" width="1178" height="258"/>
+<text class="dag-lane-t" x="14" y="1190">可靠性與記憶</text>
+<rect class="dag-lane alt" x="0" y="1432" width="1178" height="314"/>
+<text class="dag-lane-t" x="14" y="1448">評估</text>
+<rect class="dag-lane" x="0" y="1746" width="1178" height="258"/>
+<text class="dag-lane-t" x="14" y="1762">目標、成本與速度</text>
+<rect class="dag-lane alt" x="0" y="2004" width="1178" height="146"/>
+<text class="dag-lane-t" x="14" y="2020">Serving</text>
+<rect class="dag-lane" x="0" y="2150" width="1178" height="202"/>
+<text class="dag-lane-t" x="14" y="2166">Model 的結構與性質</text>
+<rect class="dag-lane alt" x="0" y="2352" width="1178" height="146"/>
+<text class="dag-lane-t" x="14" y="2368">GPU 與 kernel</text>
+<text class="dag-col-t" x="78.0" y="20" text-anchor="middle">第 0 層 · 起點</text>
+<text class="dag-col-t" x="224.0" y="20" text-anchor="middle">第 1 層</text>
+<text class="dag-col-t" x="370.0" y="20" text-anchor="middle">第 2 層</text>
+<text class="dag-col-t" x="516.0" y="20" text-anchor="middle">第 3 層</text>
+<text class="dag-col-t" x="662.0" y="20" text-anchor="middle">第 4 層</text>
+<text class="dag-col-t" x="808.0" y="20" text-anchor="middle">第 5 層</text>
+<text class="dag-col-t" x="954.0" y="20" text-anchor="middle">第 6 層</text>
+<text class="dag-col-t" x="1100.0" y="20" text-anchor="middle">第 7 層</text>
+<g class="dag-edges">
+<path class="dag-e" data-from="agent-loop" data-to="cost-per-success" d="M142,77 C151,77 151,1793 160,1793"/>
+<path class="dag-e" data-from="probabilistic" data-to="cost-per-success" d="M142,2197 C151,2197 151,1793 160,1793"/>
+<path class="dag-e" data-from="cost-per-success" data-to="human-time" d="M288,1793 C297,1793 297,1905 306,1905"/>
+<path class="dag-e" data-from="batching" data-to="human-time" d="M288,2051 C297,2051 297,1905 306,1905"/>
+<path class="dag-e" data-from="cost-per-success" data-to="stack" d="M288,1793 C297,1793 297,77 306,77"/>
+<path class="dag-e" data-from="agent-loop" data-to="harness-os" d="M142,77 C151,77 151,77 160,77"/>
+<path class="dag-e" data-from="probabilistic" data-to="harness-os" d="M142,2197 C151,2197 151,77 160,77"/>
+<path class="dag-e" data-from="kv-cache" data-to="assumptions" d="M288,2107 C297,2107 297,2107 306,2107"/>
+<path class="dag-e" data-from="probabilistic" data-to="assumptions" d="M142,2197 L145,2197 Q151,2197 151,2191 L151,2113 Q151,2107 157,2107 L306,2107"/>
+<path class="dag-e" data-from="partial-failure" data-to="assumptions" d="M288,1221 C297,1221 297,2107 306,2107"/>
+<path class="dag-e" data-from="prefill-decode" data-to="batching" d="M142,2051 C151,2051 151,2051 160,2051"/>
+<path class="dag-e" data-from="three-numbers" data-to="disaggregation" d="M580,2197 C589,2197 589,2051 598,2051"/>
+<path class="dag-e" data-from="prefill-decode" data-to="kv-cache" d="M142,2051 C151,2051 151,2107 160,2107"/>
+<path class="dag-e" data-from="kv-cache" data-to="kv-cache-storage" d="M288,2107 C297,2107 297,2051 306,2051"/>
+<path class="dag-e" data-from="agent-loop" data-to="kv-cache-storage" d="M142,77 L142,77 Q148,77 148,83 L148,2045 Q148,2051 154,2051 L306,2051"/>
+<path class="dag-e" data-from="code-vs-text" data-to="two-layer-testing" d="M288,133 C297,133 297,1535 306,1535"/>
+<path class="dag-e" data-from="agent-loop" data-to="partial-failure" d="M142,77 C151,77 151,1221 160,1221"/>
+<path class="dag-e" data-from="probabilistic" data-to="code-vs-text" d="M142,2197 C151,2197 151,133 160,133"/>
+<path class="dag-e" data-from="agent-loop" data-to="code-vs-text" d="M142,77 C151,77 151,133 160,133"/>
+<path class="dag-e" data-from="agent-loop" data-to="context-resend" d="M142,77 C151,77 151,391 160,391"/>
+<path class="dag-e" data-from="code-vs-text" data-to="permissions" d="M288,133 C297,133 297,133 306,133"/>
+<path class="dag-e" data-from="harness-os" data-to="permissions" d="M288,77 C297,77 297,133 306,133"/>
+<path class="dag-e" data-from="code-vs-text" data-to="prompt-injection" d="M288,133 C297,133 297,189 306,189"/>
+<path class="dag-e" data-from="context-resend" data-to="instruction-files" d="M288,391 C297,391 297,245 306,245"/>
+<path class="dag-e" data-from="code-vs-text" data-to="instruction-files" d="M288,133 C297,133 297,245 306,245"/>
+<path class="dag-e" data-from="code-vs-text" data-to="hooks" d="M288,133 C297,133 297,301 306,301"/>
+<path class="dag-e" data-from="instruction-files" data-to="skills" d="M434,245 C443,245 443,133 452,133"/>
+<path class="dag-e" data-from="tool-anatomy" data-to="mcp" d="M434,447 C443,447 443,77 452,77"/>
+<path class="dag-e" data-from="permissions" data-to="mcp" d="M434,133 C443,133 443,77 452,77"/>
+<path class="dag-e" data-from="skills" data-to="plugins" d="M580,133 C589,133 589,77 598,77"/>
+<path class="dag-e" data-from="hooks" data-to="plugins" d="M434,301 L440,301 Q446,301 446,295 L446,83 Q446,77 452,77 L598,77"/>
+<path class="dag-e" data-from="mcp" data-to="plugins" d="M580,77 C589,77 589,77 598,77"/>
+<path class="dag-e" data-from="agent-loop" data-to="scaling-axes" d="M142,77 C151,77 151,705 160,705"/>
+<path class="dag-e" data-from="scaling-axes" data-to="amdahl" d="M288,705 C297,705 297,761 306,761"/>
+<path class="dag-e" data-from="human-time" data-to="review-bottleneck" d="M434,1905 C443,1905 443,705 452,705"/>
+<path class="dag-e" data-from="amdahl" data-to="review-bottleneck" d="M434,761 C443,761 443,705 452,705"/>
+<path class="dag-e" data-from="review-bottleneck" data-to="verification-defines-autonomy" d="M580,705 C589,705 589,817 598,817"/>
+<path class="dag-e" data-from="verification-loop" data-to="verification-defines-autonomy" d="M434,1221 L437,1221 Q443,1221 443,1215 L443,823 Q443,817 449,817 L598,817"/>
+<path class="dag-e" data-from="scaling-axes" data-to="worktree" d="M288,705 C297,705 297,817 306,817"/>
+<path class="dag-e" data-from="context-resend" data-to="subagent" d="M288,391 C297,391 297,705 306,705"/>
+<path class="dag-e" data-from="scaling-axes" data-to="subagent" d="M288,705 C297,705 297,705 306,705"/>
+<path class="dag-e" data-from="subagent" data-to="team-workflow" d="M434,705 L744,705"/>
+<path class="dag-e" data-from="verification-defines-autonomy" data-to="team-workflow" d="M726,817 C735,817 735,705 744,705"/>
+<path class="dag-e" data-from="skills" data-to="process-in-skill" d="M580,133 C589,133 589,761 598,761"/>
+<path class="dag-e" data-from="hooks" data-to="process-in-skill" d="M434,301 L440,301 Q446,301 446,307 L446,755 Q446,761 452,761 L598,761"/>
+<path class="dag-e" data-from="cost-breakdown" data-to="token-saving-direction" d="M580,1793 C589,1793 589,705 598,705"/>
+<path class="dag-e" data-from="skills" data-to="token-saving-direction" d="M580,133 C589,133 589,705 598,705"/>
+<path class="dag-e" data-from="team-workflow" data-to="attention-as-resource" d="M872,705 C881,705 881,705 890,705"/>
+<path class="dag-e" data-from="context-resend" data-to="fix-harness-first" d="M288,391 L291,391 Q297,391 297,397 L297,497 Q297,503 303,503 L452,503"/>
+<path class="dag-e" data-from="score-is-system" data-to="fix-harness-first" d="M434,1479 C443,1479 443,503 452,503"/>
+<path class="dag-e" data-from="prefix-cache" data-to="context-layout" d="M434,1793 C443,1793 443,391 452,391"/>
+<path class="dag-e" data-from="context-resend" data-to="context-admission" d="M288,391 C297,391 297,391 306,391"/>
+<path class="dag-e" data-from="context-admission" data-to="context-reduce" d="M434,391 C443,391 443,447 452,447"/>
+<path class="dag-e" data-from="prefix-cache" data-to="context-reduce" d="M434,1793 C443,1793 443,447 452,447"/>
+<path class="dag-e" data-from="context-resend" data-to="tool-anatomy" d="M288,391 C297,391 297,447 306,447"/>
+<path class="dag-e" data-from="tool-anatomy" data-to="tool-design" d="M434,447 C443,447 443,559 452,559"/>
+<path class="dag-e" data-from="partial-failure" data-to="tool-design" d="M288,1221 L294,1221 Q300,1221 300,1215 L300,565 Q300,559 306,559 L452,559"/>
+<path class="dag-e" data-from="tool-design" data-to="execution-tools" d="M580,559 C589,559 589,391 598,391"/>
+<path class="dag-e" data-from="permissions" data-to="execution-tools" d="M434,133 L436,133 Q442,133 442,139 L442,385 Q442,391 448,391 L598,391"/>
+<path class="dag-e" data-from="tool-design" data-to="search-tools" d="M580,559 C589,559 589,503 598,503"/>
+<path class="dag-e" data-from="tool-design" data-to="edit-tools" d="M580,559 C589,559 589,559 598,559"/>
+<path class="dag-e" data-from="probabilistic" data-to="prompting" d="M142,2197 L145,2197 Q151,2197 151,2191 L151,509 Q151,503 157,503 L306,503"/>
+<path class="dag-e" data-from="context-resend" data-to="prompting" d="M288,391 C297,391 297,503 306,503"/>
+<path class="dag-e" data-from="context-resend" data-to="text-only-channel" d="M288,391 C297,391 297,963 306,963"/>
+<path class="dag-e" data-from="amdahl" data-to="dont-split" d="M434,761 C443,761 443,1019 452,1019"/>
+<path class="dag-e" data-from="subagent" data-to="dont-split" d="M434,705 C443,705 443,1019 452,1019"/>
+<path class="dag-e" data-from="text-only-channel" data-to="dont-split" d="M434,963 C443,963 443,1019 452,1019"/>
+<path class="dag-e" data-from="dont-split" data-to="read-parallel-write-serial" d="M580,1019 L586,1019 Q592,1019 592,1013 L592,969 Q592,963 598,963 L744,963"/>
+<path class="dag-e" data-from="verification-defines-autonomy" data-to="read-parallel-write-serial" d="M726,817 C735,817 735,963 744,963"/>
+<path class="dag-e" data-from="subagent" data-to="delegation-prompt" d="M434,705 C443,705 443,1075 452,1075"/>
+<path class="dag-e" data-from="text-only-channel" data-to="delegation-prompt" d="M434,963 C443,963 443,1075 452,1075"/>
+<path class="dag-e" data-from="subagent" data-to="report-claim-evidence" d="M434,705 C443,705 443,963 452,963"/>
+<path class="dag-e" data-from="partial-failure" data-to="timeout-idempotent" d="M288,1221 L294,1221 Q300,1221 300,1215 L300,969 Q300,963 306,963 L598,963"/>
+<path class="dag-e" data-from="delegation-prompt" data-to="timeout-idempotent" d="M580,1075 C589,1075 589,963 598,963"/>
+<path class="dag-e" data-from="text-only-channel" data-to="distributed-state" d="M434,963 C443,963 443,1131 452,1131"/>
+<path class="dag-e" data-from="partial-failure" data-to="distributed-state" d="M288,1221 L294,1221 Q300,1221 300,1215 L300,1137 Q300,1131 306,1131 L452,1131"/>
+<path class="dag-e" data-from="probabilistic" data-to="error-compounding" d="M142,2197 C151,2197 151,1277 160,1277"/>
+<path class="dag-e" data-from="agent-loop" data-to="error-compounding" d="M142,77 C151,77 151,1277 160,1277"/>
+<path class="dag-e" data-from="error-compounding" data-to="verification-loop" d="M288,1277 C297,1277 297,1221 306,1221"/>
+<path class="dag-e" data-from="code-vs-text" data-to="verification-loop" d="M288,133 C297,133 297,1221 306,1221"/>
+<path class="dag-e" data-from="verification-loop" data-to="checkpoint-budget" d="M434,1221 C443,1221 443,1277 452,1277"/>
+<path class="dag-e" data-from="partial-failure" data-to="checkpoint-budget" d="M288,1221 L294,1221 Q300,1221 300,1227 L300,1271 Q300,1277 306,1277 L452,1277"/>
+<path class="dag-e" data-from="fix-harness-first" data-to="failure-layers" d="M580,503 C589,503 589,1221 598,1221"/>
+<path class="dag-e" data-from="stack" data-to="failure-layers" d="M434,77 L434,77 Q440,77 440,83 L440,1215 Q440,1221 446,1221 L598,1221"/>
+<path class="dag-e" data-from="instruction-files" data-to="memory-worth-it" d="M434,245 C443,245 443,1221 452,1221"/>
+<path class="dag-e" data-from="memory-worth-it" data-to="valid-time-provenance" d="M580,1221 C589,1221 589,1389 598,1389"/>
+<path class="dag-e" data-from="memory-worth-it" data-to="memory-retrieval" d="M580,1221 C589,1221 589,1333 598,1333"/>
+<path class="dag-e" data-from="context-admission" data-to="memory-retrieval" d="M434,391 L434,391 Q440,391 440,397 L440,1327 Q440,1333 446,1333 L598,1333"/>
+<path class="dag-e" data-from="memory-retrieval" data-to="memory-backend" d="M726,1333 L729,1333 Q735,1333 735,1327 L735,1227 Q735,1221 741,1221 L1036,1221"/>
+<path class="dag-e" data-from="valid-time-provenance" data-to="memory-backend" d="M726,1389 L730,1389 Q736,1389 736,1383 L736,1227 Q736,1221 742,1221 L1036,1221"/>
+<path class="dag-e" data-from="eval-driven-decisions" data-to="memory-backend" d="M1018,1479 C1027,1479 1027,1221 1036,1221"/>
+<path class="dag-e" data-from="prompt-injection" data-to="memory-poisoning" d="M434,189 L437,189 Q443,189 443,195 L443,1271 Q443,1277 449,1277 L598,1277"/>
+<path class="dag-e" data-from="memory-worth-it" data-to="memory-poisoning" d="M580,1221 C589,1221 589,1277 598,1277"/>
+<path class="dag-e" data-from="harness-os" data-to="score-is-system" d="M288,77 C297,77 297,1479 306,1479"/>
+<path class="dag-e" data-from="score-is-system" data-to="public-scores-limits" d="M434,1479 C443,1479 443,1591 452,1591"/>
+<path class="dag-e" data-from="cost-per-success" data-to="public-scores-limits" d="M288,1793 L290,1793 Q296,1793 296,1787 L296,1597 Q296,1591 302,1591 L452,1591"/>
+<path class="dag-e" data-from="cost-per-success" data-to="metrics-passk" d="M288,1793 L290,1793 Q296,1793 296,1787 L296,1709 Q296,1703 302,1703 L452,1703"/>
+<path class="dag-e" data-from="two-layer-testing" data-to="metrics-passk" d="M434,1535 C443,1535 443,1703 452,1703"/>
+<path class="dag-e" data-from="metrics-passk" data-to="noise" d="M580,1703 C589,1703 589,1535 598,1535"/>
+<path class="dag-e" data-from="score-is-system" data-to="leakage" d="M434,1479 C443,1479 443,1647 452,1647"/>
+<path class="dag-e" data-from="score-is-system" data-to="grader-validity" d="M434,1479 C443,1479 443,1535 452,1535"/>
+<path class="dag-e" data-from="verification-loop" data-to="grader-validity" d="M434,1221 C443,1221 443,1535 452,1535"/>
+<path class="dag-e" data-from="public-scores-limits" data-to="saturation" d="M580,1591 C589,1591 589,1479 598,1479"/>
+<path class="dag-e" data-from="leakage" data-to="saturation" d="M580,1647 C589,1647 589,1479 598,1479"/>
+<path class="dag-e" data-from="grader-validity" data-to="build-eval" d="M580,1535 L580,1535 Q586,1535 586,1529 L586,1485 Q586,1479 592,1479 L744,1479"/>
+<path class="dag-e" data-from="leakage" data-to="build-eval" d="M580,1647 L583,1647 Q589,1647 589,1641 L589,1485 Q589,1479 595,1479 L744,1479"/>
+<path class="dag-e" data-from="noise" data-to="build-eval" d="M726,1535 C735,1535 735,1479 744,1479"/>
+<path class="dag-e" data-from="build-eval" data-to="eval-driven-decisions" d="M872,1479 C881,1479 881,1479 890,1479"/>
+<path class="dag-e" data-from="score-is-system" data-to="harness-drift" d="M434,1479 C443,1479 443,1479 452,1479"/>
+<path class="dag-e" data-from="permissions" data-to="harness-drift" d="M434,133 C443,133 443,1479 452,1479"/>
+<path class="dag-e" data-from="cost-per-success" data-to="cost-formula" d="M288,1793 C297,1793 297,1849 306,1849"/>
+<path class="dag-e" data-from="context-resend" data-to="cost-formula" d="M288,391 C297,391 297,1849 306,1849"/>
+<path class="dag-e" data-from="cost-formula" data-to="cost-breakdown" d="M434,1849 C443,1849 443,1793 452,1793"/>
+<path class="dag-e" data-from="kv-cache" data-to="prefix-cache" d="M288,2107 C297,2107 297,1793 306,1793"/>
+<path class="dag-e" data-from="context-resend" data-to="prefix-cache" d="M288,391 C297,391 297,1793 306,1793"/>
+<path class="dag-e" data-from="cost-breakdown" data-to="net-savings" d="M580,1793 L1036,1793"/>
+<path class="dag-e" data-from="context-reduce" data-to="net-savings" d="M580,447 L584,447 Q590,447 590,453 L590,1787 Q590,1793 596,1793 L1036,1793"/>
+<path class="dag-e" data-from="eval-driven-decisions" data-to="net-savings" d="M1018,1479 C1027,1479 1027,1793 1036,1793"/>
+<path class="dag-e" data-from="cost-breakdown" data-to="fewer-steps" d="M580,1793 C589,1793 589,1793 598,1793"/>
+<path class="dag-e" data-from="code-vs-text" data-to="fewer-steps" d="M288,133 L290,133 Q296,133 296,139 L296,1787 Q296,1793 302,1793 L598,1793"/>
+<path class="dag-e" data-from="cost-breakdown" data-to="model-routing-effort" d="M580,1793 C589,1793 589,1961 598,1961"/>
+<path class="dag-e" data-from="prefix-cache" data-to="model-routing-effort" d="M434,1793 L434,1793 Q440,1793 440,1799 L440,1955 Q440,1961 446,1961 L598,1961"/>
+<path class="dag-e" data-from="error-compounding" data-to="model-routing-effort" d="M288,1277 L288,1277 Q294,1277 294,1283 L294,1955 Q294,1961 300,1961 L598,1961"/>
+<path class="dag-e" data-from="checkpoint-budget" data-to="cost-caps" d="M580,1277 C589,1277 589,1905 598,1905"/>
+<path class="dag-e" data-from="cost-formula" data-to="cost-caps" d="M434,1849 L436,1849 Q442,1849 442,1855 L442,1899 Q442,1905 448,1905 L598,1905"/>
+<path class="dag-e" data-from="amdahl" data-to="latency-critical-path" d="M434,761 L440,761 Q446,761 446,767 L446,1843 Q446,1849 452,1849 L598,1849"/>
+<path class="dag-e" data-from="cost-breakdown" data-to="latency-critical-path" d="M580,1793 C589,1793 589,1849 598,1849"/>
+<path class="dag-e" data-from="human-time" data-to="latency-critical-path" d="M434,1905 L437,1905 Q443,1905 443,1899 L443,1855 Q443,1849 449,1849 L598,1849"/>
+<path class="dag-e" data-from="team-workflow" data-to="harness-architecture" d="M872,705 C881,705 881,77 890,77"/>
+<path class="dag-e" data-from="permissions" data-to="harness-architecture" d="M434,133 L436,133 Q442,133 442,127 L442,83 Q442,77 448,77 L890,77"/>
+<path class="dag-e" data-from="prefill-decode" data-to="model-skeleton" d="M142,2051 C151,2051 151,2197 160,2197"/>
+<path class="dag-e" data-from="model-skeleton" data-to="attention" d="M288,2197 C297,2197 297,2253 306,2253"/>
+<path class="dag-e" data-from="kv-cache" data-to="attention" d="M288,2107 C297,2107 297,2253 306,2253"/>
+<path class="dag-e" data-from="attention" data-to="three-numbers" d="M434,2253 C443,2253 443,2197 452,2197"/>
+<path class="dag-e" data-from="batching" data-to="three-numbers" d="M288,2051 L291,2051 Q297,2051 297,2057 L297,2191 Q297,2197 303,2197 L452,2197"/>
+<path class="dag-e" data-from="three-numbers" data-to="moe" d="M580,2197 C589,2197 589,2197 598,2197"/>
+<path class="dag-e" data-from="three-numbers" data-to="kv-architectures" d="M580,2197 C589,2197 589,2253 598,2253"/>
+<path class="dag-e" data-from="kv-architectures" data-to="per-token-kv" d="M726,2253 C735,2253 735,2197 744,2197"/>
+<path class="dag-e" data-from="model-skeleton" data-to="tokenizer" d="M288,2197 C297,2197 297,2197 306,2197"/>
+<path class="dag-e" data-from="context-resend" data-to="tokenizer" d="M288,391 C297,391 297,2197 306,2197"/>
+<path class="dag-e" data-from="probabilistic" data-to="sampling" d="M142,2197 C151,2197 151,2253 160,2253"/>
+<path class="dag-e" data-from="sampling" data-to="fp-nondeterminism" d="M288,2253 C297,2253 297,2309 306,2309"/>
+<path class="dag-e" data-from="batching" data-to="fp-nondeterminism" d="M288,2051 C297,2051 297,2309 306,2309"/>
+<path class="dag-e" data-from="gpu-throughput" data-to="roofline" d="M142,2399 C151,2399 151,2399 160,2399"/>
+<path class="dag-e" data-from="roofline" data-to="decode-roofline" d="M288,2399 L290,2399 Q296,2399 296,2405 L296,2449 Q296,2455 302,2455 L598,2455"/>
+<path class="dag-e" data-from="three-numbers" data-to="decode-roofline" d="M580,2197 C589,2197 589,2455 598,2455"/>
+<path class="dag-e" data-from="decode-roofline" data-to="gpu-measurement" d="M726,2455 C735,2455 735,2455 744,2455"/>
+<path class="dag-e" data-from="roofline" data-to="chip-internals" d="M288,2399 C297,2399 297,2455 306,2455"/>
+<path class="dag-e" data-from="chip-internals" data-to="gpu-programming" d="M434,2455 C443,2455 443,2455 452,2455"/>
+<path class="dag-e" data-from="attention" data-to="fusion-flash" d="M434,2253 C443,2253 443,2399 452,2399"/>
+<path class="dag-e" data-from="chip-internals" data-to="fusion-flash" d="M434,2455 C443,2455 443,2399 452,2399"/>
+<path class="dag-e" data-from="fusion-flash" data-to="inter-kernel" d="M580,2399 L744,2399"/>
+<path class="dag-e" data-from="gpu-programming" data-to="inter-kernel" d="M580,2455 L583,2455 Q589,2455 589,2449 L589,2405 Q589,2399 595,2399 L744,2399"/>
+<path class="dag-e" data-from="decode-roofline" data-to="inter-kernel" d="M726,2455 C735,2455 735,2399 744,2399"/>
+<path class="dag-e" data-from="gpu-programming" data-to="ai-kernels" d="M580,2455 C589,2455 589,2399 598,2399"/>
+<path class="dag-e" data-from="verification-loop" data-to="ai-kernels" d="M434,1221 L437,1221 Q443,1221 443,1227 L443,2393 Q443,2399 449,2399 L598,2399"/>
+<path class="dag-e" data-from="gpu-throughput" data-to="datacenter" d="M142,2399 L306,2399"/>
+<path class="dag-e" data-from="partial-failure" data-to="datacenter" d="M288,1221 C297,1221 297,2399 306,2399"/>
+<path class="dag-e" data-from="tool-anatomy" data-to="secrets-transcript" d="M434,447 C443,447 443,615 452,615"/>
+<path class="dag-e" data-from="checkpoint-budget" data-to="session-hygiene" d="M580,1277 C589,1277 589,447 598,447"/>
+<path class="dag-e" data-from="context-reduce" data-to="session-hygiene" d="M580,447 C589,447 589,447 598,447"/>
+<path class="dag-e" data-from="worktree" data-to="execution-env" d="M434,817 L434,817 Q440,817 440,823 L440,867 Q440,873 446,873 L598,873"/>
+<path class="dag-e" data-from="subagent" data-to="execution-env" d="M434,705 L438,705 Q444,705 444,711 L444,867 Q444,873 450,873 L598,873"/>
+<path class="dag-e" data-from="checkpoint-budget" data-to="execution-env" d="M580,1277 C589,1277 589,873 598,873"/>
+</g>
+<g class="dag-nodes">
+<g class="dag-n tier-a" id="n-agent-loop" data-id="agent-loop" tabindex="0" role="button" aria-label="Agent loop，基礎，L2">
+<rect class="dag-box" x="14" y="54" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="14" y="54" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="136" y="65" text-anchor="end">L2</text>
+<text class="dag-t" x="24" y="81.5">Agent loop</text>
+</g>
+<g class="dag-n tier-a" id="n-probabilistic" data-id="probabilistic" tabindex="0" role="button" aria-label="機率性輸出，基礎，L1">
+<rect class="dag-box" x="14" y="2174" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="14" y="2174" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="136" y="2185" text-anchor="end">L1</text>
+<text class="dag-t" x="24" y="2201.5">機率性輸出</text>
+</g>
+<g class="dag-n tier-a" id="n-prefill-decode" data-id="prefill-decode" tabindex="0" role="button" aria-label="Prefill 與 decode，基礎，L9">
+<rect class="dag-box" x="14" y="2028" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="14" y="2028" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="136" y="2039" text-anchor="end">L9</text>
+<text class="dag-t" x="24" y="2055.5">Prefill 與 decode</text>
+</g>
+<g class="dag-n tier-a" id="n-gpu-throughput" data-id="gpu-throughput" tabindex="0" role="button" aria-label="GPU 換 throughput，基礎，L10">
+<rect class="dag-box" x="14" y="2376" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="14" y="2376" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="136" y="2387" text-anchor="end">L10</text>
+<text class="dag-t" x="24" y="2403.5">GPU 換 throughput</text>
+</g>
+<g class="dag-n tier-a" id="n-cost-per-success" data-id="cost-per-success" tabindex="0" role="button" aria-label="每個成功任務的成本，基礎，L1">
+<rect class="dag-box" x="160" y="1770" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="1770" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="1781" text-anchor="end">L1</text>
+<text class="dag-t" x="170" y="1797.5">每個成功任務的成本</text>
+</g>
+<g class="dag-n tier-c" id="n-human-time" data-id="human-time" tabindex="0" role="button" aria-label="人的時間，進階，L1">
+<rect class="dag-box" x="306" y="1882" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="1882" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="1893" text-anchor="end">L1</text>
+<text class="dag-t" x="316" y="1909.5">人的時間</text>
+</g>
+<g class="dag-n tier-a" id="n-stack" data-id="stack" tabindex="0" role="button" aria-label="Stack 分層，基礎，L1">
+<rect class="dag-box" x="306" y="54" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="54" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="65" text-anchor="end">L1</text>
+<text class="dag-t" x="316" y="81.5">Stack 分層</text>
+</g>
+<g class="dag-n tier-a" id="n-harness-os" data-id="harness-os" tabindex="0" role="button" aria-label="Harness 是 OS，基礎，L1">
+<rect class="dag-box" x="160" y="54" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="54" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="65" text-anchor="end">L1</text>
+<text class="dag-t" x="170" y="81.5">Harness 是 OS</text>
+</g>
+<g class="dag-n tier-c" id="n-assumptions" data-id="assumptions" tabindex="0" role="button" aria-label="五個假設反轉，進階，L1">
+<rect class="dag-box" x="306" y="2084" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2084" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2095" text-anchor="end">L1</text>
+<text class="dag-t" x="316" y="2111.5">五個假設反轉</text>
+</g>
+<g class="dag-n tier-a" id="n-batching" data-id="batching" tabindex="0" role="button" aria-label="Batching，基礎，L1">
+<rect class="dag-box" x="160" y="2028" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="2028" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="2039" text-anchor="end">L1</text>
+<text class="dag-t" x="170" y="2055.5">Batching</text>
+</g>
+<g class="dag-n tier-d" id="n-disaggregation" data-id="disaggregation" tabindex="0" role="button" aria-label="P/D 分離，專家，L1">
+<rect class="dag-box" x="598" y="2028" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="2028" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="2039" text-anchor="end">L1</text>
+<text class="dag-t" x="608" y="2055.5">P/D 分離</text>
+</g>
+<g class="dag-n tier-a" id="n-kv-cache" data-id="kv-cache" tabindex="0" role="button" aria-label="KV cache，基礎，L1">
+<rect class="dag-box" x="160" y="2084" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="2084" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="2095" text-anchor="end">L1</text>
+<text class="dag-t" x="170" y="2111.5">KV cache</text>
+</g>
+<g class="dag-n tier-c" id="n-kv-cache-storage" data-id="kv-cache-storage" tabindex="0" role="button" aria-label="KV cache 當儲存，進階，L1">
+<rect class="dag-box" x="306" y="2028" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2028" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2039" text-anchor="end">L1</text>
+<text class="dag-t" x="316" y="2055.5">KV cache 當儲存</text>
+</g>
+<g class="dag-n tier-c" id="n-two-layer-testing" data-id="two-layer-testing" tabindex="0" role="button" aria-label="測試分兩層，進階，L1">
+<rect class="dag-box" x="306" y="1512" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="1512" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="1523" text-anchor="end">L1</text>
+<text class="dag-t" x="316" y="1539.5">測試分兩層</text>
+</g>
+<g class="dag-n tier-a" id="n-partial-failure" data-id="partial-failure" tabindex="0" role="button" aria-label="故障是常態，基礎，L1">
+<rect class="dag-box" x="160" y="1198" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="1198" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="1209" text-anchor="end">L1</text>
+<text class="dag-t" x="170" y="1225.5">故障是常態</text>
+</g>
+<g class="dag-n tier-a" id="n-code-vs-text" data-id="code-vs-text" tabindex="0" role="button" aria-label="保證寫成程式，基礎，L2">
+<rect class="dag-box" x="160" y="110" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="110" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="121" text-anchor="end">L2</text>
+<text class="dag-t" x="170" y="137.5">保證寫成程式</text>
+</g>
+<g class="dag-n tier-a" id="n-context-resend" data-id="context-resend" tabindex="0" role="button" aria-label="Context 整份重送，基礎，L4">
+<rect class="dag-box" x="160" y="368" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="368" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="379" text-anchor="end">L4</text>
+<text class="dag-t" x="170" y="395.5">Context 整份重送</text>
+</g>
+<g class="dag-n tier-c" id="n-permissions" data-id="permissions" tabindex="0" role="button" aria-label="權限三層，進階，L2">
+<rect class="dag-box" x="306" y="110" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="110" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="121" text-anchor="end">L2</text>
+<text class="dag-t" x="316" y="137.5">權限三層</text>
+</g>
+<g class="dag-n tier-c" id="n-prompt-injection" data-id="prompt-injection" tabindex="0" role="button" aria-label="Prompt injection，進階，L2">
+<rect class="dag-box" x="306" y="166" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="166" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="177" text-anchor="end">L2</text>
+<text class="dag-t" x="316" y="193.5">Prompt injection</text>
+</g>
+<g class="dag-n tier-c" id="n-instruction-files" data-id="instruction-files" tabindex="0" role="button" aria-label="CLAUDE.md 的租金，進階，L2">
+<rect class="dag-box" x="306" y="222" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="222" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="233" text-anchor="end">L2</text>
+<text class="dag-t" x="316" y="249.5">CLAUDE.md 的租金</text>
+</g>
+<g class="dag-n tier-c" id="n-hooks" data-id="hooks" tabindex="0" role="button" aria-label="Hook，進階，L2">
+<rect class="dag-box" x="306" y="278" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="278" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="289" text-anchor="end">L2</text>
+<text class="dag-t" x="316" y="305.5">Hook</text>
+</g>
+<g class="dag-n tier-c" id="n-skills" data-id="skills" tabindex="0" role="button" aria-label="Skill，進階，L2">
+<rect class="dag-box" x="452" y="110" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="110" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="121" text-anchor="end">L2</text>
+<text class="dag-t" x="462" y="137.5">Skill</text>
+</g>
+<g class="dag-n tier-c" id="n-mcp" data-id="mcp" tabindex="0" role="button" aria-label="MCP，進階，L2">
+<rect class="dag-box" x="452" y="54" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="54" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="65" text-anchor="end">L2</text>
+<text class="dag-t" x="462" y="81.5">MCP</text>
+</g>
+<g class="dag-n tier-c" id="n-plugins" data-id="plugins" tabindex="0" role="button" aria-label="Plugin，進階，L2">
+<rect class="dag-box" x="598" y="54" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="54" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="65" text-anchor="end">L2</text>
+<text class="dag-t" x="608" y="81.5">Plugin</text>
+</g>
+<g class="dag-n tier-a" id="n-scaling-axes" data-id="scaling-axes" tabindex="0" role="button" aria-label="放大的三個軸，基礎，L3">
+<rect class="dag-box" x="160" y="682" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="682" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="693" text-anchor="end">L3</text>
+<text class="dag-t" x="170" y="709.5">放大的三個軸</text>
+</g>
+<g class="dag-n tier-c" id="n-amdahl" data-id="amdahl" tabindex="0" role="button" aria-label="Amdahl 上限，進階，L3">
+<rect class="dag-box" x="306" y="738" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="738" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="749" text-anchor="end">L3</text>
+<text class="dag-t" x="316" y="765.5">Amdahl 上限</text>
+</g>
+<g class="dag-n tier-c" id="n-review-bottleneck" data-id="review-bottleneck" tabindex="0" role="button" aria-label="Review 是瓶頸，進階，L3">
+<rect class="dag-box" x="452" y="682" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="682" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="693" text-anchor="end">L3</text>
+<text class="dag-t" x="462" y="709.5">Review 是瓶頸</text>
+</g>
+<g class="dag-n tier-c" id="n-verification-defines-autonomy" data-id="verification-defines-autonomy" tabindex="0" role="button" aria-label="能驗證才能放手，進階，L3">
+<rect class="dag-box" x="598" y="794" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="794" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="805" text-anchor="end">L3</text>
+<text class="dag-t" x="608" y="821.5">能驗證才能放手</text>
+</g>
+<g class="dag-n tier-c" id="n-worktree" data-id="worktree" tabindex="0" role="button" aria-label="Worktree 隔離，進階，L3">
+<rect class="dag-box" x="306" y="794" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="794" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="805" text-anchor="end">L3</text>
+<text class="dag-t" x="316" y="821.5">Worktree 隔離</text>
+</g>
+<g class="dag-n tier-c" id="n-subagent" data-id="subagent" tabindex="0" role="button" aria-label="Subagent，進階，L3">
+<rect class="dag-box" x="306" y="682" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="682" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="693" text-anchor="end">L3</text>
+<text class="dag-t" x="316" y="709.5">Subagent</text>
+</g>
+<g class="dag-n tier-c" id="n-team-workflow" data-id="team-workflow" tabindex="0" role="button" aria-label="Team 與 workflow，進階，L3">
+<rect class="dag-box" x="744" y="682" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="744" y="682" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="866" y="693" text-anchor="end">L3</text>
+<text class="dag-t" x="754" y="709.5">Team 與 workflow</text>
+</g>
+<g class="dag-n tier-c" id="n-process-in-skill" data-id="process-in-skill" tabindex="0" role="button" aria-label="流程寫進 skill，進階，L3">
+<rect class="dag-box" x="598" y="738" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="738" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="749" text-anchor="end">L3</text>
+<text class="dag-t" x="608" y="765.5">流程寫進 skill</text>
+</g>
+<g class="dag-n tier-c" id="n-token-saving-direction" data-id="token-saving-direction" tabindex="0" role="button" aria-label="省 token 看方向，進階，L3">
+<rect class="dag-box" x="598" y="682" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="682" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="693" text-anchor="end">L3</text>
+<text class="dag-t" x="608" y="709.5">省 token 看方向</text>
+</g>
+<g class="dag-n tier-c" id="n-attention-as-resource" data-id="attention-as-resource" tabindex="0" role="button" aria-label="省人的注意力，進階，L3">
+<rect class="dag-box" x="890" y="682" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="890" y="682" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="1012" y="693" text-anchor="end">L3</text>
+<text class="dag-t" x="900" y="709.5">省人的注意力</text>
+</g>
+<g class="dag-n tier-c" id="n-fix-harness-first" data-id="fix-harness-first" tabindex="0" role="button" aria-label="先查 harness，進階，L4">
+<rect class="dag-box" x="452" y="480" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="480" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="491" text-anchor="end">L4</text>
+<text class="dag-t" x="462" y="507.5">先查 harness</text>
+</g>
+<g class="dag-n tier-c" id="n-context-layout" data-id="context-layout" tabindex="0" role="button" aria-label="Context 開頭不動，進階，L4">
+<rect class="dag-box" x="452" y="368" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="368" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="379" text-anchor="end">L4</text>
+<text class="dag-t" x="462" y="395.5">Context 開頭不動</text>
+</g>
+<g class="dag-n tier-c" id="n-context-admission" data-id="context-admission" tabindex="0" role="button" aria-label="先擋在門口，進階，L4">
+<rect class="dag-box" x="306" y="368" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="368" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="379" text-anchor="end">L4</text>
+<text class="dag-t" x="316" y="395.5">先擋在門口</text>
+</g>
+<g class="dag-n tier-c" id="n-context-reduce" data-id="context-reduce" tabindex="0" role="button" aria-label="先刪後摘要，進階，L4">
+<rect class="dag-box" x="452" y="424" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="424" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="435" text-anchor="end">L4</text>
+<text class="dag-t" x="462" y="451.5">先刪後摘要</text>
+</g>
+<g class="dag-n tier-a" id="n-tool-anatomy" data-id="tool-anatomy" tabindex="0" role="button" aria-label="Tool 是三段文字，基礎，L4">
+<rect class="dag-box" x="306" y="424" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="424" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="435" text-anchor="end">L4</text>
+<text class="dag-t" x="316" y="451.5">Tool 是三段文字</text>
+</g>
+<g class="dag-n tier-c" id="n-tool-design" data-id="tool-design" tabindex="0" role="button" aria-label="Tool 五條原則，進階，L4">
+<rect class="dag-box" x="452" y="536" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="536" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="547" text-anchor="end">L4</text>
+<text class="dag-t" x="462" y="563.5">Tool 五條原則</text>
+</g>
+<g class="dag-n tier-c" id="n-execution-tools" data-id="execution-tools" tabindex="0" role="button" aria-label="Shell 與專用 tool，進階，L4">
+<rect class="dag-box" x="598" y="368" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="368" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="379" text-anchor="end">L4</text>
+<text class="dag-t" x="608" y="395.5">Shell 與專用 tool</text>
+</g>
+<g class="dag-n tier-c" id="n-search-tools" data-id="search-tools" tabindex="0" role="button" aria-label="先 grep 再換，進階，L4">
+<rect class="dag-box" x="598" y="480" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="480" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="491" text-anchor="end">L4</text>
+<text class="dag-t" x="608" y="507.5">先 grep 再換</text>
+</g>
+<g class="dag-n tier-c" id="n-edit-tools" data-id="edit-tools" tabindex="0" role="button" aria-label="Edit 失敗要看得見，進階，L4">
+<rect class="dag-box" x="598" y="536" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="536" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="547" text-anchor="end">L4</text>
+<text class="dag-t" x="608" y="563.5">Edit 失敗要看得見</text>
+</g>
+<g class="dag-n tier-a" id="n-prompting" data-id="prompting" tabindex="0" role="button" aria-label="Prompt 原則，基礎，L4">
+<rect class="dag-box" x="306" y="480" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="480" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="491" text-anchor="end">L4</text>
+<text class="dag-t" x="316" y="507.5">Prompt 原則</text>
+</g>
+<g class="dag-n tier-a" id="n-text-only-channel" data-id="text-only-channel" tabindex="0" role="button" aria-label="只能傳文字，基礎，L5">
+<rect class="dag-box" x="306" y="940" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="940" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="951" text-anchor="end">L5</text>
+<text class="dag-t" x="316" y="967.5">只能傳文字</text>
+</g>
+<g class="dag-n tier-c" id="n-dont-split" data-id="dont-split" tabindex="0" role="button" aria-label="多數任務不該拆，進階，L5">
+<rect class="dag-box" x="452" y="996" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="996" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1007" text-anchor="end">L5</text>
+<text class="dag-t" x="462" y="1023.5">多數任務不該拆</text>
+</g>
+<g class="dag-n tier-c" id="n-read-parallel-write-serial" data-id="read-parallel-write-serial" tabindex="0" role="button" aria-label="讀平行、寫單線，進階，L5">
+<rect class="dag-box" x="744" y="940" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="744" y="940" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="866" y="951" text-anchor="end">L5</text>
+<text class="dag-t" x="754" y="967.5">讀平行、寫單線</text>
+</g>
+<g class="dag-n tier-c" id="n-delegation-prompt" data-id="delegation-prompt" tabindex="0" role="button" aria-label="派工 prompt，進階，L5">
+<rect class="dag-box" x="452" y="1052" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1052" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1063" text-anchor="end">L5</text>
+<text class="dag-t" x="462" y="1079.5">派工 prompt</text>
+</g>
+<g class="dag-n tier-c" id="n-report-claim-evidence" data-id="report-claim-evidence" tabindex="0" role="button" aria-label="回報帶證據，進階，L5">
+<rect class="dag-box" x="452" y="940" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="940" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="951" text-anchor="end">L5</text>
+<text class="dag-t" x="462" y="967.5">回報帶證據</text>
+</g>
+<g class="dag-n tier-c" id="n-timeout-idempotent" data-id="timeout-idempotent" tabindex="0" role="button" aria-label="Timeout 與冪等，進階，L5">
+<rect class="dag-box" x="598" y="940" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="940" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="951" text-anchor="end">L5</text>
+<text class="dag-t" x="608" y="967.5">Timeout 與冪等</text>
+</g>
+<g class="dag-n tier-d" id="n-distributed-state" data-id="distributed-state" tabindex="0" role="button" aria-label="分散式狀態，專家，L5">
+<rect class="dag-box" x="452" y="1108" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1108" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1119" text-anchor="end">L5</text>
+<text class="dag-t" x="462" y="1135.5">分散式狀態</text>
+</g>
+<g class="dag-n tier-a" id="n-error-compounding" data-id="error-compounding" tabindex="0" role="button" aria-label="錯誤相乘，基礎，L6">
+<rect class="dag-box" x="160" y="1254" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="1254" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="1265" text-anchor="end">L6</text>
+<text class="dag-t" x="170" y="1281.5">錯誤相乘</text>
+</g>
+<g class="dag-n tier-c" id="n-verification-loop" data-id="verification-loop" tabindex="0" role="button" aria-label="驗證迴圈，進階，L6">
+<rect class="dag-box" x="306" y="1198" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="1198" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="1209" text-anchor="end">L6</text>
+<text class="dag-t" x="316" y="1225.5">驗證迴圈</text>
+</g>
+<g class="dag-n tier-c" id="n-checkpoint-budget" data-id="checkpoint-budget" tabindex="0" role="button" aria-label="Checkpoint 與上限，進階，L6">
+<rect class="dag-box" x="452" y="1254" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1254" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1265" text-anchor="end">L6</text>
+<text class="dag-t" x="462" y="1281.5">Checkpoint 與上限</text>
+</g>
+<g class="dag-n tier-c" id="n-failure-layers" data-id="failure-layers" tabindex="0" role="button" aria-label="失敗分層，進階，L6">
+<rect class="dag-box" x="598" y="1198" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1198" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1209" text-anchor="end">L6</text>
+<text class="dag-t" x="608" y="1225.5">失敗分層</text>
+</g>
+<g class="dag-n tier-c" id="n-memory-worth-it" data-id="memory-worth-it" tabindex="0" role="button" aria-label="壞記憶更糟，進階，L6">
+<rect class="dag-box" x="452" y="1198" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1198" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1209" text-anchor="end">L6</text>
+<text class="dag-t" x="462" y="1225.5">壞記憶更糟</text>
+</g>
+<g class="dag-n tier-c" id="n-valid-time-provenance" data-id="valid-time-provenance" tabindex="0" role="button" aria-label="Valid time 與來源，進階，L6">
+<rect class="dag-box" x="598" y="1366" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1366" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1377" text-anchor="end">L6</text>
+<text class="dag-t" x="608" y="1393.5">Valid time 與來源</text>
+</g>
+<g class="dag-n tier-c" id="n-memory-retrieval" data-id="memory-retrieval" tabindex="0" role="button" aria-label="檢索五個訊號，進階，L6">
+<rect class="dag-box" x="598" y="1310" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1310" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1321" text-anchor="end">L6</text>
+<text class="dag-t" x="608" y="1337.5">檢索五個訊號</text>
+</g>
+<g class="dag-n tier-c" id="n-memory-backend" data-id="memory-backend" tabindex="0" role="button" aria-label="先用檔案，進階，L6">
+<rect class="dag-box" x="1036" y="1198" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="1036" y="1198" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="1158" y="1209" text-anchor="end">L6</text>
+<text class="dag-t" x="1046" y="1225.5">先用檔案</text>
+</g>
+<g class="dag-n tier-c" id="n-memory-poisoning" data-id="memory-poisoning" tabindex="0" role="button" aria-label="記憶中毒，進階，L6">
+<rect class="dag-box" x="598" y="1254" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1254" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1265" text-anchor="end">L6</text>
+<text class="dag-t" x="608" y="1281.5">記憶中毒</text>
+</g>
+<g class="dag-n tier-a" id="n-score-is-system" data-id="score-is-system" tabindex="0" role="button" aria-label="分數是系統的輸出，基礎，L7">
+<rect class="dag-box" x="306" y="1456" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="1456" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="1467" text-anchor="end">L7</text>
+<text class="dag-t" x="316" y="1483.5">分數是系統的輸出</text>
+</g>
+<g class="dag-n tier-c" id="n-public-scores-limits" data-id="public-scores-limits" tabindex="0" role="button" aria-label="公開分數的限制，進階，L7">
+<rect class="dag-box" x="452" y="1568" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1568" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1579" text-anchor="end">L7</text>
+<text class="dag-t" x="462" y="1595.5">公開分數的限制</text>
+</g>
+<g class="dag-n tier-c" id="n-metrics-passk" data-id="metrics-passk" tabindex="0" role="button" aria-label="pass@k 與 pass^k，進階，L7">
+<rect class="dag-box" x="452" y="1680" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1680" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1691" text-anchor="end">L7</text>
+<text class="dag-t" x="462" y="1707.5">pass@k 與 pass^k</text>
+</g>
+<g class="dag-n tier-c" id="n-noise" data-id="noise" tabindex="0" role="button" aria-label="雜訊，進階，L7">
+<rect class="dag-box" x="598" y="1512" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1512" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1523" text-anchor="end">L7</text>
+<text class="dag-t" x="608" y="1539.5">雜訊</text>
+</g>
+<g class="dag-n tier-c" id="n-leakage" data-id="leakage" tabindex="0" role="button" aria-label="Leakage，進階，L7">
+<rect class="dag-box" x="452" y="1624" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1624" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1635" text-anchor="end">L7</text>
+<text class="dag-t" x="462" y="1651.5">Leakage</text>
+</g>
+<g class="dag-n tier-c" id="n-grader-validity" data-id="grader-validity" tabindex="0" role="button" aria-label="Grader 會錯，進階，L7">
+<rect class="dag-box" x="452" y="1512" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1512" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1523" text-anchor="end">L7</text>
+<text class="dag-t" x="462" y="1539.5">Grader 會錯</text>
+</g>
+<g class="dag-n tier-c" id="n-saturation" data-id="saturation" tabindex="0" role="button" aria-label="Benchmark 是耗材，進階，L7">
+<rect class="dag-box" x="598" y="1456" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1456" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1467" text-anchor="end">L7</text>
+<text class="dag-t" x="608" y="1483.5">Benchmark 是耗材</text>
+</g>
+<g class="dag-n tier-c" id="n-build-eval" data-id="build-eval" tabindex="0" role="button" aria-label="從失敗建評估，進階，L7">
+<rect class="dag-box" x="744" y="1456" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="744" y="1456" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="866" y="1467" text-anchor="end">L7</text>
+<text class="dag-t" x="754" y="1483.5">從失敗建評估</text>
+</g>
+<g class="dag-n tier-c" id="n-eval-driven-decisions" data-id="eval-driven-decisions" tabindex="0" role="button" aria-label="一次改一件事，進階，L7">
+<rect class="dag-box" x="890" y="1456" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="890" y="1456" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="1012" y="1467" text-anchor="end">L7</text>
+<text class="dag-t" x="900" y="1483.5">一次改一件事</text>
+</g>
+<g class="dag-n tier-c" id="n-harness-drift" data-id="harness-drift" tabindex="0" role="button" aria-label="Harness 會變，進階，L11">
+<rect class="dag-box" x="452" y="1456" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1456" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1467" text-anchor="end">L11</text>
+<text class="dag-t" x="462" y="1483.5">Harness 會變</text>
+</g>
+<g class="dag-n tier-c" id="n-cost-formula" data-id="cost-formula" tabindex="0" role="button" aria-label="成本六個乘數，進階，L8">
+<rect class="dag-box" x="306" y="1826" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="1826" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="1837" text-anchor="end">L8</text>
+<text class="dag-t" x="316" y="1853.5">成本六個乘數</text>
+</g>
+<g class="dag-n tier-c" id="n-cost-breakdown" data-id="cost-breakdown" tabindex="0" role="button" aria-label="錢在重讀的 context，進階，L8">
+<rect class="dag-box" x="452" y="1770" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="1770" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="1781" text-anchor="end">L8</text>
+<text class="dag-t" x="462" y="1790">錢在重讀的</text>
+<text class="dag-t" x="462" y="1805">context</text>
+</g>
+<g class="dag-n tier-c" id="n-prefix-cache" data-id="prefix-cache" tabindex="0" role="button" aria-label="Prefix cache，進階，L8">
+<rect class="dag-box" x="306" y="1770" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="1770" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="1781" text-anchor="end">L8</text>
+<text class="dag-t" x="316" y="1797.5">Prefix cache</text>
+</g>
+<g class="dag-n tier-c" id="n-net-savings" data-id="net-savings" tabindex="0" role="button" aria-label="淨節省要量，進階，L8">
+<rect class="dag-box" x="1036" y="1770" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="1036" y="1770" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="1158" y="1781" text-anchor="end">L8</text>
+<text class="dag-t" x="1046" y="1797.5">淨節省要量</text>
+</g>
+<g class="dag-n tier-c" id="n-fewer-steps" data-id="fewer-steps" tabindex="0" role="button" aria-label="少走幾步，進階，L8">
+<rect class="dag-box" x="598" y="1770" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1770" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1781" text-anchor="end">L8</text>
+<text class="dag-t" x="608" y="1797.5">少走幾步</text>
+</g>
+<g class="dag-n tier-c" id="n-model-routing-effort" data-id="model-routing-effort" tabindex="0" role="button" aria-label="換 model 的時機，進階，L8">
+<rect class="dag-box" x="598" y="1938" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1938" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1949" text-anchor="end">L8</text>
+<text class="dag-t" x="608" y="1965.5">換 model 的時機</text>
+</g>
+<g class="dag-n tier-c" id="n-cost-caps" data-id="cost-caps" tabindex="0" role="button" aria-label="失控要喊停，進階，L8">
+<rect class="dag-box" x="598" y="1882" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1882" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1893" text-anchor="end">L8</text>
+<text class="dag-t" x="608" y="1909.5">失控要喊停</text>
+</g>
+<g class="dag-n tier-c" id="n-latency-critical-path" data-id="latency-critical-path" tabindex="0" role="button" aria-label="Critical path，進階，L8">
+<rect class="dag-box" x="598" y="1826" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="1826" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="1837" text-anchor="end">L8</text>
+<text class="dag-t" x="608" y="1853.5">Critical path</text>
+</g>
+<g class="dag-n tier-d" id="n-harness-architecture" data-id="harness-architecture" tabindex="0" role="button" aria-label="Harness 的邊界，專家，L8">
+<rect class="dag-box" x="890" y="54" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="890" y="54" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="1012" y="65" text-anchor="end">L8</text>
+<text class="dag-t" x="900" y="81.5">Harness 的邊界</text>
+</g>
+<g class="dag-n tier-c" id="n-model-skeleton" data-id="model-skeleton" tabindex="0" role="button" aria-label="Model 的骨架，進階，L9">
+<rect class="dag-box" x="160" y="2174" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="2174" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="2185" text-anchor="end">L9</text>
+<text class="dag-t" x="170" y="2201.5">Model 的骨架</text>
+</g>
+<g class="dag-n tier-c" id="n-attention" data-id="attention" tabindex="0" role="button" aria-label="Attention，進階，L9">
+<rect class="dag-box" x="306" y="2230" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2230" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2241" text-anchor="end">L9</text>
+<text class="dag-t" x="316" y="2257.5">Attention</text>
+</g>
+<g class="dag-n tier-c" id="n-three-numbers" data-id="three-numbers" tabindex="0" role="button" aria-label="三個數字，進階，L9">
+<rect class="dag-box" x="452" y="2174" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="2174" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="2185" text-anchor="end">L9</text>
+<text class="dag-t" x="462" y="2201.5">三個數字</text>
+</g>
+<g class="dag-n tier-c" id="n-moe" data-id="moe" tabindex="0" role="button" aria-label="MoE，進階，L9">
+<rect class="dag-box" x="598" y="2174" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="2174" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="2185" text-anchor="end">L9</text>
+<text class="dag-t" x="608" y="2201.5">MoE</text>
+</g>
+<g class="dag-n tier-d" id="n-kv-architectures" data-id="kv-architectures" tabindex="0" role="button" aria-label="改 KV cache 的架構，專家，L9">
+<rect class="dag-box" x="598" y="2230" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="2230" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="2241" text-anchor="end">L9</text>
+<text class="dag-t" x="608" y="2257.5">改 KV cache 的架構</text>
+</g>
+<g class="dag-n tier-d" id="n-per-token-kv" data-id="per-token-kv" tabindex="0" role="button" aria-label="每個 token 的 KV，專家，L9">
+<rect class="dag-box" x="744" y="2174" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="744" y="2174" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="866" y="2185" text-anchor="end">L9</text>
+<text class="dag-t" x="754" y="2201.5">每個 token 的 KV</text>
+</g>
+<g class="dag-n tier-c" id="n-tokenizer" data-id="tokenizer" tabindex="0" role="button" aria-label="Tokenizer 與中文，進階，L9">
+<rect class="dag-box" x="306" y="2174" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2174" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2185" text-anchor="end">L9</text>
+<text class="dag-t" x="316" y="2201.5">Tokenizer 與中文</text>
+</g>
+<g class="dag-n tier-a" id="n-sampling" data-id="sampling" tabindex="0" role="button" aria-label="Sampling 設定，基礎，L9">
+<rect class="dag-box" x="160" y="2230" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="2230" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="2241" text-anchor="end">L9</text>
+<text class="dag-t" x="170" y="2257.5">Sampling 設定</text>
+</g>
+<g class="dag-n tier-d" id="n-fp-nondeterminism" data-id="fp-nondeterminism" tabindex="0" role="button" aria-label="浮點數不確定性，專家，L9">
+<rect class="dag-box" x="306" y="2286" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2286" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2297" text-anchor="end">L9</text>
+<text class="dag-t" x="316" y="2313.5">浮點數不確定性</text>
+</g>
+<g class="dag-n tier-c" id="n-roofline" data-id="roofline" tabindex="0" role="button" aria-label="Roofline，進階，L10">
+<rect class="dag-box" x="160" y="2376" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="160" y="2376" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="282" y="2387" text-anchor="end">L10</text>
+<text class="dag-t" x="170" y="2403.5">Roofline</text>
+</g>
+<g class="dag-n tier-c" id="n-decode-roofline" data-id="decode-roofline" tabindex="0" role="button" aria-label="Decode 的 roofline，進階，L10">
+<rect class="dag-box" x="598" y="2432" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="2432" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="2443" text-anchor="end">L10</text>
+<text class="dag-t" x="608" y="2452">Decode 的</text>
+<text class="dag-t" x="608" y="2467">roofline</text>
+</g>
+<g class="dag-n tier-d" id="n-gpu-measurement" data-id="gpu-measurement" tabindex="0" role="button" aria-label="MFU 與 MBU，專家，L10">
+<rect class="dag-box" x="744" y="2432" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="744" y="2432" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="866" y="2443" text-anchor="end">L10</text>
+<text class="dag-t" x="754" y="2459.5">MFU 與 MBU</text>
+</g>
+<g class="dag-n tier-d" id="n-chip-internals" data-id="chip-internals" tabindex="0" role="button" aria-label="晶片內部，專家，L10">
+<rect class="dag-box" x="306" y="2432" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2432" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2443" text-anchor="end">L10</text>
+<text class="dag-t" x="316" y="2459.5">晶片內部</text>
+</g>
+<g class="dag-n tier-d" id="n-gpu-programming" data-id="gpu-programming" tabindex="0" role="button" aria-label="GPU 程式五層，專家，L10">
+<rect class="dag-box" x="452" y="2432" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="2432" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="2443" text-anchor="end">L10</text>
+<text class="dag-t" x="462" y="2459.5">GPU 程式五層</text>
+</g>
+<g class="dag-n tier-d" id="n-fusion-flash" data-id="fusion-flash" tabindex="0" role="button" aria-label="FlashAttention，專家，L10">
+<rect class="dag-box" x="452" y="2376" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="2376" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="2387" text-anchor="end">L10</text>
+<text class="dag-t" x="462" y="2403.5">FlashAttention</text>
+</g>
+<g class="dag-n tier-d" id="n-inter-kernel" data-id="inter-kernel" tabindex="0" role="button" aria-label="Kernel 之間的空等，專家，L10">
+<rect class="dag-box" x="744" y="2376" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="744" y="2376" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="866" y="2387" text-anchor="end">L10</text>
+<text class="dag-t" x="754" y="2403.5">Kernel 之間的空等</text>
+</g>
+<g class="dag-n tier-d" id="n-ai-kernels" data-id="ai-kernels" tabindex="0" role="button" aria-label="AI 寫的 kernel，專家，L10">
+<rect class="dag-box" x="598" y="2376" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="2376" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="2387" text-anchor="end">L10</text>
+<text class="dag-t" x="608" y="2403.5">AI 寫的 kernel</text>
+</g>
+<g class="dag-n tier-c" id="n-datacenter" data-id="datacenter" tabindex="0" role="button" aria-label="一張卡之外，進階，L10">
+<rect class="dag-box" x="306" y="2376" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="306" y="2376" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="428" y="2387" text-anchor="end">L10</text>
+<text class="dag-t" x="316" y="2403.5">一張卡之外</text>
+</g>
+<g class="dag-n tier-c" id="n-secrets-transcript" data-id="secrets-transcript" tabindex="0" role="button" aria-label="Secrets 與 transcript，進階，L11">
+<rect class="dag-box" x="452" y="592" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="452" y="592" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="574" y="603" text-anchor="end">L11</text>
+<text class="dag-t" x="462" y="612">Secrets 與</text>
+<text class="dag-t" x="462" y="627">transcript</text>
+</g>
+<g class="dag-n tier-c" id="n-session-hygiene" data-id="session-hygiene" tabindex="0" role="button" aria-label="一個 session 一件事，進階，L11">
+<rect class="dag-box" x="598" y="424" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="424" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="435" text-anchor="end">L11</text>
+<text class="dag-t" x="608" y="444">一個 session</text>
+<text class="dag-t" x="608" y="459">一件事</text>
+</g>
+<g class="dag-n tier-c" id="n-execution-env" data-id="execution-env" tabindex="0" role="button" aria-label="執行環境，進階，L11">
+<rect class="dag-box" x="598" y="850" width="128" height="46" rx="5"/>
+<rect class="dag-tier" x="598" y="850" width="4" height="46" rx="2"/>
+<text class="dag-tag" x="720" y="861" text-anchor="end">L11</text>
+<text class="dag-t" x="608" y="877.5">執行環境</text>
+</g>
+</g></svg></div>
+    <ul class="dag-legend" aria-label="圖例">
+      <li><span class="dag-badge tier-a">基礎</span> <span class="dag-badge tier-c">進階</span> <span class="dag-badge tier-d">專家</span> 難度</li>
+      <li><i class="sel"></i> 選取的觀念</li>
+      <li><i></i> 它的前置（往左）</li>
+      <li><i class="desc"></i> 從它延伸出去的（往右）</li>
+      <li>方塊右上的 L 數字是講得最完整的那一堂；散在兩堂的觀念列在下面</li>
+    </ul>
+    <figcaption>每個方塊是一個觀念，寫的是短名；點開看完整的一句話主張和「為什麼從那裡延伸」。一條邊 A → B 的意思是「讀 B 之前要先懂 A」，只畫直接的前置，能從別條邊推出來的不重畫。版面：x 是最長依賴路徑的長度，y 是主題；同一格有好幾個觀念時上下排。</figcaption>
+  </figure>
+
+  <aside class="dag-detail" id="dag-detail" aria-live="polite">
+    <p class="hint">點圖上的一個觀念，這裡會顯示它的主張、為什麼從那些觀念延伸、出處章節，和從它延伸出去的觀念。</p>
+  </aside>
+
+  <section class="dag-sec" aria-labelledby="gap-h">
+    <h2 id="gap-h">講次和觀念的落差</h2>
+    <p>下面三件事都是從上面的圖算出來的，不是另外寫的。它們就是「一小時一堂」和「觀念的依賴」對不上的地方。</p>
+    <h3>一個觀念散在兩堂<small>14 個</small></h3>
+    <p>同一個觀念在兩堂各講一半：一堂從 workload 講，一堂從機制講。拆成觀念之後它們是同一個節點。</p>
+    <ul class="dag-fw"><li><button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button>：<a href="l02.html#i1" title="L2 第 1 章 Loop：model 只提議，所有動作都經過 harness">L2 第 1 章 Loop</a>、<a href="l01.html#i1" title="L1 第 1 章 根本的差別：一次 inference 變成一條鏈">L1 第 1 章 根本的差別</a></li><li><button type="button" class="dag-ref" data-id="prefill-decode">Prefill 與 decode</button>：<a href="l09.html#i1" title="L9 第 1 章 一個 request 的一生：prefill 決定第一個字多快，decode 決定之後每個字多快">L9 第 1 章 一個 request 的一生</a>、<a href="l01.html#i7" title="L1 第 7 章 時間：prefill 和 decode 瓶頸不同，長度事先不知道">L1 第 7 章 時間</a></li><li><button type="button" class="dag-ref" data-id="batching">Batching</button>：<a href="l01.html#i7-1" title="L1 第 7 章 時間：prefill 和 decode 瓶頸不同，長度事先不知道（Batching：整張 GPU 變快，每個請求變慢）">L1 第 7 章 時間</a>、<a href="l09.html#i1-3" title="L9 第 1 章 一個 request 的一生：prefill 決定第一個字多快，decode 決定之後每個字多快（Schedule：每一步重新決定誰上車）">L9 第 1 章 一個 request 的一生</a></li><li><button type="button" class="dag-ref" data-id="kv-cache">KV cache</button>：<a href="l01.html#i8" title="L1 第 8 章 狀態：KV cache 放哪裡，變成首要決定">L1 第 8 章 狀態</a>、<a href="l09.html#i1-2" title="L9 第 1 章 一個 request 的一生：prefill 決定第一個字多快，decode 決定之後每個字多快（Prefill 的副產品：KV cache）">L9 第 1 章 一個 request 的一生</a></li><li><button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button>：<a href="l04.html#i1" title="L4 第 1 章 根本的限制：model 沒有記憶，每一圈整份重送">L4 第 1 章 根本的限制</a>、<a href="l02.html#i3" title="L2 第 3 章 Context：進去的東西，每一圈都要再付一次">L2 第 3 章 Context</a></li><li><button type="button" class="dag-ref" data-id="prompt-injection">Prompt injection</button>：<a href="l02.html#i5" title="L2 第 5 章 Prompt injection：model 分不出指令和資料">L2 第 5 章 Prompt injection</a>、<a href="l05.html#i8" title="L5 第 8 章 安全：傳回來的文字也不可信">L5 第 8 章 安全</a></li><li><button type="button" class="dag-ref" data-id="review-bottleneck">Review 是瓶頸</button>：<a href="l03.html#i3" title="L3 第 3 章 人：能管幾個 agent，由你 review 的速度決定">L3 第 3 章 人</a>、<a href="l11.html#i1" title="L11 第 1 章 根本的事實：agent 做得越多，人抓到的錯越少">L11 第 1 章 根本的事實</a></li><li><button type="button" class="dag-ref" data-id="verification-defines-autonomy">能驗證才能放手</button>：<a href="l03.html#i4" title="L3 第 4 章 終點：自主程度由能不能驗證決定">L3 第 4 章 終點</a>、<a href="l11.html#i2" title="L11 第 2 章 開工前：把「做完」寫成檢查得了的條件">L11 第 2 章 開工前</a>、<a href="l11.html#i3" title="L11 第 3 章 收工時：agent 說「好了」是主張，要看證據">L11 第 3 章 收工時</a></li><li><button type="button" class="dag-ref" data-id="subagent">Subagent</button>：<a href="l03.html#i6" title="L3 第 6 章 Subagent：換到乾淨的主對話，代價是摘要有損">L3 第 6 章 Subagent</a>、<a href="l02.html#i3-6" title="L2 第 3 章 Context：進去的東西，每一圈都要再付一次（把雜訊留在外面：subagent）">L2 第 3 章 Context</a></li><li><button type="button" class="dag-ref" data-id="context-reduce">先刪後摘要</button>：<a href="l04.html#i5" title="L4 第 5 章 已經進來的：先用規則刪，最後才摘要">L4 第 5 章 已經進來的</a>、<a href="l02.html#i3-5" title="L2 第 3 章 Context：進去的東西，每一圈都要再付一次（Context 只會變大，滿了就 compaction）">L2 第 3 章 Context</a></li><li><button type="button" class="dag-ref" data-id="checkpoint-budget">Checkpoint 與上限</button>：<a href="l06.html#i3" title="L6 第 3 章 Checkpoint 與上限：決定失敗時退回多遠、最多花多少">L6 第 3 章 Checkpoint 與上限</a>、<a href="l11.html#i6" title="L11 第 6 章 破壞性指令：先 commit，危險指令讓權限規則擋">L11 第 6 章 破壞性指令</a></li><li><button type="button" class="dag-ref" data-id="eval-driven-decisions">一次改一件事</button>：<a href="l07.html#i9" title="L7 第 9 章 用評估做決定：題目分三堆，一次改一件事">L7 第 9 章 用評估做決定</a>、<a href="l11.html#i4" title="L11 第 4 章 實驗：一次改一件事，每版跑不只一次">L11 第 4 章 實驗</a></li><li><button type="button" class="dag-ref" data-id="prefix-cache">Prefix cache</button>：<a href="l08.html#i3" title="L8 第 3 章 Prompt cache：沒命中的 token 貴 12 到 50 倍">L8 第 3 章 Prompt cache</a>、<a href="l02.html#i3-3" title="L2 第 3 章 Context：進去的東西，每一圈都要再付一次（每圈都重送，靠 prefix cache 才負擔得起）">L2 第 3 章 Context</a></li><li><button type="button" class="dag-ref" data-id="fp-nondeterminism">浮點數不確定性</button>：<a href="l09.html#i9-4" title="L9 第 9 章 Sampling：設定改的是答案，也改輸出有多長（Temperature 0 也不保證每次相同）">L9 第 9 章 Sampling</a>、<a href="l01.html#i9-1" title="L1 第 9 章 不確定與故障：測試和長任務都要換寫法（同一個 prompt，輸出為什麼不同）">L1 第 9 章 不確定與故障</a></li></ul>
+    <h3>前置觀念在後面的講次<small>7 條邊</small></h3>
+    <p>照講次讀，讀到這個觀念的那一堂，它的前置連帶過都還沒出現過（前置若在更早的講次提過一句，就不算）。站台把 Part I 的建議順序改成 L2 → L4 → L3 → L5，修掉了幾條；剩下的只能靠文章裡的前情註。</p>
+    <ul class="dag-fw"><li><b>L1 課程總覽與 AI 系統</b><ul><li><button type="button" class="dag-ref" data-id="disaggregation">P/D 分離</button> 要先懂 <button type="button" class="dag-ref" data-id="three-numbers">三個數字</button><small>（L9 才出現）</small></li><li><button type="button" class="dag-ref" data-id="two-layer-testing">測試分兩層</button> 要先懂 <button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button><small>（L2 才出現）</small></li></ul></li><li><b>L2 Claude Code 怎麼運作</b><ul><li><button type="button" class="dag-ref" data-id="mcp">MCP</button> 要先懂 <button type="button" class="dag-ref" data-id="tool-anatomy">Tool 是三段文字</button><small>（L4 才出現）</small></li></ul></li><li><b>L3 用多個 agent 放大產能</b><ul><li><button type="button" class="dag-ref" data-id="verification-defines-autonomy">能驗證才能放手</button> 要先懂 <button type="button" class="dag-ref" data-id="verification-loop">驗證迴圈</button><small>（L6 才出現）</small></li><li><button type="button" class="dag-ref" data-id="token-saving-direction">省 token 看方向</button> 要先懂 <button type="button" class="dag-ref" data-id="cost-breakdown">錢在重讀的 context</button><small>（L8 才出現）</small></li></ul></li><li><b>L4 Context 管理與 tool 設計</b><ul><li><button type="button" class="dag-ref" data-id="fix-harness-first">先查 harness</button> 要先懂 <button type="button" class="dag-ref" data-id="score-is-system">分數是系統的輸出</button><small>（L7 才出現）</small></li></ul></li><li><b>L6 Agent memory 與可靠性</b><ul><li><button type="button" class="dag-ref" data-id="memory-backend">先用檔案</button> 要先懂 <button type="button" class="dag-ref" data-id="eval-driven-decisions">一次改一件事</button><small>（L7 才出現）</small></li></ul></li></ul>
+    <h3>每一堂的難度組成與深度範圍</h3>
+    <p>深度是圖上的層數。一堂的深度範圍越寬，表示它同時在講起點和很下游的東西；「前置在後面講次的邊」越多，表示照講次讀會越卡。</p>
+    <div class="table-wrap"><table class="dag-table"><thead><tr><th>講次</th><th>觀念數</th><th>基礎</th><th>進階</th><th>專家</th><th>深度範圍</th><th>前置在後面講次的邊</th></tr></thead><tbody><tr><th scope="row"><a href="l01.html">L1</a> 課程總覽與 AI 系統</th><td>12</td><td>7</td><td>4</td><td>1</td><td>0–4</td><td>2</td></tr><tr><th scope="row"><a href="l02.html">L2</a> Claude Code 怎麼運作</th><td>9</td><td>2</td><td>7</td><td>0</td><td>0–4</td><td>1</td></tr><tr><th scope="row"><a href="l03.html">L3</a> 用多個 agent 放大產能</th><td>10</td><td>1</td><td>9</td><td>0</td><td>1–6</td><td>2</td></tr><tr><th scope="row"><a href="l04.html">L4</a> Context 管理與 tool 設計</th><td>11</td><td>3</td><td>8</td><td>0</td><td>1–4</td><td>1</td></tr><tr><th scope="row"><a href="l05.html">L5</a> Multi-agent 架構與溝通</th><td>7</td><td>1</td><td>5</td><td>1</td><td>2–5</td><td>—</td></tr><tr><th scope="row"><a href="l06.html">L6</a> Agent memory 與可靠性</th><td>9</td><td>1</td><td>8</td><td>0</td><td>1–7</td><td>1</td></tr><tr><th scope="row"><a href="l07.html">L7</a> Agent 評估</th><td>9</td><td>1</td><td>8</td><td>0</td><td>2–6</td><td>—</td></tr><tr><th scope="row"><a href="l08.html">L8</a> 成本、速度與 harness 架構</th><td>9</td><td>0</td><td>8</td><td>1</td><td>2–7</td><td>—</td></tr><tr><th scope="row"><a href="l09.html">L9</a> LLM 的結構與 serving 的帳</th><td>10</td><td>2</td><td>5</td><td>3</td><td>0–5</td><td>—</td></tr><tr><th scope="row"><a href="l10.html">L10</a> GPU 入門與 kernel 最佳化</th><td>10</td><td>1</td><td>3</td><td>6</td><td>0–5</td><td>—</td></tr><tr><th scope="row"><a href="l11.html">L11</a> 作業回饋與 agent 的十個陷阱</th><td>4</td><td>0</td><td>4</td><td>0</td><td>3–4</td><td>—</td></tr><tr class="dag-sum"><th scope="row">合計</th><td>100</td><td>19</td><td>69</td><td>12</td><td>0–7</td><td>7</td></tr></tbody></table></div>
+  </section>
+
+  <section class="dag-sec" aria-labelledby="order-h">
+    <h2 id="order-h">依賴順序的閱讀清單</h2>
+    <p>把圖攤平成清單：一層一組，同一層裡依主題排。每一層的前置都在前面的層，所以照這份清單讀不會碰到沒教過的前置。這是把課程改成 DAG 形式時的順序草稿，不是最後的分堂。</p>
+    <ol class="dag-layers"><li class="dag-layer"><h3>第 0 層：起點，不靠課程裡別的觀念<small>4 個</small></h3><ol class="dag-olist"><li id="o-agent-loop"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="agent-loop">Agent loop</button><span class="dag-o-name">Agent loop：model 只提議下一步，harness 執行；model 沒有狀態，一個任務是一條 inference 鏈</span><span class="dag-o-meta"><a href="l02.html#i1">L2</a> · 起點</span></span></li><li id="o-prefill-decode"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="prefill-decode">Prefill 與 decode</button><span class="dag-o-name">一個 request 的一生：prefill 一次讀完輸入，decode 一個一個字吐出來，長度事先不知道</span><span class="dag-o-meta"><a href="l09.html#i1">L9</a> · 起點</span></span></li><li id="o-probabilistic"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="probabilistic">機率性輸出</button><span class="dag-o-name">LLM 是機率性的：同一個輸入，輸出不保證相同</span><span class="dag-o-meta"><a href="l01.html#i9-1">L1</a> · 起點</span></span></li><li id="o-gpu-throughput"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="gpu-throughput">GPU 換 throughput</button><span class="dag-o-name">GPU 的設計：用幾千個簡單的核心換 throughput，latency 和 throughput 是兩個目標</span><span class="dag-o-meta"><a href="l10.html#i1">L10</a> · 起點</span></span></li></ol></li><li class="dag-layer"><h3>第 1 層：前置都在前 1 層<small>12 個</small></h3><ol class="dag-olist"><li id="o-harness-os"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="harness-os">Harness 是 OS</button><span class="dag-o-name">Agent 這一層：一台會出錯的新電腦，harness 是它的 OS，周邊都在補 LLM 的弱項</span><span class="dag-o-meta"><a href="l01.html#i5">L1</a> · 前置：<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button>、<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button></span></span></li><li id="o-code-vs-text"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="code-vs-text">保證寫成程式</button><span class="dag-o-name">最重要的判斷：要保證的事寫成程式，不要寫成文字；機率性觸發擋不住</span><span class="dag-o-meta"><a href="l02.html#i2">L2</a> · 前置：<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button>、<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button></span></span></li><li id="o-context-resend"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="context-resend">Context 整份重送</button><span class="dag-o-name">Context：model 沒有記憶，每一圈整份重送；進去的東西每圈都再付一次錢、時間和注意力</span><span class="dag-o-meta"><a href="l04.html#i1">L4</a> · 前置：<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button></span></span></li><li id="o-scaling-axes"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="scaling-axes">放大的三個軸</button><span class="dag-o-name">放大的三個軸：更多 agent、更久、每步更強，每一種只買到一樣東西</span><span class="dag-o-meta"><a href="l03.html#i1">L3</a> · 前置：<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button></span></span></li><li id="o-partial-failure"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="partial-failure">故障是常態</button><span class="dag-o-name">故障是常態：單一個 run 先怕 tool，不是 GPU；分不出對方是慢還是掛了</span><span class="dag-o-meta"><a href="l01.html#i9-3">L1</a> · 前置：<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button></span></span></li><li id="o-error-compounding"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="error-compounding">錯誤相乘</button><span class="dag-o-name">錯誤相乘：每步 95%，50 步只剩 8%；但算式的兩個前提真實的 run 都不成立</span><span class="dag-o-meta"><a href="l06.html#i1">L6</a> · 前置：<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button>、<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button></span></span></li><li id="o-cost-per-success"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="cost-per-success">每個成功任務的成本</button><span class="dag-o-name">目標：不是 throughput，是每個成功任務的成本</span><span class="dag-o-meta"><a href="l01.html#i2">L1</a> · 前置：<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button>、<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button></span></span></li><li id="o-batching"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="batching">Batching</button><span class="dag-o-name">Batching：把多個請求一起算，整張 GPU 變快，每個請求變慢；每一步重新決定誰上車</span><span class="dag-o-meta"><a href="l01.html#i7-1">L1</a> · 前置：<button type="button" class="dag-ref" data-id="prefill-decode">Prefill 與 decode</button></span></span></li><li id="o-kv-cache"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="kv-cache">KV cache</button><span class="dag-o-name">KV cache：prefill 算過的東西存起來給 decode 用，大小隨長度線性成長，搬它才是瓶頸</span><span class="dag-o-meta"><a href="l01.html#i8">L1</a> · 前置：<button type="button" class="dag-ref" data-id="prefill-decode">Prefill 與 decode</button></span></span></li><li id="o-model-skeleton"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="model-skeleton">Model 的骨架</button><span class="dag-o-name">Model 的骨架：一疊相同的 block，參數就是矩陣裡的數字；每個 token 先變成一個 vector；幾乎所有計算是矩陣乘法</span><span class="dag-o-meta"><a href="l09.html#i2">L9</a> · 前置：<button type="button" class="dag-ref" data-id="prefill-decode">Prefill 與 decode</button></span></span></li><li id="o-sampling"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="sampling">Sampling 設定</button><span class="dag-o-name">Sampling：temperature、top-k、top-p 改的是答案，也改輸出有多長；託管的 model 開始不讓你調</span><span class="dag-o-meta"><a href="l09.html#i9">L9</a> · 前置：<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button></span></span></li><li id="o-roofline"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="roofline">Roofline</button><span class="dag-o-name">Roofline：kernel 的時間由較慢的那一邊（算力或記憶體頻寬）決定；arithmetic intensity 和 ridge</span><span class="dag-o-meta"><a href="l10.html#i2">L10</a> · 前置：<button type="button" class="dag-ref" data-id="gpu-throughput">GPU 換 throughput</button></span></span></li></ol></li><li class="dag-layer"><h3>第 2 層：前置都在前 2 層<small>25 個</small></h3><ol class="dag-olist"><li id="o-instruction-files"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="instruction-files">CLAUDE.md 的租金</button><span class="dag-o-name">CLAUDE.md 與 auto memory：每一行都要值回租金，只放不寫就會出錯的事</span><span class="dag-o-meta"><a href="l02.html#i6">L2</a> · 前置：<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button>、<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button></span></span></li><li id="o-hooks"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="hooks">Hook</button><span class="dag-o-name">Hook：事件一到就執行的程式；一定會跑，不代表一定比對得到</span><span class="dag-o-meta"><a href="l02.html#i7">L2</a> · 前置：<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button></span></span></li><li id="o-prompt-injection"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="prompt-injection">Prompt injection</button><span class="dag-o-name">Prompt injection：model 分不出指令和資料，不能靠過濾；repo 裡的設定檔、傳回來的文字都是攻擊面</span><span class="dag-o-meta"><a href="l02.html#i5">L2</a> · 前置：<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button></span></span></li><li id="o-stack"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="stack">Stack 分層</button><span class="dag-o-name">Stack：每一層動目標的一項，問題會跨層，看不到就不能優化</span><span class="dag-o-meta"><a href="l01.html#i4">L1</a> · 前置：<button type="button" class="dag-ref" data-id="cost-per-success">每個成功任務的成本</button></span></span></li><li id="o-permissions"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="permissions">權限三層</button><span class="dag-o-name">權限：規則先於 mode，自主程度要配合風險；規則只比字串，sandbox 才限制行程</span><span class="dag-o-meta"><a href="l02.html#i4">L2</a> · 前置：<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button>、<button type="button" class="dag-ref" data-id="harness-os">Harness 是 OS</button></span></span></li><li id="o-prompting"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="prompting">Prompt 原則</button><span class="dag-o-name">Prompt：招式會過期，原則不會</span><span class="dag-o-meta"><a href="l04.html#i10">L4</a> · 前置：<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button>、<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-tool-anatomy"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="tool-anatomy">Tool 是三段文字</button><span class="dag-o-name">Tool 設計的起點：model 眼中的 tool 只有三段文字（名稱、描述、參數）；tool 的輸出就是 context</span><span class="dag-o-meta"><a href="l04.html#i6-1">L4</a> · 前置：<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-context-admission"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="context-admission">先擋在門口</button><span class="dag-o-name">管理的順序：能不進來就不要進來（admission），放在外面要用再讀（offloading）</span><span class="dag-o-meta"><a href="l04.html#i4">L4</a> · 前置：<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-amdahl"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="amdahl">Amdahl 上限</button><span class="dag-o-name">上限：16 個 agent 不會快 16 倍；任務切不開就沒用，協調也要時間</span><span class="dag-o-meta"><a href="l03.html#i2">L3</a> · 前置：<button type="button" class="dag-ref" data-id="scaling-axes">放大的三個軸</button></span></span></li><li id="o-subagent"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="subagent">Subagent</button><span class="dag-o-name">Subagent：換到乾淨的 context 做一段，代價是摘要有損，兩個方向都會掉東西</span><span class="dag-o-meta"><a href="l03.html#i6">L3</a> · 前置：<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button>、<button type="button" class="dag-ref" data-id="scaling-axes">放大的三個軸</button></span></span></li><li id="o-worktree"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="worktree">Worktree 隔離</button><span class="dag-o-name">手動平行：worktree 只隔離檔案，主幹也在動</span><span class="dag-o-meta"><a href="l03.html#i5">L3</a> · 前置：<button type="button" class="dag-ref" data-id="scaling-axes">放大的三個軸</button></span></span></li><li id="o-text-only-channel"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="text-only-channel">只能傳文字</button><span class="dag-o-name">根本的限制：agent 之間只能傳文字，每個 agent 只看得到自己的 context</span><span class="dag-o-meta"><a href="l05.html#i1">L5</a> · 前置：<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-verification-loop"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="verification-loop">驗證迴圈</button><span class="dag-o-name">驗證：model 沒變強，8% 也能變 88%；檢查要真的抓得到、要早、不靠 model 自律</span><span class="dag-o-meta"><a href="l06.html#i2">L6</a> · 前置：<button type="button" class="dag-ref" data-id="error-compounding">錯誤相乘</button>、<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button></span></span></li><li id="o-score-is-system"><span class="dag-badge tier-a">基礎</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="score-is-system">分數是系統的輸出</button><span class="dag-o-name">根本的事實：分數是整個系統（model、harness、環境、grader）的輸出，比較時要固定其他項</span><span class="dag-o-meta"><a href="l07.html#i1">L7</a> · 前置：<button type="button" class="dag-ref" data-id="harness-os">Harness 是 OS</button></span></span></li><li id="o-two-layer-testing"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="two-layer-testing">測試分兩層</button><span class="dag-o-name">測試要分兩層：確定性的部分用一般測試，機率性的部分用統計</span><span class="dag-o-meta"><a href="l01.html#i9-2">L1</a> · 前置：<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button></span></span></li><li id="o-prefix-cache"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="prefix-cache">Prefix cache</button><span class="dag-o-name">Prompt cache：只比開頭，差一個字就從那裡重算；沒命中的 token 貴 12 到 50 倍；能等的工作用 batch API</span><span class="dag-o-meta"><a href="l08.html#i3">L8</a> · 前置：<button type="button" class="dag-ref" data-id="kv-cache">KV cache</button>、<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-human-time"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="human-time">人的時間</button><span class="dag-o-name">目標少算的一項：人的時間；有人等和沒人等，batching 的答案相反</span><span class="dag-o-meta"><a href="l01.html#i3">L1</a> · 前置：<button type="button" class="dag-ref" data-id="cost-per-success">每個成功任務的成本</button>、<button type="button" class="dag-ref" data-id="batching">Batching</button></span></span></li><li id="o-cost-formula"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="cost-formula">成本六個乘數</button><span class="dag-o-name">成本公式：六個乘數，分母要算成功的任務；比完平均還要比邊際</span><span class="dag-o-meta"><a href="l08.html#i1">L8</a> · 前置：<button type="button" class="dag-ref" data-id="cost-per-success">每個成功任務的成本</button>、<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-kv-cache-storage"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="kv-cache-storage">KV cache 當儲存</button><span class="dag-o-name">Agent 的 KV cache 會閒著：閒置來自人，該搬的時機是 turn 邊界；記憶體塞滿會掉懸崖；KV cache 變成一層儲存</span><span class="dag-o-meta"><a href="l01.html#i8-3">L1</a> · 前置：<button type="button" class="dag-ref" data-id="kv-cache">KV cache</button>、<button type="button" class="dag-ref" data-id="agent-loop">Agent loop</button></span></span></li><li id="o-assumptions"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="assumptions">五個假設反轉</button><span class="dag-o-name">五個假設反過來：零件和傳統系統相同，workload 不同</span><span class="dag-o-meta"><a href="l01.html#i6">L1</a> · 前置：<button type="button" class="dag-ref" data-id="kv-cache">KV cache</button>、<button type="button" class="dag-ref" data-id="probabilistic">機率性輸出</button>、<button type="button" class="dag-ref" data-id="partial-failure">故障是常態</button></span></span></li><li id="o-attention"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="attention">Attention</button><span class="dag-o-name">Attention：每個新 token 都要讀前面全部的 K 和 V，n 個 token n² 個分數；multi-head、GQA</span><span class="dag-o-meta"><a href="l09.html#i3">L9</a> · 前置：<button type="button" class="dag-ref" data-id="model-skeleton">Model 的骨架</button>、<button type="button" class="dag-ref" data-id="kv-cache">KV cache</button></span></span></li><li id="o-tokenizer"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="tokenizer">Tokenizer 與中文</button><span class="dag-o-name">Tokenizer：BPE 從 byte 開始合併；繁體中文一個字約 0.7 到 0.9 個 token；詞彙越大 token 越少、embedding 也越大</span><span class="dag-o-meta"><a href="l09.html#i8">L9</a> · 前置：<button type="button" class="dag-ref" data-id="model-skeleton">Model 的骨架</button>、<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button></span></span></li><li id="o-fp-nondeterminism"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="fp-nondeterminism">浮點數不確定性</button><span class="dag-o-name">Temperature 0 也不保證每次相同：浮點數加法順序、batch 組成不同，第 7 位有效數字就會變</span><span class="dag-o-meta"><a href="l09.html#i9-4">L9</a> · 前置：<button type="button" class="dag-ref" data-id="sampling">Sampling 設定</button>、<button type="button" class="dag-ref" data-id="batching">Batching</button></span></span></li><li id="o-datacenter"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="datacenter">一張卡之外</button><span class="dag-o-name">一張卡之外：scale-up 與 scale-out；出了這台機器慢一個數量級；16K 張 GPU 約每 3 小時中斷一次；一櫃 120 kW 要液冷</span><span class="dag-o-meta"><a href="l10.html#i10">L10</a> · 前置：<button type="button" class="dag-ref" data-id="gpu-throughput">GPU 換 throughput</button>、<button type="button" class="dag-ref" data-id="partial-failure">故障是常態</button></span></span></li><li id="o-chip-internals"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="chip-internals">晶片內部</button><span class="dag-o-name">晶片裡面：SM、warp 與 SIMT、Tensor Core、記憶體階層越近越快也越小；Little&#x27;s law 說頻寬要靠路上的 bytes</span><span class="dag-o-meta"><a href="l10.html#i5">L10</a> · 前置：<button type="button" class="dag-ref" data-id="roofline">Roofline</button></span></span></li></ol></li><li class="dag-layer"><h3>第 3 層：前置都在前 3 層<small>23 個</small></h3><ol class="dag-olist"><li id="o-mcp"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="mcp">MCP</button><span class="dag-o-name">MCP：把外部系統包成 tool；對 model 來說和 Read 沒差別；接上一個 server 等於交出憑證</span><span class="dag-o-meta"><a href="l02.html#i9">L2</a> · 前置：<button type="button" class="dag-ref" data-id="tool-anatomy">Tool 是三段文字</button>、<button type="button" class="dag-ref" data-id="permissions">權限三層</button></span></span></li><li id="o-skills"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="skills">Skill</button><span class="dag-o-name">Skill：用到才載入的程序，description 常駐、body 用到才載入；model 會漏選</span><span class="dag-o-meta"><a href="l02.html#i8">L2</a> · 前置：<button type="button" class="dag-ref" data-id="instruction-files">CLAUDE.md 的租金</button></span></span></li><li id="o-context-layout"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="context-layout">Context 開頭不動</button><span class="dag-o-name">Context 的結構：十格裡，開頭不動才省得下來</span><span class="dag-o-meta"><a href="l04.html#i3">L4</a> · 前置：<button type="button" class="dag-ref" data-id="prefix-cache">Prefix cache</button></span></span></li><li id="o-secrets-transcript"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="secrets-transcript">Secrets 與 transcript</button><span class="dag-o-name">Secrets：進過 context 的，都留在 transcript 裡；log 為什麼會帶著 key</span><span class="dag-o-meta"><a href="l11.html#i7">L11</a> · 前置：<button type="button" class="dag-ref" data-id="tool-anatomy">Tool 是三段文字</button></span></span></li><li id="o-tool-design"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="tool-design">Tool 五條原則</button><span class="dag-o-name">Tool 設計五條原則：錯誤要能教、預設冪等、輸出不一定要進 context；只給 shell 行不行</span><span class="dag-o-meta"><a href="l04.html#i6">L4</a> · 前置：<button type="button" class="dag-ref" data-id="tool-anatomy">Tool 是三段文字</button>、<button type="button" class="dag-ref" data-id="partial-failure">故障是常態</button></span></span></li><li id="o-context-reduce"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="context-reduce">先刪後摘要</button><span class="dag-o-name">已經進來的：先用規則刪（transformation），最後才摘要（compaction）；紀錄和 model 看到的要分開</span><span class="dag-o-meta"><a href="l04.html#i5">L4</a> · 前置：<button type="button" class="dag-ref" data-id="context-admission">先擋在門口</button>、<button type="button" class="dag-ref" data-id="prefix-cache">Prefix cache</button></span></span></li><li id="o-fix-harness-first"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="fix-harness-first">先查 harness</button><span class="dag-o-name">做不好先查 context 和 harness，再換 model；倍數要連著條件讀；評估時固定 harness</span><span class="dag-o-meta"><a href="l04.html#i2">L4</a> · 前置：<button type="button" class="dag-ref" data-id="context-resend">Context 整份重送</button>、<button type="button" class="dag-ref" data-id="score-is-system">分數是系統的輸出</button></span></span></li><li id="o-review-bottleneck"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="review-bottleneck">Review 是瓶頸</button><span class="dag-o-name">人：能管幾個 agent，由 review 的速度決定；agent 做得越多，人抓到的錯越少</span><span class="dag-o-meta"><a href="l03.html#i3">L3</a> · 前置：<button type="button" class="dag-ref" data-id="human-time">人的時間</button>、<button type="button" class="dag-ref" data-id="amdahl">Amdahl 上限</button></span></span></li><li id="o-distributed-state"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="distributed-state">分散式狀態</button><span class="dag-o-name">狀態與時間：每個 agent 的 context 都是一份會過期的副本；consistency、CAP、沒有全域時鐘、observability</span><span class="dag-o-meta"><a href="l05.html#i7">L5</a> · 前置：<button type="button" class="dag-ref" data-id="text-only-channel">只能傳文字</button>、<button type="button" class="dag-ref" data-id="partial-failure">故障是常態</button></span></span></li><li id="o-report-claim-evidence"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="report-claim-evidence">回報帶證據</button><span class="dag-o-name">回報：訊息只帶主張和證據，原文放檔案</span><span class="dag-o-meta"><a href="l05.html#i5">L5</a> · 前置：<button type="button" class="dag-ref" data-id="subagent">Subagent</button></span></span></li><li id="o-dont-split"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="dont-split">多數任務不該拆</button><span class="dag-o-name">最重要的判斷：多數任務不該拆；拆開只在子任務能各自進行時有好處</span><span class="dag-o-meta"><a href="l05.html#i2">L5</a> · 前置：<button type="button" class="dag-ref" data-id="amdahl">Amdahl 上限</button>、<button type="button" class="dag-ref" data-id="subagent">Subagent</button>、<button type="button" class="dag-ref" data-id="text-only-channel">只能傳文字</button></span></span></li><li id="o-delegation-prompt"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="delegation-prompt">派工 prompt</button><span class="dag-o-name">派工：worker 的全部世界就是那段 prompt；拆多細、沿什麼切、一定要設上限</span><span class="dag-o-meta"><a href="l05.html#i4">L5</a> · 前置：<button type="button" class="dag-ref" data-id="subagent">Subagent</button>、<button type="button" class="dag-ref" data-id="text-only-channel">只能傳文字</button></span></span></li><li id="o-checkpoint-budget"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="checkpoint-budget">Checkpoint 與上限</button><span class="dag-o-name">Checkpoint 與上限：決定失敗時退回多遠、存什麼（context 也要退）、回不去的動作先 commit、最多花多少</span><span class="dag-o-meta"><a href="l06.html#i3">L6</a> · 前置：<button type="button" class="dag-ref" data-id="verification-loop">驗證迴圈</button>、<button type="button" class="dag-ref" data-id="partial-failure">故障是常態</button></span></span></li><li id="o-memory-worth-it"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="memory-worth-it">壞記憶更糟</button><span class="dag-o-name">要不要記：壞的記憶比沒有記憶更糟；記憶是一份沒人通知你過期的副本；寫入 policy 是光譜</span><span class="dag-o-meta"><a href="l06.html#i5">L6</a> · 前置：<button type="button" class="dag-ref" data-id="instruction-files">CLAUDE.md 的租金</button></span></span></li><li id="o-grader-validity"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="grader-validity">Grader 會錯</button><span class="dag-o-name">Grader：它會判錯，agent 還會鑽漏洞；過了測試不等於做完；給 grader 寫測試</span><span class="dag-o-meta"><a href="l07.html#i6">L7</a> · 前置：<button type="button" class="dag-ref" data-id="score-is-system">分數是系統的輸出</button>、<button type="button" class="dag-ref" data-id="verification-loop">驗證迴圈</button></span></span></li><li id="o-harness-drift"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="harness-drift">Harness 會變</button><span class="dag-o-name">Claude Code 也會在你腳下變：經過它量的數字會混進它自己的變化；綁在專用 tool 上的安全網會安靜地失效</span><span class="dag-o-meta"><a href="l11.html#i5">L11</a> · 前置：<button type="button" class="dag-ref" data-id="score-is-system">分數是系統的輸出</button>、<button type="button" class="dag-ref" data-id="permissions">權限三層</button></span></span></li><li id="o-leakage"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="leakage">Leakage</button><span class="dag-o-name">Leakage：答案能從整個 stack 進來（訓練資料、agent 自己找到、git 歷史）</span><span class="dag-o-meta"><a href="l07.html#i5">L7</a> · 前置：<button type="button" class="dag-ref" data-id="score-is-system">分數是系統的輸出</button></span></span></li><li id="o-metrics-passk"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="metrics-passk">pass@k 與 pass^k</button><span class="dag-o-name">指標：一個成功率藏住穩定性和成本；pass@k 與 pass^k；成本算每個成功任務；多個維度用 Pareto</span><span class="dag-o-meta"><a href="l07.html#i3">L7</a> · 前置：<button type="button" class="dag-ref" data-id="cost-per-success">每個成功任務的成本</button>、<button type="button" class="dag-ref" data-id="two-layer-testing">測試分兩層</button></span></span></li><li id="o-public-scores-limits"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="public-scores-limits">公開分數的限制</button><span class="dag-o-name">公開分數回答不了「能不能上線」：動作和 grader 可能不同、benchmark 裡沒有使用者、過程中的破壞沒人扣分</span><span class="dag-o-meta"><a href="l07.html#i2">L7</a> · 前置：<button type="button" class="dag-ref" data-id="score-is-system">分數是系統的輸出</button>、<button type="button" class="dag-ref" data-id="cost-per-success">每個成功任務的成本</button></span></span></li><li id="o-cost-breakdown"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="cost-breakdown">錢在重讀的 context</button><span class="dag-o-name">錢花在哪裡：大宗是重讀的 context；三種 token 量和單價方向相反；重送總量隨 turn 數的平方成長</span><span class="dag-o-meta"><a href="l08.html#i2">L8</a> · 前置：<button type="button" class="dag-ref" data-id="cost-formula">成本六個乘數</button></span></span></li><li id="o-three-numbers"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="three-numbers">三個數字</button><span class="dag-o-name">三個數字：weights 卡記憶體與 decode，FLOPs 卡 prefill，KV cache 卡人數與長度；agent 的帳是算力省得下、記憶體省不下</span><span class="dag-o-meta"><a href="l09.html#i4">L9</a> · 前置：<button type="button" class="dag-ref" data-id="attention">Attention</button>、<button type="button" class="dag-ref" data-id="batching">Batching</button></span></span></li><li id="o-fusion-flash"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="fusion-flash">FlashAttention</button><span class="dag-o-name">Kernel 之內：少搬資料；fusion 讓中間值不回 HBM；FlashAttention 一塊一塊算，online softmax 不看完整列也能算對</span><span class="dag-o-meta"><a href="l10.html#i7">L10</a> · 前置：<button type="button" class="dag-ref" data-id="attention">Attention</button>、<button type="button" class="dag-ref" data-id="chip-internals">晶片內部</button></span></span></li><li id="o-gpu-programming"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="gpu-programming">GPU 程式五層</button><span class="dag-o-name">GPU 程式：為一個 thread 寫，從最高的抽象層開始；graph compiler、tile language；五層抽象越往下控制越多、成本越高</span><span class="dag-o-meta"><a href="l10.html#i6">L10</a> · 前置：<button type="button" class="dag-ref" data-id="chip-internals">晶片內部</button></span></span></li></ol></li><li class="dag-layer"><h3>第 4 層：前置都在前 4 層<small>25 個</small></h3><ol class="dag-olist"><li id="o-plugins"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="plugins">Plugin</button><span class="dag-o-name">Plugin：把 skill、hook、MCP、subagent 一套設定變成別人裝得起來的東西；裝了就是跑別人的程式</span><span class="dag-o-meta"><a href="l02.html#i10">L2</a> · 前置：<button type="button" class="dag-ref" data-id="skills">Skill</button>、<button type="button" class="dag-ref" data-id="hooks">Hook</button>、<button type="button" class="dag-ref" data-id="mcp">MCP</button></span></span></li><li id="o-edit-tools"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="edit-tools">Edit 失敗要看得見</button><span class="dag-o-name">Edit：失敗看不看得見，和省 token 一樣重要（整檔重寫、unified diff、search/replace、AST）</span><span class="dag-o-meta"><a href="l04.html#i9">L4</a> · 前置：<button type="button" class="dag-ref" data-id="tool-design">Tool 五條原則</button></span></span></li><li id="o-execution-tools"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="execution-tools">Shell 與專用 tool</button><span class="dag-o-name">Execution：shell 最強，保護全在 harness；既然 shell 都做得到，為什麼還要專用的 read、edit tool</span><span class="dag-o-meta"><a href="l04.html#i7">L4</a> · 前置：<button type="button" class="dag-ref" data-id="tool-design">Tool 五條原則</button>、<button type="button" class="dag-ref" data-id="permissions">權限三層</button></span></span></li><li id="o-session-hygiene"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="session-hygiene">一個 session 一件事</button><span class="dag-o-name">Session：一個 session 一件事，狀態寫在檔案裡；session 太長 compaction 會丟 context；卡住時給證據不給情緒</span><span class="dag-o-meta"><a href="l11.html#i8">L11</a> · 前置：<button type="button" class="dag-ref" data-id="checkpoint-budget">Checkpoint 與上限</button>、<button type="button" class="dag-ref" data-id="context-reduce">先刪後摘要</button></span></span></li><li id="o-search-tools"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="search-tools">先 grep 再換</button><span class="dag-o-name">Search：先 grep，名字猜不到才換（glob、semantic search、repo map、extrinsic signal、LSP）</span><span class="dag-o-meta"><a href="l04.html#i8">L4</a> · 前置：<button type="button" class="dag-ref" data-id="tool-design">Tool 五條原則</button></span></span></li><li id="o-execution-env"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="execution-env">執行環境</button><span class="dag-o-name">執行環境：平行的 session 會互踩、派工也有成本、長跑要撐得住</span><span class="dag-o-meta"><a href="l11.html#i9">L11</a> · 前置：<button type="button" class="dag-ref" data-id="worktree">Worktree 隔離</button>、<button type="button" class="dag-ref" data-id="subagent">Subagent</button>、<button type="button" class="dag-ref" data-id="checkpoint-budget">Checkpoint 與上限</button></span></span></li><li id="o-process-in-skill"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="process-in-skill">流程寫進 skill</button><span class="dag-o-name">Superpowers 與 mattpocock/skills：流程寫進 skill，差別在誰保證它被走（hook 或人）</span><span class="dag-o-meta"><a href="l03.html#i8">L3</a> · 前置：<button type="button" class="dag-ref" data-id="skills">Skill</button>、<button type="button" class="dag-ref" data-id="hooks">Hook</button></span></span></li><li id="o-token-saving-direction"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="token-saving-direction">省 token 看方向</button><span class="dag-o-name">Caveman：省 token 先看帳單；輸出方向一份 skill 就能做，輸入方向只有 proxy 管得到</span><span class="dag-o-meta"><a href="l03.html#i9">L3</a> · 前置：<button type="button" class="dag-ref" data-id="cost-breakdown">錢在重讀的 context</button>、<button type="button" class="dag-ref" data-id="skills">Skill</button></span></span></li><li id="o-verification-defines-autonomy"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="verification-defines-autonomy">能驗證才能放手</button><span class="dag-o-name">自主程度由能不能驗證決定：把「做完」寫成檢查得了的條件；agent 說好了是主張，要看證據</span><span class="dag-o-meta"><a href="l03.html#i4">L3</a> · 前置：<button type="button" class="dag-ref" data-id="review-bottleneck">Review 是瓶頸</button>、<button type="button" class="dag-ref" data-id="verification-loop">驗證迴圈</button></span></span></li><li id="o-timeout-idempotent"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="timeout-idempotent">Timeout 與冪等</button><span class="dag-o-name">送出去之後：timeout、冪等與 partial failure，分不出對方是慢還是掛了</span><span class="dag-o-meta"><a href="l05.html#i6">L5</a> · 前置：<button type="button" class="dag-ref" data-id="partial-failure">故障是常態</button>、<button type="button" class="dag-ref" data-id="delegation-prompt">派工 prompt</button></span></span></li><li id="o-valid-time-provenance"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="valid-time-provenance">Valid time 與來源</button><span class="dag-o-name">時間與來源：寫入時沒存 valid time 和 provenance，之後補不回來；歸納風險最高，遺忘是正式操作</span><span class="dag-o-meta"><a href="l06.html#i6">L6</a> · 前置：<button type="button" class="dag-ref" data-id="memory-worth-it">壞記憶更糟</button></span></span></li><li id="o-failure-layers"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="failure-layers">失敗分層</button><span class="dag-o-name">失敗分層：同一個症狀有五個來源（model、prompt、tool、環境、任務），在來源那一層修；沒有紀錄就不知道改什麼</span><span class="dag-o-meta"><a href="l06.html#i4">L6</a> · 前置：<button type="button" class="dag-ref" data-id="fix-harness-first">先查 harness</button>、<button type="button" class="dag-ref" data-id="stack">Stack 分層</button></span></span></li><li id="o-memory-retrieval"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="memory-retrieval">檢索五個訊號</button><span class="dag-o-name">檢索：語意相似只是五個訊號之一；過濾還是排序差在後果；該常駐的不靠檢索碰運氣；k 是 context 的預算</span><span class="dag-o-meta"><a href="l06.html#i7">L6</a> · 前置：<button type="button" class="dag-ref" data-id="memory-worth-it">壞記憶更糟</button>、<button type="button" class="dag-ref" data-id="context-admission">先擋在門口</button></span></span></li><li id="o-memory-poisoning"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="memory-poisoning">記憶中毒</button><span class="dag-o-name">安全：記憶讓 injection 活過一個 session；四條進去的路沒有一條看起來像「寫入記憶」</span><span class="dag-o-meta"><a href="l06.html#i9">L6</a> · 前置：<button type="button" class="dag-ref" data-id="prompt-injection">Prompt injection</button>、<button type="button" class="dag-ref" data-id="memory-worth-it">壞記憶更糟</button></span></span></li><li id="o-saturation"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="saturation">Benchmark 是耗材</button><span class="dag-o-name">飽和：benchmark 是耗材；飽和之後下一版接手；你的題組消耗得更快</span><span class="dag-o-meta"><a href="l07.html#i7">L7</a> · 前置：<button type="button" class="dag-ref" data-id="public-scores-limits">公開分數的限制</button>、<button type="button" class="dag-ref" data-id="leakage">Leakage</button></span></span></li><li id="o-noise"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="noise">雜訊</button><span class="dag-o-name">雜訊：差幾分常常只是運氣；題數決定精度、基礎設施也是雜訊、比兩版用配對</span><span class="dag-o-meta"><a href="l07.html#i4">L7</a> · 前置：<button type="button" class="dag-ref" data-id="metrics-passk">pass@k 與 pass^k</button></span></span></li><li id="o-latency-critical-path"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="latency-critical-path">Critical path</button><span class="dag-o-name">完成時間：看 critical path，錢看全部；時間常常花在 tool；每個加速手段錢往哪裡走；speculation</span><span class="dag-o-meta"><a href="l08.html#i8">L8</a> · 前置：<button type="button" class="dag-ref" data-id="amdahl">Amdahl 上限</button>、<button type="button" class="dag-ref" data-id="cost-breakdown">錢在重讀的 context</button>、<button type="button" class="dag-ref" data-id="human-time">人的時間</button></span></span></li><li id="o-cost-caps"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="cost-caps">失控要喊停</button><span class="dag-o-name">上限：失控的任務要有人喊停；四個上限的數字從 trace 來；上限之前先有進展檢查</span><span class="dag-o-meta"><a href="l08.html#i7">L8</a> · 前置：<button type="button" class="dag-ref" data-id="checkpoint-budget">Checkpoint 與上限</button>、<button type="button" class="dag-ref" data-id="cost-formula">成本六個乘數</button></span></span></li><li id="o-fewer-steps"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="fewer-steps">少走幾步</button><span class="dag-o-name">少走幾步：先問這一步需不需要 LLM，再減 turn 與 step；重用計畫與 skill，任務重複才回本</span><span class="dag-o-meta"><a href="l08.html#i5">L8</a> · 前置：<button type="button" class="dag-ref" data-id="cost-breakdown">錢在重讀的 context</button>、<button type="button" class="dag-ref" data-id="code-vs-text">保證寫成程式</button></span></span></li><li id="o-model-routing-effort"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="model-routing-effort">換 model 的時機</button><span class="dag-o-name">Model、effort 與 output：錯了也便宜的步驟才值得換小 model；換 model 要在 context 小的時候；thinking 也算 output</span><span class="dag-o-meta"><a href="l08.html#i6">L8</a> · 前置：<button type="button" class="dag-ref" data-id="cost-breakdown">錢在重讀的 context</button>、<button type="button" class="dag-ref" data-id="prefix-cache">Prefix cache</button>、<button type="button" class="dag-ref" data-id="error-compounding">錯誤相乘</button></span></span></li><li id="o-disaggregation"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="disaggregation">P/D 分離</button><span class="dag-o-name">瓶頸不同，就拆到不同的 GPU：prefill 和 decode 分開跑</span><span class="dag-o-meta"><a href="l01.html#i7-3">L1</a> · 前置：<button type="button" class="dag-ref" data-id="three-numbers">三個數字</button></span></span></li><li id="o-moe"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="moe">MoE</button><span class="dag-o-name">MoE：記憶體看全部的參數，運算只看每個 token 用到的部分；decode 時 batch 越大讀的 expert 越多</span><span class="dag-o-meta"><a href="l09.html#i5">L9</a> · 前置：<button type="button" class="dag-ref" data-id="three-numbers">三個數字</button></span></span></li><li id="o-kv-architectures"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="kv-architectures">改 KV cache 的架構</button><span class="dag-o-name">改 KV cache 的架構：sliding window、MLA、linear attention、state-space、sparse attention；方向是混合</span><span class="dag-o-meta"><a href="l09.html#i6">L9</a> · 前置：<button type="button" class="dag-ref" data-id="three-numbers">三個數字</button></span></span></li><li id="o-ai-kernels"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="ai-kernels">AI 寫的 kernel</button><span class="dag-o-name">AI 寫的 kernel：先證明它對，再相信它快；漏洞集中在四個地方；speed of light 是 roofline 給的下限</span><span class="dag-o-meta"><a href="l10.html#i9">L10</a> · 前置：<button type="button" class="dag-ref" data-id="gpu-programming">GPU 程式五層</button>、<button type="button" class="dag-ref" data-id="verification-loop">驗證迴圈</button></span></span></li><li id="o-decode-roofline"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="decode-roofline">Decode 的 roofline</button><span class="dag-o-name">Decode：batch 1 只用到 0.5% 的算力；batch 拉高 weights 的 intensity，拉不動 attention；context 越長每一步越慢</span><span class="dag-o-meta"><a href="l10.html#i3">L10</a> · 前置：<button type="button" class="dag-ref" data-id="roofline">Roofline</button>、<button type="button" class="dag-ref" data-id="three-numbers">三個數字</button></span></span></li></ol></li><li class="dag-layer"><h3>第 5 層：前置都在前 5 層<small>6 個</small></h3><ol class="dag-olist"><li id="o-team-workflow"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="team-workflow">Team 與 workflow</button><span class="dag-o-name">Team 與 workflow：要討論才用 team，對話協調不了才用 script；16 個 agent 沒有 lead 也行，條件是測試和 git</span><span class="dag-o-meta"><a href="l03.html#i7">L3</a> · 前置：<button type="button" class="dag-ref" data-id="subagent">Subagent</button>、<button type="button" class="dag-ref" data-id="verification-defines-autonomy">能驗證才能放手</button></span></span></li><li id="o-read-parallel-write-serial"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="read-parallel-write-serial">讀平行、寫單線</button><span class="dag-o-name">最實用的分界：讀可以平行，寫留在單線；writer 加 reviewer 最值得學；驗證能力比架構重要</span><span class="dag-o-meta"><a href="l05.html#i3">L5</a> · 前置：<button type="button" class="dag-ref" data-id="dont-split">多數任務不該拆</button>、<button type="button" class="dag-ref" data-id="verification-defines-autonomy">能驗證才能放手</button></span></span></li><li id="o-build-eval"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="build-eval">從失敗建評估</button><span class="dag-o-name">建立評估：從真實失敗開始；環境要能重置、agent 碰不到答案；grader 疊三層；長任務給部分分數</span><span class="dag-o-meta"><a href="l07.html#i8">L7</a> · 前置：<button type="button" class="dag-ref" data-id="grader-validity">Grader 會錯</button>、<button type="button" class="dag-ref" data-id="leakage">Leakage</button>、<button type="button" class="dag-ref" data-id="noise">雜訊</button></span></span></li><li id="o-per-token-kv"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="per-token-kv">每個 token 的 KV</button><span class="dag-o-name">能自己架的 model：每個 token 的 KV cache 差到 13 倍，同一條公式代入 config.json 就算得出來</span><span class="dag-o-meta"><a href="l09.html#i7">L9</a> · 前置：<button type="button" class="dag-ref" data-id="kv-architectures">改 KV cache 的架構</button></span></span></li><li id="o-inter-kernel"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="inter-kernel">Kernel 之間的空等</button><span class="dag-o-name">Kernel 之間：把 SM、launch 和 GPU 之間的空等拿掉；split-KV、CUDA Graphs、megakernel、通訊藏在計算後面；多數團隊選 engine</span><span class="dag-o-meta"><a href="l10.html#i8">L10</a> · 前置：<button type="button" class="dag-ref" data-id="fusion-flash">FlashAttention</button>、<button type="button" class="dag-ref" data-id="gpu-programming">GPU 程式五層</button>、<button type="button" class="dag-ref" data-id="decode-roofline">Decode 的 roofline</button></span></span></li><li id="o-gpu-measurement"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="gpu-measurement">MFU 與 MBU</button><span class="dag-o-name">量測：nvidia-smi 的 100% 只代表有 kernel 在跑；MFU 看算力、MBU 看頻寬；先看 timeline 再看 kernel</span><span class="dag-o-meta"><a href="l10.html#i4">L10</a> · 前置：<button type="button" class="dag-ref" data-id="decode-roofline">Decode 的 roofline</button></span></span></li></ol></li><li class="dag-layer"><h3>第 6 層：前置都在前 6 層<small>3 個</small></h3><ol class="dag-olist"><li id="o-harness-architecture"><span class="dag-badge tier-d">專家</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="harness-architecture">Harness 的邊界</button><span class="dag-o-name">Harness 架構：邊界放在哪裡，看要隔離什麼、什麼要活得久；三種架構差在呼叫跨過什麼邊界；問三個問題，不數 agent</span><span class="dag-o-meta"><a href="l08.html#i9">L8</a> · 前置：<button type="button" class="dag-ref" data-id="team-workflow">Team 與 workflow</button>、<button type="button" class="dag-ref" data-id="permissions">權限三層</button></span></span></li><li id="o-attention-as-resource"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="attention-as-resource">省人的注意力</button><span class="dag-o-name">dsh-superagent：把人的注意力當第一個要省的資源，主 session 只路由、worker 只做事</span><span class="dag-o-meta"><a href="l03.html#i10">L3</a> · 前置：<button type="button" class="dag-ref" data-id="team-workflow">Team 與 workflow</button></span></span></li><li id="o-eval-driven-decisions"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="eval-driven-decisions">一次改一件事</button><span class="dag-o-name">用評估做決定：題目分三堆，一次改一件事和基準比；上線條件寫進 CI；分數跳升先懷疑</span><span class="dag-o-meta"><a href="l07.html#i9">L7</a> · 前置：<button type="button" class="dag-ref" data-id="build-eval">從失敗建評估</button></span></span></li></ol></li><li class="dag-layer"><h3>第 7 層：前置都在前 7 層<small>2 個</small></h3><ol class="dag-olist"><li id="o-memory-backend"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="memory-backend">先用檔案</button><span class="dag-o-name">放在哪裡：backend 依之後怎麼查反推；先用檔案，分數自己量</span><span class="dag-o-meta"><a href="l06.html#i8">L6</a> · 前置：<button type="button" class="dag-ref" data-id="memory-retrieval">檢索五個訊號</button>、<button type="button" class="dag-ref" data-id="valid-time-provenance">Valid time 與來源</button>、<button type="button" class="dag-ref" data-id="eval-driven-decisions">一次改一件事</button></span></span></li><li id="o-net-savings"><span class="dag-badge tier-c">進階</span><span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="net-savings">淨節省要量</button><span class="dag-o-name">淨節省：每個省法都有反向成本；compaction 幾步回本；只能在同一組任務上量；優化是迴圈</span><span class="dag-o-meta"><a href="l08.html#i4">L8</a> · 前置：<button type="button" class="dag-ref" data-id="cost-breakdown">錢在重讀的 context</button>、<button type="button" class="dag-ref" data-id="context-reduce">先刪後摘要</button>、<button type="button" class="dag-ref" data-id="eval-driven-decisions">一次改一件事</button></span></span></li></ol></li></ol>
+  </section>
+
+  <section class="dag-sec" aria-labelledby="rules-h">
+    <h2 id="rules-h">這張圖怎麼定的</h2>
+    <h3>節點是什麼</h3>
+    <ul class="dag-rules">
+      <li>一個節點是一個觀念：能用一句話寫成主張、有自己的前置、刪掉它後面某個觀念就讀不懂。</li>
+      <li>起點是各堂核心觀念的章（v7 版面已經一章一個想法）。一章講兩個前置不同的觀念就拆成兩個節點（例如 L1 第 9 章拆成機率性輸出、測試分兩層、故障是常態）；兩堂講同一個觀念就併成一個節點（例如 Agent loop 來自 L1 與 L2）。</li>
+      <li>目錄章（查閱用的清單）不是觀念，不進圖：<ul><li><a href="l01.html#i10">L1 第 10 章 目錄：九個問題、十個性質、課程範圍</a>：目錄：九個問題、十個性質、課程範圍，查閱用</li><li><a href="l05.html#i9">L5 第 9 章 目錄：八種架構、通訊選項、兩個協定</a>：目錄：八種架構、通訊選項、兩個協定，查閱用</li><li><a href="l06.html#i10">L6 第 10 章 目錄：八種記憶失敗、26 種 run 失敗、系統與指標</a>：目錄：八種記憶失敗、26 種 run 失敗，查閱用</li><li><a href="l07.html#i10">L7 第 10 章 目錄：八個 benchmark、五層目標、早期指標</a>：目錄：八個 benchmark、五層目標，查閱用</li><li><a href="l08.html#i10">L8 第 10 章 目錄：八個 harness、論文、系統層手段</a>：目錄：八個 harness、論文、系統層手段，查閱用</li><li><a href="l09.html#i10">L9 第 10 章 目錄：符號、公式與其他架構方向</a>：目錄：符號、公式與其他架構方向，查閱用</li><li><a href="l11.html#i10">L11 第 10 章 目錄：十個陷阱、三份作業的數字、學生想要的功能</a>：目錄：十個陷阱、三份作業的數字，查閱用</li></ul></li>
+    </ul>
+    <h3>邊是什麼</h3>
+    <ul class="dag-rules">
+      <li>A → B 表示「讀 B 之前要先懂 A」。B 的「為什麼從這裡延伸」那一句要能說出少了 A 哪裡讀不懂。</li>
+      <li>只畫直接的前置。A → C 能從 A → B → C 推出來就不畫。</li>
+      <li>邊只看觀念，不看講次。所以會出現前置在後面講次的邊，那正是要找的落差。</li>
+    </ul>
+    <h3>難度怎麼分</h3>
+    <ul class="dag-tiers"><li><span class="dag-badge tier-a">基礎</span><span>一句話能說清楚；靠日常經驗或一個前置觀念就能懂；不懂它，後面多數觀念讀不下去。全站 19 個。</span></li><li><span class="dag-badge tier-c">進階</span><span>要同時拿著兩個以上的前置觀念才能懂；通常是在做一個設計決定，或算一次帳。全站 69 個。</span></li><li><span class="dag-badge tier-d">專家</span><span>要進到機制內部（算式、硬體單元、演算法），或要能判斷研究結論的效度；不自己做 serving、harness、評估的人可以跳過，不影響上游的判斷。全站 12 個。</span></li></ul>
+    <p>一條規則：前置的難度不能比這個觀念高。基礎觀念不能依賴進階觀念，否則不是邊畫錯就是難度標錯。<code>tools/dag.py --check</code> 會擋。</p>
+    <p>資料在 <a href="https://github.com/chihmingyang/cs2680/blob/main/docs/dag.json" target="_blank" rel="noopener">docs/dag.json</a>，規則全文在 <a href="https://github.com/chihmingyang/cs2680/blob/main/guide/DAG.md" target="_blank" rel="noopener">guide/DAG.md</a>。這一頁由 <code>tools/dag.py</code> 從資料產生，改資料就重跑。</p>
+  </section>
+
+  <p class="fineprint">這張圖是讀書會對課程內容的整理，節點的主張、邊和難度都是本文的判斷，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。</p>
+</main>
+
+<script type="application/json" id="dag-data">{"nodes": [{"id": "agent-loop", "name": "Agent loop：model 只提議下一步，harness 執行；model 沒有狀態，一個任務是一條 inference 鏈", "short": "Agent loop", "tier": "基礎", "theme": "Agent 的機制", "deps": [], "why": "起點。model 一次只回一個提議，harness 跑完再把結果塞回去，所以一個任務變成一條很多次 inference 的鏈。L1 從 workload 的角度講這條鏈，L2 從 Claude Code 的機制講，是同一個觀念。", "depth": 0, "src": [{"href": "l02.html#i1", "label": "L2 第 1 章 Loop：model 只提議，所有動作都經過 harness"}, {"href": "l01.html#i1", "label": "L1 第 1 章 根本的差別：一次 inference 變成一條鏈"}], "lecs": ["L1", "L2"]}, {"id": "probabilistic", "name": "LLM 是機率性的：同一個輸入，輸出不保證相同", "short": "機率性輸出", "tier": "基礎", "theme": "Model 的結構與性質", "deps": [], "why": "起點。model 的輸出是從機率分布抽樣來的。這一點決定了後面的測試、驗證、評估都不能用確定性程式的寫法。", "depth": 0, "src": [{"href": "l01.html#i9-1", "label": "L1 第 9 章 不確定與故障：測試和長任務都要換寫法（同一個 prompt，輸出為什麼不同）"}], "lecs": ["L1"]}, {"id": "prefill-decode", "name": "一個 request 的一生：prefill 一次讀完輸入，decode 一個一個字吐出來，長度事先不知道", "short": "Prefill 與 decode", "tier": "基礎", "theme": "Serving", "deps": [], "why": "起點。model 一次只算出下一個 token：先把整段輸入算一遍（prefill），再一個字一個字接著算（decode）。L1 講它對時間的影響，L9 講 request 怎麼走，是同一個觀念。", "depth": 0, "src": [{"href": "l09.html#i1", "label": "L9 第 1 章 一個 request 的一生：prefill 決定第一個字多快，decode 決定之後每個字多快"}, {"href": "l01.html#i7", "label": "L1 第 7 章 時間：prefill 和 decode 瓶頸不同，長度事先不知道"}], "lecs": ["L1", "L9"]}, {"id": "gpu-throughput", "name": "GPU 的設計：用幾千個簡單的核心換 throughput，latency 和 throughput 是兩個目標", "short": "GPU 換 throughput", "tier": "基礎", "theme": "GPU 與 kernel", "deps": [], "why": "起點。GPU 放棄單一核心的速度，用數量換總量。這個取捨解釋了 roofline、batch，和後面所有 kernel 最佳化在追什麼。", "depth": 0, "src": [{"href": "l10.html#i1", "label": "L10 第 1 章 GPU 的設計：用幾千個簡單的核心換 throughput"}], "lecs": ["L10"]}, {"id": "cost-per-success", "name": "目標：不是 throughput，是每個成功任務的成本", "short": "每個成功任務的成本", "tier": "基礎", "theme": "目標、成本與速度", "deps": ["agent-loop", "probabilistic"], "why": "從 agent loop 與機率性延伸：一個任務是很多次呼叫，而且會失敗，所以算成本時分母要是做成的任務，失敗的嘗試也要攤進去。tokens/sec 看不到這兩件事。", "depth": 1, "src": [{"href": "l01.html#i2", "label": "L1 第 2 章 最重要的判斷：throughput 是錯的目標，要算每個成功任務的成本"}], "lecs": ["L1"]}, {"id": "human-time", "name": "目標少算的一項：人的時間；有人等和沒人等，batching 的答案相反", "short": "人的時間", "tier": "進階", "theme": "目標、成本與速度", "deps": ["cost-per-success", "batching"], "why": "從成本目標與 batching 延伸：有人在等結果時，batch 拉大省了 GPU 卻讓人多等，把人的時薪算進去後結論反轉；沒人等的工作才該用大 batch。", "depth": 2, "src": [{"href": "l01.html#i3", "label": "L1 第 3 章 目標少算的一項：人的時間"}], "lecs": ["L1"]}, {"id": "stack", "name": "Stack：每一層動目標的一項，問題會跨層，看不到就不能優化", "short": "Stack 分層", "tier": "基礎", "theme": "Agent 的機制", "deps": ["cost-per-success"], "why": "從成本目標延伸：目標有好幾項，每一層（agent、harness、serving、model、runtime、硬體）各動其中一項，所以要決定動哪一層就得先有目標。問題會跨層，所以要有 trace 才看得到。", "depth": 2, "src": [{"href": "l01.html#i4", "label": "L1 第 4 章 Stack：每一層動目標的一項，問題會跨層"}], "lecs": ["L1"]}, {"id": "harness-os", "name": "Agent 這一層：一台會出錯的新電腦，harness 是它的 OS，周邊都在補 LLM 的弱項", "short": "Harness 是 OS", "tier": "基礎", "theme": "Agent 的機制", "deps": ["agent-loop", "probabilistic"], "why": "從 agent loop 與機率性延伸：model 會出錯又沒有狀態，所以要有一層 harness 替它管記憶、權限、tool，像 OS 管硬體。產品差異多半在這一層。", "depth": 1, "src": [{"href": "l01.html#i5", "label": "L1 第 5 章 Agent 這一層：一台會出錯的新電腦，harness 是它的 OS"}], "lecs": ["L1"]}, {"id": "assumptions", "name": "五個假設反過來：零件和傳統系統相同，workload 不同", "short": "五個假設反轉", "tier": "進階", "theme": "Serving", "deps": ["kv-cache", "probabilistic", "partial-failure"], "why": "整理：傳統系統假設請求短、無狀態、確定、少故障、架構穩定；跑 LLM 時這五項都反過來。它們分別來自 KV cache（連同它背後的 prefill／decode）、機率性輸出和故障常態。", "depth": 2, "src": [{"href": "l01.html#i6", "label": "L1 第 6 章 五個假設：零件和傳統系統相同，workload 不同"}], "lecs": ["L1"]}, {"id": "batching", "name": "Batching：把多個請求一起算，整張 GPU 變快，每個請求變慢；每一步重新決定誰上車", "short": "Batching", "tier": "基礎", "theme": "Serving", "deps": ["prefill-decode"], "why": "從 prefill／decode 延伸：decode 每一步只算一個 token，一個人用不滿 GPU，所以把很多人的下一步合在一起算。代價是每個人的那一步都要等別人。", "depth": 1, "src": [{"href": "l01.html#i7-1", "label": "L1 第 7 章 時間：prefill 和 decode 瓶頸不同，長度事先不知道（Batching：整張 GPU 變快，每個請求變慢）"}, {"href": "l09.html#i1-3", "label": "L9 第 1 章 一個 request 的一生：prefill 決定第一個字多快，decode 決定之後每個字多快（Schedule：每一步重新決定誰上車）"}], "lecs": ["L1", "L9"]}, {"id": "disaggregation", "name": "瓶頸不同，就拆到不同的 GPU：prefill 和 decode 分開跑", "short": "P/D 分離", "tier": "專家", "theme": "Serving", "deps": ["three-numbers"], "why": "從三個數字延伸：prefill 卡算力、decode 卡記憶體頻寬，放在同一張卡上互相拖累，所以 serving 系統把兩段拆到不同 GPU，中間搬 KV cache。", "depth": 4, "src": [{"href": "l01.html#i7-3", "label": "L1 第 7 章 時間：prefill 和 decode 瓶頸不同，長度事先不知道（本文補的：瓶頸不同，就拆到不同的 GPU）"}], "lecs": ["L1"]}, {"id": "kv-cache", "name": "KV cache：prefill 算過的東西存起來給 decode 用，大小隨長度線性成長，搬它才是瓶頸", "short": "KV cache", "tier": "基礎", "theme": "Serving", "deps": ["prefill-decode"], "why": "從 prefill／decode 延伸：decode 每一步都要用到前面全部 token 算過的中間值，不存就要重算，所以把它留在 GPU 記憶體裡。它有多大、放哪裡，是 serving 的首要決定。", "depth": 1, "src": [{"href": "l01.html#i8", "label": "L1 第 8 章 狀態：KV cache 放哪裡，變成首要決定"}, {"href": "l09.html#i1-2", "label": "L9 第 1 章 一個 request 的一生：prefill 決定第一個字多快，decode 決定之後每個字多快（Prefill 的副產品：KV cache）"}], "lecs": ["L1", "L9"]}, {"id": "kv-cache-storage", "name": "Agent 的 KV cache 會閒著：閒置來自人，該搬的時機是 turn 邊界；記憶體塞滿會掉懸崖；KV cache 變成一層儲存", "short": "KV cache 當儲存", "tier": "進階", "theme": "Serving", "deps": ["kv-cache", "agent-loop"], "why": "從 KV cache 與 agent loop 延伸：agent 一段對話有很多圈，圈與圈之間在等 tool 或等人，這段時間 KV cache 佔著記憶體沒人用。所以要把它搬到便宜的地方，變成一層可以換進換出的儲存。", "depth": 2, "src": [{"href": "l01.html#i8-3", "label": "L1 第 8 章 狀態：KV cache 放哪裡，變成首要決定（本文補的：agent 的 KV cache 什麼時候閒著）"}, {"href": "l01.html#i8-4", "label": "L1 第 8 章 狀態：KV cache 放哪裡，變成首要決定（本文補的：記憶體塞滿時會掉下懸崖）"}, {"href": "l01.html#i8-5", "label": "L1 第 8 章 狀態：KV cache 放哪裡，變成首要決定（本文補的：KV cache 變成一層儲存）"}], "lecs": ["L1"]}, {"id": "two-layer-testing", "name": "測試要分兩層：確定性的部分用一般測試，機率性的部分用統計", "short": "測試分兩層", "tier": "進階", "theme": "評估", "deps": ["code-vs-text"], "why": "從「保證寫成程式」延伸：harness 裡確定性的部分可以像一般軟體那樣寫測試；經過 model 的部分是機率性的，同一個輸入會有不同輸出，只能跑多次看比例。", "depth": 2, "src": [{"href": "l01.html#i9-2", "label": "L1 第 9 章 不確定與故障：測試和長任務都要換寫法（本文的判斷：測試要分兩層）"}], "lecs": ["L1"]}, {"id": "partial-failure", "name": "故障是常態：單一個 run 先怕 tool，不是 GPU；分不出對方是慢還是掛了", "short": "故障是常態", "tier": "基礎", "theme": "可靠性與記憶", "deps": ["agent-loop"], "why": "從 agent loop 延伸：一條鏈要經過很多次 tool 呼叫和網路，任何一段都可能慢或掛，而且等不到回覆時分不出是哪一種。GPU 故障反而是長時間訓練才要先擔心的。", "depth": 1, "src": [{"href": "l01.html#i9-3", "label": "L1 第 9 章 不確定與故障：測試和長任務都要換寫法（故障是常態）"}, {"href": "l01.html#i9-4", "label": "L1 第 9 章 不確定與故障：測試和長任務都要換寫法（本文的判斷：單一個 run，先怕 tool，不是 GPU）"}], "lecs": ["L1"]}, {"id": "code-vs-text", "name": "最重要的判斷：要保證的事寫成程式，不要寫成文字；機率性觸發擋不住", "short": "保證寫成程式", "tier": "基礎", "theme": "Agent 的機制", "deps": ["probabilistic", "agent-loop"], "why": "從機率性與 agent loop 延伸：寫在 prompt 裡的規則由 model 決定要不要遵守，所以是機率性的；寫在 harness 裡的檢查每次都會跑。要保證的事只能放在後者。", "depth": 1, "src": [{"href": "l02.html#i2", "label": "L2 第 2 章 最重要的判斷：要保證的事寫成程式，不要寫成文字"}], "lecs": ["L2"]}, {"id": "context-resend", "name": "Context：model 沒有記憶，每一圈整份重送；進去的東西每圈都再付一次錢、時間和注意力", "short": "Context 整份重送", "tier": "基礎", "theme": "Context 與 tool", "deps": ["agent-loop"], "why": "從 agent loop 延伸：model 是 stateless，harness 每一圈都把整段對話和 tool 輸出再送一次，所以 context 有三種成本（錢、延遲、注意力），而且只會變大。L2 講 Claude Code 怎麼花，L4 講原理。", "depth": 1, "src": [{"href": "l04.html#i1", "label": "L4 第 1 章 根本的限制：model 沒有記憶，每一圈整份重送"}, {"href": "l02.html#i3", "label": "L2 第 3 章 Context：進去的東西，每一圈都要再付一次"}], "lecs": ["L2", "L4"]}, {"id": "permissions", "name": "權限：規則先於 mode，自主程度要配合風險；規則只比字串，sandbox 才限制行程", "short": "權限三層", "tier": "進階", "theme": "Agent 的機制", "deps": ["code-vs-text", "harness-os"], "why": "從「保證寫成程式」與 harness 延伸：擋危險動作要靠 harness 的規則而不是 prompt；但規則只比對指令字串，真正限制行程的是 sandbox，所以三層要疊起來用。", "depth": 2, "src": [{"href": "l02.html#i4", "label": "L2 第 4 章 權限：規則先於 mode，自主程度要配合風險"}], "lecs": ["L2"]}, {"id": "prompt-injection", "name": "Prompt injection：model 分不出指令和資料，不能靠過濾；repo 裡的設定檔、傳回來的文字都是攻擊面", "short": "Prompt injection", "tier": "進階", "theme": "Agent 的機制", "deps": ["code-vs-text"], "why": "從「保證寫成程式」延伸：tool 讀進來的任何文字都和使用者的指令放在同一個 context 裡，model 分不出來，所以防禦不能是請 model 過濾，只能是結構性的（限制它拿得到的能力）。L5 的「傳回來的文字也不可信」是同一件事在多 agent 的版本。", "depth": 2, "src": [{"href": "l02.html#i5", "label": "L2 第 5 章 Prompt injection：model 分不出指令和資料"}, {"href": "l05.html#i8", "label": "L5 第 8 章 安全：傳回來的文字也不可信"}], "lecs": ["L2", "L5"]}, {"id": "instruction-files", "name": "CLAUDE.md 與 auto memory：每一行都要值回租金，只放不寫就會出錯的事", "short": "CLAUDE.md 的租金", "tier": "進階", "theme": "Agent 的機制", "deps": ["context-resend", "code-vs-text"], "why": "從 context 重送與「保證寫成程式」延伸：CLAUDE.md 每一圈都重送，所以每一行都在付租金；它又是文字，model 不一定照做，所以只放不寫會出錯、又沒辦法寫成程式的事。", "depth": 2, "src": [{"href": "l02.html#i6", "label": "L2 第 6 章 記憶：每一行都要值回租金"}], "lecs": ["L2"]}, {"id": "hooks", "name": "Hook：事件一到就執行的程式；一定會跑，不代表一定比對得到", "short": "Hook", "tier": "進階", "theme": "Agent 的機制", "deps": ["code-vs-text"], "why": "從「保證寫成程式」延伸：hook 是把保證落實成程式的機制，掛在 loop 的事件上。但 hook 的比對邏輯是你寫的，寫錯就放行。", "depth": 2, "src": [{"href": "l02.html#i7", "label": "L2 第 7 章 Hook：事件一到就執行的程式"}], "lecs": ["L2"]}, {"id": "skills", "name": "Skill：用到才載入的程序，description 常駐、body 用到才載入；model 會漏選", "short": "Skill", "tier": "進階", "theme": "Agent 的機制", "deps": ["instruction-files"], "why": "從 CLAUDE.md 的租金延伸：CLAUDE.md 全部常駐太貴，skill 只常駐一句 description、用到才載入 body。代價是選不選由 model 決定，會漏。", "depth": 3, "src": [{"href": "l02.html#i8", "label": "L2 第 8 章 Skill：用到才載入的程序"}], "lecs": ["L2"]}, {"id": "mcp", "name": "MCP：把外部系統包成 tool；對 model 來說和 Read 沒差別；接上一個 server 等於交出憑證", "short": "MCP", "tier": "進階", "theme": "Agent 的機制", "deps": ["tool-anatomy", "permissions"], "why": "從 tool 的三段文字與權限延伸：MCP server 提供的就是一組 tool 定義，model 看到的形式和內建 tool 相同；差別在它拿著你的憑證在外面執行，所以要用權限的眼光看。", "depth": 3, "src": [{"href": "l02.html#i9", "label": "L2 第 9 章 MCP：把外部系統包成 tool，接上就等於交出憑證"}], "lecs": ["L2"]}, {"id": "plugins", "name": "Plugin：把 skill、hook、MCP、subagent 一套設定變成別人裝得起來的東西；裝了就是跑別人的程式", "short": "Plugin", "tier": "進階", "theme": "Agent 的機制", "deps": ["skills", "hooks", "mcp"], "why": "從 skill、hook、MCP 延伸：plugin 只是把這幾種零件打包。它的風險也是零件的總和：hook 和 MCP 會用你的權限跑別人的程式。", "depth": 4, "src": [{"href": "l02.html#i10", "label": "L2 第 10 章 Plugin：把一套設定變成別人裝得起來的東西"}], "lecs": ["L2"]}, {"id": "scaling-axes", "name": "放大的三個軸：更多 agent、更久、每步更強，每一種只買到一樣東西", "short": "放大的三個軸", "tier": "基礎", "theme": "放大與人", "deps": ["agent-loop"], "why": "從 agent loop 延伸：一條鏈可以加長（跑更久）、加粗（每步用更強的 model），或多開幾條（更多 agent）。三條路各自買到不同的東西，先分清楚再談怎麼放大。", "depth": 1, "src": [{"href": "l03.html#i1", "label": "L3 第 1 章 放大的三個軸：每一種只買到一樣東西"}], "lecs": ["L3"]}, {"id": "amdahl", "name": "上限：16 個 agent 不會快 16 倍；任務切不開就沒用，協調也要時間", "short": "Amdahl 上限", "tier": "進階", "theme": "放大與人", "deps": ["scaling-axes"], "why": "從三個軸延伸：多開幾條鏈只加速能平行的那一段，串行的那一段（規劃、整合、review）不變，所以加速有上限。這是 Amdahl's law。", "depth": 2, "src": [{"href": "l03.html#i2", "label": "L3 第 2 章 上限：16 個 agent 不會快 16 倍"}], "lecs": ["L3"]}, {"id": "review-bottleneck", "name": "人：能管幾個 agent，由 review 的速度決定；agent 做得越多，人抓到的錯越少", "short": "Review 是瓶頸", "tier": "進階", "theme": "放大與人", "deps": ["human-time", "amdahl"], "why": "從人的時間與 Amdahl 延伸：串行段裡最慢的常是人 review，所以 agent 數的上限是 m ÷ r（產出速度除以 review 速度）。L11 的作業數據是同一件事：agent 做得越多，人看得越少。", "depth": 3, "src": [{"href": "l03.html#i3", "label": "L3 第 3 章 人：能管幾個 agent，由你 review 的速度決定"}, {"href": "l11.html#i1", "label": "L11 第 1 章 根本的事實：agent 做得越多，人抓到的錯越少"}], "lecs": ["L3", "L11"]}, {"id": "verification-defines-autonomy", "name": "自主程度由能不能驗證決定：把「做完」寫成檢查得了的條件；agent 說好了是主張，要看證據", "short": "能驗證才能放手", "tier": "進階", "theme": "放大與人", "deps": ["review-bottleneck", "verification-loop"], "why": "從 review 瓶頸與驗證迴圈延伸：人 review 不夠快，能放手的程度就看有沒有程式化的驗證替人把關；有可驗證的終點（/goal、測試）才能讓 agent 自己跑。L11 把它寫成開工前和收工時的具體做法。", "depth": 4, "src": [{"href": "l03.html#i4", "label": "L3 第 4 章 終點：自主程度由能不能驗證決定"}, {"href": "l11.html#i2", "label": "L11 第 2 章 開工前：把「做完」寫成檢查得了的條件"}, {"href": "l11.html#i3", "label": "L11 第 3 章 收工時：agent 說「好了」是主張，要看證據"}], "lecs": ["L3", "L11"]}, {"id": "worktree", "name": "手動平行：worktree 只隔離檔案，主幹也在動", "short": "Worktree 隔離", "tier": "進階", "theme": "放大與人", "deps": ["scaling-axes"], "why": "從三個軸延伸：多開幾個 agent 最簡單的做法是各開一個 git worktree。它只隔離檔案，不隔離 port、資料庫和主幹的變動，所以撐不到太多個。", "depth": 2, "src": [{"href": "l03.html#i5", "label": "L3 第 5 章 手動平行：worktree 只隔離檔案"}], "lecs": ["L3"]}, {"id": "subagent", "name": "Subagent：換到乾淨的 context 做一段，代價是摘要有損，兩個方向都會掉東西", "short": "Subagent", "tier": "進階", "theme": "放大與人", "deps": ["context-resend", "scaling-axes"], "why": "從 context 重送與三個軸延伸：把雜訊留在另一份 context 裡，主對話就不必每圈重付。但派工和回報都只能用文字摘要，派出去會漏前情、回來會漏細節。", "depth": 2, "src": [{"href": "l03.html#i6", "label": "L3 第 6 章 Subagent：換到乾淨的主對話，代價是摘要有損"}, {"href": "l02.html#i3-6", "label": "L2 第 3 章 Context：進去的東西，每一圈都要再付一次（把雜訊留在外面：subagent）"}], "lecs": ["L2", "L3"]}, {"id": "team-workflow", "name": "Team 與 workflow：要討論才用 team，對話協調不了才用 script；16 個 agent 沒有 lead 也行，條件是測試和 git", "short": "Team 與 workflow", "tier": "進階", "theme": "放大與人", "deps": ["subagent", "verification-defines-autonomy"], "why": "從 subagent 與可驗證延伸：agent 之間要來回討論才值得開 team；平行數量多到對話協調不了，就改用 script 和 git 當協調者，前提是有測試替每個 agent 驗收。", "depth": 5, "src": [{"href": "l03.html#i7", "label": "L3 第 7 章 Team 與 workflow：要討論才用 team，對話協調不了才用 script"}], "lecs": ["L3"]}, {"id": "process-in-skill", "name": "Superpowers 與 mattpocock/skills：流程寫進 skill，差別在誰保證它被走（hook 或人）", "short": "流程寫進 skill", "tier": "進階", "theme": "放大與人", "deps": ["skills", "hooks"], "why": "從 skill 與 hook 延伸：兩個 plugin 都把開發流程寫成 skill，但 skill 是文字、會被跳過。Superpowers 加 hook 強制，mattpocock 把保證交給人，正好是「保證寫成程式」這個判斷的兩種選擇。", "depth": 4, "src": [{"href": "l03.html#i8", "label": "L3 第 8 章 Superpowers 與 mattpocock/skills：流程寫進 skill，差別在誰保證它被走"}], "lecs": ["L3"]}, {"id": "token-saving-direction", "name": "Caveman：省 token 先看帳單；輸出方向一份 skill 就能做，輸入方向只有 proxy 管得到", "short": "省 token 看方向", "tier": "進階", "theme": "放大與人", "deps": ["cost-breakdown", "skills"], "why": "從錢花在哪裡與 skill 延伸：帳單大宗是輸入（重送的 context），輸出很少。skill 只能改 model 的輸出風格，要壓輸入得在 request 送出前改寫，只有 proxy 做得到。", "depth": 4, "src": [{"href": "l03.html#i9", "label": "L3 第 9 章 Caveman：省 token 先看帳單，輸入方向只有 proxy 管得到"}], "lecs": ["L3"]}, {"id": "attention-as-resource", "name": "dsh-superagent：把人的注意力當第一個要省的資源，主 session 只路由、worker 只做事", "short": "省人的注意力", "tier": "進階", "theme": "放大與人", "deps": ["team-workflow"], "why": "從 team 延伸：既然人的 review 是最慢的一段，架構就該先省人的注意力。主 session 不做事、只路由，worker 的結果先過驗證再找人。", "depth": 6, "src": [{"href": "l03.html#i10", "label": "L3 第 10 章 dsh-superagent：把人的注意力當第一個要省的資源"}], "lecs": ["L3"]}, {"id": "fix-harness-first", "name": "做不好先查 context 和 harness，再換 model；倍數要連著條件讀；評估時固定 harness", "short": "先查 harness", "tier": "進階", "theme": "Context 與 tool", "deps": ["context-resend", "score-is-system"], "why": "從 context 重送與「分數是系統的輸出」延伸：同一個 model 換 harness、換 context 管法，成功率能差好幾倍，所以表現不好先懷疑自己能改的這一層。", "depth": 3, "src": [{"href": "l04.html#i2", "label": "L4 第 2 章 最重要的判斷：做不好先查 context 和 harness，再換 model"}], "lecs": ["L4"]}, {"id": "context-layout", "name": "Context 的結構：十格裡，開頭不動才省得下來", "short": "Context 開頭不動", "tier": "進階", "theme": "Context 與 tool", "deps": ["prefix-cache"], "why": "從 prefix cache 延伸：cache 只認從頭開始相同的那一段，所以 system prompt、tool 定義這些放前面且不能變，會變的放後面。排錯順序每圈都重算。", "depth": 3, "src": [{"href": "l04.html#i3", "label": "L4 第 3 章 Context 的結構：十格裡，開頭不動才省得下來"}], "lecs": ["L4"]}, {"id": "context-admission", "name": "管理的順序：能不進來就不要進來（admission），放在外面要用再讀（offloading）", "short": "先擋在門口", "tier": "進階", "theme": "Context 與 tool", "deps": ["context-resend"], "why": "從 context 重送延伸：進來的東西每圈都付錢，最便宜的管法是在門口擋住（只讀需要的檔、tool 輸出先截短），其次放在檔案裡要用再讀。", "depth": 2, "src": [{"href": "l04.html#i4", "label": "L4 第 4 章 管理的順序：能不進來，就不要進來"}], "lecs": ["L4"]}, {"id": "context-reduce", "name": "已經進來的：先用規則刪（transformation），最後才摘要（compaction）；紀錄和 model 看到的要分開", "short": "先刪後摘要", "tier": "進階", "theme": "Context 與 tool", "deps": ["context-admission", "prefix-cache"], "why": "從門口把關與 prefix cache 延伸：擋不住的東西進來後，用規則刪舊的 tool 輸出不花 LLM 也不失真；compaction 用 LLM 摘要是有損的，放最後。兩者都會改到 context 中段，所以要知道 cache 會從哪裡開始失效。", "depth": 3, "src": [{"href": "l04.html#i5", "label": "L4 第 5 章 已經進來的：先用規則刪，最後才摘要"}, {"href": "l02.html#i3-5", "label": "L2 第 3 章 Context：進去的東西，每一圈都要再付一次（Context 只會變大，滿了就 compaction）"}], "lecs": ["L2", "L4"]}, {"id": "tool-anatomy", "name": "Tool 設計的起點：model 眼中的 tool 只有三段文字（名稱、描述、參數）；tool 的輸出就是 context", "short": "Tool 是三段文字", "tier": "基礎", "theme": "Context 與 tool", "deps": ["context-resend"], "why": "從 context 重送延伸：model 不會執行 tool，只看到它的定義文字（名稱、描述、參數），然後提議呼叫；執行結果又全部進 context，所以 tool 的輸出等於下一圈的輸入。", "depth": 2, "src": [{"href": "l04.html#i6-1", "label": "L4 第 6 章 Tool 設計：tool 的輸出就是 context（Model 眼中的 tool 只有三段文字）"}, {"href": "l04.html#i6-2", "label": "L4 第 6 章 Tool 設計：tool 的輸出就是 context（設計 tool 時最先要問的：輸出進了 context，下一步會更好嗎？）"}], "lecs": ["L4"]}, {"id": "tool-design", "name": "Tool 設計五條原則：錯誤要能教、預設冪等、輸出不一定要進 context；只給 shell 行不行", "short": "Tool 五條原則", "tier": "進階", "theme": "Context 與 tool", "deps": ["tool-anatomy", "partial-failure"], "why": "從 tool 的三段文字與故障常態延伸：既然輸出就是 context，錯誤訊息要寫成 model 讀了能改正的樣子；既然呼叫會重試，動作要冪等；大量輸出可以在外面先處理（code execution）再進 context。", "depth": 3, "src": [{"href": "l04.html#i6", "label": "L4 第 6 章 Tool 設計：tool 的輸出就是 context"}], "lecs": ["L4"]}, {"id": "execution-tools", "name": "Execution：shell 最強，保護全在 harness；既然 shell 都做得到，為什麼還要專用的 read、edit tool", "short": "Shell 與專用 tool", "tier": "進階", "theme": "Context 與 tool", "deps": ["tool-design", "permissions"], "why": "從 tool 原則與權限延伸：shell 什麼都能做，所以也什麼都能弄壞，限制只能靠 harness 的權限規則。專用 tool 的價值是輸出可控、失敗看得見，和省 token。", "depth": 4, "src": [{"href": "l04.html#i7", "label": "L4 第 7 章 Execution：shell 最強，保護全在 harness"}], "lecs": ["L4"]}, {"id": "search-tools", "name": "Search：先 grep，名字猜不到才換（glob、semantic search、repo map、extrinsic signal、LSP）", "short": "先 grep 再換", "tier": "進階", "theme": "Context 與 tool", "deps": ["tool-design"], "why": "從 tool 原則延伸：找程式碼的五種方法差在成本、要不要建索引、結果會不會過期。grep 零成本又不會過期，所以先用它，猜不到名字才換依意思或依 symbol 找。", "depth": 4, "src": [{"href": "l04.html#i8", "label": "L4 第 8 章 Search：先 grep，名字猜不到才換"}], "lecs": ["L4"]}, {"id": "edit-tools", "name": "Edit：失敗看不看得見，和省 token 一樣重要（整檔重寫、unified diff、search/replace、AST）", "short": "Edit 失敗要看得見", "tier": "進階", "theme": "Context 與 tool", "deps": ["tool-design"], "why": "從 tool 原則延伸：改檔的四種格式差在 token 用量和失敗時的樣子。search/replace 找不到就明確失敗，diff 的行號對不上會靜悄悄地改錯地方，所以第一個考量不是省 token。", "depth": 4, "src": [{"href": "l04.html#i9", "label": "L4 第 9 章 Edit：失敗看不看得見，和省 token 一樣重要"}], "lecs": ["L4"]}, {"id": "prompting", "name": "Prompt：招式會過期，原則不會", "short": "Prompt 原則", "tier": "基礎", "theme": "Context 與 tool", "deps": ["probabilistic", "context-resend"], "why": "從機率性與 context 重送延伸：prompt 技巧是在調 model 的機率分布，model 一換就失效。不會過期的是給夠 context、說清楚目標、給例子這類原則。", "depth": 2, "src": [{"href": "l04.html#i10", "label": "L4 第 10 章 Prompt：招式會過期，原則不會"}], "lecs": ["L4"]}, {"id": "text-only-channel", "name": "根本的限制：agent 之間只能傳文字，每個 agent 只看得到自己的 context", "short": "只能傳文字", "tier": "基礎", "theme": "Multi-agent 溝通", "deps": ["context-resend"], "why": "從 context 延伸：一個 agent 就是一份 context 加一個 loop，多一個 agent 就多一份互不相通的 context，兩邊只能靠文字傳話。拆開的好處和代價都從這裡來。", "depth": 2, "src": [{"href": "l05.html#i1", "label": "L5 第 1 章 根本的限制：agent 之間只能傳文字"}], "lecs": ["L5"]}, {"id": "dont-split", "name": "最重要的判斷：多數任務不該拆；拆開只在子任務能各自進行時有好處", "short": "多數任務不該拆", "tier": "進階", "theme": "Multi-agent 溝通", "deps": ["amdahl", "subagent", "text-only-channel"], "why": "從 Amdahl、subagent 與只能傳文字延伸：步驟彼此相依的任務拆了沒有平行可賺，卻要付交接時摘要有損的代價，所以預設不拆。", "depth": 3, "src": [{"href": "l05.html#i2", "label": "L5 第 2 章 最重要的判斷：多數任務不該拆"}], "lecs": ["L5"]}, {"id": "read-parallel-write-serial", "name": "最實用的分界：讀可以平行，寫留在單線；writer 加 reviewer 最值得學；驗證能力比架構重要", "short": "讀平行、寫單線", "tier": "進階", "theme": "Multi-agent 溝通", "deps": ["dont-split", "verification-defines-autonomy"], "why": "從不該拆與可驗證延伸：只讀的 agent 結果只會累積，可以同時跑；會寫的 agent 帶著沒說出口的決定，兩個各寫一半就會衝突。架構名字不重要，有沒有 reviewer 驗證才重要。", "depth": 5, "src": [{"href": "l05.html#i3", "label": "L5 第 3 章 最實用的分界：讀可以平行，寫留在單線"}], "lecs": ["L5"]}, {"id": "delegation-prompt", "name": "派工：worker 的全部世界就是那段 prompt；拆多細、沿什麼切、一定要設上限", "short": "派工 prompt", "tier": "進階", "theme": "Multi-agent 溝通", "deps": ["subagent", "text-only-channel"], "why": "從 subagent 與只能傳文字延伸：接手的 agent 沒有你的 context，沒寫進任務說明的它都不知道。所以任務要沿著邊界清楚的地方切，並且給步數和預算的上限。", "depth": 3, "src": [{"href": "l05.html#i4", "label": "L5 第 4 章 派工：worker 的全部世界就是那段 prompt"}], "lecs": ["L5"]}, {"id": "report-claim-evidence", "name": "回報：訊息只帶主張和證據，原文放檔案", "short": "回報帶證據", "tier": "進階", "theme": "Multi-agent 溝通", "deps": ["subagent"], "why": "從 subagent 延伸：回報整份原文會把主對話的 context 撐爆，只回結論又驗不了。所以訊息帶主張加可以查的證據（檔案路徑、測試結果），原文留在檔案。", "depth": 3, "src": [{"href": "l05.html#i5", "label": "L5 第 5 章 回報：訊息只帶主張和證據，原文放檔案"}], "lecs": ["L5"]}, {"id": "timeout-idempotent", "name": "送出去之後：timeout、冪等與 partial failure，分不出對方是慢還是掛了", "short": "Timeout 與冪等", "tier": "進階", "theme": "Multi-agent 溝通", "deps": ["partial-failure", "delegation-prompt"], "why": "從故障常態與派工延伸：派出去的 agent 可能慢、可能掛、可能做了一半，等不到回覆時分不出來。所以要設 timeout，而且重派要安全，動作得冪等。", "depth": 4, "src": [{"href": "l05.html#i6", "label": "L5 第 6 章 送出去之後：timeout、冪等與 partial failure"}], "lecs": ["L5"]}, {"id": "distributed-state", "name": "狀態與時間：每個 agent 的 context 都是一份會過期的副本；consistency、CAP、沒有全域時鐘、observability", "short": "分散式狀態", "tier": "專家", "theme": "Multi-agent 溝通", "deps": ["text-only-channel", "partial-failure"], "why": "從只能傳文字與故障常態延伸：共享的東西被別人改了，每個 agent 先前讀進去的那份就過期，這就是分散式系統的一致性問題。網路斷開時 CAP 說只能保一邊，時間戳排不出先後，要靠 trace 把 log 串起來。", "depth": 3, "src": [{"href": "l05.html#i7", "label": "L5 第 7 章 狀態與時間：每個 agent 的 context 都是一份會過期的副本"}], "lecs": ["L5"]}, {"id": "error-compounding", "name": "錯誤相乘：每步 95%，50 步只剩 8%；但算式的兩個前提真實的 run 都不成立", "short": "錯誤相乘", "tier": "基礎", "theme": "可靠性與記憶", "deps": ["probabilistic", "agent-loop"], "why": "從機率性與 agent loop 延伸：每一步都有出錯機率，一條長鏈把它們乘起來。但真實的 run 會發現並修正錯誤，所以 pⁿ 不是上界，三個槓桿（步數、每步成功率、攔錯）才是重點。", "depth": 1, "src": [{"href": "l06.html#i1", "label": "L6 第 1 章 錯誤相乘：每步 95%，50 步只剩 8%"}], "lecs": ["L6"]}, {"id": "verification-loop", "name": "驗證：model 沒變強，8% 也能變 88%；檢查要真的抓得到、要早、不靠 model 自律", "short": "驗證迴圈", "tier": "進階", "theme": "可靠性與記憶", "deps": ["error-compounding", "code-vs-text"], "why": "從錯誤相乘與「保證寫成程式」延伸：在每一步後面放一個會抓到錯的檢查並重試，整體成功率就不再是相乘。檢查必須是程式（測試、型別、lint），不能是問 model「你確定嗎」。", "depth": 2, "src": [{"href": "l06.html#i2", "label": "L6 第 2 章 驗證：model 沒變強，8% 也能變 88%"}], "lecs": ["L6"]}, {"id": "checkpoint-budget", "name": "Checkpoint 與上限：決定失敗時退回多遠、存什麼（context 也要退）、回不去的動作先 commit、最多花多少", "short": "Checkpoint 與上限", "tier": "進階", "theme": "可靠性與記憶", "deps": ["verification-loop", "partial-failure"], "why": "從驗證迴圈與故障常態延伸：驗證抓到錯之後要退回某個已驗證過的狀態重來，所以要存 checkpoint（檔案用 git，context 也要能退）；刪檔、發信這類回不去的動作要先留退路；一直錯就要停。L11 的「先 commit」是它的實作。", "depth": 3, "src": [{"href": "l06.html#i3", "label": "L6 第 3 章 Checkpoint 與上限：決定失敗時退回多遠、最多花多少"}, {"href": "l11.html#i6", "label": "L11 第 6 章 破壞性指令：先 commit，危險指令讓權限規則擋"}], "lecs": ["L6", "L11"]}, {"id": "failure-layers", "name": "失敗分層：同一個症狀有五個來源（model、prompt、tool、環境、任務），在來源那一層修；沒有紀錄就不知道改什麼", "short": "失敗分層", "tier": "進階", "theme": "可靠性與記憶", "deps": ["fix-harness-first", "stack"], "why": "從先查 harness 與 stack 延伸：「先查 context 和 harness 再換 model」推廣成五層，先找第一個出錯的步驟判斷它屬於哪一層，再在那一層修。這要靠完整的 trace。", "depth": 4, "src": [{"href": "l06.html#i4", "label": "L6 第 4 章 失敗分層：同一個症狀有五個來源，在來源那一層修"}], "lecs": ["L6"]}, {"id": "memory-worth-it", "name": "要不要記：壞的記憶比沒有記憶更糟；記憶是一份沒人通知你過期的副本；寫入 policy 是光譜", "short": "壞記憶更糟", "tier": "進階", "theme": "可靠性與記憶", "deps": ["instruction-files"], "why": "從 CLAUDE.md 的租金延伸：記憶是會自動進 context 的文字，錯的記憶每一圈都在誤導，代價比漏記高。所以寫入要有規則，不是什麼都存。", "depth": 3, "src": [{"href": "l06.html#i5", "label": "L6 第 5 章 要不要記：壞的記憶比沒有記憶更糟"}], "lecs": ["L6"]}, {"id": "valid-time-provenance", "name": "時間與來源：寫入時沒存 valid time 和 provenance，之後補不回來；歸納風險最高，遺忘是正式操作", "short": "Valid time 與來源", "tier": "進階", "theme": "可靠性與記憶", "deps": ["memory-worth-it"], "why": "從壞記憶更糟延伸：要判斷一條記憶還能不能信，得知道它什麼時候成立、是誰說的，這兩樣只有寫入當下存得到。model 自己歸納出來的記憶來源是它自己，最該標記，也最該能刪。", "depth": 4, "src": [{"href": "l06.html#i6", "label": "L6 第 6 章 時間與來源：寫入時沒存，之後補不回來"}], "lecs": ["L6"]}, {"id": "memory-retrieval", "name": "檢索：語意相似只是五個訊號之一；過濾還是排序差在後果；該常駐的不靠檢索碰運氣；k 是 context 的預算", "short": "檢索五個訊號", "tier": "進階", "theme": "可靠性與記憶", "deps": ["memory-worth-it", "context-admission"], "why": "從壞記憶更糟與門口把關延伸：每次讀回幾條記憶就是在花 context 預算，所以 k 要小、要排序。只靠語意相似會漏掉時間、來源、頻率這些訊號，一定要在的東西直接常駐。", "depth": 4, "src": [{"href": "l06.html#i7", "label": "L6 第 7 章 檢索：語意相似只是五個訊號之一"}], "lecs": ["L6"]}, {"id": "memory-backend", "name": "放在哪裡：backend 依之後怎麼查反推；先用檔案，分數自己量", "short": "先用檔案", "tier": "進階", "theme": "可靠性與記憶", "deps": ["memory-retrieval", "valid-time-provenance", "eval-driven-decisions"], "why": "從檢索、時間與來源、用評估做決定延伸：知道要怎麼查、要存哪些欄位之後才選 backend。檔案最簡單又能 diff，向量庫的好處要在自己的任務上量過才算數。", "depth": 7, "src": [{"href": "l06.html#i8", "label": "L6 第 8 章 放在哪裡：先用檔案，分數自己量"}], "lecs": ["L6"]}, {"id": "memory-poisoning", "name": "安全：記憶讓 injection 活過一個 session；四條進去的路沒有一條看起來像「寫入記憶」", "short": "記憶中毒", "tier": "進階", "theme": "可靠性與記憶", "deps": ["prompt-injection", "memory-worth-it"], "why": "從 prompt injection 與壞記憶更糟延伸：injection 原本只影響這一次對話，一旦被寫進記憶就每一次都載入。所以寫入那一站要有一道不靠 model 判斷的防線。", "depth": 4, "src": [{"href": "l06.html#i9", "label": "L6 第 9 章 安全：記憶讓 injection 活過一個 session"}], "lecs": ["L6"]}, {"id": "score-is-system", "name": "根本的事實：分數是整個系統（model、harness、環境、grader）的輸出，比較時要固定其他項", "short": "分數是系統的輸出", "tier": "基礎", "theme": "評估", "deps": ["harness-os"], "why": "從 harness 是 OS 延伸：跑 benchmark 的不只是 model，harness、tool、環境、grader 都在影響結果。同一個 model 換 harness 分數差很多，所以分數先問「誰的分數」。", "depth": 2, "src": [{"href": "l07.html#i1", "label": "L7 第 1 章 根本的事實：分數是整個系統的輸出"}], "lecs": ["L7"]}, {"id": "public-scores-limits", "name": "公開分數回答不了「能不能上線」：動作和 grader 可能不同、benchmark 裡沒有使用者、過程中的破壞沒人扣分", "short": "公開分數的限制", "tier": "進階", "theme": "評估", "deps": ["score-is-system", "cost-per-success"], "why": "從分數是系統的輸出與成本目標延伸：benchmark 固定了一組 harness 和 grader，和你的上線情境不同；它也不算成本、不算人的時間、不扣破壞的分，所以回答不了能不能上線。", "depth": 3, "src": [{"href": "l07.html#i2", "label": "L7 第 2 章 最重要的判斷：公開分數回答不了「能不能上線」"}], "lecs": ["L7"]}, {"id": "metrics-passk", "name": "指標：一個成功率藏住穩定性和成本；pass@k 與 pass^k；成本算每個成功任務；多個維度用 Pareto", "short": "pass@k 與 pass^k", "tier": "進階", "theme": "評估", "deps": ["cost-per-success", "two-layer-testing"], "why": "從成本目標與測試分兩層延伸：同一題跑 k 次，「至少一次對」和「每次都對」是兩個指標，能不能重試決定看哪個；再加上每個成功任務的成本，才是能做決定的分數。", "depth": 3, "src": [{"href": "l07.html#i3", "label": "L7 第 3 章 指標：一個成功率藏住穩定性和成本"}], "lecs": ["L7"]}, {"id": "noise", "name": "雜訊：差幾分常常只是運氣；題數決定精度、基礎設施也是雜訊、比兩版用配對", "short": "雜訊", "tier": "進階", "theme": "評估", "deps": ["metrics-passk"], "why": "從指標延伸：每題的結果是抽樣，題數少時信賴區間很寬；harness 和環境的差異也混進分數。所以比兩版要在同一組題、同一套環境上配對比。", "depth": 4, "src": [{"href": "l07.html#i4", "label": "L7 第 4 章 雜訊：差幾分常常只是運氣"}], "lecs": ["L7"]}, {"id": "leakage", "name": "Leakage：答案能從整個 stack 進來（訓練資料、agent 自己找到、git 歷史）", "short": "Leakage", "tier": "進階", "theme": "評估", "deps": ["score-is-system"], "why": "從分數是系統的輸出延伸：既然 agent 能用 tool，它就能在環境裡找到答案（git log、網路、快取），入口不只訓練資料。所以環境要能重置、要查 agent 碰得到什麼。", "depth": 3, "src": [{"href": "l07.html#i5", "label": "L7 第 5 章 Leakage：答案能從整個 stack 進來"}], "lecs": ["L7"]}, {"id": "grader-validity", "name": "Grader：它會判錯，agent 還會鑽漏洞；過了測試不等於做完；給 grader 寫測試", "short": "Grader 會錯", "tier": "進階", "theme": "評估", "deps": ["score-is-system", "verification-loop"], "why": "從分數是系統的輸出與驗證迴圈延伸：grader 也是系統的一部分，它判錯分數就錯；agent 會針對 grader 的漏洞最佳化，所以檢查要真的抓得到，grader 自己也要被測。", "depth": 3, "src": [{"href": "l07.html#i6", "label": "L7 第 6 章 Grader：它會判錯，agent 還會鑽漏洞"}], "lecs": ["L7"]}, {"id": "saturation", "name": "飽和：benchmark 是耗材；飽和之後下一版接手；你的題組消耗得更快", "short": "Benchmark 是耗材", "tier": "進階", "theme": "評估", "deps": ["public-scores-limits", "leakage"], "why": "從公開分數的限制與 leakage 延伸：benchmark 公開後會進訓練資料、會被針對最佳化，分數到頂就不再區分能力。自己的題組被自己的 agent 反覆跑，飽和得更快。", "depth": 4, "src": [{"href": "l07.html#i7", "label": "L7 第 7 章 飽和：benchmark 是耗材"}], "lecs": ["L7"]}, {"id": "build-eval", "name": "建立評估：從真實失敗開始；環境要能重置、agent 碰不到答案；grader 疊三層；長任務給部分分數", "short": "從失敗建評估", "tier": "進階", "theme": "評估", "deps": ["grader-validity", "leakage", "noise"], "why": "從 grader 會錯、leakage 與雜訊延伸：自己的評估要避開這三個坑。題目來自真實失敗、環境可重置且藏好答案、grader 用程式加 LLM 加人三層；題數要夠才看得出差異。", "depth": 5, "src": [{"href": "l07.html#i8", "label": "L7 第 8 章 建立評估：從真實失敗開始"}], "lecs": ["L7"]}, {"id": "eval-driven-decisions", "name": "用評估做決定：題目分三堆，一次改一件事和基準比；上線條件寫進 CI；分數跳升先懷疑", "short": "一次改一件事", "tier": "進階", "theme": "評估", "deps": ["build-eval"], "why": "從建立評估延伸：有了自己的題組，改 prompt、換 model、改 tool 都一次只改一件事，在同一組題上和基準比；差異要大過雜訊才算數。L11 的實驗紀律是同一件事。", "depth": 6, "src": [{"href": "l07.html#i9", "label": "L7 第 9 章 用評估做決定：題目分三堆，一次改一件事"}, {"href": "l11.html#i4", "label": "L11 第 4 章 實驗：一次改一件事，每版跑不只一次"}], "lecs": ["L7", "L11"]}, {"id": "harness-drift", "name": "Claude Code 也會在你腳下變：經過它量的數字會混進它自己的變化；綁在專用 tool 上的安全網會安靜地失效", "short": "Harness 會變", "tier": "進階", "theme": "評估", "deps": ["score-is-system", "permissions"], "why": "從分數是系統的輸出與權限延伸：harness 是分數的一部分，它自動更新時你量到的差異可能是它變了；權限規則綁在某個 tool 名稱上，tool 改名規則就失效。", "depth": 3, "src": [{"href": "l11.html#i5", "label": "L11 第 5 章 Claude Code：它也會在你腳下變"}], "lecs": ["L11"]}, {"id": "cost-formula", "name": "成本公式：六個乘數，分母要算成功的任務；比完平均還要比邊際", "short": "成本六個乘數", "tier": "進階", "theme": "目標、成本與速度", "deps": ["cost-per-success", "context-resend"], "why": "從成本目標與 context 重送延伸：一個任務的錢是任務數 × 每個任務的 turn 數 × 每個 turn 的 step 數 × 每步的 token 數 × 單價，再除以成功率。context 重送就是每步 token 數的大宗。", "depth": 2, "src": [{"href": "l08.html#i1", "label": "L8 第 1 章 成本公式：六個乘數，分母要算成功的任務"}], "lecs": ["L8"]}, {"id": "cost-breakdown", "name": "錢花在哪裡：大宗是重讀的 context；三種 token 量和單價方向相反；重送總量隨 turn 數的平方成長", "short": "錢在重讀的 context", "tier": "進階", "theme": "目標、成本與速度", "deps": ["cost-formula"], "why": "從成本公式延伸：每一步都重送整個 context，所以輸入 token 的量遠大於輸出；輸出單價雖高但量小。省錢要先看輸入，而且 context 越長後面每一步越貴。", "depth": 3, "src": [{"href": "l08.html#i2", "label": "L8 第 2 章 錢花在哪裡：大宗是重讀的 context"}], "lecs": ["L8"]}, {"id": "prefix-cache", "name": "Prompt cache：只比開頭，差一個字就從那裡重算；沒命中的 token 貴 12 到 50 倍；能等的工作用 batch API", "short": "Prefix cache", "tier": "進階", "theme": "目標、成本與速度", "deps": ["kv-cache", "context-resend"], "why": "從 KV cache 與 context 重送延伸：每圈重送的開頭幾乎相同，serving 端把算過的 KV cache 留著，開頭相同就不必重算，所以便宜。它只認從頭開始完全相同的那段。", "depth": 2, "src": [{"href": "l08.html#i3", "label": "L8 第 3 章 Prompt cache：沒命中的 token 貴 12 到 50 倍"}, {"href": "l02.html#i3-3", "label": "L2 第 3 章 Context：進去的東西，每一圈都要再付一次（每圈都重送，靠 prefix cache 才負擔得起）"}], "lecs": ["L2", "L8"]}, {"id": "net-savings", "name": "淨節省：每個省法都有反向成本；compaction 幾步回本；只能在同一組任務上量；優化是迴圈", "short": "淨節省要量", "tier": "進階", "theme": "目標、成本與速度", "deps": ["cost-breakdown", "context-reduce", "eval-driven-decisions"], "why": "從錢花在哪裡、先刪後摘要與用評估做決定延伸：compaction 省了之後每步的 token，卻多付一次摘要、可能丟資訊讓任務失敗。淨效果只有在同一組任務上跑過才知道。", "depth": 7, "src": [{"href": "l08.html#i4", "label": "L8 第 4 章 淨節省：每個省法都有反向成本，要在同一組任務上量"}], "lecs": ["L8"]}, {"id": "fewer-steps", "name": "少走幾步：先問這一步需不需要 LLM，再減 turn 與 step；重用計畫與 skill，任務重複才回本", "short": "少走幾步", "tier": "進階", "theme": "目標、成本與速度", "deps": ["cost-breakdown", "code-vs-text"], "why": "從錢花在哪裡與「保證寫成程式」延伸：成本公式裡 step 數和 turn 數是乘數。確定性的步驟用程式做不用 LLM，一次 call 做多個動作，都是在砍乘數。", "depth": 4, "src": [{"href": "l08.html#i5", "label": "L8 第 5 章 少走幾步：先問要不要 LLM，再減 turn 與 step"}], "lecs": ["L8"]}, {"id": "model-routing-effort", "name": "Model、effort 與 output：錯了也便宜的步驟才值得換小 model；換 model 要在 context 小的時候；thinking 也算 output", "short": "換 model 的時機", "tier": "進階", "theme": "目標、成本與速度", "deps": ["cost-breakdown", "prefix-cache", "error-compounding"], "why": "從錢花在哪裡、prefix cache 與錯誤相乘延伸：換小 model 省單價，但錯一步會拖累整條鏈，所以只換錯了也便宜的步驟；換 model 會讓 cache 失效，要選在 context 小的時候。", "depth": 4, "src": [{"href": "l08.html#i6", "label": "L8 第 6 章 Model、effort 與 output：錯了也便宜的步驟才值得省"}], "lecs": ["L8"]}, {"id": "cost-caps", "name": "上限：失控的任務要有人喊停；四個上限的數字從 trace 來；上限之前先有進展檢查", "short": "失控要喊停", "tier": "進階", "theme": "目標、成本與速度", "deps": ["checkpoint-budget", "cost-formula"], "why": "從 checkpoint 與上限、成本公式延伸：失敗的任務往往跑最久、花最多，所以 turn、token、時間、錢都要設上限，數字從歷史 trace 的分布來；更早的信號是進展檢查。", "depth": 4, "src": [{"href": "l08.html#i7", "label": "L8 第 7 章 上限：失控的任務要有人喊停"}], "lecs": ["L8"]}, {"id": "latency-critical-path", "name": "完成時間：看 critical path，錢看全部；時間常常花在 tool；每個加速手段錢往哪裡走；speculation", "short": "Critical path", "tier": "進階", "theme": "目標、成本與速度", "deps": ["amdahl", "cost-breakdown", "human-time"], "why": "從 Amdahl、錢花在哪裡與人的時間延伸：完成時間由最長的那條相依鏈決定，平行能縮它但總錢不變甚至變多。先量時間花在哪，常常是 tool 不是 model。", "depth": 4, "src": [{"href": "l08.html#i8", "label": "L8 第 8 章 完成時間：看 critical path，錢看全部"}], "lecs": ["L8"]}, {"id": "harness-architecture", "name": "Harness 架構：邊界放在哪裡，看要隔離什麼、什麼要活得久；三種架構差在呼叫跨過什麼邊界；問三個問題，不數 agent", "short": "Harness 的邊界", "tier": "專家", "theme": "Agent 的機制", "deps": ["team-workflow", "permissions"], "why": "從 team 與權限延伸：loop、tool、狀態可以在同一個行程、分開的行程或遠端服務，邊界越遠越能隔離和長存，代價是每次呼叫都跨邊界。要隔離什麼、什麼要活過 session，決定邊界放哪。", "depth": 6, "src": [{"href": "l08.html#i9", "label": "L8 第 9 章 Harness 架構：邊界放在哪裡，看要隔離什麼、什麼要活得久"}], "lecs": ["L8"]}, {"id": "model-skeleton", "name": "Model 的骨架：一疊相同的 block，參數就是矩陣裡的數字；每個 token 先變成一個 vector；幾乎所有計算是矩陣乘法", "short": "Model 的骨架", "tier": "進階", "theme": "Model 的結構與性質", "deps": ["prefill-decode"], "why": "從 prefill／decode 延伸：要算「下一個 token」這件事在硬體上是什麼，得知道 model 是幾十層相同的 block，每層是幾個矩陣乘法。參數量、FLOPs 從這裡算出來。", "depth": 1, "src": [{"href": "l09.html#i2", "label": "L9 第 2 章 Model 的骨架：一疊相同的 block，參數就是矩陣裡的數字"}], "lecs": ["L9"]}, {"id": "attention", "name": "Attention：每個新 token 都要讀前面全部的 K 和 V，n 個 token n² 個分數；multi-head、GQA", "short": "Attention", "tier": "進階", "theme": "Model 的結構與性質", "deps": ["model-skeleton", "kv-cache"], "why": "從 model 骨架與 KV cache 延伸：block 裡唯一會看前面 token 的部分是 attention，每個 token 產生 Q、K、V 三個 vector。KV cache 存的就是這裡的 K 和 V，GQA 讓幾個 head 共用一組來縮小它。", "depth": 2, "src": [{"href": "l09.html#i3", "label": "L9 第 3 章 Attention：每個新 token 都要讀前面全部的 K 和 V"}], "lecs": ["L9"]}, {"id": "three-numbers", "name": "三個數字：weights 卡記憶體與 decode，FLOPs 卡 prefill，KV cache 卡人數與長度；agent 的帳是算力省得下、記憶體省不下", "short": "三個數字", "tier": "進階", "theme": "Model 的結構與性質", "deps": ["attention", "batching"], "why": "從 attention 與 batching 延伸：參數量決定每一步要從記憶體讀多少 bytes、FLOPs 決定 prefill 要算多久、KV cache 決定裝得下幾個人多長。三個數字對到 GPU 的三個規格，就知道卡在哪。", "depth": 3, "src": [{"href": "l09.html#i4", "label": "L9 第 4 章 三個數字：weights 卡記憶體與 decode，FLOPs 卡 prefill，KV cache 卡人數與長度"}], "lecs": ["L9"]}, {"id": "moe", "name": "MoE：記憶體看全部的參數，運算只看每個 token 用到的部分；decode 時 batch 越大讀的 expert 越多", "short": "MoE", "tier": "進階", "theme": "Model 的結構與性質", "deps": ["three-numbers"], "why": "從三個數字延伸：MoE 把 FFN 拆成很多 expert，每個 token 只走幾個，所以 FLOPs 按啟用的參數算、記憶體按全部參數算，兩本帳分開。這改變 prefill 和 decode 的瓶頸。", "depth": 4, "src": [{"href": "l09.html#i5", "label": "L9 第 5 章 MoE（混合專家）：記憶體看全部的參數，運算只看每個 token 用到的部分"}], "lecs": ["L9"]}, {"id": "kv-architectures", "name": "改 KV cache 的架構：sliding window、MLA、linear attention、state-space、sparse attention；方向是混合", "short": "改 KV cache 的架構", "tier": "專家", "theme": "Model 的結構與性質", "deps": ["three-numbers"], "why": "從三個數字延伸：KV cache 隨長度線性長是 attention 的結構造成的，所以要縮它就得改 attention：只看最近的、壓縮每個 token 存的、或換成固定大小的 state。每種都在用精度換記憶體。", "depth": 4, "src": [{"href": "l09.html#i6", "label": "L9 第 6 章 改 KV cache 的架構：縮小、封頂，或換成固定大小的 state"}], "lecs": ["L9"]}, {"id": "per-token-kv", "name": "能自己架的 model：每個 token 的 KV cache 差到 13 倍，同一條公式代入 config.json 就算得出來", "short": "每個 token 的 KV", "tier": "專家", "theme": "Model 的結構與性質", "deps": ["kv-architectures"], "why": "從改 KV cache 的架構延伸：層數 × KV head 數 × head 維度 × 2 × 精度就是每個 token 的 bytes。GQA、MLA、sliding window 各改公式裡的一項，所以選 model 時這個數字和參數量一樣重要。", "depth": 5, "src": [{"href": "l09.html#i7", "label": "L9 第 7 章 能自己架的 model：每個 token 的 KV cache 差到 13 倍"}], "lecs": ["L9"]}, {"id": "tokenizer", "name": "Tokenizer：BPE 從 byte 開始合併；繁體中文一個字約 0.7 到 0.9 個 token；詞彙越大 token 越少、embedding 也越大", "short": "Tokenizer 與中文", "tier": "進階", "theme": "Model 的結構與性質", "deps": ["model-skeleton", "context-resend"], "why": "從 model 骨架與 context 重送延伸：token 是 model 的最小單位，怎麼切由 tokenizer 的詞彙表決定。中文一個字幾個 token 直接影響 context 預算、KV cache 大小和帳單。", "depth": 2, "src": [{"href": "l09.html#i8", "label": "L9 第 8 章 Tokenizer：繁體中文一個字約 0.7 到 0.9 個 token"}], "lecs": ["L9"]}, {"id": "sampling", "name": "Sampling：temperature、top-k、top-p 改的是答案，也改輸出有多長；託管的 model 開始不讓你調", "short": "Sampling 設定", "tier": "基礎", "theme": "Model 的結構與性質", "deps": ["probabilistic"], "why": "從機率性延伸：model 算出的是每個 token 的分數，temperature 決定分布多平、top-k／top-p 決定從前幾名抽。這些就是「機率性」在哪裡被決定的地方。", "depth": 1, "src": [{"href": "l09.html#i9", "label": "L9 第 9 章 Sampling：設定改的是答案，也改輸出有多長"}], "lecs": ["L9"]}, {"id": "fp-nondeterminism", "name": "Temperature 0 也不保證每次相同：浮點數加法順序、batch 組成不同，第 7 位有效數字就會變", "short": "浮點數不確定性", "tier": "專家", "theme": "Model 的結構與性質", "deps": ["sampling", "batching"], "why": "從 sampling 與 batching 延伸：就算每次都取最高分，GPU 上平行加總的順序會隨 batch 裡有誰而變，浮點數的誤差讓兩個很接近的分數互換名次。所以確定性要靠系統層保證，不是靠 temperature。", "depth": 2, "src": [{"href": "l09.html#i9-4", "label": "L9 第 9 章 Sampling：設定改的是答案，也改輸出有多長（Temperature 0 也不保證每次相同）"}, {"href": "l01.html#i9-1", "label": "L1 第 9 章 不確定與故障：測試和長任務都要換寫法（同一個 prompt，輸出為什麼不同）"}], "lecs": ["L1", "L9"]}, {"id": "roofline", "name": "Roofline：kernel 的時間由較慢的那一邊（算力或記憶體頻寬）決定；arithmetic intensity 和 ridge", "short": "Roofline", "tier": "進階", "theme": "GPU 與 kernel", "deps": ["gpu-throughput"], "why": "從 GPU 換 throughput 延伸：GPU 有兩個上限，每秒能算多少 FLOPs、每秒能從記憶體讀多少 bytes。一個 kernel 每讀一個 byte 算幾次（arithmetic intensity）決定它撞到哪一邊。", "depth": 1, "src": [{"href": "l10.html#i2", "label": "L10 第 2 章 Roofline：kernel 的時間由較慢的那一邊決定"}], "lecs": ["L10"]}, {"id": "decode-roofline", "name": "Decode：batch 1 只用到 0.5% 的算力；batch 拉高 weights 的 intensity，拉不動 attention；context 越長每一步越慢", "short": "Decode 的 roofline", "tier": "進階", "theme": "GPU 與 kernel", "deps": ["roofline", "three-numbers"], "why": "從 roofline 與三個數字延伸：decode 一步每個 weight 只用一次，intensity 極低、撞記憶體頻寬。多個人一起算（batching）讓每個 weight 多用幾次，但每個人的 KV cache 各自讀，attention 的 intensity 拉不起來。", "depth": 4, "src": [{"href": "l10.html#i3", "label": "L10 第 3 章 Decode：batch 1 只用到 0.5% 的算力"}], "lecs": ["L10"]}, {"id": "gpu-measurement", "name": "量測：nvidia-smi 的 100% 只代表有 kernel 在跑；MFU 看算力、MBU 看頻寬；先看 timeline 再看 kernel", "short": "MFU 與 MBU", "tier": "專家", "theme": "GPU 與 kernel", "deps": ["decode-roofline"], "why": "從 decode 的 roofline 延伸：知道該撞哪一邊之後，才能判斷量到的數字是不是用滿了：prefill 看 MFU、decode 看 MBU。utilization 100% 不代表任何一邊用滿。", "depth": 5, "src": [{"href": "l10.html#i4", "label": "L10 第 4 章 量測：nvidia-smi 的 100% 只代表有 kernel 在跑"}], "lecs": ["L10"]}, {"id": "chip-internals", "name": "晶片裡面：SM、warp 與 SIMT、Tensor Core、記憶體階層越近越快也越小；Little's law 說頻寬要靠路上的 bytes", "short": "晶片內部", "tier": "專家", "theme": "GPU 與 kernel", "deps": ["roofline"], "why": "從 roofline 延伸：幾千個核心怎麼組織（SM、warp 一次 32 個 thread）、矩陣乘法為什麼快（Tensor Core）、記憶體為什麼要靠平行才供得上（Little's law），是 roofline 兩條線背後的硬體。", "depth": 2, "src": [{"href": "l10.html#i5", "label": "L10 第 5 章 晶片裡面：Tensor Core 算得快，記憶體要靠平行才供得上"}, {"href": "l10.html#i1-2", "label": "L10 第 1 章 GPU 的設計：用幾千個簡單的核心換 throughput（GPU 怎麼藏住等待：切換 warp）"}, {"href": "l10.html#i1-3", "label": "L10 第 1 章 GPU 的設計：用幾千個簡單的核心換 throughput（SIMT：程式為一個 thread 寫，硬體一次跑 32 個）"}, {"href": "l10.html#i1-4", "label": "L10 第 1 章 GPU 的設計：用幾千個簡單的核心換 throughput（Divergence：同一個 warp 走不同分支，兩邊都要走一次）"}], "lecs": ["L10"]}, {"id": "gpu-programming", "name": "GPU 程式：為一個 thread 寫，從最高的抽象層開始；graph compiler、tile language；五層抽象越往下控制越多、成本越高", "short": "GPU 程式五層", "tier": "專家", "theme": "GPU 與 kernel", "deps": ["chip-internals"], "why": "從晶片內部延伸：知道硬體是 warp 和 SM 之後，才懂 kernel 為什麼「為一個 thread 寫、硬體跑幾千個」。compiler 和 tile language 是替你做這層對應的工具。", "depth": 3, "src": [{"href": "l10.html#i6", "label": "L10 第 6 章 GPU 程式：為一個 thread 寫，從最高的抽象層開始"}], "lecs": ["L10"]}, {"id": "fusion-flash", "name": "Kernel 之內：少搬資料；fusion 讓中間值不回 HBM；FlashAttention 一塊一塊算，online softmax 不看完整列也能算對", "short": "FlashAttention", "tier": "專家", "theme": "GPU 與 kernel", "deps": ["attention", "chip-internals"], "why": "從 attention 與晶片內部延伸：attention 的 n×n 分數矩陣寫回 HBM 再讀回來是純搬資料。FlashAttention 把它切塊留在晶片上算完，是 roofline 的「提高 intensity」在 attention 上的實作。", "depth": 3, "src": [{"href": "l10.html#i7", "label": "L10 第 7 章 Kernel 之內：少搬資料，FlashAttention 是範例"}], "lecs": ["L10"]}, {"id": "inter-kernel", "name": "Kernel 之間：把 SM、launch 和 GPU 之間的空等拿掉；split-KV、CUDA Graphs、megakernel、通訊藏在計算後面；多數團隊選 engine", "short": "Kernel 之間的空等", "tier": "專家", "theme": "GPU 與 kernel", "deps": ["fusion-flash", "gpu-programming", "decode-roofline"], "why": "從 FlashAttention、GPU 程式與 decode 的 roofline 延伸：單一 kernel 寫好之後，時間還漏在最後一輪只用到部分 SM、每次 launch 的空檔、GPU 之間等通訊。decode 的 attention 要沿 KV cache 切才用得滿 SM。", "depth": 5, "src": [{"href": "l10.html#i8", "label": "L10 第 8 章 Kernel 之間：把 SM、launch 和 GPU 之間的空等拿掉"}], "lecs": ["L10"]}, {"id": "ai-kernels", "name": "AI 寫的 kernel：先證明它對，再相信它快；漏洞集中在四個地方；speed of light 是 roofline 給的下限", "short": "AI 寫的 kernel", "tier": "專家", "theme": "GPU 與 kernel", "deps": ["gpu-programming", "verification-loop"], "why": "從 GPU 程式與驗證迴圈延伸：AI 生成的 kernel 常在邊界條件、精度、同步上出錯，又會鑽 benchmark 的漏洞。驗收先用對照測試證明對，再拿 roofline 算出的下限看它快了多少是真的。", "depth": 4, "src": [{"href": "l10.html#i9", "label": "L10 第 9 章 AI 寫的 kernel：先證明它對，再相信它快"}], "lecs": ["L10"]}, {"id": "datacenter", "name": "一張卡之外：scale-up 與 scale-out；出了這台機器慢一個數量級；16K 張 GPU 約每 3 小時中斷一次；一櫃 120 kW 要液冷", "short": "一張卡之外", "tier": "進階", "theme": "GPU 與 kernel", "deps": ["gpu-throughput", "partial-failure"], "why": "從 GPU 換 throughput 與故障常態延伸：一張卡不夠就要跨卡、跨機器，每跨一層頻寬掉一個數量級；卡越多故障越頻繁，電力和散熱變成實際的上限。", "depth": 2, "src": [{"href": "l10.html#i10", "label": "L10 第 10 章 一張卡之外：網路、故障、電力與水"}], "lecs": ["L10"]}, {"id": "secrets-transcript", "name": "Secrets：進過 context 的，都留在 transcript 裡；log 為什麼會帶著 key", "short": "Secrets 與 transcript", "tier": "進階", "theme": "Context 與 tool", "deps": ["tool-anatomy"], "why": "從「tool 的輸出就是 context」延伸：tool 讀到的 .env、指令印出的 token 都進了 context，而 harness 會把每一圈的 context 存成 transcript。所以 secret 不能讓 tool 讀到，而不是事後刪 log。", "depth": 3, "src": [{"href": "l11.html#i7", "label": "L11 第 7 章 Secrets：進過 context 的，都留在 transcript 裡"}], "lecs": ["L11"]}, {"id": "session-hygiene", "name": "Session：一個 session 一件事，狀態寫在檔案裡；session 太長 compaction 會丟 context；卡住時給證據不給情緒", "short": "一個 session 一件事", "tier": "進階", "theme": "Context 與 tool", "deps": ["checkpoint-budget", "context-reduce"], "why": "從 checkpoint 與先刪後摘要延伸：長 session 遲早 compaction，摘要是有損的，所以把進度寫進檔案、一件事一個 session，等於自己做 checkpoint。卡住時貼錯誤訊息比說「還是不行」有用。", "depth": 4, "src": [{"href": "l11.html#i8", "label": "L11 第 8 章 Session：一個 session 一件事，狀態寫在檔案裡"}], "lecs": ["L11"]}, {"id": "execution-env", "name": "執行環境：平行的 session 會互踩、派工也有成本、長跑要撐得住", "short": "執行環境", "tier": "進階", "theme": "放大與人", "deps": ["worktree", "subagent", "checkpoint-budget"], "why": "從 worktree、subagent 與 checkpoint 延伸：L3 講的隔離、派工成本和 L6 講的斷點，在作業裡變成三個實際踩到的坑。", "depth": 4, "src": [{"href": "l11.html#i9", "label": "L11 第 9 章 執行環境：平行要隔離，長跑要撐得住"}], "lecs": ["L11"]}]}</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('dag-data').textContent);
+  var by = {}, kids = {};
+  data.nodes.forEach(function (n) { by[n.id] = n; kids[n.id] = []; });
+  data.nodes.forEach(function (n) { n.deps.forEach(function (d) { kids[d].push(n.id); }); });
+  var fig = document.getElementById('dag-fig');
+  var svgEl = fig.querySelector('svg');
+  var nodeEls = {}, edgeEls = [];
+  svgEl.querySelectorAll('.dag-n').forEach(function (g) { nodeEls[g.getAttribute('data-id')] = g; });
+  svgEl.querySelectorAll('.dag-e').forEach(function (p) { edgeEls.push(p); });
+  var detail = document.getElementById('dag-detail');
+  var selected = null;
+
+  function walk(id, next) {
+    var seen = {}, q = [id];
+    while (q.length) {
+      var x = q.shift();
+      next(x).forEach(function (y) { if (!seen[y]) { seen[y] = true; q.push(y); } });
+    }
+    delete seen[id];
+    return seen;
+  }
+  function paint(id) {
+    Object.keys(nodeEls).forEach(function (k) { nodeEls[k].classList.remove('is-sel', 'is-anc', 'is-desc'); });
+    edgeEls.forEach(function (e) { e.classList.remove('is-anc', 'is-desc'); });
+    if (!id) { fig.classList.remove('has-focus'); return; }
+    fig.classList.add('has-focus');
+    var anc = walk(id, function (x) { return by[x].deps; });
+    var desc = walk(id, function (x) { return kids[x]; });
+    nodeEls[id].classList.add('is-sel');
+    Object.keys(anc).forEach(function (k) { nodeEls[k].classList.add('is-anc'); });
+    Object.keys(desc).forEach(function (k) { nodeEls[k].classList.add('is-desc'); });
+    edgeEls.forEach(function (e) {
+      var f = e.getAttribute('data-from'), t = e.getAttribute('data-to');
+      if ((t === id || desc[t]) && (f === id || desc[f])) e.classList.add('is-desc');
+      if ((t === id || anc[t]) && (f === id || anc[f])) e.classList.add('is-anc');
+    });
+  }
+  function refBtn(id) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'dag-ref'; b.setAttribute('data-id', id); b.textContent = by[id].short;
+    return b;
+  }
+  function show(id) {
+    var n = by[id];
+    detail.innerHTML = '';
+    var h = document.createElement('h2');
+    var badge = document.createElement('span'); badge.className = 'dag-badge tier-' + ({'基礎': 'a', '進階': 'c', '專家': 'd'})[n.tier]; badge.textContent = n.tier;
+    h.appendChild(badge);
+    h.appendChild(document.createTextNode(n.short));
+    var sm = document.createElement('small'); sm.textContent = n.theme + ' · 第 ' + n.depth + ' 層 · ' + n.lecs.join('、');
+    h.appendChild(sm);
+    detail.appendChild(h);
+    var claim = document.createElement('p'); claim.className = 'claim'; claim.textContent = n.name; detail.appendChild(claim);
+    var why = document.createElement('p'); why.className = 'why'; why.textContent = n.why; detail.appendChild(why);
+    var dl = document.createElement('dl');
+    function row(label, fill) {
+      var dt = document.createElement('dt'); dt.textContent = label; dl.appendChild(dt);
+      var dd = document.createElement('dd'); fill(dd); dl.appendChild(dd);
+    }
+    row('前置', function (dd) {
+      if (!n.deps.length) { var s = document.createElement('span'); s.className = 'none'; s.textContent = '起點，不靠課程裡別的觀念'; dd.appendChild(s); return; }
+      n.deps.forEach(function (d) { dd.appendChild(refBtn(d)); });
+    });
+    row('延伸出去', function (dd) {
+      if (!kids[id].length) { var s = document.createElement('span'); s.className = 'none'; s.textContent = '沒有，是葉子'; dd.appendChild(s); return; }
+      kids[id].forEach(function (d) { dd.appendChild(refBtn(d)); });
+    });
+    row('出處', function (dd) {
+      n.src.forEach(function (s) { var a = document.createElement('a'); a.href = s.href; a.textContent = s.label; dd.appendChild(a); });
+    });
+    detail.appendChild(dl);
+  }
+  function select(id, scroll) {
+    selected = id;
+    paint(id);
+    show(id);
+    if (history.replaceState) history.replaceState(null, '', '#n-' + id);
+    if (scroll) {
+      var g = nodeEls[id];
+      var box = fig.querySelector('.scroll');
+      var r = g.getBoundingClientRect(), fr = box.getBoundingClientRect();
+      if (r.left < fr.left || r.right > fr.right) box.scrollLeft += (r.left + r.right) / 2 - (fr.left + fr.right) / 2;
+      detail.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+  Object.keys(nodeEls).forEach(function (id) {
+    var g = nodeEls[id];
+    g.addEventListener('mouseenter', function () { paint(id); });
+    g.addEventListener('mouseleave', function () { paint(selected); });
+    g.addEventListener('click', function () { select(id, false); detail.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(id, false); detail.scrollIntoView({ block: 'nearest' }); } });
+  });
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('.dag-ref');
+    if (!b) return;
+    var id = b.getAttribute('data-id');
+    if (by[id]) { select(id, true); fig.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  });
+  document.getElementById('dag-clear').addEventListener('click', function () {
+    selected = null; paint(null);
+    detail.innerHTML = '<p class="hint">點圖上的一個觀念，這裡會顯示它的主張、為什麼從那些觀念延伸、出處章節，和從它延伸出去的觀念。</p>';
+    if (history.replaceState) history.replaceState(null, '', location.pathname);
+  });
+
+  // 篩選：難度 × 講次
+  var tierBoxes = Array.prototype.slice.call(document.querySelectorAll('.dag-f-tier'));
+  var lecSel = document.getElementById('dag-f-lec');
+  function applyFilter() {
+    var tiers = {};
+    tierBoxes.forEach(function (c) { tiers[c.value] = c.checked; });
+    var lec = lecSel.value;
+    var on = {};
+    data.nodes.forEach(function (n) {
+      on[n.id] = !!tiers[n.tier] && (!lec || n.lecs.indexOf(lec) >= 0);
+      nodeEls[n.id].classList.toggle('is-off', !on[n.id]);
+    });
+    edgeEls.forEach(function (e) {
+      e.classList.toggle('is-off', !(on[e.getAttribute('data-from')] && on[e.getAttribute('data-to')]));
+    });
+  }
+  tierBoxes.forEach(function (c) { c.addEventListener('change', applyFilter); });
+  lecSel.addEventListener('change', applyFilter);
+
+  var fit = document.getElementById('dag-fit');
+  try { fit.checked = localStorage.getItem('cs2680.dag.fit') === '1'; } catch (e) {}
+  function applyFit() { fig.classList.toggle('fit', fit.checked); try { localStorage.setItem('cs2680.dag.fit', fit.checked ? '1' : '0'); } catch (e) {} }
+  fit.addEventListener('change', applyFit); applyFit();
+
+  var m = /^#n-(.+)$/.exec(location.hash);
+  if (m && by[m[1]]) select(m[1], true);
+})();
+</script>
+<script src="app.js"></script>
+</body>
+</html>

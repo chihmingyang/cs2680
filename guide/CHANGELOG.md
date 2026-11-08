@@ -6,6 +6,7 @@
 ## README.md
 
 - 2026-11-09（L6 第 2 章末尾加本文延伸 `#x5`〈檢查會往兩個方向錯：漏抓與誤判〉：James 問 detect 有沒有考慮 false negative。算式的 1 − detect 就是漏抓，沒算的是誤判；延伸加 false_alarm 的算式與四種檢查的橫條圖，正文第 2 段加一句指過去。取捨記在 V7_DECISIONS L6〈補（2026-11-09）〉。`tools/add_anchors.py` 改成跳過舊頁面留下的 `<span class="anchor" id="xN">` 號碼（L6 的 x1–x4 還有連結指著），不然新的本文延伸會被編成重複的 `#x1`；README 腳本表同步。）
+- 2026-11-08（加觀念 DAG：`docs/dag.json`、`docs/dag.html`、`tools/dag.py`、`guide/DAG.md`；「東西放在哪裡」與腳本表各加一列；`verify.sh` 加 `dag.py --check`。James 要把課程改成觀念 DAG 的形式，這是第一版：100 個觀念、164 條邊、8 層、4 個起點；算出 14 個觀念散在兩堂、7 條前置在後面講次的邊。首頁還沒連過去，等他確認。）
 - 2026-11-08（加 `tools/quiz.py` 一列、「東西放在哪裡」加題庫一列；`verify.sh` 對有題庫的頁面跑 `quiz.py check`。）
 - 2026-11-07（`tools/verify.sh` 加 `all` 模式，「東西放在哪裡」加 CI 一列；見 WORKFLOW J。）
 - 2026-11-07（L1 tldr 第 2 條改寫：James 問「聊天是 1 次、750 token、105 token」在寫什麼、為什麼可讀性審查會過。三個數字沒標籤、聊天的數字放在 Copilot 底下像是 Copilot 的、一段對話對一問一答單位不同；改成兩個數字加倍數，聊天的來源用括號標出。照新規則把 tldr 單獨審：第一輪 4 BLOCK、1 NIT，第二輪仍 4 BLOCK（每輪都是新的問題），主線修完、沒有第三輪；tldr 四條都改了，細節在 V7_DECISIONS L1 最後一條。`review_pack.py` 加 `--prefix`、`--since` 也抓 tldr，README 腳本表同步。）
@@ -149,3 +150,7 @@
 - 2026-11-08（選項預設 3 個，4 個要有 3 種真的誤解；刪掉 k1a、k4a 湊數的「約 50%」。重點觀念標 `core`，至少 3 題選擇＋1 題應用、從不同角度問：L6 加 k1c、k1d、k8c、k8d、k14d。`quiz.py check` 擋這兩條。James 問選項幾個合適、重要觀念能不能重複出題。）
 - 2026-11-08（回想題改成選擇題：James 要自己能快速知道答對沒有。L6 第 1–4 章 18 題回想拆成 30 題選擇題，點了立刻判對錯、選錯說錯在哪；應用題、整合題維持問答。`quiz.py` 用程式判選擇題，作答包加「文章沒寫」選項。）
 - 2026-11-08（新增。James 2026-11-07 提：內容拆成有連貫性的 knowledge section，學完一節做 unit 題、最後做整合題，同一批題當 CI 第 2 層的 regression test。節＝文章自己的小節；題庫放在頁面的 `<script id="quiz">`；L6 第 1–4 章 pilot：16 節、22 題 unit、3 題整合。基準全過，mutation 刪 K4 算式後 3 題轉紅；從 k1b、k14b、k4a 學到三條出題規則。）
+
+## DAG.md
+
+- 2026-11-08（新增：節點、邊、難度的規則，版面與頁面下半的定義，第一版的判斷。）

@@ -1,0 +1,1589 @@
+{
+  "version": 1,
+  "updated": "2026-11-08",
+  "note": "課程的觀念 DAG。節點是一個觀念，deps 是「要先懂哪些觀念」；規則在 guide/DAG.md，頁面由 tools/dag.py 產生。",
+  "tiers": {
+    "基礎": "一句話能說清楚；靠日常經驗或一個前置觀念就能懂；不懂它，後面多數觀念讀不下去",
+    "進階": "要同時拿著兩個以上的前置觀念才能懂；通常是在做一個設計決定，或算一次帳",
+    "專家": "要進到機制內部（算式、硬體單元、演算法），或要能判斷研究結論的效度；不自己做 serving、harness、評估的人可以跳過，不影響上游的判斷"
+  },
+  "themes": [
+    {
+      "id": "mech",
+      "name": "Agent 的機制",
+      "desc": "loop、harness、權限、hook、skill、MCP"
+    },
+    {
+      "id": "ctx",
+      "name": "Context 與 tool",
+      "desc": "context 的成本與管理、tool 的設計"
+    },
+    {
+      "id": "scale",
+      "name": "放大與人",
+      "desc": "多個 agent 的上限、人的 review、驗證"
+    },
+    {
+      "id": "multi",
+      "name": "Multi-agent 溝通",
+      "desc": "拆不拆、派工、回報、分散式狀態"
+    },
+    {
+      "id": "rely",
+      "name": "可靠性與記憶",
+      "desc": "錯誤相乘、驗證、checkpoint、記憶"
+    },
+    {
+      "id": "eval",
+      "name": "評估",
+      "desc": "分數是什麼、雜訊、grader、自己建評估"
+    },
+    {
+      "id": "cost",
+      "name": "目標、成本與速度",
+      "desc": "每個成功任務的成本、錢花在哪、prefix cache"
+    },
+    {
+      "id": "serving",
+      "name": "Serving",
+      "desc": "prefill／decode、batching、KV cache"
+    },
+    {
+      "id": "model",
+      "name": "Model 的結構與性質",
+      "desc": "機率性、attention、三個數字、MoE、tokenizer"
+    },
+    {
+      "id": "gpu",
+      "name": "GPU 與 kernel",
+      "desc": "roofline、量測、晶片、FlashAttention"
+    }
+  ],
+  "lectures": {
+    "l01": "課程總覽與 AI 系統",
+    "l02": "Claude Code 怎麼運作",
+    "l03": "用多個 agent 放大產能",
+    "l04": "Context 管理與 tool 設計",
+    "l05": "Multi-agent 架構與溝通",
+    "l06": "Agent memory 與可靠性",
+    "l07": "Agent 評估",
+    "l08": "成本、速度與 harness 架構",
+    "l09": "LLM 的結構與 serving 的帳",
+    "l10": "GPU 入門與 kernel 最佳化",
+    "l11": "作業回饋與 agent 的十個陷阱"
+  },
+  "excluded": [
+    {
+      "src": "l01#i10",
+      "why": "目錄：九個問題、十個性質、課程範圍，查閱用"
+    },
+    {
+      "src": "l05#i9",
+      "why": "目錄：八種架構、通訊選項、兩個協定，查閱用"
+    },
+    {
+      "src": "l06#i10",
+      "why": "目錄：八種記憶失敗、26 種 run 失敗，查閱用"
+    },
+    {
+      "src": "l07#i10",
+      "why": "目錄：八個 benchmark、五層目標，查閱用"
+    },
+    {
+      "src": "l08#i10",
+      "why": "目錄：八個 harness、論文、系統層手段，查閱用"
+    },
+    {
+      "src": "l09#i10",
+      "why": "目錄：符號、公式與其他架構方向，查閱用"
+    },
+    {
+      "src": "l11#i10",
+      "why": "目錄：十個陷阱、三份作業的數字，查閱用"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "agent-loop",
+      "name": "Agent loop：model 只提議下一步，harness 執行；model 沒有狀態，一個任務是一條 inference 鏈",
+      "short": "Agent loop",
+      "tier": "基礎",
+      "theme": "mech",
+      "src": [
+        "l02#i1",
+        "l01#i1"
+      ],
+      "deps": [],
+      "why": "起點。model 一次只回一個提議，harness 跑完再把結果塞回去，所以一個任務變成一條很多次 inference 的鏈。L1 從 workload 的角度講這條鏈，L2 從 Claude Code 的機制講，是同一個觀念。"
+    },
+    {
+      "id": "probabilistic",
+      "name": "LLM 是機率性的：同一個輸入，輸出不保證相同",
+      "short": "機率性輸出",
+      "tier": "基礎",
+      "theme": "model",
+      "src": [
+        "l01#i9-1"
+      ],
+      "deps": [],
+      "why": "起點。model 的輸出是從機率分布抽樣來的。這一點決定了後面的測試、驗證、評估都不能用確定性程式的寫法。"
+    },
+    {
+      "id": "prefill-decode",
+      "name": "一個 request 的一生：prefill 一次讀完輸入，decode 一個一個字吐出來，長度事先不知道",
+      "short": "Prefill 與 decode",
+      "tier": "基礎",
+      "theme": "serving",
+      "src": [
+        "l09#i1",
+        "l01#i7"
+      ],
+      "deps": [],
+      "why": "起點。model 一次只算出下一個 token：先把整段輸入算一遍（prefill），再一個字一個字接著算（decode）。L1 講它對時間的影響，L9 講 request 怎麼走，是同一個觀念。"
+    },
+    {
+      "id": "gpu-throughput",
+      "name": "GPU 的設計：用幾千個簡單的核心換 throughput，latency 和 throughput 是兩個目標",
+      "short": "GPU 換 throughput",
+      "tier": "基礎",
+      "theme": "gpu",
+      "src": [
+        "l10#i1"
+      ],
+      "deps": [],
+      "why": "起點。GPU 放棄單一核心的速度，用數量換總量。這個取捨解釋了 roofline、batch，和後面所有 kernel 最佳化在追什麼。"
+    },
+    {
+      "id": "cost-per-success",
+      "name": "目標：不是 throughput，是每個成功任務的成本",
+      "short": "每個成功任務的成本",
+      "tier": "基礎",
+      "theme": "cost",
+      "src": [
+        "l01#i2"
+      ],
+      "deps": [
+        "agent-loop",
+        "probabilistic"
+      ],
+      "why": "從 agent loop 與機率性延伸：一個任務是很多次呼叫，而且會失敗，所以算成本時分母要是做成的任務，失敗的嘗試也要攤進去。tokens/sec 看不到這兩件事。"
+    },
+    {
+      "id": "human-time",
+      "name": "目標少算的一項：人的時間；有人等和沒人等，batching 的答案相反",
+      "short": "人的時間",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l01#i3"
+      ],
+      "deps": [
+        "cost-per-success",
+        "batching"
+      ],
+      "why": "從成本目標與 batching 延伸：有人在等結果時，batch 拉大省了 GPU 卻讓人多等，把人的時薪算進去後結論反轉；沒人等的工作才該用大 batch。"
+    },
+    {
+      "id": "stack",
+      "name": "Stack：每一層動目標的一項，問題會跨層，看不到就不能優化",
+      "short": "Stack 分層",
+      "tier": "基礎",
+      "theme": "mech",
+      "src": [
+        "l01#i4"
+      ],
+      "deps": [
+        "cost-per-success"
+      ],
+      "why": "從成本目標延伸：目標有好幾項，每一層（agent、harness、serving、model、runtime、硬體）各動其中一項，所以要決定動哪一層就得先有目標。問題會跨層，所以要有 trace 才看得到。"
+    },
+    {
+      "id": "harness-os",
+      "name": "Agent 這一層：一台會出錯的新電腦，harness 是它的 OS，周邊都在補 LLM 的弱項",
+      "short": "Harness 是 OS",
+      "tier": "基礎",
+      "theme": "mech",
+      "src": [
+        "l01#i5"
+      ],
+      "deps": [
+        "agent-loop",
+        "probabilistic"
+      ],
+      "why": "從 agent loop 與機率性延伸：model 會出錯又沒有狀態，所以要有一層 harness 替它管記憶、權限、tool，像 OS 管硬體。產品差異多半在這一層。"
+    },
+    {
+      "id": "assumptions",
+      "name": "五個假設反過來：零件和傳統系統相同，workload 不同",
+      "short": "五個假設反轉",
+      "tier": "進階",
+      "theme": "serving",
+      "src": [
+        "l01#i6"
+      ],
+      "deps": [
+        "kv-cache",
+        "probabilistic",
+        "partial-failure"
+      ],
+      "why": "整理：傳統系統假設請求短、無狀態、確定、少故障、架構穩定；跑 LLM 時這五項都反過來。它們分別來自 KV cache（連同它背後的 prefill／decode）、機率性輸出和故障常態。"
+    },
+    {
+      "id": "batching",
+      "name": "Batching：把多個請求一起算，整張 GPU 變快，每個請求變慢；每一步重新決定誰上車",
+      "short": "Batching",
+      "tier": "基礎",
+      "theme": "serving",
+      "src": [
+        "l01#i7-1",
+        "l09#i1-3"
+      ],
+      "deps": [
+        "prefill-decode"
+      ],
+      "why": "從 prefill／decode 延伸：decode 每一步只算一個 token，一個人用不滿 GPU，所以把很多人的下一步合在一起算。代價是每個人的那一步都要等別人。"
+    },
+    {
+      "id": "disaggregation",
+      "name": "瓶頸不同，就拆到不同的 GPU：prefill 和 decode 分開跑",
+      "short": "P/D 分離",
+      "tier": "專家",
+      "theme": "serving",
+      "src": [
+        "l01#i7-3"
+      ],
+      "deps": [
+        "three-numbers"
+      ],
+      "why": "從三個數字延伸：prefill 卡算力、decode 卡記憶體頻寬，放在同一張卡上互相拖累，所以 serving 系統把兩段拆到不同 GPU，中間搬 KV cache。"
+    },
+    {
+      "id": "kv-cache",
+      "name": "KV cache：prefill 算過的東西存起來給 decode 用，大小隨長度線性成長，搬它才是瓶頸",
+      "short": "KV cache",
+      "tier": "基礎",
+      "theme": "serving",
+      "src": [
+        "l01#i8",
+        "l09#i1-2"
+      ],
+      "deps": [
+        "prefill-decode"
+      ],
+      "why": "從 prefill／decode 延伸：decode 每一步都要用到前面全部 token 算過的中間值，不存就要重算，所以把它留在 GPU 記憶體裡。它有多大、放哪裡，是 serving 的首要決定。"
+    },
+    {
+      "id": "kv-cache-storage",
+      "name": "Agent 的 KV cache 會閒著：閒置來自人，該搬的時機是 turn 邊界；記憶體塞滿會掉懸崖；KV cache 變成一層儲存",
+      "short": "KV cache 當儲存",
+      "tier": "進階",
+      "theme": "serving",
+      "src": [
+        "l01#i8-3",
+        "l01#i8-4",
+        "l01#i8-5"
+      ],
+      "deps": [
+        "kv-cache",
+        "agent-loop"
+      ],
+      "why": "從 KV cache 與 agent loop 延伸：agent 一段對話有很多圈，圈與圈之間在等 tool 或等人，這段時間 KV cache 佔著記憶體沒人用。所以要把它搬到便宜的地方，變成一層可以換進換出的儲存。"
+    },
+    {
+      "id": "two-layer-testing",
+      "name": "測試要分兩層：確定性的部分用一般測試，機率性的部分用統計",
+      "short": "測試分兩層",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l01#i9-2"
+      ],
+      "deps": [
+        "code-vs-text"
+      ],
+      "why": "從「保證寫成程式」延伸：harness 裡確定性的部分可以像一般軟體那樣寫測試；經過 model 的部分是機率性的，同一個輸入會有不同輸出，只能跑多次看比例。"
+    },
+    {
+      "id": "partial-failure",
+      "name": "故障是常態：單一個 run 先怕 tool，不是 GPU；分不出對方是慢還是掛了",
+      "short": "故障是常態",
+      "tier": "基礎",
+      "theme": "rely",
+      "src": [
+        "l01#i9-3",
+        "l01#i9-4"
+      ],
+      "deps": [
+        "agent-loop"
+      ],
+      "why": "從 agent loop 延伸：一條鏈要經過很多次 tool 呼叫和網路，任何一段都可能慢或掛，而且等不到回覆時分不出是哪一種。GPU 故障反而是長時間訓練才要先擔心的。"
+    },
+    {
+      "id": "code-vs-text",
+      "name": "最重要的判斷：要保證的事寫成程式，不要寫成文字；機率性觸發擋不住",
+      "short": "保證寫成程式",
+      "tier": "基礎",
+      "theme": "mech",
+      "src": [
+        "l02#i2"
+      ],
+      "deps": [
+        "probabilistic",
+        "agent-loop"
+      ],
+      "why": "從機率性與 agent loop 延伸：寫在 prompt 裡的規則由 model 決定要不要遵守，所以是機率性的；寫在 harness 裡的檢查每次都會跑。要保證的事只能放在後者。"
+    },
+    {
+      "id": "context-resend",
+      "name": "Context：model 沒有記憶，每一圈整份重送；進去的東西每圈都再付一次錢、時間和注意力",
+      "short": "Context 整份重送",
+      "tier": "基礎",
+      "theme": "ctx",
+      "src": [
+        "l04#i1",
+        "l02#i3"
+      ],
+      "deps": [
+        "agent-loop"
+      ],
+      "why": "從 agent loop 延伸：model 是 stateless，harness 每一圈都把整段對話和 tool 輸出再送一次，所以 context 有三種成本（錢、延遲、注意力），而且只會變大。L2 講 Claude Code 怎麼花，L4 講原理。"
+    },
+    {
+      "id": "permissions",
+      "name": "權限：規則先於 mode，自主程度要配合風險；規則只比字串，sandbox 才限制行程",
+      "short": "權限三層",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i4"
+      ],
+      "deps": [
+        "code-vs-text",
+        "harness-os"
+      ],
+      "why": "從「保證寫成程式」與 harness 延伸：擋危險動作要靠 harness 的規則而不是 prompt；但規則只比對指令字串，真正限制行程的是 sandbox，所以三層要疊起來用。"
+    },
+    {
+      "id": "prompt-injection",
+      "name": "Prompt injection：model 分不出指令和資料，不能靠過濾；repo 裡的設定檔、傳回來的文字都是攻擊面",
+      "short": "Prompt injection",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i5",
+        "l05#i8"
+      ],
+      "deps": [
+        "code-vs-text"
+      ],
+      "why": "從「保證寫成程式」延伸：tool 讀進來的任何文字都和使用者的指令放在同一個 context 裡，model 分不出來，所以防禦不能是請 model 過濾，只能是結構性的（限制它拿得到的能力）。L5 的「傳回來的文字也不可信」是同一件事在多 agent 的版本。"
+    },
+    {
+      "id": "instruction-files",
+      "name": "CLAUDE.md 與 auto memory：每一行都要值回租金，只放不寫就會出錯的事",
+      "short": "CLAUDE.md 的租金",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i6"
+      ],
+      "deps": [
+        "context-resend",
+        "code-vs-text"
+      ],
+      "why": "從 context 重送與「保證寫成程式」延伸：CLAUDE.md 每一圈都重送，所以每一行都在付租金；它又是文字，model 不一定照做，所以只放不寫會出錯、又沒辦法寫成程式的事。"
+    },
+    {
+      "id": "hooks",
+      "name": "Hook：事件一到就執行的程式；一定會跑，不代表一定比對得到",
+      "short": "Hook",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i7"
+      ],
+      "deps": [
+        "code-vs-text"
+      ],
+      "why": "從「保證寫成程式」延伸：hook 是把保證落實成程式的機制，掛在 loop 的事件上。但 hook 的比對邏輯是你寫的，寫錯就放行。"
+    },
+    {
+      "id": "skills",
+      "name": "Skill：用到才載入的程序，description 常駐、body 用到才載入；model 會漏選",
+      "short": "Skill",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i8"
+      ],
+      "deps": [
+        "instruction-files"
+      ],
+      "why": "從 CLAUDE.md 的租金延伸：CLAUDE.md 全部常駐太貴，skill 只常駐一句 description、用到才載入 body。代價是選不選由 model 決定，會漏。"
+    },
+    {
+      "id": "mcp",
+      "name": "MCP：把外部系統包成 tool；對 model 來說和 Read 沒差別；接上一個 server 等於交出憑證",
+      "short": "MCP",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i9"
+      ],
+      "deps": [
+        "tool-anatomy",
+        "permissions"
+      ],
+      "why": "從 tool 的三段文字與權限延伸：MCP server 提供的就是一組 tool 定義，model 看到的形式和內建 tool 相同；差別在它拿著你的憑證在外面執行，所以要用權限的眼光看。"
+    },
+    {
+      "id": "plugins",
+      "name": "Plugin：把 skill、hook、MCP、subagent 一套設定變成別人裝得起來的東西；裝了就是跑別人的程式",
+      "short": "Plugin",
+      "tier": "進階",
+      "theme": "mech",
+      "src": [
+        "l02#i10"
+      ],
+      "deps": [
+        "skills",
+        "hooks",
+        "mcp"
+      ],
+      "why": "從 skill、hook、MCP 延伸：plugin 只是把這幾種零件打包。它的風險也是零件的總和：hook 和 MCP 會用你的權限跑別人的程式。"
+    },
+    {
+      "id": "scaling-axes",
+      "name": "放大的三個軸：更多 agent、更久、每步更強，每一種只買到一樣東西",
+      "short": "放大的三個軸",
+      "tier": "基礎",
+      "theme": "scale",
+      "src": [
+        "l03#i1"
+      ],
+      "deps": [
+        "agent-loop"
+      ],
+      "why": "從 agent loop 延伸：一條鏈可以加長（跑更久）、加粗（每步用更強的 model），或多開幾條（更多 agent）。三條路各自買到不同的東西，先分清楚再談怎麼放大。"
+    },
+    {
+      "id": "amdahl",
+      "name": "上限：16 個 agent 不會快 16 倍；任務切不開就沒用，協調也要時間",
+      "short": "Amdahl 上限",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i2"
+      ],
+      "deps": [
+        "scaling-axes"
+      ],
+      "why": "從三個軸延伸：多開幾條鏈只加速能平行的那一段，串行的那一段（規劃、整合、review）不變，所以加速有上限。這是 Amdahl's law。"
+    },
+    {
+      "id": "review-bottleneck",
+      "name": "人：能管幾個 agent，由 review 的速度決定；agent 做得越多，人抓到的錯越少",
+      "short": "Review 是瓶頸",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i3",
+        "l11#i1"
+      ],
+      "deps": [
+        "human-time",
+        "amdahl"
+      ],
+      "why": "從人的時間與 Amdahl 延伸：串行段裡最慢的常是人 review，所以 agent 數的上限是 m ÷ r（產出速度除以 review 速度）。L11 的作業數據是同一件事：agent 做得越多，人看得越少。"
+    },
+    {
+      "id": "verification-defines-autonomy",
+      "name": "自主程度由能不能驗證決定：把「做完」寫成檢查得了的條件；agent 說好了是主張，要看證據",
+      "short": "能驗證才能放手",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i4",
+        "l11#i2",
+        "l11#i3"
+      ],
+      "deps": [
+        "review-bottleneck",
+        "verification-loop"
+      ],
+      "why": "從 review 瓶頸與驗證迴圈延伸：人 review 不夠快，能放手的程度就看有沒有程式化的驗證替人把關；有可驗證的終點（/goal、測試）才能讓 agent 自己跑。L11 把它寫成開工前和收工時的具體做法。"
+    },
+    {
+      "id": "worktree",
+      "name": "手動平行：worktree 只隔離檔案，主幹也在動",
+      "short": "Worktree 隔離",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i5"
+      ],
+      "deps": [
+        "scaling-axes"
+      ],
+      "why": "從三個軸延伸：多開幾個 agent 最簡單的做法是各開一個 git worktree。它只隔離檔案，不隔離 port、資料庫和主幹的變動，所以撐不到太多個。"
+    },
+    {
+      "id": "subagent",
+      "name": "Subagent：換到乾淨的 context 做一段，代價是摘要有損，兩個方向都會掉東西",
+      "short": "Subagent",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i6",
+        "l02#i3-6"
+      ],
+      "deps": [
+        "context-resend",
+        "scaling-axes"
+      ],
+      "why": "從 context 重送與三個軸延伸：把雜訊留在另一份 context 裡，主對話就不必每圈重付。但派工和回報都只能用文字摘要，派出去會漏前情、回來會漏細節。"
+    },
+    {
+      "id": "team-workflow",
+      "name": "Team 與 workflow：要討論才用 team，對話協調不了才用 script；16 個 agent 沒有 lead 也行，條件是測試和 git",
+      "short": "Team 與 workflow",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i7"
+      ],
+      "deps": [
+        "subagent",
+        "verification-defines-autonomy"
+      ],
+      "why": "從 subagent 與可驗證延伸：agent 之間要來回討論才值得開 team；平行數量多到對話協調不了，就改用 script 和 git 當協調者，前提是有測試替每個 agent 驗收。"
+    },
+    {
+      "id": "process-in-skill",
+      "name": "Superpowers 與 mattpocock/skills：流程寫進 skill，差別在誰保證它被走（hook 或人）",
+      "short": "流程寫進 skill",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i8"
+      ],
+      "deps": [
+        "skills",
+        "hooks"
+      ],
+      "why": "從 skill 與 hook 延伸：兩個 plugin 都把開發流程寫成 skill，但 skill 是文字、會被跳過。Superpowers 加 hook 強制，mattpocock 把保證交給人，正好是「保證寫成程式」這個判斷的兩種選擇。"
+    },
+    {
+      "id": "token-saving-direction",
+      "name": "Caveman：省 token 先看帳單；輸出方向一份 skill 就能做，輸入方向只有 proxy 管得到",
+      "short": "省 token 看方向",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i9"
+      ],
+      "deps": [
+        "cost-breakdown",
+        "skills"
+      ],
+      "why": "從錢花在哪裡與 skill 延伸：帳單大宗是輸入（重送的 context），輸出很少。skill 只能改 model 的輸出風格，要壓輸入得在 request 送出前改寫，只有 proxy 做得到。"
+    },
+    {
+      "id": "attention-as-resource",
+      "name": "dsh-superagent：把人的注意力當第一個要省的資源，主 session 只路由、worker 只做事",
+      "short": "省人的注意力",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l03#i10"
+      ],
+      "deps": [
+        "team-workflow"
+      ],
+      "why": "從 team 延伸：既然人的 review 是最慢的一段，架構就該先省人的注意力。主 session 不做事、只路由，worker 的結果先過驗證再找人。"
+    },
+    {
+      "id": "fix-harness-first",
+      "name": "做不好先查 context 和 harness，再換 model；倍數要連著條件讀；評估時固定 harness",
+      "short": "先查 harness",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i2"
+      ],
+      "deps": [
+        "context-resend",
+        "score-is-system"
+      ],
+      "why": "從 context 重送與「分數是系統的輸出」延伸：同一個 model 換 harness、換 context 管法，成功率能差好幾倍，所以表現不好先懷疑自己能改的這一層。"
+    },
+    {
+      "id": "context-layout",
+      "name": "Context 的結構：十格裡，開頭不動才省得下來",
+      "short": "Context 開頭不動",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i3"
+      ],
+      "deps": [
+        "prefix-cache"
+      ],
+      "why": "從 prefix cache 延伸：cache 只認從頭開始相同的那一段，所以 system prompt、tool 定義這些放前面且不能變，會變的放後面。排錯順序每圈都重算。"
+    },
+    {
+      "id": "context-admission",
+      "name": "管理的順序：能不進來就不要進來（admission），放在外面要用再讀（offloading）",
+      "short": "先擋在門口",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i4"
+      ],
+      "deps": [
+        "context-resend"
+      ],
+      "why": "從 context 重送延伸：進來的東西每圈都付錢，最便宜的管法是在門口擋住（只讀需要的檔、tool 輸出先截短），其次放在檔案裡要用再讀。"
+    },
+    {
+      "id": "context-reduce",
+      "name": "已經進來的：先用規則刪（transformation），最後才摘要（compaction）；紀錄和 model 看到的要分開",
+      "short": "先刪後摘要",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i5",
+        "l02#i3-5"
+      ],
+      "deps": [
+        "context-admission",
+        "prefix-cache"
+      ],
+      "why": "從門口把關與 prefix cache 延伸：擋不住的東西進來後，用規則刪舊的 tool 輸出不花 LLM 也不失真；compaction 用 LLM 摘要是有損的，放最後。兩者都會改到 context 中段，所以要知道 cache 會從哪裡開始失效。"
+    },
+    {
+      "id": "tool-anatomy",
+      "name": "Tool 設計的起點：model 眼中的 tool 只有三段文字（名稱、描述、參數）；tool 的輸出就是 context",
+      "short": "Tool 是三段文字",
+      "tier": "基礎",
+      "theme": "ctx",
+      "src": [
+        "l04#i6-1",
+        "l04#i6-2"
+      ],
+      "deps": [
+        "context-resend"
+      ],
+      "why": "從 context 重送延伸：model 不會執行 tool，只看到它的定義文字（名稱、描述、參數），然後提議呼叫；執行結果又全部進 context，所以 tool 的輸出等於下一圈的輸入。"
+    },
+    {
+      "id": "tool-design",
+      "name": "Tool 設計五條原則：錯誤要能教、預設冪等、輸出不一定要進 context；只給 shell 行不行",
+      "short": "Tool 五條原則",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i6"
+      ],
+      "deps": [
+        "tool-anatomy",
+        "partial-failure"
+      ],
+      "why": "從 tool 的三段文字與故障常態延伸：既然輸出就是 context，錯誤訊息要寫成 model 讀了能改正的樣子；既然呼叫會重試，動作要冪等；大量輸出可以在外面先處理（code execution）再進 context。"
+    },
+    {
+      "id": "execution-tools",
+      "name": "Execution：shell 最強，保護全在 harness；既然 shell 都做得到，為什麼還要專用的 read、edit tool",
+      "short": "Shell 與專用 tool",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i7"
+      ],
+      "deps": [
+        "tool-design",
+        "permissions"
+      ],
+      "why": "從 tool 原則與權限延伸：shell 什麼都能做，所以也什麼都能弄壞，限制只能靠 harness 的權限規則。專用 tool 的價值是輸出可控、失敗看得見，和省 token。"
+    },
+    {
+      "id": "search-tools",
+      "name": "Search：先 grep，名字猜不到才換（glob、semantic search、repo map、extrinsic signal、LSP）",
+      "short": "先 grep 再換",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i8"
+      ],
+      "deps": [
+        "tool-design"
+      ],
+      "why": "從 tool 原則延伸：找程式碼的五種方法差在成本、要不要建索引、結果會不會過期。grep 零成本又不會過期，所以先用它，猜不到名字才換依意思或依 symbol 找。"
+    },
+    {
+      "id": "edit-tools",
+      "name": "Edit：失敗看不看得見，和省 token 一樣重要（整檔重寫、unified diff、search/replace、AST）",
+      "short": "Edit 失敗要看得見",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l04#i9"
+      ],
+      "deps": [
+        "tool-design"
+      ],
+      "why": "從 tool 原則延伸：改檔的四種格式差在 token 用量和失敗時的樣子。search/replace 找不到就明確失敗，diff 的行號對不上會靜悄悄地改錯地方，所以第一個考量不是省 token。"
+    },
+    {
+      "id": "prompting",
+      "name": "Prompt：招式會過期，原則不會",
+      "short": "Prompt 原則",
+      "tier": "基礎",
+      "theme": "ctx",
+      "src": [
+        "l04#i10"
+      ],
+      "deps": [
+        "probabilistic",
+        "context-resend"
+      ],
+      "why": "從機率性與 context 重送延伸：prompt 技巧是在調 model 的機率分布，model 一換就失效。不會過期的是給夠 context、說清楚目標、給例子這類原則。"
+    },
+    {
+      "id": "text-only-channel",
+      "name": "根本的限制：agent 之間只能傳文字，每個 agent 只看得到自己的 context",
+      "short": "只能傳文字",
+      "tier": "基礎",
+      "theme": "multi",
+      "src": [
+        "l05#i1"
+      ],
+      "deps": [
+        "context-resend"
+      ],
+      "why": "從 context 延伸：一個 agent 就是一份 context 加一個 loop，多一個 agent 就多一份互不相通的 context，兩邊只能靠文字傳話。拆開的好處和代價都從這裡來。"
+    },
+    {
+      "id": "dont-split",
+      "name": "最重要的判斷：多數任務不該拆；拆開只在子任務能各自進行時有好處",
+      "short": "多數任務不該拆",
+      "tier": "進階",
+      "theme": "multi",
+      "src": [
+        "l05#i2"
+      ],
+      "deps": [
+        "amdahl",
+        "subagent",
+        "text-only-channel"
+      ],
+      "why": "從 Amdahl、subagent 與只能傳文字延伸：步驟彼此相依的任務拆了沒有平行可賺，卻要付交接時摘要有損的代價，所以預設不拆。"
+    },
+    {
+      "id": "read-parallel-write-serial",
+      "name": "最實用的分界：讀可以平行，寫留在單線；writer 加 reviewer 最值得學；驗證能力比架構重要",
+      "short": "讀平行、寫單線",
+      "tier": "進階",
+      "theme": "multi",
+      "src": [
+        "l05#i3"
+      ],
+      "deps": [
+        "dont-split",
+        "verification-defines-autonomy"
+      ],
+      "why": "從不該拆與可驗證延伸：只讀的 agent 結果只會累積，可以同時跑；會寫的 agent 帶著沒說出口的決定，兩個各寫一半就會衝突。架構名字不重要，有沒有 reviewer 驗證才重要。"
+    },
+    {
+      "id": "delegation-prompt",
+      "name": "派工：worker 的全部世界就是那段 prompt；拆多細、沿什麼切、一定要設上限",
+      "short": "派工 prompt",
+      "tier": "進階",
+      "theme": "multi",
+      "src": [
+        "l05#i4"
+      ],
+      "deps": [
+        "subagent",
+        "text-only-channel"
+      ],
+      "why": "從 subagent 與只能傳文字延伸：接手的 agent 沒有你的 context，沒寫進任務說明的它都不知道。所以任務要沿著邊界清楚的地方切，並且給步數和預算的上限。"
+    },
+    {
+      "id": "report-claim-evidence",
+      "name": "回報：訊息只帶主張和證據，原文放檔案",
+      "short": "回報帶證據",
+      "tier": "進階",
+      "theme": "multi",
+      "src": [
+        "l05#i5"
+      ],
+      "deps": [
+        "subagent"
+      ],
+      "why": "從 subagent 延伸：回報整份原文會把主對話的 context 撐爆，只回結論又驗不了。所以訊息帶主張加可以查的證據（檔案路徑、測試結果），原文留在檔案。"
+    },
+    {
+      "id": "timeout-idempotent",
+      "name": "送出去之後：timeout、冪等與 partial failure，分不出對方是慢還是掛了",
+      "short": "Timeout 與冪等",
+      "tier": "進階",
+      "theme": "multi",
+      "src": [
+        "l05#i6"
+      ],
+      "deps": [
+        "partial-failure",
+        "delegation-prompt"
+      ],
+      "why": "從故障常態與派工延伸：派出去的 agent 可能慢、可能掛、可能做了一半，等不到回覆時分不出來。所以要設 timeout，而且重派要安全，動作得冪等。"
+    },
+    {
+      "id": "distributed-state",
+      "name": "狀態與時間：每個 agent 的 context 都是一份會過期的副本；consistency、CAP、沒有全域時鐘、observability",
+      "short": "分散式狀態",
+      "tier": "專家",
+      "theme": "multi",
+      "src": [
+        "l05#i7"
+      ],
+      "deps": [
+        "text-only-channel",
+        "partial-failure"
+      ],
+      "why": "從只能傳文字與故障常態延伸：共享的東西被別人改了，每個 agent 先前讀進去的那份就過期，這就是分散式系統的一致性問題。網路斷開時 CAP 說只能保一邊，時間戳排不出先後，要靠 trace 把 log 串起來。"
+    },
+    {
+      "id": "error-compounding",
+      "name": "錯誤相乘：每步 95%，50 步只剩 8%；但算式的兩個前提真實的 run 都不成立",
+      "short": "錯誤相乘",
+      "tier": "基礎",
+      "theme": "rely",
+      "src": [
+        "l06#i1"
+      ],
+      "deps": [
+        "probabilistic",
+        "agent-loop"
+      ],
+      "why": "從機率性與 agent loop 延伸：每一步都有出錯機率，一條長鏈把它們乘起來。但真實的 run 會發現並修正錯誤，所以 pⁿ 不是上界，三個槓桿（步數、每步成功率、攔錯）才是重點。"
+    },
+    {
+      "id": "verification-loop",
+      "name": "驗證：model 沒變強，8% 也能變 88%；檢查要真的抓得到、要早、不靠 model 自律",
+      "short": "驗證迴圈",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i2"
+      ],
+      "deps": [
+        "error-compounding",
+        "code-vs-text"
+      ],
+      "why": "從錯誤相乘與「保證寫成程式」延伸：在每一步後面放一個會抓到錯的檢查並重試，整體成功率就不再是相乘。檢查必須是程式（測試、型別、lint），不能是問 model「你確定嗎」。"
+    },
+    {
+      "id": "checkpoint-budget",
+      "name": "Checkpoint 與上限：決定失敗時退回多遠、存什麼（context 也要退）、回不去的動作先 commit、最多花多少",
+      "short": "Checkpoint 與上限",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i3",
+        "l11#i6"
+      ],
+      "deps": [
+        "verification-loop",
+        "partial-failure"
+      ],
+      "why": "從驗證迴圈與故障常態延伸：驗證抓到錯之後要退回某個已驗證過的狀態重來，所以要存 checkpoint（檔案用 git，context 也要能退）；刪檔、發信這類回不去的動作要先留退路；一直錯就要停。L11 的「先 commit」是它的實作。"
+    },
+    {
+      "id": "failure-layers",
+      "name": "失敗分層：同一個症狀有五個來源（model、prompt、tool、環境、任務），在來源那一層修；沒有紀錄就不知道改什麼",
+      "short": "失敗分層",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i4"
+      ],
+      "deps": [
+        "fix-harness-first",
+        "stack"
+      ],
+      "why": "從先查 harness 與 stack 延伸：「先查 context 和 harness 再換 model」推廣成五層，先找第一個出錯的步驟判斷它屬於哪一層，再在那一層修。這要靠完整的 trace。"
+    },
+    {
+      "id": "memory-worth-it",
+      "name": "要不要記：壞的記憶比沒有記憶更糟；記憶是一份沒人通知你過期的副本；寫入 policy 是光譜",
+      "short": "壞記憶更糟",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i5"
+      ],
+      "deps": [
+        "instruction-files"
+      ],
+      "why": "從 CLAUDE.md 的租金延伸：記憶是會自動進 context 的文字，錯的記憶每一圈都在誤導，代價比漏記高。所以寫入要有規則，不是什麼都存。"
+    },
+    {
+      "id": "valid-time-provenance",
+      "name": "時間與來源：寫入時沒存 valid time 和 provenance，之後補不回來；歸納風險最高，遺忘是正式操作",
+      "short": "Valid time 與來源",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i6"
+      ],
+      "deps": [
+        "memory-worth-it"
+      ],
+      "why": "從壞記憶更糟延伸：要判斷一條記憶還能不能信，得知道它什麼時候成立、是誰說的，這兩樣只有寫入當下存得到。model 自己歸納出來的記憶來源是它自己，最該標記，也最該能刪。"
+    },
+    {
+      "id": "memory-retrieval",
+      "name": "檢索：語意相似只是五個訊號之一；過濾還是排序差在後果；該常駐的不靠檢索碰運氣；k 是 context 的預算",
+      "short": "檢索五個訊號",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i7"
+      ],
+      "deps": [
+        "memory-worth-it",
+        "context-admission"
+      ],
+      "why": "從壞記憶更糟與門口把關延伸：每次讀回幾條記憶就是在花 context 預算，所以 k 要小、要排序。只靠語意相似會漏掉時間、來源、頻率這些訊號，一定要在的東西直接常駐。"
+    },
+    {
+      "id": "memory-backend",
+      "name": "放在哪裡：backend 依之後怎麼查反推；先用檔案，分數自己量",
+      "short": "先用檔案",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i8"
+      ],
+      "deps": [
+        "memory-retrieval",
+        "valid-time-provenance",
+        "eval-driven-decisions"
+      ],
+      "why": "從檢索、時間與來源、用評估做決定延伸：知道要怎麼查、要存哪些欄位之後才選 backend。檔案最簡單又能 diff，向量庫的好處要在自己的任務上量過才算數。"
+    },
+    {
+      "id": "memory-poisoning",
+      "name": "安全：記憶讓 injection 活過一個 session；四條進去的路沒有一條看起來像「寫入記憶」",
+      "short": "記憶中毒",
+      "tier": "進階",
+      "theme": "rely",
+      "src": [
+        "l06#i9"
+      ],
+      "deps": [
+        "prompt-injection",
+        "memory-worth-it"
+      ],
+      "why": "從 prompt injection 與壞記憶更糟延伸：injection 原本只影響這一次對話，一旦被寫進記憶就每一次都載入。所以寫入那一站要有一道不靠 model 判斷的防線。"
+    },
+    {
+      "id": "score-is-system",
+      "name": "根本的事實：分數是整個系統（model、harness、環境、grader）的輸出，比較時要固定其他項",
+      "short": "分數是系統的輸出",
+      "tier": "基礎",
+      "theme": "eval",
+      "src": [
+        "l07#i1"
+      ],
+      "deps": [
+        "harness-os"
+      ],
+      "why": "從 harness 是 OS 延伸：跑 benchmark 的不只是 model，harness、tool、環境、grader 都在影響結果。同一個 model 換 harness 分數差很多，所以分數先問「誰的分數」。"
+    },
+    {
+      "id": "public-scores-limits",
+      "name": "公開分數回答不了「能不能上線」：動作和 grader 可能不同、benchmark 裡沒有使用者、過程中的破壞沒人扣分",
+      "short": "公開分數的限制",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i2"
+      ],
+      "deps": [
+        "score-is-system",
+        "cost-per-success"
+      ],
+      "why": "從分數是系統的輸出與成本目標延伸：benchmark 固定了一組 harness 和 grader，和你的上線情境不同；它也不算成本、不算人的時間、不扣破壞的分，所以回答不了能不能上線。"
+    },
+    {
+      "id": "metrics-passk",
+      "name": "指標：一個成功率藏住穩定性和成本；pass@k 與 pass^k；成本算每個成功任務；多個維度用 Pareto",
+      "short": "pass@k 與 pass^k",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i3"
+      ],
+      "deps": [
+        "cost-per-success",
+        "two-layer-testing"
+      ],
+      "why": "從成本目標與測試分兩層延伸：同一題跑 k 次，「至少一次對」和「每次都對」是兩個指標，能不能重試決定看哪個；再加上每個成功任務的成本，才是能做決定的分數。"
+    },
+    {
+      "id": "noise",
+      "name": "雜訊：差幾分常常只是運氣；題數決定精度、基礎設施也是雜訊、比兩版用配對",
+      "short": "雜訊",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i4"
+      ],
+      "deps": [
+        "metrics-passk"
+      ],
+      "why": "從指標延伸：每題的結果是抽樣，題數少時信賴區間很寬；harness 和環境的差異也混進分數。所以比兩版要在同一組題、同一套環境上配對比。"
+    },
+    {
+      "id": "leakage",
+      "name": "Leakage：答案能從整個 stack 進來（訓練資料、agent 自己找到、git 歷史）",
+      "short": "Leakage",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i5"
+      ],
+      "deps": [
+        "score-is-system"
+      ],
+      "why": "從分數是系統的輸出延伸：既然 agent 能用 tool，它就能在環境裡找到答案（git log、網路、快取），入口不只訓練資料。所以環境要能重置、要查 agent 碰得到什麼。"
+    },
+    {
+      "id": "grader-validity",
+      "name": "Grader：它會判錯，agent 還會鑽漏洞；過了測試不等於做完；給 grader 寫測試",
+      "short": "Grader 會錯",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i6"
+      ],
+      "deps": [
+        "score-is-system",
+        "verification-loop"
+      ],
+      "why": "從分數是系統的輸出與驗證迴圈延伸：grader 也是系統的一部分，它判錯分數就錯；agent 會針對 grader 的漏洞最佳化，所以檢查要真的抓得到，grader 自己也要被測。"
+    },
+    {
+      "id": "saturation",
+      "name": "飽和：benchmark 是耗材；飽和之後下一版接手；你的題組消耗得更快",
+      "short": "Benchmark 是耗材",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i7"
+      ],
+      "deps": [
+        "public-scores-limits",
+        "leakage"
+      ],
+      "why": "從公開分數的限制與 leakage 延伸：benchmark 公開後會進訓練資料、會被針對最佳化，分數到頂就不再區分能力。自己的題組被自己的 agent 反覆跑，飽和得更快。"
+    },
+    {
+      "id": "build-eval",
+      "name": "建立評估：從真實失敗開始；環境要能重置、agent 碰不到答案；grader 疊三層；長任務給部分分數",
+      "short": "從失敗建評估",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i8"
+      ],
+      "deps": [
+        "grader-validity",
+        "leakage",
+        "noise"
+      ],
+      "why": "從 grader 會錯、leakage 與雜訊延伸：自己的評估要避開這三個坑。題目來自真實失敗、環境可重置且藏好答案、grader 用程式加 LLM 加人三層；題數要夠才看得出差異。"
+    },
+    {
+      "id": "eval-driven-decisions",
+      "name": "用評估做決定：題目分三堆，一次改一件事和基準比；上線條件寫進 CI；分數跳升先懷疑",
+      "short": "一次改一件事",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l07#i9",
+        "l11#i4"
+      ],
+      "deps": [
+        "build-eval"
+      ],
+      "why": "從建立評估延伸：有了自己的題組，改 prompt、換 model、改 tool 都一次只改一件事，在同一組題上和基準比；差異要大過雜訊才算數。L11 的實驗紀律是同一件事。"
+    },
+    {
+      "id": "harness-drift",
+      "name": "Claude Code 也會在你腳下變：經過它量的數字會混進它自己的變化；綁在專用 tool 上的安全網會安靜地失效",
+      "short": "Harness 會變",
+      "tier": "進階",
+      "theme": "eval",
+      "src": [
+        "l11#i5"
+      ],
+      "deps": [
+        "score-is-system",
+        "permissions"
+      ],
+      "why": "從分數是系統的輸出與權限延伸：harness 是分數的一部分，它自動更新時你量到的差異可能是它變了；權限規則綁在某個 tool 名稱上，tool 改名規則就失效。"
+    },
+    {
+      "id": "cost-formula",
+      "name": "成本公式：六個乘數，分母要算成功的任務；比完平均還要比邊際",
+      "short": "成本六個乘數",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i1"
+      ],
+      "deps": [
+        "cost-per-success",
+        "context-resend"
+      ],
+      "why": "從成本目標與 context 重送延伸：一個任務的錢是任務數 × 每個任務的 turn 數 × 每個 turn 的 step 數 × 每步的 token 數 × 單價，再除以成功率。context 重送就是每步 token 數的大宗。"
+    },
+    {
+      "id": "cost-breakdown",
+      "name": "錢花在哪裡：大宗是重讀的 context；三種 token 量和單價方向相反；重送總量隨 turn 數的平方成長",
+      "short": "錢在重讀的 context",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i2"
+      ],
+      "deps": [
+        "cost-formula"
+      ],
+      "why": "從成本公式延伸：每一步都重送整個 context，所以輸入 token 的量遠大於輸出；輸出單價雖高但量小。省錢要先看輸入，而且 context 越長後面每一步越貴。"
+    },
+    {
+      "id": "prefix-cache",
+      "name": "Prompt cache：只比開頭，差一個字就從那裡重算；沒命中的 token 貴 12 到 50 倍；能等的工作用 batch API",
+      "short": "Prefix cache",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i3",
+        "l02#i3-3"
+      ],
+      "deps": [
+        "kv-cache",
+        "context-resend"
+      ],
+      "why": "從 KV cache 與 context 重送延伸：每圈重送的開頭幾乎相同，serving 端把算過的 KV cache 留著，開頭相同就不必重算，所以便宜。它只認從頭開始完全相同的那段。"
+    },
+    {
+      "id": "net-savings",
+      "name": "淨節省：每個省法都有反向成本；compaction 幾步回本；只能在同一組任務上量；優化是迴圈",
+      "short": "淨節省要量",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i4"
+      ],
+      "deps": [
+        "cost-breakdown",
+        "context-reduce",
+        "eval-driven-decisions"
+      ],
+      "why": "從錢花在哪裡、先刪後摘要與用評估做決定延伸：compaction 省了之後每步的 token，卻多付一次摘要、可能丟資訊讓任務失敗。淨效果只有在同一組任務上跑過才知道。"
+    },
+    {
+      "id": "fewer-steps",
+      "name": "少走幾步：先問這一步需不需要 LLM，再減 turn 與 step；重用計畫與 skill，任務重複才回本",
+      "short": "少走幾步",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i5"
+      ],
+      "deps": [
+        "cost-breakdown",
+        "code-vs-text"
+      ],
+      "why": "從錢花在哪裡與「保證寫成程式」延伸：成本公式裡 step 數和 turn 數是乘數。確定性的步驟用程式做不用 LLM，一次 call 做多個動作，都是在砍乘數。"
+    },
+    {
+      "id": "model-routing-effort",
+      "name": "Model、effort 與 output：錯了也便宜的步驟才值得換小 model；換 model 要在 context 小的時候；thinking 也算 output",
+      "short": "換 model 的時機",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i6"
+      ],
+      "deps": [
+        "cost-breakdown",
+        "prefix-cache",
+        "error-compounding"
+      ],
+      "why": "從錢花在哪裡、prefix cache 與錯誤相乘延伸：換小 model 省單價，但錯一步會拖累整條鏈，所以只換錯了也便宜的步驟；換 model 會讓 cache 失效，要選在 context 小的時候。"
+    },
+    {
+      "id": "cost-caps",
+      "name": "上限：失控的任務要有人喊停；四個上限的數字從 trace 來；上限之前先有進展檢查",
+      "short": "失控要喊停",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i7"
+      ],
+      "deps": [
+        "checkpoint-budget",
+        "cost-formula"
+      ],
+      "why": "從 checkpoint 與上限、成本公式延伸：失敗的任務往往跑最久、花最多，所以 turn、token、時間、錢都要設上限，數字從歷史 trace 的分布來；更早的信號是進展檢查。"
+    },
+    {
+      "id": "latency-critical-path",
+      "name": "完成時間：看 critical path，錢看全部；時間常常花在 tool；每個加速手段錢往哪裡走；speculation",
+      "short": "Critical path",
+      "tier": "進階",
+      "theme": "cost",
+      "src": [
+        "l08#i8"
+      ],
+      "deps": [
+        "amdahl",
+        "cost-breakdown",
+        "human-time"
+      ],
+      "why": "從 Amdahl、錢花在哪裡與人的時間延伸：完成時間由最長的那條相依鏈決定，平行能縮它但總錢不變甚至變多。先量時間花在哪，常常是 tool 不是 model。"
+    },
+    {
+      "id": "harness-architecture",
+      "name": "Harness 架構：邊界放在哪裡，看要隔離什麼、什麼要活得久；三種架構差在呼叫跨過什麼邊界；問三個問題，不數 agent",
+      "short": "Harness 的邊界",
+      "tier": "專家",
+      "theme": "mech",
+      "src": [
+        "l08#i9"
+      ],
+      "deps": [
+        "team-workflow",
+        "permissions"
+      ],
+      "why": "從 team 與權限延伸：loop、tool、狀態可以在同一個行程、分開的行程或遠端服務，邊界越遠越能隔離和長存，代價是每次呼叫都跨邊界。要隔離什麼、什麼要活過 session，決定邊界放哪。"
+    },
+    {
+      "id": "model-skeleton",
+      "name": "Model 的骨架：一疊相同的 block，參數就是矩陣裡的數字；每個 token 先變成一個 vector；幾乎所有計算是矩陣乘法",
+      "short": "Model 的骨架",
+      "tier": "進階",
+      "theme": "model",
+      "src": [
+        "l09#i2"
+      ],
+      "deps": [
+        "prefill-decode"
+      ],
+      "why": "從 prefill／decode 延伸：要算「下一個 token」這件事在硬體上是什麼，得知道 model 是幾十層相同的 block，每層是幾個矩陣乘法。參數量、FLOPs 從這裡算出來。"
+    },
+    {
+      "id": "attention",
+      "name": "Attention：每個新 token 都要讀前面全部的 K 和 V，n 個 token n² 個分數；multi-head、GQA",
+      "short": "Attention",
+      "tier": "進階",
+      "theme": "model",
+      "src": [
+        "l09#i3"
+      ],
+      "deps": [
+        "model-skeleton",
+        "kv-cache"
+      ],
+      "why": "從 model 骨架與 KV cache 延伸：block 裡唯一會看前面 token 的部分是 attention，每個 token 產生 Q、K、V 三個 vector。KV cache 存的就是這裡的 K 和 V，GQA 讓幾個 head 共用一組來縮小它。"
+    },
+    {
+      "id": "three-numbers",
+      "name": "三個數字：weights 卡記憶體與 decode，FLOPs 卡 prefill，KV cache 卡人數與長度；agent 的帳是算力省得下、記憶體省不下",
+      "short": "三個數字",
+      "tier": "進階",
+      "theme": "model",
+      "src": [
+        "l09#i4"
+      ],
+      "deps": [
+        "attention",
+        "batching"
+      ],
+      "why": "從 attention 與 batching 延伸：參數量決定每一步要從記憶體讀多少 bytes、FLOPs 決定 prefill 要算多久、KV cache 決定裝得下幾個人多長。三個數字對到 GPU 的三個規格，就知道卡在哪。"
+    },
+    {
+      "id": "moe",
+      "name": "MoE：記憶體看全部的參數，運算只看每個 token 用到的部分；decode 時 batch 越大讀的 expert 越多",
+      "short": "MoE",
+      "tier": "進階",
+      "theme": "model",
+      "src": [
+        "l09#i5"
+      ],
+      "deps": [
+        "three-numbers"
+      ],
+      "why": "從三個數字延伸：MoE 把 FFN 拆成很多 expert，每個 token 只走幾個，所以 FLOPs 按啟用的參數算、記憶體按全部參數算，兩本帳分開。這改變 prefill 和 decode 的瓶頸。"
+    },
+    {
+      "id": "kv-architectures",
+      "name": "改 KV cache 的架構：sliding window、MLA、linear attention、state-space、sparse attention；方向是混合",
+      "short": "改 KV cache 的架構",
+      "tier": "專家",
+      "theme": "model",
+      "src": [
+        "l09#i6"
+      ],
+      "deps": [
+        "three-numbers"
+      ],
+      "why": "從三個數字延伸：KV cache 隨長度線性長是 attention 的結構造成的，所以要縮它就得改 attention：只看最近的、壓縮每個 token 存的、或換成固定大小的 state。每種都在用精度換記憶體。"
+    },
+    {
+      "id": "per-token-kv",
+      "name": "能自己架的 model：每個 token 的 KV cache 差到 13 倍，同一條公式代入 config.json 就算得出來",
+      "short": "每個 token 的 KV",
+      "tier": "專家",
+      "theme": "model",
+      "src": [
+        "l09#i7"
+      ],
+      "deps": [
+        "kv-architectures"
+      ],
+      "why": "從改 KV cache 的架構延伸：層數 × KV head 數 × head 維度 × 2 × 精度就是每個 token 的 bytes。GQA、MLA、sliding window 各改公式裡的一項，所以選 model 時這個數字和參數量一樣重要。"
+    },
+    {
+      "id": "tokenizer",
+      "name": "Tokenizer：BPE 從 byte 開始合併；繁體中文一個字約 0.7 到 0.9 個 token；詞彙越大 token 越少、embedding 也越大",
+      "short": "Tokenizer 與中文",
+      "tier": "進階",
+      "theme": "model",
+      "src": [
+        "l09#i8"
+      ],
+      "deps": [
+        "model-skeleton",
+        "context-resend"
+      ],
+      "why": "從 model 骨架與 context 重送延伸：token 是 model 的最小單位，怎麼切由 tokenizer 的詞彙表決定。中文一個字幾個 token 直接影響 context 預算、KV cache 大小和帳單。"
+    },
+    {
+      "id": "sampling",
+      "name": "Sampling：temperature、top-k、top-p 改的是答案，也改輸出有多長；託管的 model 開始不讓你調",
+      "short": "Sampling 設定",
+      "tier": "基礎",
+      "theme": "model",
+      "src": [
+        "l09#i9"
+      ],
+      "deps": [
+        "probabilistic"
+      ],
+      "why": "從機率性延伸：model 算出的是每個 token 的分數，temperature 決定分布多平、top-k／top-p 決定從前幾名抽。這些就是「機率性」在哪裡被決定的地方。"
+    },
+    {
+      "id": "fp-nondeterminism",
+      "name": "Temperature 0 也不保證每次相同：浮點數加法順序、batch 組成不同，第 7 位有效數字就會變",
+      "short": "浮點數不確定性",
+      "tier": "專家",
+      "theme": "model",
+      "src": [
+        "l09#i9-4",
+        "l01#i9-1"
+      ],
+      "deps": [
+        "sampling",
+        "batching"
+      ],
+      "why": "從 sampling 與 batching 延伸：就算每次都取最高分，GPU 上平行加總的順序會隨 batch 裡有誰而變，浮點數的誤差讓兩個很接近的分數互換名次。所以確定性要靠系統層保證，不是靠 temperature。"
+    },
+    {
+      "id": "roofline",
+      "name": "Roofline：kernel 的時間由較慢的那一邊（算力或記憶體頻寬）決定；arithmetic intensity 和 ridge",
+      "short": "Roofline",
+      "tier": "進階",
+      "theme": "gpu",
+      "src": [
+        "l10#i2"
+      ],
+      "deps": [
+        "gpu-throughput"
+      ],
+      "why": "從 GPU 換 throughput 延伸：GPU 有兩個上限，每秒能算多少 FLOPs、每秒能從記憶體讀多少 bytes。一個 kernel 每讀一個 byte 算幾次（arithmetic intensity）決定它撞到哪一邊。"
+    },
+    {
+      "id": "decode-roofline",
+      "name": "Decode：batch 1 只用到 0.5% 的算力；batch 拉高 weights 的 intensity，拉不動 attention；context 越長每一步越慢",
+      "short": "Decode 的 roofline",
+      "tier": "進階",
+      "theme": "gpu",
+      "src": [
+        "l10#i3"
+      ],
+      "deps": [
+        "roofline",
+        "three-numbers"
+      ],
+      "why": "從 roofline 與三個數字延伸：decode 一步每個 weight 只用一次，intensity 極低、撞記憶體頻寬。多個人一起算（batching）讓每個 weight 多用幾次，但每個人的 KV cache 各自讀，attention 的 intensity 拉不起來。"
+    },
+    {
+      "id": "gpu-measurement",
+      "name": "量測：nvidia-smi 的 100% 只代表有 kernel 在跑；MFU 看算力、MBU 看頻寬；先看 timeline 再看 kernel",
+      "short": "MFU 與 MBU",
+      "tier": "專家",
+      "theme": "gpu",
+      "src": [
+        "l10#i4"
+      ],
+      "deps": [
+        "decode-roofline"
+      ],
+      "why": "從 decode 的 roofline 延伸：知道該撞哪一邊之後，才能判斷量到的數字是不是用滿了：prefill 看 MFU、decode 看 MBU。utilization 100% 不代表任何一邊用滿。"
+    },
+    {
+      "id": "chip-internals",
+      "name": "晶片裡面：SM、warp 與 SIMT、Tensor Core、記憶體階層越近越快也越小；Little's law 說頻寬要靠路上的 bytes",
+      "short": "晶片內部",
+      "tier": "專家",
+      "theme": "gpu",
+      "src": [
+        "l10#i5",
+        "l10#i1-2",
+        "l10#i1-3",
+        "l10#i1-4"
+      ],
+      "deps": [
+        "roofline"
+      ],
+      "why": "從 roofline 延伸：幾千個核心怎麼組織（SM、warp 一次 32 個 thread）、矩陣乘法為什麼快（Tensor Core）、記憶體為什麼要靠平行才供得上（Little's law），是 roofline 兩條線背後的硬體。"
+    },
+    {
+      "id": "gpu-programming",
+      "name": "GPU 程式：為一個 thread 寫，從最高的抽象層開始；graph compiler、tile language；五層抽象越往下控制越多、成本越高",
+      "short": "GPU 程式五層",
+      "tier": "專家",
+      "theme": "gpu",
+      "src": [
+        "l10#i6"
+      ],
+      "deps": [
+        "chip-internals"
+      ],
+      "why": "從晶片內部延伸：知道硬體是 warp 和 SM 之後，才懂 kernel 為什麼「為一個 thread 寫、硬體跑幾千個」。compiler 和 tile language 是替你做這層對應的工具。"
+    },
+    {
+      "id": "fusion-flash",
+      "name": "Kernel 之內：少搬資料；fusion 讓中間值不回 HBM；FlashAttention 一塊一塊算，online softmax 不看完整列也能算對",
+      "short": "FlashAttention",
+      "tier": "專家",
+      "theme": "gpu",
+      "src": [
+        "l10#i7"
+      ],
+      "deps": [
+        "attention",
+        "chip-internals"
+      ],
+      "why": "從 attention 與晶片內部延伸：attention 的 n×n 分數矩陣寫回 HBM 再讀回來是純搬資料。FlashAttention 把它切塊留在晶片上算完，是 roofline 的「提高 intensity」在 attention 上的實作。"
+    },
+    {
+      "id": "inter-kernel",
+      "name": "Kernel 之間：把 SM、launch 和 GPU 之間的空等拿掉；split-KV、CUDA Graphs、megakernel、通訊藏在計算後面；多數團隊選 engine",
+      "short": "Kernel 之間的空等",
+      "tier": "專家",
+      "theme": "gpu",
+      "src": [
+        "l10#i8"
+      ],
+      "deps": [
+        "fusion-flash",
+        "gpu-programming",
+        "decode-roofline"
+      ],
+      "why": "從 FlashAttention、GPU 程式與 decode 的 roofline 延伸：單一 kernel 寫好之後，時間還漏在最後一輪只用到部分 SM、每次 launch 的空檔、GPU 之間等通訊。decode 的 attention 要沿 KV cache 切才用得滿 SM。"
+    },
+    {
+      "id": "ai-kernels",
+      "name": "AI 寫的 kernel：先證明它對，再相信它快；漏洞集中在四個地方；speed of light 是 roofline 給的下限",
+      "short": "AI 寫的 kernel",
+      "tier": "專家",
+      "theme": "gpu",
+      "src": [
+        "l10#i9"
+      ],
+      "deps": [
+        "gpu-programming",
+        "verification-loop"
+      ],
+      "why": "從 GPU 程式與驗證迴圈延伸：AI 生成的 kernel 常在邊界條件、精度、同步上出錯，又會鑽 benchmark 的漏洞。驗收先用對照測試證明對，再拿 roofline 算出的下限看它快了多少是真的。"
+    },
+    {
+      "id": "datacenter",
+      "name": "一張卡之外：scale-up 與 scale-out；出了這台機器慢一個數量級；16K 張 GPU 約每 3 小時中斷一次；一櫃 120 kW 要液冷",
+      "short": "一張卡之外",
+      "tier": "進階",
+      "theme": "gpu",
+      "src": [
+        "l10#i10"
+      ],
+      "deps": [
+        "gpu-throughput",
+        "partial-failure"
+      ],
+      "why": "從 GPU 換 throughput 與故障常態延伸：一張卡不夠就要跨卡、跨機器，每跨一層頻寬掉一個數量級；卡越多故障越頻繁，電力和散熱變成實際的上限。"
+    },
+    {
+      "id": "secrets-transcript",
+      "name": "Secrets：進過 context 的，都留在 transcript 裡；log 為什麼會帶著 key",
+      "short": "Secrets 與 transcript",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l11#i7"
+      ],
+      "deps": [
+        "tool-anatomy"
+      ],
+      "why": "從「tool 的輸出就是 context」延伸：tool 讀到的 .env、指令印出的 token 都進了 context，而 harness 會把每一圈的 context 存成 transcript。所以 secret 不能讓 tool 讀到，而不是事後刪 log。"
+    },
+    {
+      "id": "session-hygiene",
+      "name": "Session：一個 session 一件事，狀態寫在檔案裡；session 太長 compaction 會丟 context；卡住時給證據不給情緒",
+      "short": "一個 session 一件事",
+      "tier": "進階",
+      "theme": "ctx",
+      "src": [
+        "l11#i8"
+      ],
+      "deps": [
+        "checkpoint-budget",
+        "context-reduce"
+      ],
+      "why": "從 checkpoint 與先刪後摘要延伸：長 session 遲早 compaction，摘要是有損的，所以把進度寫進檔案、一件事一個 session，等於自己做 checkpoint。卡住時貼錯誤訊息比說「還是不行」有用。"
+    },
+    {
+      "id": "execution-env",
+      "name": "執行環境：平行的 session 會互踩、派工也有成本、長跑要撐得住",
+      "short": "執行環境",
+      "tier": "進階",
+      "theme": "scale",
+      "src": [
+        "l11#i9"
+      ],
+      "deps": [
+        "worktree",
+        "subagent",
+        "checkpoint-budget"
+      ],
+      "why": "從 worktree、subagent 與 checkpoint 延伸：L3 講的隔離、派工成本和 L6 講的斷點，在作業裡變成三個實際踩到的坑。"
+    }
+  ]
+}
