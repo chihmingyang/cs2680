@@ -276,6 +276,10 @@ def report(path, pairs):
     units = unit_map(src, q)
     names = {s["id"]: s["title"] for s in q["sections"]}
     items = [(u["id"], [u["ks"]], u) for u in q["unit"]] + [(x["id"], x["ks"], x) for x in q.get("integration", [])]
+    asked = set()
+    for a, _ in pairs:
+        asked |= set(json.loads(Path(a).read_text(encoding="utf-8")))
+    items = [x for x in items if x[0] in asked]  # 只出了部分題目（exam 指定題號）時，沒出的題不算
     runs = []
     for a, v in pairs:
         answers = json.loads(Path(a).read_text(encoding="utf-8"))
