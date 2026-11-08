@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""觀念 DAG：檢查 docs/dag.json，並產生 docs/dag.html。
+"""觀念 DAG：檢查 docs/dag.json，並產生 docs/dag.html（頁面是英文版，2026-11-08 James 要求）。
 
 用法：
   python3 -I tools/dag.py --check     # 只檢查，不寫檔；verify.sh 會跑
@@ -7,10 +7,11 @@
 
 檢查什麼（規則在 guide/DAG.md）：
   - id 唯一、deps 都存在、沒有自己依賴自己、沒有環
-  - 難度沿著邊不會降：前置觀念的難度 ≤ 這個觀念（基礎 ≤ 進階 ≤ 專家）
+  - 難度沿著邊不會降：前置觀念的難度 ≤ 這個觀念（Basic ≤ Intermediate ≤ Expert）
   - src 的錨點（lXX#iN、lXX#iN-M）在該頁真的存在
   - 每一堂核心觀念的每一章，都被某個節點的 src 蓋到，或列在 excluded（目錄章）
-  - short 太長（方塊放不下）、同一個 src 出現在兩個節點、可以從別的邊推出來的多餘邊 → 只提示
+  - short 在方塊裡要能放進兩行（用字寬估算）→ 放不下是 ERROR
+  - 同一個 src 出現在兩個節點、可以從別的邊推出來的多餘邊 → 只提示
 
 頁面怎麼畫：x 是依賴深度（最長路徑的層數），y 是主題泳道；顏色是難度；
 hover／點一個觀念亮出它的前置（往左）和延伸（往右）；選講次看一堂的章散在哪裡。
@@ -27,13 +28,19 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "docs"
 DATA = SITE / "dag.json"
 OUT = SITE / "dag.html"
-TIER_ORDER = ["基礎", "進階", "專家"]
-TIER_CLASS = {"基礎": "a", "進階": "c", "專家": "d"}
+TIER_ORDER = ["Basic", "Intermediate", "Expert"]
+TIER_CLASS = {"Basic": "a", "Intermediate": "c", "Expert": "d"}
+
+# 方塊幾何（px）。英文標籤比中文長，所以字 12px、方塊高 52、最多兩行。
+NW, NH, FONT = 134, 52, 12
+TEXT_W = NW - 16          # 左右各 8px 內距
+PITCH_MAX = 150
+
 
 # ---------- 讀頁面：章節 id 與標題 ----------
 
 def page_chapters(lec):
-    """回傳 {chapter_id: title}（只有核心觀念裡的 iN），以及該頁全部 id 的集合。"""
+    """回傳 ({chapter_id: title}, {section_id: lead-in}, 全部 id 的集合)。章只算核心觀念裡的 iN。"""
     p = SITE / f"{lec}.html"
     s = p.read_text(encoding="utf-8")
     ids = set(re.findall(r'\sid="([^"]+)"', s))
@@ -51,6 +58,50 @@ def page_chapters(lec):
         t = re.sub(r"<[^>]+>", "", lead.group(1)) if lead else ""
         secs[m.group(1)] = html.unescape(t).strip().rstrip("。：:")
     return chapters, secs, ids
+
+
+# ---------- 字寬估算與換行 ----------
+
+def char_w(c, size=FONT):
+    """IBM Plex Sans 的近似字寬。CJK 全形；大寫、小寫、數字、標點分開估。"""
+    o = ord(c)
+    if o > 0x2E7F:
+        return size
+    if c == " ":
+        return size * 0.26
+    if c in "il.,:;'|!":
+        return size * 0.28
+    if c in "fjrt-()[]/":
+        return size * 0.38
+    if c.isupper():
+        return size * 0.66
+    if c.isdigit():
+        return size * 0.58
+    if c in "mw":
+        return size * 0.86
+    return size * 0.54
+
+
+def text_w(s, size=FONT):
+    return sum(char_w(c, size) for c in s)
+
+
+def wrap(s, max_w=TEXT_W):
+    """貪婪換行：依空格切字，一行放不下就換行。回傳行的清單（可能超過兩行，由檢查擋）。"""
+    if text_w(s) <= max_w:
+        return [s]
+    words = s.split(" ")
+    lines, cur = [], ""
+    for w in words:
+        cand = (cur + " " + w) if cur else w
+        if text_w(cand) <= max_w or not cur:
+            cur = cand
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines
 
 
 # ---------- 檢查 ----------
@@ -79,9 +130,9 @@ def check(d):
                 errs.append(f"{n['id']}：依賴自己")
             elif dep not in by:
                 errs.append(f"{n['id']}：dep {dep} 不存在")
-        w = sum(1 if ord(c) > 0x2E7F else (0.3 if c == " " else 0.56) for c in n.get("short", ""))
-        if w > 11.5:
-            warns.append(f"{n['id']}：short「{n['short']}」太長（{w:.1f} 個中文字寬），方塊會放不下")
+        lines = wrap(n.get("short", ""))
+        if len(lines) > 2 or any(text_w(x) > TEXT_W for x in lines):
+            errs.append(f"{n['id']}：short「{n['short']}」在方塊裡放不進兩行（估 {text_w(n['short']):.0f}px，一行 {TEXT_W}px），請縮短")
     if errs:
         return errs, warns, None
 
@@ -171,30 +222,6 @@ def check(d):
 
 # ---------- 版面 ----------
 
-def wrap_short(s, units=9.2):
-    def w(t):
-        return sum(1 if ord(c) > 0x2E7F else (0.3 if c == " " else 0.56) for c in t)
-    if w(s) <= units:
-        return [s]
-    # 先找空格，離中間最近的
-    best = None
-    for i, c in enumerate(s):
-        if c == " ":
-            cand = (abs(w(s[:i]) - w(s) / 2), i)
-            if best is None or cand < best:
-                best = cand
-    if best:
-        i = best[1]
-        return [s[:i], s[i + 1:]]
-    # 沒空格：在中文字之間切
-    acc = 0
-    for i, c in enumerate(s):
-        acc += 1 if ord(c) > 0x2E7F else 0.56
-        if acc >= w(s) / 2:
-            return [s[:i + 1], s[i + 1:]]
-    return [s]
-
-
 def layout(d, info):
     by = {n["id"]: n for n in d["nodes"]}
     depth = info["depth"]
@@ -203,13 +230,10 @@ def layout(d, info):
     cells = {(t, k): [] for t in themes for k in range(D + 1)}
     for i in info["order"]:
         cells[(by[i]["theme"], depth[i])].append(i)
-    # 幾何
     W_TOTAL = 1200
     ML, MR, MT = 14, 14, 30
-    pitch = min(150, (W_TOTAL - ML - MR) // (D + 1))
-    NW, NH, GAP_Y = pitch - 18, 46, 10
-    HEAD = 24
-    PAD = 10
+    pitch = min(PITCH_MAX, (W_TOTAL - ML - MR) // (D + 1))
+    GAP_Y, HEAD, PAD = 10, 24, 10
     pos = {}
     rows = []
     y = MT
@@ -219,7 +243,7 @@ def layout(d, info):
         inner_top = y + HEAD
         for k in range(D + 1):
             cell = cells[(t, k)]
-            # 依前置的 y 重心排序，前置都在左邊的欄，已經放好
+
             def bary(i):
                 ys = [pos[dep][1] for dep in by[i]["deps"] if dep in pos]
                 return sum(ys) / len(ys) if ys else 0
@@ -231,27 +255,24 @@ def layout(d, info):
         y = top + hgt
     H = y + 10
     W = ML + (D + 1) * pitch - (pitch - NW) + MR
-    return {"pos": pos, "rows": rows, "D": D, "pitch": pitch, "NW": NW, "NH": NH, "W": W, "H": H, "ML": ML, "MT": MT}
+    return {"pos": pos, "rows": rows, "D": D, "pitch": pitch, "W": W, "H": H, "ML": ML, "MT": MT}
 
 
 def svg(d, info, L):
     by = {n["id"]: n for n in d["nodes"]}
     theme_name = {t["id"]: t["name"] for t in d["themes"]}
-    pos, NW, NH, W, H = L["pos"], L["NW"], L["NH"], L["W"], L["H"]
+    pos, W, H = L["pos"], L["W"], L["H"]
     out = []
     out.append(f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" xmlns="http://www.w3.org/2000/svg" role="img" '
-               f'aria-label="觀念 DAG：{len(by)} 個觀念，依依賴深度由左到右分成 {L["D"] + 1} 層，依主題分成 {len(L["rows"])} 列；顏色是難度">')
-    # 泳道底
+               f'aria-label="Concept DAG: {len(by)} concepts in {L["D"] + 1} layers by dependency depth (left to right) and {len(L["rows"])} theme rows; color is difficulty">')
     for idx, (t, top, hgt) in enumerate(L["rows"]):
         cls = "dag-lane" + (" alt" if idx % 2 else "")
         out.append(f'<rect class="{cls}" x="0" y="{top}" width="{W}" height="{hgt}"/>')
-        out.append(f'<text class="dag-lane-t" x="{L["ML"]}" y="{top + 16}">{html.escape(theme_name[t])}</text>')
-    # 欄標
     for k in range(L["D"] + 1):
         x = L["ML"] + k * L["pitch"] + NW / 2
-        label = "第 0 層 · 起點" if k == 0 else f"第 {k} 層"
+        label = "Layer 0 · roots" if k == 0 else f"Layer {k}"
         out.append(f'<text class="dag-col-t" x="{x}" y="{L["MT"] - 10}" text-anchor="middle">{label}</text>')
-    # 邊。跨好幾欄的邊會有一段接近垂直的線，落在來源那一欄右邊的空隙裡；
+    # 邊。跨好幾欄的邊走正交線：往右到來源那一欄右邊空隙裡的 lx，垂直到目標那一列，再往右接上。
     # 同一欄的來源各用空隙裡不同的 x，免得全部疊成一條。
     gap = L["pitch"] - NW
     col_rank = defaultdict(int)
@@ -259,7 +280,7 @@ def svg(d, info, L):
     for i in sorted(pos, key=lambda i: (pos[i][0], pos[i][1])):
         k = col_rank[pos[i][0]]
         col_rank[pos[i][0]] += 1
-        lane_x[i] = pos[i][0] + NW + 6 + (k % 5) * ((gap - 12) / 4)
+        lane_x[i] = pos[i][0] + NW + 5 + (k % 5) * ((gap - 10) / 4)
     out.append('<g class="dag-edges">')
     for n in d["nodes"]:
         x2, y2 = pos[n["id"]]
@@ -271,9 +292,8 @@ def svg(d, info, L):
                 mx = (ax + bx) / 2
                 dpath = f"M{ax:.0f},{ay:.0f} C{mx:.0f},{ay:.0f} {mx:.0f},{by_:.0f} {bx:.0f},{by_:.0f}"
             else:
-                # 正交走線，轉角圓一點：往右到空隙裡的 lx，垂直到目標那一列，再往右接上
                 lx = lane_x[dep]
-                r = 6
+                r = 5
                 if abs(by_ - ay) < 2 * r:
                     dpath = f"M{ax:.0f},{ay:.0f} L{bx:.0f},{by_:.0f}"
                 else:
@@ -282,26 +302,30 @@ def svg(d, info, L):
                              f"L{lx:.0f},{by_ - sg * r:.0f} Q{lx:.0f},{by_:.0f} {lx + r:.0f},{by_:.0f} L{bx:.0f},{by_:.0f}")
             out.append(f'<path class="dag-e" data-from="{dep}" data-to="{n["id"]}" d="{dpath}"/>')
     out.append("</g>")
-    # 節點
     out.append('<g class="dag-nodes">')
     for n in d["nodes"]:
         x, y = pos[n["id"]]
         lec = n["src"][0].split("#")[0]
         tag = "L" + str(int(lec[1:]))
-        lines = wrap_short(n["short"])
+        lines = wrap(n["short"])
         label = html.escape(n["short"])
         out.append(f'<g class="dag-n tier-{TIER_CLASS[n["tier"]]}" id="n-{n["id"]}" data-id="{n["id"]}" tabindex="0" role="button" '
-                   f'aria-label="{label}，{n["tier"]}，{tag}">')
+                   f'aria-label="{label}, {n["tier"]}, {tag}">')
         out.append(f'<rect class="dag-box" x="{x}" y="{y}" width="{NW}" height="{NH}" rx="5"/>')
         out.append(f'<rect class="dag-tier" x="{x}" y="{y}" width="4" height="{NH}" rx="2"/>')
-        out.append(f'<text class="dag-tag" x="{x + NW - 6}" y="{y + 11}" text-anchor="end">{tag}</text>')
+        out.append(f'<text class="dag-tag" x="{x + NW - 6}" y="{y + NH - 5}" text-anchor="end">{tag}</text>')
         if len(lines) == 1:
-            out.append(f'<text class="dag-t" x="{x + 10}" y="{y + NH / 2 + 4.5:.1f}">{html.escape(lines[0])}</text>')
+            out.append(f'<text class="dag-t" x="{x + 10}" y="{y + 22}">{html.escape(lines[0])}</text>')
         else:
-            out.append(f'<text class="dag-t" x="{x + 10}" y="{y + 20}">{html.escape(lines[0])}</text>')
-            out.append(f'<text class="dag-t" x="{x + 10}" y="{y + 35}">{html.escape(lines[1])}</text>')
+            out.append(f'<text class="dag-t" x="{x + 10}" y="{y + 19}">{html.escape(lines[0])}</text>')
+            out.append(f'<text class="dag-t" x="{x + 10}" y="{y + 34}">{html.escape(lines[1])}</text>')
         out.append("</g>")
-    out.append("</g></svg>")
+    out.append("</g>")
+    # 泳道標題最後畫，壓在邊的上面；halo 用泳道自己的底色
+    for idx, (t, top, hgt) in enumerate(L["rows"]):
+        cls = "dag-lane-t" + (" alt" if idx % 2 else "")
+        out.append(f'<text class="{cls}" x="{L["ML"]}" y="{top + 16}">{html.escape(theme_name[t])}</text>')
+    out.append("</svg>")
     return "\n".join(out)
 
 
@@ -345,24 +369,30 @@ def esc(s):
     return html.escape(s, quote=True)
 
 
-def src_label(s, pages):
+def src_ref(s):
+    """l04#i6-1 → ('l04.html#i6-1', 'L4 ch.6')"""
+    lec, anchor = s.split("#")
+    ch = anchor.split("-")[0]
+    return f"{lec}.html#{anchor}", f"L{int(lec[1:])} ch.{ch[1:]}"
+
+
+def src_title(s, pages):
+    """出處的中文章名（頁面是中文的，所以照抄，讓讀者找得到那一章）。"""
     lec, anchor = s.split("#")
     ch = anchor.split("-")[0]
     chapters, secs, _ = pages[lec]
     t = chapters.get(ch, "")
     if "-" in anchor and anchor in secs:
         t = f"{t}（{secs[anchor]}）"
-    return f"L{int(lec[1:])} 第 {ch[1:]} 章 {t}"
-
-
-def src_label_short(s, pages):
-    """清單用：只到章名的冒號為止，例如「L2 第 1 章 Loop」。"""
-    full = src_label(s, pages)
-    return full.split("：")[0]
+    return t
 
 
 def tier_badge(t):
     return f'<span class="dag-badge tier-{TIER_CLASS[t]}">{t}</span>'
+
+
+def ref_btn(n, cls=""):
+    return f'<button type="button" class="dag-ref{(" " + cls) if cls else ""}" data-id="{n["id"]}">{esc(n["short"])}</button>'
 
 
 def render(d, info, L, A):
@@ -372,16 +402,16 @@ def render(d, info, L, A):
     theme_name = {t["id"]: t["name"] for t in d["themes"]}
     N = len(d["nodes"])
     E = sum(len(n["deps"]) for n in d["nodes"])
+    tt = A["tier_total"]
 
-    # 給 JS 的資料（含章節標題，點節點時顯示）
     js_nodes = []
     for n in d["nodes"]:
         js_nodes.append({
             "id": n["id"], "name": n["name"], "short": n["short"], "tier": n["tier"],
             "theme": theme_name[n["theme"]], "deps": n["deps"], "why": n["why"],
             "depth": depth[n["id"]],
-            "src": [{"href": f"{s.split('#')[0]}.html#{s.split('#')[1]}", "label": src_label(s, pages)} for s in n["src"]],
-            "lecs": sorted({"L" + str(int(s.split("#")[0][1:])) for s in n["src"]}, key=lambda x: int(x[1:])),
+            "src": [{"href": src_ref(s)[0], "ref": src_ref(s)[1], "title": src_title(s, pages)} for s in n["src"]],
+            "lecs": sorted({"L" + str(lec_no(s)) for s in n["src"]}, key=lambda x: int(x[1:])),
         })
     data_json = json.dumps({"nodes": js_nodes}, ensure_ascii=False).replace("</", "<\\/")
 
@@ -391,19 +421,18 @@ def render(d, info, L, A):
         t = r["tiers"]
         rows.append(
             f'<tr><th scope="row"><a href="{lec}.html">L{int(lec[1:])}</a> {esc(d["lectures"][lec])}</th>'
-            f'<td>{r["n"]}</td><td>{t["基礎"]}</td><td>{t["進階"]}</td><td>{t["專家"]}</td>'
+            f'<td>{r["n"]}</td><td>{t["Basic"]}</td><td>{t["Intermediate"]}</td><td>{t["Expert"]}</td>'
             f'<td>{r["dmin"]}–{r["dmax"]}</td><td>{r["fw"] or "—"}</td></tr>')
-    tt = A["tier_total"]
-    rows.append(f'<tr class="dag-sum"><th scope="row">合計</th><td>{N}</td><td>{tt["基礎"]}</td><td>{tt["進階"]}</td><td>{tt["專家"]}</td><td>0–{L["D"]}</td><td>{len(A["forward"])}</td></tr>')
+    rows.append(f'<tr class="dag-sum"><th scope="row">Total</th><td>{N}</td><td>{tt["Basic"]}</td><td>{tt["Intermediate"]}</td><td>{tt["Expert"]}</td><td>0–{L["D"]}</td><td>{len(A["forward"])}</td></tr>')
     table = ("<div class=\"table-wrap\"><table class=\"dag-table\">"
-             "<thead><tr><th>講次</th><th>觀念數</th><th>基礎</th><th>進階</th><th>專家</th><th>深度範圍</th><th>前置在後面講次的邊</th></tr></thead>"
+             "<thead><tr><th>Lecture</th><th>Concepts</th><th>Basic</th><th>Intermediate</th><th>Expert</th><th>Depth range</th><th>Prerequisites taught later</th></tr></thead>"
              f"<tbody>{''.join(rows)}</tbody></table></div>")
 
     # 散在兩堂
     merged_li = []
     for n in A["merged"]:
-        srcs = "、".join(f'<a href="{s.split("#")[0]}.html#{s.split("#")[1]}" title="{esc(src_label(s, pages))}">{esc(src_label_short(s, pages))}</a>' for s in n["src"])
-        merged_li.append(f'<li><button type="button" class="dag-ref" data-id="{n["id"]}">{esc(n["short"])}</button>：{srcs}</li>')
+        srcs = ", ".join(f'<a href="{src_ref(s)[0]}" title="{esc(src_title(s, pages))}">{src_ref(s)[1]}</a>' for s in n["src"])
+        merged_li.append(f'<li>{ref_btn(n)}: {srcs}</li>')
 
     # 前置在後面的講次
     fw_by_lec = defaultdict(list)
@@ -413,12 +442,10 @@ def render(d, info, L, A):
     for lec in sorted(fw_by_lec):
         items = []
         for n, dep in fw_by_lec[lec]:
-            items.append(f'<li><button type="button" class="dag-ref" data-id="{n["id"]}">{esc(n["short"])}</button>'
-                         f' 要先懂 <button type="button" class="dag-ref" data-id="{dep["id"]}">{esc(dep["short"])}</button>'
-                         f'<small>（L{first_lec(dep)} 才出現）</small></li>')
+            items.append(f'<li>{ref_btn(n)} needs {ref_btn(dep)}<small> (first appears in L{first_lec(dep)})</small></li>')
         fw_blocks.append(f'<li><b>L{lec} {esc(d["lectures"][f"l{lec:02d}"])}</b><ul>{"".join(items)}</ul></li>')
 
-    # 依賴順序的閱讀清單：一層一組，層內依主題
+    # 依賴順序的閱讀清單
     theme_rank = {t["id"]: k for k, t in enumerate(d["themes"])}
     layers = defaultdict(list)
     for i in info["order"]:
@@ -429,27 +456,28 @@ def render(d, info, L, A):
         lis = []
         for i in ids:
             n = by[i]
-            deps = "、".join(f'<button type="button" class="dag-ref" data-id="{dep}">{esc(by[dep]["short"])}</button>' for dep in n["deps"])
-            lec = "L" + str(int(n["src"][0].split("#")[0][1:]))
+            deps = ", ".join(ref_btn(by[dep]) for dep in n["deps"])
+            href, ref = src_ref(n["src"][0])
             lis.append(
-                f'<li id="o-{i}">{tier_badge(n["tier"])}<span class="dag-o-main"><button type="button" class="dag-ref strong" data-id="{i}">{esc(n["short"])}</button>'
+                f'<li id="o-{i}">{tier_badge(n["tier"])}<span class="dag-o-main">{ref_btn(n, "strong")}'
                 f'<span class="dag-o-name">{esc(n["name"])}</span>'
-                f'<span class="dag-o-meta"><a href="{n["src"][0].split("#")[0]}.html#{n["src"][0].split("#")[1]}">{lec}</a>'
-                + (f' · 前置：{deps}' if deps else " · 起點") + "</span></span></li>")
-        title = "第 0 層：起點，不靠課程裡別的觀念" if k == 0 else f"第 {k} 層：前置都在前 {k} 層"
-        layer_blocks.append(f'<li class="dag-layer"><h3>{title}<small>{len(ids)} 個</small></h3><ol class="dag-olist">{"".join(lis)}</ol></li>')
+                f'<span class="dag-o-meta"><a href="{href}" title="{esc(src_title(n["src"][0], pages))}">{ref}</a>'
+                + (f' · needs: {deps}' if deps else " · root") + "</span></span></li>")
+        title = "Layer 0: roots — depend on nothing else in the course" if k == 0 else f"Layer {k}: all prerequisites are in layers 0–{k - 1}"
+        layer_blocks.append(f'<li class="dag-layer"><h3>{title}<small>{len(ids)} concepts</small></h3><ol class="dag-olist">{"".join(lis)}</ol></li>')
 
-    roots_txt = "、".join(f'<button type="button" class="dag-ref" data-id="{n["id"]}">{esc(n["short"])}</button>' for n in A["roots"])
-    tiers_desc = "".join(f"<li>{tier_badge(t)}<span>{esc(d['tiers'][t])}。全站 {tt[t]} 個。</span></li>" for t in TIER_ORDER)
+    roots_txt = ", ".join(ref_btn(n) for n in A["roots"])
+    tiers_desc = "".join(f"<li>{tier_badge(t)}<span>{esc(d['tiers'][t])}. {tt[t]} concepts.</span></li>" for t in TIER_ORDER)
     lec_opts = "".join(f'<option value="L{int(l[1:])}">L{int(l[1:])} {esc(t)}</option>' for l, t in sorted(d["lectures"].items()))
-    excluded_li = "".join(f'<li><a href="{e["src"].split("#")[0]}.html#{e["src"].split("#")[1]}">{esc(src_label(e["src"], pages))}</a>：{esc(e["why"])}</li>' for e in d.get("excluded", []))
+    excluded_li = "".join(f'<li><a href="{src_ref(e["src"])[0]}" title="{esc(src_title(e["src"], pages))}">{src_ref(e["src"])[1]}</a>: {esc(e["why"])}</li>' for e in d.get("excluded", []))
+    hint = "Click a concept in the figure. This panel shows its claim, why it builds on its prerequisites, where it is taught, and what builds on it."
 
     page = f"""<!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>觀念 DAG · CS2680</title>
+<title>Concept DAG · CS2680</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -464,7 +492,7 @@ def render(d, info, L, A):
 .dag-bar fieldset {{ border: 0; padding: 0; margin: 0; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }}
 .dag-bar legend {{ float: left; padding: 0; margin-right: .2rem; color: var(--ink-soft); }}
 .dag-bar label {{ display: inline-flex; gap: .3rem; align-items: center; cursor: pointer; }}
-.dag-bar select {{ font: inherit; font-size: .875rem; padding: .15rem .4rem; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); color: var(--ink); }}
+.dag-bar select {{ font: inherit; font-size: .875rem; padding: .15rem .4rem; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--sheet); color: var(--ink); max-width: 22rem; }}
 .dag-bar .spacer {{ flex: 1; }}
 .dag-bar button {{ font: inherit; font-size: .8125rem; padding: .2rem .7rem; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); color: var(--ink); cursor: pointer; }}
 .dag-bar button:hover {{ border-color: var(--signal); color: var(--signal); }}
@@ -477,7 +505,8 @@ def render(d, info, L, A):
 @media (min-width: 1100px) {{ .dag-fig.fit svg {{ width: 100%; min-width: 0; }} }}
 .dag-lane {{ fill: transparent; }}
 .dag-lane.alt {{ fill: var(--dg-panel); }}
-.dag-lane-t {{ fill: var(--ink-soft); font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .02em; }}
+.dag-lane-t {{ fill: var(--ink-soft); font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .02em; paint-order: stroke; stroke: var(--sheet); stroke-width: 4px; stroke-linejoin: round; }}
+.dag-lane-t.alt {{ stroke: var(--dg-panel); }}
 .dag-col-t {{ fill: var(--ink-soft); font-family: var(--font-mono); font-size: 10.5px; }}
 .dag-e {{ fill: none; stroke: var(--dg-link); stroke-width: 1.2; opacity: .45; transition: opacity .12s, stroke-width .12s; }}
 .dag-n {{ cursor: pointer; outline: none; }}
@@ -485,13 +514,12 @@ def render(d, info, L, A):
 .dag-n.tier-a .dag-box {{ fill: var(--dg-a); }}
 .dag-n.tier-c .dag-box {{ fill: var(--dg-c); }}
 .dag-n.tier-d .dag-box {{ fill: var(--dg-d); }}
-.dag-tier {{ fill: var(--ink-soft); opacity: .0; }}
+.dag-tier {{ fill: var(--ink-soft); opacity: 0; }}
 .dag-n.tier-c .dag-tier {{ opacity: .35; }}
 .dag-n.tier-d .dag-tier {{ opacity: .8; }}
-.dag-t {{ fill: var(--ink); font-family: var(--font-body); font-size: 12.5px; pointer-events: none; }}
+.dag-t {{ fill: var(--ink); font-family: var(--font-body); font-size: {FONT}px; pointer-events: none; }}
 .dag-tag {{ fill: var(--ink-soft); font-family: var(--font-mono); font-size: 9.5px; pointer-events: none; }}
 .dag-n:hover .dag-box, .dag-n:focus-visible .dag-box {{ stroke: var(--signal); stroke-width: 1.6; }}
-/* 高亮狀態：has-focus 時沒被點名的都淡掉 */
 .has-focus .dag-n:not(.is-sel):not(.is-anc):not(.is-desc) {{ opacity: .22; }}
 .has-focus .dag-e:not(.is-anc):not(.is-desc) {{ opacity: .06; }}
 .dag-n.is-sel .dag-box {{ stroke: var(--key); stroke-width: 2.2; }}
@@ -499,7 +527,6 @@ def render(d, info, L, A):
 .dag-n.is-desc .dag-box {{ stroke: var(--caution); stroke-width: 1.8; stroke-dasharray: 4 3; }}
 .dag-e.is-anc {{ stroke: var(--signal); opacity: .95; stroke-width: 1.8; }}
 .dag-e.is-desc {{ stroke: var(--caution); opacity: .9; stroke-width: 1.6; stroke-dasharray: 4 3; }}
-/* 篩選：不符合的淡掉 */
 .dag-n.is-off {{ opacity: .15; }}
 .dag-e.is-off {{ opacity: .04; }}
 .dag-legend {{ display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin: .5rem 0 0; padding: 0; list-style: none; font-size: .8125rem; color: var(--ink-soft); }}
@@ -507,22 +534,21 @@ def render(d, info, L, A):
 .dag-legend i {{ display: inline-block; width: 1.4rem; height: 0; border-top: 2px solid var(--signal); }}
 .dag-legend i.desc {{ border-top-style: dashed; border-color: var(--caution); }}
 .dag-legend i.sel {{ width: .9rem; height: .9rem; border: 2px solid var(--key); border-radius: 3px; }}
-/* 詳細面板 */
 .dag-detail {{ margin-top: 1rem; border: 1px solid var(--rule); border-left: 4px solid var(--signal); border-radius: var(--radius); background: var(--sheet); padding: 1rem 1.1rem; display: grid; gap: .6rem; max-width: 52rem; }}
 .dag-detail .hint {{ color: var(--ink-soft); margin: 0; }}
 .dag-detail h2 {{ margin: 0; font-size: 1.15rem; font-family: var(--font-display); display: flex; flex-wrap: wrap; gap: .5rem .6rem; align-items: center; }}
 .dag-detail h2 small {{ font-family: var(--font-mono); font-weight: 400; font-size: .75rem; color: var(--ink-soft); }}
 .dag-detail .claim {{ margin: 0; font-weight: 500; }}
 .dag-detail .why {{ margin: 0; color: var(--ink); }}
-.dag-detail dl {{ margin: 0; display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .35rem .8rem; font-size: .9rem; }}
+.dag-detail dl {{ margin: 0; display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: .35rem .8rem; font-size: .9rem; }}
 .dag-detail dt {{ color: var(--ink-soft); }}
-.dag-detail dd {{ margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .5rem; align-items: baseline; }}
+.dag-detail dd {{ margin: 0; display: flex; flex-wrap: wrap; gap: .3rem .6rem; align-items: baseline; }}
 .dag-detail dd .none {{ color: var(--ink-soft); }}
+.dag-detail dd a small {{ color: var(--ink-soft); font-size: .8em; }}
 @media (max-width: 520px) {{ .dag-detail dl {{ grid-template-columns: 1fr; gap: .15rem; }} .dag-detail dt {{ margin-top: .3rem; }} }}
 .dag-ref {{ font: inherit; padding: 0 .1rem; border: 0; border-bottom: 1px dashed var(--signal); background: none; color: var(--signal); cursor: pointer; text-align: left; }}
 .dag-ref:hover {{ border-bottom-style: solid; }}
 .dag-ref.strong {{ font-weight: 600; color: var(--ink); border-bottom-color: var(--ink-soft); }}
-/* 下半：分析與清單 */
 .dag-sec {{ margin-top: 2.5rem; display: grid; gap: .9rem; max-width: 52rem; }}
 .dag-sec > h2 {{ margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; }}
 .dag-sec > p, .dag-sec li {{ max-width: var(--measure); }}
@@ -540,15 +566,17 @@ def render(d, info, L, A):
 .dag-layers {{ list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }}
 .dag-layer > h3 {{ margin: .8rem 0 .4rem; }}
 .dag-olist {{ list-style: none; padding: 0; margin: 0; display: grid; gap: .45rem; }}
-.dag-olist > li {{ display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: .25rem .7rem; align-items: start; padding: .35rem 0; border-bottom: 1px solid var(--rule); }}
+.dag-olist > li {{ display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: .25rem .7rem; align-items: start; padding: .35rem 0; border-bottom: 1px solid var(--rule); }}
 .dag-olist .dag-badge {{ justify-self: start; margin-top: .15rem; }}
 .dag-o-main {{ display: grid; gap: .15rem; min-width: 0; }}
 .dag-o-main > .dag-ref {{ justify-self: start; }}
 .dag-o-name {{ font-size: .9rem; color: var(--ink); }}
 .dag-o-meta {{ font-size: .8125rem; color: var(--ink-soft); }}
+@media (max-width: 520px) {{ .dag-olist > li {{ grid-template-columns: 1fr; }} }}
 .dag-rules {{ margin: 0; padding-left: 1.2rem; display: grid; gap: .35rem; }}
+.dag-rules ul {{ margin: .3rem 0 0; padding-left: 1.2rem; display: grid; gap: .2rem; }}
 .dag-tiers {{ list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }}
-.dag-tiers li {{ display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); gap: .6rem; align-items: start; }}
+.dag-tiers li {{ display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: .6rem; align-items: start; }}
 .dag-tiers .dag-badge {{ margin-top: .2rem; justify-self: start; }}
 </style>
 </head>
@@ -556,93 +584,94 @@ def render(d, info, L, A):
 <header class="topbar">
   <div class="topbar-inner gutter">
     <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
-    <nav class="lecnav" aria-label="回首頁"><a href="index.html">← 課程總覽</a><a href="#rules-h">規則</a></nav>
+    <nav class="lecnav" aria-label="Back to the course"><a href="index.html">← Course home</a><a href="#rules-h">How this was built</a></nav>
   </div>
 </header>
 
 <main class="page gutter dag-page">
   <header class="dag-head">
-    <p class="eyebrow">課程地圖 · 觀念 DAG · 草稿 {d["updated"]}</p>
-    <h1>觀念 DAG：每個觀念從哪裡來</h1>
-    <p>這門課現在是用一小時的 slides 切成一堂一堂，但觀念之間的依賴不照堂次走。這張圖把 11 堂的核心觀念拆成 <b>{N} 個觀念</b>、<b>{E} 條「要先懂」的邊</b>，每個觀念都從別的觀念延伸出來，只有 {len(A["roots"])} 個起點：{roots_txt}。</p>
-    <p>怎麼讀：<b>由左到右是依賴深度</b>（第 k 層的前置都在前 k 層，所以從左往右讀就是一個合法的順序）；<b>每一列是一個主題</b>；<b>顏色是難度</b>。點一個觀念，看它往左的前置和往右的延伸；選一堂講次，看那一堂的章散在圖的哪裡。</p>
+    <p class="eyebrow">Course map · Concept DAG · draft {d["updated"]}</p>
+    <h1>Concept DAG: where each concept comes from</h1>
+    <p>The course is currently cut into one-hour lecture decks, but the dependencies between concepts do not follow the lecture order. This figure breaks the core ideas of the 11 lectures into <b>{N} concepts</b> and <b>{E} “understand this first” edges</b>. Every concept builds on another; there are only {len(A["roots"])} roots: {roots_txt}.</p>
+    <p>How to read it: <b>left to right is dependency depth</b> (everything a concept in layer k needs is in layers 0 to k−1, so reading left to right is a valid order); <b>each row is a theme</b>; <b>color is difficulty</b>. Click a concept to see what it builds on (to the left) and what builds on it (to the right). Pick a lecture to see where its chapters land in the figure.</p>
   </header>
 
-  <div class="dag-bar" role="group" aria-label="篩選">
-    <fieldset><legend>難度</legend>
-      <label><input type="checkbox" class="dag-f-tier" value="基礎" checked> {tier_badge("基礎")}</label>
-      <label><input type="checkbox" class="dag-f-tier" value="進階" checked> {tier_badge("進階")}</label>
-      <label><input type="checkbox" class="dag-f-tier" value="專家" checked> {tier_badge("專家")}</label>
+  <div class="dag-bar" role="group" aria-label="Filters">
+    <fieldset><legend>Difficulty</legend>
+      <label><input type="checkbox" class="dag-f-tier" value="Basic" checked> {tier_badge("Basic")}</label>
+      <label><input type="checkbox" class="dag-f-tier" value="Intermediate" checked> {tier_badge("Intermediate")}</label>
+      <label><input type="checkbox" class="dag-f-tier" value="Expert" checked> {tier_badge("Expert")}</label>
     </fieldset>
-    <label>講次 <select id="dag-f-lec"><option value="">全部</option>{lec_opts}</select></label>
+    <label>Lecture <select id="dag-f-lec"><option value="">all</option>{lec_opts}</select></label>
     <span class="spacer"></span>
-    <label><input type="checkbox" id="dag-fit"> 縮到螢幕寬</label>
-    <button type="button" id="dag-clear">清除選取</button>
+    <label><input type="checkbox" id="dag-fit"> Fit to width</label>
+    <button type="button" id="dag-clear">Clear selection</button>
   </div>
 
   <figure class="diagram dag-fig" id="dag-fig">
     <div class="scroll">{svg(d, info, L)}</div>
-    <ul class="dag-legend" aria-label="圖例">
-      <li>{tier_badge("基礎")} {tier_badge("進階")} {tier_badge("專家")} 難度</li>
-      <li><i class="sel"></i> 選取的觀念</li>
-      <li><i></i> 它的前置（往左）</li>
-      <li><i class="desc"></i> 從它延伸出去的（往右）</li>
-      <li>方塊右上的 L 數字是講得最完整的那一堂；散在兩堂的觀念列在下面</li>
+    <ul class="dag-legend" aria-label="Legend">
+      <li>{tier_badge("Basic")} {tier_badge("Intermediate")} {tier_badge("Expert")} difficulty</li>
+      <li><i class="sel"></i> selected concept</li>
+      <li><i></i> its prerequisites (to the left)</li>
+      <li><i class="desc"></i> what builds on it (to the right)</li>
+      <li>The L-number in a box is the lecture that covers the concept most fully; concepts split across two lectures are listed below the figure.</li>
     </ul>
-    <figcaption>每個方塊是一個觀念，寫的是短名；點開看完整的一句話主張和「為什麼從那裡延伸」。一條邊 A → B 的意思是「讀 B 之前要先懂 A」，只畫直接的前置，能從別條邊推出來的不重畫。版面：x 是最長依賴路徑的長度，y 是主題；同一格有好幾個觀念時上下排。</figcaption>
+    <figcaption>Each box is one concept, shown by its short name; click it for the one-sentence claim and why it builds on its prerequisites. An edge A → B means “understand A before reading B”. Only direct prerequisites are drawn: an edge that follows from other edges is omitted. Layout: x is the length of the longest dependency path, y is the theme; several concepts in one cell stack vertically.</figcaption>
   </figure>
 
   <aside class="dag-detail" id="dag-detail" aria-live="polite">
-    <p class="hint">點圖上的一個觀念，這裡會顯示它的主張、為什麼從那些觀念延伸、出處章節，和從它延伸出去的觀念。</p>
+    <p class="hint">{hint}</p>
   </aside>
 
   <section class="dag-sec" aria-labelledby="gap-h">
-    <h2 id="gap-h">講次和觀念的落差</h2>
-    <p>下面三件事都是從上面的圖算出來的，不是另外寫的。它們就是「一小時一堂」和「觀念的依賴」對不上的地方。</p>
-    <h3>一個觀念散在兩堂<small>{len(A["merged"])} 個</small></h3>
-    <p>同一個觀念在兩堂各講一半：一堂從 workload 講，一堂從機制講。拆成觀念之後它們是同一個節點。</p>
+    <h2 id="gap-h">Where lectures and concepts disagree</h2>
+    <p>The three findings below are computed from the figure, not written by hand. They are the places where “one hour per lecture” and “what depends on what” do not line up.</p>
+    <h3>One concept split across two lectures<small>{len(A["merged"])} concepts</small></h3>
+    <p>The same concept is taught half in one lecture and half in another, for example once as a workload property and once as a mechanism. As concepts they are a single node.</p>
     <ul class="dag-fw">{"".join(merged_li)}</ul>
-    <h3>前置觀念在後面的講次<small>{len(A["forward"])} 條邊</small></h3>
-    <p>照講次讀，讀到這個觀念的那一堂，它的前置連帶過都還沒出現過（前置若在更早的講次提過一句，就不算）。站台把 Part I 的建議順序改成 L2 → L4 → L3 → L5，修掉了幾條；剩下的只能靠文章裡的前情註。</p>
+    <h3>Prerequisites taught in a later lecture<small>{len(A["forward"])} edges</small></h3>
+    <p>Reading in lecture order, you reach this concept before its prerequisite has appeared at all, not even in passing (a prerequisite mentioned briefly in an earlier lecture does not count). The site already changed the recommended order of Part I to L2 → L4 → L3 → L5, which fixed several of these; the rest are bridged by notes in the articles.</p>
     <ul class="dag-fw">{"".join(fw_blocks)}</ul>
-    <h3>每一堂的難度組成與深度範圍</h3>
-    <p>深度是圖上的層數。一堂的深度範圍越寬，表示它同時在講起點和很下游的東西；「前置在後面講次的邊」越多，表示照講次讀會越卡。</p>
+    <h3>Difficulty mix and depth range per lecture</h3>
+    <p>Depth is the layer in the figure. A wide depth range means a lecture teaches roots and far-downstream ideas in the same hour; a high count in the last column means reading that lecture in sequence gets stuck more often. A concept is counted under the lecture that covers it most fully.</p>
     {table}
   </section>
 
   <section class="dag-sec" aria-labelledby="order-h">
-    <h2 id="order-h">依賴順序的閱讀清單</h2>
-    <p>把圖攤平成清單：一層一組，同一層裡依主題排。每一層的前置都在前面的層，所以照這份清單讀不會碰到沒教過的前置。這是把課程改成 DAG 形式時的順序草稿，不是最後的分堂。</p>
+    <h2 id="order-h">Reading order by dependency</h2>
+    <p>The figure flattened into a list: one group per layer, ordered by theme within a layer. Every prerequisite of a layer is in the layers before it, so following this list never hits an unexplained concept. This is a draft order for a DAG-shaped version of the course, not a final split into lectures.</p>
     <ol class="dag-layers">{"".join(layer_blocks)}</ol>
   </section>
 
   <section class="dag-sec" aria-labelledby="rules-h">
-    <h2 id="rules-h">這張圖怎麼定的</h2>
-    <h3>節點是什麼</h3>
+    <h2 id="rules-h">How this figure was built</h2>
+    <h3>What a node is</h3>
     <ul class="dag-rules">
-      <li>一個節點是一個觀念：能用一句話寫成主張、有自己的前置、刪掉它後面某個觀念就讀不懂。</li>
-      <li>起點是各堂核心觀念的章（v7 版面已經一章一個想法）。一章講兩個前置不同的觀念就拆成兩個節點（例如 L1 第 9 章拆成機率性輸出、測試分兩層、故障是常態）；兩堂講同一個觀念就併成一個節點（例如 Agent loop 來自 L1 與 L2）。</li>
-      <li>目錄章（查閱用的清單）不是觀念，不進圖：{excluded_li and "<ul>" + excluded_li + "</ul>"}</li>
+      <li>A node is one concept: it can be stated as a one-sentence claim, it has its own prerequisites, and removing it makes some later concept unreadable.</li>
+      <li>The starting point is the chapters of each lecture article (the v7 layout already has one idea per chapter). A chapter that teaches two concepts with different prerequisites is split into two nodes (L1 chapter 9 becomes probabilistic output, two-layer testing, and failure is normal). Two lectures teaching the same concept are merged into one node (the agent loop comes from L1 and L2).</li>
+      <li>Catalog chapters (lookup lists) are not concepts and stay out:{excluded_li and "<ul>" + excluded_li + "</ul>"}</li>
     </ul>
-    <h3>邊是什麼</h3>
+    <h3>What an edge is</h3>
     <ul class="dag-rules">
-      <li>A → B 表示「讀 B 之前要先懂 A」。B 的「為什麼從這裡延伸」那一句要能說出少了 A 哪裡讀不懂。</li>
-      <li>只畫直接的前置。A → C 能從 A → B → C 推出來就不畫。</li>
-      <li>邊只看觀念，不看講次。所以會出現前置在後面講次的邊，那正是要找的落差。</li>
+      <li>A → B means “understand A before reading B”. B's “why” sentence must say what becomes unreadable without A.</li>
+      <li>Only direct prerequisites are drawn. If A → C follows from A → B → C, it is not drawn.</li>
+      <li>Edges look only at concepts, never at lectures. Prerequisites that live in a later lecture are therefore expected; they are exactly the gap this figure is meant to expose.</li>
     </ul>
-    <h3>難度怎麼分</h3>
+    <h3>How difficulty is assigned</h3>
     <ul class="dag-tiers">{tiers_desc}</ul>
-    <p>一條規則：前置的難度不能比這個觀念高。基礎觀念不能依賴進階觀念，否則不是邊畫錯就是難度標錯。<code>tools/dag.py --check</code> 會擋。</p>
-    <p>資料在 <a href="https://github.com/chihmingyang/cs2680/blob/main/docs/dag.json" target="_blank" rel="noopener">docs/dag.json</a>，規則全文在 <a href="https://github.com/chihmingyang/cs2680/blob/main/guide/DAG.md" target="_blank" rel="noopener">guide/DAG.md</a>。這一頁由 <code>tools/dag.py</code> 從資料產生，改資料就重跑。</p>
+    <p>Difficulty is a property of the concept, not of its depth in the figure. One hard rule: a prerequisite can never be harder than the concept that depends on it (Basic ≤ Intermediate ≤ Expert). A violation means either the edge or the difficulty is wrong, and <code>tools/dag.py --check</code> rejects it.</p>
+    <p>Data: <a href="https://github.com/chihmingyang/cs2680/blob/main/docs/dag.json" target="_blank" rel="noopener">docs/dag.json</a>. Rules in full (Chinese): <a href="https://github.com/chihmingyang/cs2680/blob/main/guide/DAG.md" target="_blank" rel="noopener">guide/DAG.md</a>. This page is generated from the data by <code>tools/dag.py</code>; edit the data and rerun.</p>
   </section>
 
-  <p class="fineprint">這張圖是讀書會對課程內容的整理，節點的主張、邊和難度都是本文的判斷，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。</p>
+  <p class="fineprint">This figure is the study group's reading of the course. The claims, edges and difficulty levels are our judgment, not the instructor's. The original slides and course content are © Juncheng Yang and Harvard CS2680. Chapter links go to the group's Chinese-language lecture articles.</p>
 </main>
 
 <script type="application/json" id="dag-data">{data_json}</script>
 <script>
 (function () {{
   var data = JSON.parse(document.getElementById('dag-data').textContent);
+  var HINT = {json.dumps(hint)};
   var by = {{}}, kids = {{}};
   data.nodes.forEach(function (n) {{ by[n.id] = n; kids[n.id] = []; }});
   data.nodes.forEach(function (n) {{ n.deps.forEach(function (d) {{ kids[d].push(n.id); }}); }});
@@ -688,10 +717,10 @@ def render(d, info, L, A):
     var n = by[id];
     detail.innerHTML = '';
     var h = document.createElement('h2');
-    var badge = document.createElement('span'); badge.className = 'dag-badge tier-' + ({{'基礎': 'a', '進階': 'c', '專家': 'd'}})[n.tier]; badge.textContent = n.tier;
+    var badge = document.createElement('span'); badge.className = 'dag-badge tier-' + ({{'Basic': 'a', 'Intermediate': 'c', 'Expert': 'd'}})[n.tier]; badge.textContent = n.tier;
     h.appendChild(badge);
     h.appendChild(document.createTextNode(n.short));
-    var sm = document.createElement('small'); sm.textContent = n.theme + ' · 第 ' + n.depth + ' 層 · ' + n.lecs.join('、');
+    var sm = document.createElement('small'); sm.textContent = n.theme + ' · layer ' + n.depth + ' · ' + n.lecs.join(', ');
     h.appendChild(sm);
     detail.appendChild(h);
     var claim = document.createElement('p'); claim.className = 'claim'; claim.textContent = n.name; detail.appendChild(claim);
@@ -701,16 +730,20 @@ def render(d, info, L, A):
       var dt = document.createElement('dt'); dt.textContent = label; dl.appendChild(dt);
       var dd = document.createElement('dd'); fill(dd); dl.appendChild(dd);
     }}
-    row('前置', function (dd) {{
-      if (!n.deps.length) {{ var s = document.createElement('span'); s.className = 'none'; s.textContent = '起點，不靠課程裡別的觀念'; dd.appendChild(s); return; }}
+    row('Needs first', function (dd) {{
+      if (!n.deps.length) {{ var s = document.createElement('span'); s.className = 'none'; s.textContent = 'nothing — this is a root'; dd.appendChild(s); return; }}
       n.deps.forEach(function (d) {{ dd.appendChild(refBtn(d)); }});
     }});
-    row('延伸出去', function (dd) {{
-      if (!kids[id].length) {{ var s = document.createElement('span'); s.className = 'none'; s.textContent = '沒有，是葉子'; dd.appendChild(s); return; }}
+    row('Builds into', function (dd) {{
+      if (!kids[id].length) {{ var s = document.createElement('span'); s.className = 'none'; s.textContent = 'nothing — this is a leaf'; dd.appendChild(s); return; }}
       kids[id].forEach(function (d) {{ dd.appendChild(refBtn(d)); }});
     }});
-    row('出處', function (dd) {{
-      n.src.forEach(function (s) {{ var a = document.createElement('a'); a.href = s.href; a.textContent = s.label; dd.appendChild(a); }});
+    row('Taught in', function (dd) {{
+      n.src.forEach(function (s) {{
+        var a = document.createElement('a'); a.href = s.href; a.textContent = s.ref;
+        if (s.title) {{ a.appendChild(document.createTextNode(' ')); var t = document.createElement('small'); t.textContent = s.title; a.appendChild(t); }}
+        dd.appendChild(a);
+      }});
     }});
     detail.appendChild(dl);
   }}
@@ -742,11 +775,11 @@ def render(d, info, L, A):
   }});
   document.getElementById('dag-clear').addEventListener('click', function () {{
     selected = null; paint(null);
-    detail.innerHTML = '<p class="hint">點圖上的一個觀念，這裡會顯示它的主張、為什麼從那些觀念延伸、出處章節，和從它延伸出去的觀念。</p>';
+    detail.innerHTML = '';
+    var p = document.createElement('p'); p.className = 'hint'; p.textContent = HINT; detail.appendChild(p);
     if (history.replaceState) history.replaceState(null, '', location.pathname);
   }});
 
-  // 篩選：難度 × 講次
   var tierBoxes = Array.prototype.slice.call(document.querySelectorAll('.dag-f-tier'));
   var lecSel = document.getElementById('dag-f-lec');
   function applyFilter() {{
