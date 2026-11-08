@@ -147,6 +147,18 @@ def units_of(container, loc):
                 svg = next(c.find_all(lambda x: x.tag == "svg"), None)
                 if svg is not None and svg.attrs.get("aria-label"):
                     out.append((f"{loc} 圖{k} 內容", svg.attrs["aria-label"]))
+                calc = next(c.find_all(lambda x: x.tag == "div" and "calc" in x.cls()), None)
+                if calc is not None:
+                    # interactive figure (calc.js): the sliders with their ranges, then the readout at the default
+                    parts = []
+                    for x in calc.find_all(lambda x: x.tag in ("label", "input", "output", "button")
+                                           or (x.tag == "div" and "calc-h" in x.cls())):
+                        if x.tag == "input":
+                            parts.append(f"[滑桿 {x.attrs.get('min')}–{x.attrs.get('max')}]")
+                        else:
+                            parts.append(x.text())
+                    out.append((f"{loc} 圖{k} 滑桿",
+                                "(互動元件：拖滑桿時長條照同一條算式重畫，下面是預設值時的文字) " + " ".join(parts)))
             elif c.tag == "table":
                 counts["table"] += 1
                 k = counts["table"]

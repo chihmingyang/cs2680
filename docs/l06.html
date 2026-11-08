@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261102b">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body>
 <header class="topbar">
@@ -433,13 +433,13 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
               </div>
               <figcaption>這張圖回答：checkpoint 省下什麼？省下失敗時要重跑的那一段。青色是驗證過、存起來的部分，粉色是要重跑的部分，深紅細條是 checkpoint。兩條路第 23 步都出錯，差別在幾步之後才發現、退回多遠。</figcaption>
             </figure>
-              <p>切成幾段最划算，要算兩筆帳。第一筆是步數。每段 k 步時，一段全對的機率是 0.95<sup>k</sup>。失敗就重跑，跑到過為止。平均要跑幾次，是全對機率的倒數：全對 60% 的段，跑 100 次約過 60 次，所以每過一次平均要跑 100 ÷ 60，約 1.7 次。一般式是 1 ÷ 0.95<sup>k</sup> 次。段越短，全對的機率越高，重跑的越少。第二筆是驗證。每跑完一次段就驗證一次，所以驗證次數是段數乘上每段平均跑幾次。這兩個數往相反方向變：段切短，段數變多，每段平均跑的次數卻變少。段很長時，後者降得快（不分段要跑 13 次，每段 25 步只要 3.6 次），驗證次數先變少；段短到每段平均已經不到 2 次，再降也有限，段數變多就占上風，驗證次數跟著變多。這裡把一次驗證算成 5 步的成本（本文的假設：跑測試、讀輸出、存 checkpoint）。兩筆加起來是總成本，算出來的都是平均值：</p>
+              <p>切成幾段最划算，要算兩筆帳。第一筆是步數。每段 k 步時，一段全對的機率是 0.95<sup>k</sup>。失敗就重跑，跑到過為止。平均要跑幾次，是全對機率的倒數：全對 60% 的段，跑 100 次約過 60 次，所以每過一次平均要跑 100 ÷ 60，約 1.7 次。一般式是 1 ÷ 0.95<sup>k</sup> 次。段越短，全對的機率越高，重跑的越少。第二筆是驗證。每跑完一次段就驗證一次，所以驗證次數是段數乘上每段平均跑幾次。這兩個數往相反方向變：段切短，段數變多，每段平均跑的次數卻變少。段很長時，每段平均跑的次數降得比段數漲得快：不分段是 1 段、平均跑 13 次，驗證 13 次；每段 25 步是 2 段、平均跑 3.6 次，驗證約 7.2 次，所以驗證次數先變少。段短到每段平均已經不到 2 次（每段 10 步時是 1.7 次），再降也有限，因為每段至少要跑 1 次，最多只能再少一半；段數卻還會翻好幾倍（每段 10 步是 5 段，每段 1 步是 50 段），驗證次數就跟著變多。這裡把一次驗證算成 5 步的成本（本文的假設：跑測試、讀輸出、存 checkpoint）。兩筆加起來是總成本，算出來的都是平均值：</p>
               <figure class="file"><figcaption>平均的總成本</figcaption><pre><code class="lang-text">每段平均跑幾次 = 1 ÷ 0.95 ^ k
 總步數 = 段數 × k × 每段平均跑幾次
 驗證次數 = 段數 × 每段平均跑幾次
 總成本 = 總步數 + 驗證次數 × 5</code></pre></figure>
               <p>把六種切法代進去，就是下圖。每一列是一種切法：列名下一行是一段的數字，長條是整個 run 的數字，灰色是步數，黃色是驗證的成本。</p>
-              <figure class="diagram">
+              <figure class="diagram" data-calc="ckpt">
               <div class="scroll">
                 <svg viewBox="0 0 720 342" role="img" aria-label="橫條圖：50 步、每步 95% 的 run，每段切幾步時平均要花多少。列名下一行是一段的數字；長條是整個 run 的數字：要跑的步數加上驗證的成本，一次驗證算 5 步。不分段，共 1 段：每段全對 8%，平均跑 13 次；整個 run 的步數 650，驗證約 13.0 次、成本 65，合計 715。每段 25 步，共 2 段：每段全對 28%，平均跑 3.6 次；整個 run 的步數 180，驗證約 7.2 次、成本 36，合計 216。每段 10 步，共 5 段：每段全對 60%，平均跑 1.7 次；整個 run 的步數 84，驗證約 8.4 次、成本 42，合計 126 最省。每段 5 步，共 10 段：每段全對 77%，平均跑 1.3 次；整個 run 的步數 65，驗證約 12.9 次、成本 65，合計 130。每段 2 步，共 25 段：每段全對 90%，平均跑 1.1 次；整個 run 的步數 55，驗證約 27.7 次、成本 139，合計 194。每段 1 步，共 50 段：每段全對 95%，平均跑 1.05 次；整個 run 的步數 53，驗證約 52.6 次、成本 263，合計 316。結論：每段 10 步最省，每段 5 步只多 4。切到每段 10 步以下，步數只從 84 降到 53，驗證的成本卻從 42 漲到 263。">
                   <defs><marker id="l6v-seg-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-seg-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
@@ -479,9 +479,27 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
                   <text x="387.5" y="316" class="dg-cb">316<tspan class="dg-c">（53 + 263）</tspan></text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：每段切幾步最划算？灰色是步數：切得越細，失敗時重跑的越少，灰色越短，但到每段 10 步以下就短得很慢。黃色是驗證：從不分段切到每段 25 步，重跑變少，驗證也跟著變少；再往下切，段數增加的效果占上風，黃色越來越長。結果：每段 10 步最省，每段 5 步只多一點。（本文的整理）</figcaption>
+              <div class="calc" hidden>
+                <div class="calc-h">換假設試試：拖滑桿，長條和最省的那一列會跟著變</div>
+                <div class="calc-row">
+                  <label for="ckpt-c">一次驗證的成本</label>
+                  <input type="range" id="ckpt-c" min="0" max="20" step="1" value="5" data-k="c">
+                  <output for="ckpt-c" data-v="c">5 步</output>
+                </div>
+                <div class="calc-row">
+                  <label for="ckpt-p">每步成功率</label>
+                  <input type="range" id="ckpt-p" min="90" max="99.5" step="0.5" value="95" data-k="p">
+                  <output for="ckpt-p" data-v="p">95%（平均每 20 步錯一次）</output>
+                </div>
+                <div class="calc-foot">
+                  <output class="calc-out" aria-live="polite">最省：每段 10 步，合計 126。第二省是每段 5 步，多 4。</output>
+                  <button type="button" class="calc-reset" disabled>回到本文的假設：5 步、95%</button>
+                </div>
+              </div>
+              <figcaption>這張圖回答：每段切幾步最划算？預設是本文的假設：一次驗證 5 步、每步 95%，圖下的兩個滑桿可以換。灰色是步數：切得越細，失敗時重跑的越少，灰色越短，但到每段 10 步以下就短得很慢。黃色是驗證：從不分段切到每段 25 步，重跑變少，驗證也跟著變少；再往下切，段數增加的效果占上風，黃色越來越長。結果：每段 10 步最省，每段 5 步只多一點。（本文的整理）</figcaption>
             </figure>
-              <p>同一個 run、同一個 model，只看灰色，<strong>650 步變 84 步</strong>。再往下切，灰色只剩 65、55、53，因為一步都不錯也要 50 步。黃色卻越來越長：每段 10 步共驗證約 8.4 次，成本 42；每段 1 步是 50 段，要驗證約 52.6 次，成本 263。兩筆加起來，每段 10 步最省，每段 5 步只多 4。最省的段長取決於驗證有多貴。一次驗證只算 1 步時，六種切法的總成本照圖上由上到下是 663、187、92、78、83、105，最省的從每段 10 步換成每段 5 步。驗證完全不花成本時，最省的是每段 1 步的 53，也就是第 2 章每一步都檢查的情況。這張圖還假設段尾才發現失敗。如果段中途就有便宜的檢查先抓到錯，灰色還會再短一些。</p>
+              <p>同一個 run、同一個 model，只看灰色，從不分段切到每段 10 步，要跑的步數就從 <strong>650 步降到 84 步</strong>。再往下切，步數只剩每段 5 步 65、每段 2 步 55、每段 1 步 53，因為一步都不錯也要 50 步。黃色卻越來越長：每段 10 步共驗證約 8.4 次，成本 42；每段 1 步是 50 段，要驗證約 52.6 次，成本 263。兩筆加起來，每段 10 步的總成本 126（84 + 42）最省，每段 5 步是 130（65 + 65），只多 4 步。</p>
+              <p>最省的段長取決於兩個假設，圖下的兩個滑桿各管一個。第一個是驗證有多貴：一次驗證只算 1 步時，最省的從每段 10 步換成每段 5 步；驗證完全不花成本時，總成本只剩步數，最省的是每段 1 步，總成本 53 步，也就是第 2 章每一步都檢查的情況。第二個是每步多可靠：每步 95% 等於平均每 20 步錯一次。升到 99%，平均每 100 步才錯一次。切短是為了少重跑；重跑本來就少，切短省下的步數不多，驗證次數就成了主要的帳，所以少驗證幾次比較划算，最省的變成每段 25 步；降到 90%，最省的變成每段 5 步。合起來是一條規則：<strong>驗證越貴、每步越可靠，段就切得越長</strong>。這張圖還假設段尾才發現失敗。如果段中途就有便宜的檢查先抓到錯，灰色還會再短一些。</p>
               <p id="i3-2"><b>存什麼：驗證過的狀態，而且 context 也要退。</b>Context 是這一次送進 model 的全部文字，包括對話歷史（<a class="tm" href="#n-context">第 5 章的註</a>）。沒驗證就存，退回去也沒用。只退檔案也不夠：<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a> 比了三種接手方式：只給失敗後的環境、環境加一段動作摘要、環境加完整的動作歷史。帶著完整歷史的最差，因為錯的推理會繼續帶偏下一次。本文的做法是折衷：退回時不帶原本的對話，只留一句「這條路試過，為什麼失敗」。完整的對話已經量到會帶偏，什麼都不留，下一次又可能重走同一條路（本文的判斷）。</p>
               <p>工具能不能替你退？Claude Code 的 <code>/rewind</code> 能同時退 code 和對話，但有三個限制（<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">2026-11 的官方文件</a>）：</p>
               <ul>
@@ -2651,6 +2669,29 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    ]
   },
   {
+   "id": "k8e",
+   "ks": "k8",
+   "kind": "choice",
+   "q": "一次驗證還是算 5 步，每步成功率從 95% 升到 99%。最省的切法會怎麼變？",
+   "choices": [
+    {
+     "t": "切得更長，每段 25 步最省：錯得少，少驗證幾次較划算",
+     "ok": true
+    },
+    {
+     "t": "切得更短，每段 5 步最省：錯得少，多驗證幾次也不貴",
+     "why": "一次驗證還是 5 步，多驗證一次就多花 5 步。錯得少，重跑也少，該省的是驗證次數，所以段要切長。"
+    },
+    {
+     "t": "不會變，還是每段 10 步：最省的段長只看驗證有多貴",
+     "why": "最省的段長也看每步多可靠。每步 99% 時平均每 100 步才錯一次，最省的變成每段 25 步。"
+    }
+   ],
+   "key": [
+    "每步 99% 時平均每 100 步才錯一次，重跑變少，少驗證幾次比較划算，最省的變成每段 25 步。驗證越貴、每步越可靠，段就切得越長。"
+   ]
+  },
+  {
    "id": "k8b",
    "ks": "k8",
    "kind": "apply",
@@ -4424,5 +4465,6 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
 </script>
 <script src="app.js"></script>
 <script src="code.js"></script>
+<script src="calc.js"></script>
 </body>
 </html>

@@ -188,6 +188,8 @@
   var statusEl = null;
 
   function indexBlocks() {
+    /* calc.js redraws interactive figures; put them back to the source state first */
+    if (window.cs2680Calc) window.cs2680Calc.resetAll();
     recs = new WeakMap();
     var seen = {};
     var all = main.querySelectorAll('p,li,h1,h2,h3,h4,h5,td,th,figcaption,blockquote,dt,dd,div');

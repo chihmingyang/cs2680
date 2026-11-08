@@ -16,7 +16,7 @@
 
 | 東西 | 位置 | 說明 |
 |---|---|---|
-| 站台檔案 | `docs/`（index、l01–l11、l02-readings、styles.css、app.js、code.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
+| 站台檔案 | `docs/`（index、l01–l11、l02-readings、styles.css、app.js、code.js、calc.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
 | 撰寫規範 | `guide/STYLE_ARTICLE.md`、`guide/STYLE_DIGEST.md` | 寫新講次或改內容前先讀。DIGEST 是延伸閱讀裡必讀與推薦摘要的規範。`STYLE_BASIC.md`（基礎題）2026-11-09 停用。 |
 | 可讀性審查 | `guide/REVIEW_READABILITY.md` | 改正文後、push 前，另一個 agent 讀一遍的 checklist 與報告格式。James 說看不懂就先回來改這份。 |
 | v7 的決定與來源 | `guide/V7_DECISIONS.md`、`guide/sources/lXX.md` | 每堂怎麼排、補、刪；外部事實的來源與查證紀錄。 |
@@ -26,6 +26,7 @@
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
 | 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前只有 L6（2026-11-08，整堂）。 |
 | 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 以心智模型為單位的觀念依賴圖（concept／practice、三級難度、要先懂的邊）；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（英文頁，首頁課程地圖有連結，2026-11-09）。 |
+| 互動圖 | `docs/calc.js`、`figure.diagram[data-calc]` | 拖滑桿換假設、圖照算式重畫；HTML 裡是預設值的靜態圖。目前只有 L6 3.1（2026-11-09）。規則在 `STYLE_ARTICLE.md` 第 6 節〈互動圖〉。 |
 | CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是「問 Claude」。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
 | L2 readings 的逐篇導讀 | `docs/l02-readings.html` | 只有 L2 有，10 篇全寫；l02.html 的延伸閱讀連到它。其他講次用頁內的必讀摘要。 |
@@ -54,7 +55,7 @@
 | `shot_article.py` | 截圖：架構圖（亮／暗）、第一題基礎題、第一題進階題、手機版。看的時候一則訊息平行 Read 6 張。 |
 | `verify.sh` | 一次跑完一堂的檢查：`bash tools/verify.sh l03`；`all` 是每一堂的頁面檢查加全站檢查各一次，CI 用（WORKFLOW J）。check_article、check_diagrams、quiz（有題庫的頁面）、audit、add_lecture --check、dag --check，全過只印 `ALL OK`；punct 只提示。不寫回檔案。 |
 | `assemble_ideas.py` | （v5 頁面用，v7 改用 `assemble_v7.py`）把 `notes/lXX/` 的章片段（`head.html`、`i1.html`…、選用的 `tldr.html`、`arch.html`）組回頁面的核心觀念：換掉 `#s-ideas`、填閱讀地圖的分鐘數、重建本頁的三層目錄。大改一堂的核心觀念時用（L5、L6 的擴寫）。 |
-| `review_pack.py` | 把一頁（或 `--since <ref>` 之後文字有變的章，tldr 也算）印成讀者視角的純文字審查包：一行一個單位、帶定位，表格格子帶欄名與列名，數字列併成一行。給可讀性審查的 subagent 讀。`--prefix` 把要審的章前面的章當上下文印出、後面的章不印（2026-11-07 起一律這樣給，tldr 用 `--chapter tldr` 單獨一包）。 |
+| `review_pack.py` | 把一頁（或 `--since <ref>` 之後文字有變的章，tldr 也算）印成讀者視角的純文字審查包：一行一個單位、帶定位，表格格子帶欄名與列名，數字列併成一行。給可讀性審查的 subagent 讀。`--prefix` 把要審的章前面的章當上下文印出、後面的章不印（2026-11-07 起一律這樣給，tldr 用 `--chapter tldr` 單獨一包）。互動圖的滑桿與預設的結論印成一個單位 `圖N 滑桿`（2026-11-09）。 |
 | `review_noise.py` | 比對同一包的幾份審查報告：每份的 BLOCK／NIT 數、哪些單位每次都被標、兩兩重疊、「最難讀的三處」重疊。量審查者的雜訊用（2026-11-07）。 |
 | `quiz.py` | 題庫：`check` 題庫和頁面的小節對不對得上（verify.sh 會跑）；`exam` 出作答包；`grade` 對定位、出評分包；`report` 彙整與比較各次結果。見 `guide/QUIZ.md`（2026-11-08）。 |
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
