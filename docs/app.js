@@ -237,16 +237,31 @@
       if (next && chapterOf(next) === ch && next.parentNode === prose) prose.insertBefore(nb, next);
       else prose.appendChild(nb);
     });
+    /* 整合題 go after the chapter named in `after` (default: the last chapter in
+       scope), one block per place; the label spans the chapters the questions use */
     var scope = q.scope || [];
-    var last = document.getElementById(scope[scope.length - 1]);
-    var lastProse = last && last.querySelector('.prose');
-    if (lastProse && (q.integration || []).length) {
-      var nums = scope.map(function (c) { return c.replace(/^i/, ''); });
-      var span = nums.length > 1 ? '第 ' + nums[0] + '–' + nums[nums.length - 1] + ' 章' : '第 ' + nums[0] + ' 章';
-      lastProse.appendChild(block('quiz-int', 'ksq-int', '整合題', span + '合起來用',
-        q.integration.map(function (x) { return item(x, x.ks); }),
+    var chap = {};
+    secs.forEach(function (s) { chap[s.id] = parseInt(s.from.slice(1), 10); });
+    var groups = {}, places = [];
+    (q.integration || []).forEach(function (x) {
+      var at = x.after || scope[scope.length - 1];
+      if (!groups[at]) { groups[at] = []; places.push(at); }
+      groups[at].push(x);
+    });
+    places.sort(function (a, b) { return scope.indexOf(a) - scope.indexOf(b); });
+    places.forEach(function (at, gi) {
+      var ch = document.getElementById(at);
+      var prose = ch && ch.querySelector('.prose');
+      if (!prose) return;
+      var lo = 99, hi = 0;
+      groups[at].forEach(function (x) {
+        x.ks.forEach(function (ks) { lo = Math.min(lo, chap[ks]); hi = Math.max(hi, chap[ks]); });
+      });
+      var span = lo === hi ? '第 ' + lo + ' 章' : '第 ' + lo + '–' + hi + ' 章';
+      prose.appendChild(block(gi ? 'quiz-int-' + at : 'quiz-int', 'ksq-int', '整合題', span + '合起來用',
+        groups[at].map(function (x) { return item(x, x.ks); }),
         '每一題要把幾節的觀念合起來答。各節的小測都會、這裡卻答不出來，通常是節和節之間怎麼接起來還沒讀通，可以從「用到」的連結回去讀。'));
-    }
+    });
     refresh();
   })();
 

@@ -109,8 +109,14 @@ def check(path):
                 if not c.get("t") or (not c.get("ok") and not c.get("why")):
                     errs.append(f'{u["id"]}：每個選項要有文字，錯的選項要寫 why（錯在哪）')
                     break
+    chap_of = {s["id"]: s["from"].split("-")[0] for s in q["sections"]}
     for x in q.get("integration", []):
         qids.append(x["id"])
+        at = x.get("after", scope[-1] if scope else None)
+        if at not in scope:
+            errs.append(f'{x["id"]}：after 的 #{at} 不在 scope 裡')
+        elif any(k in chap_of and scope.index(chap_of[k]) > scope.index(at) for k in x["ks"]):
+            errs.append(f'{x["id"]}：用到的節在 #{at} 之後，讀者做這題時還沒讀到')
         if len(x["ks"]) < 2:
             errs.append(f'{x["id"]}：整合題至少要用到兩節')
         for k in x["ks"]:
@@ -196,7 +202,8 @@ def exam(path, only=()):
 2. 每一題附「定位」：支持你答案每個要點的單位，寫法和每行開頭方括號裡的一樣，例如 #i2 ¶1、#i2 表1 列2、#i2 code1 內容、#i2 表2 列1 ‹換成›。要計算的題，附上算式的出處。
 3. 選擇題選一個字母。文字裡找不到能支持某個選項的內容，就選「文章沒寫，答不出來」，即使你自己知道答案。
 4. 問答題的答案寫成完整的句子，數字寫出來。
-5. 輸出一個 JSON 物件，不要其他文字：選擇題 {"k1a": {"choice": "C", "cite": ["#i1 ¶1"]}}，問答題 {"k1b": {"answer": "…", "cite": ["…"]}}，每一題一個 key。
+5. 覺得題目本身有問題（兩個選項都對、選項說得比文章多、題目要的文章沒寫、題目分不出懂不懂），照樣作答，另外寫在 "_issues"，一題一句。
+6. 輸出一個 JSON 物件，不要其他文字：選擇題 {"k1a": {"choice": "C", "cite": ["#i1 ¶1"]}}，問答題 {"k1b": {"answer": "…", "cite": ["…"]}}，每一題一個 key；另加 "_issues": {"k23d": "…"}（沒有就給空物件）。
 """)
     print("## 文字\n")
     group = None
@@ -245,7 +252,8 @@ def grade(path, answers_path, only=()):
     answers = json.loads(Path(answers_path).read_text(encoding="utf-8"))
     loc = locate(q, units, answers)
     names = {s["id"]: s["title"] for s in q["sections"]}
-    print(f"# 評分包：{Path(path).name}　{len(loc)} 題")
+    n = sum(1 for k, r in loc.items() if (not only or k in only) and r["item"].get("kind") != "choice")
+    print(f"# 評分包：{Path(path).name}　{n} 題")
     print("""
 你是評分者。每一題有：題目、答案要點（key）、作答者的答案、作答者引用的文字。
 對每個要點判斷：作答者的答案有沒有答到它（意思對就算，不必同字；數字要對，四捨五入可以），
@@ -284,7 +292,7 @@ def report(path, pairs):
     items = [(u["id"], [u["ks"]], u) for u in q["unit"]] + [(x["id"], x["ks"], x) for x in q.get("integration", [])]
     asked = set()
     for a, _ in pairs:
-        asked |= set(json.loads(Path(a).read_text(encoding="utf-8")))
+        asked |= {k for k in json.loads(Path(a).read_text(encoding="utf-8")) if not k.startswith("_")}
     items = [x for x in items if x[0] in asked]  # 只出了部分題目（exam 指定題號）時，沒出的題不算
     runs = []
     for a, v in pairs:
@@ -304,9 +312,10 @@ def report(path, pairs):
                 continue
             pts = (verdicts.get(qid) or {}).get("points") or []
             content = len(pts) == len(it["key"]) and all(pts)
+            why = (verdicts.get(qid) or {}).get("why", "") if pts else "還沒評分（問答題要評分 agent 的 verdicts）"
             r[qid] = {"pass": content and loc[qid]["ok"], "content": content, "loc": loc[qid]["ok"],
                       "pts": "".join("✓" if p else "✗" for p in pts) or "?",
-                      "lack": loc[qid]["lack"], "why": (verdicts.get(qid) or {}).get("why", "")}
+                      "lack": loc[qid]["lack"], "why": why}
         runs.append((Path(a).stem, r))
     hdr = " | ".join(n for n, _ in runs)
     print(f"| 題 | 節 | {hdr} |\n|---|---|" + "---|" * len(runs))

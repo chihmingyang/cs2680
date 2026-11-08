@@ -267,7 +267,7 @@ James 問：每次改一章，能不能像 CI 的 regression test 一樣，確�
 | 層 | 對應 code CI | 檢查什麼 | 狀態 |
 |---|---|---|---|
 | 1 機械檢查 | build＋lint | `verify.sh all`：每一堂的 check_article、check_discuss、check_diagrams，全站的 audit、add_lecture --check | 2026-11-07 上線：`.github/workflows/verify.yml` |
-| 2 理解測試 | regression test suite | 題庫：一個沒看過寫作過程的 agent 只拿頁面作答，每個答案附定位，定位落在該節、引用的文字真的寫了答案才算過 | 2026-11-08 pilot：L6 第 1–4 章，手動跑。目前的頁面 25 題全過；刪掉 K4 的算式後，考算式的 3 題轉紅（`guide/QUIZ.md`） |
+| 2 理解測試 | regression test suite | 題庫：一個沒看過寫作過程的 agent 只拿頁面作答，每個答案附定位，定位落在該節、引用的文字真的寫了答案才算過 | 2026-11-08：L6 整堂（第 1–4 章 pilot 時，刪掉 K4 的算式後考算式的題轉紅），手動跑（`guide/QUIZ.md`） |
 | 3 前後對照 | 和 baseline 比的 benchmark | 改過的章，舊版和新版並排重述，哪一版讀得懂 | 等第 2 層與雜訊數字 |
 
 第 1 層：
