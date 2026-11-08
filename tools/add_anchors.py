@@ -4,7 +4,8 @@
 Usage: python3 -I add_anchors.py docs/l01.html [docs/l02.html ...]
 
   section#s-ideas      div.idea      -> id="i1", "i2", ...
-  section#s-ideas      details.ex.deep whose summary starts with 本文延伸 -> id="x1", "x2", ... (page order)
+  section#s-ideas      details.ex.deep whose summary starts with 本文延伸 -> id="x1", "x2", ... (page order;
+                       numbers already used by legacy <span class="anchor" id="xN"> are skipped)
   section#s-beyond     div.idea      -> id="x1", ... (legacy pages only)
   section#s-background dl.terms > div -> id="t1", "t2", ...
 
@@ -60,11 +61,16 @@ def number_beyond(text):
     body = text[start:end]
     found = []
     k = [0]
+    # Legacy anchors kept as <span class="anchor" id="xN"> (old links still point at them, L6)
+    # keep their numbers; new blocks skip those numbers.
+    reserved = set(re.findall(r'<span class="anchor" id="(x\d+)"', body))
 
     def repl(m):
         if not re.match(r'\s*<summary>本文延伸', m.group(3)):
             return m.group(0)
         k[0] += 1
+        while "x%d" % k[0] in reserved:
+            k[0] += 1
         xid = "x%d" % k[0]
         found.append((xid, strip_tags(re.search(r"<summary>本文延伸｜(.*?)<span>", m.group(3), re.S).group(1))))
         return m.group(1) + ' id="%s"' % xid + m.group(2) + m.group(3)

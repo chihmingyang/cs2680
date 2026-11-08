@@ -173,7 +173,16 @@ def units_of(container, loc):
                 summ = next((x for x in c.children if isinstance(x, Node) and x.tag == "summary"), None)
                 kind = "註" if "gloss" in cls else "收合"
                 if summ:
-                    out.append((f"{loc} {kind} {did} 標題", summ.text()))
+                    # 本文延伸／深入: the trailing class-less <span> is a tag on the page (「不是 slide 的內容」),
+                    # not part of the title; print it apart so the reviewer does not read it as one sentence
+                    tail = [x for x in summ.children if not (isinstance(x, str) and not x.strip())]
+                    tag = tail[-1] if tail and isinstance(tail[-1], Node) and tail[-1].tag == "span" and not tail[-1].cls() else None
+                    if tag is not None:
+                        rest = Node("summary", {}, None)
+                        rest.children = [x for x in summ.children if x is not tag]
+                        out.append((f"{loc} {kind} {did} 標題", f"{rest.text().strip()}　〔頁面上的標籤：{tag.text().strip()}〕"))
+                    else:
+                        out.append((f"{loc} {kind} {did} 標題", summ.text()))
                 sub = Node("div", {}, None)
                 sub.children = [x for x in c.children if x is not summ]
                 for lc, tx in units_of(sub, f"{loc} {kind} {did}"):

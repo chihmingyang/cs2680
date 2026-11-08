@@ -64,8 +64,8 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/6_agent_design_3.pdf" target="_blank" rel="noopener">6_agent_design_3.pdf ↗</a></li>
       <li><span class="k">頁數</span>31</li>
       <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
-      <li><span class="k">註與延伸</span><span class="deep-time">約 9 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 70 分鐘</span></li>
+      <li><span class="k">註與延伸</span><span class="deep-time">約 14 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 75 分鐘</span></li>
     </ul>
   </header>
 
@@ -257,7 +257,7 @@ run 全對       = s ^ 50</code></pre></figure>
                   <tr><td>檢查很準，但重試常常還是錯</td><td>100%</td><td>50%</td><td>97.5%</td><td>28%</td></tr>
                 </tbody>
               </table></div>
-              <p>Model 一點都沒變強，<strong>50 步的全對率從 8% 升到 88%</strong>。但檢查要準：漏兩成，就掉到 55%。重試之前要確認這一步做兩次不會出事，這是 L5〈<a href="l05.html#i6">送出去之後</a>〉講的冪等。</p>
+              <p>Model 一點都沒變強，<strong>50 步的全對率從 8% 升到 88%</strong>。但檢查要準：漏兩成，就掉到 55%。檢查也會往另一個方向錯：把做對的步驟判成錯，打回去重做。上面的算式沒算這一種。把檢查調嚴，漏抓會變少；但多加的測試和規則本身也可能判錯，所以這一種錯通常會變多。冤枉到的步驟要重做，重做時可能把本來對的改壞，所以<strong>檢查不是越嚴越好</strong>，數字見本章最後的本文延伸〈<a href="#x5">檢查會往兩個方向錯</a>〉。另外，重試之前要確認這一步做兩次不會出事，這是 L5〈<a href="l05.html#i6">送出去之後</a>〉講的冪等。</p>
               <p id="i2-1"><b>檢查要真的抓得到。</b>detect 最容易高估，因為下面四種都看起來像檢查：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>看起來像檢查</th><th>為什麼抓不到</th><th>換成</th></tr></thead>
@@ -328,6 +328,75 @@ exit 0</code></pre></figure>
     }]
   }
 }</code></pre></figure>
+            </div>
+            <div class="exlist deeplist">
+            <details class="ex deep" id="x5">
+              <summary>本文延伸｜檢查會往兩個方向錯：漏抓與誤判<span>不是 slide 的內容</span></summary>
+              <div class="exbody prose">
+              <p>本章的算式只算了檢查的一種錯。檢查拿這一步的結果做判斷：說「過」就放行，說「錯」就打回去重做。它可能往兩個方向判錯，所以一共有四種結果。下表的 p、detect 和本章開頭的意思一樣：p 是這一步第一次就做對的機率，detect 是這一步做錯時檢查抓到的機率。</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>這一步</th><th>檢查說「過」</th><th>檢查說「錯」</th></tr></thead>
+                <tbody>
+                  <tr><td><b>真的做對了</b><br><small>機率 p</small></td><td>放行，判對了</td><td><b>誤判</b>：檢查把做對的步驟打回去重做。算式沒有這一格，等於假設它不會發生</td></tr>
+                  <tr><td><b>真的做錯了</b><br><small>機率 1 − p</small></td><td><b>漏抓</b>：錯誤留在 run 裡。機率是 1 − detect，本章表裡「檢查漏兩成」那一列就是漏抓 20%</td><td>抓到了，重試。機率是 detect</td></tr>
+                </tbody>
+              </table></div>
+              <p>英文常把這兩種錯叫 false positive 和 false negative，但哪一種叫哪個名字，要看把哪一種判定當成 positive（陽性），而兩種當法都有人用。把「檢查說錯」當 positive，就像驗出病叫陽性：漏抓是 false negative（偽陰性），誤判是 false positive（偽陽性）。評估 agent 的 grader（判斷 agent 有沒有做完任務的程式）通常反過來，把「判過」當 positive，名字就對調：沒做對卻判過，叫 false positive。L7〈<a href="l07.html#i6">Grader</a>〉用的是後一種。為了不混淆，本文不用這兩個英文名字，直接說漏抓和誤判。</p>
+              <p><b>把誤判算進去。</b>設 false_alarm 是檢查把做對的步驟判成錯的機率。打回去的步驟要重做。這裡的假設和本章的算式一樣：重做之後做對的機率是 retry_ok；重做的結果不再檢查，重做錯了就算這一步失敗。本章的算式也是這樣算的，它沒有「重試又錯、再檢查、再重試」那一項。</p>
+              <figure class="file"><figcaption>一步的成功率，加上誤判（本文補的）</figcaption><pre><code class="lang-text">s = p × (1 − false_alarm)          ← 做對了，放行
+  + p × false_alarm × retry_ok     ← 做對了，檢查誤判，重做之後還是對的
+  + (1 − p) × detect × retry_ok    ← 做錯了，抓到了，重試成功
+
+false_alarm = 0 時，就是本章的算式</code></pre></figure>
+              <p>漏抓只會發生在做錯的步驟上，每一步只有 1 − p = 5% 的機率做錯。誤判發生在做對的步驟上，每一步有 p = 95% 的機率做對。所以誤判能碰到的步驟，是漏抓的 19 倍（95% ÷ 5%）。但兩種錯每發生一次的損失，要看 retry_ok。漏抓一次，損失的是一次修好的機會，這個機會本來有 retry_ok 的機率成功。誤判一次，那一步要在重做時改壞才算失敗，機率是 1 − retry_ok。兩邊乘起來：漏抓率每多 1 個百分點，一步的成功率就少 (1 − p) × retry_ok 個百分點；誤判率每多 1 個百分點，就少 p × (1 − retry_ok) 個百分點。重試和第一次一樣準的時候（retry_ok = p = 95%），兩個都是 5% × 95% = 0.0475：誤判碰到的步驟是 19 倍，每一次的損失卻只有漏抓的 19 分之一（5% 對 95%），剛好抵銷，傷害一樣大。重試常常還是錯的時候（retry_ok = 50%），兩種錯每一次的損失都是 50%，只剩碰到的步驟數不同，所以漏抓是 0.025、誤判是 0.475，誤判的傷害是漏抓的 19 倍。</p>
+              <p><b>所以檢查不是越嚴越好。</b>把檢查調嚴，例如多跑幾種測試、或讓 reviewer 看到可疑的地方就打回去，漏抓會變少。但每多跑一個測試，就多一個可能本身寫錯、或時過時不過的測試；reviewer 打回去的「可疑」，也不一定真的錯。所以調嚴之後，誤判通常也會變多。下圖用本章的 p = 95%，比較四種檢查的 50 步全對率：</p>
+              <ul>
+                <li><b>本章的「檢查很準」</b>：漏抓 0、誤判 0，理想的情況。</li>
+                <li><b>寬鬆</b>：漏抓 20%、誤判 0，就是本章表裡「檢查漏兩成」那一列。</li>
+                <li><b>調嚴，少誤判</b>：漏抓降到 1%，誤判 5%。</li>
+                <li><b>調嚴，常誤判</b>：漏抓降到 1%，誤判 20%。</li>
+              </ul>
+              <figure class="diagram">
+                            <div class="scroll">
+                              <svg viewBox="0 0 720 340" role="img" aria-label="橫條圖：四種檢查在 p = 95%、50 步時的 50 步全對率，每種檢查兩條，上面一條是重試和第一次一樣準（95%），下面一條是重試常常還是錯（50%）。本章的「檢查很準」（漏抓 0、誤判 0）：重試一樣準 88%，重試常錯 28%。寬鬆（漏抓 20%、誤判 0）：重試一樣準 55%，重試常錯 22%。調嚴，少誤判（漏抓 1%、誤判 5%）：重試一樣準 76%，重試常錯 8%。調嚴，常誤判（漏抓 1%、誤判 20%）：重試一樣準 53%，重試常錯 0.2%。重試和第一次一樣準時，除了理想的檢查很準，調嚴而且少誤判最高；誤判多到 20%，就退回和寬鬆差不多。重試常常還是錯時，調嚴的兩種都比寬鬆差。">
+                                <defs><marker id="l6v-fa-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-fa-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                                <rect x="420" y="12" width="14" height="14" rx="2" class="dg-n-a"/>
+                                <text x="440" y="24" class="dg-c">重試和第一次一樣（95%）</text>
+                                <rect x="420" y="32" width="14" height="14" rx="2" class="dg-n-n"/>
+                                <text x="440" y="44" class="dg-c">重試常常還是錯（50%）</text>
+                                <text x="14" y="80" class="dg-h">本章的「檢查很準」</text>
+                                <text x="14" y="101" class="dg-c">漏抓 0、誤判 0</text>
+                                <rect x="420" y="58" width="255.9" height="24" rx="2" class="dg-n-a"/>
+                                <text x="683.9" y="75" class="dg-cb">88%</text>
+                                <rect x="420" y="86" width="81.8" height="24" rx="2" class="dg-n-n"/>
+                                <text x="509.8" y="103" class="dg-cb">28%</text>
+                                <text x="14" y="152" class="dg-h">寬鬆</text>
+                                <text x="14" y="173" class="dg-c">漏抓 20%、誤判 0</text>
+                                <rect x="420" y="130" width="158.6" height="24" rx="2" class="dg-n-a"/>
+                                <text x="586.6" y="147" class="dg-cb">55%</text>
+                                <rect x="420" y="158" width="63.2" height="24" rx="2" class="dg-n-n"/>
+                                <text x="491.2" y="175" class="dg-cb">22%</text>
+                                <text x="14" y="224" class="dg-h">調嚴，少誤判</text>
+                                <text x="14" y="245" class="dg-c">漏抓 1%、誤判 5%</text>
+                                <rect x="420" y="202" width="221.8" height="24" rx="2" class="dg-n-focus"/>
+                                <text x="649.8" y="219" class="dg-k">76%</text>
+                                <rect x="420" y="230" width="23.5" height="24" rx="2" class="dg-n-n"/>
+                                <text x="451.5" y="247" class="dg-cb">8%</text>
+                                <text x="14" y="296" class="dg-h">調嚴，常誤判</text>
+                                <text x="14" y="317" class="dg-c">漏抓 1%、誤判 20%</text>
+                                <rect x="420" y="274" width="154.8" height="24" rx="2" class="dg-n-a"/>
+                                <text x="582.8" y="291" class="dg-cb">53%</text>
+                                <rect x="420" y="302" width="2" height="24" rx="2" class="dg-n-n"/>
+                                <text x="430" y="319" class="dg-cb">0.2%</text>
+                              </svg>
+                            </div>
+                            <figcaption>這張圖回答：檢查調嚴，一定比較好嗎？不一定。重試和第一次一樣準的時候，調嚴要少誤判才有用：50 步全對率從寬鬆的 55% 升到調嚴、少誤判的 76%；誤判多到 20%，就退回 53%。重試常常還是錯的時候，調嚴的兩種都比寬鬆的 22% 差：少誤判的是 8%，常誤判的是 0.2%。四種檢查都是 p = 95%、50 步，照上面的算式計算，本文的整理。</figcaption>
+                          </figure>
+              <p>用上一段的係數就算得出這張圖。從寬鬆調到「調嚴，少誤判」，漏抓少了 19 個百分點（20% 降到 1%），誤判多了 5 個百分點（0 升到 5%）。重試和第一次一樣準的時候，兩種錯每個百分點都讓一步的成功率少 0.0475 個百分點；漏抓少 19 個、誤判多 5 個，一步的成功率淨增約 0.67 個百分點，50 步全對率就從 55% 升到 76%。誤判多到 20% 時，多出來的誤判比少掉的漏抓還多 1 個百分點，一步的成功率反而微降，50 步全對率退回 53%，等於白調。重試常常還是錯的時候，漏抓每個百分點只值 0.025，誤判每個值 0.475：少掉 19 個百分點的漏抓，一步的成功率只多約 0.48 個百分點；多出 5 個百分點的誤判，卻少約 2.4 個百分點。一步淨少約 1.9 個百分點，50 步全對率從寬鬆的 22% 掉到 8%。所以<strong>評一個檢查要看兩個數字：漏抓多少、誤判多少</strong>，還要看重試修不修得好，因為它決定兩種錯各值多少。</p>
+              <p><b>實際的誤判比算式更傷。</b>算式假設冤枉到的步驟只是重做一次，做對的機率還是 retry_ok。實際上 agent 收到的訊息是「你做錯了」，它會去修一個不存在的 bug，改壞的機率比重做一次更高。常見的來源是 flaky test：同一份程式碼有時過、有時不過的測試，例如一個依當天日期計算的測試，剛好碰到 2 月 29 日才失敗（第 10 章〈<a href="#n-fail">26 種 run 的失敗</a>〉的環境那張表）。對策是先在沒改過的版本上，把同一個測試多跑幾次：沒改過的版本也會失敗，失敗就不是這一步造成的，該處理的是那個測試，不是叫 agent 改程式。更糟的是檢查本身寫錯，例如測試和規格矛盾，做對的實作永遠過不了，等於誤判率 100%。這正是本章前面 ImpossibleBench 的設定：GPT-5 在 Oneoff 有 76% 改用作弊讓測試變綠；給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 的作弊就從 54% 降到 9%。ImpossibleBench 量的是誤判率 100% 的極端情況，偶爾的誤判會不會也讓 agent 作弊，沒有量測。本文的推論是方向相同：agent 收到「錯了」卻找不到錯，能做的就只剩改程式去迎合檢查。所以誤判的代價可能不只是多一次重試。</p>
+              <p><b>漏抓的代價，sⁿ 也低估了。</b>sⁿ 只回答 50 步全對的機率，不分失敗的 run 是哪一種。有的失敗至少有一次檢查說過「錯」，留下了紀錄，有人可以回頭看。漏抓的錯不一樣：那一步做錯了，檢查卻說過，當下沒有任何紀錄說它錯了。以寬鬆的檢查為例（漏抓 20%）：一步做錯的機率是 1 − p = 5%，做錯又漏抓的機率是 5% × 20% = 1%。50 步裡至少有一步漏抓的機率是 1 − 0.99⁵⁰，約 40%。重試和第一次一樣準的時候，寬鬆的檢查 50 步全對率是 55%，失敗的 run 約 45%。有漏抓的 run 一定不是全對的，所以這 40% 全部落在那 45% 裡。照這個算式推，失敗的 run 有近九成（40% ÷ 45%）至少帶著一個漏抓的錯。這些錯有的之後會露出症狀，有的不會；不會的，agent 就會當成成功交出去。本章前面引的 Failure as a Process 量到，26% 的失敗 run 宣稱自己成功，可見 agent 把失敗當成成功交出去，在實測裡並不少見。</p>
+              </div>
+            </details>
             </div>
           </div>
 
