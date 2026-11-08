@@ -25,7 +25,7 @@
 | Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
 | 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前只有 L6（2026-11-08，整堂）。 |
-| 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 100 個觀念、要先懂的邊、三級難度；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（2026-11-08 草稿，英文頁，首頁還沒連）。 |
+| 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 以心智模型為單位的觀念依賴圖（concept／practice、三級難度、要先懂的邊）；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（英文頁，首頁課程地圖有連結，2026-11-09）。 |
 | CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是「問 Claude」。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
 | 成員的討論 | repo 的 Issues（每堂一串，label `L01`…） | `tools/discuss.py --digest lXX` 依題號匯出成 Markdown。 |

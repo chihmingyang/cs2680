@@ -8,6 +8,7 @@
 檢查什麼（規則在 guide/DAG.md）：
   - id 唯一、deps 都存在、沒有自己依賴自己、沒有環
   - 難度沿著邊不會降：前置觀念的難度 ≤ 這個觀念（Basic ≤ Intermediate ≤ Expert）
+  - kind 是 concept（心智模型）或 practice（決定規則／技巧／案例）；concept 不能依賴 practice
   - src 的錨點（lXX#iN、lXX#iN-M）在該頁真的存在
   - 每一堂核心觀念的每一章，都被某個節點的 src 蓋到，或列在 excluded（目錄章）
   - short 在方塊裡要能放進兩行（用字寬估算）→ 放不下是 ERROR
@@ -30,11 +31,13 @@ DATA = SITE / "dag.json"
 OUT = SITE / "dag.html"
 TIER_ORDER = ["Basic", "Intermediate", "Expert"]
 TIER_CLASS = {"Basic": "a", "Intermediate": "c", "Expert": "d"}
+KINDS = ["concept", "practice"]
 
 # 方塊幾何（px）。英文標籤比中文長，所以字 12px、方塊高 52、最多兩行。
-NW, NH, FONT = 134, 52, 12
+# 欄距最多 142：9 欄時整張 1300px，比內容欄寬一點，用 .scroll 橫向捲；「Fit to width」可以縮進去。
+NW, NH, FONT = 124, 52, 12
 TEXT_W = NW - 16          # 左右各 8px 內距
-PITCH_MAX = 150
+PITCH_MAX = 142
 
 
 # ---------- 讀頁面：章節 id 與標題 ----------
@@ -121,6 +124,8 @@ def check(d):
                 errs.append(f"{n['id']}：缺 {k}")
         if n.get("tier") not in TIER_ORDER:
             errs.append(f"{n['id']}：tier 要是 {TIER_ORDER}，現在是 {n.get('tier')}")
+        if n.get("kind") not in KINDS:
+            errs.append(f"{n['id']}：kind 要是 {KINDS}，現在是 {n.get('kind')}")
         if n.get("theme") not in theme_ids:
             errs.append(f"{n['id']}：theme {n.get('theme')} 不在 themes 裡")
         if not n.get("src"):
@@ -161,11 +166,13 @@ def check(d):
     for i in order:
         depth[i] = max((depth[dep] + 1 for dep in by[i]["deps"]), default=0)
 
-    # 難度單調
+    # 難度單調；concept 不能依賴 practice
     for n in nodes:
         for dep in n["deps"]:
             if TIER_ORDER.index(by[dep]["tier"]) > TIER_ORDER.index(n["tier"]):
                 errs.append(f"{n['id']}（{n['tier']}）依賴 {dep}（{by[dep]['tier']}）：前置的難度不能比較高")
+            if n["kind"] == "concept" and by[dep]["kind"] == "practice":
+                errs.append(f"{n['id']} 是 concept，卻依賴 practice {dep}：心智模型不能建立在技巧上，邊或 kind 有一個錯")
 
     # 多餘的邊：dep 已經是別的 dep 的祖先
     anc = {}
@@ -230,9 +237,9 @@ def layout(d, info):
     cells = {(t, k): [] for t in themes for k in range(D + 1)}
     for i in info["order"]:
         cells[(by[i]["theme"], depth[i])].append(i)
-    W_TOTAL = 1200
+    W_TOTAL = 1300
     ML, MR, MT = 14, 14, 30
-    pitch = min(PITCH_MAX, (W_TOTAL - ML - MR) // (D + 1))
+    pitch = max(NW + 14, min(PITCH_MAX, (W_TOTAL - ML - MR) // (D + 1)))  # 欄太多就讓整張變寬，不擠方塊
     GAP_Y, HEAD, PAD = 10, 24, 10
     pos = {}
     rows = []
@@ -309,8 +316,8 @@ def svg(d, info, L):
         tag = "L" + str(int(lec[1:]))
         lines = wrap(n["short"])
         label = html.escape(n["short"])
-        out.append(f'<g class="dag-n tier-{TIER_CLASS[n["tier"]]}" id="n-{n["id"]}" data-id="{n["id"]}" tabindex="0" role="button" '
-                   f'aria-label="{label}, {n["tier"]}, {tag}">')
+        out.append(f'<g class="dag-n tier-{TIER_CLASS[n["tier"]]} kind-{n["kind"]}" id="n-{n["id"]}" data-id="{n["id"]}" tabindex="0" role="button" '
+                   f'aria-label="{label}, {n["kind"]}, {n["tier"]}, {tag}">')
         out.append(f'<rect class="dag-box" x="{x}" y="{y}" width="{NW}" height="{NH}" rx="5"/>')
         out.append(f'<rect class="dag-tier" x="{x}" y="{y}" width="4" height="{NH}" rx="2"/>')
         out.append(f'<text class="dag-tag" x="{x + NW - 6}" y="{y + NH - 5}" text-anchor="end">{tag}</text>')
@@ -355,12 +362,14 @@ def analyze(d, info):
     for lec in sorted(d["lectures"]):
         ns = [n for n in d["nodes"] if n["src"][0].startswith(lec + "#")]
         tiers = {t: sum(1 for n in ns if n["tier"] == t) for t in TIER_ORDER}
+        kinds = {k: sum(1 for n in ns if n["kind"] == k) for k in KINDS}
         ds = [depth[n["id"]] for n in ns]
         fw = sum(1 for n, dep in forward if n["src"][0].startswith(lec + "#"))
-        per_lec[lec] = {"n": len(ns), "tiers": tiers, "dmin": min(ds) if ds else None, "dmax": max(ds) if ds else None, "fw": fw}
+        per_lec[lec] = {"n": len(ns), "tiers": tiers, "kinds": kinds, "dmin": min(ds) if ds else None, "dmax": max(ds) if ds else None, "fw": fw}
     tier_total = {t: sum(1 for n in d["nodes"] if n["tier"] == t) for t in TIER_ORDER}
+    kind_total = {k: sum(1 for n in d["nodes"] if n["kind"] == k) for k in KINDS}
     roots = [n for n in d["nodes"] if not n["deps"]]
-    return {"merged": merged, "forward": forward, "per_lec": per_lec, "tier_total": tier_total, "roots": roots}
+    return {"merged": merged, "forward": forward, "per_lec": per_lec, "tier_total": tier_total, "kind_total": kind_total, "roots": roots}
 
 
 # ---------- 頁面 ----------
@@ -407,7 +416,7 @@ def render(d, info, L, A):
     js_nodes = []
     for n in d["nodes"]:
         js_nodes.append({
-            "id": n["id"], "name": n["name"], "short": n["short"], "tier": n["tier"],
+            "id": n["id"], "name": n["name"], "short": n["short"], "tier": n["tier"], "kind": n["kind"],
             "theme": theme_name[n["theme"]], "deps": n["deps"], "why": n["why"],
             "depth": depth[n["id"]],
             "src": [{"href": src_ref(s)[0], "ref": src_ref(s)[1], "title": src_title(s, pages)} for s in n["src"]],
@@ -421,11 +430,12 @@ def render(d, info, L, A):
         t = r["tiers"]
         rows.append(
             f'<tr><th scope="row"><a href="{lec}.html">L{int(lec[1:])}</a> {esc(d["lectures"][lec])}</th>'
-            f'<td>{r["n"]}</td><td>{t["Basic"]}</td><td>{t["Intermediate"]}</td><td>{t["Expert"]}</td>'
+            f'<td>{r["kinds"]["concept"]} / {r["kinds"]["practice"]}</td><td>{t["Basic"]}</td><td>{t["Intermediate"]}</td><td>{t["Expert"]}</td>'
             f'<td>{r["dmin"]}–{r["dmax"]}</td><td>{r["fw"] or "—"}</td></tr>')
-    rows.append(f'<tr class="dag-sum"><th scope="row">Total</th><td>{N}</td><td>{tt["Basic"]}</td><td>{tt["Intermediate"]}</td><td>{tt["Expert"]}</td><td>0–{L["D"]}</td><td>{len(A["forward"])}</td></tr>')
+    kt = A["kind_total"]
+    rows.append(f'<tr class="dag-sum"><th scope="row">Total</th><td>{kt["concept"]} / {kt["practice"]}</td><td>{tt["Basic"]}</td><td>{tt["Intermediate"]}</td><td>{tt["Expert"]}</td><td>0–{L["D"]}</td><td>{len(A["forward"])}</td></tr>')
     table = ("<div class=\"table-wrap\"><table class=\"dag-table\">"
-             "<thead><tr><th>Lecture</th><th>Concepts</th><th>Basic</th><th>Intermediate</th><th>Expert</th><th>Depth range</th><th>Prerequisites taught later</th></tr></thead>"
+             "<thead><tr><th>Lecture</th><th>Concepts / practices</th><th>Basic</th><th>Intermediate</th><th>Expert</th><th>Depth range</th><th>Prerequisites taught later</th></tr></thead>"
              f"<tbody>{''.join(rows)}</tbody></table></div>")
 
     # 散在兩堂
@@ -459,10 +469,10 @@ def render(d, info, L, A):
             deps = ", ".join(ref_btn(by[dep]) for dep in n["deps"])
             href, ref = src_ref(n["src"][0])
             lis.append(
-                f'<li id="o-{i}">{tier_badge(n["tier"])}<span class="dag-o-main">{ref_btn(n, "strong")}'
+                f'<li id="o-{i}" class="kind-{n["kind"]}">{tier_badge(n["tier"])}<span class="dag-o-main">{ref_btn(n, "strong")}'
                 f'<span class="dag-o-name">{esc(n["name"])}</span>'
                 f'<span class="dag-o-meta"><a href="{href}" title="{esc(src_title(n["src"][0], pages))}">{ref}</a>'
-                + (f' · needs: {deps}' if deps else " · root") + "</span></span></li>")
+                + (f' · needs: {deps}' if deps else " · root") + f' · {n["kind"]}' + "</span></span></li>")
         title = "Layer 0: roots — depend on nothing else in the course" if k == 0 else f"Layer {k}: all prerequisites are in layers 0–{k - 1}"
         layer_blocks.append(f'<li class="dag-layer"><h3>{title}<small>{len(ids)} concepts</small></h3><ol class="dag-olist">{"".join(lis)}</ol></li>')
 
@@ -514,6 +524,8 @@ def render(d, info, L, A):
 .dag-n.tier-a .dag-box {{ fill: var(--dg-a); }}
 .dag-n.tier-c .dag-box {{ fill: var(--dg-c); }}
 .dag-n.tier-d .dag-box {{ fill: var(--dg-d); }}
+.dag-n.kind-practice .dag-box {{ fill-opacity: .38; stroke: var(--ink-soft); stroke-dasharray: 2 2.5; }}
+.dag-n.kind-practice .dag-t {{ fill: var(--ink); }}
 .dag-tier {{ fill: var(--ink-soft); opacity: 0; }}
 .dag-n.tier-c .dag-tier {{ opacity: .35; }}
 .dag-n.tier-d .dag-tier {{ opacity: .8; }}
@@ -534,6 +546,8 @@ def render(d, info, L, A):
 .dag-legend i {{ display: inline-block; width: 1.4rem; height: 0; border-top: 2px solid var(--signal); }}
 .dag-legend i.desc {{ border-top-style: dashed; border-color: var(--caution); }}
 .dag-legend i.sel {{ width: .9rem; height: .9rem; border: 2px solid var(--key); border-radius: 3px; }}
+.dag-legend i.box {{ width: 1.1rem; height: .8rem; border: 1px solid var(--rule); border-radius: 3px; background: var(--dg-c); }}
+.dag-legend i.box.practice {{ border: 1px dotted var(--ink-soft); background: color-mix(in srgb, var(--dg-c) 38%, var(--sheet)); }}
 .dag-detail {{ margin-top: 1rem; border: 1px solid var(--rule); border-left: 4px solid var(--signal); border-radius: var(--radius); background: var(--sheet); padding: 1rem 1.1rem; display: grid; gap: .6rem; max-width: 52rem; }}
 .dag-detail .hint {{ color: var(--ink-soft); margin: 0; }}
 .dag-detail h2 {{ margin: 0; font-size: 1.15rem; font-family: var(--font-display); display: flex; flex-wrap: wrap; gap: .5rem .6rem; align-items: center; }}
@@ -592,8 +606,8 @@ def render(d, info, L, A):
   <header class="dag-head">
     <p class="eyebrow">Course map · Concept DAG · draft {d["updated"]}</p>
     <h1>Concept DAG: where each concept comes from</h1>
-    <p>The course is currently cut into one-hour lecture decks, but the dependencies between concepts do not follow the lecture order. This figure breaks the core ideas of the 11 lectures into <b>{N} concepts</b> and <b>{E} “understand this first” edges</b>. Every concept builds on another; there are only {len(A["roots"])} roots: {roots_txt}.</p>
-    <p>How to read it: <b>left to right is dependency depth</b> (everything a concept in layer k needs is in layers 0 to k−1, so reading left to right is a valid order); <b>each row is a theme</b>; <b>color is difficulty</b>. Click a concept to see what it builds on (to the left) and what builds on it (to the right). Pick a lecture to see where its chapters land in the figure.</p>
+    <p>The course is cut into one-hour lecture decks, but understanding does not come in one-hour pieces. This figure starts from the other end: what mental models does a reader have to hold, and which one must be in place before the next makes sense? It has <b>{A["kind_total"]["concept"]} concepts</b> (mental models that stay true across products), <b>{A["kind_total"]["practice"]} practices</b> (decision rules and techniques that apply them) and <b>{E} “understand this first” edges</b>. Everything grows from {len(A["roots"])} root{"s" if len(A["roots"]) > 1 else ""}: {roots_txt}.</p>
+    <p>How to read it: <b>left to right is dependency depth</b> (everything in layer k needs only layers 0 to k−1, so reading left to right is a valid order); <b>each row is a theme</b>; <b>color is difficulty</b>; <b>solid boxes are concepts, pale dotted boxes are practices</b>. Click a box to see what it builds on (to the left) and what builds on it (to the right). Untick “Show practices” to see only the skeleton of mental models. Pick a lecture to see where its chapters land.</p>
   </header>
 
   <div class="dag-bar" role="group" aria-label="Filters">
@@ -603,8 +617,9 @@ def render(d, info, L, A):
       <label><input type="checkbox" class="dag-f-tier" value="Expert" checked> {tier_badge("Expert")}</label>
     </fieldset>
     <label>Lecture <select id="dag-f-lec"><option value="">all</option>{lec_opts}</select></label>
+    <label><input type="checkbox" id="dag-f-practice" checked> Show practices</label>
     <span class="spacer"></span>
-    <label><input type="checkbox" id="dag-fit"> Fit to width</label>
+    <label><input type="checkbox" id="dag-fit" checked> Fit to width</label>
     <button type="button" id="dag-clear">Clear selection</button>
   </div>
 
@@ -612,12 +627,13 @@ def render(d, info, L, A):
     <div class="scroll">{svg(d, info, L)}</div>
     <ul class="dag-legend" aria-label="Legend">
       <li>{tier_badge("Basic")} {tier_badge("Intermediate")} {tier_badge("Expert")} difficulty</li>
-      <li><i class="sel"></i> selected concept</li>
+      <li><i class="box"></i> concept (mental model) · <i class="box practice"></i> practice (rule or technique)</li>
+      <li><i class="sel"></i> selected</li>
       <li><i></i> its prerequisites (to the left)</li>
       <li><i class="desc"></i> what builds on it (to the right)</li>
       <li>The L-number in a box is the lecture that covers the concept most fully; concepts split across two lectures are listed below the figure.</li>
     </ul>
-    <figcaption>Each box is one concept, shown by its short name; click it for the one-sentence claim and why it builds on its prerequisites. An edge A → B means “understand A before reading B”. Only direct prerequisites are drawn: an edge that follows from other edges is omitted. Layout: x is the length of the longest dependency path, y is the theme; several concepts in one cell stack vertically.</figcaption>
+    <figcaption>Each box is one concept or practice, shown by its short name; click it for the one-sentence claim and why it builds on its prerequisites. An edge A → B means “understand A before reading B”. Only direct prerequisites are drawn: an edge that follows from other edges is omitted. A concept never depends on a practice, so the solid boxes alone form a complete map. Layout: x is the length of the longest dependency path, y is the theme; several boxes in one cell stack vertically.</figcaption>
   </figure>
 
   <aside class="dag-detail" id="dag-detail" aria-live="polite">
@@ -648,15 +664,18 @@ def render(d, info, L, A):
     <h2 id="rules-h">How this figure was built</h2>
     <h3>What a node is</h3>
     <ul class="dag-rules">
-      <li>A node is one concept: it can be stated as a one-sentence claim, it has its own prerequisites, and removing it makes some later concept unreadable.</li>
-      <li>The starting point is the chapters of each lecture article (the v7 layout already has one idea per chapter). A chapter that teaches two concepts with different prerequisites is split into two nodes (L1 chapter 9 becomes probabilistic output, two-layer testing, and failure is normal). Two lectures teaching the same concept are merged into one node (the agent loop comes from L1 and L2).</li>
-      <li>Catalog chapters (lookup lists) are not concepts and stay out:{excluded_li and "<ul>" + excluded_li + "</ul>"}</li>
+      <li>The unit is what a reader holds in their head, not what a lecture covers. A <b>concept</b> is a mental model: {esc(d["kinds"]["concept"])}</li>
+      <li>A <b>practice</b> applies concepts: {esc(d["kinds"]["practice"])}</li>
+      <li>The test for a concept: state it without naming a product, a lecture or this course. If the sentence only works with “Claude Code” or “CLAUDE.md” in it, the node is the general idea and the product is its example (CLAUDE.md and auto memory are one concept, persistent text; skills and offloading are one concept, keep it out until needed; subagents and multi-agent systems are one concept, agents share only text).</li>
+      <li>One node, one claim: it can be written as a single sentence, it has its own prerequisites, and removing it makes some later node unreadable. Worked cases from the lectures (Caveman, Superpowers, dsh-superagent) are not nodes; they are examples inside the node they illustrate.</li>
+      <li>Every chapter of every lecture article maps onto at least one node, so nothing taught is lost. Catalog chapters (lookup lists) are not concepts and stay out:{excluded_li and "<ul>" + excluded_li + "</ul>"}</li>
     </ul>
     <h3>What an edge is</h3>
     <ul class="dag-rules">
       <li>A → B means “understand A before reading B”. B's “why” sentence must say what becomes unreadable without A.</li>
       <li>Only direct prerequisites are drawn. If A → C follows from A → B → C, it is not drawn.</li>
-      <li>Edges look only at concepts, never at lectures. Prerequisites that live in a later lecture are therefore expected; they are exactly the gap this figure is meant to expose.</li>
+      <li>Edges look only at ideas, never at lectures. Prerequisites that live in a later lecture are therefore expected; they are exactly the gap this figure is meant to expose.</li>
+      <li>A concept never depends on a practice. If it seems to, either the edge points the wrong way or the node is misclassified. <code>tools/dag.py --check</code> rejects it.</li>
     </ul>
     <h3>How difficulty is assigned</h3>
     <ul class="dag-tiers">{tiers_desc}</ul>
@@ -720,7 +739,7 @@ def render(d, info, L, A):
     var badge = document.createElement('span'); badge.className = 'dag-badge tier-' + ({{'Basic': 'a', 'Intermediate': 'c', 'Expert': 'd'}})[n.tier]; badge.textContent = n.tier;
     h.appendChild(badge);
     h.appendChild(document.createTextNode(n.short));
-    var sm = document.createElement('small'); sm.textContent = n.theme + ' · layer ' + n.depth + ' · ' + n.lecs.join(', ');
+    var sm = document.createElement('small'); sm.textContent = n.kind + ' · ' + n.theme + ' · layer ' + n.depth + ' · ' + n.lecs.join(', ');
     h.appendChild(sm);
     detail.appendChild(h);
     var claim = document.createElement('p'); claim.className = 'claim'; claim.textContent = n.name; detail.appendChild(claim);
@@ -782,13 +801,14 @@ def render(d, info, L, A):
 
   var tierBoxes = Array.prototype.slice.call(document.querySelectorAll('.dag-f-tier'));
   var lecSel = document.getElementById('dag-f-lec');
+  var practiceBox = document.getElementById('dag-f-practice');
   function applyFilter() {{
     var tiers = {{}};
     tierBoxes.forEach(function (c) {{ tiers[c.value] = c.checked; }});
     var lec = lecSel.value;
     var on = {{}};
     data.nodes.forEach(function (n) {{
-      on[n.id] = !!tiers[n.tier] && (!lec || n.lecs.indexOf(lec) >= 0);
+      on[n.id] = !!tiers[n.tier] && (!lec || n.lecs.indexOf(lec) >= 0) && (practiceBox.checked || n.kind === 'concept');
       nodeEls[n.id].classList.toggle('is-off', !on[n.id]);
     }});
     edgeEls.forEach(function (e) {{
@@ -797,9 +817,11 @@ def render(d, info, L, A):
   }}
   tierBoxes.forEach(function (c) {{ c.addEventListener('change', applyFilter); }});
   lecSel.addEventListener('change', applyFilter);
+  practiceBox.addEventListener('change', applyFilter);
 
   var fit = document.getElementById('dag-fit');
-  try {{ fit.checked = localStorage.getItem('cs2680.dag.fit') === '1'; }} catch (e) {{}}
+  fit.checked = true;  // 預設縮到內容欄寬（約 0.9 倍）；取消就 1:1 橫向捲
+  try {{ var fv = localStorage.getItem('cs2680.dag.fit'); if (fv !== null) fit.checked = fv === '1'; }} catch (e) {{}}
   function applyFit() {{ fig.classList.toggle('fit', fit.checked); try {{ localStorage.setItem('cs2680.dag.fit', fit.checked ? '1' : '0'); }} catch (e) {{}} }}
   fit.addEventListener('change', applyFit); applyFit();
 
