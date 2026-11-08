@@ -5,10 +5,9 @@
 #       bash tools/verify.sh all    # 每一堂的頁面檢查＋全站檢查各一次（CI 用，.github/workflows/verify.yml）
 #
 # 為什麼：分開跑是六個 tool call，每個 call 都要重讀整個 context；合成一個，每輪檢查只花一步。
-# 跑的是：check_article、check_discuss、check_diagrams、audit、add_lecture --check、dag --check、punct --diff（只提示）、
+# 跑的是：check_article、check_diagrams、audit、add_lecture --check、dag --check、punct --diff（只提示）、
 # find_figure_spots（只提示：可能該畫成圖、或表和圖重複的地方）。
 # 不寫回任何檔案（check_article 不帶 --fix-time，punct 只用 --diff）。
-# 不包含 discuss.py --sync-body：它要連 GitHub、改的是 issue，改了基礎題才另外跑。
 # 通過但有 warn 的檢查，會印出 warn 讓你看一次。
 set -u
 cd "$(dirname "$0")/.."
@@ -33,7 +32,7 @@ run() {   # run 名稱 乾淨時最後一行要符合的-regex 指令...
   fi
 }
 
-page() {   # 一堂的頁面檢查：check_article、check_discuss、check_diagrams、punct（只提示）
+page() {   # 一堂的頁面檢查：check_article、check_diagrams、punct（只提示）
   local L=$1 P=docs/$1.html PDF PAGES pd fs
   [ -f "$P" ] || { echo "找不到 $P"; fail=1; return; }
   # 頁數用頁面的 data-pages-total（兩份 deck 的 L10 是總和），沒有才讀 slides 筆記第 4 行。
@@ -46,7 +45,6 @@ page() {   # 一堂的頁面檢查：check_article、check_discuss、check_diagr
   else
     run check_article '^OK$' python3 -I tools/check_article.py "$P"
   fi
-  run check_discuss  '^OK$'                 python3 -I tools/check_discuss.py "$P"
   run check_diagrams '^OK$'                 python3 -I tools/check_diagrams.py "$P"
   # 有題庫（<script id="quiz">）的頁面：題庫的節和頁面的小節對得上（guide/QUIZ.md）
   if grep -q 'id="quiz"' "$P"; then run quiz '^ok ' python3 -I tools/quiz.py check "$P"; fi

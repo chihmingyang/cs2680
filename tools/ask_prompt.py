@@ -46,7 +46,7 @@ EDIT = """這次要直接改站台：
 1. 內容看不懂、要補案例或圖：照 .claude/skills/rewrite-with-example/SKILL.md 改 docs/ 裡的 HTML，規則以 guide/STYLE_ARTICLE.md 為準。
    功能或版面（docs/app.js、docs/edit.js、docs/styles.css、docs/edit.css、tools/、guide/）：直接改，定下新規則就寫回 guide/。
    這個 token 改不了 .github/workflows/；要改那裡的話，把改法寫在回覆裡，不要 push。
-2. 改了 lecture 頁：跑 python3 -I tools/check_article.py docs/lXX.html 和 python3 -I tools/check_discuss.py docs/lXX.html。改了 .js：跑 node --check <檔案>。這個環境沒有瀏覽器，不跑 audit.py、shot_article.py、test_editor.py；改到畫面或編輯器時，在回覆裡說明沒有實際看過畫面，並列出要他在頁面上確認的地方。
+2. 改了 lecture 頁：跑 python3 -I tools/check_article.py docs/lXX.html。改了 .js：跑 node --check <檔案>。這個環境沒有瀏覽器，不跑 audit.py、shot_article.py、test_editor.py；改到畫面或編輯器時，在回覆裡說明沒有實際看過畫面，並列出要他在頁面上確認的地方。
 3. git add 改過的檔案、用中文一行訊息 commit，然後 git pull --rebase origin main，git push origin main。
 4. 最後的輸出只列：原因、改了什麼、哪裡要他確認。站台約 1–2 分鐘後更新。
 """

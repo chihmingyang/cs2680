@@ -13,13 +13,12 @@ Usage:
 What you get (docs/lXX.html; refuses to overwrite unless --force):
   head, topbar (← previous lecture, "LX / N"), this page's sidenav (built like add_lecture.py would),
   main[data-lecture][data-pdf][data-pages-total], lecture-head (eyebrow with「· 依想法重組」, h1, en-title, meta),
-  placeholder tldr and #s-ideas, the fixed frame of #s-discuss (tabs, ledes, copy buttons with the right
-  data-title / data-slides, textarea, quiz, #s-submit shell), #s-try, #wrap (rg-legend, readmark),
+  placeholder tldr and #s-ideas, #s-try, #wrap (rg-legend, readmark),
   pager (← previous, 回總覽), fineprint, scripts. Copied from docs/l05.html, the v7 template.
 
 Then write the fragments in notes/lXX/ (head.html, i1.html…, tldr.html, fineprint.html, and the whole
-sections discuss.html, try.html, wrap.html) and run tools/assemble_v7.py docs/lXX.html notes/lXX.
-Wire it to the site last: add_lecture.py, then discuss.py (WORKFLOW B5).
+sections try.html, wrap.html) and run tools/assemble_v7.py docs/lXX.html notes/lXX.
+Wire it to the site last: add_lecture.py (WORKFLOW B5).
 """
 import argparse
 import html as H
@@ -65,10 +64,8 @@ def main():
                     rf'\1\n      <a href="{prev["key"]}.html" rel="prev">← L{prev["no"]}</a>\n'
                     rf'      <span class="here">L{no} / {no}</span>\n    \2', topbar, flags=re.S)
     aside = tpl[tpl.index('<aside class="sidenav"'):tpl.index("</aside>") + len("</aside>")]
-    tabs = re.search(r'[ \t]*<div class="qtabs".*?</div>\n', tpl, re.S).group(0)
     legend = re.search(r'[ \t]*<p class="rg-legend">.*?</p>\n', tpl).group(0)
     readmark = re.search(r'[ \t]*<label class="readmark">.*?</label>\n', tpl).group(0)
-    submit_lis = re.search(r'<ul class="limits gh-how">.*?</ul>', tpl, re.S).group(0)
 
     if len(a.pdf) == 1:
         slides = f'<li><span class="k">Slides</span><a href="https://cs2680.com/slides/{a.pdf[0]}" {E}>{a.pdf[0]} ↗</a></li>'
@@ -127,48 +124,10 @@ def main():
         </div>
       </section>
 
-      <!-- ===================== 2 問題討論 ===================== -->
-      <section class="part" id="s-discuss">
-        <header class="part-head">
-          <p class="kicker">2 · 問題討論</p>
-          <h2>讀書會討論題</h2>
-          <p class="lede">分兩組。基礎題在讀文章之前看，帶著問題讀，答案都在文章裡；卡住的地方，按題目下面的連結，到這堂的 GitHub 討論串隨手寫。進階題讀完文章後先想一想，讀書會當天一起討論。</p>
-        </header>
-{tabs}        <div class="qset" id="qset-basic" role="tabpanel" aria-labelledby="tab-basic">
-          <p class="qset-lede">讀文章之前先看一遍這 5 題。它們依核心觀念的章節排列，每題標了答案在哪幾章。讀到那幾章時，把答案記下來；讀完再展開「參考答案與重點複習」對照：它先直接回答，再把這一題的觀念整理成複習筆記，有些附圖。卡住的地方，按題目下面的「到 GitHub 回答這一題」留言。</p>
-          <div class="copyrow">
-            <button type="button" class="copybtn" data-copy="basic" data-title="CS2680 L{no} 基礎題（帶著問題讀文章）：{title} {url}">複製基礎題</button>
-            <span class="copyhint">只複製題目與章節，方便貼到群組。</span>
-          </div>
-          <ol class="qlist qlist-basic">
-            <!-- li.bq#b1 … #b5 -->
-          </ol>
-        </div>
-        <div class="qset" id="qset-adv" role="tabpanel" aria-labelledby="tab-adv" hidden>
-          <p class="qset-lede">這 3 題留到讀書會當天一起討論，不用先寫在 GitHub。讀完文章後，先挑一題想一想。每個回答要點下面有一行提示。不用每點都答，挑一點想清楚就可以。不知道怎麼開頭，就展開「作答範本」，照著填空。「參考觀點與追問」建議討論後再展開。</p>
-          <div class="copyrow">
-            <button type="button" class="copybtn" data-copy="adv" data-title="CS2680 L{no} 進階題（讀書會討論）：{title}" data-slides="https://cs2680.com/slides/{a.pdf[0]}">複製進階題</button>
-            <span class="copyhint">只複製題目、情境與回答要點，方便貼到群組。</span>
-          </div>
-          <ol class="qlist">
-            <!-- li.dq#q1 … #q3 -->
-          </ol>
-        </div>
-        <textarea class="copybox" id="copy-fallback" rows="8" readonly hidden aria-label="討論題文字，可手動複製"></textarea>
-
-        <h3 class="subhead">自我檢查</h3>
-        <div class="quiz">
-          <!-- 3 × details > summary + div.answer -->
-        </div>
-        <div class="submit" id="s-submit">
-          <h3 class="subhead">到 GitHub 寫你的答案</h3>
-        </div>
-      </section>
-
-      <!-- ===================== 3 動手試試 ===================== -->
+      <!-- ===================== 2 動手試試 ===================== -->
       <section class="part" id="s-try">
         <header class="part-head">
-          <p class="kicker">3 · 動手試試</p>
+          <p class="kicker">2 · 動手試試</p>
           <h2>照著做一次</h2>
           <p class="lede">（待寫）點開才會展開。</p>
         </header>
@@ -176,9 +135,9 @@ def main():
         </div>
       </section>
 
-      <!-- ===================== 4 延伸閱讀 ===================== -->
+      <!-- ===================== 3 延伸閱讀 ===================== -->
       <section class="wrap" id="wrap" aria-label="延伸閱讀">
-        <p class="kicker">4 · 延伸閱讀</p>
+        <p class="kicker">3 · 延伸閱讀</p>
         <h2>延伸閱讀</h2>
         <p class="rg-intro">（待寫）</p>
 {legend}        <ol class="rg">
@@ -200,7 +159,6 @@ def main():
 </body>
 </html>
 """
-    assert submit_lis  # the #s-submit block itself is filled by discuss.py
     out.write_text(s, encoding="utf-8")
     # this page's own sidenav, the way add_lecture.py builds it
     lecs = al.lectures()

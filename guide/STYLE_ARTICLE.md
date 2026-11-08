@@ -5,7 +5,7 @@
 你負責把 Harvard CS2680 的一堂課寫成一篇「架構文章」：`/home/claude/cs2680/docs/lXX.html`。
 **範本是 `docs/l05.html`（v7）。先完整讀一遍：結構、class、語氣、密度都照它做。** 下面寫「照 l02」的地方只是複製固定文字（lede、rg-legend、readmark 等）。
 
-只寫你負責的 `lXX.html`。不要改 `styles.css`、`app.js` 和其他頁面；跨頁的改動由 `tools/add_lecture.py` 處理，討論連結由 `tools/discuss.py` 處理。不要 commit、push，不要寫入 memory。
+只寫你負責的 `lXX.html`。不要改 `styles.css`、`app.js` 和其他頁面；跨頁的改動由 `tools/add_lecture.py` 處理。不要 commit、push，不要寫入 memory。
 
 ## 0. v7：依想法的重要性重組（2026-11-03，L5 先行）
 
@@ -14,13 +14,13 @@
 - **目標換了。** 讀完要能判斷、能設計，不是記住 slides 的分類。Slides 是素材：順序不必照，頁碼不必寫（`h3` 不放 `a.ref`），可以刪。
 - **份量的排法。** 用三個問題排每個想法：會不會改變讀者的決定？忽略它的代價多大、能不能挽回？能不能從別的想法推出來？再看它多久會過時。最上游的決定排最前面；能推出來的降級；會過時的細節收成查閱。
 - **補課程漏掉的。** 論證不完整的地方、2025–2026 年改變結論的業界經驗或論文，查原始來源後補成正文的章，`nav.map` 小字標「本文補的」。只有一家公司的經驗要寫明不是對照實驗。
-- **頁面四段**：1 核心觀念、2 問題討論、3 動手試試、4 延伸閱讀。沒有「架構」段；`section#s-ideas` 開頭放 `header.part-head` 與 `nav.map`。
+- **頁面三段**（2026-11-09 拿掉問題討論）：1 核心觀念、2 動手試試、3 延伸閱讀。題目放在每一節後面的小測（`guide/QUIZ.md`）。沒有「架構」段；`section#s-ideas` 開頭放 `header.part-head` 與 `nav.map`。
 - **章**：`h3` 寫「主題：主張」，`span.idea-no` 只放 1、2、3…。章依份量分組（`p.map-g`），組名照內容取，例如「一定要會」「要用時會做」「底層」「要防的」「需要時查」。最多 10 章。
 - **圖優先**：講架構、流程、狀態、時序的地方都要有圖，圖裡的專有名詞用英文。要逐列比較的數字或條目用表。算式先定義每一項，再給公式，再列逐列算好的表。
 - **刪減的準則**：不改變決定的、能從主線推出來的、很快會過時的、和別處重複的，刪掉或收進最後一章「目錄」或 `details.gloss`（`gloss-k` 寫「查閱」）。
-- **錨點**：別頁連進來的錨點要接到新章節，或在相同內容的段落保留同一個 id；基礎題的「相關：」整句重寫。`h1` 不改。
+- **錨點**：別頁連進來的錨點要接到新章節，或在相同內容的段落保留同一個 id。`h1` 不改。
 - **跨堂引用**：文字裡不寫別堂的章號（「L4 2.6」），寫 L4〈概念名〉再放連結，章號會變。別堂是主場的主題，一兩句帶過再連過去，頁面仍要能單獨讀懂。
-- **新講次（L9 起，2026-11-06）**：沒有舊頁面，骨架用 `tools/new_lecture.py`。基礎題和進階題的 `qtag` 都連到本頁的章（`<a class="ref" href="#i4">第 4 章</a>`），進階題的提示指到章節、表或數字，不寫 slide 頁碼。延伸閱讀摘要的「跟這堂課的關係」連到本頁的章。一堂有兩份 deck 時（L10）合成一篇，meta 一份一行。
+- **新講次（L9 起，2026-11-06）**：沒有舊頁面，骨架用 `tools/new_lecture.py`。延伸閱讀摘要的「跟這堂課的關係」連到本頁的章。一堂有兩份 deck 時（L10）合成一篇，meta 一份一行。
 
 
 ## 1. 定位
@@ -66,7 +66,7 @@
 - `div.prose`：「讀圖重點」2–4 句。
 
 ### 2 核心觀念 `section.part#s-ideas` ← 文章的主體
-- 3–8 個 `div.idea#iN`（2026-10-27 放寬到 8；`check_discuss.py` 已改）。`h3` 內放 `a.ref`（slide 頁碼範圍）。
+- 3–8 個 `div.idea#iN`（2026-10-27 放寬到 8）。`h3` 內放 `a.ref`（slide 頁碼範圍）。
 - **章名（v5.0）**：「主題：這章的結論」，主題在前（Agent loop、Search tool、Edit tool、Prompt、Context 的成本、Context 管理），冒號後一句結論。`h3` 開頭放章號 `<span class="idea-no">2.3</span>`。正文引用別章一律寫章號（「2.6 會解釋原因」「見 2.4 的註」），不要寫 `i5`、「下一個觀念」。
 - **分組與地圖（v5.0）**：章依內容分成 2–3 組，組名寫在 `div.ideas` 裡的 `p.idea-group#g-a`（「A · Loop：agent 的最小單位」），放在該組第一章前面。側欄目錄（`ol.sn-subs`）不放分組，只列章（v5.7）。`header.part-head` 加一句 `p.lede` 說三組各講什麼；header 後面放 `nav.map`：每組一個 `p.map-g`，每章一列 `a.map-row[href="#iN"]`（`span.map-no` 章號、`span.map-t` 主題 + `<small>` 結論、`span.map-m` 頁碼與分鐘）。分鐘用 `check_article.py` 的公式（400 單位／分鐘）算該章收合時的字數，寫法見 WORKFLOW B4。
 - **章內小標加 id（v5.0）**：結構性的粗體小標（找法 1–4、改法 1–4、四種策略、五種失敗…）寫成 `<p id="i2-3"><b>找法 1：…。</b>…`，sidenav 的第三層 `ol.sn-sub2s > li > a.sn-sub2` 連到它們，只在該章在畫面上時顯示。每章 4–9 個。
@@ -109,7 +109,7 @@
 ### 3 觀念補充 `section.part#s-background`（v5.0 起不再寫；L1–L8 已全部併入第 2 段的 `details.gloss`，這一節只留作歷史）
 - 2026-10-25 起改成**查閱用的詞條**：`header.part-head` 裡加一句 `p.lede`（「第 2 段已經在第一次出現的地方解釋過這些名詞。這裡是查閱用的短版……」）。每條 `dd` 2–4 句，結尾指回第 2 段講解的位置（`見 <a href="#i2">i2</a> 的 search 一節`）。
 - 只有和主線無關的背景（例如 L4 的 reasoning model、guardrail 與 prompt injection）才在這裡完整寫。
-- `dl.terms`，建議 4–6 條（上限只是建議，`check_discuss.py` 只警告），每條包在 `div#tN`：`dt`（名詞 + `<small>` 一句用途）。既有的 `#tN` 錨點有別頁連過來（index、L2、L5、L6），改寫時保留順序，新詞條加在後面。
+- `dl.terms`，建議 4–6 條（上限只是建議），每條包在 `div#tN`：`dt`（名詞 + `<small>` 一句用途）。既有的 `#tN` 錨點有別頁連過來（index、L2、L5、L6），改寫時保留順序，新詞條加在後面。
 
 ### 本文延伸（沒有獨立的段，2026-10-26 起全站如此）
 - 超出 slide 的推論放在它所屬章節的末尾，用收合區塊：`div.exlist.deeplist > details.ex.deep#xN`，summary 寫「本文延伸｜標題」+ `<span>不是 slide 的內容</span>`，內容放 `div.exbody.prose`。錨點用 `#x1`…依全頁順序編號；一個章節可以有好幾個。
@@ -117,45 +117,16 @@
 - `ul.meta` 有一行「本文延伸 `span.deep-time`，收合」；頁面同時有「深入」區塊時寫「深入與本文延伸」；v5.0 的頁面寫「註與延伸」（`deep-time` 算進 `details.deep` 與 `details.gloss`）。時間由 `check_article.py --fix-time` 填。
 - **只放離主線的東西**（v5.9）：對外部評論或 benchmark 的查證、純粹的推算。章的論證需要的事實、公式、判斷一律寫在正文，用粗體小標分節（L3 2.6 的 Amdahl 一段、2.2 的「沒有 hook，拿什麼保證」）。一章最多 2 個本文延伸，合計長度不超過該章正文；超過就併回正文或刪。
 - 推論要有根據，不要誇大。Slide 留給 assignment 的問題（例如 L4 p.39「哪幾招 prompt 過期」），本文直接給判斷，標明「本文的判斷（年月）」，不要讓讀者自己去找。
-- 工具：`check_article.py` 不再要求 `#s-beyond`；`add_lecture.py`、`discuss.py` 依頁面有沒有 `#s-beyond` 決定段號（新頁面一律沒有）。
+- 工具：`check_article.py` 不再要求 `#s-beyond`；`add_lecture.py` 依頁面有沒有 `#s-beyond` 決定段號（新頁面一律沒有）。
 
-### 3 問題討論 `section.part#s-discuss` ← 最重要
-- `header.part-head` 的 `.lede` 照 l02。
-- `div.qtabs`：兩個 `button.qtab`（`#tab-basic`「基礎」、`#tab-adv`「進階」）。
-- `div.qset#qset-basic`：基礎題，見 `STYLE_BASIC.md`。
-- `div.qset#qset-adv[hidden]`：進階題。
-  - `p.qset-lede` 照 l02 的文字（「這 3 題留到讀書會當天一起討論，不用先寫在 GitHub……」）。
-  - `div.copyrow`：`button.copybtn[data-copy="adv"]`，`data-title="CS2680 LX 進階題（讀書會討論）：<中文標題>"`、`data-slides="<PDF 網址>"`，加 `span.copyhint`。
-  - `ol.qlist` 內**最多 3 題** `li.dq#q1…#q3`（2026-10-22 定，之前 6 題）。
-  - 3 題的題型不重複（`qtag` 第一段：概念、估算、分析、設計、團隊實務、風險、取捨、應用）。
-  - 挑題的優先順序：一題算數字或分析資料（估算／分析）、一題設計、一題帶回自己團隊（團隊實務／風險／應用）。
-  - 3 題對到這堂不同段落的 slides。不要和基礎題、動手試試重複；概念題通常和基礎題重疊，優先刪。
-- 每題 `li.dq` > `div.qbody`：
-  - `p.qtag`：題型 · 主題 · `a.ref`。
-  - `p.qtext`：一個清楚的問題，可以有兩個小問。
-  - `p.qctx`：`<b>情境：</b>` + 具體情境（數字、條件、例子）。成員只靠這段就能開始回答。
-  - `div.qcover`：`<b>回答時請涵蓋</b>` + `ul` **3 點**。每點是可檢查的要求，後面接 `<span class="qh">提示：……</span>`：指出從哪一頁、哪個數字、哪個比較開始想。不給答案。
-  - `details.qstart`「作答範本」> `div.hint`：**3 句** `p.tpl` 填空句，空格用「＿＿」，對應三個回答要點。
-  - `details`「參考觀點與追問」> `div.hint`：4–6 點 `ul`，加 `<p><b>追問：</b>…</p>` 1–2 個延伸問題。估算題寫出完整算式與結果。
-- 不要寫「思考方向」區塊（已由 `qh` 提示和作答範本取代）。
-- 進階題不上 GitHub，不寫 `p.gh-talk`（`check_discuss.py` 會擋）。讀書會當天大家直接看頁面，所以題目、情境、回答要點和作答範本要能獨立讀懂。
-- `textarea#copy-fallback.copybox[hidden]`：照 l02。
-- `h3.subhead`「自我檢查」+ `div.quiz`：3 題有標準答案的題目（`details` > `summary` + `div.answer`）。
+### 3 問題討論（2026-11-09 停用）
+- 頁面不再有 `section#s-discuss`：基礎題、進階題、自我檢查、GitHub 區塊都拿掉了。題目改放在每一節後面的小測（`guide/QUIZ.md`）。舊規則在 git 歷史。
 
 ### 4 動手試試 `section.part#s-try`
 - `p.lede` 一句說明範例依據。`div.exlist` 內 2–4 個 `details.ex`（預設收合）。`summary` 寫標題 + `<span>頁碼</span>`，內容 `div.exbody`。
 - 工具類講次：可以照打的設定檔、指令、程式碼（`figure.file` > `figcaption` + `pre > code`）。
 - 觀念類講次（Part II 多數是）：小練習（估算、設計、用 python 驗證一個現象），附解答。
 - 範例要正確可用；產品相關內容以官方文件為準並寫明日期。
-
-### 到 GitHub 寫你的答案 `div.submit#s-submit`（在第 4 段的最後，2026-10-27 起不再是獨立的段）
-- 放在 `section#s-discuss` 的結尾、`div.quiz` 之後。新頁面只寫空殼：
-  ```html
-        <div class="submit" id="s-submit">
-          <h3 class="subhead">到 GitHub 寫你的答案</h3>
-        </div>
-  ```
-- 內容（lede、這堂與全部討論串的連結、留言方式）由 `tools/discuss.py` 填入。
 
 ### 5 延伸閱讀 `section.wrap#wrap`
 - `p.kicker`「5 · 延伸閱讀」+ `h2` 延伸閱讀；`p.rg-intro`：教授列了幾篇、官方清單連結（`readings/<mon-dd>.html`）。
@@ -261,7 +232,7 @@
 
 ## 8. 驗證
 
-照 `WORKFLOW.md` B4。`check_article.py` 要 `OK`；`check_discuss.py` 在 `discuss.py` 跑完後要 `OK`；截圖用 Read 看一次。
+照 `WORKFLOW.md` B4。`check_article.py` 要 `OK`；截圖用 Read 看一次。
 
 ## 9. 各堂資料
 

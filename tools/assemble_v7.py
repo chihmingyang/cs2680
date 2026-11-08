@@ -14,14 +14,13 @@ Fragments in the folder (notes/ is git-ignored):
   i1.html …       one <div class="idea" id="iN"> per file; h3 = <span class="idea-no">N</span>主題：主張, no a.ref
   tldr.html       the whole <section class="tldr"> … </section>
   fineprint.html  optional: the whole <p class="fineprint"> … </p>
-  discuss.html    optional (new pages, 2026-11-06): the whole <section class="part" id="s-discuss"> … </section>
   try.html        optional: the whole <section class="part" id="s-try"> … </section>
   wrap.html       optional: the whole <section class="wrap" id="wrap"> … </section>
                   A new lecture starts from tools/new_lecture.py's skeleton and fills all of these.
 
 What it does:
   - replaces the tldr and #s-ideas, removes #s-arch
-  - renumbers the sections: 1 核心觀念, 2 問題討論, 3 動手試試, 4 延伸閱讀 (HTML comments and kickers)
+  - renumbers the sections: 1 核心觀念, 2 動手試試, 3 延伸閱讀 (問題討論 removed 2026-11-09) (HTML comments and kickers)
   - eyebrow gets「· 依想法重組」, the meta row「頁碼」goes away, the styles.css link copies l05.html's version
   - rebuilds this page's own three-level sidenav line from the h3s and the <p id="…"><b>小標</b> paragraphs
 
@@ -50,9 +49,9 @@ def sidenav_line(s):
 
 
 def v7_secs(s):
-    """The four sections of a v7 page for the sidenav: 先看這裡, 1 核心觀念 (chapters and their 小標), 2–4.
+    """The sections of a v7 page for the sidenav: 先看這裡, 1 核心觀念 (chapters and their 小標), 2–3.
     add_lecture.py uses it too, so a new v7 page gets this block on its first wiring (2026-11-06)."""
-    ideas = s[s.index('id="s-ideas"'):s.index('id="s-discuss"')]
+    ideas = s[s.index('id="s-ideas"'):s.index('id="s-try"')]
     parts = re.split(r'(?=<div class="idea" id="i\d+">)', ideas)[1:]
     subs = []
     for part in parts:
@@ -72,9 +71,8 @@ def v7_secs(s):
 
     return (sec("tldr-h", "", "先看這裡") + "</li>"
             + sec("s-ideas", 1, "核心觀念") + f'<ol class="sn-subs">{"".join(subs)}</ol></li>'
-            + sec("s-discuss", 2, "問題討論") + "</li>"
-            + sec("s-try", 3, "動手試試") + "</li>"
-            + sec("wrap", 4, "延伸閱讀") + "</li>")
+            + sec("s-try", 2, "動手試試") + "</li>"
+            + sec("wrap", 3, "延伸閱讀") + "</li>")
 
 
 def replace_section(s, sid, frag_text):
@@ -145,8 +143,8 @@ def main():
     if t.exists():
         s = re.sub(r'<p class="fineprint">.*?</p>', lambda _: t.read_text(encoding="utf-8").strip(), s, count=1, flags=re.S)
 
-    # new pages (tools/new_lecture.py): the other three sections can come from fragments too
-    for name, sid in (("discuss.html", "s-discuss"), ("try.html", "s-try"), ("wrap.html", "wrap")):
+    # new pages (tools/new_lecture.py): the other two sections can come from fragments too
+    for name, sid in (("try.html", "s-try"), ("wrap.html", "wrap")):
         t = frag / name
         if t.exists():
             s = replace_section(s, sid, t.read_text(encoding="utf-8"))

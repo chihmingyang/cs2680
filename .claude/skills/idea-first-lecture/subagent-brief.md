@@ -12,7 +12,7 @@ James 要把 CS2680 讀書會站台（https://chihmingyang.github.io/cs2680/ ）
 
 ## 先讀（依序）
 
-1. `.claude/skills/idea-first-lecture/SKILL.md`：流程。第 1–6 步照做；第 7 步（README、commit、push）和第 6 步的 `discuss.py` 由主線做。第 1 步的「照 WORKFLOW A 開工」已經做好，不要再 clone。第 4 步的組裝改用下面「組裝」這一節的工具，第 5 步的側欄由工具重建。
+1. `.claude/skills/idea-first-lecture/SKILL.md`：流程。第 1–6 步照做；第 7 步（README、commit、push）由主線做。第 1 步的「照 WORKFLOW A 開工」已經做好，不要再 clone。第 4 步的組裝改用下面「組裝」這一節的工具，第 5 步的側欄由工具重建。
 2. `guide/STYLE_ARTICLE.md`：第 0 節（`sed -n 10,22p`）是 v7 規則，衝突時它優先。再讀第 4 節裡的名詞註 `details.gloss`、`a.tm`，第 5 節語言，第 6 節圖的 v6.0 畫法，第 6b 節 code snippet，第 6c 節紅字。更新紀錄在 `guide/CHANGELOG.md`，不用整份讀，用下面第 6 項的指令抓和這堂有關的部分。
 3. 範本：`python3 -I tools/page_text.py docs/l05.html s-ideas` 看文字與章法；markup 用 `Grep`／`Read` 看 `docs/l05.html` 的 `tldr`、`header.part-head`、`nav.map`、第 3、4 章。
 4. `slides/lXX-notes.md` 全文：事實的來源。
@@ -31,7 +31,7 @@ James 要把 CS2680 讀書會站台（https://chihmingyang.github.io/cs2680/ ）
 - 講工具或流程時附具體範例：檔案內容、實際指令、對話怎麼打（`figure.file`，逐行註解）。只有概念他無法實踐。
 - 算式先定義每一項，再給公式，再列逐列算好的表。所有計算用 python 驗算。
 - 正文不寫 slide 頁碼，也不寫「slide 第幾頁說了什麼」。正文的判斷段落用「本文的判斷：…」開頭。
-- 知識點放正文的邏輯順序裡，收合只放查閱（`details.gloss`，`gloss-k` 寫「查閱」或「前情」）。問題討論維持通用，不寫特定公司。
+- 知識點放正文的邏輯順序裡，收合只放查閱（`details.gloss`，`gloss-k` 寫「查閱」或「前情」）。
 
 ## 份量、補、刪
 
@@ -79,23 +79,14 @@ python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-t
 
 `assemble_v7.py` 會處理：tldr、`#s-ideas`、拿掉 `#s-arch`、段號與 kicker、eyebrow、meta、CSS 版本、本頁的側欄。用法寫在檔頭。長頁面分章寫，不要一次寫完。
 
-**基礎題**（skill 第 5 步，2026-11-03 新增；每堂的情況在你的任務說明裡）：
-
-- 這堂的 issue 已經有成員留言：題目不動，只重寫每題的「相關：」。
-- 這堂的 issue 0 則留言：依新章節重出 5 題，照 `guide/STYLE_BASIC.md` 的「v7 頁面」一節（`sed -n 1,20p`），範例是 `docs/l05.html` 的 `#qset-basic`（已依 v7 重出）。先再查一次留言數：`gh api repos/chihmingyang/cs2680/issues/<n>/comments --jq length`，不是 0 就改回「題目不動」並寫進回報。重出後跑 `python3 -I tools/discuss.py docs/lXX.html`：issue 已存在，它只把 GitHub 連結寫回頁面，不會寫 GitHub。不要加 `--sync-body`，內文由主線同步。
-- 進階題的題目都不動，只改裡面指向舊章節的地方。
-
 其他保留段落（動手試試、延伸閱讀）整段留著，要改的是指過去的地方：
 
-- 每題基礎題的 `p.tk-rel`（相關：）整句重寫，連到新章節。
-- 延伸閱讀摘要、進階題、參考答案、動手試試裡提到舊章節的地方都改。檢查殘留：
+- 延伸閱讀摘要、動手試試裡提到舊章節的地方都改。檢查殘留：
   ```bash
-  grep -n '第 [0-9] 段\|架構圖\|s-arch' docs/lXX.html | cut -c1-160     # 段號現在是 2 問題討論、3 動手試試、4 延伸閱讀，架構段沒了
-  python3 -I tools/page_text.py docs/lXX.html s-discuss | grep -n '\b2\.[0-9]\|本文延伸'
+  grep -n '第 [0-9] 段\|架構圖\|s-arch' docs/lXX.html | cut -c1-160     # 段號現在是 2 動手試試、3 延伸閱讀（2026-11-09 拿掉問題討論），架構段沒了
   python3 -I tools/page_text.py docs/lXX.html wrap | grep -n '\b2\.[0-9]\|本文延伸'
   python3 -I tools/page_text.py docs/lXX.html s-try | grep -n '\b2\.[0-9]\|本文延伸'
   ```
-- 基礎題題目上的 slide `a.ref` 留著（那是帶著問題看 slides 用的）。正文才不放頁碼。
 - `h1`、`p.en-title` 不改。
 
 ## 跨堂連結（重要）
@@ -124,7 +115,7 @@ python3 -I tools/punct.py notes/lXX/i1.html --diff  # 只看新片段，不要�
 
 ## 不要做
 
-Commit、push、`git stash`／`reset`；對 GitHub 寫入（包括 `discuss.py` 不帶 `--dry`）；寫入 memory；再開 subagent。
+Commit、push、`git stash`／`reset`；對 GitHub 寫入；寫入 memory；再開 subagent。
 
 ## 回報
 

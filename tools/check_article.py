@@ -4,8 +4,8 @@
 Usage: python3 -I check_article.py docs/lXX.html --pages N --pdf FILE.pdf [--fix-time]
 
 Checks: tag balance; required sections (#s-ideas [#s-arch optional since v7; #s-background, #s-beyond optional]
-#s-discuss #s-try #s-submit #wrap) and parts (tldr, diagram, two question tabs,
-quiz, reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
+#s-try #wrap; 問題討論 removed 2026-11-09) and parts (tldr, diagram,
+reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
 STE heuristics on prose; reading times;
 red key points (<strong>, STYLE_ARTICLE 6c): never inside b/a/code/pre/headings/summary/figcaption/
@@ -42,9 +42,8 @@ STRONG_NOT_IN = {"b", "a", "code", "pre", "h1", "h2", "h3", "h4", "summary", "fi
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
 # s-beyond optional since 2026-10-26 (L4); s-background optional since 2026-10-27 (L4 merged it into #s-ideas)
-REQUIRED_IDS = ["s-ideas", "s-discuss", "s-try", "s-submit", "wrap",
-                "read-box", "qset-basic", "qset-adv", "sidenav"]
-REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "div.qtabs", "ol.qlist", "div.quiz", "ol.rg", "nav.pager",
+REQUIRED_IDS = ["s-ideas", "s-try", "wrap", "read-box", "sidenav"]  # 問題討論 removed 2026-11-09
+REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "ol.rg", "nav.pager",
                     "p.fineprint", "span.read-time", "span.full-time", "aside.sidenav", "nav.lecnav"]
 
 

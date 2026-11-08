@@ -56,7 +56,7 @@ if t.exists():
     s = s[:i] + t.read_text(encoding="utf-8").strip() + s[j:]
 
 # this page's own sidenav line
-ideas = s[s.index('id="s-ideas"'):s.index('id="s-discuss"')]
+ideas = s[s.index('id="s-ideas"'):s.index('id="s-try"')]
 subs, starts, ends = [], [], []
 pat = re.compile(r'<div class="idea" id="(i\d)">\s*<h3><span class="idea-no">([\d.]+)</span>(.*?)<a class="ref"[^>]*>(.*?)</a></h3>(.*?)(?=<div class="idea" id="i\d">|\Z)', re.S)
 for iid, no, title, pages, rest in pat.findall(ideas):
@@ -69,7 +69,7 @@ for iid, no, title, pages, rest in pat.findall(ideas):
 span = f'<span class="sn-p">p.{min(starts)}–{max(ends)}</span>'
 line = re.search(r'<li class="sn-lec is-here">.*?</li>\n', s).group(0)
 hdr = re.search(r'(<li class="sn-lec is-here">.*?<ol class="sn-secs">)', line, re.S).group(1)
-tail = line[line.index('<li><a class="sn-sec" href="#s-discuss"'):]
+tail = line[line.index('<li><a class="sn-sec" href="#s-try"'):]
 pre = line[len(hdr):line.index('<li><a class="sn-sec" href="#s-ideas"')]
 ideas_li = (f'<li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">2</span><span class="sn-t">核心觀念</span>{span}</a>'
             f'<ol class="sn-subs">{"".join(subs)}</ol></li>')

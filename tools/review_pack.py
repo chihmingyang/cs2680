@@ -10,7 +10,7 @@ Usage:
   python3 -I tools/review_pack.py docs/l06.html                  # tldr + every chapter of 核心觀念
   python3 -I tools/review_pack.py docs/l06.html --chapter i2 i5  # only these chapters ("tldr" selects 先看這裡)
   python3 -I tools/review_pack.py docs/l06.html --since HEAD~1   # only chapters whose text changed since that git ref
-  python3 -I tools/review_pack.py docs/l06.html --since HEAD --sections s-discuss s-try   # other sections too
+  python3 -I tools/review_pack.py docs/l06.html --since HEAD --sections s-try wrap   # other sections too
   python3 -I tools/review_pack.py docs/l06.html --units          # just count the units (for the time budget)
   python3 -I tools/review_pack.py docs/l06.html --chapter i3 i4 --prefix   # tldr, i1, i2 as context; i3, i4 reviewed; nothing after i4
   python3 -I tools/review_pack.py docs/l06.html --chapter tldr   # the tldr alone: its reader has read nothing else
@@ -278,7 +278,7 @@ def main():
     ap.add_argument("page")
     ap.add_argument("--chapter", nargs="*", help="chapter ids, e.g. i2 i5")
     ap.add_argument("--since", help="git ref; only chapters whose text changed since it")
-    ap.add_argument("--sections", nargs="*", default=[], help="extra section ids: s-discuss s-try wrap")
+    ap.add_argument("--sections", nargs="*", default=[], help="extra section ids: s-try wrap")
     ap.add_argument("--units", action="store_true", help="only count units")
     ap.add_argument("--prefix", action="store_true",
                     help="also print, as unreviewed context, every group before the last selected one; "

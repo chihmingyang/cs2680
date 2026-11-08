@@ -5,6 +5,7 @@
 
 ## README.md
 
+- 2026-11-09（拿掉每一堂的「問題討論」段：James 打算在每個觀念後面直接放題目，問題討論和 GitHub 討論串不需要了。L1–L11 刪掉 `section#s-discuss`（基礎題、進階題、自我檢查、GitHub 區塊）與側欄項目，段號改成 1 核心觀念、2 動手試試、3 延伸閱讀，正文裡「第 3 段動手試試」「第 4 段延伸閱讀」跟著改，指向進階題的句子刪掉；側欄與首頁的「GitHub 討論」連結、首頁「留下你的想法」一節、「怎麼讀」裡講討論題的步驟拿掉，閱讀時間重算。各堂討論串 issue 關閉（留言保留）。刪 `tools/discuss.py`、`tools/check_discuss.py`；`verify.sh`、`check_article.py`、`new_lecture.py`、`assemble_v7.py`、`add_lecture.py`、`assemble_ideas.py`、`dag.py` 不再要求或產生 `#s-discuss`。STYLE_BASIC 標停用，STYLE_ARTICLE、WORKFLOW、CLAUDE.md、skill 同步。）
 - 2026-11-09（L6 第 2 章末尾加本文延伸 `#x5`〈檢查會往兩個方向錯：漏抓與誤判〉：James 問 detect 有沒有考慮 false negative。算式的 1 − detect 就是漏抓，沒算的是誤判；延伸加 false_alarm 的算式與四種檢查的橫條圖，正文第 2 段加一句指過去。取捨記在 V7_DECISIONS L6〈補（2026-11-09）〉。`tools/add_anchors.py` 改成跳過舊頁面留下的 `<span class="anchor" id="xN">` 號碼（L6 的 x1–x4 還有連結指著），不然新的本文延伸會被編成重複的 `#x1`；README 腳本表同步。）
 - 2026-11-08（加觀念 DAG：`docs/dag.json`、`docs/dag.html`、`tools/dag.py`、`guide/DAG.md`；「東西放在哪裡」與腳本表各加一列；`verify.sh` 加 `dag.py --check`。James 要把課程改成觀念 DAG 的形式，這是第一版：100 個觀念、164 條邊、8 層、4 個起點；算出 14 個觀念散在兩堂、7 條前置在後面講次的邊。首頁還沒連過去，等他確認。）
 - 2026-11-08（加 `tools/quiz.py` 一列、「東西放在哪裡」加題庫一列；`verify.sh` 對有題庫的頁面跑 `quiz.py check`。）

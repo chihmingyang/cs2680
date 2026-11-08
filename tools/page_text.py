@@ -3,7 +3,7 @@
 
 Usage:
   python3 -I tools/page_text.py docs/lXX.html              # the whole article
-  python3 -I tools/page_text.py docs/lXX.html s-ideas      # one section: s-arch, s-ideas, s-discuss, s-try, wrap
+  python3 -I tools/page_text.py docs/lXX.html s-ideas      # one section: s-arch, s-ideas, s-try, wrap
   python3 -I tools/page_text.py docs/lXX.html ids          # every id on the page, one per line
 
 Figures print as [FIG: aria-label] and [caption: …], so you can see what a figure says without its SVG.

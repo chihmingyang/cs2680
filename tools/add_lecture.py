@@ -6,7 +6,7 @@ Usage:
   python3 -I tools/add_lecture.py --check      # rebuild every sidenav in memory, write nothing,
                                                # report pages whose sidenav would change
 
-The new page must already pass check_article.py and check_discuss.py. Everything the
+The new page must already pass check_article.py. Everything the
 script needs is read from that page:
   key      main[data-lecture]            (l09)
   title    h1 inside header.lecture-head
@@ -25,7 +25,6 @@ What it changes (idempotent; running it twice changes nothing the second time):
   3. The previous lecture: nav.lecnav gets "LX →"; its pager's right link points to the new page.
   4. index.html: a row in 已公開的講次; the row with the same date leaves ul.later.
      Course-map chips are NOT added: pick anchors by hand (add_anchors.py prints them).
-Afterwards run tools/discuss.py on the new page: it opens the GitHub issues and writes the links.
 """
 import argparse
 import html as H
@@ -147,9 +146,8 @@ def here_block(m):
     if has_beyond:
         parts.append(sec("s-beyond", str(k - 1), "延伸思考") + subs(beyond) + "</li>")
     parts += [
-        sec("s-discuss", str(k), "問題討論") + "</li>",
-        sec("s-try", str(k + 1), "動手試試") + "</li>",
-        sec("wrap", str(k + 2), "延伸閱讀") + "</li>",  # 2026-10-27: 大家的討論 merged into 問題討論; 延伸閱讀 numbered
+        sec("s-try", str(k), "動手試試") + "</li>",
+        sec("wrap", str(k + 1), "延伸閱讀") + "</li>",  # 2026-11-09: 問題討論 removed
     ]
     return (f'<li class="sn-lec is-here"><a class="sn-row" href="{m["key"]}.html" aria-current="page">'
             f'<span class="sn-no">L{m["no"]}</span><span class="sn-t">{H.escape(m["title"], quote=False)}</span>'
@@ -273,8 +271,7 @@ def main():
             p.write_text(s, encoding="utf-8")
             touched.append(p.name)
     print("changed: " + (", ".join(touched) if touched else "nothing"))
-    print("next: python3 -I tools/discuss.py " + a.page + " (opens the GitHub issues, writes the links); "
-          "by hand: index.html course-map chips (課程地圖); then audit.py, commit and push.")
+    print("next, by hand: index.html course-map chips (課程地圖); then audit.py, commit and push.")
 
 
 if __name__ == "__main__":

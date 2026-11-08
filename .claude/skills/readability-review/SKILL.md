@@ -20,7 +20,7 @@ python3 -I tools/review_pack.py docs/lXX.html --chapter tldr > notes/review/lXX-
 - **Tldr 單獨一個審查者**，只給 `--chapter tldr`：只讀 tldr 的讀者什麼都還沒讀。這包只有 5 個單位左右，很便宜。`--since` 抓到 tldr 有改時，把它從主包拿掉（`--chapter i3 i5 --prefix` 列出其他有改的章），另開這一包。
 - 新寫一堂或改成 v7：tldr 一包；各章 `--chapter i1 … i10 --prefix`。
 - 只改一章或一段：`--since origin/main --prefix` 會自動只審那一章；也可以 `--chapter i2 --prefix`。
-- 改了問題討論或動手試試：加 `--sections s-discuss s-try`（`--prefix` 會把全部核心觀念當上下文）。
+- 改了動手試試：加 `--sections s-try`（`--prefix` 會把全部核心觀念當上下文）。
 - 單位數超過 300，分成前後兩段各一個審查者：第一個 `--chapter i1 … i5 --prefix`，第二個 `--chapter i6 … i10 --prefix`（i1–i5 自動成為上下文）。L6 pilot 的教訓是不能只給半頁：R3「名詞沒解釋」會大量誤報（第 1–5 章解釋過的 run、context、harness、store，第 6–10 章的審查者全標成 BLOCK），53 個 BLOCK 裡約 15 個是這種。前文要給，後文不給。
 - 同一段之內，前面的單位還是看得到後面的單位（例如 i1 看得到 i5）。這一段靠審查者每個單位寫「靠：」來抓（R13），不完全可靠；要更嚴就把段切小。
 - pack 會印 code block 的內容（`codeN 內容`），因為正文會指著它說「第二種」「這些欄位」；少了它，這類句子會被誤判成 R2。
@@ -53,7 +53,7 @@ Agent(subagent_type="general-purpose", run_in_background=false,
 - 保留語放句尾括號：「（Anthropic 一家的經驗，不是對照實驗）」。引用要帶結論：「Anthropic 2026-03 的 harness 實驗：agent 替自己的成果打分時穩定給高分」。
 - 不修的 BLOCK，在報告那一條底下寫一句為什麼。
 
-修完跑一次 `check_article.py`、`check_discuss.py`（表格的格子現在也有 lint，見下）。
+修完跑一次 `check_article.py`（表格的格子現在也有 lint，見下）。
 
 ## 4. 第二輪：只審被標過的單位
 

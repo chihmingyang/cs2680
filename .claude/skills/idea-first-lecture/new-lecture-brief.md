@@ -10,8 +10,8 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 
 - 工作目錄 `/home/claude/cs2680`（repo 本身，三個 subagent 共用；**不是** worktree）。`cd` 不會跨指令保留，每個 Bash 指令都以 `cd /home/claude/cs2680 &&` 開頭。Python 一律 `python3 -I`；build script 裡 `sys.path.insert(0, 'tools')` 再 import。
 - **你只能寫這些檔案**：`docs/lXX.html`、`notes/lXX/`（暫存，git-ignored）、`shots/lXX-*`、`guide/sources/lXX.md`（新檔）、`slides/lXX-notes.md`（只在發現筆記有錯時更正，加註更正日期）。別頁、`index.html`、`styles.css`、`app.js`、`code.js`、`tools/`、`guide/` 其他檔案都不要動。工具有 bug 或需要新的 CSS class，先用現有的繞過，寫進回報。
-- 已知的坑（2026-11-06）：`#s-submit` 只留空殼，`discuss.py` 會填；兩份 deck 的 meta 一份一行（`new_lecture.py --deck-date`），合在一行 390px 會撐破；延伸閱讀的篇數以 readings 頁為準，自己再數一次。
-- 頁面骨架已經由 `tools/new_lecture.py` 建好（head、topbar、側欄、meta、問題討論的外框、延伸閱讀的 legend、pager、scripts）。存一份：`cp docs/lXX.html notes/lXX/base.html`，之後一律用 `--base` 從它組裝，script 才能重跑。
+- 已知的坑（2026-11-06）：兩份 deck 的 meta 一份一行（`new_lecture.py --deck-date`），合在一行 390px 會撐破；延伸閱讀的篇數以 readings 頁為準，自己再數一次。
+- 頁面骨架已經由 `tools/new_lecture.py` 建好（head、topbar、側欄、meta、延伸閱讀的 legend、pager、scripts）。存一份：`cp docs/lXX.html notes/lXX/base.html`，之後一律用 `--base` 從它組裝，script 才能重跑。
 - 今天是 2026-11-06，你的知識可能過時。
 
 ## 先讀（依序）
@@ -32,7 +32,7 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 - 講工具或流程時附具體範例：檔案內容、實際指令、對話怎麼打（`figure.file`，逐行註解）。只有概念他無法實踐。
 - 算式先定義每一項，再給公式，再列逐列算好的表。**所有計算用 python 驗算**，算錯是這種講次最容易出的錯。
 - 正文不寫 slide 頁碼，也不寫「slide 第幾頁說了什麼」。正文的判斷段落用「本文的判斷：…」開頭。
-- 知識點放正文的邏輯順序裡，收合只放查閱（`details.gloss`，`gloss-k` 寫「名詞」「前情」「背景」或「查閱」）。問題討論維持通用，不寫特定公司。
+- 知識點放正文的邏輯順序裡，收合只放查閱（`details.gloss`，`gloss-k` 寫「名詞」「前情」「背景」或「查閱」）。動手試試維持通用，不寫特定公司。
 
 ## 份量、補、刪
 
@@ -74,7 +74,6 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 - `head.html`：`section#s-ideas` 開頭、`header.part-head`（kicker「1 · 核心觀念」、h2、`p.lede`）、`nav.map`（分鐘數寫 `__i1__`）、`<div class="ideas">`。
 - `tldr.html`：整個 `section.tldr`（thesis 一段、`ul.core` 3 條，紅字剛好 3 處；句數不設上限，只讀 tldr 的人要讀得懂每一條，見 STYLE_ARTICLE 第 3 節第 6 點）。
 - `fineprint.html`：整個 `p.fineprint`，句型照 L5，列出外部來源。
-- `discuss.html`：整個 `section#s-discuss`，從骨架複製外框再填題目（見下一節）。
 - `try.html`：整個 `section#s-try`；`wrap.html`：整個 `section#wrap`。
 
 ```bash
@@ -83,12 +82,6 @@ cd /home/claude/cs2680 && python3 -I tools/check_article.py docs/lXX.html --page
 ```
 
 meta 的「註」標籤照頁面實際有的收合內容改（L5 是「前情註」）。`h1` 骨架已經有了；你覺得不貼切可以改（16 字以內），寫進回報，主線接到全站時會一起重建側欄。
-
-## 問題討論
-
-- **基礎題 5 題**：照 `STYLE_BASIC.md` 的「v7 頁面」一節（範例 `docs/l05.html`、`docs/l08.html` 的 `#qset-basic`）：依章序、`qtag` 的 `a.ref` 連到本頁的章（`<a class="ref" href="#i2">第 2、3 章</a> · 主題`）、參考答案是 600–1000 字的重點複習（答案、重點拆解只用文章、背景補充、常見誤解、帶走這幾點 3 點、相關：）。約六成附圖。題目下面的 GitHub 連結、`#s-submit` 的內容由主線跑 `discuss.py` 寫入，你只留空殼；`check_discuss.py` 在那之前會報 `no GitHub issue link`，正常。
-- **進階題 3 題**：照 STYLE_ARTICLE 第 4 節（題型不重複：一題估算或分析、一題設計、一題帶回自己的團隊）。新講次的 `qtag` 也連到本頁的章（`設計 · 主題 · <a class="ref" href="#i4">第 4 章</a>`），提示指到章節、表或數字，不寫 slide 頁碼。估算題的參考觀點寫完整算式（python 驗算過）。
-- **自我檢查 3 題**：`div.quiz` 裡 3 個 `details`，有標準答案。
 
 ## 動手試試
 
@@ -105,13 +98,12 @@ meta 的「註」標籤照頁面實際有的收合內容改（L5 是「前情註
 
 ```bash
 cd /home/claude/cs2680 && python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-time   # 要 OK；warn 看一次，紅字數量依 warn 調
-cd /home/claude/cs2680 && python3 -I tools/check_discuss.py docs/lXX.html     # 除了 GitHub 連結那幾條，要乾淨
 cd /home/claude/cs2680 && python3 -I tools/check_diagrams.py docs/lXX.html    # 要 OK
 cd /home/claude/cs2680 && python3 -I tools/audit.py                           # 你這一頁不能有 problem；別的新講次還在寫，它們的 problem 不用管
 cd /home/claude/cs2680 && python3 -I tools/punct.py notes/lXX/i1.html --diff  # 只看新片段，看過再決定要不要寫回片段
 ```
 
-不要跑 `add_lecture.py`（`--check` 在主線接線前一定會報 sidenav 不同步）、`discuss.py`、`anchor_map.py apply`。也不要用 `tools/verify.sh`：它跑的就是上面幾條加 `add_lecture --check`，接線前一定 FAIL；主線接線之後才用它。最後把 `python3 -I tools/page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？數字和 slides、來源一致嗎？
+不要跑 `add_lecture.py`（`--check` 在主線接線前一定會報 sidenav 不同步）、`anchor_map.py apply`。也不要用 `tools/verify.sh`：它跑的就是上面幾條加 `add_lecture --check`，接線前一定 FAIL；主線接線之後才用它。最後把 `python3 -I tools/page_text.py docs/lXX.html s-ideas` 從頭讀一遍，當作第一次讀的人：句子接得上嗎？名詞都解釋了嗎？每章有圖或表嗎？數字和 slides、來源一致嗎？
 
 ## 跨堂連結
 
@@ -120,7 +112,7 @@ cd /home/claude/cs2680 && python3 -I tools/punct.py notes/lXX/i1.html --diff  # 
 
 ## 不要做
 
-Commit、push、`git stash`／`reset`／`checkout`；對 GitHub 寫入（包括 `discuss.py`）；寫入 memory；再開 subagent；改別人的檔案。
+Commit、push、`git stash`／`reset`／`checkout`；對 GitHub 寫入；寫入 memory；再開 subagent；改別人的檔案。
 
 ## 回報
 
@@ -128,7 +120,7 @@ Commit、push、`git stash`／`reset`／`checkout`；對 GitHub 寫入（包括 
 
 ```
 ## LX 結果
-檢查：五個工具的結果。章數、read-time、核心觀念的圖數與表數、基礎題附圖數。
+檢查：四個工具的結果。章數、read-time、核心觀念的圖數與表數。
 ### 份量怎麼排
 每組一行：組名、含哪幾章、為什麼排在這裡（用三個問題的答案講，不是描述章的內容）。
 ### 補了什麼、為什麼
