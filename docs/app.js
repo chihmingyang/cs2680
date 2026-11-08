@@ -31,7 +31,7 @@
     var q;
     try { q = JSON.parse(data.textContent); } catch (e) { return; }
     var page = lecture.getAttribute('data-lecture');
-    var KIND = { recall: '回想', apply: '應用' };
+    var KIND = { recall: '回想', apply: '應用', choice: '選擇' };
     var secs = q.sections || [];
     var title = {}, startOf = {}, byKs = {};
     secs.forEach(function (s) { title[s.id] = s.title; startOf[s.id] = s.from; });
@@ -48,7 +48,83 @@
     function chapterOf(n) { return n && n.closest ? n.closest('.idea') : null; }
     function refresh() { counters.forEach(function (f) { f(); }); }
 
+    /* 選擇題: a click answers at once. A wrong pick shows why it is wrong and
+       stays open for another try; the right pick locks the question and shows the
+       explanation. What is stored is how the first pick of this visit went. */
+    function choice(u) {
+      var li = mk('li', 'ksq-item ksq-choice');
+      li.id = 'q-' + u.id;
+      var qp = mk('p', 'ksq-q');
+      qp.appendChild(mk('span', 'ksq-kind', '選擇'));
+      qp.appendChild(document.createTextNode(u.q));
+      li.appendChild(qp);
+      var opts = u.choices.slice();
+      for (var i = opts.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+      }
+      var ul = mk('ul', 'ksq-opts');
+      var mark = mk('p', 'ksq-mark');
+      var box = mk('div', 'ksq-key');
+      box.hidden = true;
+      var kl = mk('ul');
+      u.key.forEach(function (t2) { kl.appendChild(mk('li', null, t2)); });
+      box.appendChild(kl);
+      var back = mk('a', 'ksq-back', '回到這一節');
+      back.href = '#' + startOf[u.ks];
+      var bp = mk('p', 'ksq-self');
+      bp.appendChild(back);
+      box.appendChild(bp);
+      var tried = false, done = false;
+      function paint() {
+        var v = get(k(u.id, 'v'));
+        if (done) return;
+        mark.textContent = v === 'ok' ? '上次：第一次就答對' : v === 'miss' ? '上次：第一次答錯' : '';
+        mark.className = 'ksq-mark' + (v ? ' is-' + v + ' is-past' : '');
+      }
+      opts.forEach(function (c) {
+        var oli = mk('li');
+        var b = mk('button', 'ksq-opt', c.t);
+        b.type = 'button';
+        var why = mk('p', 'ksq-why');
+        why.hidden = true;
+        b.addEventListener('click', function () {
+          if (done) return;
+          if (!tried) {
+            tried = true;
+            set(k(u.id, 'v'), c.ok ? 'ok' : 'miss');
+            refresh();
+          }
+          if (c.ok) {
+            done = true;
+            b.classList.add('is-right');
+            b.setAttribute('aria-pressed', 'true');
+            ul.querySelectorAll('.ksq-opt').forEach(function (x) { x.disabled = true; });
+            mark.textContent = get(k(u.id, 'v')) === 'ok' ? '✓ 答對了' : '✓ 這次選對了（第一次答錯，記為有漏）';
+            mark.className = 'ksq-mark is-ok';
+            box.hidden = false;
+          } else {
+            b.classList.add('is-wrong');
+            b.disabled = true;
+            why.textContent = '✗ 不對：' + c.why;
+            why.hidden = false;
+            mark.textContent = '再選一次';
+            mark.className = 'ksq-mark is-miss';
+          }
+        });
+        oli.appendChild(b);
+        oli.appendChild(why);
+        ul.appendChild(oli);
+      });
+      li.appendChild(ul);
+      li.appendChild(mark);
+      li.appendChild(box);
+      paint();
+      return li;
+    }
+
     function item(u, uses) {
+      if (u.choices) return choice(u);
       var li = mk('li', 'ksq-item');
       li.id = 'q-' + u.id;
       var qp = mk('p', 'ksq-q');
@@ -145,7 +221,7 @@
           if (v) done++;
           if (v === 'ok') good++;
         });
-        n.textContent = done ? '對照 ' + done + '／' + ids.length + '・都答到 ' + good : ids.length + ' 題';
+        n.textContent = done ? '做了 ' + done + '／' + ids.length + '・第一次就對 ' + good : ids.length + ' 題';
       });
       return d;
     }

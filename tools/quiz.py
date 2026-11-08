@@ -13,11 +13,12 @@ app.js 讀它，在每一節後面放小測、在範圍最後一章後面放整�
   python3 -I tools/quiz.py report docs/l06.html answers.json verdicts.json [更多 answers verdicts 對]
         # 彙整：每題過不過、每一節的結果；給兩組以上就比較各次是否一致
 
-作答的 answers.json：{"k1a": {"answer": "…", "cite": ["#i1 ¶1", "#i1 code1 內容"]}, …}
-評分的 verdicts.json：{"k1a": {"points": [1, 0], "why": "…"}, …}（points 對應題目的 key，1 是答到且引用的文字支持）
+作答的 answers.json：{"k1a": {"choice": "C", "cite": ["#i1 ¶1"]}, "k1b": {"answer": "…", "cite": [...]}, …}
+評分的 verdicts.json：{"k1b": {"points": [1, 0], "why": "…"}, …}（只有問答題；points 對應題目的 key，1 是答到且引用的文字支持）
 
-一題「過」＝每個要點都答到（評分 agent 判斷）＋定位對（程式判斷）：
-unit 題至少有一個定位落在它那一節；整合題在它列的每一節各至少一個定位。
+一題「過」＝內容對＋定位對（程式判斷：unit 題至少有一個定位落在它那一節；整合題在它列的每一節各至少一個定位）。
+內容對：選擇題（kind choice）由程式比對選項；問答題（apply 與整合題）由評分 agent 逐要點判斷。
+作答包裡的選擇題，最後都多一個「文章沒寫，答不出來」：文章不夠時要選它，刪掉內容後題目才會轉紅。
 """
 import json
 import re
@@ -28,7 +29,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from review_pack import Node, by_id, parse, tldr_of, units_of  # noqa: E402
 
 SENT = re.compile(r"⟦(k\d+)⟧")
-KINDS = {"recall": "回想", "apply": "應用"}
+KINDS = {"recall": "回想", "apply": "應用", "choice": "選擇"}
+NOT_IN_TEXT = "文章沒寫，答不出來"
+LETTERS = "ABCDEFGH"
 
 
 def load(path):
@@ -96,6 +99,16 @@ def check(path):
             errs.append(f'{u["id"]}：kind 要是 {"／".join(KINDS)}')
         if not u.get("q") or not u.get("key"):
             errs.append(f'{u["id"]}：缺題目或答案要點')
+        if u.get("kind") == "choice":
+            cs = u.get("choices") or []
+            if not 3 <= len(cs) <= len(LETTERS) - 1:
+                errs.append(f'{u["id"]}：選擇題要 3–{len(LETTERS) - 1} 個選項')
+            if sum(bool(c.get("ok")) for c in cs) != 1:
+                errs.append(f'{u["id"]}：選擇題要剛好一個正確選項')
+            for c in cs:
+                if not c.get("t") or (not c.get("ok") and not c.get("why")):
+                    errs.append(f'{u["id"]}：每個選項要有文字，錯的選項要寫 why（錯在哪）')
+                    break
     for x in q.get("integration", []):
         qids.append(x["id"])
         if len(x["ks"]) < 2:
@@ -175,8 +188,9 @@ def exam(path, only=()):
 規則：
 1. 只用這份文字寫的東西作答。你自己知道、文字沒寫的不算；文字不夠回答，就寫「文章沒寫」，說缺了什麼，不要猜。
 2. 每一題附「定位」：支持你答案每個要點的單位，寫法和每行開頭方括號裡的一樣，例如 #i2 ¶1、#i2 表1 列2、#i2 code1 內容、#i2 表2 列1 ‹換成›。要計算的題，附上算式的出處。
-3. 答案寫成完整的句子，數字寫出來。
-4. 輸出一個 JSON 物件，不要其他文字：{"k1a": {"answer": "…", "cite": ["#i1 ¶1", "…"]}, …}，每一題一個 key。
+3. 選擇題選一個字母。文字裡找不到能支持某個選項的內容，就選「文章沒寫，答不出來」，即使你自己知道答案。
+4. 問答題的答案寫成完整的句子，數字寫出來。
+5. 輸出一個 JSON 物件，不要其他文字：選擇題 {"k1a": {"choice": "C", "cite": ["#i1 ¶1"]}}，問答題 {"k1b": {"answer": "…", "cite": ["…"]}}，每一題一個 key。
 """)
     print("## 文字\n")
     group = None
@@ -189,7 +203,10 @@ def exam(path, only=()):
         print(f"[{lc}] {tx}")
     print("\n## 題目\n")
     for x in items:
-        print(f"- {x['id']}：{x['q']}")
+        print(f"- {x['id']}：{'（選擇題）' if x.get('kind') == 'choice' else ''}{x['q']}")
+        if x.get("kind") == "choice":
+            for i, c in enumerate(x["choices"] + [{"t": NOT_IN_TEXT}]):
+                print(f"    {LETTERS[i]}. {c['t']}")
     return 0
 
 
@@ -234,6 +251,8 @@ def grade(path, answers_path, only=()):
         if only and qid not in only:
             continue
         it = r["item"]
+        if it.get("kind") == "choice":
+            continue  # 選擇題由程式判，不進評分包
         kind = "整合" if qid.startswith("x") else KINDS.get(it.get("kind"), "")
         print(f"\n## {qid}（{kind}；節：{'、'.join(names[k] for k in r['need'])}）")
         print(f"題目：{it['q']}")
@@ -264,6 +283,15 @@ def report(path, pairs):
         loc = locate(q, units, answers)
         r = {}
         for qid, need, it in items:
+            if it.get("kind") == "choice":
+                right = LETTERS[next(i for i, c in enumerate(it["choices"]) if c.get("ok"))]
+                got = str((answers.get(qid) or {}).get("choice", "")).strip().upper()[:1]
+                none = LETTERS[len(it["choices"])]
+                content = got == right
+                why = "" if content else ("選了「文章沒寫」" if got == none else f"選 {got or '?'}，正確是 {right}")
+                r[qid] = {"pass": content and loc[qid]["ok"], "content": content, "loc": loc[qid]["ok"],
+                          "pts": f"選{got or '?'}", "lack": loc[qid]["lack"], "why": why}
+                continue
             pts = (verdicts.get(qid) or {}).get("points") or []
             content = len(pts) == len(it["key"]) and all(pts)
             r[qid] = {"pass": content and loc[qid]["ok"], "content": content, "loc": loc[qid]["ok"],
