@@ -135,8 +135,19 @@ def check(path):
             mine = [u for u in q["unit"] if u["ks"] == s["id"]]
             nc = sum(u.get("kind") == "choice" for u in mine)
             na = sum(u.get("kind") == "apply" for u in mine)
-            if nc < 3 or na < 1:
-                errs.append(f'{s["id"]}（{s["title"]}）是重點觀念：要至少 3 題選擇、1 題應用（現在 {nc}、{na}）')
+            if nc + na < 4 or na < 1 or nc < 2:
+                errs.append(f'{s["id"]}（{s["title"]}）是重點觀念：至少 4 題，其中至少 2 題選擇、1 題應用（現在選擇 {nc}、應用 {na}）')
+    # 正確選項最長、而且比錯的選項平均長 25% 以上：閉卷挑最長的就會對（QUIZ.md）。只警告，不擋。
+    long = []
+    for u in q["unit"]:
+        if u.get("kind") != "choice" or not u.get("choices"):
+            continue
+        right = next((len(c["t"]) for c in u["choices"] if c.get("ok")), 0)
+        wrong = [len(c["t"]) for c in u["choices"] if not c.get("ok")]
+        if wrong and right > max(wrong) and right > 1.25 * sum(wrong) / len(wrong):
+            long.append(u["id"])
+    if long:
+        print(f"warn 正確選項明顯最長 {len(long)} 題：{' '.join(long)}")
     for e in errs:
         print("FAIL", e)
     if not errs:
@@ -225,11 +236,11 @@ def exam(path, only=()):
     return 0
 
 
-def closed(path):
+def closed(path, only=()):
     """Closed-book exam: the choice questions only, no article. A question answered right
     with confidence here does not measure reading (passage independence)."""
     src, q = load(path)
-    items = [u for u in q["unit"] if u.get("kind") == "choice"]
+    items = [u for u in q["unit"] if u.get("kind") == "choice" and (not only or u["id"] in only)]
     print(f"# 閉卷作答包：{Path(path).name}　{len(items)} 題選擇題，沒有文章")
     print("""
 你沒有讀過這些題目出自的文章。只用常識、推理和你本來就知道的東西，每一題都選一個最可能的答案（一定要選，不能不答）。
@@ -247,7 +258,7 @@ def closed(path):
 def closedcheck(path, ans_path):
     src, q = load(path)
     ans = json.loads(Path(ans_path).read_text(encoding="utf-8"))
-    items = [u for u in q["unit"] if u.get("kind") == "choice"]
+    items = [u for u in q["unit"] if u.get("kind") == "choice" and u["id"] in ans]
     right = sure = 0
     flagged = []
     for u in items:
@@ -256,10 +267,17 @@ def closedcheck(path, ans_path):
         right += ok
         if ok and a.get("sure"):
             sure += 1
-            flagged.append((u["id"], a.get("why", "")))
+            flagged.append((u["id"], a.get("why", ""), u.get("closed_ok")))
     print(f"閉卷：{len(items)} 題選擇題，答對 {right}（純猜的期望值約 {sum(1 / len(u['choices']) for u in items):.0f}），答對而且有把握 {sure}")
-    for qid, why in flagged:
+    bad = [f for f in flagged if not f[2]]
+    print(f"要改的（沒標 closed_ok）：{len(bad)}")
+    for qid, why, _ in bad:
         print(f"- {qid}：{why}")
+    ok_ = [f for f in flagged if f[2]]
+    if ok_:
+        print(f"已接受（closed_ok）：{len(ok_)}")
+        for qid, _, reason in ok_:
+            print(f"- {qid}：{reason}")
     return 0
 
 
@@ -400,7 +418,7 @@ def main(argv):
     if cmd == "exam":
         return exam(path, set(argv[3:]))
     if cmd == "closed":
-        return closed(path)
+        return closed(path, set(argv[3:]))
     if cmd == "closedcheck" and len(argv) == 4:
         return closedcheck(path, argv[3])
     if cmd == "grade" and len(argv) >= 4:
