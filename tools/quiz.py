@@ -8,6 +8,8 @@ app.js 讀它，在每一節後面放小測、在範圍最後一章後面放整�
   python3 -I tools/quiz.py check docs/l06.html              # 題庫和頁面對得上嗎（verify.sh 會跑）
   python3 -I tools/quiz.py units docs/l06.html              # 每個單位屬於哪一節（除錯用）
   python3 -I tools/quiz.py exam docs/l06.html [k14b …] > exam.md   # 作答包：讀者文字＋題目，不含答案；列題號就只出那幾題
+  python3 -I tools/quiz.py closed docs/l06.html > closed.md   # 閉卷：只有選擇題、不給文章；閉卷也答對的題沒在測文章
+  python3 -I tools/quiz.py closedcheck docs/l06.html closed.json   # 列出閉卷答對而且有把握的題
   python3 -I tools/quiz.py grade docs/l06.html answers.json [k1b k14b …] > judge.md
         # 對定位（程式判斷），並產出評分包給評分的 agent；後面列題號就只評那幾題（改了 key 之後重評）
   python3 -I tools/quiz.py report docs/l06.html answers.json verdicts.json [更多 answers verdicts 對]
@@ -223,6 +225,44 @@ def exam(path, only=()):
     return 0
 
 
+def closed(path):
+    """Closed-book exam: the choice questions only, no article. A question answered right
+    with confidence here does not measure reading (passage independence)."""
+    src, q = load(path)
+    items = [u for u in q["unit"] if u.get("kind") == "choice"]
+    print(f"# 閉卷作答包：{Path(path).name}　{len(items)} 題選擇題，沒有文章")
+    print("""
+你沒有讀過這些題目出自的文章。只用常識、推理和你本來就知道的東西，每一題都選一個最可能的答案（一定要選，不能不答）。
+每一題另外標 sure：true 表示你不靠文章也有把握（例如選項之間的因果或定義就能推出答案），false 表示主要是猜的。
+再用一句話寫你怎麼判斷的。
+只輸出一個 JSON 物件，不要其他文字：{"k1a": {"choice": "C", "sure": true, "why": "…"}, …}，每一題一個 key。
+""")
+    for u in items:
+        print(f"- {u['id']}：{u['q']}")
+        for i, c in enumerate(u["choices"]):
+            print(f"    {LETTERS[i]}. {c['t']}")
+    return 0
+
+
+def closedcheck(path, ans_path):
+    src, q = load(path)
+    ans = json.loads(Path(ans_path).read_text(encoding="utf-8"))
+    items = [u for u in q["unit"] if u.get("kind") == "choice"]
+    right = sure = 0
+    flagged = []
+    for u in items:
+        a = ans.get(u["id"]) or {}
+        ok = str(a.get("choice", "")).strip().upper()[:1] == LETTERS[next(i for i, c in enumerate(u["choices"]) if c.get("ok"))]
+        right += ok
+        if ok and a.get("sure"):
+            sure += 1
+            flagged.append((u["id"], a.get("why", "")))
+    print(f"閉卷：{len(items)} 題選擇題，答對 {right}（純猜的期望值約 {sum(1 / len(u['choices']) for u in items):.0f}），答對而且有把握 {sure}")
+    for qid, why in flagged:
+        print(f"- {qid}：{why}")
+    return 0
+
+
 def locate(q, units, answers):
     """Program half of grading: does each answer cite its own section(s)?"""
     res = {}
@@ -359,6 +399,10 @@ def main(argv):
         return 0
     if cmd == "exam":
         return exam(path, set(argv[3:]))
+    if cmd == "closed":
+        return closed(path)
+    if cmd == "closedcheck" and len(argv) == 4:
+        return closedcheck(path, argv[3])
     if cmd == "grade" and len(argv) >= 4:
         return grade(path, argv[3], set(argv[4:]))
     if cmd == "report" and len(argv) >= 5 and len(argv) % 2 == 1:
