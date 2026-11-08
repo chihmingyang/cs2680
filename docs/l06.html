@@ -2231,7 +2231,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
 </div>
 <script type="application/json" id="quiz">
 {
- "version": 2,
+ "version": 3,
  "note": "題庫 pilot（2026-11-08）：L6 第 1–4 章。回想題是選擇題（kind choice），應用題與整合題是問答。節＝文章自己的小節（from 是該節起點的 id）。規則見 guide/QUIZ.md。",
  "scope": [
   "i1",
@@ -2243,7 +2243,8 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
   {
    "id": "k1",
    "from": "i1",
-   "title": "錯誤相乘：pⁿ"
+   "title": "錯誤相乘：pⁿ",
+   "core": true
   },
   {
    "id": "k2",
@@ -2258,7 +2259,8 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
   {
    "id": "k4",
    "from": "i2",
-   "title": "檢查加重試的算式"
+   "title": "檢查加重試的算式",
+   "core": true
   },
   {
    "id": "k5",
@@ -2278,7 +2280,8 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
   {
    "id": "k8",
    "from": "i3",
-   "title": "退回多遠：切幾段最划算"
+   "title": "退回多遠：切幾段最划算",
+   "core": true
   },
   {
    "id": "k9",
@@ -2308,7 +2311,8 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
   {
    "id": "k14",
    "from": "i4-1",
-   "title": "先找第一個出錯的步驟"
+   "title": "先找第一個出錯的步驟",
+   "core": true
   },
   {
    "id": "k15",
@@ -2333,10 +2337,6 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "why": "每一步都要對，機率要相乘：0.95 乘上 50 次，不是取平均。"
     },
     {
-     "t": "約 50%",
-     "why": "不是一半一半。0.95 的 50 次方只剩約 7.7%。"
-    },
-    {
      "t": "約 8%",
      "ok": true
     },
@@ -2347,6 +2347,52 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    ],
    "key": [
     "0.95 的 50 次方 ≈ 7.7%，約 13 次 run 才有 1 次全對。單步很準，整趟卻一路往下掉。"
+   ]
+  },
+  {
+   "id": "k1c",
+   "ks": "k1",
+   "kind": "choice",
+   "q": "反過來算：要讓 50 步的 run 有 90% 全對，每一步大約要多準？",
+   "choices": [
+    {
+     "t": "95%",
+     "why": "每步 95% 時，50 步只有約 8% 全對。"
+    },
+    {
+     "t": "99%",
+     "why": "0.99 的 50 次方約 60%，還不到 90%。"
+    },
+    {
+     "t": "約 99.8%（99.79%），等於約 475 步才錯一次",
+     "ok": true
+    }
+   ],
+   "key": [
+    "每步要 99.79%（0.9 的 1/50 次方），約 475 步才錯一次。實際的 agent 離這個很遠，所以不能只靠每一步都對。"
+   ]
+  },
+  {
+   "id": "k1d",
+   "ks": "k1",
+   "kind": "choice",
+   "q": "同樣每步 95%，run 從 10 步變成 50 步，全對的機率怎麼變？",
+   "choices": [
+    {
+     "t": "一樣約 95%：每一步的準度沒變",
+     "why": "每一步的準度沒變，但要全對的步數多了，要多乘 40 次 0.95。"
+    },
+    {
+     "t": "從約 60% 掉到約 8%",
+     "ok": true
+    },
+    {
+     "t": "從約 50% 掉到約 10%：步數變 5 倍，機率就除以 5",
+     "why": "不是除以 5，是多乘 40 次 0.95：10 步約 60%，50 步約 8%，掉得比直覺快。"
+    }
+   ],
+   "key": [
+    "10 步是 0.95 的 10 次方 ≈ 60%，50 步是 0.95 的 50 次方 ≈ 8%。每多一步就多乘一次 0.95，步數一長，全對的機率掉得比直覺快。"
    ]
   },
   {
@@ -2491,10 +2537,6 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "t": "100%：每個錯都抓得到，就不會錯",
      "why": "重試也可能再錯。一步還有 0.25% 會失敗，50 步累積下來是 88%。"
-    },
-    {
-     "t": "50%",
-     "why": "照算式算：一步 0.95 + 0.05 × 1 × 0.95 = 99.75%，50 次方約 88%。"
     }
    ],
    "key": [
@@ -2703,6 +2745,52 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    ],
    "key": [
     "每段 10 步約 126 最省；不分段約 715，每段 1 步約 316。段切短，重跑變少，但驗證次數變多，驗證的成本會占上風。"
+   ]
+  },
+  {
+   "id": "k8c",
+   "ks": "k8",
+   "kind": "choice",
+   "q": "為什麼「不分段、最後才驗證一次」最貴？",
+   "choices": [
+    {
+     "t": "驗證本身太貴",
+     "why": "不分段只在最後驗證，驗證的次數最少。貴的是重跑：一段 50 步全對只有 8%，平均要跑約 13 次。"
+    },
+    {
+     "t": "一段 50 步全對只有 8%，失敗就從頭重跑，平均要跑約 13 次、共約 650 步",
+     "ok": true
+    },
+    {
+     "t": "最後幾步最容易出錯",
+     "why": "每一步一樣是 95%。問題是整段 50 步要一起對，失敗就全部重來。"
+    }
+   ],
+   "key": [
+    "不分段時，一段就是整個 run：全對 8%，平均跑約 13 次、650 步，總成本約 715。切成每段 10 步，步數只剩約 84 步。"
+   ]
+  },
+  {
+   "id": "k8d",
+   "ks": "k8",
+   "kind": "choice",
+   "q": "如果驗證完全不花成本，最省的切法變成哪一種？",
+   "choices": [
+    {
+     "t": "還是每段 10 步",
+     "why": "每段 10 步最省，是因為驗證要花成本。驗證免費時只剩步數這一筆帳，切得越細，重跑越少。"
+    },
+    {
+     "t": "不分段",
+     "why": "不分段要跑約 650 步，步數這筆帳最大。"
+    },
+    {
+     "t": "每段 1 步，也就是第 2 章每一步都檢查",
+     "ok": true
+    }
+   ],
+   "key": [
+    "驗證完全不花成本時，總成本只剩步數：每段 1 步只要約 53 步，最省，也就是第 2 章每一步都檢查的情況。最省的段長取決於驗證有多貴：一次驗證算 1 步時，最省的是每段 5 步。"
    ]
   },
   {
@@ -2974,6 +3062,29 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    ],
    "key": [
     "Failure as a Process：epistemic 57.9%、competence 32.8%。更強的 model 主要補 competence；epistemic 要到 harness、tool、環境那幾層修。"
+   ]
+  },
+  {
+   "id": "k14d",
+   "ks": "k14",
+   "kind": "choice",
+   "q": "定位第一個出錯的步驟：任務的原文清楚，送進 model 的 context 也有需要的資訊，但照 model 看到的輸入，它的判斷還是錯了。來源在哪一層？",
+   "choices": [
+    {
+     "t": "Model",
+     "ok": true
+    },
+    {
+     "t": "Tool",
+     "why": "依序往下問，第一個答「否」的就是來源。這裡問到第三題（model 的判斷合理嗎）就答否了，不用再往下問 tool。"
+    },
+    {
+     "t": "Harness",
+     "why": "Context 有需要的資訊，第二題答「是」，所以不是 harness。"
+    }
+   ],
+   "key": [
+    "依序問五題：任務原文清楚嗎（規格）→ context 有需要的資訊嗎（harness）→ 照看到的輸入，判斷合理嗎（model）→ tool 回傳和實際相符嗎（tool）→ 最後是環境。第一個答「否」的就是來源層；這裡是第三題，來源在 model。"
    ]
   },
   {

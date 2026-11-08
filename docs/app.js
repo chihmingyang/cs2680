@@ -200,12 +200,13 @@
       return li;
     }
 
-    function block(id, cls, label, name, items, note) {
+    function block(id, cls, label, name, items, note, core) {
       var d = mk('details', 'ks-quiz' + (cls ? ' ' + cls : ''));
       d.id = id;
       var s = mk('summary');
       s.appendChild(mk('span', 'ksq-k', label));
       s.appendChild(mk('span', 'ksq-t', name));
+      if (core) s.appendChild(mk('span', 'ksq-core', '重點'));
       var n = mk('span', 'ksq-n');
       s.appendChild(n);
       d.appendChild(s);
@@ -231,7 +232,7 @@
       var ch = chapterOf(start);
       var prose = ch && ch.querySelector('.prose');
       if (!prose || !byKs[s.id]) return;
-      var nb = block('quiz-' + s.id, '', '小測', s.title, byKs[s.id].map(function (u) { return item(u); }));
+      var nb = block('quiz-' + s.id, '', '小測', s.title, byKs[s.id].map(function (u) { return item(u); }), null, s.core);
       var next = secs[i + 1] && document.getElementById(secs[i + 1].from);
       if (next && chapterOf(next) === ch && next.parentNode === prose) prose.insertBefore(nb, next);
       else prose.appendChild(nb);

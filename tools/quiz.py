@@ -101,8 +101,8 @@ def check(path):
             errs.append(f'{u["id"]}：缺題目或答案要點')
         if u.get("kind") == "choice":
             cs = u.get("choices") or []
-            if not 3 <= len(cs) <= len(LETTERS) - 1:
-                errs.append(f'{u["id"]}：選擇題要 3–{len(LETTERS) - 1} 個選項')
+            if not 3 <= len(cs) <= 4:
+                errs.append(f'{u["id"]}：選擇題要 3 個選項；有 3 種真的誤解才用 4 個（QUIZ.md）')
             if sum(bool(c.get("ok")) for c in cs) != 1:
                 errs.append(f'{u["id"]}：選擇題要剛好一個正確選項')
             for c in cs:
@@ -123,6 +123,12 @@ def check(path):
     for s in q["sections"]:
         if s["id"] not in used:
             errs.append(f'{s["id"]}（{s["title"]}）沒有 unit 題')
+        if s.get("core"):
+            mine = [u for u in q["unit"] if u["ks"] == s["id"]]
+            nc = sum(u.get("kind") == "choice" for u in mine)
+            na = sum(u.get("kind") == "apply" for u in mine)
+            if nc < 3 or na < 1:
+                errs.append(f'{s["id"]}（{s["title"]}）是重點觀念：要至少 3 題選擇、1 題應用（現在 {nc}、{na}）')
     for e in errs:
         print("FAIL", e)
     if not errs:
