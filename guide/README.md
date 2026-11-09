@@ -24,7 +24,7 @@
 | 更新紀錄 | `guide/CHANGELOG.md` | `guide/` 各文件的更新紀錄，依文件分節，新的在最上面、一則一行。開工不必讀；要查某堂的來龍去脈就 `grep L3 guide/CHANGELOG.md`。設了 `merge=union`，不會衝突（2026-11-06 以前寫在各檔第 3 行）。 |
 | Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
-| 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前只有 L6（2026-11-08，整堂）。 |
+| 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前只有 L6（2026-11-08，整堂；2026-11-09 補齊觀念涵蓋，258 題 unit）。 |
 | 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 以心智模型為單位的觀念依賴圖（concept／practice、三級難度、要先懂的邊）；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（英文頁，首頁課程地圖有連結，2026-11-09）。 |
 | 互動圖 | `docs/calc.js`、`figure.diagram[data-calc]` | 拖滑桿換假設、圖照算式重畫；HTML 裡是預設值的靜態圖。目前只有 L6 3.1（2026-11-09）。規則在 `STYLE_ARTICLE.md` 第 6 節〈互動圖〉。 |
 | CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是「問 Claude」。 |
@@ -57,7 +57,7 @@
 | `assemble_ideas.py` | （v5 頁面用，v7 改用 `assemble_v7.py`）把 `notes/lXX/` 的章片段（`head.html`、`i1.html`…、選用的 `tldr.html`、`arch.html`）組回頁面的核心觀念：換掉 `#s-ideas`、填閱讀地圖的分鐘數、重建本頁的三層目錄。大改一堂的核心觀念時用（L5、L6 的擴寫）。 |
 | `review_pack.py` | 把一頁（或 `--since <ref>` 之後文字有變的章，tldr 也算）印成讀者視角的純文字審查包：一行一個單位、帶定位，表格格子帶欄名與列名，數字列併成一行。給可讀性審查的 subagent 讀。`--prefix` 把要審的章前面的章當上下文印出、後面的章不印（2026-11-07 起一律這樣給，tldr 用 `--chapter tldr` 單獨一包）。互動圖的滑桿與預設的結論印成一個單位 `圖N 滑桿`（2026-11-09）。 |
 | `review_noise.py` | 比對同一包的幾份審查報告：每份的 BLOCK／NIT 數、哪些單位每次都被標、兩兩重疊、「最難讀的三處」重疊。量審查者的雜訊用（2026-11-07）。 |
-| `quiz.py` | 題庫：`check` 題庫和頁面的小節對不對得上（verify.sh 會跑）；`exam` 出作答包；`grade` 對定位、出評分包；`report` 彙整與比較各次結果。見 `guide/QUIZ.md`（2026-11-08）。 |
+| `quiz.py` | 題庫：`check` 題庫和頁面的小節對不對得上、每個觀念（`points`）都有題目測到（verify.sh 會跑）；`coverage` 列出每個觀念被哪幾題測到；`exam` 出作答包；`closed`／`closedcheck` 閉卷測試；`grade` 對定位、出評分包；`report` 彙整與比較各次結果。見 `guide/QUIZ.md`（2026-11-08）。 |
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
 | `insert_digest.py` | 把 `notes/digests/lXX-rN.html` 的摘要片段插進該篇的 `li`、重寫 `rg-intro` 的篇數，並檢查錨點、頁碼、長度與「別誤讀」。`--check` 只驗證。 |
 | `dag.py` | 觀念 DAG：`--check` 檢查 `docs/dag.json`（無環、難度沿邊不降、src 錨點存在、每章都被蓋到或在 excluded），不帶參數就重寫 `docs/dag.html`。規則見 `guide/DAG.md`（2026-11-08）。 |

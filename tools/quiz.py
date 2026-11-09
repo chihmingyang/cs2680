@@ -8,6 +8,7 @@ app.js 讀它，在每一節後面放小測、在範圍最後一章後面放整�
   python3 -I tools/quiz.py check docs/l06.html              # 題庫和頁面對得上嗎（verify.sh 會跑）
   python3 -I tools/quiz.py units docs/l06.html              # 每個單位屬於哪一節（除錯用）
   python3 -I tools/quiz.py exam docs/l06.html [k14b …] > exam.md   # 作答包：讀者文字＋題目，不含答案；列題號就只出那幾題
+  python3 -I tools/quiz.py coverage docs/l06.html          # 每一節的觀念（points）各被哪幾題測到；沒測到的標出來
   python3 -I tools/quiz.py closed docs/l06.html > closed.md   # 閉卷：只有選擇題、不給文章；閉卷也答對的題沒在測文章
   python3 -I tools/quiz.py closedcheck docs/l06.html closed.json   # 列出閉卷答對而且有把握的題
   python3 -I tools/quiz.py grade docs/l06.html answers.json [k1b k14b …] > judge.md
@@ -23,6 +24,7 @@ app.js 讀它，在每一節後面放小測、在範圍最後一章後面放整�
 作答包裡的選擇題，最後都多一個「文章沒寫，答不出來」：文章不夠時要選它，刪掉內容後題目才會轉紅。
 """
 import json
+import random
 import re
 import sys
 from pathlib import Path
@@ -34,6 +36,19 @@ SENT = re.compile(r"⟦(k\d+)⟧")
 KINDS = {"recall": "回想", "apply": "應用", "choice": "選擇"}
 NOT_IN_TEXT = "文章沒寫，答不出來"
 LETTERS = "ABCDEFGH"
+
+
+def shown(u):
+    """Choices in the order the exam packets show them: shuffled with the question id as seed,
+    like the page shuffles them, so the bank's order (where writers tend to put the key) leaks nothing.
+    Same id → same order, so grading can map letters back."""
+    cs = list(u["choices"])
+    random.Random(u["id"]).shuffle(cs)
+    return cs
+
+
+def key_letter(u):
+    return LETTERS[next(i for i, c in enumerate(shown(u)) if c.get("ok"))]
 
 
 def load(path):
@@ -148,8 +163,29 @@ def check(path):
             long.append(u["id"])
     if long:
         print(f"warn 正確選項明顯最長 {len(long)} 題：{' '.join(long)}")
+    # 觀念涵蓋（coverage）：每一節的 points 是 spec，每題的 covers 標它測哪個觀念。
+    # 有 points 的節，每個觀念都要有一題 unit 測到（選擇或應用），covers 只能指向自己這一節的觀念。
+    pts = {pt["id"]: s_["id"] for s_ in q["sections"] for pt in s_.get("points", [])}
+    TYPES = {"claim", "mechanism", "condition", "limit", "misconception"}
+    for s_ in q["sections"]:
+        for pt in s_.get("points", []):
+            if pt.get("type") not in TYPES:
+                errs.append(f'{pt["id"]}：type 要是 {"／".join(sorted(TYPES))}')
+    covered = set()
+    for u in q["unit"]:
+        for c in u.get("covers", []):
+            if c not in pts:
+                errs.append(f'{u["id"]}：covers 的 {c} 不存在')
+            elif pts[c] != u["ks"]:
+                errs.append(f'{u["id"]}：covers 的 {c} 屬於 {pts[c]}，不是這題的節 {u["ks"]}')
+            covered.add(c)
+    missing = [pid for pid in pts if pid not in covered]
+    for pid in missing:
+        errs.append(f'觀念 {pid} 沒有題目測到')
     for e in errs:
         print("FAIL", e)
+    if pts and not errs:
+        print(f"ok   涵蓋：{len(pts)} 個觀念都有題目測到")
     if not errs:
         print(f'ok   題庫：{len(q["sections"])} 節、{len(q["unit"])} 題 unit、{len(q.get("integration", []))} 題整合')
     return 1 if errs else 0
@@ -231,8 +267,29 @@ def exam(path, only=()):
     for x in items:
         print(f"- {x['id']}：{'（選擇題）' if x.get('kind') == 'choice' else ''}{x['q']}")
         if x.get("kind") == "choice":
-            for i, c in enumerate(x["choices"] + [{"t": NOT_IN_TEXT}]):
+            for i, c in enumerate(shown(x) + [{"t": NOT_IN_TEXT}]):
                 print(f"    {LETTERS[i]}. {c['t']}")
+    return 0
+
+
+def coverage(path):
+    src, q = load(path)
+    by = {}
+    for u in q["unit"]:
+        for c in u.get("covers", []):
+            by.setdefault(c, []).append(u["id"])
+    TYPE = {"claim": "主張", "mechanism": "機制", "condition": "前提", "limit": "限制", "misconception": "誤解"}
+    tot = cov = 0
+    for s_ in q["sections"]:
+        if not s_.get("points"):
+            continue
+        print(f"\n## {s_['id']} {s_['title']}")
+        for pt in s_["points"]:
+            tot += 1
+            qs = by.get(pt["id"], [])
+            cov += bool(qs)
+            print(f"- {pt['id']} [{TYPE.get(pt['type'], pt['type'])}] {'、'.join(qs) if qs else '**沒有題目**'}｜{pt['t']}")
+    print(f"\n涵蓋 {cov}/{tot}")
     return 0
 
 
@@ -250,7 +307,7 @@ def closed(path, only=()):
 """)
     for u in items:
         print(f"- {u['id']}：{u['q']}")
-        for i, c in enumerate(u["choices"]):
+        for i, c in enumerate(shown(u)):
             print(f"    {LETTERS[i]}. {c['t']}")
     return 0
 
@@ -263,7 +320,7 @@ def closedcheck(path, ans_path):
     flagged = []
     for u in items:
         a = ans.get(u["id"]) or {}
-        ok = str(a.get("choice", "")).strip().upper()[:1] == LETTERS[next(i for i, c in enumerate(u["choices"]) if c.get("ok"))]
+        ok = str(a.get("choice", "")).strip().upper()[:1] == key_letter(u)
         right += ok
         if ok and a.get("sure"):
             sure += 1
@@ -360,7 +417,7 @@ def report(path, pairs):
         r = {}
         for qid, need, it in items:
             if it.get("kind") == "choice":
-                right = LETTERS[next(i for i, c in enumerate(it["choices"]) if c.get("ok"))]
+                right = key_letter(it)
                 got = str((answers.get(qid) or {}).get("choice", "")).strip().upper()[:1]
                 none = LETTERS[len(it["choices"])]
                 content = got == right
@@ -419,6 +476,8 @@ def main(argv):
         return exam(path, set(argv[3:]))
     if cmd == "closed":
         return closed(path, set(argv[3:]))
+    if cmd == "coverage":
+        return coverage(path)
     if cmd == "closedcheck" and len(argv) == 4:
         return closedcheck(path, argv[3])
     if cmd == "grade" and len(argv) >= 4:
