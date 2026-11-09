@@ -7,6 +7,7 @@
 - 這個環境不能用 GitHub GraphQL，也不能改 repo 設定；用 `gh api` 的 REST endpoint。
 - 舊的 claude.ai artifact 已停用，不要再發布到它。
 - L1–L11 都是 v7 依想法重組的版面，三段：核心觀念、動手試試、延伸閱讀，各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
+- 替一堂建題庫（每一節的小測與整合題），或改了某一節要補題 → 照 `.claude/skills/build-quiz/SKILL.md`，一個 session 一堂，先做完那一堂的可讀性審查。
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。
 - James 也會在站台上直接改字（commit 訊息「網頁編輯：…」）或從頁面發問（label `ask` 的 issue），見 `guide/WORKFLOW.md` G。這些 issue 不是討論串，也不是錯誤回報。
 - 改內容直接改 HTML、跑檢查、push，在頁面上給他看；不先給純文字版等 OK（他幾乎不看）。

@@ -5,9 +5,13 @@
 app.js 讀它，在每一節後面放小測、在範圍最後一章後面放整合題。審查包與 page_text 都會去掉 <script>，
 所以作答的 agent 看不到答案。
 
+  python3 -I tools/quiz.py init docs/l07.html               # 新題庫：從頁面的小節產生節的骨架，寫進頁面（已有題庫就不動）
+  python3 -I tools/quiz.py spec docs/l07.html [i1 i2 …] > spec.md   # 給列觀念的 agent：讀者文字依節分組，不含 tldr 與題目
+  python3 -I tools/quiz.py merge docs/l07.html part.json …  # 把 subagent 寫的 points／unit／integration 併進頁面的題庫
   python3 -I tools/quiz.py check docs/l06.html              # 題庫和頁面對得上嗎（verify.sh 會跑）
   python3 -I tools/quiz.py units docs/l06.html              # 每個單位屬於哪一節（除錯用）
   python3 -I tools/quiz.py exam docs/l06.html [k14b …] > exam.md   # 作答包：讀者文字＋題目，不含答案；列題號就只出那幾題
+        # exam、closed、grade 後面列的可以是題號（k14b）、節（k14：那一節的題）或章（i3：那一章的題、放在那一章後的整合題）
   python3 -I tools/quiz.py coverage docs/l06.html          # 每一節的觀念（points）各被哪幾題測到；沒測到的標出來
   python3 -I tools/quiz.py closed docs/l06.html > closed.md   # 閉卷：只有選擇題、不給文章；閉卷也答對的題沒在測文章
   python3 -I tools/quiz.py closedcheck docs/l06.html closed.json   # 列出閉卷答對而且有把握的題
@@ -57,6 +61,25 @@ def load(path):
     if not m:
         return src, None
     return src, json.loads(m.group(1))
+
+
+def picker(q, only):
+    """Select questions by question id (k14b), section id (k14) or chapter id (i3)."""
+    if not only:
+        return lambda x: True
+    ch = {s_["id"]: s_["from"].split("-")[0] for s_ in q["sections"]}
+    last = q["scope"][-1] if q.get("scope") else None
+
+    def ok(x):
+        if x["id"] in only:
+            return True
+        ks = x["ks"] if isinstance(x["ks"], list) else [x["ks"]]
+        if any(k in only for k in ks):
+            return True
+        if isinstance(x["ks"], str):
+            return ch.get(x["ks"]) in only
+        return x.get("after", last) in only
+    return ok
 
 
 def chapter_of(root, el):
@@ -241,7 +264,8 @@ def exam(path, only=()):
     for cid in q["scope"]:
         h = next(by_id(root, cid).find_all(lambda x: x.tag == "h3"), None)
         titles[cid] = h.text() if h is not None else cid
-    items = [x for x in q["unit"] + q.get("integration", []) if not only or x["id"] in only]
+    sel = picker(q, only)
+    items = [x for x in q["unit"] + q.get("integration", []) if sel(x)]
     print(f"# 作答包：{Path(path).name}　{len(items)} 題")
     print("""
 你是讀者，只讀過下面這份文字。依序回答最後的每一題。
@@ -297,7 +321,8 @@ def closed(path, only=()):
     """Closed-book exam: the choice questions only, no article. A question answered right
     with confidence here does not measure reading (passage independence)."""
     src, q = load(path)
-    items = [u for u in q["unit"] if u.get("kind") == "choice" and (not only or u["id"] in only)]
+    sel = picker(q, only)
+    items = [u for u in q["unit"] if u.get("kind") == "choice" and sel(u)]
     print(f"# 閉卷作答包：{Path(path).name}　{len(items)} 題選擇題，沒有文章")
     print("""
 你沒有讀過這些題目出自的文章。只用常識、推理和你本來就知道的東西，每一題都選一個最可能的答案（一定要選，不能不答）。
@@ -367,7 +392,8 @@ def grade(path, answers_path, only=()):
     answers = json.loads(Path(answers_path).read_text(encoding="utf-8"))
     loc = locate(q, units, answers)
     names = {s["id"]: s["title"] for s in q["sections"]}
-    n = sum(1 for k, r in loc.items() if (not only or k in only) and r["item"].get("kind") != "choice")
+    sel = picker(q, only)
+    n = sum(1 for k, r in loc.items() if sel(r["item"]) and r["item"].get("kind") != "choice")
     print(f"# 評分包：{Path(path).name}　{n} 題")
     print("""
 你是評分者。每一題有：題目、答案要點（key）、作答者的答案、作答者引用的文字。
@@ -377,7 +403,7 @@ def grade(path, answers_path, only=()):
 只輸出一個 JSON 物件，不要其他文字：{"k1a": {"points": [1, 0], "why": "一句話：哪個要點沒答到或沒有出處"}, …}
 """)
     for qid, r in loc.items():
-        if only and qid not in only:
+        if not sel(r["item"]):
             continue
         it = r["item"]
         if it.get("kind") == "choice":
@@ -459,12 +485,125 @@ def report(path, pairs):
     return 0
 
 
+BLOCK = re.compile(r'<script type="application/json" id="quiz">(.*?)</script>', re.S)
+
+
+def save(path, src, q):
+    body = json.dumps(q, ensure_ascii=False, indent=1)
+    Path(path).write_text(BLOCK.sub(lambda m: f'<script type="application/json" id="quiz">\n{body}\n</script>', src, count=1),
+                          encoding="utf-8")
+
+
+def init(path):
+    """Skeleton for a new bank: scope = every chapter (div.idea), one section per chapter head and
+    one per subsection (p#iN-M, title from its bold lead-in). A chapter head with at most one unit
+    (a transition sentence) merges into its first subsection (QUIZ.md). Written into the page."""
+    src = Path(path).read_text(encoding="utf-8")
+    if BLOCK.search(src):
+        sys.exit(f"{path} 已經有題庫，init 不動它")
+    root = parse(src)
+    scope = [m.group(1) for m in re.finditer(r'<div class="idea" id="(i\d+)"', src)]
+    secs = []
+    for cid in scope:
+        ch = by_id(root, cid)
+        h = next(ch.find_all(lambda x: x.tag == "h3"), None)
+        secs.append({"from": cid, "title": re.sub(r"^\s*\d+\s*", "", h.text()).strip() if h is not None else cid})
+        for m in re.finditer(rf'<p id="({cid}-\d+)"', src):
+            el = by_id(root, m.group(1))
+            b = next((c for c in el.children if isinstance(c, Node) and c.tag in ("b", "strong")), None)
+            secs.append({"from": m.group(1), "title": (b.text() if b is not None else m.group(1)).strip().rstrip("。：:")})
+    for i, s_ in enumerate(secs, 1):
+        s_["id"] = f"t{i}"
+    q = {"version": 1, "scope": scope, "sections": secs, "unit": [], "integration": []}
+    n = {}
+    for lc, tx, ks in unit_map(src, q):
+        if ks and " 標題" not in lc:
+            n[ks] = n.get(ks, 0) + 1
+    out = []
+    for i, s_ in enumerate(secs):
+        nxt = secs[i + 1] if i + 1 < len(secs) else None
+        if "-" not in s_["from"] and n.get(s_["id"], 0) <= 1 and nxt and nxt["from"].startswith(s_["from"] + "-"):
+            nxt["from"] = s_["from"]  # 章首只有一句過場：併進第一個小節
+            continue
+        out.append(s_)
+    out = [{"id": f"k{i}", "from": s_["from"], "title": s_["title"], "core": False, "points": []}
+           for i, s_ in enumerate(out, 1)]
+    q = {"version": 1, "note": f"題庫：{Path(path).stem.upper()}（規則見 guide/QUIZ.md）。", "scope": scope,
+         "sections": out, "unit": [], "integration": []}
+    body = json.dumps(q, ensure_ascii=False, indent=1)
+    tag = '<script src="app.js"></script>'
+    if tag not in src:
+        sys.exit(f"{path} 找不到 {tag}")
+    src = src.replace(tag, f'<script type="application/json" id="quiz">\n{body}\n</script>\n{tag}', 1)
+    Path(path).write_text(src, encoding="utf-8")
+    print(f"寫進 {path}：{len(scope)} 章、{len(out)} 節（併掉 {len(secs) - len(out)} 個只有一句的章首）")
+    for s_ in out:
+        print(f"  {s_['id']:4} #{s_['from']:6} {s_['title']}")
+    return 0
+
+
+def spec(path, chapters=()):
+    """Packet for the agent that lists concepts: the reader text grouped by section.
+    No tldr (a summary teaches nothing new), no questions, no existing points."""
+    src, q = load(path)
+    names = {s_["id"]: s_ for s_ in q["sections"]}
+    secs = [s_ for s_ in q["sections"] if not chapters or s_["from"].split("-")[0] in chapters]
+    print(f"# 觀念清單包：{Path(path).name}　{len(secs)} 節")
+    cur = None
+    for lc, tx, ks in unit_map(src, q):
+        if ks is None or (chapters and lc.split(" ")[0][1:] not in chapters):
+            continue
+        if ks != cur:
+            cur = ks
+            s_ = names[ks]
+            print(f"\n## {ks}　{s_['title']}{'（重點）' if s_.get('core') else ''}")
+        print(f"[{lc}] {tx}")
+    return 0
+
+
+def merge(path, parts):
+    """Merge subagent output into the page's bank. Each part is a JSON object with any of:
+    "points": {"k3": [ {id,type,t,at}, … ]} (replaces that section's points),
+    "unit": [ … ] and "integration": [ … ] (a question with an existing id replaces it, otherwise appended
+    and the unit list re-sorted by section order)."""
+    src, q = load(path)
+    order = {s_["id"]: i for i, s_ in enumerate(q["sections"])}
+    secs = {s_["id"]: s_ for s_ in q["sections"]}
+    np_ = nu = ni = 0
+    for part in parts:
+        d = json.loads(Path(part).read_text(encoding="utf-8"))
+        for k, pts in d.get("points", {}).items():
+            if k not in secs:
+                sys.exit(f"{part}：節 {k} 不存在")
+            secs[k]["points"] = pts
+            np_ += len(pts)
+        for key, cnt in (("unit", "nu"), ("integration", "ni")):
+            have = {x["id"]: i for i, x in enumerate(q.setdefault(key, []))}
+            for x in d.get(key, []):
+                if x["id"] in have:
+                    q[key][have[x["id"]]] = x
+                else:
+                    q[key].append(x)
+                if key == "unit":
+                    nu += 1
+                else:
+                    ni += 1
+    q["unit"].sort(key=lambda u: order.get(u.get("ks"), 1e9))
+    save(path, src, q)
+    print(f"併進 {path}：points {np_} 條、unit {nu} 題、整合 {ni} 題（現在共 {len(q['unit'])} 題 unit、{len(q.get('integration', []))} 題整合）")
+    return 0
+
+
 def main(argv):
     if len(argv) < 3:
         sys.exit(__doc__)
     cmd, path = argv[1], argv[2]
     if cmd == "check":
         return check(path)
+    if cmd == "init":
+        return init(path)
+    if cmd == "merge" and len(argv) >= 4:
+        return merge(path, argv[3:])
     src, q = load(path)
     if q is None:
         sys.exit(f"{path} 沒有題庫")
@@ -472,6 +611,8 @@ def main(argv):
         for lc, tx, ks in unit_map(src, q):
             print(f"{ks or '-':4} [{lc}] {tx[:50]}")
         return 0
+    if cmd == "spec":
+        return spec(path, set(argv[3:]))
     if cmd == "exam":
         return exam(path, set(argv[3:]))
     if cmd == "closed":
