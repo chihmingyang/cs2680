@@ -294,6 +294,11 @@
         if (!ids.length) return;
         var qs = [];
         ids.forEach(function (id) { byKs[id].forEach(function (u) { qs.push(u.id); }); });
+        /* the row's own text goes in one cell, the mark in a right-hand column */
+        var body = mk('span', 'sn-qt');
+        while (a.firstChild) body.appendChild(a.firstChild);
+        a.appendChild(body);
+        a.classList.add('has-qk');
         var mark = mk('span', 'sn-qk');
         mark.hidden = true;
         a.appendChild(mark);
@@ -305,7 +310,7 @@
           r.qs.forEach(function (x) { if (get(k(x, 'v'))) n++; });
           var all = n === r.qs.length;
           r.mark.hidden = !n;
-          r.mark.textContent = all ? '✓' : n + '/' + r.qs.length;
+          r.mark.textContent = all ? '✓' : n + '/' + r.qs.length + ' 題';
           r.mark.className = 'sn-qk' + (all ? ' is-done' : '');
           r.mark.title = all ? '這一段的小測都做了' : '小測做了 ' + n + ' 題，共 ' + r.qs.length + ' 題';
         });
