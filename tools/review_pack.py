@@ -140,7 +140,7 @@ def units_of(container, loc):
                     pre = next(c.find_all(lambda x: x.tag == "pre"), None)
                     body = pre.text() if pre is not None else ""
                     out.append((f"{loc} code{counts['code']} 內容",
-                                "(程式碼／指令，讀者看得到、可以被正文引用；不審句子) " + body[:600]))
+                                "(程式碼／指令，讀者看得到、可以被正文引用；不審句子) " + body[:3000]))
                     continue
                 if cap:
                     out.append((f"{loc} 圖{k} 說明", cap.text()))
