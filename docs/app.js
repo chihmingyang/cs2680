@@ -19,6 +19,21 @@
     else if (mq.addListener) mq.addListener(fn);
   }
 
+  /* 搬走的錨點 (2026-11-10): when a lesson is split by idea (L6 → L6 + L6b), the old page keeps
+     <script type="application/json" id="moved">{"to": "l06b.html", "ids": {"old": "new"}}</script>.
+     A link to an id that is no longer on this page goes to where that content lives now. */
+  (function () {
+    var m = document.getElementById('moved');
+    if (!m || !location.hash) return;
+    var id;
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) { return; }
+    if (document.getElementById(id)) return;
+    var d;
+    try { d = JSON.parse(m.textContent); } catch (e) { return; }
+    var to = d.ids && d.ids[id];
+    if (to) location.replace(d.to + '#' + to);
+  })();
+
   /* 小測與整合題: the page's question bank (<script type="application/json" id="quiz">,
      guide/QUIZ.md) becomes a collapsed quiz after each knowledge section and the
      integration questions after the last chapter in scope. The reader's draft answers
@@ -31,6 +46,21 @@
     var q;
     try { q = JSON.parse(data.textContent); } catch (e) { return; }
     var page = lecture.getAttribute('data-lecture');
+    /* moved_from (2026-11-10): questions that moved here from another page with the same ids
+       (L6 → L6b) bring this viewer's earlier answers along, once. */
+    if (q.moved_from) {
+      try {
+        var pre = 'cs2680.quiz.' + q.moved_from + '.', mine = {}, ls = window.localStorage, keys = [];
+        (q.unit || []).concat(q.integration || []).forEach(function (u) { mine[u.id] = 1; });
+        for (var li = 0; li < ls.length; li++) keys.push(ls.key(li));
+        keys.forEach(function (key) {
+          if (!key || key.indexOf(pre) !== 0) return;
+          var rest = key.slice(pre.length), qid = rest.slice(0, rest.lastIndexOf('.'));
+          var nk = 'cs2680.quiz.' + page + '.' + rest;
+          if (mine[qid] && get(nk) === null) set(nk, get(key));
+        });
+      } catch (e) { /* storage unavailable */ }
+    }
     var KIND = { recall: '回想', apply: '應用', choice: '選擇' };
     var secs = q.sections || [];
     var title = {}, startOf = {}, byKs = {};

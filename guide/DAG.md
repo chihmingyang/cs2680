@@ -64,7 +64,7 @@ James 2026-11-09：granularity 要以大腦的觀念為第一性原理，不要�
 
 ## 怎麼改
 
-1. 改 `docs/dag.json`。新講次：每章一個節點（或拆、併），`src` 對到 `docs/lXX.html` 的章 id；目錄章加進 `excluded`。
+1. 改 `docs/dag.json`。講次的 key 可以帶一個字母（`l06b`，2026-11-10 一份 slides 拆成兩堂），`src`、`excluded`、`lectures` 都用它；頁面上顯示成 L6b，排序照字串（l06 < l06b < l07）。新講次：每章一個節點（或拆、併），`src` 對到 `docs/lXX.html` 的章 id；目錄章加進 `excluded`。
 2. `python3 -I tools/dag.py --check`，看 ERROR 和 warn。
 3. `python3 -I tools/dag.py` 重寫 `docs/dag.html`，截圖看一次（圖、點一個節點、手機版）。
 4. 章 id 改了（`add_anchors.py` 重編）會被覆蓋檢查抓到：每一章都要被某個節點蓋到或在 `excluded`。

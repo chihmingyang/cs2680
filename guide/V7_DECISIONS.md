@@ -4,7 +4,7 @@ L1–L8 改成 v7 時，每一堂怎麼排份量、補了什麼、刪了什麼�
 
 整個站的共同取捨：
 
-- 每堂的主場不重複（L1 目標與 workload、L2 單一 agent 的機制、L3 當使用者怎麼放大、L4 context 與 tool、L5 multi-agent、L6 memory 與可靠性、L7 評估、L8 成本與速度）。別堂的主場用一兩句帶過再連過去。
+- 每堂的主場不重複（L1 目標與 workload、L2 單一 agent 的機制、L3 當使用者怎麼放大、L4 context 與 tool、L5 multi-agent、L6 可靠性、L6b memory（2026-11-10 拆開）、L7 評估、L8 成本與速度）。別堂的主場用一兩句帶過再連過去。
 - 文字裡不寫別堂的章號，寫 L4〈概念名〉，因為章號會變。
 - L1–L4 的基礎題已有成員留言，題目不動，只重寫「相關：」，所以這四堂的基礎題仍是帶著問題看 slides。L5–L8 當時 0 則留言，基礎題依新章節重出。
 - 問題討論與動手試試裡的舊畫法圖沒有重畫：L1 Q1–Q4 各一張，L2 Q1、Q2、Q5 各一張，L3 Q1、Q2、Q3、Q5 各一張，L4 Q1、Q2、Q4 各一張。
@@ -47,6 +47,14 @@ L1–L8 改成 v7 時，每一堂怎麼排份量、補了什麼、刪了什麼�
 - **可讀性審查（2026-11-06～07）。** 第一輪 37 BLOCK、7 NIT；第二輪剩 4 BLOCK、1 NIT，主線修：260 種設定不是 5×6×3（每家不只一個 model）；Anthropic 研究系統那格不用 lead（和第 9 章的中層 lead 撞名）；「換不到東西」加上不需要平行、不需要隔開權限的前提；LLM Tagging 的「少約 5%」照原文、寫明原文沒說是哪一種。順手更正：17.2 倍的架構是「結果只合成一份、中間沒有人檢查」（第 5 章與基礎題第 4 題答案）。
 
 ## L6 Agent memory 與可靠性（10 章，40 分）
+
+- **拆成兩堂（2026-11-10）。** James：「把 Agent Memory、Agent reliability 分成兩個章節，以觀念去 split 而不是 slide 去 split，未來 lesson 的對應跟課程投影片不需要綁死一對一對應。」切的依據是觀念 DAG：可靠性的四個節點（error-compounding、verification-loop、checkpoint-budget、failure-layers）和 memory 的五個節點（persistent-text、valid-time-provenance、memory-retrieval、memory-backend、memory-poisoning）之間沒有一條「要先懂」的邊；memory 接在 L2 的 persistent text、L4 的 context 上，可靠性接在 agent loop、sampling 上。舊頁 tldr 用「錯誤會活過一個 run」把兩半綁在一起，那是敘事的橋，不是理解上的前置，所以留成兩堂之間的過場句。
+  - L6〈Agent 可靠性〉（`l06.html`，5 章 20 分）：原第 1–4 章不動，第 5 章是目錄（只留 26 種 run 的失敗）。保留 `l06` 這個 key 與 `#i1`–`#i4` 錨點：別頁帶錨點連進 L6 的 17 條連結有 14 條指可靠性。
+  - L6b〈Agent memory〉（`l06b.html`，6 章 20 分）：原第 5–9 章重編 1–5，第 6 章是目錄（八種記憶失敗、七個設計問題、系統、指標）。第 1 章開頭改寫：不再說「前四章的錯誤」，改說 L6 講的錯誤停在一個 run 裡，並在本頁重新解釋 run、session、harness。
+  - 新寫的只有兩頁的 tldr、lede、目錄章開頭、兩半之間的三句過場；L6 第 3 章「context 是什麼」原本指 memory 那章的註，改指 L4〈Context 的成本〉。動手試試（compound.py、run 預算 → L6；memory 記錄 → L6b）、延伸閱讀（失敗模式 4 篇 → L6；State 與記憶 2 篇 → L6b）、fineprint 的來源依觀念分開。
+  - 編號用 L6b，不把 L7–L11 往後推：2026-10-21 定過講次編號、檔名不跟著改；成員的已讀與作答紀錄都綁在 key 上。
+  - 可讀性審查只審新寫的定位（兩頁 tldr、L6 第 3 章兩段與第 5 章、L6b 第 1 章開頭與第 6 章）。第一輪 BLOCK：L6 tldr 4、章 5，L6b tldr 4、章 4；第二輪 4／1／4／2，主線修完，沒有第三輪。修的方向：兩頁開頭都先定義 agent 是 model 加一層叫 harness 的程式（原本兩頁各說各的，審查者分不出 agent 和 harness）；88% 寫出 5% × 5% 那一步，10 步寫出比的是什麼並指到第 3 章的圖；L6b 的邊界統一成 session（context 在一個 session 裡會留著，run 結束不會清掉）；SWE-ContextBench 寫明「配好的那份」與挑中率，才撐得起「拿錯的記憶比沒有更糟」；Memory 錯誤那一列寫明改到的是舊路徑新建的檔案、為什麼沒有錯誤訊息；七個設計問題與 checklist 七站逐一對上。L6 第 3 章〈存什麼〉順手補上「沒驗證就存為什麼沒用」，Recovery-Bench 寫明它量的是接手失敗的環境。
+  - 舊連結：`l06.html` 帶一張 `#moved` 表，68 個搬走的 id 轉到 `l06b.html` 的新 id。`#i5` 例外：它現在是 L6 的目錄章，舊的 `l06.html#i5`（要不要記）會停在 L6。站內三條已改指 L6b。
 
 - **排法。** 一定要會（1–4 長任務靠攔錯）：每個 agent 都碰到，有沒有 memory 都一樣，所以排在 memory 前面；它決定力氣投資在哪裡。一定要會（5–7 記憶讓錯誤活過 run）：錯誤會跨 session，時間與來源沒存就補不回來，最難挽回。要用時會做（8 放在哪裡）：backend 能換，也能從「之後怎麼查」推出來。要防的（9 安全）：代價高、難發現，但要有不可信的輸入才發生。需要時查（10）：都是前面決定沒做好的名字。
 - **補。** 算式的前提：課程說要每步都對，Failure as a Process（UCL、南京大學 2026-07）量到成功的 run 有 71% 修過錯，Recovery-Bench（Letta 2025-08）量到接手失敗環境從 26.3% 掉到 11.2%；舊頁「0.95ⁿ 是上界」不嚴格，改掉。檢查要真、要早：ImpossibleBench（CMU、Anthropic 2025-10）量到作弊 76%；第 7 步錯、第 16 步才看到。先用檔案：課程打了問號，Letta 2025-08、SWE-ContextBench 2026-02 都不是對照實驗。記憶中毒：課程只有一列，補 Unit 42、Microsoft、Cisco、MINJA。

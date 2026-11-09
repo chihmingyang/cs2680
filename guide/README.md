@@ -7,8 +7,9 @@
 - 讀書會站台「CS2680 觀念導讀」：https://chihmingyang.github.io/cs2680/
 - 課程：Harvard CS2680 Modern AI Systems: Agents and System Optimizations（Fall 2026，Juncheng Yang）。課程沒有錄影，讀書會讀 slides。
 - 每一堂有三段（2026-11-09 起；之前第 2 段是問題討論，已拿掉）：核心觀念、動手試試、延伸閱讀。核心觀念依想法的重要性排，不照 slides 的順序，不寫頁碼（STYLE_ARTICLE 第 0 節），課程漏掉的主題查原始來源補上，標「本文補的」。名詞在正文裡解釋，或用收合註 `details.gloss`；題目放在每一節後面的小測（`guide/QUIZ.md`，目前只有 L6）、延伸閱讀導讀（必讀與推薦的每一篇附摘要；選讀、查閱不附）。
-- 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分、L7 10 章 35 分、L8 10 章 35 分；L9 10 章 40 分、L10 10 章 55 分、L11 10 章 35 分（2026-11-06）。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
+- 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分（2026-11-10 拆成 L6 可靠性 5 章 20 分、L6b memory 6 章 20 分）、L7 10 章 35 分、L8 10 章 35 分；L9 10 章 40 分、L10 10 章 55 分、L11 10 章 35 分（2026-11-06）。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
 - 事實會過時的地方，要改就重抓：L2、L3、L4、L6、L8 的 Claude Code 細節依 2026-11 的官方文件；L3 的 repo 依 2026-11-03（Superpowers v7.0.1、mattpocock/skills 1.3.2、Caveman 4.0.1、`deepseek-ai/dsh-superagent-prototype` 2026-10-31）；L7 的 benchmark 現況與 L8 的單價依 2026-11-03。L3 的 `#x1`（Caveman 評論查證）、`#x2`（SWE-Shift 查證）是 James 要留的本文延伸。L9 的每 token KV 表依 2026-11-06 的 config.json，中文 token 數是本文用六個 tokenizer 實測（重現方法在 `guide/sources/l09.md`）；L10 的 GPU 規格與 AI 寫 kernel 的案例依 2026-11-06；L11 的 Claude Code 細節依 2026-11 的官方文件，第 5 章引的兩串 GitHub issue 到 2026-11-06 都沒有官方回覆，有變化就重抓。
+- **一堂不綁一份 slides**（2026-11-10，James）：堂依觀念切，不依 slides 切。一份 slides 講了兩個互不依賴的觀念就拆成兩堂，編號沿用加字母：舊 L6 拆成 L6〈Agent 可靠性〉（`l06.html`）和 L6b〈Agent memory〉（`l06b.html`），兩堂都指同一份 `6_agent_design_3.pdf`、共用 `slides/l06-notes.md` 與 `guide/sources/l06.md`。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
 - Part I 的建議閱讀順序是 L2 → L4 → L3 → L5（2026-10-21 定）：L2、L3 會先用到 L4 才解釋的 context 代價、subagent。順序寫在首頁「怎麼讀」和 L2、L4 頁尾的 `.pager-note`。講次編號、檔名、issue label 不跟著改。
 - 2026-11-09 James 決定拿掉「問題討論」段：之後每個觀念後面直接放題目（小測）。基礎題、進階題、自我檢查與 GitHub 討論串連結從 L1–L11 刪掉（內容留在 git 歷史，要找就看 2026-11-09 之前的 commit）；各堂的討論串 issue 已關閉，成員留言還在 GitHub 上。
 
@@ -16,7 +17,7 @@
 
 | 東西 | 位置 | 說明 |
 |---|---|---|
-| 站台檔案 | `docs/`（index、l01–l11、l02-readings、styles.css、app.js、code.js、calc.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
+| 站台檔案 | `docs/`（index、l01–l11、l06b、l02-readings、styles.css、app.js、code.js、calc.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
 | 撰寫規範 | `guide/STYLE_ARTICLE.md`、`guide/STYLE_DIGEST.md` | 寫新講次或改內容前先讀。DIGEST 是延伸閱讀裡必讀與推薦摘要的規範。`STYLE_BASIC.md`（基礎題）2026-11-09 停用。 |
 | 可讀性審查 | `guide/REVIEW_READABILITY.md` | 改正文後、push 前，另一個 agent 讀一遍的 checklist 與報告格式。James 說看不懂就先回來改這份。 |
 | v7 的決定與來源 | `guide/V7_DECISIONS.md`、`guide/sources/lXX.md` | 每堂怎麼排、補、刪；外部事實的來源與查證紀錄。 |
@@ -24,7 +25,7 @@
 | 更新紀錄 | `guide/CHANGELOG.md` | `guide/` 各文件的更新紀錄，依文件分節，新的在最上面、一則一行。開工不必讀；要查某堂的來龍去脈就 `grep L3 guide/CHANGELOG.md`。設了 `merge=union`，不會衝突（2026-11-06 以前寫在各檔第 3 行）。 |
 | Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。`build-quiz`：替一堂建題庫，先列觀念再出題，開卷閉卷都過才 push。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
-| 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前有 L6（2026-11-08，整堂；2026-11-09 補齊觀念涵蓋，258 題 unit）、L5（2026-11-09，119 題 unit、7 題整合）和 L7（2026-11-10，265 題 unit、7 題整合）。各堂的數字在 `guide/QUIZ.md`〈各堂題庫〉。 |
+| 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前有 L6 與 L6b（2026-11-08 建在舊 L6，2026-11-09 補齊觀念涵蓋；2026-11-10 隨頁面拆開：L6 106 題 unit、3 題整合，L6b 152 題 unit、4 題整合）、L5（2026-11-09，119 題 unit、7 題整合）和 L7（2026-11-10，265 題 unit、7 題整合）。各堂的數字在 `guide/QUIZ.md`〈各堂題庫〉。 |
 | 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 以心智模型為單位的觀念依賴圖（concept／practice、三級難度、要先懂的邊）；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（英文頁，首頁課程地圖有連結，2026-11-09）。 |
 | 互動圖 | `docs/calc.js`、`figure.diagram[data-calc]` | 拖滑桿換假設、圖照算式重畫；HTML 裡是預設值的靜態圖。目前只有 L6 3.1（2026-11-09）。規則在 `STYLE_ARTICLE.md` 第 6 節〈互動圖〉。 |
 | CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是「問 Claude」。 |
@@ -43,8 +44,8 @@
 |---|---|
 | `punct.py` | 中文標點正規化（全形標點、中英文間空格）。`--diff` 先看會改什麼；數學式與英文片語的 ASCII 括號、冒號會保留。只對新片段跑，不要對頁面盲跑。 |
 | `check_article.py` | 全頁結構（`#s-ideas`、`#s-try`、`#wrap`；`#s-background`、`#s-beyond` 可有可無）、slide 頁碼連結、STE 句長、閱讀時間（`--fix-time` 寫回三個時間；`deep-time` 含 `details.deep` 與 `details.gloss`）、紅字重點 `<strong>` 的位置與每章數量（依正文長度算目標）、用「；」串 4 項以上的段落（該改成清單；例外加 `data-inline`）。 |
-| `add_anchors.py` | 核心觀念、觀念補充、本文延伸加上 `i1`、`t1`、`x1` 錨點，並列出標題（v5.0 頁面沒有觀念補充，`tN` 錨點手動保留在正文）。舊連結還指著的 `<span class="anchor" id="xN">` 保留原號，新的本文延伸跳過這些號碼（L6 的 x1–x4 是這種，所以 L6 第一個本文延伸是 `#x5`，2026-11-09）。 |
-| `add_lecture.py` | 新講次接到全站：目錄、講次數、上一堂連結、首頁列表。段號依頁面有沒有 `#s-background`／`#s-beyond` 決定；每頁自己的展開目錄不重建（L4 的三層目錄是手寫的）。 |
+| `add_anchors.py` | 核心觀念、觀念補充、本文延伸加上 `i1`、`t1`、`x1` 錨點，並列出標題（v5.0 頁面沒有觀念補充，`tN` 錨點手動保留在正文）。舊連結還指著的 `<span class="anchor" id="xN">` 保留原號，新的本文延伸跳過這些號碼（L6 的 x1–x4 是這種，所以 L6 第一個本文延伸是 `#x5`，2026-11-09）。頁面的 `#moved` 表（一堂拆成兩堂時搬走的 id）裡的 `xN` 也跳過（2026-11-10）。 |
+| `add_lecture.py` | 新講次接到全站：目錄、講次數、上一堂連結、首頁列表。段號依頁面有沒有 `#s-background`／`#s-beyond` 決定；每頁自己的展開目錄不重建（L4 的三層目錄是手寫的）。Key 可以帶一個字母（`l06b`，2026-11-10）：新頁插在原堂之後，前後兩堂的 lecnav、pager 和首頁列表的位置跟著改。 |
 | `audit.py` | 全站連結、SVG 無障礙屬性、marker id 重複、390px 與 1280px 版面、JS 錯誤。 |
 | `dg.py` | 畫圖的 helper（v6／v7 的配色與元件、重用舊圖），給 `notes/` 裡的 build script 用。 |
 | `check_diagrams.py` | 圖的幾何檢查：文字超出方塊或 viewBox、文字互相重疊、連接線穿過文字。 |

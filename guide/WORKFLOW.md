@@ -257,3 +257,16 @@ James 問：每次改一章，能不能像 CI 的 regression test 一樣，確�
 - 輸出在該次 run 的 summary。本機重現：`bash tools/verify.sh all`（約 30 秒）。
 - 雜訊實驗（第 2、3 層能不能擋的前提，2026-11-07）：L6 第 2–4 章沒改，三個新審查者各審一次，BLOCK 13／17／15；21 個單位被標過，11 個三次都標。結論：不比總數，比多數決的單位集合。細節在 `REVIEW_READABILITY.md`〈審查者的雜訊〉，比對用 `tools/review_noise.py`。
 
+---
+
+## K. 一份 slides 拆成幾堂（2026-11-10 起）
+
+規則在 `STYLE_ARTICLE.md` 第 0 節〈一堂不綁一份 slides〉。第一例是 L6 → L6〈Agent 可靠性〉＋ L6b〈Agent memory〉，build script 在 `notes/l06split/`（不 commit；做法記在這裡）。
+
+1. **先用 DAG 決定切在哪裡。** `docs/dag.json` 裡這堂各章的節點，分成兩組之後，組和組之間沒有 deps 邊，就是乾淨的切法。目錄章、動手試試的每一項、延伸閱讀的每一篇、fineprint 的每個來源、題庫的每一節，都依觀念歸到其中一組。
+2. **新頁的 key 是原編號加字母**（`l06b`）。`add_lecture.py`、`audit.py`、`verify.sh`、`dag.py`、`assemble_v7.py` 都接受 `lNN` 加一個小寫字母；`add_lecture.py` 會把新頁插在原堂之後：前一堂的下一堂、後一堂的上一堂、首頁列表的位置都跟著改。原堂在首頁的那一列（標題、英文、一句話、分鐘數）和前一堂 pager 裡的標題要手改。
+3. **原頁保留留下來那一半的章號與錨點**，搬走的章在新頁從 1 重編：`id`／`href` 的 `iN`、`iN-M`、`span.idea-no`、正文與 SVG 裡的「第 N 章」、題庫的 `from`／`after`／`scope`／`at` 一起換。兩半之間的引用改成 L6〈章名〉＋連結。gloss（`n-context` 這類）兩頁都要用到的，各留一份或改連到主場那一堂。
+4. **舊連結**：原頁放 `<script type="application/json" id="moved">{"to": "l06b.html", "ids": {"i6": "i2", …}}</script>`（放在 `app.js` 前）。`app.js` 在網址的錨點不在這一頁時，照表轉到新頁。`add_anchors.py` 不會把表裡的 `xN` 再編給新的本文延伸。原頁新的章號若和搬走的舊章號相同（L6 的 `#i5` 現在是目錄章），舊連結會停在原頁，這一點沒有轉址。
+5. **題庫**：搬走的節、題保留原 id，新頁的 JSON 加 `"moved_from": "l06"`，`app.js` 會把讀者在舊頁的作答紀錄複製一份過來。只有拆開的那一節（L6 舊第 10 章）要分 points 和題目；新開的節用沒用過的 id（L6 的 `k43`），不要重用搬走的 id，否則舊頁的 localStorage 會被當成新題的答案。跨兩半的整合題改寫成只用本頁的節，另一堂的觀念寫在題幹裡當前提（L6b 的 x7）。
+6. **別頁的連結和文字**：`grep -n 'l06.html' docs/*.html`，逐條判斷屬於哪一半；首頁課程地圖的 chip、`dag.json` 的 `src`、`excluded`、`lectures` 一起改，`python3 -I tools/dag.py` 重寫 `dag.html`。
+7. 兩頁跑 `bash tools/verify.sh l06`、`l06b`，全站 `all`；新寫的 tldr、lede、目錄章開頭、兩半之間的過場句跑可讀性審查（I），只審新寫的定位；`app.js` 有改就把全站的 `?v=` 版本號加一號。

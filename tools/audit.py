@@ -14,7 +14,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 SITE = Path(__file__).resolve().parent.parent / "docs"
-pages = sorted(SITE.glob("l[0-9][0-9].html"))
+pages = sorted(p for p in SITE.glob("l[0-9][0-9]*.html") if re.fullmatch(r"l\d\d[a-z]?\.html", p.name))  # l06b: 2026-11-10
 problems = []
 page_ids = {q.name: set(re.findall(r'\sid="([^"]+)"', q.read_text(encoding="utf-8"))) for q in SITE.glob("*.html")}
 marker_ids = {}
@@ -26,7 +26,7 @@ for p in pages:
         if href.startswith("#"):
             if href[1:] not in ids:
                 problems.append(f"{p.name}: anchor {href} has no target")
-        elif re.fullmatch(r"(l\d\d(?:-readings)?|index)\.html(#[\w-]+)?", href):
+        elif re.fullmatch(r"(l\d\d[a-z]?(?:-readings)?|index)\.html(#[\w-]+)?", href):
             page, _, frag = href.partition("#")
             if not (SITE / page).exists():
                 problems.append(f"{p.name}: link to missing {href}")

@@ -63,7 +63,8 @@ page() {   # 一堂的頁面檢查：check_article、check_diagrams、punct（�
 }
 
 if [ "$L" = all ]; then
-  for f in docs/l[0-9][0-9].html; do
+  # l06b: one deck split into several lessons by idea (2026-11-10)
+  for f in $(ls docs/l[0-9][0-9]*.html | grep -E '/l[0-9]{2}[a-z]?\.html$'); do
     l=$(basename "$f" .html)
     out=$(page "$l"; echo "rc=$fail")
     case "$out" in *rc=1) fail=1;; esac

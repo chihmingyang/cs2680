@@ -195,7 +195,7 @@ def check(d):
     covered = defaultdict(set)   # lec -> chapter ids
     for n in nodes:
         for s in n["src"]:
-            m = re.fullmatch(r"(l\d\d)#(i\d+)(-\d+)?", s)
+            m = re.fullmatch(r"(l\d\d[a-z]?)#(i\d+)(-\d+)?", s)
             if not m:
                 errs.append(f"{n['id']}：src「{s}」格式要像 l04#i6 或 l04#i6-1")
                 continue
@@ -313,7 +313,7 @@ def svg(d, info, L):
     for n in d["nodes"]:
         x, y = pos[n["id"]]
         lec = n["src"][0].split("#")[0]
-        tag = "L" + str(int(lec[1:]))
+        tag = "L" + lec_label(lec)
         lines = wrap(n["short"])
         label = html.escape(n["short"])
         out.append(f'<g class="dag-n tier-{TIER_CLASS[n["tier"]]} kind-{n["kind"]}" id="n-{n["id"]}" data-id="{n["id"]}" tabindex="0" role="button" '
@@ -338,8 +338,15 @@ def svg(d, info, L):
 
 # ---------- 分析 ----------
 
+def lec_label(key):
+    """l06 → "6", l06b → "6b" (2026-11-10: one deck can become several lessons, split by idea)."""
+    return str(int(key[1:3])) + key[3:]
+
+
 def lec_no(src):
-    return int(src.split("#")[0][1:])
+    """The lecture key of a src ("l06b#i2" → "l06b"). Keys sort in reading order as strings
+    (l06 < l06b < l07 < l10), so first_lec and the forward-edge test compare them directly."""
+    return src.split("#")[0]
 
 
 def first_lec(n):
@@ -382,7 +389,7 @@ def src_ref(s):
     """l04#i6-1 → ('l04.html#i6-1', 'L4 ch.6')"""
     lec, anchor = s.split("#")
     ch = anchor.split("-")[0]
-    return f"{lec}.html#{anchor}", f"L{int(lec[1:])} ch.{ch[1:]}"
+    return f"{lec}.html#{anchor}", f"L{lec_label(lec)} ch.{ch[1:]}"
 
 
 def src_title(s, pages):
@@ -420,7 +427,7 @@ def render(d, info, L, A):
             "theme": theme_name[n["theme"]], "deps": n["deps"], "why": n["why"],
             "depth": depth[n["id"]],
             "src": [{"href": src_ref(s)[0], "ref": src_ref(s)[1], "title": src_title(s, pages)} for s in n["src"]],
-            "lecs": sorted({"L" + str(lec_no(s)) for s in n["src"]}, key=lambda x: int(x[1:])),
+            "lecs": ["L" + lec_label(k) for k in sorted({lec_no(s) for s in n["src"]})],
         })
     data_json = json.dumps({"nodes": js_nodes}, ensure_ascii=False).replace("</", "<\\/")
 
@@ -429,7 +436,7 @@ def render(d, info, L, A):
     for lec, r in A["per_lec"].items():
         t = r["tiers"]
         rows.append(
-            f'<tr><th scope="row"><a href="{lec}.html">L{int(lec[1:])}</a> {esc(d["lectures"][lec])}</th>'
+            f'<tr><th scope="row"><a href="{lec}.html">L{lec_label(lec)}</a> {esc(d["lectures"][lec])}</th>'
             f'<td>{r["kinds"]["concept"]} / {r["kinds"]["practice"]}</td><td>{t["Basic"]}</td><td>{t["Intermediate"]}</td><td>{t["Expert"]}</td>'
             f'<td>{r["dmin"]}–{r["dmax"]}</td><td>{r["fw"] or "—"}</td></tr>')
     kt = A["kind_total"]
@@ -452,8 +459,8 @@ def render(d, info, L, A):
     for lec in sorted(fw_by_lec):
         items = []
         for n, dep in fw_by_lec[lec]:
-            items.append(f'<li>{ref_btn(n)} needs {ref_btn(dep)}<small> (first appears in L{first_lec(dep)})</small></li>')
-        fw_blocks.append(f'<li><b>L{lec} {esc(d["lectures"][f"l{lec:02d}"])}</b><ul>{"".join(items)}</ul></li>')
+            items.append(f'<li>{ref_btn(n)} needs {ref_btn(dep)}<small> (first appears in L{lec_label(first_lec(dep))})</small></li>')
+        fw_blocks.append(f'<li><b>L{lec_label(lec)} {esc(d["lectures"][lec])}</b><ul>{"".join(items)}</ul></li>')
 
     # 依賴順序的閱讀清單
     theme_rank = {t["id"]: k for k, t in enumerate(d["themes"])}
@@ -478,7 +485,7 @@ def render(d, info, L, A):
 
     roots_txt = ", ".join(ref_btn(n) for n in A["roots"])
     tiers_desc = "".join(f"<li>{tier_badge(t)}<span>{esc(d['tiers'][t])}. {tt[t]} concepts.</span></li>" for t in TIER_ORDER)
-    lec_opts = "".join(f'<option value="L{int(l[1:])}">L{int(l[1:])} {esc(t)}</option>' for l, t in sorted(d["lectures"].items()))
+    lec_opts = "".join(f'<option value="L{lec_label(l)}">L{lec_label(l)} {esc(t)}</option>' for l, t in sorted(d["lectures"].items()))
     excluded_li = "".join(f'<li><a href="{src_ref(e["src"])[0]}" title="{esc(src_title(e["src"], pages))}">{src_ref(e["src"])[1]}</a>: {esc(e["why"])}</li>' for e in d.get("excluded", []))
     hint = "Click a concept in the figure. This panel shows its claim, why it builds on its prerequisites, where it is taught, and what builds on it."
 

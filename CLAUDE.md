@@ -6,7 +6,8 @@
 - 頁面沒有「問題討論」段，也不開 GitHub 討論串（2026-11-09 James 決定拿掉，舊串已關閉，`discuss.py`、`check_discuss.py` 已刪）。題目改放在每一節後面的小測，規則在 `guide/QUIZ.md`。
 - 這個環境不能用 GitHub GraphQL，也不能改 repo 設定；用 `gh api` 的 REST endpoint。
 - 舊的 claude.ai artifact 已停用，不要再發布到它。
-- L1–L11 都是 v7 依想法重組的版面，三段：核心觀念、動手試試、延伸閱讀，各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
+- L1–L11（L6 另拆出 L6b）都是 v7 依想法重組的版面，三段：核心觀念、動手試試、延伸閱讀，各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
+- 一堂不綁一份 slides（2026-11-10 James）：依觀念切堂，一份 slides 可以拆成幾堂（L6 可靠性／L6b memory），幾份也可以併成一堂。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
 - 替一堂建題庫（每一節的小測與整合題），或改了某一節要補題 → 照 `.claude/skills/build-quiz/SKILL.md`，一個 session 一堂，先做完那一堂的可讀性審查。
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。
 - James 也會在站台上直接改字（commit 訊息「網頁編輯：…」）或從頁面發問（label `ask` 的 issue），見 `guide/WORKFLOW.md` G。這些 issue 不是討論串，也不是錯誤回報。

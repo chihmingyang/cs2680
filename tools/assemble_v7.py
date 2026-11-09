@@ -34,7 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_article as ca  # noqa: E402
 
-SECTIONS = {"問題討論": 2, "動手試試": 3, "延伸閱讀": 4}
+SECTIONS = {"動手試試": 2, "延伸閱讀": 3}  # 2026-11-09: 問題討論 removed
 
 
 def clean(html):
@@ -121,9 +121,10 @@ def main():
 
     # #s-arch out, #s-ideas replaced; everything up to the 問題討論 comment goes
     start = s.index('<div class="content">') + len('<div class="content">')
-    m = re.search(r'[ \t]*<!-- =+ \d 問題討論 =+ -->', s)
+    # pages built before 2026-11-09 still have the 問題討論 comment; later ones start at 動手試試
+    m = re.search(r'[ \t]*<!-- =+ \d 問題討論 =+ -->', s) or re.search(r'[ \t]*<!-- =+ \d 動手試試 =+ -->', s)
     if not m:
-        sys.exit("no 問題討論 comment")
+        sys.exit("no 問題討論 or 動手試試 comment")
     s = s[:start] + "\n" + new_ideas.lstrip("\n") + s[m.start():]
 
     # section numbers
@@ -132,7 +133,7 @@ def main():
         s = re.sub(rf'(<p class="kicker">)\d( · {name}</p>)', rf'\g<1>{n}\g<2>', s)
 
     # eyebrow, meta, css version
-    s = re.sub(r'(<p class="eyebrow">Lecture \d+ · [\d-]+ · Part [IVX]+)(?: · 依想法重組)?(</p>)', r'\1 · 依想法重組\2', s)
+    s = re.sub(r'(<p class="eyebrow">Lecture \d+[a-z]? · [\d-]+ · Part [IVX]+)(?: · 依想法重組)?(</p>)', r'\1 · 依想法重組\2', s)
     s = s.replace('      <li><span class="k">頁碼</span>PDF 檢視器的頁數</li>\n', "")
     l5 = (page.parent / "l05.html").read_text(encoding="utf-8")
     css = re.search(r'href="(styles\.css[^"]*)"', l5).group(1)

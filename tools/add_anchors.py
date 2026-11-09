@@ -13,6 +13,7 @@ The index page links its course-map chips to these anchors.
 Existing ids on those elements are replaced, so the script is idempotent.
 It also prints each anchor with its heading, for picking chip targets.
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -64,6 +65,11 @@ def number_beyond(text):
     # Legacy anchors kept as <span class="anchor" id="xN"> (old links still point at them, L6)
     # keep their numbers; new blocks skip those numbers.
     reserved = set(re.findall(r'<span class="anchor" id="(x\d+)"', body))
+    # Ids that moved to another page when a lesson was split (<script id="moved">, L6 → L6b, 2026-11-10)
+    # stay reserved too: reusing one here would catch old links meant for the moved content.
+    mv = re.search(r'<script type="application/json" id="moved">(.*?)</script>', text, re.S)
+    if mv:
+        reserved |= {i for i in json.loads(mv.group(1)).get("ids", {}) if re.fullmatch(r"x\d+", i)}
 
     def repl(m):
         if not re.match(r'\s*<summary>本文延伸', m.group(3)):

@@ -54,7 +54,7 @@ def text(fragment):
 
 def meta(path):
     s = read(path)
-    m = re.search(r'<main[^>]*data-lecture="(l\d\d)"[^>]*>', s)
+    m = re.search(r'<main[^>]*data-lecture="(l\d\d[a-z]?)"[^>]*>', s)
     if not m:
         return None
     tag = m.group(0)
@@ -64,7 +64,7 @@ def meta(path):
     part = re.search(r"Part [IVX]+", eyebrow).group(0)
     return {
         "key": m.group(1),
-        "no": int(m.group(1)[1:]),
+        "no": label(m.group(1)),
         "title": text(re.search(r"<h1>(.*?)</h1>", head, re.S).group(1)),
         "en": text(re.search(r'<p class="en-title">(.*?)</p>', head, re.S).group(1)),
         "date": date,
@@ -76,8 +76,18 @@ def meta(path):
     }
 
 
+def label(key):
+    """l06 → "6", l06b → "6b". 2026-11-10: one slide deck can become several lessons (L6 and L6b),
+    split by idea, so a key may carry a letter after the deck number."""
+    return str(int(key[1:3])) + key[3:]
+
+
+def lecture_pages():
+    return sorted(p for p in SITE.glob("l[0-9][0-9]*.html") if re.fullmatch(r"l\d\d[a-z]?\.html", p.name))
+
+
 def lectures():
-    out = [meta(p) for p in sorted(SITE.glob("l[0-9][0-9].html"))]
+    out = [meta(p) for p in lecture_pages()]
     return [m for m in out if m]
 
 
@@ -190,7 +200,7 @@ def rebuild_sidenav(page_name, s, lecs, new_key):
 
 
 def set_counts(s, m, n, lecs):
-    s = re.sub(r'<span class="here">L\d+ / \d+</span>', f'<span class="here">L{m["no"]} / {n}</span>', s)
+    s = re.sub(r'<span class="here">L\d+[a-z]? / \d+</span>', f'<span class="here">L{m["no"]} / {n}</span>', s)
     return s
 
 
@@ -211,16 +221,35 @@ def link_next(prev, new, s):
     return s
 
 
+def link_prev(nxt, new, s):
+    """Next lecture page, when the new page is inserted before it: lecnav and pager point back to the new page."""
+    nav = re.search(r'(<nav class="lecnav" aria-label="講次">)(.*?)(</nav>)', s, re.S)
+    if nav:
+        inner = re.sub(r'<a href="[^"]+" rel="prev">.*?</a>', f'<a href="{new["key"]}.html" rel="prev">← L{new["no"]}</a>',
+                       nav.group(2), count=1)
+        s = s[:nav.start(2)] + inner + s[nav.end(2):]
+    pg = re.search(r'<nav class="pager" aria-label="[^"]*">(.*?)</nav>', s, re.S)
+    if pg:
+        prv = (f'<a class="prev" href="{new["key"]}.html"><span>← 上一堂 L{new["no"]}</span>'
+               f'{H.escape(new["title"], quote=False)}</a>')
+        inner = re.sub(r'<a class="prev".*?</a>', prv, pg.group(1), count=1, flags=re.S)
+        s = s[:pg.start(1)] + inner + s[pg.end(1):]
+    return s
 
-def update_index(s, new, summary):
+
+def update_index(s, new, summary, prev_key=None):
     s = strip_wrapper(s)
     if f'href="{new["key"]}.html"><span class="no">' not in s:
-        r = (f'      <li><a class="row" href="{new["key"]}.html"><span class="no">{new["no"]:02d}</span>'
+        r = (f'      <li><a class="row" href="{new["key"]}.html"><span class="no">{new["key"][1:]}</span>'
              f'<span class="t">{H.escape(new["title"], quote=False)}<span class="en">{H.escape(new["en"], quote=False)} · {new["date"]}</span></span>'
              f'<span class="sum">{H.escape(summary, quote=False)}</span><span class="side"><span>{new["pages"]} 頁</span>'
              f'<span>約 {new["read"]} 分</span><span class="pill" data-read-key="{new["key"]}" hidden>已讀</span></span></a></li>\n')
         i = s.index('<ol class="leclist">')
         j = s.index("    </ol>", i)
+        # inserted in the middle (L6b after L6): right after the previous lecture's row
+        k = s.find(f'href="{prev_key}.html"><span class="no">', i, j) if prev_key else -1
+        if k >= 0:
+            j = s.index("</li>\n", k) + len("</li>\n")
         s = s[:j] + r + s[j:]
     s = re.sub(rf'\n\s*<li><span class="d">{new["date"]}</span>.*?</li>', "", s, count=1)
     return s
@@ -256,6 +285,10 @@ def main():
     if not new or Path(a.page).resolve().parent != SITE:
         ap.error("the page must be docs/lXX.html with main[data-lecture]")
     n = len(lecs)
+    order = [m["key"] for m in lecs]
+    at = order.index(new["key"])
+    prev_key = order[at - 1] if at > 0 else None
+    next_key = order[at + 1] if at + 1 < len(order) else None
     touched = []
     for p in sorted(SITE.glob("*.html")):
         s0 = read(p)
@@ -263,10 +296,14 @@ def main():
         m = meta(p) if p.name.startswith("l") else None
         if m:
             s = set_counts(s, m, n, lecs)
-            if m["no"] == new["no"] - 1:
+            if m["key"] == prev_key:
                 s = link_next(m, new, s)
+            if m["key"] == next_key:
+                s = link_prev(m, new, s)
+            if m["key"] == new["key"] and next_key:
+                s = link_next(new, next(x for x in lecs if x["key"] == next_key), s)
         if p.name == "index.html":
-            s = update_index(s, new, a.sum)
+            s = update_index(s, new, a.sum, prev_key)
         if s != s0:
             p.write_text(s, encoding="utf-8")
             touched.append(p.name)
