@@ -154,7 +154,7 @@ def main():
   </div>
 </main>
 </div>
-<script src="app.js"></script>
+<script src="app.js?v=20261110d"></script>
 <script src="code.js"></script>
 </body>
 </html>

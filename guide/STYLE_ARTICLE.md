@@ -184,6 +184,7 @@
   - 一張圖只講一件事。放不下就拆成兩張，或把說明移到 figcaption，不要縮字（L5 第 1 段就拆成兩張）。
   - 畫完跑 `tools/check_diagrams.py`，再看亮、暗兩種截圖。
   - 頁面開始用 `styles.css` 新增的 class 時，把該頁的連結版本號往上改（`styles.css?v=日期`）。GitHub Pages 會快取約 10 分鐘，舊 CSS 配新 SVG 時，沒有樣式的方塊會變成全黑（2026-11-02 L5 發生過）。
+  - 改了 `app.js` 也一樣，全站的 `app.js?v=日期` 一起往上改（`tools/dag.py`、`tools/new_lecture.py` 的樣板也要改）。2026-11-10 目錄打勾第一次改版時 `app.js` 沒有版本號，瀏覽器拿到舊 JS 配新 CSS，標記黏在標題後面。
 - 舊 class（L1–L4 基礎題答案裡的圖還在用，不要用在新圖）：`dg-box`、`dg-box-soft`、`dg-box-accent`、`dg-frame`、`dg-line`、`dg-soft`、`dg-dash`、`dg-accent`、`dg-fill-ink`、`dg-fill-accent`、`dg-fill-soft`、`dg-t`、`dg-tb`、`dg-ts`、`dg-tm`、`dg-ta`。
 - marker id 加前綴，全站不能重複：文章本文用 `lNc-`（L9 → `l9c-ah`），基礎題答案用 `tkN-<題號>-`（L9 第 2 題 → `tk9-2-ah`）。
 - 箭頭要有標籤。舊畫法的文字 11–13px。viewBox 寬 600–760。數據圖照比例畫，標籤寫實際數值。

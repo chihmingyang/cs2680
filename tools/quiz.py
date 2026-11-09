@@ -531,9 +531,10 @@ def init(path):
     q = {"version": 1, "note": f"題庫：{Path(path).stem.upper()}（規則見 guide/QUIZ.md）。", "scope": scope,
          "sections": out, "unit": [], "integration": []}
     body = json.dumps(q, ensure_ascii=False, indent=1)
-    tag = '<script src="app.js"></script>'
-    if tag not in src:
-        sys.exit(f"{path} 找不到 {tag}")
+    m = re.search(r'<script src="app\.js(\?v=[^"]*)?"></script>', src)
+    if not m:
+        sys.exit(f'{path} 找不到 <script src="app.js…"></script>')
+    tag = m.group(0)
     src = src.replace(tag, f'<script type="application/json" id="quiz">\n{body}\n</script>\n{tag}', 1)
     Path(path).write_text(src, encoding="utf-8")
     print(f"寫進 {path}：{len(scope)} 章、{len(out)} 節（併掉 {len(secs) - len(out)} 個只有一句的章首）")
