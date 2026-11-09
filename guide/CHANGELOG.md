@@ -5,6 +5,7 @@
 
 ## README.md
 
+- 2026-11-09（**L7 可讀性審查第二次**（WORKFLOW I，替 L7 建題庫之前）：tldr 一包、i1–i4／i5–i7／i8–i9／i10 各一包 `--prefix`。第一輪 62 個 BLOCK（4／19／22／8／9），三個作者 subagent 交替換清單、主線套用；第二輪剩 18 個（2／5／3／3／3 個單位），主線修，沒有審第三輪。修改中更正的事實：第 1 章「1 到 2 分」原文是 naive binomial 區間，不是題目抽樣，和第 4 章 ±11.8 分開；「將近 2 分」是中等資源設定的散布，單獨不顯著；Terminal-Bench 89→66 題是 3.0 換題組＋4.0 刪 8 題；RLI 的 judge 會開真的軟體，難在操作；FrontierCode 不能說第二種飽和還沒到；L4 的 102 比 101 是對照組小贏。）
 - 2026-11-09（Skill 一列加 `build-quiz`；`quiz.py` 一列補 `init`、`spec`、`merge` 與用節號、章號挑題。）
 - 2026-11-09（題庫加觀念涵蓋：`quiz.py` 一列補 `check` 的涵蓋檢查與 `coverage`、`closed`／`closedcheck`；題庫一列更新 L6 題數。）
 - 2026-11-09（拿掉每一堂的「問題討論」段：James 打算在每個觀念後面直接放題目，問題討論和 GitHub 討論串不需要了。L1–L11 刪掉 `section#s-discuss`（基礎題、進階題、自我檢查、GitHub 區塊）與側欄項目，段號改成 1 核心觀念、2 動手試試、3 延伸閱讀，正文裡「第 3 段動手試試」「第 4 段延伸閱讀」跟著改，指向進階題的句子刪掉；側欄與首頁的「GitHub 討論」連結、首頁「留下你的想法」一節、「怎麼讀」裡講討論題的步驟拿掉，閱讀時間重算。各堂討論串 issue 關閉（留言保留）。刪 `tools/discuss.py`、`tools/check_discuss.py`；`verify.sh`、`check_article.py`、`new_lecture.py`、`assemble_v7.py`、`add_lecture.py`、`assemble_ideas.py`、`dag.py` 不再要求或產生 `#s-discuss`。STYLE_BASIC 標停用，STYLE_ARTICLE、WORKFLOW、CLAUDE.md、skill 同步。）

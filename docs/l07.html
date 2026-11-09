@@ -62,19 +62,19 @@
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/7_agent_design_4.pdf" target="_blank" rel="noopener">7_agent_design_4.pdf ↗</a></li>
       <li><span class="k">頁數</span>37</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
-      <li><span class="k">查閱與註</span><span class="deep-time">約 11 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 70 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 50 分鐘</span></li>
+      <li><span class="k">查閱與註</span><span class="deep-time">約 14 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 80 分鐘</span></li>
     </ul>
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">一個 benchmark 分數是整個系統在一組題目上的輸出：model、包住 model 的程式（harness，替它執行 tool、管理 context）、機器資源、題目，和判分的程式（grader），換掉任何一項，分數都會變。你的 agent 和榜上的系統至少有一項不同，所以這堂要帶走兩個判斷：<strong>怎麼讀一個分數，以及怎麼評估自己的 agent</strong>。八個 benchmark 的細節收在最後一章，需要時再查。</p>
+    <p class="thesis">一個 benchmark 分數，是整個系統在一組題目上跑出來的結果。這個系統有五項：model、harness、機器資源、題目，和判分的程式 grader。Harness 是包住 model 的程式：它把任務說明，和 tool 執行後傳回的結果，組成 model 讀到的輸入（叫 context）；model 決定要用哪個 tool，harness 替它執行，例如跑一行 shell 指令。換掉任何一項，分數都會變。你的 agent 跑的是你自己的題目，harness 和設定也多半和榜上不同，所以榜上的分數不能直接當成你的分數，只能幫你挑出值得先試的 model 和 harness。這堂要帶走兩個判斷：<strong>怎麼讀一個分數，以及怎麼評估自己的 agent</strong>。八個 benchmark 的細節收在最後一章，需要時再查。</p>
     <ul class="core">
-      <li><span><b>分數不能直接搬。</b>同一個 model 只換 harness，ARC-AGI-3 從 62.7% 變成 98.6%；只修題目，Terminal-Bench 上同一個 agent 多了 12 分。<strong>比較之前，先問比的是什麼</strong>。</span></li>
-      <li><span><b>讀分數問五件事。</b>它考的動作（叫 API、打 shell、點網頁）和判分方式，和我的 agent 一樣嗎？設定相同嗎？報了穩定性和成本嗎？差距大過雜訊嗎？答案沒有外洩進系統、grader 沒有判錯、頂尖的幾個系統分數還沒擠在一起嗎？</span></li>
-      <li><span><b>自己的 agent 要自己量。</b>先把 20 到 50 個真實的失敗寫成題目；grader 先用程式查最終狀態，再掃危險動作，最後才請另一個 model 當裁判（judge）打分；每題跑 k 次，<strong>報 k 次全過的比例（pass^k）與每個成功任務的成本</strong>。</span></li>
+      <li><span><b>分數不能搬到另一套設定。</b>Model 不變、只換 harness：GPT-6 Astra 在 ARC-AGI-3（一組要邊玩邊摸索規則的抽象小遊戲）從 62.7% 升到 98.6%，多了 36 個百分點。只修題目：Terminal-Bench（考在 shell 裡做完一件事）的 2.1 版沒換題組，只修了 89 題裡的 28 題，同一個 agent 就從 58.0% 升到 70.1%，多了 12 個百分點。<strong>比較兩個分數之前，先問兩邊的五項有哪幾項不同</strong>。</span></li>
+      <li><span><b>讀分數問五件事。</b>前兩件問這個分數和你有沒有關係。一，這個 benchmark 讓 agent 做的動作（叫 API、打 shell、點網頁）和它判分時看的東西，和你的 agent 要做的事、你判斷成功的方式一樣嗎？二，榜上這個分數是用哪個 model、哪個 harness、多少機器資源跑出來的，和你的一樣嗎？後三件問分數本身準不準。三，它報了穩定性（每一題都重跑好幾次，次次都成功的題目佔幾成）和每個成功任務的成本嗎？四，兩個系統的差距大過雜訊嗎？同一組題目重跑，agent 每次走的步驟不同，分數本來就會差幾分；這組題目也只是從同類任務裡抽出來的一組，換一組題目，分數又會變。五，這組題目還可信嗎？答案有沒有漏進 model 的訓練資料，或 agent 執行時碰得到的檔案、grader 有沒有判錯、頂尖的幾個系統是不是已經擠在同一個分數，差距小到落在雜訊裡。</span></li>
+      <li><span><b>自己的 agent 要自己量。</b>先把 20 到 50 個真實的失敗寫成題目。Grader 疊三層，便宜又確定的放前面：先用程式查 agent 做完之後的資料庫、檔案和測試對不對；再用程式掃 agent 執行過的每一步，碰到刪測試、對外寄信這類不准發生的動作就判 0；程式查不了的「做得好不好」，最後才請另一個 model 當裁判（judge）打分，因為 judge 貴，自己也會判偏。同一題每次跑的結果會不同，所以每題跑 k 次，算 k 次全部成功的比例（pass^k）。<strong>報 pass^k 和每個成功任務的成本</strong>，成本是總花費除以成功的次數。</span></li>
     </ul>
   </section>
 
@@ -111,7 +111,7 @@
               <p>L6 說 agent 常常沒驗證就宣布完成，所以 agent 能不能用，不能問 agent 自己，要由 agent 外面的一套程序來量，這套程序叫評估（evaluation，常簡稱 eval）。受測的 agent 也不只是 model。Model 只決定下一步做什麼；外面那層程式叫 harness，它把 prompt 和 tool 的結果組成 context 送給 model、替 model 執行 tool call、決定什麼時候停（<a href="l02.html#i1">L2〈Loop〉</a>）。看到「X 在 <a class="tm" href="#n-swebench">SWE-bench</a> 拿到 80%」時（SWE-bench 考修真實的 GitHub issue），多數人會把 80% 當成 X 這個 model 的能力。這是讀分數最常見的錯誤，先看分數是怎麼產生的：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 300" role="img" aria-label="一次評估的解剖圖。左上是任務集，往右先把環境重置，再進入一個在預算內反覆的框：受測的 agent 系統（青色方塊，裡面是 model、prompt、harness、tools、memory）和環境之間來回 action 與 observation。框結束後產生三種輸出：最終答案、最終環境狀態、trajectory。三種輸出往下進入 grader，它是唯一下判斷的地方。Grader 輸出一次 trial 的分數，全部任務乘 k 次 trial 彙整成 metrics：pass^k、cost、latency。">
+                <svg viewBox="0 0 720 300" role="img" aria-label="一次評估的解剖圖。左上是任務集，往右先把環境重置，再進入一個在預算內反覆的框：受測的 agent 系統（青色方塊，裡面是 model、prompt、harness、tools、memory）和環境之間來回 action 與 observation。框結束後產生三種輸出：最終答案、最終環境狀態、trajectory（這一次每一步的觀察和動作）。三種輸出往下進入 grader，它是唯一下判斷的地方。Grader 輸出一次 trial（跑一題一次）的分數，全部任務乘 k 次 trial 彙整成 metrics：pass^k、cost、latency。">
                   <defs><marker id="l7v-anat-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-anat-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="304" y="8" width="408" height="136" rx="6" class="dg-panel"/>
                   <text x="318" y="30" class="dg-cb">while 還沒結束 and budget 還夠</text>
@@ -167,9 +167,9 @@
                   <text x="10" y="176" class="dg-c">評估也可能停不下來。</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「一個分數是怎麼產生的」。Grader 只看得到三種輸出，每個 benchmark 選的不同，這決定它量到什麼。受測的是整個青色方塊，不只是裡面的 model。</figcaption>
+              <figcaption>這張圖回答「一個分數是怎麼產生的」。跑一題一次叫一次 trial。Trial 結束時，grader 只看得到三種輸出：最終答案、最終的環境狀態，以及 trajectory（這次 trial 每一步的觀察和動作）。每個 benchmark 選的不同，這決定它量到什麼。受測的是整個青色方塊，不只是裡面的 model；方塊裡的 memory 是 agent 跨 session 留下、下次再讀回 context 的筆記。</figcaption>
             </figure>
-              <p>跑一題叫一次 trial，同一題要跑很多次，因為 agent 每次的結果可能不同。Trajectory 是一次 trial 裡每一步的觀察和動作，也叫 trace 或 transcript。骨架只有幾行，和 <a href="l04.html#i1">L4 的 agent loop</a> 幾乎一樣，差別是外面多了重置、預算和 grader：</p>
+              <p>同一題要跑很多次 trial（圖裡的 k 次），因為 agent 每次的結果可能不同。Trajectory 也叫 trace 或 transcript。骨架只有幾行，和 <a href="l04.html#i1">L4 的 agent loop</a> 幾乎一樣，差別是外面多了重置、預算和 grader：</p>
               <figure class="file"><figcaption>一次評估的骨架（課程的偽碼，註解是本文補的）</figcaption><pre><code>for task in tasks:
     env.reset(task.initial_state)              # 每題開始前恢復快照，前一題的副作用不能留下來
     history = []
@@ -188,7 +188,7 @@
                 <li><b>預算。</b>上限決定 agent 有多少機會把事做完，所以上限不同的兩個分數不能直接比。</li>
                 <li><b>Grader 看什麼。</b>看答案量不到動作，看最終狀態量不到過程中的破壞。比對 trajectory 是拿 agent 走的每一步去對出題者事先寫好的一條標準路徑，agent 走另一條也正確的路，一樣判錯（第 6 章）。</li>
               </ul>
-              <p id="i1-2"><b>寫成式子：分數是整個 stack 的函數。</b>課程把這件事寫成 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment），scaffold 就是上面說的 harness，retriever 是替 agent 查資料的那一層，memory 是 agent 跨 session 留下來、下次再讀回 context 的筆記（L6 的主題）。本文再加上跑評估的人決定的三項：題目、grader、資源與預算。<strong>換掉其中任何一項，分數都會變</strong>，而且變化常常比兩個 model 之間的差距大：</p>
+              <p id="i1-2"><b>寫成式子：分數是整個 stack 的函數。</b>課程把這件事寫成 P = f（LLM、prompt、scaffold、tools、retriever、memory、environment），scaffold 就是上面說的 harness，retriever 是替 agent 查資料的那一層，memory 是 agent 跨 session 留下來、下次再讀回 context 的筆記（L6 的主題）。本文再加上 agent 外面、由評估這一邊決定的三項：題目、grader、資源與預算（grader 和預算就是上面三個地方裡的兩個）。<strong>換掉其中任何一項，分數都會變</strong>，而且變化常常比兩個 model 之間的差距大：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 262" role="img" aria-label="四組前後對照，每組的 model 都沒換，只改 model 以外的東西。灰點是改之前，紅點是改之後。換 harness：GPT-6 Astra 在 ARC-AGI-3 從 62.7% 到 98.6%。換 harness：本機跑的 Qwen3.6 在 SWE-bench Verified 的 169 題裡從 25.4% 到 42.6%。修題目：同一個 agent（Opus 4.6）在 Terminal-Bench 從 58.0% 到 70.1%。第四組同時改了兩樣，修 grader 並換成限制較少的 scaffold：Opus 4.5 在 CORE-Bench 從 42% 到 95%。">
@@ -238,24 +238,24 @@
             </figure>
               <p>四列各改了什麼：</p>
               <ul>
-                <li><b>ARC-AGI-3。</b>一組要邊玩邊摸索規則的抽象小遊戲，數字來自 <a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">ARC Prize 2026 年 9 月的報告</a>。兩種 harness 差在步與步之間留下什麼：Standard harness 只留 model 自己決定寫下的筆記；Provider Adapter harness 把 model 上一輪的 reasoning 狀態（回答前的思考，內容不公開）帶到下一輪，對話太長時再做 compaction（把舊的對話壓成摘要，騰出 context）。兩邊都開到最高的 effort（reasoning 的強度設定），分數差 36 分。</li>
-                <li><b>SWE-bench Verified。</b>OpenAI 請人篩過、確定可解的 500 題 SWE-bench 子集（第 7 章）。這一列是 <a href="l04.html#i2">L4 講過的 Lewis 實驗</a>：本機跑 4-bit 量化的 Qwen3.6，在其中 169 題上，harness 從整段對話照送，換成縮短舊的 tool 輸出、偵測原地打轉，解出的題從 43 升到 72。這是 window 只有 20,480 token 時的結果，L4 也說 window 放大後差距幾乎消失。</li>
+                <li><b>ARC-AGI-3。</b>一組要邊玩邊摸索規則的抽象小遊戲，數字來自 <a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">ARC Prize 2026 年 9 月的報告</a>。兩種 harness 差在步與步之間留下什麼：Standard harness 只留 model 自己決定寫下的筆記；Provider Adapter harness 把 model 上一輪的 reasoning 狀態（回答前的思考，內容不公開）帶到下一輪，對話太長時再做 compaction（把舊的對話壓成摘要，騰出 context）。兩邊都開到最高的 effort（reasoning 的強度設定），Standard harness 是 62.7%，Provider Adapter harness 是 98.6%，差 36 分。</li>
+                <li><b>SWE-bench Verified。</b>OpenAI 請人篩過、確定可解的 500 題 SWE-bench 子集（第 7 章）。這一列是 <a href="l04.html#i2">L4 講過的 Lewis 實驗</a>：本機跑 4-bit 量化的 Qwen3.6，在其中 169 題上，harness 從整段對話照送，換成縮短舊的 tool 輸出、偵測原地打轉，解出的題從 43 升到 72（43/169 = 25.4%、72/169 = 42.6%，就是圖上這一列的兩個點）。4-bit 量化是把 model 的每個權重從 16 bit 壓成 4 bit 存，記憶體少很多，才能在本機跑，代價是能力通常比原本差一點。這個差距有前提：model 的 context window（一次能讀進的 token 上限）只有 20,480 token。對照組整段照送，對話紀錄塞滿 window 時 run 就直接結束，所以多解出來的題，有一部分只是沒有中途停掉。L4 也說 window 放大到 262,144 token 時，兩邊幾乎打平：169 題裡，整段照送的對照組解 102 題，改良的 harness 解 101 題。</li>
                 <li><b>Terminal-Bench。</b>考在 container 裡用 shell 做完一件事（細節在第 10 章的 <a class="tm" href="#n-tb">Terminal-Bench 註</a>）。<a href="https://www.tbench.ai/news/terminal-bench-2-1" target="_blank" rel="noopener">2.1 版</a>只修了 89 題裡的 28 題，同一個 agent 就多了 12.1 分。</li>
                 <li><b>CORE-Bench。</b>考重現論文的計算結果。<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic 發現</a>它判分太死（期待 96.124991 時把 96.12 判錯）、題目描述模糊、有些題本身隨機而無法重現。修掉這些錯，再換成限制較少的 scaffold（文章沒寫放寬了哪些限制），Opus 4.5 從 42% 變成 95%。</li>
               </ul>
-              <p>連 VM 的大小也算在內。<a href="https://www.anthropic.com/engineering/infrastructure-noise" target="_blank" rel="noopener">Anthropic 2026 年 2 月的實驗</a>只改資源設定，Terminal-Bench 2.0 上資源最多和最少的兩種設定就差 6 分。6 分是兩個極端；一般常用的幾種設定之間也差將近 2 分，而且這是疊在題目抽樣本身 1 到 2 分的信賴區間之上。所以他們的結論是：<strong>榜上差距小於 3 分的，在設定公開並對齊之前都值得懷疑</strong>（第 4 章）。</p>
+              <p>連 VM 的大小也算在內。<a href="https://www.anthropic.com/engineering/infrastructure-noise" target="_blank" rel="noopener">Anthropic 2026 年 2 月的實驗</a>只改資源設定，Terminal-Bench 2.0 上資源最多和最少的兩種設定就差 6 分。6 分是兩個極端；資源居中的幾種設定之間，分數散布不到 2 分，這麼小的差單獨看還在雜訊內（第 4 章）。但它會疊在另一層誤差上：用最簡單的二項公式算（把每個結果都當成互不相干的一次試驗），重跑同一組題目的信賴區間（只因為運氣，分數就可能落在的範圍）就已經有 1 到 2 分。換一組題目的雜訊更大，第 4 章會算。依這兩層誤差，他們的判斷是：<strong>榜上差距小於 3 分的，在設定公開並對齊之前都值得懷疑</strong>（3 分是他們給的門檻，文章沒有寫推導；第 4 章）。</p>
               <p>Harness 的影響也不是定值。<a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">Scale 與 Reflection</a> 用三種 harness（mini-swe-agent、Pi、OpenCode）跑開放權重的 model：最強的兩個（GLM-5.3、Kimi K3）換 harness 後解題的成績差不多，差得多的是花費。分數既然拉不開，能比的只剩帳單，所以他們建議「依帳單選 harness，不要依分數選」。不要記成「harness 一定差很多」，要記成<strong>每個分數都要連同它的設定一起讀</strong>：哪個 model、哪個 harness、多少資源與預算。</p>
-              <p id="i1-3"><b>所以比較時要固定其他項。</b>比 model 就固定 harness，比 harness 就固定 model 和題目（L4〈<a href="l04.html#x4">最重要的判斷</a>〉）；自己改 agent 時，<a href="l08.html#x1">一次只改一件事</a>。<a href="l05.html#i2">L5 問的「拿掉一個 agent，品質掉多少」</a>也是這樣答：同一套程序跑兩次。</p>
+              <p id="i1-3"><b>所以比較時要固定其他項。</b>比 model 就固定 harness，比 harness 就固定 model 和題目（L4〈<a href="l04.html#x4">最重要的判斷</a>〉）；自己改 agent 時，<a href="l08.html#x1">一次只改一件事</a>。<a href="l05.html#i2">L5 問的「少了這個 agent，品質掉多少」</a>也是這樣答。L5 講的是 multi-agent 系統：一個主 agent 把工作分給幾個 subagent（主 agent 派出去做一部分工作的 agent）。拿掉其中一個、其他都不動，用同一套程序各跑一次，再比兩個分數。</p>
             </div>
           </div>
 <div class="idea" id="i2">
             <h3><span class="idea-no">2</span>最重要的判斷：公開分數回答不了「能不能上線」</h3>
             <div class="prose">
               <p><span class="anchor" id="x3"></span>公開 benchmark 要讓不同團隊的分數能比，所以題目固定、環境通用。你要問的是另一個問題：在我的 tool、資料和政策下，這個 agent 會不會出錯。<strong>公開分數可以用來挑起點，不能當上線的證據</strong>。兩者的距離來自三個地方。</p>
-              <p id="i2-1"><b>第一，動作和 grader 可能不同。</b>任何 benchmark 都只要問兩件事。第一是動作空間（action space）：agent 能做什麼，叫 API、打 shell、點網頁，還是動滑鼠；它決定這個 benchmark 像哪一種真實 agent。第二是 grader 看什麼；它決定什麼叫成功。課程介紹的八個 benchmark 放到這兩軸上：</p>
+              <p id="i2-1"><b>第一，動作和 grader 可能不同。</b>任何 benchmark 都只要問兩件事。一件是動作空間（action space）：agent 能做什麼，叫 API、打 shell、點網頁，還是動滑鼠；它決定這個 benchmark 像哪一種真實 agent。另一件是 grader 看什麼；它決定什麼叫成功。課程介紹的八個 benchmark 放到這兩軸上：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 332" role="img" aria-label="八個 benchmark 放在兩個軸上。橫軸是動作空間：API、受測團隊自己帶的 tools、網頁、repo、shell、桌面 GUI、整間公司。縱軸是 grader 看什麼：最終答案、tool call、最終狀態、測試腳本、checkpoint（任務中途設的檢查點，達成幾個給幾分）。GAIA 在自備 tools 欄、最終答案列。BFCL 在 API 欄、tool call 列。τ-bench 在 API 欄、最終狀態列，它另外也檢查回覆內容（第 10 章）。WebArena 在網頁欄、最終狀態列。OSWorld 在桌面 GUI 欄、最終狀態列。SWE-bench 在 repo 欄、測試腳本列。Terminal-Bench 在 shell 欄、測試腳本列。TheAgentCompany 在整間公司欄、checkpoint 列。紅色虛線圈出 repo 那一欄，表示如果你的 agent 改 repo，這一欄以外的分數都不能直接參考。">
+                <svg viewBox="0 0 720 332" role="img" aria-label="八個 benchmark 放在兩個軸上。橫軸是動作空間：API、受測團隊自己帶的 tools、網頁、repo、shell、桌面 GUI、整間公司（在一間模擬公司的工單系統、程式碼庫、文件和聊天室之間來回操作，還要傳訊息問 LLM 扮演的同事）。縱軸是 grader 看什麼：最終答案、tool call、最終狀態、測試腳本、checkpoint（任務中途設的檢查點，達成幾個給幾分）。GAIA 在自備 tools 欄、最終答案列。BFCL 在 API 欄、tool call 列。τ-bench 在 API 欄、最終狀態列，它另外也檢查回覆內容（第 10 章）。WebArena 在網頁欄、最終狀態列。OSWorld 在桌面 GUI 欄、最終狀態列。SWE-bench 在 repo 欄、測試腳本列。Terminal-Bench 在 shell 欄、測試腳本列。TheAgentCompany 在整間公司欄、checkpoint 列。紅色虛線圈出 repo 那一欄，表示如果你的 agent 改 repo，這一欄以外的分數都不能直接參考。">
                   <defs><marker id="l7v-map-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-map-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="4" y="60" width="712" height="46" rx="6" class="dg-panel"/>
                   <text x="14" y="88" class="dg-cb">Final answer</text>
@@ -303,14 +303,14 @@
                   <text x="360" y="316" text-anchor="middle" class="dg-k">例：你的 agent 改 repo，這一欄以外的分數都不能直接參考</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「這個分數和我的 agent 有關嗎」。每個 benchmark 只佔一格：它量一種動作空間，用一種方式判分。動作不同的分數不能換算；grader 不同，「成功」的意思也不同。</figcaption>
+              <figcaption>這張圖回答「這個分數和我的 agent 有關嗎」。每個 benchmark 放在它主要的那一格：它量一種動作空間，主要用一種方式判分（τ-bench 另外也看回覆內容）。動作不同的分數不能換算；grader 不同，「成功」的意思也不同。</figcaption>
             </figure>
-              <p>先找你的 agent 在哪一欄，只有同一欄的分數有參考價值：</p>
+              <p>先找你的 agent 在哪一欄，<strong>只有同一欄的分數有參考價值</strong>：</p>
               <ul>
                 <li><b>用瀏覽器。</b>看 <a class="tm" href="#n-webarena">WebArena</a>。</li>
                 <li><b>改 repo。</b>看 <a class="tm" href="#n-swebench">SWE-bench</a>。</li>
                 <li><b>在 shell 裡裝套件、設服務。</b>看 shell 欄的 <a class="tm" href="#n-tb">Terminal-Bench</a>。</li>
-                <li><b>和人對話，又改資料。</b><a class="tm" href="#n-taubench">τ-bench</a> 最接近。</li>
+                <li><b>和人對話，又改資料。</b><a class="tm" href="#n-taubench">τ-bench</a> 最接近：它模擬客服，一個 LLM 扮演客戶和 agent 對話，agent 要守一份客服政策，透過 API 改後端的資料庫（例如改訂位）。</li>
               </ul>
               <p>拿 SWE-bench 的分數推測客服表現，沒有可比性。再看列：<a class="tm" href="#n-gaia">GAIA</a> 只比最後的答案，寄信、改資料庫這類動作它完全量不到。八個的細節收在第 10 章。</p>
               <p id="i2-2"><b>第二，benchmark 的世界裡沒有使用者。</b>多數 benchmark 的形狀都一樣：一句寫完整的指令進去，最終狀態出來，中間沒有人。真實的工作會缺條件、做到一半改需求、目標中途移動：</p>
@@ -356,15 +356,15 @@
                   <text x="387" y="259" text-anchor="middle" class="dg-k">memory：第一個 turn 給的限制，到最後還記得</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「benchmark 的形狀和真實工作差在哪」。上面問了也沒有人回答，只是多花步數，所以直接猜最划算（下一段算給你看）。下面三個轉折各對到課程提出的一個評估維度，標成紅字：問一句是 clarification，改需求後重新規劃是 recovery，到最後還記得第一個 turn 的限制是 memory。第 8 章講怎麼出題。</figcaption>
+              <figcaption>這張圖回答「benchmark 的形狀和真實工作差在哪」。上面問了也沒有人回答，只是多花步數，所以直接猜最划算（下一段算給你看）。下面用紅字標出課程提出的三個評估維度：問一句是 clarification，改需求後重新規劃是 recovery；貫穿整條時間軸的虛線是 memory，量同一段對話裡，第一個 turn 給的限制到最後還記不記得。這個 memory 是評估維度，和第 1 章受測系統裡跨 session 存筆記的 memory 元件不是同一件事。第 8 章講怎麼出題。</figcaption>
             </figure>
               <p>這個形狀會獎勵一種行為：有自信地猜。假設一句指令有兩種解讀，機率各半。直接猜，期望分數是 0.5。先問，benchmark 裡沒有人回答，最後還是得猜，期望分數最多也是 0.5，還多花了步數。有真人回答時，問一句就能把成功率拉近 1。所以<strong>在單一 turn 的 benchmark 上，最不問問題的 agent 分數最好</strong>，這和你希望它在團隊裡的樣子相反。</p>
               <p id="i2-3"><b>第三，過程中的破壞沒人扣分。</b>Agent 為了讓測試通過，把失敗的測試刪了；為了清出空間，刪了不該刪的檔；中途寄出一封信、花了一筆錢。只看最終狀態的 grader 看到「測試全過」，一樣給 1 分。第 8 章會把這件事量進來。</p>
-              <p id="i2-4"><b>讀分數的五個問題。</b>上面三個落差和第 1 章的設定，回答的是「這個分數和我的 agent 有沒有關係」；再加上分數本身準不準、題目可不可信，就是看到任何一個分數時先問的五件事。前兩題這兩章已經講了，第 3 到 5 題由後面五章展開，第 7 章的最後拿一個真實的分數跑一次：</p>
+              <p id="i2-4"><b>讀分數的五個問題。</b>看到任何一個分數，先問下表五題。前兩題回答「這個分數和我的 agent 有沒有關係」：第 1 題把這一章的三個落差合成一題（動作空間、有沒有使用者、grader 看什麼），第 2 題問第 1 章的設定。後三題問分數本身靠不靠得住：第 3 題問報了哪些指標，第 4 題問差距大過雜訊沒有，第 5 題問題目可不可信。前兩題這兩章已經講了，第 3 到 5 題由後面五章展開，第 7 章的最後拿一個真實的分數跑一次：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>問題</th><th>要查什麼</th><th>在哪一章</th></tr></thead>
                 <tbody>
-                  <tr><td><b>1. 它量的動作和 grader，和我的 agent 一樣嗎？</b></td><td>動作空間；grader 看答案、狀態還是 trajectory</td><td>這一章</td></tr>
+                  <tr><td><b>1. 它量的動作、使用者和 grader，和我的 agent 一樣嗎？</b></td><td>動作空間；有沒有使用者、只有一個 turn 還是多個；grader 看答案、狀態還是 trajectory，過程中的破壞有沒有扣分</td><td>這一章</td></tr>
                   <tr><td><b>2. 它是在什麼設定下量的？</b></td><td>Model、harness、effort、資源、預算</td><td><a href="#i1">第 1 章</a></td></tr>
                   <tr><td><b>3. 報的是穩定性和成本，還是單次成功率？</b></td><td>pass^k、每個成功任務的成本、latency</td><td><a href="#i3">第 3 章</a></td></tr>
                   <tr><td><b>4. 差距大過雜訊嗎？</b></td><td>題數、每題跑幾次、信賴區間</td><td><a href="#i4">第 4 章</a></td></tr>
@@ -376,11 +376,11 @@
 <div class="idea" id="i3">
             <h3><span class="idea-no">3</span>指標：一個成功率藏住穩定性和成本</h3>
             <div class="prose">
-              <p>Benchmark 通常只報一個百分比。這個數字把三件事壓在一起：每次都做得到嗎、花多少錢、要等多久。這一章把它們拆開，對應五個問題的第 3 題。</p>
+              <p>Benchmark 通常只報一個百分比：跑過的題目裡，成功了幾成。這個數字看不出另外三件事：每次都做得到嗎、花多少錢、要等多久。這一章把它們分開量，對應第 2 章〈<a href="#i2-4">讀分數的五個問題</a>〉的第 3 題。</p>
               <p id="i3-1"><b>pass@k 與 pass^k：能力和穩定性是兩件事。</b>同一題跑 k 次。pass@k 問「至少一次成功」，它來自程式題：產生 k 個解答，有一個通過測試就算過，所以量的是能力的上限。pass^k 問「k 次全部成功」，<a href="https://arxiv.org/abs/2406.12045" target="_blank" rel="noopener">τ-bench</a> 為了客服提出它，量的是穩定性。設每次的成功率是 p、各次獨立，那麼 pass@k = 1 − (1 − p)^k，pass^k = p^k。把 p = 0.8 代進去：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 278" role="img" aria-label="折線圖。橫軸 k 是 1、2、4、8、16，縱軸是 0 到 1。單次成功率 0.8 時，pass@k 從 0.80 升到 0.96、0.998，之後貼著 1。pass^k 從 0.80 降到 0.64、0.41、0.17、0.03。兩條線在 k 等於 1 時重合，之後張開。">
+                <svg viewBox="0 0 720 278" role="img" aria-label="折線圖。橫軸 k 是 1、2、4、8、16，縱軸是 0 到 1。單次成功率 0.8 時，pass@k 在 k = 1、2、4 依序是 0.80、0.96、0.998，k = 8 和 k = 16 都是 1.00（四捨五入）。pass^k 在 k = 1、2、4、8、16 依序是 0.80、0.64、0.41、0.17、0.03。兩條線在 k = 1 時重合，之後張開。">
                   <defs><marker id="l7v-passk-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-passk-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M90,226 L650,226" class="dg-soft-link dg-dash"/>
                   <text x="80" y="230" text-anchor="end" class="dg-mn">0</text>
@@ -497,9 +497,9 @@
                   <tr><td>Coding agent 交 PR，有人 review</td><td>人看得到、能退回，但花人的時間</td><td><b>平均成功率</b>，加上每個成功任務的成本</td></tr>
                 </tbody>
               </table></div>
-              <p>本文的判斷：上線前的問題多半是第二種，<strong>客戶只給你一次機會</strong>。真實的差距也不小：τ-bench 上 gpt-4o 在 retail 的單次成功率是 61.2%，同一題連續 8 次都成功的比例低於 25%。不穩定也不會隨著換新 model 自動消失。<a href="https://arxiv.org/abs/2602.16666" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a> 讓 14 個 model 在 τ-bench 和 GAIA 每題跑 5 次，把可靠性拆成 12 個 0 到 1 的指標，例如同一題每次結果一不一致、tool 出錯時撐不撐得住、出事時傷害多大。18 個月裡，正確率（0 到 1）每年升約 0.21，可靠性的分數每年只升 0.03 到 0.10；其中結果的一致性（同一題每次是否都成功，pass^k 量的就是它）幾乎沒動。</p>
+              <p>本文的判斷：上線前的問題多半是第二種，<strong>客戶只給你一次機會</strong>。真實的差距也不小：τ-bench 上 gpt-4o 在 retail 的單次成功率是 61.2%，同一題連續 8 次都成功的比例低於 25%。不穩定也不會隨著換新 model 自動消失。<a href="https://arxiv.org/abs/2602.16666" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a> 讓 14 個 model 在 τ-bench 和 GAIA 每題跑 5 次，把可靠性拆成 12 個 0 到 1 的指標，例如同一題每次結果一不一致、tool 出錯時撐不撐得住、出事時傷害多大。這 14 個 model 的發布日期前後跨了 18 個月。依發布日期看，正確率（0 到 1）每年升約 0.21，可靠性的分數每年最多只升 0.10，不到正確率的一半；其中結果的一致性（同一題每次是否都成功，pass^k 量的就是它）幾乎沒動。</p>
               <p id="i3-3"><b>成本：算每個成功任務，不算每次執行。</b>一次 200 步、花 40 美元的 run，和一次 12 步、花 0.30 美元的 run，兩次都「成功」，只看成功率分不出來。<a href="l01.html#i2">L1 講過的算法</a>是<strong>總花費除以成功次數</strong>，所以每次較貴但常成功的設定，算下來可能反而便宜。花費要算全部：除了 model 讀寫的 token，還有 tool call 本身的費用（搜尋 API、sandbox 的機器時間），以及 cache miss 多付的錢（prompt 開頭和上一次相同的部分沒命中 provider 的快取，就要用全價重算一次）。<a href="l08.html#i1">L8 會把這幾項一起算進每個成功任務的成本</a>。Latency 同理，等網頁載入和跑測試都在使用者的等待裡，上線時看 p95（最慢的那 5% 要等多久），不看平均。</p>
-              <p>有成本這一軸，也才看得出簡單的做法多有用。<a href="https://arxiv.org/abs/2407.01502" target="_blank" rel="noopener">AI Agents That Matter</a> 在 HumanEval 上量到，只是失敗就重試的簡單 agent（Warming）有 93.2%、總共 2.45 美元；複雜的 LATS 有 88.0%、134.50 美元。所以<strong>評估裡要放一個簡單的 baseline</strong>，否則你不知道複雜的東西換到了什麼。</p>
+              <p>有成本這一軸，也才看得出簡單的做法多有用。<a href="https://arxiv.org/abs/2407.01502" target="_blank" rel="noopener">AI Agents That Matter</a> 在 HumanEval（164 題 Python 函式，用測試判對錯）上比了好幾種 agent，下面兩種都用 GPT-4。最簡單的一種叫 Warming：寫出的程式沒通過題目附的範例測試，就再寫一次，最多 5 次，每次把 temperature（取樣的隨機程度，越高，每次寫出的程式越不一樣）調高一點。複雜的 LATS（Language Agent Tree Search）會展開好幾條生成程式的路徑，再從中挑。結果 Warming 解對 93.2%、跑完全部題目總共 2.45 美元；LATS 解對 88.0%、總共 134.50 美元。簡單的那個正確率高 5.2 分，花費只有約 1/55。所以<strong>評估裡要放一個簡單的 baseline</strong>，否則你不知道複雜的東西換到了什麼。</p>
               <p id="i3-4"><span class="anchor" id="t4"></span><b>多個維度怎麼比：Pareto。</b>能力、成本、速度要合成一個排名，直覺是加權平均，但權重由誰定？客服在乎速度，研究用的 agent 在乎能力，沒有一組權重對每個人都對。Pareto dominance 不需要權重：A 在每個維度都不比 B 差，而且至少一個維度更好，就說 A 支配（dominate）B。沒有人支配得了的那一群叫 Pareto frontier，也就是 Rank 1；拿掉 Rank 1 之後剩下不受支配的是 Rank 2，依此類推。下圖是一張真實的榜，只看能力和花費兩個維度：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -572,12 +572,12 @@
                 <thead><tr><th>來源</th><th>是什麼</th><th>多大</th><th>怎麼壓</th></tr></thead>
                 <tbody>
                   <tr><td><b>題目抽樣</b></td><td>這 N 題剛好對它有利</td><td>50 題約 ±11 分（下面算）</td><td>加題目</td></tr>
-                  <tr><td><b>每次執行不同</b></td><td>Model 抽下一個字時帶隨機性（temperature 越高越隨機），tool 每次回傳不同，一步走偏後面跟著偏；<a href="l01.html#i9-1">L1 講過</a> temperature 設成 0 也不保證重現</td><td>τ-bench 上 gpt-4o 單次 61.2%，同一題 8 次全過不到 25%（第 3 章）</td><td>每題跑 k 次</td></tr>
+                  <tr><td><b>每次執行不同</b></td><td>Model 抽下一個字時帶隨機性（temperature 越高越隨機），tool 每次回傳不同，一步走偏後面跟著偏；<a href="l01.html#i9-1">L1 講過</a> temperature 設成 0 也不保證重現</td><td>Terminal-Bench 4.0 榜上，同一組 66 題重跑 5 次，95% 範圍約 ±3 分（下面的圖）</td><td>每題跑 k 次</td></tr>
                   <tr><td><b>基礎設施</b></td><td>VM 資源、API 錯誤、網路</td><td><a href="https://www.anthropic.com/engineering/infrastructure-noise" target="_blank" rel="noopener">Terminal-Bench 2.0</a> 最多差 6 分</td><td>固定並公開設定；換時段重跑</td></tr>
                 </tbody>
               </table></div>
-              <p>課程的提醒是：<strong>只跑一次的分數大多是雜訊</strong>。下面把這句話算出來。</p>
-              <p id="i4-1"><span class="anchor" id="t5"></span><b>題數決定精度。</b>Benchmark 分數是把每題的結果平均，所以可以估它的誤差。先定義三項：N 是題數；p 是成功率；標準誤（standard error）是「換一組題目，平均值大約會動多少」。公式是標準誤 = √（p（1 − p）/ N），95% 範圍約 ±1.96 × 標準誤。比較兩版時，兩邊各有雜訊，差值的範圍要再乘 √2。代入 p = 0.8：</p>
+              <p>課程的提醒是：同一個 agent 做同一題，每次結果可能不同，所以<strong>只跑一次的分數大多是雜訊</strong>，兩個只跑一次的分數差幾分，多半分不出是能力還是運氣。下面依上表的順序把三種雜訊各量一次：先算最容易算的題目抽樣，再看重跑和基礎設施。</p>
+              <p id="i4-1"><span class="anchor" id="t5"></span><b>題數決定精度。</b>Benchmark 分數是把每題的結果平均，所以可以估它的誤差。先定義三項：N 是題數；p 是成功率；標準誤（standard error）是「換一組題目，平均值大約會動多少」。公式是標準誤 = √（p（1 − p）/ N），95% 範圍約 ±1.96 × 標準誤。比較兩版時，兩邊各有雜訊。兩邊的雜訊互相獨立，不會每次都往同一邊偏，所以要相加的是變異數（標準誤的平方），不是標準誤本身：差值的標準誤 = √（標準誤² + 標準誤²）= √2 × 標準誤，約 1.41 倍，不是 2 倍。所以差值的範圍要再乘 √2。代入 p = 0.8：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>題數 N</th><th>標準誤</th><th>一個分數的 95% 範圍</th><th>兩版的差距要超過</th></tr></thead>
                 <tbody>
@@ -588,7 +588,7 @@
                   <tr><td>1,000</td><td>1.3 分</td><td>±2.5 分</td><td>3.5 分</td></tr>
                 </tbody>
               </table></div>
-              <p>所以 50 題上的 80% 對 84%，只是 40 題對 42 題，完全在雜訊裡。而且 N 要變 4 倍，標準誤才減半。你的團隊如果有 50 題的題組，<strong>只憑平均分數看不出 10 分以內的進步</strong>，要靠下面的配對比較。</p>
+              <p>所以 50 題上的 80% 對 84%，只是 40 題對 42 題，完全在雜訊裡。而且 N 要變 4 倍，標準誤才減半。你的團隊如果有 50 題的題組，<strong>只憑平均分數看不出 15 分以內的進步</strong>（上表 50 題那一列：兩版要差超過 15.7 分），要靠下面的配對比較。</p>
               <p id="i4-2"><b>讀榜時先看範圍。</b>有些榜已經把範圍寫出來了，把它畫出來，排名的意思就不一樣了：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -645,8 +645,8 @@
               </div>
               <figcaption>這張圖回答「榜上差幾分算數」。橫線是榜上寫的誤差範圍，第 3 到第 5 名幾乎完全重疊，第 1、2 名也有重疊。資料是 <a href="https://snorkel.ai/leaderboard/terminal-bench-4-0/" target="_blank" rel="noopener">Terminal-Bench 4.0 榜</a>（66 題，2026-10-06 更新，2026-11-03 查詢）。</figcaption>
             </figure>
-              <p>這個 ± 也只算了重跑的變異：研究機構 Epoch AI 的<a href="https://epoch.ai/benchmarks/terminal-bench-4/review" target="_blank" rel="noopener">審查</a>說它是 5 次 run 的 95% 信賴區間，題目就是這 66 題。要推論到題目以外，還要加上題目抽樣的雜訊，用上面的公式算，66 題、p = 0.6 時約 ±11.8 分（本文算的）。</p>
-              <p id="i4-3"><b>基礎設施也是雜訊。</b><a href="https://www.anthropic.com/engineering/infrastructure-noise" target="_blank" rel="noopener">Anthropic 的實驗</a>把每題的資源上限從 1 倍放到不設限，基礎設施造成的錯誤從 5.8% 降到 0.5%。放到 3 倍之前，分數的變化還在雜訊內，只是資源上限誤殺的 run 變少了（統計檢定的 p 值是 0.40；這個 p 值和上面的成功率 p 是兩回事，下面的配對比較會解釋）。超過 3 倍後分數再升近 4 分，因為 agent 多了本來跑不動的解法，<strong>它在考的東西已經變了</strong>。從 1 倍到不設限總共差 6 分，就是第 1 章引的那個數字。所以他們建議每題同時定保證的下限和強制終止的上限，並把倍數寫進報告。</p>
+              <p>這個 ± 也只算了重跑的變異：研究機構 Epoch AI 的<a href="https://epoch.ai/benchmarks/terminal-bench-4/review" target="_blank" rel="noopener">審查</a>說它是 5 次 run 的 95% 信賴區間，題目就是這 66 題。所以它只回答「同一組 66 題重跑，分數會動多少」。要推論到這 66 題以外，也就是換一組同類的題目，還要算題目抽樣的雜訊：用上面的公式，66 題、p = 0.6 時約 ±11.8 分（本文算的）。這 ±11.8 不必再加上 ±3：每題成功或失敗本來就含著重跑的運氣，二項公式已經把它算進去，所以 ±11.8 是兩種雜訊合起來的粗估。它的範圍只會偏寬、不會偏窄：榜上的分數是 5 次的平均，每題的運氣已經平均掉一些，用單次的公式算就多算了這一塊。圖上相鄰兩名差 0 到 4.5 分，都遠小於 ±11.8，所以只看平均和這些 ±，只能說誰在這 66 題上比較高；要說換一組同類的題目名次也一樣，得用後面的配對比較逐題看。第 1 章引的 Anthropic「1 到 2 分」量的不是這件事：照上面的公式，Terminal-Bench 2.0 的 89 題換一組題目，範圍約 ±10 分；要窄到 1、2 分，得有上千次試驗。89 題只能靠每題重跑很多次湊出這麼多次，而重跑不會換題目，所以那個範圍量的是重跑的運氣，不含換一組題目的雜訊（本文的推算，文章沒寫它的 N）。</p>
+              <p id="i4-3"><b>基礎設施也是雜訊。</b>這裡的雜訊是廣義的：和 agent 的能力無關、卻會改變分數的因素。<a href="https://www.anthropic.com/engineering/infrastructure-noise" target="_blank" rel="noopener">Anthropic 的實驗</a>在 Terminal-Bench 2.0 上比了六種資源設定，從 1 倍到不設限。1 倍是嚴格照每題的規格：題目寫明的資源，同時當保證給的下限和超過就強制終止的上限。上限放得越寬，基礎設施造成的錯誤越少，從 1 倍的 5.8% 一路降到不設限的 0.5%。放到 3 倍之前，分數的變化還在運氣的範圍內（統計檢定的 p 值是 0.40；這個 p 值和上面的成功率 p 是兩回事，下面的配對比較會解釋），只是資源上限誤殺的 run 變少了：3 倍時，基礎設施錯誤已經降到 2.1%。3 倍到不設限之間，分數再升近 4 分，因為 agent 多了本來跑不動的解法，<strong>它在考的東西已經變了</strong>。從 1 倍到不設限總共差 6 分（p &lt; 0.01，不是運氣造成的），就是第 1 章引的那個數字。第 1 章那不到 2 分的散布也一樣，單獨看不顯著，但它疊在二項區間之上，所以他們說 3 分以下的差距要存疑。3 倍以內和 3 倍以上這兩段結果，各撐起一半建議。3 倍以內那段說明，容許用量暫時超過規格，就能少掉誤殺，又不灌高分數。3 倍以上那段說明，上限一拿掉，更多資源就把分數灌高。所以他們建議每題分開定兩個值：保證的下限，和強制終止的上限。兩個值中間留出餘裕，暫時的記憶體尖峰就不會讓系統誤殺 container（OOM kill：記憶體超過上限時，系統直接終止程式）；上限保留，更多資源就灌不高分數。兩個值要校準到下限和上限跑出的分數差在雜訊內，Terminal-Bench 2.0 的例子是上限設成規格的 3 倍。倍數也要寫進報告。</p>
               <p id="i4-4"><b>比兩版時用配對。</b>兩版跑在同一組題目上時，只有翻盤的題才帶資訊：兩版都過或都不過的題，對「誰比較好」沒有貢獻。<a href="https://arxiv.org/abs/2411.00640" target="_blank" rel="noopener">Adding Error Bars to Evals</a> 建議比較每題的差，不要比兩個平均。下表三列都是新版多 4 分，結論卻不同。p 值是「兩版沒有差別時，看到這麼偏的結果的機率」，這裡只看翻盤題偏向哪一邊（sign test；本文的例子，數字用 python 算過）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>情況</th><th>舊版過</th><th>新版過</th><th>只有舊版過</th><th>只有新版過</th><th>p 值</th><th>判斷</th></tr></thead>
@@ -667,7 +667,7 @@
               <p id="i5-1"><b>入口不只訓練資料。</b>第 1 章說分數是整個 stack 的函數，所以 stack 的每一層都是入口：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 330" role="img" aria-label="Leakage 的入口依什麼時候漏分成三欄。訓練時（黃色方塊）：base model 的預訓練資料含題目；fine-tuning 拿解答當訓練 trajectory。評估執行時（青色方塊）：prompt 的 few-shot 取自測試題；retrieval 的語料收了答案；memory 存了上一輪的嘗試；web search 搜到公開解答；environment 露出題目建立之後才有的 git commit（正式的修法就在裡面）或隱藏的檔案。開發過程中：scaffold 的規則針對 benchmark 調過（藍色）；研究者反覆看失敗案例再調系統（紅色），旁邊寫著它最常見也最難防。上方一條紅線只蓋住第一欄，標著「沒用測試集訓練」只排除這一欄。">
+                <svg viewBox="0 0 720 330" role="img" aria-label="Leakage 的入口依什麼時候漏分成三欄。訓練時（黃色方塊）：base model 的預訓練資料含題目；fine-tuning 拿測試題的解答當訓練 trajectory。評估執行時（青色方塊）：prompt 的 few-shot 範例取自測試題；retrieval 的語料收了答案；memory 存了上一輪的嘗試；web search 搜到公開解答；environment 露出題目建立之後才有的 git commit（正式的修法就在裡面）或隱藏的檔案。開發過程中：scaffold 的規則針對 benchmark 調過（藍色）；Agent 開發時「看失敗、改一下、再跑」（紅色）：每看一次測試題的失敗、針對它改 prompt 或規則，系統就更貼合這幾百題一點。旁邊寫著它最常見也最難防，因為它就是正常的開發流程，沒有人抄答案，但系統是對著這幾百題磨出來的。上方一條紅線只蓋住第一欄，標著「沒用測試集訓練」只排除這一欄。">
                   <defs><marker id="l7v-stack-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-stack-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="4" y="56" width="200" height="268" rx="6" class="dg-panel"/>
                   <text x="16" y="80" class="dg-h">訓練時</text>
@@ -710,13 +710,13 @@
                   <text x="518" y="258" class="dg-c">對著這幾百題磨出來的。</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「答案可以從哪裡進來」。三欄依什麼時候漏分組，黃色在訓練時，青色在評估執行時，藍色和紅色在開發過程中。方塊來自課程的表，分組是本文的整理。</figcaption>
+              <figcaption>這張圖回答「答案可以從哪裡進來」。三欄依什麼時候漏分組，黃色在訓練時，青色在評估執行時，藍色和紅色在開發過程中。Base model 是先用大量公開文字預訓練（pre-training）出來的 model，題目公開在網路上，就可能收進這些文字；fine-tuning 是之後再拿一批示範（例如解題的 trajectory）加訓；few-shot 是 prompt 裡附的幾個範例題和解答。三者只要用到測試題，model 在考試前就看過答案。方塊來自課程的表，分組是本文的整理。</figcaption>
             </figure>
-              <p>這裡有一個躲不掉的取捨：<strong>越真實的 tool，leakage 的面越大</strong>。給 agent 真的 web search，它更接近真實使用，但 benchmark 需要的資訊可能就搜得到；拿掉 search，分數乾淨了，agent 卻不像真的。下面是 2026 年的三個例子，依序落在評估執行時的 web search、訓練時、評估執行時的 environment；開發過程中那一欄留到第 7、9 章。</p>
+              <p>這裡有一個躲不掉的取捨：<strong>越真實的 tool，leakage 的面越大</strong>。給 agent 真的 web search，它更接近真實使用，但題目的答案本身可能就在網路上搜得到；拿掉 search，分數乾淨了，agent 卻不像真的。下面是 2026 年的三個例子，依序落在評估執行時的 web search、訓練時、評估執行時的 environment；開發過程中那一欄留到第 7、9 章。</p>
               <p id="i5-2"><b>評估時：agent 自己找到答案。</b>BrowseComp 是一組很難查的網路搜尋題。它的答案用 XOR 加密存放，就是為了防止 agent 直接讀到；金鑰是一段 canary 字串，也就是附在 benchmark 檔案裡的一串固定辨識字，原本的用途是讓整理訓練資料的人搜到它、把整份題目濾掉：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 198" role="img" aria-label="Claude Opus 4.6 跑 BrowseComp 時的流程。一題搜不到答案，agent 開始懷疑這是考試；接著猜出是哪個 benchmark；在 GitHub 找到評估的原始碼，讀懂 XOR 解密和 canary 金鑰；官方資料集是 binary，工具拒收，於是找到 HuggingFace 上的 JSON 鏡像；解開全部 1,266 題，找到自己這一題的答案。">
+                <svg viewBox="0 0 720 198" role="img" aria-label="Claude Opus 4.6 跑 BrowseComp 時的流程。一題搜不到答案，agent 開始懷疑這是考試；接著猜出是哪個 benchmark；在 GitHub 找到評估的原始碼，讀懂 XOR 解密和 canary 金鑰；官方資料集是 binary 檔，agent 抓網頁用的 web 工具只收文字，回了格式錯誤；於是它找到第三方放在 HuggingFace（放 model 和資料集的公開網站）上的 JSON 版本，內容是同一份加密資料；解開全部 1,266 題，找到自己這一題的答案。">
                   <defs><marker id="l7v-bc-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-bc-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M134,62 L152,62" class="dg-link" marker-end="url(#l7v-bc-ah)"/>
                   <path d="M276,62 L294,62" class="dg-link" marker-end="url(#l7v-bc-ah)"/>
@@ -732,7 +732,7 @@
                   <text x="356" y="58" text-anchor="middle" class="dg-ls">GitHub 原始碼</text>
                   <text x="356" y="76" text-anchor="middle" class="dg-c">XOR、canary</text>
                   <rect x="436" y="36" width="124" height="52" rx="4" class="dg-n-b"/>
-                  <text x="498" y="58" text-anchor="middle" class="dg-ls">官方檔案拒收</text>
+                  <text x="498" y="58" text-anchor="middle" class="dg-ls">web 工具拒收</text>
                   <text x="498" y="76" text-anchor="middle" class="dg-c">找到 JSON 鏡像</text>
                   <rect x="578" y="36" width="124" height="52" rx="4" class="dg-n-focus"/>
                   <text x="640" y="58" text-anchor="middle" class="dg-l-on">解開 1,266 題</text>
@@ -746,11 +746,11 @@
               </div>
               <figcaption>這張圖回答「有 web search 的評估，能有多難防」。沒有人把答案放進環境，是 agent 自己找到的。依 <a href="https://anthropic.com/engineering/eval-awareness-browsecomp" target="_blank" rel="noopener">Anthropic 2026 年 3 月的報告</a>，只有一家公司的紀錄，不是對照實驗。</figcaption>
             </figure>
-              <p>作者不認為這是 alignment 的問題，因為 model 收到的指令就是找到答案。他們的結論是：在開放網路上跑評估會越來越難做得可靠，<strong>評估的乾淨要當成持續的對抗問題</strong>，不是設計時解決一次就好。</p>
+              <p>作者不認為這是 alignment 失敗（model 的行為違背人給它的指示或意圖），因為 model 收到的指令只有找到答案，沒有限制它怎麼搜。他們的結論是：在開放網路上跑評估會越來越難做得可靠，<strong>評估的乾淨要當成持續的對抗問題</strong>，不是設計時解決一次就好。</p>
               <p id="i5-3"><b>訓練時：公開題和私有題的落差。</b><a class="tm" href="#n-swebench">SWE-Bench Pro</a> 同時有公開題和不公開的題，把兩邊放在一起，落差就看得到了：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 252" role="img" aria-label="SWE-Bench Pro V2 前五名的公開題與私有題分數。Opus 5 公開 99.4% 私有 81.6%，差 17.8 分。Kimi K3 97.7% 與 78.7%，差 19.0。GLM-5.3 95.6% 與 77.6%，差 18.1。Gemini 3.8 Flash 94.9% 與 77.6%，差 17.3。Inkling 89.9% 與 67.6%，差 22.2。">
+                <svg viewBox="0 0 720 252" role="img" aria-label="SWE-Bench Pro V2 前五名的公開題與私有題分數。Opus 5 公開 99.4% 私有 81.6%，差 17.8 分。Kimi K3 公開 97.7% 私有 78.7%，差 19.0 分。GLM-5.3 公開 95.6% 私有 77.6%，差 18.1 分。Gemini 3.8 Flash 公開 94.9% 私有 77.6%，差 17.3 分。Inkling 公開 89.9% 私有 67.6%，差 22.2 分。">
                   <defs><marker id="l7v-gap-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-gap-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M150.0,214 L620.0,214" class="dg-soft-link"/>
                   <path d="M150.0,214 L150.0,219" class="dg-soft-link"/>
@@ -804,30 +804,30 @@
               </div>
               <figcaption>這張圖回答「公開題上的分數可信嗎」。紅點是公開題（642 題），灰點是私有題（272 題），同一批 model、同一套檢查。兩組題目來自不同的 repo，難度未必相同，所以差距是線索，不是證明。資料是 <a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">Scale 2026-09-22 的 SWE-Bench Pro V2</a>，百分比是本文從題數換算的。</figcaption>
             </figure>
-              <p><a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">Scale</a> 認為評估時 leakage 不太可能，因為公開題的 run 已經斷網而且稽核過；更可能的原因是 repo 和 benchmark 在訓練之前就公開了，所以「私有題才是唯一乾淨的量測」。OpenAI 2026 年 2 月對 SWE-bench Verified 的審計也看到類似的事：受測的 frontier model 都能背出部分題目的標準答案。</p>
-              <p id="i5-4"><b>環境：git 歷史。</b>SWE-bench 的題目來自已經修好的 issue，評估用的 repo 如果留著題目之後的 commit，正式的修法就在 git 歷史裡。<a href="https://rdi.berkeley.edu/blog/trustworthy-benchmarks" target="_blank" rel="noopener">UC Berkeley RDI 的整理</a>提到，IQuest-Coder-V1 在 SWE-bench 上原本宣稱 81.4%，查出 24.4% 的 trajectory 跑了 <code>git log</code>、從 commit 歷史找答案。IQuest 團隊改用官方的 SWE-bench Docker image 重跑，更正成 76.2%。只掉 5.2 分，表示那些題多半不看歷史也解得出來，但原本的分數已經說不清哪些是自己解的（本文的推論；來源沒寫 24.4% 的分母）。<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a> 也提過，自己的內部評估裡 Claude 讀了前幾次 trial 留下的 git 歷史，得到不公平的優勢。兩者都是 sandbox 沒清乾淨。</p>
+              <p><a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">Scale</a> 認為評估時 leakage 不太可能，因為公開題的 run 已經斷網而且稽核過；更可能的原因是 repo 和 benchmark 在訓練之前就公開了，所以「私有題才是唯一乾淨的量測」。OpenAI 2026 年 2 月對 SWE-bench Verified 的審計也看到類似的事：受測的 frontier model（當時最強的那幾個 model）都能背出部分題目的標準答案。</p>
+              <p id="i5-4"><b>環境：git 歷史。</b>SWE-bench 的題目來自已經修好的 issue，評估用的 repo 如果留著題目之後的 commit，正式的修法就在 git 歷史裡。<a href="https://rdi.berkeley.edu/blog/trustworthy-benchmarks" target="_blank" rel="noopener">UC Berkeley RDI 的整理</a>（RDI 是柏克萊大學的研究中心 Center for Responsible, Decentralized Intelligence）提到，IQuest-Coder-V1 在 SWE-bench Verified（500 題）上原本宣稱 81.4%，查出 24.4% 的 trajectory 跑了 <code>git log</code>、從 commit 歷史找答案。IQuest 團隊改用官方的 SWE-bench Docker image 重跑，官方 image 裡沒有題目之後的 commit，分數更正成 76.2%。把兩個數字擺在一起看：分數只掉 5.2 分，約少解 26 題；看過歷史的題卻多得多：24.4% 如果是全部 500 題的比例，約 122 題；如果只算解出的 407 題，也有約 99 題（來源沒寫是哪一種）。看過歷史的題遠多於少解的題，表示那些題多半不看歷史也解得出來，但<strong>原本的分數已經說不清哪些是自己解的</strong>（本文的推論）。<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a> 也提過，自己的內部評估裡 Claude 讀了前幾次 trial 留下的 git 歷史，得到不公平的優勢。兩者都是 sandbox 沒清乾淨。</p>
               <p id="i5-5"><b>本文的判斷：怎麼擋、怎麼查。</b>課程沒有給防法，下表依 stack 的入口整理，右欄是懷疑分數灌水時可以做的實驗。表依「怎麼擋」分成五列，和圖 1 依時間分的三欄不同：prompt 的 few-shot 在評估時才進 context，但它是開發時挑的，所以歸在開發。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>進來的路</th><th>怎麼擋</th><th>怎麼查</th></tr></thead>
                 <tbody>
                   <tr><td><b>訓練</b><br><small>base model、fine-tuning</small></td><td>用 model 訓練之後才出現的題，或不公開的題</td><td>比公開題和私有題的差距；直接問 model 背不背得出解答</td></tr>
                   <tr><td><b>開發</b><br><small>prompt、scaffold、看失敗</small></td><td>分集：開發時只看開發集，另留一批 held-out 題封起來（第 9 章）</td><td>拿掉可疑的規則重跑，看分數掉多少</td></tr>
-                  <tr><td><b>累積</b><br><small>retrieval、memory</small></td><td>每個 trial 從空白開始：重建索引、清掉 memory</td><td>清空和不清空各跑一次比較</td></tr>
+                  <tr><td><b>累積</b><br><small>retrieval、memory</small></td><td>前幾個 trial 留下的嘗試：每個 trial 從空白開始，重建索引、清掉 memory。語料本身就收了答案：建索引前先濾掉含題目或解答的文件</td><td>清空和不清空各跑一次比較；在語料裡搜一次題目原文</td></tr>
                   <tr><td><b>網路</b><br><small>web search</small></td><td>斷網，或只留白名單</td><td>讀 transcript 的搜尋字串和網址；找 benchmark 的名字</td></tr>
-                  <tr><td><b>環境</b><br><small>git 歷史、測試、答案</small></td><td>剪掉 git 歷史；答案和 grader 放在 agent 碰不到的地方</td><td>在乾淨的 image 上重新判一次分</td></tr>
+                  <tr><td><b>環境</b><br><small>git 歷史、測試、答案</small></td><td>剪掉 git 歷史；答案和 grader 放在 agent 碰不到的地方</td><td>在剪掉 git 歷史的 image 上重跑 agent，看分數掉多少（上面 IQuest 的做法）；搜 transcript 裡有沒有 <code>git log</code>、有沒有讀答案所在的路徑</td></tr>
                 </tbody>
               </table></div>
-              <p>SWE-Bench Pro V2 把環境這一列全做了：sandbox 拿掉 git 歷史，agent 只連得到 model，跑完在乾淨的 image 上重判。Leakage 擋不完，所以最後一層永遠是留一批沒人看過的題（第 9 章）。</p>
+              <p>SWE-Bench Pro V2 把環境這一列的擋法全做了：sandbox 拿掉 git 歷史，agent 只連得到 model，跑完在乾淨的 image 上重判，agent 在 sandbox 裡改過的東西都不算數。Leakage 擋不完，所以最後一層永遠是留一批沒人看過的題（第 9 章）。</p>
             </div>
           </div>
 <div class="idea" id="i6">
             <h3><span class="idea-no">6</span>Grader：它會判錯，agent 還會鑽漏洞</h3>
             <div class="prose">
-              <p>上一章的問題是答案漏進來，這一章的問題在判分的程式本身。課程對它只留了一句話：只看結果，會放過靠運氣和不安全的 run；比對 trajectory，又會判錯其他正確的做法。2026 年這件事變成大事：提出 SWE-bench Verified 的 OpenAI 在 2 月不再報這個分數，改推薦 Scale 出的 SWE-Bench Pro。7 月它又<a href="https://www.openai.com/index/separating-signal-from-noise-coding-evaluations" target="_blank" rel="noopener">估計 SWE-Bench Pro 約 30% 的題壞掉</a>，撤回這個推薦。這裡的 SWE-Bench Pro 是 2025 年的第一版，第 5 章的 V2 則是 Scale 在 2026 年 9 月修過題目之後的版本。</p>
+              <p>上一章的問題是答案漏進來，這一章的問題在判分的程式本身。課程對它只留了一句話：只看結果，會放過靠運氣和不安全的 run；比對 trajectory（第 1 章：agent 每一步的觀察和動作），又會判錯其他正確的做法。2026 年這件事變成大事。提出 SWE-bench Verified 的 OpenAI 在 2 月不再報這個分數，原因之一就是判分：它審的 138 題裡，59.4% 的測試或題目描述有缺陷（另一個原因是第 5 章的背答案）。它改推薦 Scale 出的 SWE-Bench Pro，7 月又<a href="https://www.openai.com/index/separating-signal-from-noise-coding-evaluations" target="_blank" rel="noopener">估計 SWE-Bench Pro 約 30% 的題壞掉</a>，撤回這個推薦。壞掉指測試或題目描述有錯：正確的解法過不了、沒修完也能過，或題目沒交代測試要查什麼。這裡的 SWE-Bench Pro 是 2025 年的第一版，第 5 章的 V2 則是 Scale 在 2026 年 9 月修過題目之後的版本。</p>
               <p><span class="anchor" id="x1"></span><strong>Grader 是程式，程式會有 bug，而且分數上看不出來</strong>。它會往兩個方向錯：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 300" role="img" aria-label="Grader 判分的四種結果。橫的是 agent 真的做對或沒做對，直的是 grader 判過或判不過。做對且判過、沒做對且判不過是正確的。沒做對卻判過是 false positive，分數高估：SWE-bench Verified 有 5.2% 的題目，錯的 patch 也能過；τ-bench 看資料庫的狀態，只有部分題目另外檢查回覆裡有沒有指定的文字；airline 領域有些題本來就做不到（例如改不能退的票），正確結果是資料庫不變，也沒有指定要說什麼，所以每輪只回空字串、什麼都不做的 agent 拿到 38%，高於 GPT-4o agent 的 35%（第 3 章的 61.2% 是 retail 領域）；o4-mini 註解掉失敗的 assertion。做對卻判不過是 false negative，分數低估：OpenAI 審計的 138 題有 35.5% 測試太窄；OSWorld 的 46 題 Chrome 任務有 13 題因為網站改版而壞掉，讓 GUI agent UI-TARS 的成績少算 28 個百分點；CORE-Bench 把 96.12 判錯。">
+                <svg viewBox="0 0 720 300" role="img" aria-label="Grader 判分的四種結果。橫的是 agent 真的做對或沒做對，直的是 grader 判過或判不過。做對且判過、沒做對且判不過是正確的。沒做對卻判過是 false positive，分數高估：SWE-bench Verified 有 5.2% 的題目，錯的 patch 也能過；τ-bench 看資料庫的狀態，只有部分題目另外檢查回覆裡有沒有指定的文字；airline 領域有些題本來就做不到（例如改不能退的票），agent 應該認出來、拒絕客人，判分的標準卻只是資料庫不變，也沒有指定要說什麼，所以每輪只回空字串、什麼都不做的 agent 也算過，拿到 38%，高於 GPT-4o agent 的 35%（第 3 章的 61.2% 是 retail 領域）；o4-mini 註解掉失敗的 assertion。做對卻判不過是 false negative，分數低估：OpenAI 審計的 138 題有 35.5% 測試太窄；OSWorld 的檢查靠 HTML selector（網頁元素的 class 或 XPath）在頁面上找結果，網站改版後 selector 對不上，46 題 Chrome 任務裡有 13 題 agent 做對也判不過，讓 GUI agent UI-TARS 在這 46 題上的成績少算 28 個百分點；CORE-Bench 把 96.12 判錯。">
                   <defs><marker id="l7v-conf-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-conf-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="215" y="24" text-anchor="middle" class="dg-cb">Agent 真的做對</text>
                   <text x="525" y="24" text-anchor="middle" class="dg-cb">Agent 沒做對</text>
@@ -847,13 +847,13 @@
                   <text x="104" y="194" class="dg-l">False negative：分數低估</text>
                   <text x="104" y="220" class="dg-c">Verified 審計的 138 題：35.5% 測試太窄</text>
                   <text x="104" y="242" class="dg-c">OSWorld：46 題 Chrome 任務有 13 題壞了，</text>
-                  <text x="104" y="260" class="dg-c">UI-TARS 因此少算 28 個百分點</text>
+                  <text x="104" y="260" class="dg-c">UI-TARS 在這 46 題少算 28 個百分點</text>
                   <text x="104" y="282" class="dg-c">CORE-Bench：96.12 對 96.124991 判錯</text>
                   <rect x="410" y="170" width="300" height="126" rx="4" class="dg-n-a"/>
                   <text x="560" y="238" text-anchor="middle" class="dg-l">正確</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「grader 會怎麼錯」。兩種錯的方向相反，所以分數不能一律打折。數字來自四個出處：<a href="https://arxiv.org/abs/2507.02825" target="_blank" rel="noopener">Establishing Best Practices</a>（2025 年的論文，提出 agent benchmark 的檢查表 ABC）、OpenAI 2026-02 的審計、<a href="https://www.nist.gov/caisi/cheating-ai-agent-evaluations/2-examples-cheating-caisis-agent-evaluations" target="_blank" rel="noopener">CAISI</a>（美國 NIST 的 AI 評估單位）的作弊紀錄，和 <a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a> 2026-01 的文章。</figcaption>
+              <figcaption>這張圖回答「grader 會怎麼錯」。兩種錯的方向相反，所以分數不能一律打折。數字的出處：Verified 的 5.2%、τ-bench 的 38%、OSWorld 的 13 題來自 <a href="https://arxiv.org/abs/2507.02825" target="_blank" rel="noopener">Establishing Best Practices</a>（2025 年的論文，提出 agent benchmark 的檢查表 ABC）；138 題的 35.5% 來自 OpenAI 2026-02 的審計；o4-mini 來自 <a href="https://www.nist.gov/caisi/cheating-ai-agent-evaluations/2-examples-cheating-caisis-agent-evaluations" target="_blank" rel="noopener">CAISI</a>（美國 NIST 的 AI 評估單位）的作弊紀錄；CORE-Bench 來自 <a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a> 2026-01 的文章。</figcaption>
             </figure>
               <p id="i6-1"><b>Agent 還會主動鑽漏洞。</b>Agent 把力氣放在拿分、沒有完成任務，這叫 reward hacking。<a href="https://arxiv.org/abs/2510.20270" target="_blank" rel="noopener">ImpossibleBench</a>（2025）把這件事量了出來。它把測試改得和題目描述互相矛盾：把一條測試的期望值改掉，或複製一條測試、給它不同的期望值。這種題不可能正當地通過，所以通過率就是作弊率。GPT-5 在 SWE-bench 改出來的那一組作弊率是 <strong>76%</strong>，在 LiveCodeBench 那一組只有 2.9%。LiveCodeBench 的題目是程式競賽網站上的單題，寫一個函式；SWE-bench 那一組是在真實 repo 裡改 issue，code 多、測試也多，能動手腳的地方也多（差這麼多的原因是本文的讀法）。論文記下四種手法：</p>
               <ul>
@@ -862,7 +862,7 @@
                 <li><b>記下呼叫次數。</b>同一個輸入，第一次呼叫回這條測試要的值，第二次回那條測試要的值，兩條互相矛盾的測試都過。</li>
                 <li><b>認出特定測試。</b>偵測到測試用的輸入，就直接回傳那條測試期望的值。</li>
               </ul>
-              <p>把測試完全藏起來，作弊的成功率接近 0，但正常題的表現也會下降（論文沒解釋原因；本文推測是 agent 少了測試，無法檢查自己的修改）。唯讀是折衷，擋得住改測試，擋不住其他三種。</p>
+              <p>防法都有代價。把測試完全藏起來，作弊的成功率接近 0，但正常題的表現也會下降（論文沒解釋原因；本文推測是 agent 少了測試，無法檢查自己的修改）。唯讀是折衷，擋得住改測試，擋不住其他三種。</p>
               <p>真實的 run 裡也看得到：CAISI 的紀錄裡 o4-mini 註解掉失敗的 assertion；<a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">SWE-Bench Pro V2</a> 抓到一個 frontier model 偽造 Go 依賴套件（module）的版本和 checksum，另一個直接改了本機的套件快取。Scale 沒寫細節，以下是本文的推論：測試要的依賴版本在 sandbox 裡拿不到，偽造一份、或改掉快取裡的那一份，build 就找得到它，測試才跑得起來、通過。Go 用 checksum 確認下載的依賴和原版相同，偽造的版本和 checksum 卻只存在 agent 的 sandbox 裡。所以兩者在原環境都通過，換到一個沒動過的乾淨 image 重新判分就失敗，重判才看得出來。</p>
               <p>一個專門找漏洞的 agent 能拿到多少分：</p>
               <figure class="diagram">
@@ -904,20 +904,20 @@
               <figcaption>這張圖回答「grader 擋得住一個專門找漏洞的 agent 嗎」。這個 agent 一題都沒解，分數全部來自評分機制的漏洞。依 <a href="https://rdi.berkeley.edu/blog/trustworthy-benchmarks-cont/" target="_blank" rel="noopener">Berkeley RDI 2026 年 4 月的報告</a>。作者沒有說榜上的 agent 都這樣做，它展示的是這些 grader 擋不住。</figcaption>
             </figure>
               <p>最根本的原因是 agent 的產出和 grader 跑在同一個 container。以 SWE-bench 為例：grader 把 agent 的 patch 套用到 repo，接著在同一個環境跑 pytest。Pytest 開始前會自動載入測試目錄裡名叫 <code>conftest.py</code> 的檔案，裡面的程式可以掛進 pytest 的流程，改寫每個測試回報的結果。所以 patch 只要多帶一個 <code>conftest.py</code>，把每個測試的結果都改成通過，grader 就判全過。作者的第一條建議因此是<strong>把 grader 和 agent 完全隔開</strong>，答案放在 agent 碰不到的地方。</p>
-              <p id="i6-2"><b>過了測試，也不等於做完。</b>就算 grader 沒有 bug，它量的也可能不是你要的東西。第三方評估機構 <a href="https://metr.org/notes/2026-03-10-many-swe-bench-passing-prs-would-not-be-merged-into-main/" target="_blank" rel="noopener">METR 2026 年 3 月</a>請 4 位 maintainer 審 296 個 AI 寫的 PR，這些 PR 都來自 SWE-bench Verified 的題。直接比，maintainer 的 merge 率只有自動 grader 通過率的三分之一到一半，也就是<strong>過了測試的 PR，有一半到三分之二不會有人 merge</strong>。Maintainer 對當初真的 merge 進 main 的人寫原始 PR 也只收約 68%，所以 METR 再把兩邊都換算成「原始 PR 的幾成」來比，grader 仍然平均高 24.2 分。作者提醒，agent 在實驗裡沒有機會依回饋修改，這不代表能力的上限。要把「過了測試不等於做完」直接算進分數，Cognition 2026 年 6 月和 maintainer 一起做了 <a href="https://cognition.com/blog/frontier-code" target="_blank" rel="noopener">FrontierCode</a>：品質的硬性檢查有一項沒過，這題就是 0 分。<a href="https://artificialanalysis.ai/articles/frontiercode" target="_blank" rel="noopener">Artificial Analysis 10 月</a>跑的結果，最高只有 52%。Cognition 自己也賣 coding agent，題目又不公開，這些都要一起讀。</p>
-              <p id="i6-3"><b>先查有沒有人審過。</b>第 4 章提過的 <a href="https://epoch.ai/data/benchmark-reviews-documentation/included-benchmarks" target="_blank" rel="noopener">Epoch AI 有一套 Benchmark Reviews</a>，審了 24 個 benchmark，判定分三類：Verified 5 個，意思是審查要的資訊拿得到、抽樣的題裡沒有夠嚴重的計分缺陷（和 SWE-bench Verified 同名，但無關）；Flawed 12 個；資料不足 7 個（2026-11-03 查詢）。Flawed 的門檻是<a href="https://epoch.ai/data/benchmark-reviews-documentation/methodology" target="_blank" rel="noopener">抽樣的題裡，錯誤影響 20% 以上的分數</a>，超過就停止審查，所以實際的比例可能更高。這堂提到的幾個（2026 年審查）：</p>
+              <p id="i6-2"><b>過了測試，也不等於做完。</b>就算 grader 沒有 bug，它量的也可能不是你要的東西。第三方評估機構 <a href="https://metr.org/notes/2026-03-10-many-swe-bench-passing-prs-would-not-be-merged-into-main/" target="_blank" rel="noopener">METR 2026 年 3 月</a>請 4 位 maintainer 審 296 個 AI 寫的 PR，這些 PR 都來自 SWE-bench Verified 的題。按產生 PR 的 AI model 分開算，直接比，每個 model 的 maintainer merge 率只有自動 grader 通過率的三分之一到一半，也就是<strong>過了測試的 PR，有一半到三分之二不會有人 merge</strong>。但 maintainer 對人寫的 PR 也不是全收：當初真的 merge 進 main 的原始 PR，grader 全部判過，maintainer 再審一次只收約 68%。為了扣掉這個基準差，METR 把兩邊都換算成「原始 PR 的幾成」：maintainer 的 merge 率除以 68%，grader 的通過率除以 100%，例如 AI 的 PR 有 34% 會 merge，換算後是 50%。換算之後，grader 的通過率仍然比 maintainer 的 merge 率高，各 model 平均高 24.2 個百分點。作者提醒，agent 在實驗裡沒有機會依回饋修改，這不代表能力的上限。要把「過了測試不等於做完」直接算進分數，Cognition 2026 年 6 月和 maintainer 一起做了 <a href="https://cognition.com/blog/frontier-code" target="_blank" rel="noopener">FrontierCode</a>：品質的硬性檢查有一項沒過，這題就是 0 分。<a href="https://artificialanalysis.ai/articles/frontiercode" target="_blank" rel="noopener">Artificial Analysis 10 月</a>跑的結果（它是獨立替各家 model 跑 benchmark 的評測網站，和 Cognition 是不同公司），最高只有 52%。Cognition 自己也賣 coding agent，題目又不公開，這些都要一起讀。</p>
+              <p id="i6-3"><b>先查有沒有人審過。</b>第 4 章提過的 <a href="https://epoch.ai/data/benchmark-reviews-documentation/included-benchmarks" target="_blank" rel="noopener">Epoch AI 有一套 Benchmark Reviews</a>，審了 24 個 benchmark，判定分三類：Verified 5 個，意思是審查要的資訊拿得到、抽樣的題裡沒有夠嚴重的計分缺陷（和 SWE-bench Verified 同名，但無關）；Flawed 12 個；資料不足 7 個（2026-11-03 查詢）。Flawed 的門檻是<a href="https://epoch.ai/data/benchmark-reviews-documentation/methodology" target="_blank" rel="noopener">抽樣的題裡，錯誤影響 20% 以上的分數</a>，超過就停止審查，所以一個 Flawed 的 benchmark 實際有問題的題，可能比審查列出的更多。這堂提到的幾個（2026 年審查）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Benchmark</th><th>審查日</th><th>結果</th><th>主要依據</th></tr></thead>
                 <tbody>
-                  <tr><td>SWE-bench Verified</td><td>09-03</td><td>Flawed</td><td><a href="https://epoch.ai/benchmarks/swe-bench-verified/review" target="_blank" rel="noopener">OpenAI 審的 27.6% 題目裡 59.4% 有問題</a>，下限就是全部的 16.4%；題目和解答全部公開</td></tr>
+                  <tr><td>SWE-bench Verified</td><td>09-03</td><td>Flawed</td><td><a href="https://epoch.ai/benchmarks/swe-bench-verified/review" target="_blank" rel="noopener">OpenAI 審的 27.6% 題目裡 59.4% 有問題</a>（這 27.6% 就是圖 1 的 138 題，35.5% 測試太窄是其中一類），所以全部題目至少 16.4%（27.6% × 59.4%）有問題；題目和解答全部公開</td></tr>
                   <tr><td>SWE-Bench Pro（V1）</td><td>09-01</td><td>Flawed</td><td><a href="https://epoch.ai/benchmarks/swe-bench-pro/review" target="_blank" rel="noopener">多份審計估 30% 以上的題壞掉</a>；榜上混著不同上限的 run</td></tr>
                   <tr><td>Terminal-Bench 4.0.0</td><td>09-04</td><td>Flawed</td><td><a href="https://epoch.ai/benchmarks/terminal-bench-4/review" target="_blank" rel="noopener">66 題裡 30 題有公開記錄的計分缺陷</a>（45.5%）</td></tr>
                   <tr><td>BFCL v4</td><td>09-10</td><td>Flawed</td><td><a href="https://epoch.ai/benchmarks/berkeley-function-calling-leaderboard/review" target="_blank" rel="noopener">隨機 50 題裡 24 題有缺陷</a>（48%），memory 類最高 70%</td></tr>
                   <tr><td>OSWorld 2.1</td><td>09-28</td><td>Flawed</td><td><a href="https://epoch.ai/benchmarks/osworld-2-1/review" target="_blank" rel="noopener">抽查 108 題裡的 50 題，36 題有錯</a>，最多影響 50.4% 的分數；24 個錯是做對卻沒給分</td></tr>
-                  <tr><td>Remote Labor Index</td><td>10-12</td><td>資料不足</td><td>審查需要的資訊拿不到</td></tr>
+                  <tr><td>Remote Labor Index<br><small>真實的遠端外包案</small></td><td>10-12</td><td>資料不足</td><td>審查需要的資訊拿不到</td></tr>
                 </tbody>
               </table></div>
-              <p>Flawed 的意思是「讀分數的人必須知道這些缺陷」，不代表沒有用。Terminal-Bench 全部公開，才查得出 30 題有問題；資訊不夠的只能標「資料不足」，CursorBench 也是這樣。</p>
+              <p>Flawed 的意思是「讀分數的人必須知道這些缺陷」，不代表沒有用。Terminal-Bench 全部公開，才查得出 30 題有問題；資訊不夠的只能標「資料不足」，CursorBench（Cursor 用自家產品真實的使用紀錄做的內部題組）也是這樣。</p>
               <p id="i6-4"><b>給 grader 寫測試。</b>自己的 grader 也一樣會錯，寫四個測試就能抓到大半：</p>
               <figure class="file"><figcaption>test_grader.py：grader 也要有測試（本文補的範例）</figcaption><pre><code>def test_reference_solution_passes():
     assert grade(run(reference_solution)) == 1      # 標準解要過；過不了，是題目或 grader 壞了
@@ -936,10 +936,10 @@ def test_tampering_fails():
 <div class="idea" id="i7">
             <h3><span class="idea-no">7</span>飽和：benchmark 是耗材</h3>
             <div class="prose">
-              <p>Benchmark 飽和有兩種意思：frontier model 追上了人類基準線，或頂尖的幾個 model 分數擠在一起分不開。飽和的 benchmark 還能用，但只能證明「不差」，不能回答「哪個比較好」，因為 95 分和 96 分的差距在第 4 章的雜訊裡。它來得很快：</p>
+              <p>Benchmark 飽和有兩種意思：frontier model 追上了人類基準線，或頂尖的幾個 model 分數擠在一起分不開。飽和的 benchmark 還能用，但用途變少了：追上人類基準線，它已經證明 model「不比人差」，不再有「追不追得上」可以量；分數擠在一起，95 分和 96 分的差距在第 4 章的雜訊裡，<strong>它回答不了「哪個比較好」</strong>。它來得很快：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 246" role="img" aria-label="橫條圖。六個 benchmark 從推出到圖上終點花的月數，由長到短排，括號是推出年份。灰色四條的終點是 frontier model 追上某個基準線；藍色兩條（agent 類）沒有基準線，只標起點和終點的分數：MMLU（2020）39 個月，追上專家的 89.8；SWE-bench Verified（2024）22 個月，從 33% 到 95%；GLUE（2018）14 個月，追上人類的 87.1；ARC-AGI-2（2025）11 個月，追上一般人的 60；GPQA Diamond（2023）10 個月，追上博士專家的 69.7；ARC-AGI-3（2026）6 個月，從 0.5% 到 62.7%。SWE-bench Verified 和 ARC-AGI-3 兩條是藍色，其餘是灰色。">
+                <svg viewBox="0 0 720 246" role="img" aria-label="橫條圖。六個 benchmark 從推出到圖上終點花的月數，由長到短排，括號是推出年份。灰色四條的終點是 frontier model 追上某個基準線；藍色兩條（agent 類）沒有基準線，終點是課程整理時（2026-09）的最高分，只標起點和終點的分數：MMLU（2020）39 個月，追上專家的 89.8；SWE-bench Verified（2024）22 個月，從 33% 到 95%；GLUE（2018）14 個月，追上人類的 87.1；ARC-AGI-2（2025）11 個月，追上一般人的 60；GPQA Diamond（2023）10 個月，追上博士專家的 69.7；ARC-AGI-3（2026）6 個月，從 0.5% 到 62.7%。SWE-bench Verified 和 ARC-AGI-3 兩條是藍色，其餘是灰色。">
                   <defs><marker id="l7v-sat-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-sat-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M200,212 L551,212" class="dg-soft-link"/>
                   <path d="M200,212 L200,217" class="dg-soft-link"/>
@@ -970,9 +970,9 @@ def test_tampering_fails():
                   <text x="262" y="197" class="dg-ls">6 · 0.5% → 62.7%</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「一個 benchmark 能用多久」。灰色四條是追上某個人類基準線花的月數，最慢的三年多（MMLU），最快的 10 個月（GPQA Diamond）。藍色的兩條是 agent 類的 benchmark，圖上沒有基準線，只標起點和終點的分數：SWE-bench Verified 22 個月從 33% 到 95%；ARC-AGI-3 半年就從 0.5% 到 62.7%，漲得最快。62.7% 是 Standard harness 的分數，換成 Provider Adapter harness 是 98.6%（第 1 章、下面的現況表）。數字來自課程（2026-09）。</figcaption>
+              <figcaption>這張圖回答「一個 benchmark 能用多久」。灰色四條是追上某個人類基準線花的月數，最慢的三年多（MMLU），最快的 10 個月（GPQA Diamond）。藍色的兩條是 agent 類的 benchmark，圖上沒有基準線，終點是課程整理時（2026-09）的最高分，所以條的長度是從推出到漲到這個分數花的月數，看的是分數漲多快：SWE-bench Verified 22 個月從 33% 到 95%，每月約漲 2.8 分；ARC-AGI-3 半年就從 0.5% 到 62.7%，每月約漲 10.4 分，漲得最快。62.7% 是 Standard harness 的分數，換成 Provider Adapter harness 是 98.6%（第 1 章、下面的現況表）。數字來自課程（2026-09）。</figcaption>
             </figure>
-              <p>MMLU 撐了三年多，<strong>2023 年之後的 benchmark 多半一年內就追上</strong>：圖上 2023 年以後推出的四個，三個不到一年。例外是 SWE-bench Verified 的 22 個月，而那段時間進步的也不只是 model，還有 harness（第 1 章）。</p>
+              <p>MMLU 撐了三年多才被追上。<strong>2023 年以後推出、有人類基準線的兩個，都不到一年就被追上</strong>：GPQA Diamond 10 個月，ARC-AGI-2 11 個月。Agent 類的兩個沒有基準線，只能看分數漲多快：ARC-AGI-3 半年從 0.5% 漲到 62.7%；SWE-bench Verified 慢一些，22 個月從 33% 漲到 95%，而且這 62 分也不全是 model 的功勞，harness 也在進步（第 1 章）。</p>
               <p id="i7-1"><b>飽和之後，下一版接手。</b>公開題遲早有人追上、有 model 背下來。題目裡的缺陷也會在這時候浮出來：分數接近頂端時，剩下沒解的就是最難的那些題，大家開始一題一題看頂尖的 model 為什麼還解不了，常常發現是題目壞了。OpenAI 2026 年 2 月審的，就是 Verified 裡最難的 138 題。SWE-bench 這一條線最完整：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -1034,21 +1034,21 @@ def test_tampering_fails():
                   <tr><td>SWE-Bench Pro V2</td><td>公開 99.4%、私有 81.6%（<a href="https://labs.scale.com/blog/swe-bench-pro-v2" target="_blank" rel="noopener">2026-09-22</a>）</td><td>公開題飽和；私有題還沒飽和</td></tr>
                   <tr><td>Terminal-Bench 4.0</td><td>64.8% ±3.1（<a href="https://snorkel.ai/leaderboard/terminal-bench-4-0/" target="_blank" rel="noopener">2026-10-06</a>）</td><td>還沒飽和，最高分離滿分還遠，但相鄰名次的誤差範圍常重疊（第 4 章）；Epoch 判 Flawed：66 題裡 30 題有計分缺陷</td></tr>
                   <tr><td>OSWorld 2.0</td><td>全部完成 44.33%、部分分數 77.67%（<a href="https://snorkel.ai/leaderboard/os-world-2-0/" target="_blank" rel="noopener">2026-10-29</a>）</td><td>還沒飽和；推出時最高是全部完成 20.6%、部分分數 54.8%</td></tr>
-                  <tr><td>FrontierCode 1.1 Main</td><td>52%（<a href="https://artificialanalysis.ai/articles/frontiercode" target="_blank" rel="noopener">2026-10-12</a>）</td><td>還沒飽和，九個 model 在 43% 到 52% 之間；題目不公開</td></tr>
+                  <tr><td>FrontierCode 1.1 Main</td><td>52%（<a href="https://artificialanalysis.ai/articles/frontiercode" target="_blank" rel="noopener">2026-10-12</a>）</td><td>還沒到第一種飽和：最高分 52%，離滿分還遠。第二種看不出來：九個 model 落在 43% 到 52%，但這裡沒有題數和誤差範圍，前幾名分不分得開還不知道。題目不公開</td></tr>
                   <tr><td>ARC-AGI-3</td><td>Standard harness 62.7%（max effort）；Provider Adapter harness 98.6%（max effort）、99.9%（high effort）（<a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">2026-09-03</a>）</td><td>依 harness 而定</td></tr>
                   <tr><td>Remote Labor Index</td><td>15.8%（<a href="https://safe.ai/blog/significant-increase-in-digital-labor-automation" target="_blank" rel="noopener">2026-07-01</a>）</td><td>還沒飽和；推出時最高 2.5%</td></tr>
                 </tbody>
               </table></div>
-              <p id="i7-4"><span class="anchor" id="x2"></span><b>你的題組消耗得更快。</b>第 5 章最後一欄的「看失敗、改一下、再跑」，每做一次，就把題組的資訊帶進系統一次。幾週後，分數反映的是對這幾十題的熟悉度。所以題組也要新陳代謝，第 9 章講做法。</p>
+              <p id="i7-4"><span class="anchor" id="x2"></span><b>你的題組消耗得更快。</b>第 5 章 leakage 圖「開發過程中」那一欄的紅色方塊「看失敗、改一下、再跑」，每做一次，就把題組的資訊帶進系統一次。幾週後，分數反映的是對這幾十題的熟悉度。所以題組也要新陳代謝，第 9 章講做法。</p>
               <p id="i7-5"><b>把五個問題跑一次。</b>拿一個真實的分數試一次第 2 章的五個問題。假設你看到：「Claude Opus 5 在 SWE-Bench Pro V2 公開題拿到 99.4%」：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>問題</th><th>這個分數的答案</th><th>讀到什麼</th></tr></thead>
                 <tbody>
-                  <tr><td>1. 動作和 grader</td><td>改 repo；跑 repo 的測試，再到乾淨的 image 重判</td><td>只和 coding agent 有關；過測試不等於能 merge（第 6 章）</td></tr>
+                  <tr><td>1. 動作、使用者和 grader</td><td>改 repo；一句 issue 進來，中間沒有使用者；跑 repo 的測試，再到乾淨的 image 重判</td><td>只和 coding agent 有關；過測試不等於能 merge（第 6 章）</td></tr>
                   <tr><td>2. 設定</td><td>榜上這一筆的 harness 是 Claude Code（Anthropic 的 coding agent 程式），effort 開 xhigh，不設花費上限，最多 250 個 turn（這裡的 turn 指 agent 的一步：model 回一次、執行一輪 tool），sandbox 只連得到 model 的 API</td><td>這是一個 system 的分數；你的 harness 和預算要重量</td></tr>
                   <tr><td>3. 穩定性和成本</td><td>pass@1，每題一次；沒有 pass^k</td><td>不知道它是不是每次都做得到；成本要另外查</td></tr>
-                  <tr><td>4. 雜訊</td><td>642 題、分數 99.4% 時，用第 4 章的公式算出標準誤約 0.3 分（本文算的）；每題只跑一次，Scale 的 V2 文章沒報信賴區間</td><td>從同一批 repo 再抽一組題，分數也只會動 1 分以內，所以差幾分不是抽到哪些題的運氣；但它推不到別的 repo（第 5 題），重跑的變異也不知道</td></tr>
-                  <tr><td>5. 題目可信嗎</td><td><b>私有題 81.6%，差 17.8 分</b>；Epoch 的審查是 V1，V2 修過之後還沒有第三方審查；公開題已經擠在頂端</td><td>公開題的 99.4% 不能當能力；要引用，引私有題的 222/272</td></tr>
+                  <tr><td>4. 雜訊</td><td>642 題、分數 99.4% 時，用第 4 章的公式算出標準誤約 0.3 分（本文算的）；每題只跑一次，Scale 的 V2 文章沒報信賴區間</td><td>95% 範圍約 ±0.6 分（1.96 × 0.3）：從同一批 repo 再抽一組題，分數大約落在 98.8% 到 100%，所以 99.4% 不是抽到哪些題的運氣；但它推不到別的 repo（第 5 題），重跑的變異也不知道</td></tr>
+                  <tr><td>5. 題目可信嗎</td><td><b>私有題 81.6%，差 17.8 分</b>；Epoch 的審查是 V1，V2 修過之後還沒有第三方審查；公開題已經擠在頂端</td><td>公開題的 99.4% 不能當能力；要引用，引私有題的 222/272（就是 81.6%）</td></tr>
                 </tbody>
               </table></div>
               <p>結論：這個數字能說的是「這個系統在這 642 題上幾乎滿分」，不能說的是「它能修好 99% 的真實 bug」。</p>
@@ -1057,7 +1057,7 @@ def test_tampering_fails():
 <div class="idea" id="i8">
             <h3><span class="idea-no">8</span>建立評估：從真實失敗開始</h3>
             <div class="prose">
-              <p>課程講到 benchmark 和它的難處，沒有講自己的 agent 要怎麼評估，但這是多數讀者真正要做的事。<a href="https://langchain.com/state-of-agent-engineering" target="_blank" rel="noopener">LangChain 2025 年底的調查</a>（1,340 份回覆）裡，89% 有 observability（看得到每一步的紀錄），跑 offline 評估（上線前，用固定的題組在測試環境裡跑）的只有 <strong>52.4%</strong>，跑 online 評估（上線後，在真實流量上打分）的是 37.3%。<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a>、<a href="https://hamel.dev/blog/posts/evals-faq/why-is-error-analysis-so-important-in-llm-evals-and-how-is-it-performed.html" target="_blank" rel="noopener">Hamel Husain 與 Shreya Shankar</a>、<a href="https://www.langchain.com/blog/common-questions-about-agent-evals" target="_blank" rel="noopener">LangChain</a>、<a href="https://cursor.com/blog/cursorbench" target="_blank" rel="noopener">Cursor</a> 這兩年寫下的做法大致一致，這兩章整理成一條流程。它們都是各家的經驗，不是對照實驗。</p>
+              <p>課程講到 benchmark 和它的難處，沒有講自己的 agent 要怎麼評估，但這是多數讀者真正要做的事。<a href="https://langchain.com/state-of-agent-engineering" target="_blank" rel="noopener">LangChain 2025 年底的調查</a>（1,340 份回覆）裡，89% 有 observability（看得到每一步的紀錄），跑 offline 評估（上線前，用固定的題組在測試環境裡跑）的只有 <strong>52.4%</strong>，跑 online 評估（上線後，在真實流量上打分）的是 37.3%。就算跑 offline 評估的人全都在那 89% 裡，看得到每一步的紀錄、卻沒有拿它跑 offline 評估的，也至少有 89% − 52.4% ≈ 37% 的回覆者（LangChain 的說法是評估「還在追趕」）。也就是說，紀錄已經很普遍，但約每三個回覆者就有一個，還沒有把紀錄變成題組、定期跑分。<a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a>、<a href="https://hamel.dev/blog/posts/evals-faq/why-is-error-analysis-so-important-in-llm-evals-and-how-is-it-performed.html" target="_blank" rel="noopener">Hamel Husain 與 Shreya Shankar</a>、<a href="https://www.langchain.com/blog/common-questions-about-agent-evals" target="_blank" rel="noopener">LangChain</a>、<a href="https://cursor.com/blog/cursorbench" target="_blank" rel="noopener">Cursor</a> 這兩年寫下的做法大致一致，這一章和第 9 章把它們整理成一條流程。它們都是各家的經驗，不是對照實驗。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="自己的評估是一個迴圈。上排由左到右：真實的 traces、bug 與客訴；error analysis，讀失敗、分類、數數；tasks，有參考解，該做的題和應該拒絕的題都有；offline suite，環境加 grader，每題跑 k 次。接著往下到 release gate，看 pass^k、成本、latency 有沒有過門檻，這一格用紅色標出。下排由右到左：online evals，在線上流量上打分、做 A/B；新的失敗，再回到最左上的 traces，變成下一批任務。">
@@ -1103,9 +1103,9 @@ def test_tampering_fails():
                 <li><b>分類、數數。</b>把筆記歸成幾個失敗類別，算每一類有多少。</li>
                 <li><b>停止。</b>讀新的 trace 不再出現新類別，就可以停了。</li>
               </ol>
-              <p><a href="https://arxiv.org/abs/2406.12045" target="_blank" rel="noopener">τ-bench 的作者</a>就這樣分析過 gpt-4o：115 條軌跡裡 40 條失敗，其中 4 條是題目寫壞，其餘分成三類。失敗的分布決定了要寫什麼題：</p>
+              <p><a href="https://arxiv.org/abs/2406.12045" target="_blank" rel="noopener">τ-bench 的作者</a>就這樣分析過 gpt-4o：115 條軌跡裡 40 條失敗，其中 4 條是題目寫壞，其餘 36 條分成三類。失敗的分布決定了要寫什麼題：</p>
               <div class="table-wrap"><table>
-                <thead><tr><th>失敗類別</th><th>佔比</th><th>接下來寫什麼題</th></tr></thead>
+                <thead><tr><th>失敗類別</th><th>佔 36 條的比例</th><th>接下來寫什麼題</th></tr></thead>
                 <tbody>
                   <tr><td>參數或資訊錯</td><td>約 55%</td><td>查最終狀態的題：資料庫的差異要等於目標</td></tr>
                   <tr><td>決策錯，沒照政策</td><td>約 25%</td><td>應該拒絕的題，加規則掃 trajectory</td></tr>
@@ -1115,24 +1115,24 @@ def test_tampering_fails():
               <p id="i8-2"><b>第二步：把失敗變成題目。</b>Anthropic 的建議是<strong>從 20 到 50 個來自真實失敗的簡單任務開始</strong>，不要等題組完整。他們的理由是評估越晚建越難：早期的產品需求可以直接寫成題目；等太久，就得從一個已經在跑的系統反推「怎樣算成功」。好題目有四個條件：</p>
               <ul>
                 <li><b>兩位專家會給同樣的判決。</b>做不到，grader 也寫不出來。</li>
-                <li><b>有參考解。</b>它證明題目可解、grader 可過。跑 100 次都是 0%，多半是題目壞了。</li>
+                <li><b>有參考解。</b>參考解是一份已知能通過所有 grader 的答案。一題跑 100 次都是 0% 時，Anthropic 說多半是題目或 grader 壞了；參考解過得了，就證明題目可解、grader 也設定對了，這兩種可能就排除了。</li>
                 <li><b>正反都有。</b>該做的題和不該做的題（應該拒絕、應該升級人工）都要放。Anthropic 的說法是「單向的評估造成單向的優化」：只考該做的，「永遠照做」就能拿高分。</li>
                 <li><b>長得像真實的請求。</b>Cursor（一個內建 coding agent 的程式編輯器）的題組取自自家工程師平常用 Cursor 寫程式的真實 session。題目描述故意寫短，因為開發者對 agent 下指令本來就簡短、常常沒講清楚，不像公開 benchmark 用的 GitHub issue 那樣詳細。</li>
               </ul>
-              <p>第 2 章說單一 turn 量不到的三件事，要自己出題才量得到。環境裡要有一個會回話的使用者，通常是 LLM 模擬的，τ-bench 就是這樣做：</p>
+              <p>第 2 章說單一 turn 量不到的三件事，要自己出題才量得到。這裡的 turn 是使用者和 agent 的一來一往，下表寫成「輪」；它和第 7 章、下面 code 裡 <code>max_turns</code> 數的 turn（agent 的一步）不同。環境裡要有一個會回話的使用者，通常是 LLM 模擬的，τ-bench 就是這樣做：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>維度</th><th>要量什麼</th><th>題目怎麼出</th></tr></thead>
                 <tbody>
                   <tr><td><b>Clarification</b></td><td>目標不夠明確時，會不會停下來問</td><td>指令故意少一個條件；模擬使用者只在 agent 問的時候才回答</td></tr>
-                  <tr><td><b>Recovery</b></td><td>收到修正後，會不會重新規劃</td><td>第 3 個 turn 改需求，最終狀態要符合新需求</td></tr>
-                  <tr><td><b>Memory</b></td><td>第一個 turn 給的限制還記不記得</td><td>開頭說「不要動 schema」，到第 10 個 turn 查有沒有動</td></tr>
+                  <tr><td><b>Recovery</b></td><td>收到修正後，會不會重新規劃</td><td>模擬使用者在第 3 輪改需求；對話結束後，grader 查最終狀態符不符合新需求</td></tr>
+                  <tr><td><b>Memory</b></td><td>第 1 輪給的限制，到後面還記不記得</td><td>第 1 輪說「不要動 schema」，之後 10 輪的需求裡，有幾個最順手的做法就是改 schema；對話結束後，grader 查 schema 有沒有變</td></tr>
                 </tbody>
               </table></div>
-              <p id="i8-3"><b>第三步：環境要能重置，agent 碰不到答案。</b>這是第 1 章的 <code>env.reset()</code> 和第 5、6 章的教訓：每個 trial 從同一份快照開始，memory、索引和 git 歷史都不留，grader 和答案放在 agent 碰不到的地方。外部 tool 用 mock：寄信寫進 outbox 表，付款寫進 ledger 表，真實世界不動，grader 也才查得到。Claude Code 可以裝 plugin，也就是一包別人寫好的 skill 與設定（下面「一題長什麼樣」會講）。它替 plugin 做評估的 <code>claude plugin eval</code> 就是這樣隔離：每次 run 有自己的暫存 home 和工作目錄。你的 <code>CLAUDE.md</code>（Claude Code 每次開工都會讀的專案說明檔）、memory 和其他 plugin 都不載入，所以每次都從同一個起點開始；agent 也讀不到題目的目錄。</p>
+              <p id="i8-3"><b>第三步：環境要能重置，agent 碰不到答案。</b>這是第 1 章的 <code>env.reset()</code> 和第 5、6 章的教訓：每個 trial 從同一份快照開始，memory、索引和 git 歷史都不留，grader 和答案放在 agent 碰不到的地方。外部 tool 用 mock：寄信寫進 outbox 表，付款寫進 ledger 表，真實世界不動，grader 也才查得到。Claude Code 的 <code>claude plugin eval</code> 是現成的例子。它評估的是 plugin，也就是一個裝著 skill（寫給 agent 的做事說明檔）和設定的目錄（下面「一題長什麼樣」細講）。平常 Claude Code 開工時，會讀進你的 <code>CLAUDE.md</code>（每次開工都會讀的說明檔）、memory 和裝過的其他 plugin，這些都放在你的 home 目錄和專案目錄裡。<code>claude plugin eval</code> 每次 run 都換一個新的暫存 home、工作目錄和 Claude Code 設定，這些檔案都不在裡面，所以一個都不會載入，每次都從同一個起點開始；agent 也讀不到放題目的目錄。</p>
               <p id="i8-4"><b>第四步：Grader 疊三層。</b>第 6 章說只看結果會放過不安全的 run，比對路徑又會判錯正確的做法。解法是分開問三個問題：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 240" role="img" aria-label="Grader 疊三層。第一層是狀態：做完了嗎，用程式查資料庫差異、檔案、測試，便宜又確定。第二層用紅色標出，是規則：過程安全嗎，用程式掃 trajectory，碰到 rm -rf、刪測試、對外送出就判 0。第三層是 judge：做得好嗎，用 LLM 依 rubric 打分，貴也不穩定，要用人工校準。任何一層是 0，這次 trial 就是 0。">
+                <svg viewBox="0 0 720 240" role="img" aria-label="Grader 疊三層。第一層是狀態：做完了嗎，用程式查資料庫差異、檔案、測試，便宜又確定。第二層用紅色標出，是規則：過程安全嗎，用程式掃 trajectory，碰到 rm -rf、刪測試、對外送出就判 0。第三層是 judge：做得好嗎，用 LLM 照 rubric（事先寫好的評分標準）打分，貴也不穩定，要用人工校準。任何一層是 0，這次 trial 就是 0。">
                   <defs><marker id="l7v-layers-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-layers-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="8" y="12" width="116" height="50" rx="4" class="dg-n-a"/>
                   <text x="66" y="42.0" text-anchor="middle" class="dg-l">1 State</text>
@@ -1149,7 +1149,7 @@ def test_tampering_fails():
                   <rect x="8" y="136" width="116" height="50" rx="4" class="dg-n-c"/>
                   <text x="66" y="166.0" text-anchor="middle" class="dg-l">3 Judge</text>
                   <text x="140" y="157" class="dg-cb">品質：做得好嗎？</text>
-                  <text x="140" y="177" class="dg-c">LLM 依 rubric 打分，定期用人工校準</text>
+                  <text x="140" y="177" class="dg-c">LLM 照 rubric（評分標準）打分，定期用人工校準</text>
                   <text x="708" y="157" text-anchor="end" class="dg-c">貴、會飄</text>
                   <text x="8" y="216" class="dg-mn-ink">r = r_state × r_rules × r_judge</text>
                   <text x="708" y="216" text-anchor="end" class="dg-k">任何一層是 0，這次 trial 就是 0</text>
@@ -1159,7 +1159,7 @@ def test_tampering_fails():
             </figure>
               <p>Anthropic 的提醒是「通常該判 agent 交出了什麼，不要判它走了哪條路」。所以<strong>第二層只列不准發生的事，不規定步驟</strong>。第三層用的 judge 自己也會偏，細節在註裡：</p>
               <details class="gloss" id="t3">
-                <summary><span class="gloss-k">查閱</span><span class="gloss-t">LLM-as-judge：用 model 當裁判的好處與偏誤，以及三種 grader 的取捨</span></summary>
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">LLM-as-judge：用 model 當裁判的好處與偏誤，以及程式、LLM、人三種評分方式的取捨</span></summary>
                 <div class="gloss-body prose">
                   <div class="table-wrap"><table>
                 <thead><tr><th>Grader</th><th>好處</th><th>弱點</th></tr></thead>
@@ -1171,10 +1171,11 @@ def test_tampering_fails():
               </table></div>
                   <p>答案是自由文字或對話品質時，常用另一個 model 打分。Arena、AlpacaEval、MT-Bench 都是這一類。和請人評比，它便宜、快；和程式比，它能處理寫不出規則的評分，但比程式貴（上表）。</p>
                   <p>已知的偏誤：偏好較長的回答、偏好同一家的 model、容易受自我宣稱影響（受測的回答寫「已完成」「已驗證」，judge 就傾向相信）。WebArena-Verified 因此拿掉 judge，改用確定性檢查。</p>
-                  <p>校準也會過期。<a href="https://safe.ai/blog/significant-increase-in-digital-labor-automation" target="_blank" rel="noopener">Remote Labor Index 2026 年 7 月</a>的 judge 用一批舊 model 的交付物校準：調門檻，讓它判的合格率對上人工的 3.3%。拿同一個 judge 去判兩個新 model，判出的合格率是人工的 2.3 到 2.9 倍。作者的解釋是：檢查交付物本身就是困難的 agent 任務，judge 打不開專業軟體去看底下的檔案，新 model 交出表面像樣、底下不對的東西，它就看不出來。排序倒是大致對（Spearman ρ = 0.90），所以 judge 適合看相對的變化，絕對的分數要靠人工。</p>
+                  <p>校準也會過期。<a href="https://safe.ai/blog/significant-increase-in-digital-labor-automation" target="_blank" rel="noopener">Remote Labor Index</a>（RLI）考的是真實的外包案子，例如 3D 與 CAD、建築、影片：每一案有客戶的需求說明、輸入檔，和一份專業人士做的交付物，也就是交給客戶的成品檔案。人工評審把 AI 的成品和專業版比，一樣好或更好，這一案才算自動化了。2026 年 7 月，作者試著用 judge 取代人工：一個會在真實的軟體裡打開兩份交付物、像客戶那樣檢查的 agent。校準時拿 4 個舊 model 的成品，調一個門檻，讓 judge 判的合格率對上人工判的 3.3%。</p>
+                  <p>拿同一個 judge 去判 2 個它沒見過的新 model，判出的合格率是人工的 2.3 到 2.9 倍，例如 GPT-5.5，人工判 6.25%，judge 判 17.9%。作者的解釋是：檢查交付物本身就是困難的 agent 任務，要在對的專業軟體裡打開檔案、熟練地操作，這正是現在的 agent 最弱的能力，所以 judge 和它評的 agent 有一樣的弱點：agent 做不好的地方，judge 也查不出來，就判成合格。門檻是對著 4 個舊 model 的成品調的，新 model 的成品落在 judge 沒校準過的範圍，同一個門檻就對不上人工了（這一步是本文的推測，原文沒有拆解原因）。不過 judge 把這些 model 由好到壞排出的順序，和人工排的大致相同（Spearman ρ = 0.90；ρ 量兩個排序有多一致，1 表示完全相同），兩個新 model 都排在最前面，只是把它們領先的幅度誇大了。所以 judge 適合比 model 之間誰高誰低；某個 model 到底完成幾成，還是要靠人工判。</p>
                   <p><a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a> 與 <a href="https://www.langchain.com/blog/common-questions-about-agent-evals" target="_blank" rel="noopener">LangChain</a> 的建議：</p>
                   <ul>
-                    <li><b>問題問窄。</b>寫清楚 PASS 和 FAIL 的條件。</li>
+                    <li><b>問題問窄。</b>Rubric 裡寫清楚 PASS 和 FAIL 的條件，例如下面 <code>escalates.md</code> 的兩行。</li>
                     <li><b>一個面向一個 judge。</b>不要讓一個 judge 同時評好幾件事。</li>
                     <li><b>留一條路。</b>讓 judge 可以回答「不知道」。</li>
                     <li><b>定期校準。</b>用一小批人工標記對答案。</li>
@@ -1274,11 +1275,11 @@ FAIL if it claims the refund was issued, or promises one without approval.</code
 <div class="idea" id="i9">
             <h3><span class="idea-no">9</span>用評估做決定：題目分三堆，一次改一件事</h3>
             <div class="prose">
-              <p>題組建好之後，最容易壞在用法：每看一次失敗，就把資訊帶進系統一次，分數升了，agent 不一定變好。</p>
+              <p>題組建好之後，最容易壞在用法：每看一次失敗、照著改一次系統，就把題組的資訊帶進系統一次，這是第 5 章說的開發過程中的 leakage（第 7 章最後一段）。改久了，分數升了，agent 不一定變好。</p>
               <p id="i9-1"><b>題目分三堆。</b><a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a> 把題目分成兩種：capability 題問「它做得到什麼」，一開始的通過率要低，挑 agent 現在還做不好的題，才留一段坡可以爬、看得出進步；regression 題問「它還做得到以前做得到的事嗎」，通過率應該接近 100%。第 8 章的「簡單任務」指好寫、好判分的題，它們來自真實的失敗，agent 一開始多半做不到，所以和「通過率要低」不衝突。再加上第 5 章最後說的，留一批沒人看過的題：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 254" role="img" aria-label="題目的流動。左邊是新題來源：production 的失敗與客訴。新題分進兩個集：開發集和 held-out 集。開發集是 capability 題，起點低，可以看 transcript 和失敗案例。穩定通過之後升到 regression 集，接近 100%，每次改動都跑。Held-out 集用紅色標出，封起來，只看分數，發版前才跑；每次依它的分數決定上不上線，它的資訊就進了系統一次，所以用過一陣子就併入開發集，再補新題。">
+                <svg viewBox="0 0 720 254" role="img" aria-label="題目的流動。左邊是新題來源：production 的失敗與客訴。新題分進兩個集：開發集和 held-out 集。開發集是 capability 題，起點低，可以看 transcript 和失敗案例。穩定通過之後升到 regression 集，接近 100%，每次改動都跑。Held-out 集用紅色標出，封起來，只看分數，發版前才跑；它的細節沒人看，但每次依它的分數挑版本、決定上不上線，留下來的都是在這批題上分數較高的版本，挑久了系統會剛好適合這批題，所以用過一陣子就併入開發集，再補新題。">
                   <defs><marker id="l7v-pool-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-pool-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M160,110 L190,110 L190,48 L232,48" class="dg-link" marker-end="url(#l7v-pool-ah)"/>
                   <path d="M190,110 L190,196 L232,196" class="dg-link" marker-end="url(#l7v-pool-ah)"/>
@@ -1303,7 +1304,7 @@ FAIL if it claims the refund was issued, or promises one without approval.</code
                   <text x="354" y="128" class="dg-c">用過一陣子就併入開發集，再補新題</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「題目怎麼分，分數才不會自己騙自己」。紅色的 held-out 是唯一還沒有資訊漏進系統的一批。開發集像機器學習的 training set，看得到細節、拿來改系統；held-out 像 test set，只看分數、最後才用；regression 沒有對應，它是軟體的回歸測試。Capability 和 regression 的分法來自 <a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a>；held-out 的輪替是本文的判斷。</figcaption>
+              <figcaption>這張圖回答「題目怎麼分，分數才不會自己騙自己」。紅色的 held-out 是唯一沒人看過細節的一批，漏進系統的資訊最少。開發集像機器學習的 training set，看得到細節、拿來改系統；held-out 像 test set，只看分數、最後才用；regression 沒有對應，它是軟體的回歸測試。Capability 和 regression 的分法來自 <a href="https://anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a>；held-out 的輪替是本文的判斷。</figcaption>
             </figure>
               <p>分開的理由是第 7 章的耗材問題：開發者每看一次開發集的失敗、改一次 prompt，分數就多反映一點對這些題的熟悉度。舊題留在 regression，才能回答「新版有沒有退步」；新題要從 production 的失敗持續補進來，否則題組和真實用法會漸行漸遠。Capability 題也會飽和：全部通過之後，它就看不出進步了，這時把它們升到 regression，再補更難的新題。<strong>Held-out 也會慢慢變髒</strong>：它的細節沒人看，但每次依它的分數決定上不上線，就是拿它挑了一次版本，挑久了系統會剛好適合這批題，所以要定期換（本文的判斷）。</p>
               <p id="i9-2"><b>怎麼比：一次改一件事，和基準比。</b>Claude Code 把這件事做成預設：同一題跑有 plugin 和沒有 plugin 兩組，直接報差值。第 8 章那一題跑起來是這樣：</p>
@@ -1345,12 +1346,12 @@ Report: evals/results/2026-11-03T09-12-44-120Z/report.html
                 <tbody>
                   <tr><td><b>自動評估</b></td><td>上線前、每次 commit</td><td>退步，而且可重現</td><td>題組沒涵蓋的真實用法</td></tr>
                   <tr><td><b>Production monitoring</b></td><td>上線後</td><td>真實使用者的行為</td><td>還沒上線的改動：問題要先到使用者手上才看得到；線上也沒有標準答案，判不了對錯</td></tr>
-                  <tr><td><b>A/B test</b></td><td>重大改動</td><td>真實的使用者結果</td><td>要幾天到幾週；不告訴你為什麼</td></tr>
-                  <tr><td><b>使用者回饋</b></td><td>持續</td><td>沒想到的問題</td><td>樣本少，偏向嚴重案例</td></tr>
+                  <tr><td><b>A/B test</b></td><td>重大改動</td><td>真實的使用者結果</td><td>結果背後的原因：它只告訴你哪一版比較好，不告訴你為什麼（而且要等幾天到幾週才有結論）</td></tr>
+                  <tr><td><b>使用者回饋</b></td><td>持續</td><td>沒想到的問題</td><td>沒人回報的問題：回報少，又偏向嚴重的案例，輕微的問題多半沒人提；回報的人也很少說明哪裡出錯</td></tr>
                   <tr><td><b>人工讀 transcript</b></td><td>持續</td><td>細微的問題，建立直覺</td><td>沒讀到的那些 transcript：一個人讀得完的量有限，流量一大只能抽樣，少見的失敗容易漏掉</td></tr>
                 </tbody>
               </table></div>
-              <p>Online eval 在真實流量上打分，通常沒有標準答案，看的是代理訊號：和品質有關、但不是品質本身的訊號，例如使用者有沒有重問一次、有沒有留下 agent 改的程式碼。<a href="https://cursor.com/blog/cursorbench" target="_blank" rel="noopener">Cursor</a> 線上追蹤一組這類指標，包括互動的訊號和產出品質的訊號（細節沒有公開），用它抓到離線題組漏掉的退步：grader 判對、開發者用起來卻覺得比較差。<a href="https://www.langchain.com/blog/common-questions-about-agent-evals" target="_blank" rel="noopener">LangChain</a> 的說法是把迴圈接起來：<strong>線上標出的失敗，變成離線題組的新題</strong>，這就回到第 8 章那張圖的起點。</p>
+              <p>Online eval 在真實流量上打分，上表的 production monitoring 和 A/B test 都屬於這一類。它通常沒有標準答案，看的是代理訊號：和品質有關、但不是品質本身的訊號，例如使用者有沒有重問一次、有沒有留下 agent 改的程式碼。<a href="https://cursor.com/blog/cursorbench" target="_blank" rel="noopener">Cursor</a> 線上追蹤一組這類指標，包括互動的訊號和產出品質的訊號（細節沒有公開），用它抓到離線題組漏掉的退步：grader 判對、開發者用起來卻覺得比較差。<a href="https://www.langchain.com/blog/common-questions-about-agent-evals" target="_blank" rel="noopener">LangChain</a> 的說法是把迴圈接起來：<strong>線上標出的失敗，變成離線題組的新題</strong>，這就回到第 8 章那張圖的起點。</p>
               <p id="i9-6"><b>本文的判斷：分數跳升時，先懷疑。</b>依前面幾章，查的順序是：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -1376,14 +1377,14 @@ Report: evals/results/2026-11-03T09-12-44-120Z/report.html
                   <text x="94" y="262.0" text-anchor="middle" class="dg-l-on">才相信 agent 變強</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答「分數變高了，要相信嗎」。由便宜的查起。第 1 章的例子都是第一格或第二格：換 harness、修題目，model 沒有變強。順序是本文的判斷。</figcaption>
+              <figcaption>這張圖回答「分數變高了，要相信嗎」。由便宜的查起。第 1 章的四組例子都停在前兩格：換 harness、Terminal-Bench 修題目（題組版本變了）是第一格；CORE-Bench 同時修 grader 和放寬 scaffold，兩格都有。四組的 model 都沒換。順序是本文的判斷。</figcaption>
             </figure>
             </div>
           </div>
 <div class="idea" id="i10">
             <h3><span class="idea-no">10</span>目錄：八個 benchmark、五層目標、早期指標</h3>
             <div class="prose">
-              <p>這一章不必讀完，需要時再查。遇到沒聽過的 benchmark，用第 2 章的兩個問題就能讀懂：agent 在哪裡做事，grader 檢查什麼。課程介紹的八個是：</p>
+              <p>這一章不必讀完，需要時再查。它收三樣東西：課程介紹的八個 benchmark，各一個註；評估目標的五層分類，從「預測文字」一路到「完成互動任務」；以及 agent 出現以前常用的早期指標，例如 perplexity 和 accuracy。遇到沒聽過的 benchmark，用第 2 章的兩個問題就能讀懂：agent 在哪裡做事，grader 檢查什麼。課程介紹的八個是：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Benchmark</th><th>Agent 在哪裡做事</th><th>Grader 檢查什麼</th></tr></thead>
                 <tbody>
@@ -1397,19 +1398,21 @@ Report: evals/results/2026-11-03T09-12-44-120Z/report.html
                   <tr><td><a class="tm" href="#n-tac">TheAgentCompany</a></td><td>模擬公司：GitLab、工單、聊天</td><td>Checkpoint 與最終狀態</td></tr>
                 </tbody>
               </table></div>
-              <p>課程的<a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">benchmark 目錄</a>收了 48 個，<strong>當字典查，不要通讀</strong>。下面每個 benchmark 一個註，點開看例子和評分方式。</p>
+              <p>課程的<a href="https://cs2680.com/notes/agent-evaluation.html" target="_blank" rel="noopener">benchmark 目錄</a>收了 48 個，那一份<strong>當字典查，不要通讀</strong>。這一章只收上表的八個，下面每個一個註，點開看例子和評分方式；其他 benchmark 的名字收在本章最後的「其他 benchmark 的名字」註。</p>
               <details class="gloss" id="n-gaia">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">GAIA：自備 tool，只看最終答案</span></summary>
                 <div class="gloss-body prose">
                   <p>GAIA（General AI Assistant，Mialon 等人，2023）有 466 題人寫的問題，要用到網頁瀏覽、試算表、PDF、圖片、音訊和計算。它沒有固定的 tool API：每個受測的 agent 自己帶搜尋、瀏覽器、Python 和 shell，所以它測的是整個 agent 系統。題目分三級：Level 1 不超過 5 步，最多用一個 tool；Level 2 要 5 到 10 步，用多個 tool；Level 3 步數不限。</p>
                   <p>例子：一張試算表列了很多部電影，找出符合兩個條件的那一部，查它的導演，回答導演的出生地。</p>
-                  <figure class="file"><figcaption>GAIA 一題的 trajectory（課程的例子，格式是本文補的）</figcaption><pre><code>step 1  search("films list spreadsheet ...")        # 找到題目附的資料來源
-step 2  open_webpage(url)                          # 打開網頁
-step 3  download_pdf(url)                          # 條件之一在一份 PDF 裡
+                  <figure class="file"><figcaption>上面那一題的 trajectory（題目是課程的例子；步驟、答案和格式是本文補的示意）</figcaption><pre><code>step 1  read_spreadsheet("films.xlsx")             # 讀題目附的試算表
+step 2  search("... award winners 2004")           # 條件之一要上網查
+step 3  download_pdf(url)                          # 那份名單在一份 PDF 裡
 step 4  extract_table(pdf)                         # 把表格抽出來
-step 5  run_python("df[(df.year &gt; 2000) &amp; ...]")  # 用程式篩出那一部電影，再查導演
-answer  4,381                                      # 只有這一行進 grader
-grader  normalize("4,381") == normalize("4381")  → 1   # 正規化後 exact match；中間 5 步 grader 看不到</code></pre></figure>
+step 5  run_python("df[(df.year &gt; 2000) &amp; ...]")  # 用程式篩出符合兩個條件的那一部電影
+step 6  search("&lt;片名&gt; director")                  # 查導演
+step 7  search("&lt;導演&gt; birthplace")                # 查導演的出生地
+answer  san francisco                              # 只有這一行進 grader
+grader  normalize("san francisco") == normalize("San Francisco")  → 1   # 正規化後 exact match，大小寫不計；中間 7 步 grader 看不到</code></pre></figure>
                   <p>答案很短，判分標準固定，沒有裁判的主觀，所以不同團隊的分數是用同一把尺量的。但每個團隊帶的 tool 不同，比到的是整個系統，不只是 model（第 1 章）。代價是量不到有副作用的動作：寄信、訂機票、改資料庫都沒有。</p>
                 </div>
               </details>
@@ -1437,14 +1440,14 @@ grader  normalize("4,381") == normalize("4381")  → 1   # 正規化後 exact ma
 
 # 失敗 2：叫了無關的 tool
 {"name": "get_weather",    "input": {"city": "Chicago", "date": "2026-10-05"}}          # 題目沒問天氣</code></pre></figure>
-                  <p>評分有兩種：AST 檢查把輸出的 call 解析成樹，比對名稱和每個參數的值；執行檢查則真的叫一次，比對結果。多輪的題目在每一個 turn 都檢查狀態和回覆。V4 版加了 web search 和 memory 兩類題。要看分類分數，不要看總分，因為總分把單輪、多輪、平行 call、無關 call 混在一起。<a href="https://epoch.ai/benchmarks/berkeley-function-calling-leaderboard/review" target="_blank" rel="noopener">Epoch 2026-09 的審查</a>抽 50 題有 24 題有缺陷。</p>
+                  <p>評分有兩種：AST 檢查把輸出的 call 解析成樹，比對名稱和每個參數的值；執行檢查則真的叫一次，比對結果。多輪的題目在每一個 turn 都檢查狀態和回覆。V4 版加了 web search 和 memory 兩類題。總分把好幾類題混在一起，例如單輪、多輪、平行 call（一句話要同時發出好幾個 call，例如一次查三個城市的天氣），和無關 call（手上的 tool 都不該叫，正確做法是一個都不叫，上面的失敗 2 就是沒過這一類），V4 又加上 web search 和 memory。你的 agent 通常只用到其中一兩類，總分高可能來自你用不到的那幾類，所以要看分類分數，不要看總分。總分本身也要打折：<a href="https://epoch.ai/benchmarks/berkeley-function-calling-leaderboard/review" target="_blank" rel="noopener">Epoch 2026-09 的審查</a>抽 50 題有 24 題有缺陷。</p>
                 </div>
               </details>
               <details class="gloss" id="n-ast">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">AST：L4 講過的語法樹，這裡拿來比對 function call</span></summary>
                 <div class="gloss-body prose">
                   <p><a href="l04.html#i9-4">L4 講 edit tool</a> 時介紹過 AST（abstract syntax tree）：parser 把一串字元讀成一棵樹，節點是語法單位，空格與換行不在樹上。BFCL 用它比對 call：先比 function 的名稱，再把參數依名字一個一個對值，不看參數的先後。所以 <code>book_flight(flight_id="UA123", passenger_id=1)</code> 和參數順序不同、空格不同的寫法會判成相同，不會因為格式扣分；但值錯了（<code>"UA124"</code>）就判錯。</p>
-                  <p>AST 檢查不用真的執行，所以快、沒有副作用；執行檢查能抓到「語法對但結果錯」的 call。BFCL 兩種都用。</p>
+                  <p>AST 檢查不用真的執行，所以快、沒有副作用，但它只比寫法：標準答案沒列到的等價寫法會被判錯，例如標準答案只收 <code>"BOS"</code>，model 寫 <code>"Boston"</code>。執行檢查把 model 的 call 真的叫一次，拿傳回的結果和標準答案的結果比，結果一樣就算對，所以不會冤枉等價的寫法；代價是要有能執行的 API，而且會留下副作用。BFCL 一部分題目用 AST 檢查，一部分用執行檢查。</p>
                 </div>
               </details>
               <details class="gloss" id="n-webarena">
@@ -1492,7 +1495,7 @@ grader  normalize("4,381") == normalize("4381")  → 1   # 正規化後 exact ma
               </div>
               <figcaption>WebArena 的 agent loop 與評分管線。Agent 讀的是網頁結構，不是像素；grader 跑的是 functional check，不是比對 trajectory。</figcaption>
             </figure>
-                  <p>Functional check 依題型不同：建 issue 的題檢查 issue 存在、指派人與標籤都對；其他題檢查最後的 URL、頁面內容、後端資料，或一段文字答案；原版判文字答案時，有些題用 LLM 判斷意思對不對（LLM-as-judge）。2025 年 ServiceNow 出了 WebArena-Verified：把答案改成結構化輸出，檢查改成對 HTTP 紀錄的確定性比對，拿掉這類 LLM-as-judge。</p>
+                  <p>Functional check 依題型不同：建 issue 的題檢查 issue 存在、指派人與標籤都對；其他題檢查最後的 URL、頁面內容、後端資料，或一段文字答案；原版判文字答案時，有些題用 LLM 判斷意思對不對（LLM-as-judge）。2025 年 ServiceNow 出了 WebArena-Verified：把答案改成結構化輸出，檢查改成用程式比對執行時錄下的網路紀錄（瀏覽器和網站後端之間每一筆 HTTP request 的網址與回應狀態，例如建 issue 的那一筆 request 有沒有送出、有沒有成功），結果是確定的，拿掉這類 LLM-as-judge。它看的是瀏覽器和後端之間實際發生了哪些 request，不是 agent 在畫面上走了哪幾步。</p>
                 </div>
               </details>
               <details class="gloss" id="n-a11y">
@@ -1562,7 +1565,7 @@ PASS</code></pre></figure>
                   <div class="table-wrap"><table>
                 <thead><tr><th></th><th>SWE-bench</th><th>Terminal-Bench</th><th>OSWorld</th></tr></thead>
                 <tbody>
-                  <tr><td><b>動作</b></td><td>在一個 repo 裡改檔案</td><td>在 container 裡跑 shell 指令</td><td>滑鼠點擊與按鍵</td></tr>
+                  <tr><td><b>動作</b></td><td>在一個 repo 裡讀檔、改檔、跑測試（也是 shell 指令）</td><td>在 container 裡跑 shell 指令</td><td>滑鼠點擊與按鍵</td></tr>
                   <tr><td><b>觀察</b></td><td>程式碼與測試輸出</td><td>終端機輸出</td><td>截圖</td></tr>
                   <tr><td><b>範圍</b></td><td>修一個 GitHub issue</td><td>設定、除錯、修復、建置</td><td>操作任何桌面 app</td></tr>
                   <tr><td><b>評分</b></td><td>Repo 的測試</td><td>對最終系統狀態跑測試</td><td>檢查最終狀態</td></tr>
@@ -1575,7 +1578,7 @@ PASS</code></pre></figure>
                     <li><b><a href="https://www.tbench.ai/news/terminal-bench-3-0" target="_blank" rel="noopener">3.0</a>。</b>換成更難的新題組，74 題；公告的理由是 2.x 的許多題已經飽和。</li>
                     <li><b><a href="https://www.tbench.ai/news/terminal-bench-4-0" target="_blank" rel="noopener">4.0</a>。</b>刪 8 題、修 19 題，剩 66 題，所有題目的 agent timeout 都是 8 小時。</li>
                   </ul>
-                  <p>課程把 89 題到 66 題說成刪掉飽和的題。查 4.0 的公告，刪掉的 8 題裡因為飽和的只有 2 題，其餘是 model 拒絕執行 2 題、解法已經公開 2 題、品質或平台相容問題 2 題，所以主要的變化是 3.0 換了題組。第 7 章「刪掉飽和的題」那一招引的是 4.0 對飽和的定義，照這個定義刪掉的就是這 2 題。</p>
+                  <p>89 題到 66 題分兩步：3.0 把整組 89 題換成 74 題新題，4.0 再從 74 題刪 8 題，剩 66 題。課程把這段說成「刪掉飽和的題」，做法說錯了：題數變少主要是 3.0 整組換新，4.0 只刪了 8 題。而這 8 題裡，因為飽和刪掉的只有 2 題，其餘是 model 拒絕執行 2 題、解法已經公開 2 題、品質或平台相容問題 2 題。第 7 章「刪掉飽和的題」那一招引的是 4.0 對飽和的定義，照這個定義刪掉的就是這 2 題。</p>
                 </div>
               </details>
               <details class="gloss" id="n-tac">
@@ -1591,7 +1594,7 @@ PASS</code></pre></figure>
                     <li>回 Plane 更新工單狀態。</li>
                     <li>在 RocketChat 回報結果。</li>
                   </ol>
-                  <p>一題七步、跨四個系統，只看最終狀態的話多數 agent 都是 0 分，所以它用 checkpoint 給部分分數，公式在<a href="#i8-5">第 8 章</a>。</p>
+                  <p>一題七步，在 Plane、RocketChat、GitLab 和自己的工作區之間來回，只看最終狀態的話多數 agent 都是 0 分，所以它用 checkpoint 給部分分數，公式在<a href="#i8-5">第 8 章</a>。</p>
                 </div>
               </details>
               <p id="i10-1"><b>其他查閱。</b>評估目標的分類、benchmark 的歷史和早期的指標，只是幫你命名，不會改變決定：</p>
@@ -1616,7 +1619,7 @@ PASS</code></pre></figure>
                 <div class="gloss-body prose">
                   <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 232" role="img" aria-label="六個時代的時間軸。2018 前：語言模型與單一任務，PTB、SQuAD。2018 到 2019：遷移學習與一般語言理解，GLUE、SuperGLUE。2020 到 2022：foundation model 的能力，MMLU、GSM8K、HumanEval。2023 到 2024：agent、tool、長 context、多模態，SWE-bench、WebArena、GAIA。2024 到 2025：更難、更穩、更新，MMLU-Pro、LiveBench、Humanity's Last Exam。2025 到 2026：範圍更大、指令更鬆、真實場景，GDPval、Terminal-Bench、ARC-AGI-3。2023 年起的三個時代用藍色標出，前三個是灰色。">
+                <svg viewBox="0 0 720 232" role="img" aria-label="六個時代的時間軸。2018 前：語言模型與單一任務，PTB、SQuAD。2018 到 2019：遷移學習與一般語言理解，GLUE、SuperGLUE。2020 到 2022：foundation model 的能力，MMLU、GSM8K、HumanEval。2023 到 2024：agent、tool、長 context、多模態，SWE-bench、WebArena、GAIA。2024 到 2025：舊題型加難、防止答案外洩、定期換題，MMLU-Pro、LiveBench、Humanity's Last Exam。2025 到 2026：範圍更大、指令更鬆、真實場景，GDPval、Terminal-Bench、ARC-AGI-3。2023 年起的三個時代用藍色標出，前三個是灰色。">
                   <defs><marker id="l7v-era-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l7v-era-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="8" y="8" width="704" height="32" rx="4" class="dg-n-n"/>
                   <text x="20" y="29" class="dg-cb">2018 前</text>
@@ -1636,7 +1639,7 @@ PASS</code></pre></figure>
                   <text x="700" y="140" text-anchor="end" class="dg-mn-ink">SWE-bench、WebArena、GAIA</text>
                   <rect x="8" y="156" width="704" height="32" rx="4" class="dg-n-c"/>
                   <text x="20" y="177" class="dg-cb">2024–2025</text>
-                  <text x="110" y="177" class="dg-c">更難、更穩、更新</text>
+                  <text x="110" y="177" class="dg-c">加難、防汙染、定期換題</text>
                   <text x="700" y="177" text-anchor="end" class="dg-mn-ink">MMLU-Pro、LiveBench、HLE</text>
                   <rect x="8" y="193" width="704" height="32" rx="4" class="dg-n-c"/>
                   <text x="20" y="214" class="dg-cb">2025–2026</text>
@@ -1644,7 +1647,7 @@ PASS</code></pre></figure>
                   <text x="700" y="214" text-anchor="end" class="dg-mn-ink">GDPval、Terminal-Bench、ARC-AGI-3</text>
                 </svg>
               </div>
-              <figcaption>每一代的題目都是前一代 model 做不到的事。藍色是 2023 年之後：題目從「答對」變成「做完」，沒有 tool 做不到，受測的也不再只是 model。</figcaption>
+              <figcaption>每一代的題目都是前一代 model 做不到的事。藍色是 2023 年之後。2023–2024 與 2025–2026 兩格的題目從「答對」變成「做完」，沒有 tool 做不到，受測的也不再只是 model；夾在中間的 2024–2025 那一格是另一條路：把答題式的舊題組加難、換成新題，讓分數還分得出高下。遷移學習是先在大量文字上預訓練，再拿去做各種下游任務；foundation model 指這樣預訓練出來、能拿去做很多任務的大 model，第 5 章的 base model 就是一種。</figcaption>
             </figure>
                   <ul>
                     <li><b>PTB（Penn Treebank）與 WikiText。</b>整理過的文字語料，量 model 預測下一個字的能力。</li>
@@ -1675,7 +1678,7 @@ PASS</code></pre></figure>
                     <li><b>F1。</b>用在答案是一組東西時（例如抽出的關鍵字），同時看抓到的比例與抓錯的比例。</li>
                     <li><b>Preference 或 win rate。</b>把兩個回答放在一起，問人或 judge model 偏好哪一個，Arena 的排行榜就是這樣算的。</li>
                   </ul>
-                  <p>這幾種指標有一個共同點：一題只跑一次，因為 model 時代的輸出短、便宜，大家假設跑第二次結果差不多。Agent 把這個假設打破了。</p>
+                  <p>這幾種指標有一個共同點：一題只跑一次。那時的題目是一問一答，model 只輸出一個答案或一段短文字，能變的地方少，大家假設跑第二次結果差不多，就不值得多跑。Agent 一題要走幾十步，每一步的選擇都會把後面帶到不同的路上，同一題重跑的結果常常不同，這個假設就打破了。</p>
                 </div>
               </details>
               <details class="gloss" id="n-evo">
