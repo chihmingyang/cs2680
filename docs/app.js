@@ -262,6 +262,55 @@
         groups[at].map(function (x) { return item(x, x.ks); }),
         '每一題要把幾節的觀念合起來答。各節的小測都會、這裡卻答不出來，通常是節和節之間怎麼接起來還沒讀通，可以從「用到」的連結回去讀。'));
     });
+
+    /* 目錄打勾 (2026-11-10): in the left contents, a sub-section whose quiz is all
+       answered gets ✓, a started one shows answered／total; a chapter row sums its
+       sections. "Answered" means a first pick or a self-check is stored, right or
+       wrong, so the ticks show what has not been read yet. A contents row belongs to
+       the last quiz section starting at or before its target, so a sub-section
+       merged into the chapter head (L6 3-1) shares the head's mark. */
+    var tocNav = document.getElementById('sidenav');
+    if (tocNav) {
+      var starts = secs.map(function (s) { return { s: s, el: document.getElementById(s.from) }; })
+        .filter(function (x) { return x.el && byKs[x.s.id]; });
+      var before = function (a, b) { return a === b || !!(a.compareDocumentPosition(b) & 4); };
+      var owner = function (el) {
+        var hit = null;
+        starts.forEach(function (x) { if (before(x.el, el)) hit = x.s; });
+        return hit;
+      };
+      var rows = [];
+      tocNav.querySelectorAll('.sn-sub, .sn-sub2').forEach(function (a) {
+        var t = document.getElementById((a.getAttribute('href') || '').slice(1));
+        if (!t) return;
+        var ids = [];
+        if (a.classList.contains('sn-sub')) {
+          var ch = chapterOf(t);
+          starts.forEach(function (x) { if (chapterOf(x.el) === ch) ids.push(x.s.id); });
+        } else {
+          var o = owner(t);
+          if (o) ids.push(o.id);
+        }
+        if (!ids.length) return;
+        var qs = [];
+        ids.forEach(function (id) { byKs[id].forEach(function (u) { qs.push(u.id); }); });
+        var mark = mk('span', 'sn-qk');
+        mark.hidden = true;
+        a.appendChild(mark);
+        rows.push({ mark: mark, qs: qs });
+      });
+      if (rows.length) counters.push(function () {
+        rows.forEach(function (r) {
+          var n = 0;
+          r.qs.forEach(function (x) { if (get(k(x, 'v'))) n++; });
+          var all = n === r.qs.length;
+          r.mark.hidden = !n;
+          r.mark.textContent = all ? '✓' : n + '/' + r.qs.length;
+          r.mark.className = 'sn-qk' + (all ? ' is-done' : '');
+          r.mark.title = all ? '這一段的小測都做了' : '小測做了 ' + n + ' 題，共 ' + r.qs.length + ' 題';
+        });
+      });
+    }
     refresh();
   })();
 

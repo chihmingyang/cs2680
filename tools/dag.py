@@ -491,7 +491,7 @@ def render(d, info, L, A):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261102b">
+<link rel="stylesheet" href="styles.css?v=20261110">
 <script>try{{var m=localStorage.getItem('cs2680.mode');if(m==='light'||m==='dark')document.documentElement.setAttribute('data-mode',m)}}catch(e){{}}</script>
 <style>
 /* 這一頁自己的樣式；配色全部用 styles.css 的 token，暗色才正常 */
