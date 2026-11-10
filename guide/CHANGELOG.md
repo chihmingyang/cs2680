@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-10（首頁課程地圖的 chip 也改成英文，例如 Memory Design、Reliability、Eval；層名本來就是英文。）
 - 2026-11-10（James：課程名稱改成英文，例如 L6 Agent Reliability、L7 Agent Eval、L3 Multi-agent Workflows、L9 LLM Inference Basics。改了 h1、title、側欄、pager、首頁、別頁〈〉引用與 dag.json；英文原標題那行、網址、錨點不動。）
 
 - 2026-11-10（**L6 依觀念拆成兩堂**：L6〈Agent 可靠性〉＋ L6b〈Agent memory〉，James：以觀念切，不以 slides 切，之後 lesson 和投影片不必一對一。加「一堂不綁一份 slides」一條；講次章數、站台檔案、題庫、`add_lecture.py` 各列同步。工具接受 `l06b` 這種 key：`add_lecture.py`（插在原堂之後、前後兩堂互連、首頁列表位置）、`audit.py`、`verify.sh`、`dag.py`、`assemble_v7.py`（順手修好 11-09 後過時的段號與「問題討論」註解）、`add_anchors.py`（`#moved` 表裡的 xN 保留）。`app.js` 加舊錨點轉址（`#moved`）與題庫 `moved_from`，全站 `?v=` 升一號。取捨在 V7_DECISIONS L6。）
