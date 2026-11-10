@@ -39,6 +39,7 @@ from review_pack import Node, by_id, parse, tldr_of, units_of  # noqa: E402
 SENT = re.compile(r"⟦(k\d+)⟧")
 KINDS = {"recall": "回想", "apply": "應用", "choice": "選擇"}
 NOT_IN_TEXT = "文章沒寫，答不出來"
+NUM_ONLY = re.compile(r"^\s*(?:約|大約|不到|超過|將近)?\s*[\d.,]+\s*(?:%|％|倍|步|次|個|題|成|分|秒|分鐘|小時|美元|token)?\s*(?:左右|以上|以下)?\s*$")
 LETTERS = "ABCDEFGH"
 
 
@@ -188,8 +189,11 @@ def check(path):
         print(f"warn 正確選項明顯最長 {len(long)} 題：{' '.join(long)}")
     # 觀念涵蓋（coverage）：每一節的 points 是 spec，每題的 covers 標它測哪個觀念。
     # 有 points 的節，每個觀念都要有一題 unit 測到（選擇或應用），covers 只能指向自己這一節的觀念。
+    # evidence（2026-11-11）：量測的精確值、benchmark 怎麼設計、出處與證據力。讀者不必記，所以不強制出題；
+    # 它的數字由 check_numbers.py 對照來源檔和正文。
     pts = {pt["id"]: s_["id"] for s_ in q["sections"] for pt in s_.get("points", [])}
-    TYPES = {"claim", "mechanism", "condition", "limit", "misconception"}
+    evid = {pt["id"] for s_ in q["sections"] for pt in s_.get("points", []) if pt.get("type") == "evidence"}
+    TYPES = {"claim", "mechanism", "condition", "limit", "misconception", "evidence"}
     for s_ in q["sections"]:
         for pt in s_.get("points", []):
             if pt.get("type") not in TYPES:
@@ -202,13 +206,24 @@ def check(path):
             elif pts[c] != u["ks"]:
                 errs.append(f'{u["id"]}：covers 的 {c} 屬於 {pts[c]}，不是這題的節 {u["ks"]}')
             covered.add(c)
-    missing = [pid for pid in pts if pid not in covered]
+    missing = [pid for pid in pts if pid not in covered and pid not in evid]
     for pid in missing:
         errs.append(f'觀念 {pid} 沒有題目測到')
+    # 一題只測 evidence，就是在考數字或出處（QUIZ.md〈讀者自測優先〉）
+    for u in q["unit"]:
+        cv = u.get("covers", [])
+        if cv and all(c in evid for c in cv):
+            errs.append(f'{u["id"]}：covers 只有 evidence 類的觀念；這類不出題，題目要測它支持的那個觀念')
+    # 選項只有數字的選擇題：答案就是一個數字，多半在考記憶。只警告：每個錯的數字各對應一種算錯的方式時可以留，
+    # 在題目加 "num_choices_ok": "理由"。
+    numonly = [u["id"] for u in q["unit"] if u.get("kind") == "choice" and u.get("choices") and not u.get("num_choices_ok")
+               and all(NUM_ONLY.match(c.get("t", "")) for c in u["choices"])]
+    if numonly:
+        print(f"warn 選項只有數字 {len(numonly)} 題：{' '.join(numonly)}（改成問這個數字代表什麼；錯的數字各對應一種算錯的方式才留，加 num_choices_ok）")
     for e in errs:
         print("FAIL", e)
     if pts and not errs:
-        print(f"ok   涵蓋：{len(pts)} 個觀念都有題目測到")
+        print(f"ok   涵蓋：{len(pts) - len(evid)} 個觀念都有題目測到" + (f"；另有 {len(evid)} 條 evidence 不出題" if evid else ""))
     if not errs:
         print(f'ok   題庫：{len(q["sections"])} 節、{len(q["unit"])} 題 unit、{len(q.get("integration", []))} 題整合')
     return 1 if errs else 0
@@ -302,18 +317,22 @@ def coverage(path):
     for u in q["unit"]:
         for c in u.get("covers", []):
             by.setdefault(c, []).append(u["id"])
-    TYPE = {"claim": "主張", "mechanism": "機制", "condition": "前提", "limit": "限制", "misconception": "誤解"}
-    tot = cov = 0
+    TYPE = {"claim": "主張", "mechanism": "機制", "condition": "前提", "limit": "限制", "misconception": "誤解", "evidence": "證據"}
+    tot = cov = ev = 0
     for s_ in q["sections"]:
         if not s_.get("points"):
             continue
         print(f"\n## {s_['id']} {s_['title']}")
         for pt in s_["points"]:
-            tot += 1
             qs = by.get(pt["id"], [])
+            if pt.get("type") == "evidence":
+                ev += 1
+                print(f"- {pt['id']} [證據] {'、'.join(qs) if qs else '不出題'}｜{pt['t']}")
+                continue
+            tot += 1
             cov += bool(qs)
             print(f"- {pt['id']} [{TYPE.get(pt['type'], pt['type'])}] {'、'.join(qs) if qs else '**沒有題目**'}｜{pt['t']}")
-    print(f"\n涵蓋 {cov}/{tot}")
+    print(f"\n涵蓋 {cov}/{tot}" + (f"（另有 {ev} 條 evidence 不出題）" if ev else ""))
     return 0
 
 

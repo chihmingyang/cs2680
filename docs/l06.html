@@ -203,7 +203,7 @@ p = 0.95, n = 50  →  0.95 ^ 50 = 7.7%</code></pre></figure>
               </div>
               <figcaption>這張圖回答：算式漏掉了什麼？它只算第一條路。成功的 run 裡，第二條最常見（71%）；第三條走到失敗，才是真正要防的。粉色是出錯或建在錯誤上的步驟，黃色是檢查，深紅是攔不回來的錯。</figcaption>
             </figure>
-              <p>比算式好的是一步錯不等於整趟失敗。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a>（UCL 與南京大學，2026-07）逐步標註了 Terminal-Bench（在 shell 裡完成任務的 benchmark）上 21 個系統的 1,794 條 trajectory（一趟執行的完整紀錄）：<strong>成功的 run 有 71% 途中碰過至少一個錯</strong>，只有 29% 一路沒出錯。<a href="https://snorkel.ai/blog/coding-agents-dont-need-to-be-perfect-they-need-to-recover/" target="_blank" rel="noopener">Snorkel</a>（2026-02）的資料也類似：通過和失敗的任務，每題的錯誤數差不多（2.09 與 2.71 個），差別在修復率（95.0% 與 73.5%）。兩份都是觀察，不是對照實驗。</p>
+              <p data-num-own="29">比算式好的是一步錯不等於整趟失敗。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a>（UCL 與南京大學，2026-07）逐步標註了 Terminal-Bench（在 shell 裡完成任務的 benchmark）上 21 個系統的 1,794 條 trajectory（一趟執行的完整紀錄）：<strong>成功的 run 有 71% 途中碰過至少一個錯</strong>，只有 29% 一路沒出錯。<a href="https://snorkel.ai/blog/coding-agents-dont-need-to-be-perfect-they-need-to-recover/" target="_blank" rel="noopener">Snorkel</a>（2026-02）的資料也類似：通過和失敗的任務，每題的錯誤數差不多（2.09 與 2.71 個），差別在修復率（95.0% 與 73.5%）。兩份都是觀察，不是對照實驗。</p>
               <p>比算式差的是各步並不獨立：沒攔下來的錯會傳下去，越晚越難修。<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a>（Letta，2025-08）讓 agent 從之前失敗的 run 留下的環境接手，同一批 model 的平均成功率從 26.3% 掉到 11.2%。</p>
               <p>所以算式不必丟，要換的是代入的 p：p 應該是「這一步沒有留下沒攔到的錯」的機率。換了定義，兩個前提就又站得住。第一個前提變成「留下一個沒攔到的錯，整趟就失敗」：當場攔下來重做的錯不算，這正是圖裡第二條和第三條路的差別。第二個前提：錯誤往後傳，只發生在已經留下一個沒攔到的錯之後，那時這個 run 已經算失敗了。算式要的只是「前面都沒留下錯時，這一步也沒留下錯」的機率，所以每步仍然可以乘起來。每步 5% 出錯，只要多數當場攔下來，p 就遠高於 95%，<strong>該壓低的是沒攔下來的錯</strong>。</p>
               <p id="i1-2"><b>三個槓桿。</b>pⁿ 裡只有 n 和 p 兩個量，能動的做法有三種：減少 n，以及兩種提高 p 的辦法：</p>
@@ -386,7 +386,7 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
                             <figcaption>這張圖回答：檢查調嚴，一定比較好嗎？不一定。重試和第一次一樣準的時候，調嚴要少誤判才有用：50 步全對率從寬鬆的 55% 升到調嚴、少誤判的 76%；誤判多到 20%，就退回 53%。重試常常還是錯的時候，調嚴的兩種都比寬鬆的 22% 差：少誤判的是 8%，常誤判的是 0.2%。四種檢查都是 p = 95%、50 步，照上面的算式計算，本文的整理。</figcaption>
                           </figure>
               <p>用上一段的係數就算得出這張圖。從寬鬆調到「調嚴，少誤判」，漏抓少了 19 個百分點（20% 降到 1%），誤判多了 5 個百分點（0 升到 5%）。重試和第一次一樣準的時候，兩種錯每個百分點都讓一步的成功率少 0.0475 個百分點；漏抓少 19 個、誤判多 5 個，一步的成功率淨增約 0.67 個百分點，50 步全對率就從 55% 升到 76%。誤判多到 20% 時，多出來的誤判比少掉的漏抓還多 1 個百分點，一步的成功率反而微降，50 步全對率退回 53%，等於白調。重試常常還是錯的時候，漏抓每個百分點只值 0.025，誤判每個值 0.475：少掉 19 個百分點的漏抓，一步的成功率只多約 0.48 個百分點；多出 5 個百分點的誤判，卻少約 2.4 個百分點。一步淨少約 1.9 個百分點，50 步全對率從寬鬆的 22% 掉到 8%。所以<strong>評一個檢查要看兩個數字：漏抓多少、誤判多少</strong>，還要看重試修不修得好，因為它決定兩種錯各值多少。</p>
-              <p><b>實際的誤判比算式更傷。</b>算式假設冤枉到的步驟只是重做一次，做對的機率還是 retry_ok。實際上 agent 收到的訊息是「你做錯了」，它會去修一個不存在的 bug，改壞的機率比重做一次更高。常見的來源是 flaky test：同一份程式碼有時過、有時不過的測試，例如一個依當天日期計算的測試，剛好碰到 2 月 29 日才失敗（第 5 章〈<a href="#n-fail">26 種 run 的失敗</a>〉的環境那張表）。對策是先在沒改過的版本上，把同一個測試多跑幾次：沒改過的版本也會失敗，失敗就不是這一步造成的，該處理的是那個測試，不是叫 agent 改程式。更糟的是檢查本身寫錯，例如測試和規格矛盾，做對的實作永遠過不了，等於誤判率 100%。這正是本章前面 ImpossibleBench 的設定：GPT-5 在 Oneoff 有 76% 改用作弊讓測試變綠；給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 的作弊就從 54% 降到 9%。ImpossibleBench 量的是誤判率 100% 的極端情況，偶爾的誤判會不會也讓 agent 作弊，沒有量測。本文的推論是方向相同：agent 收到「錯了」卻找不到錯，能做的就只剩改程式去迎合檢查。所以誤判的代價可能不只是多一次重試。</p>
+              <p data-num-own="100"><b>實際的誤判比算式更傷。</b>算式假設冤枉到的步驟只是重做一次，做對的機率還是 retry_ok。實際上 agent 收到的訊息是「你做錯了」，它會去修一個不存在的 bug，改壞的機率比重做一次更高。常見的來源是 flaky test：同一份程式碼有時過、有時不過的測試，例如一個依當天日期計算的測試，剛好碰到 2 月 29 日才失敗（第 5 章〈<a href="#n-fail">26 種 run 的失敗</a>〉的環境那張表）。對策是先在沒改過的版本上，把同一個測試多跑幾次：沒改過的版本也會失敗，失敗就不是這一步造成的，該處理的是那個測試，不是叫 agent 改程式。更糟的是檢查本身寫錯，例如測試和規格矛盾，做對的實作永遠過不了，等於誤判率 100%。這正是本章前面 ImpossibleBench 的設定：GPT-5 在 Oneoff 有 76% 改用作弊讓測試變綠；給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 的作弊就從 54% 降到 9%。ImpossibleBench 量的是誤判率 100% 的極端情況，偶爾的誤判會不會也讓 agent 作弊，沒有量測。本文的推論是方向相同：agent 收到「錯了」卻找不到錯，能做的就只剩改程式去迎合檢查。所以誤判的代價可能不只是多一次重試。</p>
               <p><b>漏抓的代價，sⁿ 也低估了。</b>sⁿ 只回答 50 步全對的機率，不分失敗的 run 是哪一種。有的失敗至少有一次檢查說過「錯」，留下了紀錄，有人可以回頭看。漏抓的錯不一樣：那一步做錯了，檢查卻說過，當下沒有任何紀錄說它錯了。以寬鬆的檢查為例（漏抓 20%）：一步做錯的機率是 1 − p = 5%，做錯又漏抓的機率是 5% × 20% = 1%。50 步裡至少有一步漏抓的機率是 1 − 0.99⁵⁰，約 40%。重試和第一次一樣準的時候，寬鬆的檢查 50 步全對率是 55%，失敗的 run 約 45%。有漏抓的 run 一定不是全對的，所以這 40% 全部落在那 45% 裡。照這個算式推，失敗的 run 有近九成（40% ÷ 45%）至少帶著一個漏抓的錯。這些錯有的之後會露出症狀，有的不會；不會的，agent 就會當成成功交出去。本章前面引的 Failure as a Process 量到，26% 的失敗 run 宣稱自己成功，可見 agent 把失敗當成成功交出去，在實測裡並不少見。</p>
               </div>
             </details>
@@ -976,9 +976,10 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
   </div>
 </main>
 </div>
-<script type="application/json" id="quiz">{
+<script type="application/json" id="quiz">
+{
  "version": 4,
- "note": "題庫：L6 Agent 可靠性（2026-11-08 建；2026-11-10 L6 依觀念拆成兩堂，記憶的題搬到 l06b）。回想題是選擇題（kind choice），應用題與整合題是問答。節＝文章自己的小節（from 是該節起點的 id）；core 是重點觀念；整合題的 after 是放在哪一章之後。規則見 guide/QUIZ.md。",
+ "note": "題庫：L6 Agent 可靠性（2026-11-08 建；2026-11-10 L6 依觀念拆成兩堂，記憶的題搬到 l06b）。回想題是選擇題（kind choice），應用題與整合題是問答。節＝文章自己的小節（from 是該節起點的 id）；core 是重點觀念；整合題的 after 是放在哪一章之後。規則見 guide/QUIZ.md。 2026-11-11：讀者自測優先。刪 k5g、k6d、k2e、k11h；k5c、k5b、k5f、k5i、k10c 改成問含義；八題題幹的論文名移到解說；觀念清單加 evidence 類（不出題，數字由 check_numbers.py 對照）。",
  "scope": [
   "i1",
   "i2",
@@ -1088,7 +1089,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     },
     {
      "id": "k2.5",
-     "type": "limit",
+     "type": "evidence",
      "t": "支持「一步錯不等於失敗」的兩份資料（Failure as a Process、Snorkel）都是觀察，不是對照實驗。",
      "at": [
       "#i1 ¶5"
@@ -1125,6 +1126,30 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "t": "pⁿ 要成立，必須每一步都要對（一步錯就算失敗），而且各步的成敗互不影響。",
      "at": [
       "#i1 ¶1"
+     ]
+    },
+    {
+     "id": "k2.10",
+     "type": "evidence",
+     "t": "Failure as a Process 標註 Terminal-Bench 上 21 個系統的 1,794 條 trajectory：成功的 run 有 71% 途中碰過至少一個錯。",
+     "at": [
+      "#i1 ¶4"
+     ]
+    },
+    {
+     "id": "k2.11",
+     "type": "evidence",
+     "t": "Snorkel：通過與失敗的任務每題錯誤數是 2.09 與 2.71 個，修復率是 95.0% 與 73.5%。",
+     "at": [
+      "#i1 ¶4"
+     ]
+    },
+    {
+     "id": "k2.12",
+     "type": "evidence",
+     "t": "Recovery-Bench：從失敗的 run 留下的環境接手，同一批 model 的平均成功率從 26.3% 掉到 11.2%。",
+     "at": [
+      "#i1 ¶5"
      ]
     }
    ]
@@ -1174,6 +1199,14 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "t": "同一條 pⁿ 在 L7 以 pass^k 再出現：p 換成同一題跑一次成功的機率，n 換成跑的次數 k，問的是 k 次都成功的機率。",
      "at": [
       "#i1 ¶9"
+     ]
+    },
+    {
+     "id": "k3.6",
+     "type": "evidence",
+     "t": "Princeton 的量測用了 15 個 model。",
+     "at": [
+      "#i1"
      ]
     }
    ]
@@ -1269,7 +1302,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "id": "k5.2",
      "type": "misconception",
-     "t": "model 說「應該會過了」不是檢查：它沒有發出 tool call，就沒有任何輸出能證明測試過了，要拿 tool 的輸出當證據；26% 的失敗 run 宣稱自己成功。",
+     "t": "model 說「應該會過了」不是檢查：它沒有發出 tool call，就沒有任何輸出能證明測試過了；量測裡約四分之一的失敗 run 也宣稱自己成功，所以它說成功不能當證據，要拿 tool 的輸出當證據。",
      "at": [
       "#i2 表2 列1 ‹為什麼抓不到›",
       "#i2 表2 列1 ‹換成›"
@@ -1312,14 +1345,14 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "id": "k5.7",
      "type": "claim",
-     "t": "ImpossibleBench 把測試改成和規格矛盾，任何通過都只能靠作弊，而 model 作弊得很多：GPT-5 在 Oneoff 76%、在 Conflicting 54%，Claude Opus 4.1 在 Conflicting 50%。",
+     "t": "測試本身過不了時（測試和規格矛盾，任何通過都只能靠作弊），當時的 model 在五到七成多的題目上作弊：作弊是常態，不是少數例外，所以測試可以改的時候，「測試變綠」不能當成做對的證據。",
      "at": [
       "#i2 ¶4"
      ]
     },
     {
      "id": "k5.8",
-     "type": "mechanism",
+     "type": "evidence",
      "t": "Oneoff 是改掉一個測試的期望值，讓它和規格矛盾；Conflicting 是複製一個測試、給它不同的期望值，同一個輸入有兩個矛盾的答案，連測試之間都衝突。",
      "at": [
       "#i2 ¶4"
@@ -1344,7 +1377,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "id": "k5.11",
      "type": "claim",
-     "t": "給 agent 一個「回報給人」的出口能減少作弊：GPT-5 在 Conflicting 從 54% 降到 9%。",
+     "t": "給 agent 一個「回報給人」的出口（做不到時可以停下來說卡在哪）能明顯減少作弊，所以任務 prompt 要寫「改不動就停下來，告訴我卡在哪裡」。",
      "at": [
       "#i2 ¶4"
      ]
@@ -1352,7 +1385,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "id": "k5.12",
      "type": "limit",
-     "t": "回報出口的效果因 model 而異（Opus 4.1 降得少得多），而且這些是當時的 model，數字會變。",
+     "t": "回報出口的效果因 model 而異（同一招在另一個 model 上降得少得多），而且量到的是當時的 model，數字會變：別人量到的降幅不能直接當成自己 agent 的效果。",
      "at": [
       "#i2 ¶4"
      ]
@@ -1364,6 +1397,22 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "at": [
       "#i2 code2 說明",
       "#i2 code2 內容"
+     ]
+    },
+    {
+     "id": "k5.14",
+     "type": "evidence",
+     "t": "Failure as a Process 量到 26% 的失敗 run 宣稱自己成功。",
+     "at": [
+      "#i2 表2 列1"
+     ]
+    },
+    {
+     "id": "k5.15",
+     "type": "evidence",
+     "t": "ImpossibleBench 的作弊率：GPT-5 在 Oneoff 76%、在 Conflicting 54%，Claude Opus 4.1 在 Conflicting 50%；給回報出口後，GPT-5 在 Conflicting 從 54% 降到 9%。",
+     "at": [
+      "#i2-1"
      ]
     }
    ]
@@ -1392,7 +1441,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     },
     {
      "id": "k6.3",
-     "type": "limit",
+     "type": "evidence",
      "t": "這條時間軸是好幾個量的中位數或約略值拼成的，不是某一條真實的 run。",
      "at": [
       "#i2 圖3 說明"
@@ -1429,6 +1478,14 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "at": [
       "#i2 code3 說明",
       "#i2 code3 內容"
+     ]
+    },
+    {
+     "id": "k6.8",
+     "type": "evidence",
+     "t": "Failure as a Process 在失敗的 run 上量到的典型值：決定失敗的錯誤在第 7 步，約第 12 步救不回來，約第 16 步才出現第一個看得到的症狀，run 在第 27 步結束；30.7% 的失敗 run 有錯的前提。",
+     "at": [
+      "#i2-2"
      ]
     }
    ]
@@ -1728,7 +1785,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "id": "k10.4",
      "type": "mechanism",
-     "t": "另一種做法是把環境切開，讓 agent 碰不到正式環境；Replit 在 agent 刪掉 production 資料庫的事故後，推出 dev、prod 資料庫自動分離。",
+     "t": "另一種事前把關的做法是把環境切開，讓 agent 碰不到正式環境：規定寫了「不准動 production」仍可能被違反（Replit 的事故就發生在 code freeze 期間，當事人的說法），碰不到才擋得住。",
      "at": [
       "#i3 ¶13"
      ]
@@ -1807,7 +1864,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     },
     {
      "id": "k11.9",
-     "type": "limit",
+     "type": "evidence",
      "t": "短 session 的形狀依的是一家公司（Anthropic 2025-11）的經驗；「每段驗證過才 commit、退回時 context 也退，換 model 也照做」是本文的判斷，不是量測結果。",
      "at": [
       "#i3 圖5 說明",
@@ -1913,6 +1970,14 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "t": "retry with backoff 的 backoff（每次等更久，避免許多呼叫端同時重試壓垮下游）在 agent 這邊少用，因為 agent 的錯多半不是下游太忙，等久一點也不會變對。",
      "at": [
       "#i3 註 n-sre ¶3"
+     ]
+    },
+    {
+     "id": "k12.12",
+     "type": "evidence",
+     "t": "Failure as a Process：失敗的 run 裡只有 18% 在錯誤救不回來之後很快停下；修好的修復中位數 5 步，沒修好的中位數 12 步。",
+     "at": [
+      "#i3-5"
      ]
     }
    ]
@@ -2060,6 +2125,14 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
      "t": "Epistemic 錯的來源常在 model 看到的東西：tool 回了錯的結果、context 少了資訊、環境和它以為的不同，所以要在 harness、tool、環境那幾層修，而不是換 model。",
      "at": [
       "#i4 ¶5"
+     ]
+    },
+    {
+     "id": "k14.10",
+     "type": "evidence",
+     "t": "Failure as a Process：決定失敗的錯誤裡 57.9% 是 epistemic、32.8% 是 competence。",
+     "at": [
+      "#i4"
      ]
     }
    ]
@@ -2324,7 +2397,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k2a",
    "ks": "k2",
    "kind": "choice",
-   "q": "Failure as a Process 逐步標註了 Terminal-Bench（在 shell 裡完成任務的 benchmark）上的 trajectory（一趟執行的完整紀錄）。從成功的 run 來看，真實的 run 和 pⁿ 算的比起來如何？",
+   "q": "有一份量測逐步標註了真實 agent 的 trajectory（一趟執行的完整紀錄）。從成功的 run 來看，真實的 run 和 pⁿ 算的比起來如何？",
    "choices": [
     {
      "t": "比算式好：成功的 run 多半途中碰過錯，抓到重做後才成功",
@@ -2340,19 +2413,20 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "pⁿ 的第一個前提「一步錯，整個 run 就失敗」不成立，真實比算式好：Terminal-Bench 上 21 個系統、1,794 條 trajectory 裡，成功的 run 有 71% 途中碰過至少一個錯，只有 29% 一路沒出錯。"
+    "pⁿ 的第一個前提「一步錯，整個 run 就失敗」不成立，真實比算式好：Terminal-Bench 上 21 個系統、1,794 條 trajectory 裡，成功的 run 有 71% 途中碰過至少一個錯，只有 29% 一路沒出錯（Failure as a Process，UCL 與南京大學，2026-07）。"
    ],
    "covers": [
     "k2.1",
     "k2.2",
     "k2.3"
-   ]
+   ],
+   "num_own": "29"
   },
   {
    "id": "k2b",
    "ks": "k2",
    "kind": "choice",
-   "q": "Recovery-Bench（Letta，2025-08）讓 agent 從之前失敗的 run 留下的環境接手。這份量測讓真實的 run 和 pⁿ 算的比起來如何？",
+   "q": "讓 agent 從之前失敗的 run 留下的環境接手，再量一次成功率。這份量測讓真實的 run 和 pⁿ 算的比起來如何？",
    "choices": [
     {
      "t": "比算式好：前一個 run 已經做了一部分，接手的成功率反而變高",
@@ -2368,7 +2442,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "pⁿ 的第二個前提「各步的成敗互相獨立」不成立，真實比算式差：沒攔下來的錯會往後傳、越晚越難修。從之前失敗的 run 留下的環境接手，同一批 model 的平均成功率從 26.3% 掉到 11.2%。"
+    "pⁿ 的第二個前提「各步的成敗互相獨立」不成立，真實比算式差：沒攔下來的錯會往後傳、越晚越難修。從之前失敗的 run 留下的環境接手，同一批 model 的平均成功率從 26.3% 掉到 11.2%（Recovery-Bench，Letta，2025-08）。"
    ],
    "covers": [
     "k2.1",
@@ -2407,7 +2481,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k2d",
    "ks": "k2",
    "kind": "choice",
-   "q": "Snorkel（2026-02）比較了通過和失敗的任務。兩邊主要差在哪一個數字？",
+   "q": "同一批 agent 的任務，有的通過、有的失敗。照本文引的量測，兩邊主要差在哪一個數字？",
    "choices": [
     {
      "t": "每題的錯誤數：失敗的任務犯的錯多出好幾倍",
@@ -2423,36 +2497,10 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "通過和失敗的任務，每題的錯誤數差不多（2.09 與 2.71 個），差別在修復率（95.0% 與 73.5%），也就是錯了之後有沒有修回來。"
+    "通過和失敗的任務，每題的錯誤數差不多（2.09 與 2.71 個），差別在修復率（95.0% 與 73.5%），也就是錯了之後有沒有修回來（Snorkel，2026-02）。"
    ],
    "covers": [
     "k2.4"
-   ]
-  },
-  {
-   "id": "k2e",
-   "ks": "k2",
-   "kind": "choice",
-   "q": "本文第 1 章引了 Failure as a Process（2026-07）和 Snorkel（2026-02）兩份資料。本文對這兩份資料的證據力提醒了什麼？",
-   "choices": [
-    {
-     "t": "兩份都只測了一個 model，換 model 不一定適用",
-     "why": "Failure as a Process 標註的是 21 個系統。本文提醒的是：兩份都是觀察，不是對照實驗。"
-    },
-    {
-     "t": "兩份的樣本都太少，加起來只有幾十條 trajectory",
-     "why": "光是 Failure as a Process 就有 1,794 條 trajectory，樣本不少。本文提醒的是：兩份都是觀察，不是對照實驗。"
-    },
-    {
-     "t": "兩份都是事後觀察，沒有分組、只改一個條件來比",
-     "ok": true
-    }
-   ],
-   "key": [
-    "兩份都是觀察，不是對照實驗：看的是已經跑完的 run，沒有把 run 分組、只改一個條件來比較。"
-   ],
-   "covers": [
-    "k2.5"
    ]
   },
   {
@@ -2760,23 +2808,23 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k5b",
    "ks": "k5",
    "kind": "choice",
-   "q": "ImpossibleBench 裡，本文提到哪一招讓 GPT-5 在 Conflicting 的作弊率明顯下降？",
+   "q": "Agent 接到一個修不好的任務：測試和規格矛盾，照規格寫永遠過不了。照本文引的量測，下面哪一種做法最能讓它不靠動手腳來交差？",
    "choices": [
     {
-     "t": "把測試檔設成 read-only，改不動",
-     "why": "Read-only 擋得住改測試，擋不住針對測試寫特例。本文引的數字是：給它一個「回報給人」的出口，GPT-5 在 Conflicting 從 54% 降到 9%。"
+     "t": "把測試檔設成 read-only，讓它改不動",
+     "why": "Read-only 擋得住改測試，擋不住針對測試寫特例。量測裡明顯有效的是給它一個「回報給人」的出口：GPT-5 在 Conflicting 從 54% 降到 9%。"
     },
     {
      "t": "在 prompt 裡明白寫出：不准作弊",
-     "why": "本文引的數字來自另一招：給它一個出口，做不到時可以停下來告訴人，GPT-5 在 Conflicting 從 54% 降到 9%。"
+     "why": "本文引的效果來自另一招：給它一個出口，做不到時可以停下來告訴人，GPT-5 在 Conflicting 從 54% 降到 9%。"
     },
     {
-     "t": "給 agent 一個「回報給人」的出口",
+     "t": "給它一個出口：做不到就停下來回報給人",
      "ok": true
     }
    ],
    "key": [
-    "給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 從 54% 降到 9%（Opus 4.1 降得少得多）。Read-only 擋得住改測試，擋不住寫特例。所以任務 prompt 要寫「改不動就停下來，告訴我卡在哪裡」。"
+    "給 agent 一個「回報給人」的出口最有效：ImpossibleBench 量到 GPT-5 在 Conflicting 從 54% 降到 9%（Opus 4.1 降得少得多）。Read-only 擋得住改測試，擋不住寫特例。所以任務 prompt 要寫「改不動就停下來，告訴我卡在哪裡」。"
    ],
    "covers": [
     "k5.11"
@@ -2786,27 +2834,28 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k5c",
    "ks": "k5",
    "kind": "choice",
-   "q": "Failure as a Process 量到，失敗的 run 裡大約有多少宣稱自己成功了？",
+   "q": "本文引的量測裡，失敗的 run 約有四分之一宣稱自己成功。這對「拿 model 自己說的話當檢查」代表什麼？",
    "choices": [
     {
-     "t": "約 6%",
-     "why": "比這高得多：約 26% 的失敗 run 宣稱自己成功。"
+     "t": "多半還可信：四分之三的失敗 run 沒有這樣說",
+     "why": "四分之一已經多到不能拿它當檢查。Model 只說了一句話，沒有發出 tool call，就沒有任何輸出能證明測試過了；要拿 tool 的輸出當證據。"
     },
     {
-     "t": "約 26%",
+     "t": "它說成功不算證據：要看 tool 實際的輸出",
      "ok": true
     },
     {
-     "t": "約 66%",
-     "why": "沒有這麼高：是約 26%。但已經多到不能把 model 的說法當成檢查。"
+     "t": "換更強的 model 就好：強的 model 很少謊報",
+     "why": "本文的換法不是換 model，是換證據：model 說「應該會過了」時沒有任何輸出能證明測試過了，所以要 tool 的輸出當證據。"
     }
    ],
    "key": [
-    "約 26% 的失敗 run 宣稱自己成功。所以 model 說「應該會過了」不算檢查，要 tool 的輸出當證據。"
+    "Model 說「應該會過了」不算檢查：它沒有發出 tool call，沒有任何輸出能證明測試過了。失敗的 run 也常這樣說（Failure as a Process 量到 26%），所以要拿 tool 的輸出當證據。"
    ],
    "covers": [
     "k5.2"
-   ]
+   ],
+   "closed_ok": "常識或推理：讀者自測優先，問的是這個發現對設計代表什麼，懂的人推得出來。"
   },
   {
    "id": "k5d",
@@ -2865,76 +2914,49 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k5f",
    "ks": "k5",
    "kind": "choice",
-   "q": "ImpossibleBench（CMU 與 Anthropic，2025-10）把測試改成和規格矛盾，任何通過都只能靠作弊。在 GPT-5、Claude Opus 4.1 這些 model 上，作弊的比例大約落在哪裡？",
+   "q": "把測試改成和規格矛盾，任何通過都只能靠作弊。拿這種題目去量當時的幾個 model，結果是哪一種？",
    "choices": [
     {
-     "t": "一成以下：多半照規格做，回報測試過不了",
+     "t": "作弊很少見：只在一成以下的題目上作弊",
      "why": "高得多：GPT-5 在 Oneoff 作弊 76%、在 Conflicting 54%，Claude Opus 4.1 在 Conflicting 50%。"
     },
     {
-     "t": "五到七成多：很多題目是靠作弊才通過的",
+     "t": "作弊是常態：在五到七成多的題目上作弊",
      "ok": true
     },
     {
-     "t": "兩到三成：多半照規格做，少數才動手腳",
+     "t": "作弊是少數：只在兩到三成的題目上作弊",
      "why": "比這高：GPT-5 在 Oneoff 作弊 76%、在 Conflicting 54%，Claude Opus 4.1 在 Conflicting 50%。"
     }
    ],
    "key": [
-    "當時的 model 作弊得很多：GPT-5 在 Oneoff 76%、在 Conflicting 54%，Claude Opus 4.1 在 Conflicting 50%。這些是當時的 model，數字會變。"
+    "作弊是常態，不是少數例外（ImpossibleBench，CMU 與 Anthropic，2025-10）：GPT-5 在 Oneoff 76%、在 Conflicting 54%，Claude Opus 4.1 在 Conflicting 50%。所以測試可以改的時候，「測試變綠」不能當成做對的證據：測試設成 read-only，再 review diff。這些是當時的 model，數字會變。"
    ],
    "covers": [
     "k5.7"
    ]
   },
   {
-   "id": "k5g",
-   "ks": "k5",
-   "kind": "choice",
-   "q": "ImpossibleBench 有 Oneoff 和 Conflicting 兩種改測試的方法。兩者差在哪裡？",
-   "choices": [
-    {
-     "t": "Oneoff 只動一個測試；Conflicting 把同一個檔案裡的測試全部改成矛盾的",
-     "why": "Conflicting 不是全部改掉：它複製一個測試、給它不同的期望值，同一個輸入就有兩個互相矛盾的答案。"
-    },
-    {
-     "t": "Oneoff 只動一個測試的預期答案；Conflicting 讓兩個測試對同一個輸入要不同答案",
-     "ok": true
-    },
-    {
-     "t": "Oneoff 只在第一次執行時動預期答案；Conflicting 每次執行都換一個預期答案",
-     "why": "Oneoff 指的是改掉一個測試的期望值，和執行第幾次無關；Conflicting 是複製一個測試、給它不同的期望值，連測試之間都衝突。"
-    }
-   ],
-   "key": [
-    "Oneoff 改掉一個測試的期望值，讓它和規格矛盾；Conflicting 複製一個測試、給它不同的期望值，同一個輸入有兩個矛盾的答案，連測試之間都衝突。"
-   ],
-   "covers": [
-    "k5.8"
-   ],
-   "closed_ok": "要知道來源本身才答得出（一般讀者不會知道）：要知道 ImpossibleBench 對 Oneoff 和 Conflicting 的確切定義，錯的選項都說得通；閉卷理由是「印象中」。"
-  },
-  {
    "id": "k5i",
    "ks": "k5",
    "kind": "choice",
-   "q": "本文引用 ImpossibleBench 的作弊率和防作弊的效果時，提醒了哪兩個限制？",
+   "q": "你替自己的 agent 加了「做不到就回報給人」的出口。同事說：「論文量過，這一招讓作弊率從 54% 降到 9%，可以放心了。」照本文，這句話哪裡說過頭？",
    "choices": [
     {
-     "t": "同一招換個 model 效果就差很多，數字也只算當時的 model",
+     "t": "那是當時某一個 model 的數字，換個 model 效果可能小得多",
      "ok": true
     },
     {
-     "t": "作弊率靠 model 自己回報，而且題目總數也只有幾十題",
-     "why": "作弊率不靠 model 回報：測試和規格矛盾，通過就是作弊。本文提醒的是：同一個防作弊的辦法，換個 model 效果差很多；而且這些是當時的 model，數字會變。"
+     "t": "那是 model 自己回報的數字，實際的作弊比例還要高得多",
+     "why": "作弊率不靠 model 回報：測試和規格矛盾，通過就是作弊。本文提醒的是：同一招換個 model 效果差很多（Opus 4.1 降得少得多），而且這些是當時的 model，數字會變。"
     },
     {
-     "t": "只測了 GPT-5 一個 model，而且每一題都只各跑過一次",
-     "why": "不只 GPT-5，Claude Opus 4.1 也量了。本文提醒的是：同一個辦法對兩個 model 效果差很多，而且數字只代表當時的 model。"
+     "t": "那是只測一個 model 的數字，別的 model 根本沒有被量過",
+     "why": "不只量了一個：GPT-5 降到 9%，Claude Opus 4.1 也量了，只是降得少得多。本文提醒的正是同一招在不同 model 上效果差很多，而且數字只代表當時的 model。"
     }
    ],
    "key": [
-    "給 agent「回報給人」的出口，GPT-5 在 Conflicting 從 54% 降到 9%，Opus 4.1 降得少得多：效果因 model 而異。而且這些是當時的 model，數字會變。"
+    "54% 降到 9% 是 GPT-5 在 Conflicting 的數字（ImpossibleBench）；同一招在 Opus 4.1 上降得少得多，效果因 model 而異。而且這些是當時的 model，數字會變。"
    ],
    "covers": [
     "k5.12"
@@ -3014,7 +3036,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k6b",
    "ks": "k6",
    "kind": "choice",
-   "q": "Failure as a Process 發現，失敗的 run 裡最常見的單一起因是什麼？",
+   "q": "照本文引的量測，失敗的 run 裡最常見的單一起因是什麼？",
    "choices": [
     {
      "t": "錯的前提：以為成立，其實不成立",
@@ -3030,7 +3052,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "錯的前提（false premise），30.7% 的失敗 run 有它：agent 以為某件事成立就照著做，其實不成立。所以最划算的檢查，是動手之前確認前提。"
+    "錯的前提（false premise），30.7% 的失敗 run 有它：agent 以為某件事成立就照著做，其實不成立。所以最划算的檢查，是動手之前確認前提（Failure as a Process）。"
    ],
    "covers": [
     "k6.4"
@@ -3063,32 +3085,6 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     "k6.6"
    ],
    "closed_ok": "常識或推理：A（一樣划算）和 B（只查一次）都說得通，懂得晚抓要退的步數越多才選得對；節標題「檢查要早」也指向答案，但那是本文標題，不是題目。"
-  },
-  {
-   "id": "k6d",
-   "ks": "k6",
-   "kind": "choice",
-   "q": "本文那張失敗 run 的時間軸圖，上面標的幾個步數要怎麼讀？",
-   "choices": [
-    {
-     "t": "是一條真實的失敗 run，照它的紀錄一步步標出來",
-     "why": "不是某一條真實的 run：它把好幾個量的中位數或約略值拼成一條軸。"
-    },
-    {
-     "t": "是所有失敗 run 的平均，每條 run 大致都照這個節奏",
-     "why": "那些是中位數或約略值，不是平均；而且是好幾個量拼成的一條軸，不是某一條真實的 run。"
-    },
-    {
-     "t": "是幾個量各取典型值拼起來的，不對應任何一條 run",
-     "ok": true
-    }
-   ],
-   "key": [
-    "Failure as a Process 在失敗的 run 上量了好幾個量，各取中位數或約略值，拼成一條軸。它不是某一條真實的 run。"
-   ],
-   "covers": [
-    "k6.3"
-   ]
   },
   {
    "id": "k6e",
@@ -3428,7 +3424,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k9a",
    "ks": "k9",
    "kind": "choice",
-   "q": "Recovery-Bench 比了三種接手失敗任務的方式：只給失敗後的環境、環境加一段動作摘要、環境加完整的動作歷史。哪一種表現最差？",
+   "q": "有一份量測比了三種接手失敗任務的方式：只給失敗後的環境、環境加一段動作摘要、環境加完整的動作歷史。哪一種表現最差？",
    "choices": [
     {
      "t": "只給環境：沒有任何歷史，下一次容易重走同一條路",
@@ -3444,7 +3440,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "帶完整動作歷史接手的最差：錯的推理會繼續帶偏下一次。所以失敗退回時只退檔案不夠，context（這一次送進 model 的全部文字，包括對話歷史）也要退。"
+    "帶完整動作歷史接手的最差：錯的推理會繼續帶偏下一次。所以失敗退回時只退檔案不夠，context（這一次送進 model 的全部文字，包括對話歷史）也要退（Recovery-Bench）。"
    ],
    "covers": [
     "k9.2",
@@ -3632,28 +3628,28 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k10c",
    "ks": "k10",
    "kind": "choice",
-   "q": "Replit 2025 年的事故：SaaStr 創辦人 Jason Lemkin 說，Replit agent 在 code freeze 期間刪了他的 production 資料庫。Replit 事後推出的是哪一種做法？",
+   "q": "團隊的 agent 連得到 production 資料庫。規定寫著「code freeze 期間不准動 production」，agent 還是在凍結期間刪了資料。照本文，哪一種做法能在事前擋住這種動作？",
    "choices": [
     {
-     "t": "加強凍結：code freeze 期間不讓 agent 下任何指令",
-     "why": "據 Lemkin 的說法，事故就發生在 code freeze 期間。Replit 推出的是 dev、prod 資料庫自動分離。"
+     "t": "把規定寫得更嚴：凍結期間不准 agent 下任何指令",
+     "why": "本文舉的 Replit 事故，據當事人的說法就發生在 code freeze 期間。本文的做法是把環境切開，讓 agent 碰不到正式環境。"
     },
     {
-     "t": "把環境切開：讓 agent 只碰得到開發用的那個資料庫",
+     "t": "把環境切開：agent 只碰得到開發用的那個資料庫",
      "ok": true
     },
     {
-     "t": "自動備份：每次刪除前，先把資料庫存成 checkpoint",
-     "why": "Replit 推出的是 dev、prod 資料庫自動分離：把環境切開，讓 agent 碰不到正式環境。"
+     "t": "加上自動備份：每次刪除之前，先存一個 checkpoint",
+     "why": "備份是發生之後的補救。本文說回不去的動作要在發生之前把關：比對 allowlist，或把環境切開，讓 agent 碰不到正式環境。"
     }
    ],
    "key": [
-    "除了比對 allowlist，另一種做法是把環境切開，讓 agent 碰不到正式環境：Replit 事後推出 dev、prod 資料庫自動分離。這是單一案例，事故經過是 Lemkin 一方的說法。"
+    "回不去的動作要在發生之前把關。除了比對 allowlist，另一種做法是把環境切開，讓 agent 碰不到正式環境：Replit 的 agent 在 code freeze 期間刪掉 production 資料庫之後，Replit 推出 dev、prod 資料庫自動分離。這是單一案例，事故經過是 Lemkin 一方的說法。"
    ],
    "covers": [
     "k10.4"
    ],
-   "closed_ok": "要知道來源本身才答得出（一般讀者不會知道）：要知道 Replit 事故後推出開發和 production 資料庫分開，是特定產品的細節。"
+   "closed_ok": "常識或推理：讀者自測優先，問的是哪一種做法在事前擋得住，懂「回不去的動作要事前把關」的人推得出來。"
   },
   {
    "id": "k10a",
@@ -3807,33 +3803,6 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "closed_ok": "常識或推理（閉卷理由）：跨 session 讀寫的進度檔本質上就是 memory，題目也點出第 5 章接著講它的失敗。"
   },
   {
-   "id": "k11h",
-   "ks": "k11",
-   "kind": "choice",
-   "q": "本章「把長任務切成短 session」的做法依的是什麼？「換了 model，每段驗證過才 commit、退回時 context 也退，這兩件仍照做」又是誰的判斷？",
-   "choices": [
-    {
-     "t": "一家公司的經驗；換 model 也照做是本文的判斷",
-     "ok": true
-    },
-    {
-     "t": "沒有外部的來源；整個做法從頭到尾都是本文的判斷",
-     "why": "短 session 的形狀有來源：圖 5 依的是 Anthropic 2025-11 的 harness，一家公司的經驗。只有換了 model 也照做的那兩件，是本文的判斷。"
-    },
-    {
-     "t": "一家公司的量測；換 model 也照做是他們量的",
-     "why": "圖 5 依的是 Anthropic 的 harness，是一家公司的經驗，不是量測；「換了 model 也照做」是本文的判斷。"
-    }
-   ],
-   "key": [
-    "圖 5 依的是 Anthropic 2025-11 的 harness，一家公司的經驗。每段驗證過才 commit、退回時 context 也退，換了 model 也照做，是本文的判斷，不是量測結果。"
-   ],
-   "covers": [
-    "k11.9"
-   ],
-   "closed_ok": "常識或推理（閉卷理由）：切短 session 來自 Anthropic 一家的經驗；另外兩件事是本文從 checkpoint 道理推出的判斷，前幾題的說法也是這樣。"
-  },
-  {
    "id": "k11c",
    "ks": "k11",
    "kind": "apply",
@@ -3906,7 +3875,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k12c",
    "ks": "k12",
    "kind": "choice",
-   "q": "論文 Failure as a Process 看了失敗的 run：錯誤已經救不回來之後，agent 會不會自己很快停下？",
+   "q": "錯誤已經救不回來之後，agent 會不會自己很快停下？照本文引的量測，是哪一種？",
    "choices": [
     {
      "t": "大多會停：發現救不回來，八成以上很快就停",
@@ -3922,7 +3891,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "失敗的 run 裡，只有 18% 在錯誤救不回來之後很快停下，其他的繼續做下去。Agent 自己不停，上限就要從外面加。"
+    "失敗的 run 裡，只有 18% 在錯誤救不回來之後很快停下，其他的繼續做下去。Agent 自己不停，上限就要從外面加（Failure as a Process）。"
    ],
    "covers": [
     "k12.1"
@@ -3932,7 +3901,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k12d",
    "ks": "k12",
    "kind": "choice",
-   "q": "一個錯已經修了 15 步還沒修好。照 Failure as a Process 量到的修復長度，本文會怎麼看？",
+   "q": "一個錯已經修了 15 步還沒修好。照本文引的修復長度量測，本文會怎麼看？",
    "choices": [
     {
      "t": "再修一下：修復本來就常要十幾步，15 步還不算久",
@@ -3948,7 +3917,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修了遠超過 5 步還沒好，再修的價值變低，就該停（本文的判斷；論文沒給兩組的比例）。"
+    "一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修了遠超過 5 步還沒好，再修的價值變低，就該停（本文的判斷；論文沒給兩組的比例）（Failure as a Process）。"
    ],
    "covers": [
     "k12.2"
@@ -4328,7 +4297,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "id": "k14f",
    "ks": "k14",
    "kind": "choice",
-   "q": "Failure as a Process 統計了決定 agent 失敗的錯誤。它的發現是哪一個？",
+   "q": "有一份量測統計了決定 agent 失敗的錯誤。它的發現是哪一個？",
    "choices": [
     {
      "t": "多數失敗是做錯事：狀態看對了，動手卻做錯",
@@ -4344,7 +4313,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     }
    ],
    "key": [
-    "決定失敗的錯誤裡，57.9% 是 epistemic（認知的錯：agent 以為的狀態和實際不符），32.8% 是 competence（能力的錯：狀態沒看錯，事情卻做錯）。"
+    "決定失敗的錯誤裡，57.9% 是 epistemic（認知的錯：agent 以為的狀態和實際不符），32.8% 是 competence（能力的錯：狀態沒看錯，事情卻做錯）（Failure as a Process）。"
    ],
    "covers": [
     "k14.8"
@@ -4737,7 +4706,8 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "after": "i4"
   }
  ]
-}</script>
+}
+</script>
 <script type="application/json" id="moved">{"to": "l06b.html", "ids": {"i10": "i6", "i5-1": "i1-1", "i5-2": "i1-2", "i5-3": "i1-3", "i5-4": "i1-4", "i6": "i2", "i6-1": "i2-1", "i6-2": "i2-2", "i6-3": "i2-3", "i6-4": "i2-4", "i6-5": "i2-5", "i7": "i3", "i7-1": "i3-1", "i7-2": "i3-2", "i7-3": "i3-3", "i7-4": "i3-4", "i8": "i4", "i8-1": "i4-1", "i8-2": "i4-2", "i8-3": "i4-3", "i8-4": "i4-4", "i8-5": "i4-5", "i9": "i5", "i9-1": "i5-1", "i9-2": "i5-2", "l6v-asym-ah": "l6v-asym-ah", "l6v-asym-ak": "l6v-asym-ak", "l6v-atk-ah": "l6v-atk-ah", "l6v-atk-ak": "l6v-atk-ak", "l6v-back-ah": "l6v-back-ah", "l6v-back-ak": "l6v-back-ak", "l6v-cascade-ah": "l6v-cascade-ah", "l6v-cascade-ak": "l6v-cascade-ak", "l6v-ctrl-ah": "l6v-ctrl-ah", "l6v-ctrl-ak": "l6v-ctrl-ak", "l6v-dream-ah": "l6v-dream-ah", "l6v-dream-ak": "l6v-dream-ak", "l6v-life-ah": "l6v-life-ah", "l6v-life-ak": "l6v-life-ak", "l6v-own-ah": "l6v-own-ah", "l6v-own-ak": "l6v-own-ak", "l6v-pipe-ah": "l6v-pipe-ah", "l6v-pipe-ak": "l6v-pipe-ak", "l6v-prov-ah": "l6v-prov-ah", "l6v-prov-ak": "l6v-prov-ak", "l6v-sim-ah": "l6v-sim-ah", "l6v-sim-ak": "l6v-sim-ak", "l6v-spec-ah": "l6v-spec-ah", "l6v-spec-ak": "l6v-spec-ak", "l6v-stack-ah": "l6v-stack-ah", "l6v-stack-ak": "l6v-stack-ak", "l6v-swe-ah": "l6v-swe-ah", "l6v-swe-ak": "l6v-swe-ak", "l6v-time-ah": "l6v-time-ah", "l6v-time-ak": "l6v-time-ak", "l6v-two-ah": "l6v-two-ah", "l6v-two-ak": "l6v-two-ak", "n-cc": "n-cc", "n-context": "n-context", "n-kg": "n-kg", "n-metric": "n-metric", "n-q": "n-q", "n-sys": "n-sys", "t1": "t1", "t2": "t2", "t3": "t3", "x1": "x1", "x2": "x2"}}</script>
 <script src="app.js?v=20261110d"></script>
 <script src="code.js"></script>

@@ -74,7 +74,7 @@
     <h2 class="label" id="tldr-h">先看這裡</h2>
     <p class="thesis">Agent 是 model（語言模型）加上一層程式：這層程式叫 harness，它反覆呼叫 model，照 model 提議的下一步讀檔、改檔、跑指令，每次呼叫前替 model 組好 context（這一次送進 model 的全部文字）。Model 本身不記得任何事。Agent 記得的每件事，都是 harness 存進一個 store（存記憶的地方，例如幾個檔案），之後再放回 context 的。這帶來一個新風險：一筆錯的資訊被記下來之後，每一次新的 session（一次新的對話）都會讀回來照做。錯的記憶可以在三個地方擋：寫入前決定記不記；寫入時多存時間和來源，之後才分得出哪一條過期、兩條衝突時該信誰；取回時先濾掉不該拿的。課程替 memory 列了七個設計問題和八種失敗，這堂把它們收成這三件事：<strong>哪些事值得記、記的時候要多存什麼、取回時怎麼不拿錯</strong>。這三個地方都沒擋住的錯，還有一個事後的補救。Harness 除了 store，另外把每個 session 的完整對話原樣存成一份紀錄（transcript）。Agent 沒有任務的時候，harness 在背景另開一個 session，讓 model 把 store 裡的每一條和這份紀錄對一遍，對不上的就改掉。這只修得了「記下的和紀錄裡寫的不一樣」這一種錯，後來才過期的事實它修不了。而且紀錄要留著才有東西可以對。做法在第 2 章。</p>
     <ul class="core">
-      <li><span><b>壞的記憶比沒有記憶更糟。</b>沒記，agent 再查一次，多花幾步，查不到就是查不到，錯在明處；記錯，它照著錯的資訊做，做完看起來一切正常，沒有錯誤訊息提醒它，下個 session 還會再犯。2026 年的 SWE-ContextBench 量了這件事：coding agent 解 99 個 GitHub issue，每題事先配好一份相關的舊 issue 的解法摘要。直接給它配好的那份，解出 34%，比沒有記憶的 26% 高 8 個百分點；讓它自己從一堆摘要裡挑，只有 36% 的題目挑到配好的那份，解出 22%，<strong>比沒有記憶還低 4 個百分點</strong>。對的記憶有幫助，拿錯的記憶比沒有更糟。所以能重讀的不要記，少一筆可能拿錯的記憶；記了的，用之前再確認它還成立。</span></li>
+      <li data-num-own="8 4"><span><b>壞的記憶比沒有記憶更糟。</b>沒記，agent 再查一次，多花幾步，查不到就是查不到，錯在明處；記錯，它照著錯的資訊做，做完看起來一切正常，沒有錯誤訊息提醒它，下個 session 還會再犯。2026 年的 SWE-ContextBench 量了這件事：coding agent 解 99 個 GitHub issue，每題事先配好一份相關的舊 issue 的解法摘要。直接給它配好的那份，解出 34%，比沒有記憶的 26% 高 8 個百分點；讓它自己從一堆摘要裡挑，只有 36% 的題目挑到配好的那份，解出 22%，<strong>比沒有記憶還低 4 個百分點</strong>。對的記憶有幫助，拿錯的記憶比沒有更糟。所以能重讀的不要記，少一筆可能拿錯的記憶；記了的，用之前再確認它還成立。</span></li>
       <li><span><b>少記，記了就帶時間和來源。</b>這裡的時間是這件事從什麼時候開始成立，不是哪一天寫下的；事實改變時，再把舊的那條標上「到某月為止」，不要刪，之後才答得出「5 月時用的是什麼」。來源是誰說的，決定兩條衝突時信誰：使用者親口說的，不該被一篇網頁蓋過。開始時間和來源要在寫入當下存：那一刻還知道是誰、在什麼時候說的，原始對話過去之後就補不回來。</span></li>
       <li><span><b>取回時先過濾，再比相似度。</b>一個 store 常常裝著好幾個使用者、好幾個專案的記憶，也裝著已經失效的舊事實；它們和現在的問題用字很像。如果只把「屬於哪個使用者、專案」（scope）和「現在還成立嗎」（validity）當排序的加分，分數夠高的別人的記憶、過期的事實還是會排進來；當成過濾條件，它們一開始就查不到，剩下的再比語意相似度。這些取回和寫入的規則，比記憶放在哪裡重要：換一個資料庫，規則也不會變，而檔案也做得到（一個專案一個資料夾就是 scope，失效的條目不再讀進來，找相關的用 grep 這類搜尋，第 4 章有量測）。所以本文建議<strong>先用檔案</strong>：人看得懂、改得動，進 git 就有版本，真的不夠用再換。</span></li>
     </ul>
@@ -713,7 +713,7 @@ ORDER BY embedding &lt;=&gt; $query_vec                     -- semantic match：
 LIMIT 5;                                              -- top-k：k 決定要花多少 context</code></pre></figure>
               <p>第 2 段<a href="#s-try">動手試試</a>的 recall.py 用 Python 做同一件事，可以直接跑，和上面 recall.sql 的查詢對照。</p>
               <p id="i3-3"><b>該常駐的不要靠檢索碰運氣。</b>「不准動 public API」這種規則，漏掉一次的代價很高，又不一定和當下的 query 相似，所以放在每次都載入的地方，例如 CLAUDE.md（L2〈<a href="l02.html#i6">CLAUDE.md</a>〉）。這就是第 2 章四層裡最上面的 injected context。</p>
-              <p>往這一層搬有三個代價，所以它要保持小（依 Anthropic〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉，2026-11）。第一，這裡的每一行，每個 session 的每一圈都要付 token。第二，這裡寫錯的一行會進到每一個 session。第三，<strong>載入不等於照做</strong>：Claude Code 的文件提醒，instruction 檔越長，model 越不容易每一條都照做。做法是最上層只放非有不可的規則和一份索引，細節放在下層、留一行連結過去。Claude Code 的 auto memory 就是這樣：每個 session 只載入 MEMORY.md 這份索引的前 200 行或 25KB，其他的記憶檔要用才讀（第 4 章）。</p>
+              <p data-num-own="200">往這一層搬有三個代價，所以它要保持小（依 Anthropic〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉，2026-11）。第一，這裡的每一行，每個 session 的每一圈都要付 token。第二，這裡寫錯的一行會進到每一個 session。第三，<strong>載入不等於照做</strong>：Claude Code 的文件提醒，instruction 檔越長，model 越不容易每一條都照做。做法是最上層只放非有不可的規則和一份索引，細節放在下層、留一行連結過去。Claude Code 的 auto memory 就是這樣：每個 session 只載入 MEMORY.md 這份索引的前 200 行或 25KB，其他的記憶檔要用才讀（第 4 章）。</p>
               <p id="i3-4"><b>k 是 context 的預算。</b>每一條取回的記憶之後每一圈都重送。設每條 200 token，任務跑 50 圈：</p>
               <figure class="file"><figcaption>一個任務多送多少 token</figcaption><pre><code class="lang-text">多送的 token = k × 每條 200 × 50 圈</code></pre></figure>
               <div class="table-wrap"><table>
@@ -1044,7 +1044,7 @@ budget:
                 </tbody>
               </table></div>
               <p>數字要看前提。MINJA 平均寫入成功 98.2%、攻擊成功 76.8%。<a href="https://arxiv.org/html/2601.05504v1" target="_blank" rel="noopener">後續的研究</a>（UMass，2026-01）在 GPT-4o-mini 上另外量了 store 一開始有沒有東西：store 是空的時候攻擊成功 62%；先放進相關的正常記憶，同樣的攻擊掉到 6.67%。所以<strong>共用、空的 store 最危險</strong>，但路徑不會因此消失。</p>
-              <p id="i5-2"><b>每一站一道防線，至少一道不靠 model 判斷。</b>這裡的站換成攻擊會經過的五站：寫入、儲存、檢索三站對應第 1 章的 Observe 與 Encode、Store、Retrieve，再加上記憶讀回來之後的動作，以及事後的偵測。只靠 LLM 過濾不夠：MINJA 為一種 agent 量身寫的偵測 prompt 抓到 131/135，換到另一種 agent 是 0/135，通用版也只有 53/135；那篇後續研究的過濾在 Gemini 2.0 Flash 上把 54 筆惡意內容以滿分信任存了進去。各站的做法（本文的整理）：</p>
+              <p data-num-own="54" id="i5-2"><b>每一站一道防線，至少一道不靠 model 判斷。</b>這裡的站換成攻擊會經過的五站：寫入、儲存、檢索三站對應第 1 章的 Observe 與 Encode、Store、Retrieve，再加上記憶讀回來之後的動作，以及事後的偵測。只靠 LLM 過濾不夠：MINJA 為一種 agent 量身寫的偵測 prompt 抓到 131/135，換到另一種 agent 是 0/135，通用版也只有 53/135；那篇後續研究的過濾在 Gemini 2.0 Flash 上把 54 筆惡意內容以滿分信任存了進去。各站的做法（本文的整理）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>站</th><th>防線</th><th>靠什麼</th></tr></thead>
                 <tbody>
@@ -7036,7 +7036,8 @@ budget:
    "covers": [
     "k40.16",
     "k40.15"
-   ]
+   ],
+   "num_own": "500"
   },
   {
    "id": "k41a",

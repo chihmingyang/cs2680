@@ -17,7 +17,7 @@ description: 替一堂建題庫（每一節的小測與整合題）時用：Jame
 
 - **這堂的可讀性審查要先做完、push 了**（`readability-review`）。題庫是現在文字的 snapshot。先出題再改文字，`points` 和 `key` 都會過時。
 - `mkdir -p notes/quiz/lXX`。
-- 讀 `guide/QUIZ.md` 的〈出題規則〉和〈觀念涵蓋〉兩節。
+- 讀 `guide/QUIZ.md` 的〈讀者自測優先〉〈出題規則〉〈觀念涵蓋〉三節。讀者自測優先（2026-11-11）：題目問含義，不問精確值和出處；那一類在觀念清單標 `evidence`、不出題，數字由 `tools/check_numbers.py` 對照 `guide/sources/lXX.md`（`verify.sh` 會跑）。
 
 ## 1. 切節：`init`
 

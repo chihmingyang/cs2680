@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-11（腳本表加 `check_numbers.py`；`verify.sh`、`quiz.py` 兩列同步。）
 - 2026-11-10（L6b 補 Anthropic〈The components of agent memory〉：五個新小節 `#i1-5`、`#i2-6`、`#i2-7`、`#i3-5`、`#i4-6`，延伸閱讀加一篇本文補的「推薦」；L6b 20 分 → 30 分。取捨在 V7_DECISIONS，來源在 sources/l06.md。）
 - 2026-11-10（首頁課程地圖的 chip 也改成英文，例如 Memory Design、Reliability、Eval；層名本來就是英文。）
 - 2026-11-10（James：課程名稱改成英文，例如 L6 Agent Reliability、L7 Agent Eval、L3 Multi-agent Workflows、L9 LLM Inference Basics。改了 h1、title、側欄、pager、首頁、別頁〈〉引用與 dag.json；英文原標題那行、網址、錨點不動。）
@@ -72,6 +73,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-11（J 的第 1 層加 check_numbers。）
 
 - 2026-11-10（加 K〈一份 slides 拆成幾堂〉：用 DAG 決定切點、key 加字母、章號重編、舊連結 `#moved`、題庫 `moved_from`、別頁連結、檢查與審查。第一例是 L6 → L6／L6b。）
 - 2026-11-08（J 的第 2 層改成 pilot：L6 第 1–4 章題庫，手動跑；細節在新的 `QUIZ.md`。）
@@ -157,6 +159,7 @@
 - 2026-11-06（第一次用在新講次：L9–L11，10 個審查者，第一輪 33／71／21 BLOCK，第二輪剩 2／12／5，主線修完、沒有第三輪。「作者怎麼用報告」加兩條：第二輪的定位附第一輪的「我讀到的」（作者加段落後定位會移動）；新頁接到全站後就地改 HTML、不從片段重組。skill 第 4 步同步。十個審查者加三個作者修改碰到一次 5 小時的用量上限，大堂分給審查者時留意）。
 
 ## QUIZ.md
+- 2026-11-11（**讀者自測優先**：James 讀 L6 發現有些題問論文的數字，定了優先順序：讀者自測比 regression test 重要，數字背後的含義才是重點。加〈讀者自測優先〉：判準是遷移；帶數字的題分三種；量測類觀念寫成「發現 → 所以」；觀念清單加 `evidence` 類，不出題。加〈數字對照〉：新的 `tools/check_numbers.py` 拿頁面引用來源的數字對 `guide/sources/lXX.md`，接進 `verify.sh`，L6、L6b 標 strict。`quiz.py check` 放行 `evidence`、擋只測 `evidence` 的題、選項只有數字給 warn。L6 題庫照改：106 題變 102 題。L6b 來源檔補三個漏記的數字（重開原文核對過）。build-quiz 的 points-prompt、writer-brief 同步。）
 - 2026-11-10（L6b 補五個小節的題：新節 k44–k48、20 題；用「只改了某一節」的維護流程，觀念由主線列。〈各堂題庫〉加一列。）
 
 - 2026-11-10（L6 拆成 L6／L6b：〈各堂題庫〉加兩列；資料一節加 `moved_from`；整合題一條改寫成拆堂後的放法。）
