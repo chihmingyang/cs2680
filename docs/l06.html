@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>L6 Agent 可靠性 · CS2680</title>
+<title>L6 Agent Reliability · CS2680</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -32,21 +32,21 @@
 </ol>
 <p class="sn-label">Part I · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l06.html" aria-current="page"><span class="sn-no">L6</span><span class="sn-t">Agent 可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">錯誤相乘</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">本文的判斷：這條算式有兩個前提，真實的 run 兩個都不成立</a></li><li><a class="sn-sub2" href="#i1-2">三個槓桿</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">驗證</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">檢查要真的抓得到</a></li><li><a class="sn-sub2" href="#i2-2">檢查要早</a></li><li><a class="sn-sub2" href="#i2-3">不靠 model 自律</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Checkpoint 與上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">退回多遠，決定要多跑多少步</a></li><li><a class="sn-sub2" href="#i3-2">存什麼：驗證過的狀態，而且 context 也要退</a></li><li><a class="sn-sub2" href="#i3-3">回不去的動作</a></li><li><a class="sn-sub2" href="#i3-4">把長任務切成短 session</a></li><li><a class="sn-sub2" href="#i3-5">上限：一直錯的時候什麼時候停</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">失敗分層</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">先找第一個出錯的步驟，在那一層修</a></li><li><a class="sn-sub2" href="#i4-2">五層各一條原則</a></li><li><a class="sn-sub2" href="#i4-3">沒有紀錄，就不知道該改什麼</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
-<li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">Course Overview &amp; AI Systems</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">How Claude Code Works</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">Multi-agent Workflows</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context Management &amp; Tool Design</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent Architecture &amp; Communication</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l06.html" aria-current="page"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">錯誤相乘</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">本文的判斷：這條算式有兩個前提，真實的 run 兩個都不成立</a></li><li><a class="sn-sub2" href="#i1-2">三個槓桿</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">驗證</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">檢查要真的抓得到</a></li><li><a class="sn-sub2" href="#i2-2">檢查要早</a></li><li><a class="sn-sub2" href="#i2-3">不靠 model 自律</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Checkpoint 與上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">退回多遠，決定要多跑多少步</a></li><li><a class="sn-sub2" href="#i3-2">存什麼：驗證過的狀態，而且 context 也要退</a></li><li><a class="sn-sub2" href="#i3-3">回不去的動作</a></li><li><a class="sn-sub2" href="#i3-4">把長任務切成短 session</a></li><li><a class="sn-sub2" href="#i3-5">上限：一直錯的時候什麼時候停</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">失敗分層</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">先找第一個出錯的步驟，在那一層修</a></li><li><a class="sn-sub2" href="#i4-2">五層各一條原則</a></li><li><a class="sn-sub2" href="#i4-3">沒有紀錄，就不知道該改什麼</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">Cost, Latency &amp; Harness Architecture</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM 的結構與 serving 的帳</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU 入門與 kernel 最佳化</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">作業回饋與 agent 的十個陷阱</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
 <p class="sn-label">讀書會</p>
@@ -58,7 +58,7 @@
 <main class="page gutter article" data-lecture="l06" data-format="article" data-pdf="6_agent_design_3.pdf" data-pages-total="31">
   <header class="lecture-head">
     <p class="eyebrow">Lecture 06 · 2026-09-28 · Part I · 依想法重組 · 和 L6b 同一份 slides</p>
-    <h1>Agent 可靠性</h1>
+    <h1>Agent Reliability</h1>
     <p class="en-title">Agents design III: agent memory and reliability — reliability</p>
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/6_agent_design_3.pdf" target="_blank" rel="noopener">6_agent_design_3.pdf ↗</a></li>
@@ -72,7 +72,7 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">Agent 是 model（語言模型）加上一層程式：這層程式叫 harness，它反覆呼叫 model，照 model 提議的下一步讀檔、改檔、跑指令，每次呼叫前替 model 組好 context（這一次送進 model 的全部文字）。一個 run（agent 從接到任務到停下來的一次執行）有幾十步，只要有一步錯了沒被發現，整個 run 就錯，所以步數越多，全對的機率越低。這堂要帶走的不是課程列的 26 種失敗，而是<strong>怎麼把錯攔下來</strong>：在哪裡檢查、失敗時退回多遠、什麼時候停，以及出錯之後去哪裡修。另一種錯是 agent 把錯的資訊存進記憶，下一次對話又讀回來照做，那是 L6b〈<a href="l06b.html">Agent memory</a>〉的主題。</p>
+    <p class="thesis">Agent 是 model（語言模型）加上一層程式：這層程式叫 harness，它反覆呼叫 model，照 model 提議的下一步讀檔、改檔、跑指令，每次呼叫前替 model 組好 context（這一次送進 model 的全部文字）。一個 run（agent 從接到任務到停下來的一次執行）有幾十步，只要有一步錯了沒被發現，整個 run 就錯，所以步數越多，全對的機率越低。這堂要帶走的不是課程列的 26 種失敗，而是<strong>怎麼把錯攔下來</strong>：在哪裡檢查、失敗時退回多遠、什麼時候停，以及出錯之後去哪裡修。另一種錯是 agent 把錯的資訊存進記憶，下一次對話又讀回來照做，那是 L6b〈<a href="l06b.html">Agent Memory</a>〉的主題。</p>
     <ul class="core">
       <li><span><b>長任務靠攔錯，不靠每一步第一次就做對。</b>每步第一次做對的機率是 95% 時，不檢查，50 步全對只剩 8%（0.95 連乘 50 次）。改成每步做完就檢查、錯了就重試一次：只要檢查都抓得到錯，而且重試和第一次一樣有 95% 做對，這一步要兩次都錯才失敗，機率是 5% × 5% = 0.25%，所以每步有 99.75% 最後是對的，50 步全對升到 <strong>88%</strong>。實際的 agent 也是這樣成功的：Failure as a Process（2026-07）逐步看了 Terminal-Bench 上 21 個 agent 系統的紀錄，成功的 run 有 71% 途中出過錯、又修了回來。</span></li>
       <li><span><b>失敗時退回多遠、最多花多少，要事先定。</b>便宜的檢查（lint、型別檢查）每步跑，抓到錯就重做這一步；貴的驗證（跑整套測試）每隔一段跑一次，通過了才存 checkpoint（失敗時可以退回的存檔點），沒通過就退回上一個 checkpoint、重做整段。段切得越長，驗證跑得越少，但每次重做的步數越多；本文假設一次驗證的花費等於 5 步、每步 95% 對，把平均要跑的步數和驗證的花費加起來比，50 步的任務每段 10 步最省（第 3 章有算式和可以拖的圖）。退回時<strong>檔案和 context 一起退</strong>：只退檔案，錯的推理還留在 context 裡，會帶偏下一次。再給每個 run 定步數、花費、時間的上限，並且一直沒有進展就停，例如連續 8 步沒有新改的檔案、也沒有新通過的測試。</span></li>
@@ -87,7 +87,7 @@
         <header class="part-head">
           <p class="kicker">1 · 核心觀念</p>
           <h2>怎麼把錯攔下來</h2>
-          <p class="lede">五章依重要性排，不照 slides 的順序。前四章講怎麼不讓錯誤拖垮長任務：先算錯誤怎麼累積，再講當場攔錯、失敗時退回多遠、出錯後在哪一層修；最後一章是需要時再查的目錄。這堂和 L6b〈<a href="l06b.html">Agent memory</a>〉來自同一份 slides（9/28），依觀念拆成兩堂：這一堂的錯誤停在一個 run 裡，L6b 講錯誤被記下來之後怎麼辦。標「本文補的」是課程沒講、本文加上的。</p>
+          <p class="lede">五章依重要性排，不照 slides 的順序。前四章講怎麼不讓錯誤拖垮長任務：先算錯誤怎麼累積，再講當場攔錯、失敗時退回多遠、出錯後在哪一層修；最後一章是需要時再查的目錄。這堂和 L6b〈<a href="l06b.html">Agent Memory</a>〉來自同一份 slides（9/28），依觀念拆成兩堂：這一堂的錯誤停在一個 run 裡，L6b 講錯誤被記下來之後怎麼辦。標「本文補的」是課程沒講、本文加上的。</p>
         </header>
         <nav class="map" aria-label="章節">
           <p class="map-g">一定要會：長任務靠攔錯，不靠每步都對</p>
@@ -968,8 +968,8 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
       </section>
 
       <nav class="pager" aria-label="上一堂與下一堂">
-        <a class="prev" href="l05.html"><span>← 上一堂 L5</span>Multi-agent 架構與溝通</a>
-        <a class="next" href="l06b.html"><span>下一堂 L6b →</span>Agent memory</a>
+        <a class="prev" href="l05.html"><span>← 上一堂 L5</span>Multi-agent Architecture &amp; Communication</a>
+        <a class="next" href="l06b.html"><span>下一堂 L6b →</span>Agent Memory</a>
       </nav>
       <p class="fineprint">本文取材自 CS2680 9/28 那一講的 slides（和 L6b 同一份，這一堂取講可靠性的部分）與下列來源，但不照 slides 的順序；標明「本文」的段落是本文的判斷，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。標「示意」的設定檔是本文的例子；Claude Code 的細節依 2026 年 11 月的官方文件。來源：<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a>、<a href="https://snorkel.ai/blog/coding-agents-dont-need-to-be-perfect-they-need-to-recover/" target="_blank" rel="noopener">Snorkel 的錯誤分析</a>、<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a>、<a href="https://arxiv.org/abs/2602.16666v1" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a>、<a href="https://arxiv.org/abs/2510.20270" target="_blank" rel="noopener">ImpossibleBench</a>、<a href="https://anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Effective harnesses for long-running agents</a>、<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Harness design for long-running apps</a>、<a href="https://www.theregister.com/2025/07/22/replit_saastr_response/" target="_blank" rel="noopener">The Register 的 Replit 報導</a></p>
     </div>

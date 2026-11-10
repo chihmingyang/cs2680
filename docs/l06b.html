@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>L6b Agent memory · CS2680</title>
+<title>L6b Agent Memory · CS2680</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -32,21 +32,21 @@
 </ol>
 <p class="sn-label">Part I · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">課程總覽與 AI 系統</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">Claude Code 怎麼運作</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">用多個 agent 放大產能</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context 管理與 tool 設計</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent 架構與溝通</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent 可靠性</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l06b.html" aria-current="page"><span class="sn-no">L6b</span><span class="sn-t">Agent memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">要不要記</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">兩種錯的代價不對稱：</a></li><li><a class="sn-sub2" href="#i1-2">記憶是一份沒有人通知你過期的副本</a></li><li><a class="sn-sub2" href="#i1-3">寫入 policy 是光譜上的一個點</a></li><li><a class="sn-sub2" href="#i1-4">每一站都要有一條寫下來的規則</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">時間與來源</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Valid time：新事實不刪舊的</a></li><li><a class="sn-sub2" href="#i2-2">Provenance：這件事是誰說的</a></li><li><a class="sn-sub2" href="#i2-3">歸納是風險最高的寫入，因為來源是 model 自己</a></li><li><a class="sn-sub2" href="#i2-4">遺忘是正式操作</a></li><li><a class="sn-sub2" href="#i2-5">本文的判斷：刪除要能連鎖</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">檢索</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">五個訊號，放在不同的位置</a></li><li><a class="sn-sub2" href="#i3-2">過濾還是排序，差別在後果</a></li><li><a class="sn-sub2" href="#i3-3">該常駐的不要靠檢索碰運氣</a></li><li><a class="sn-sub2" href="#i3-4">k 是 context 的預算</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">放在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">Backend：依之後怎麼查反推</a></li><li><a class="sn-sub2" href="#i4-2">誰決定什麼時候讀寫</a></li><li><a class="sn-sub2" href="#i4-3">誰擁有記憶</a></li><li><a class="sn-sub2" href="#i4-4">本文的判斷（2026-11）：先用檔案</a></li><li><a class="sn-sub2" href="#i4-5">分數要自己量</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">安全</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">四個案例，四條進去的路，沒有一條看起來像「寫入記憶」：</a></li><li><a class="sn-sub2" href="#i5-2">每一站一道防線，至少一道不靠 model 判斷</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
-<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent 評估</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">成本、速度與 harness 架構</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">Course Overview &amp; AI Systems</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">How Claude Code Works</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">Multi-agent Workflows</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context Management &amp; Tool Design</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent Architecture &amp; Communication</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l06b.html" aria-current="page"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">要不要記</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">兩種錯的代價不對稱：</a></li><li><a class="sn-sub2" href="#i1-2">記憶是一份沒有人通知你過期的副本</a></li><li><a class="sn-sub2" href="#i1-3">寫入 policy 是光譜上的一個點</a></li><li><a class="sn-sub2" href="#i1-4">每一站都要有一條寫下來的規則</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">時間與來源</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Valid time：新事實不刪舊的</a></li><li><a class="sn-sub2" href="#i2-2">Provenance：這件事是誰說的</a></li><li><a class="sn-sub2" href="#i2-3">歸納是風險最高的寫入，因為來源是 model 自己</a></li><li><a class="sn-sub2" href="#i2-4">遺忘是正式操作</a></li><li><a class="sn-sub2" href="#i2-5">本文的判斷：刪除要能連鎖</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">檢索</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">五個訊號，放在不同的位置</a></li><li><a class="sn-sub2" href="#i3-2">過濾還是排序，差別在後果</a></li><li><a class="sn-sub2" href="#i3-3">該常駐的不要靠檢索碰運氣</a></li><li><a class="sn-sub2" href="#i3-4">k 是 context 的預算</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">放在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">Backend：依之後怎麼查反推</a></li><li><a class="sn-sub2" href="#i4-2">誰決定什麼時候讀寫</a></li><li><a class="sn-sub2" href="#i4-3">誰擁有記憶</a></li><li><a class="sn-sub2" href="#i4-4">本文的判斷（2026-11）：先用檔案</a></li><li><a class="sn-sub2" href="#i4-5">分數要自己量</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">安全</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">四個案例，四條進去的路，沒有一條看起來像「寫入記憶」：</a></li><li><a class="sn-sub2" href="#i5-2">每一站一道防線，至少一道不靠 model 判斷</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">Cost, Latency &amp; Harness Architecture</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM 的結構與 serving 的帳</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU 入門與 kernel 最佳化</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">作業回饋與 agent 的十個陷阱</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
 <p class="sn-label">讀書會</p>
@@ -58,7 +58,7 @@
 <main class="page gutter article" data-lecture="l06b" data-format="article" data-pdf="6_agent_design_3.pdf" data-pages-total="31">
   <header class="lecture-head">
     <p class="eyebrow">Lecture 06b · 2026-09-28 · Part I · 依想法重組 · 和 L6 同一份 slides</p>
-    <h1>Agent memory</h1>
+    <h1>Agent Memory</h1>
     <p class="en-title">Agents design III: agent memory and reliability — agent memory</p>
     <ul class="meta">
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/6_agent_design_3.pdf" target="_blank" rel="noopener">6_agent_design_3.pdf ↗</a></li>
@@ -87,7 +87,7 @@
         <header class="part-head">
           <p class="kicker">1 · 核心觀念</p>
           <h2>哪些事值得記，怎麼記才不會害你</h2>
-          <p class="lede">六章依重要性排，不照 slides 的順序。前三章是 memory 最上游的決定：記不記、記的時候多存什麼、取回時怎麼挑，因為壞的記憶會讓錯誤活過一個 run，而且最難挽回；接著是放在哪裡與安全，最後一章是需要時再查的目錄。這堂和 L6〈<a href="l06.html">Agent 可靠性</a>〉來自同一份 slides（9/28），依觀念拆成兩堂；沒讀過 L6 也讀得懂，用到它的地方會連過去。標「本文補的」是課程沒講、本文加上的。</p>
+          <p class="lede">六章依重要性排，不照 slides 的順序。前三章是 memory 最上游的決定：記不記、記的時候多存什麼、取回時怎麼挑，因為壞的記憶會讓錯誤活過一個 run，而且最難挽回；接著是放在哪裡與安全，最後一章是需要時再查的目錄。這堂和 L6〈<a href="l06.html">Agent Reliability</a>〉來自同一份 slides（9/28），依觀念拆成兩堂；沒讀過 L6 也讀得懂，用到它的地方會連過去。標「本文補的」是課程沒講、本文加上的。</p>
         </header>
         <nav class="map" aria-label="章節">
           <p class="map-g">一定要會：記憶會讓錯誤活過一個 run</p>
@@ -106,7 +106,7 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">1</span>要不要記：壞的記憶比沒有記憶更糟</h3>
             <div class="prose">
-              <p>Agent 會出錯。L6〈<a href="l06.html#i1">Agent 可靠性</a>〉講的是一個 run（agent 從接到任務到停下來的一次執行）裡的錯：model 讀錯、推錯，錯的結論只存在 context 裡。開一個新的 session（一次新的對話），context 從空的開始，這些錯就不見了；改壞的檔案還在，但那是 L6 用 checkpoint（驗證過才存的存檔點）退回的事。Memory 讓錯的資訊跨過這條線：agent 把一筆資訊記下來，它記下時就錯，或是後來過期了（例如一個後來搬走的檔案路徑），之後每個新的 session 都會讀回來照做。L2〈<a href="l02.html#i6">記憶</a>〉講過機制，model 沒有狀態，記得的每件事都是 harness（跑 agent、替它組 context 的那層程式）搬進來的：</p>
+              <p>Agent 會出錯。L6〈<a href="l06.html#i1">Agent Reliability</a>〉講的是一個 run（agent 從接到任務到停下來的一次執行）裡的錯：model 讀錯、推錯，錯的結論只存在 context 裡。開一個新的 session（一次新的對話），context 從空的開始，這些錯就不見了；改壞的檔案還在，但那是 L6 用 checkpoint（驗證過才存的存檔點）退回的事。Memory 讓錯的資訊跨過這條線：agent 把一筆資訊記下來，它記下時就錯，或是後來過期了（例如一個後來搬走的檔案路徑），之後每個新的 session 都會讀回來照做。L2〈<a href="l02.html#i6">記憶</a>〉講過機制，model 沒有狀態，記得的每件事都是 harness（跑 agent、替它組 context 的那層程式）搬進來的：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 212" role="img" aria-label="上排由左到右：user、agent harness、context window、LLM。Context window 是這一次的工作狀態。下排是 memory store，跨 session 保存，只接到 harness：harness 寫入，也讀出來放進 context。LLM 和 memory store 之間沒有線。">
@@ -1089,8 +1089,8 @@ budget:
       </section>
 
       <nav class="pager" aria-label="上一堂與下一堂">
-        <a class="prev" href="l06.html"><span>← 上一堂 L6</span>Agent 可靠性</a>
-        <a class="next" href="l07.html"><span>下一堂 L7 →</span>Agent 評估</a>
+        <a class="prev" href="l06.html"><span>← 上一堂 L6</span>Agent Reliability</a>
+        <a class="next" href="l07.html"><span>下一堂 L7 →</span>Agent Eval</a>
       </nav>
       <p class="fineprint">本文取材自 CS2680 9/28 那一講的 slides（和 L6 同一份，這一堂取講記憶的部分）與下列來源，但不照 slides 的順序；標明「本文」的段落是本文的判斷，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。標「示意」的 schema 與設定檔是本文的例子，不是特定產品的 API；Claude Code、Claude Managed Agents 與 Mem0 的細節依 2026 年 11 月的官方文件。來源：<a href="https://arxiv.org/html/2602.08316" target="_blank" rel="noopener">SWE-ContextBench</a>、<a href="https://arxiv.org/abs/2602.11988" target="_blank" rel="noopener">Evaluating AGENTS.md</a>、<a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta 的 filesystem benchmark</a>、<a href="https://arxiv.org/html/2503.03704v5" target="_blank" rel="noopener">MINJA</a>、<a href="https://arxiv.org/html/2601.05504v1" target="_blank" rel="noopener">Memory Poisoning Attack and Defense</a>、<a href="https://unit42.paloaltonetworks.com/indirect-prompt-injection-poisons-ai-longterm-memory/" target="_blank" rel="noopener">Unit 42</a>、<a href="https://www.microsoft.com/en-us/security/blog/2026/02/10/ai-recommendation-poisoning/" target="_blank" rel="noopener">Microsoft AI Recommendation Poisoning</a>、<a href="https://blogs.cisco.com/ai/identifying-and-remediating-a-persistent-memory-compromise-in-claude-code" target="_blank" rel="noopener">Cisco MemoryTrap</a>、<a href="https://genai.owasp.org/2026/05/13/memory-is-a-feature-it-is-also-an-attack-surface/" target="_blank" rel="noopener">OWASP ASI06</a></p>
     </div>
