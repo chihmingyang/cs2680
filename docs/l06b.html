@@ -465,29 +465,34 @@ Uses SGLang for model serving.
               <p id="i2-6"><b>記憶疊成四層：最下層是原始紀錄，上面三層都是它的整理（本文補的）。</b>本章開頭的四種格式不必四選一。實際的系統同時存好幾種，並且分層：越整理過的放越上面。Anthropic 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉（2026-11）分成四層。對回開頭的四種格式：原始事件是最下面的 transcripts，摘要是一條 memory note，結構化狀態和 knowledge graph 是 memory representations；最上面的 injected context 是從這幾層挑出來、每次都載入的那一小份：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 262" role="img" aria-label="記憶的四層，由上到下。Injected context：每個 session 開頭自動載入，最小。Memory representations：wiki、knowledge graph 這類整理過的結構，要用才讀。Memory notes：agent 寫下的筆記，一條一件事，要用才讀。Transcripts：每個 session 的完整紀錄，只追加，靠搜尋，標成深紅，是其他三層的來源。整理把內容往上寫，查證把上層對回下層。">
+                <svg viewBox="0 0 720 286" role="img" aria-label="記憶的四層疊成金字塔，由上到下越來越寬。頂端 Injected context：每個 session 開頭自動載入，最小。第二層 Memory representations：wiki、knowledge graph 這類整理過的結構，要用才讀。第三層 Memory notes：agent 寫下的筆記，一條一件事，要用才讀。底座 Transcripts：每個 session 的完整紀錄，只追加，靠搜尋，最大，標成深紅，是其他三層的來源。整理把內容往上寫，查證把上層對回下層。">
                   <defs><marker id="l6m-layer-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6m-layer-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <rect x="14" y="12" width="470" height="48" rx="4" class="dg-n-b"/>
-                  <text x="28" y="33" class="dg-l">Injected context</text>
-                  <text x="28" y="51" class="dg-c">每個 session 開頭自動載入：CLAUDE.md、MEMORY.md 的索引</text>
-                  <text x="498" y="41" class="dg-c">最小，每一行每一圈都花 token</text>
-                  <rect x="14" y="68" width="470" height="48" rx="4" class="dg-n-a"/>
-                  <text x="28" y="89" class="dg-l">Memory representations</text>
-                  <text x="28" y="107" class="dg-c">整理過的結構：wiki、knowledge graph、結構化狀態</text>
-                  <text x="498" y="97" class="dg-c">要用才讀一頁</text>
-                  <rect x="14" y="124" width="470" height="48" rx="4" class="dg-n-c"/>
-                  <text x="28" y="145" class="dg-l">Memory notes</text>
-                  <text x="28" y="163" class="dg-c">Agent 寫下的筆記，一條一件事</text>
-                  <text x="498" y="153" class="dg-c">要用才讀，或用檢索挑</text>
-                  <rect x="14" y="180" width="470" height="48" rx="4" class="dg-n-focus"/>
-                  <text x="28" y="201" class="dg-l-on">Transcripts</text>
-                  <text x="28" y="219" class="dg-c-on">每個 session 的完整紀錄，只追加、不改寫</text>
-                  <text x="498" y="209" class="dg-c">最大，只靠搜尋讀</text>
-                  <path d="M690,216 L690,20" class="dg-link-key" marker-end="url(#l6m-layer-ak)"/>
-                  <text x="360" y="252" text-anchor="middle" class="dg-k">深紅箭頭是整理：內容由下往上寫，上層是下層的副本；記錯時往下對回 Transcripts</text>
+                  <polygon points="170,12 354,12 390,66 134,66" class="dg-n-b"/>
+                  <text x="262" y="35" text-anchor="middle" class="dg-l">Injected context</text>
+                  <text x="262" y="54" text-anchor="middle" class="dg-c">CLAUDE.md、MEMORY.md 的索引</text>
+                  <path d="M378,39 L524,39" class="dg-soft-link"/>
+                  <text x="532" y="35" class="dg-c">每個 session 開頭自動載入</text>
+                  <text x="532" y="53" class="dg-c">每一行每一圈都花 token</text>
+                  <polygon points="129,72 395,72 431,126 93,126" class="dg-n-a"/>
+                  <text x="262" y="95" text-anchor="middle" class="dg-l">Memory representations</text>
+                  <text x="262" y="114" text-anchor="middle" class="dg-c">wiki、knowledge graph、結構化狀態</text>
+                  <path d="M419,99 L524,99" class="dg-soft-link"/>
+                  <text x="532" y="104" class="dg-c">要用才讀一頁</text>
+                  <polygon points="89,132 435,132 471,186 53,186" class="dg-n-c"/>
+                  <text x="262" y="155" text-anchor="middle" class="dg-l">Memory notes</text>
+                  <text x="262" y="174" text-anchor="middle" class="dg-c">Agent 寫下的筆記，一條一件事</text>
+                  <path d="M459,159 L524,159" class="dg-soft-link"/>
+                  <text x="532" y="164" class="dg-c">要用才讀，或用檢索挑</text>
+                  <polygon points="48,192 476,192 512,246 12,246" class="dg-n-focus"/>
+                  <text x="262" y="215" text-anchor="middle" class="dg-l-on">Transcripts</text>
+                  <text x="262" y="234" text-anchor="middle" class="dg-c-on">每個 session 的完整紀錄，只追加、不改寫</text>
+                  <path d="M500,219 L524,219" class="dg-soft-link"/>
+                  <text x="532" y="224" class="dg-c">只靠搜尋讀</text>
+                  <path d="M708,238 L708,20" class="dg-link-key" marker-end="url(#l6m-layer-ak)"/>
+                  <text x="360" y="274" text-anchor="middle" class="dg-k">深紅箭頭是整理：內容由下往上寫，上層是下層的副本；記錯時往下對回 Transcripts</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：幾種格式怎麼一起用？疊成四層。越上面越小、越常讀進 context，錯了影響也越大；最下面的 Transcripts（深紅）是其他三層的來源。分層依 Anthropic〈The components of agent memory〉（2026-11），每一層右邊的灰字（怎麼讀到它）是本文的整理。</figcaption>
+              <figcaption>這張圖回答：幾種格式怎麼一起用？疊成四層的金字塔。越上面越窄：內容越少、越常讀進 context，錯了影響也越大；最寬的底座 Transcripts（深紅）是其他三層的來源。分層依 Anthropic〈The components of agent memory〉（2026-11），每一層右邊的灰字（怎麼讀到它）是本文的整理。</figcaption>
             </figure>
               <p>這四層的關係，像資料庫的 log 和 view（本文的類比）。Log 只追加，記下每一筆發生過的事；view 是從 log 算出來的表，為了查得快而存在，算錯了可以丟掉、從 log 重算。Transcripts 是 log，上面三層都是 view。所以最下層不能省：<strong>筆記記錯時，只有原始紀錄說得出當時發生了什麼</strong>。這也是本章標題的另一種說法：transcripts 留著，上面三層寫壞了都能重做；沒留，上層的錯就沒有東西可以對。</p>
               <p>有一樣東西不在這四層裡：compaction（L4〈<a href="l04.html">Context 管理</a>〉）。它在同一個 session 裡把舊的對話換成摘要，讓這個 session 跑得下去；它不跨 session，所以那篇文章不把它算成 memory。</p>
