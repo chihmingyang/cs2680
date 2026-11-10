@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-10（L6b 補 Anthropic〈The components of agent memory〉：五個新小節 `#i1-5`、`#i2-6`、`#i2-7`、`#i3-5`、`#i4-6`，延伸閱讀加一篇本文補的「推薦」；L6b 20 分 → 30 分。取捨在 V7_DECISIONS，來源在 sources/l06.md。）
 - 2026-11-10（首頁課程地圖的 chip 也改成英文，例如 Memory Design、Reliability、Eval；層名本來就是英文。）
 - 2026-11-10（James：課程名稱改成英文，例如 L6 Agent Reliability、L7 Agent Eval、L3 Multi-agent Workflows、L9 LLM Inference Basics。改了 h1、title、側欄、pager、首頁、別頁〈〉引用與 dag.json；英文原標題那行、網址、錨點不動。）
 
@@ -156,6 +157,7 @@
 - 2026-11-06（第一次用在新講次：L9–L11，10 個審查者，第一輪 33／71／21 BLOCK，第二輪剩 2／12／5，主線修完、沒有第三輪。「作者怎麼用報告」加兩條：第二輪的定位附第一輪的「我讀到的」（作者加段落後定位會移動）；新頁接到全站後就地改 HTML、不從片段重組。skill 第 4 步同步。十個審查者加三個作者修改碰到一次 5 小時的用量上限，大堂分給審查者時留意）。
 
 ## QUIZ.md
+- 2026-11-10（L6b 補五個小節的題：新節 k44–k48、20 題；用「只改了某一節」的維護流程，觀念由主線列。〈各堂題庫〉加一列。）
 
 - 2026-11-10（L6 拆成 L6／L6b：〈各堂題庫〉加兩列；資料一節加 `moved_from`；整合題一條改寫成拆堂後的放法。）
 - 2026-11-10（目錄打勾的標記改成固定寬度的一欄（4.4rem、置中），✓ 和「9/19 題」上下對齊；全站 `app.js` 加版本號 `?v=20261110d`，James 看到的「黏在標題後面」是瀏覽器還拿著舊的 app.js。`quiz.py init` 改成認得帶版本號的 app.js 標籤。）
