@@ -153,6 +153,7 @@
 
 ## REVIEW_READABILITY.md
 
+- 2026-11-11（**作者自己判斷要不要修，報告進 repo**。James：「這兩個決定你做就好，我也不知道有哪些要修」。每個 BLOCK 判 fix／strict／needs-source，寫進 `guide/review_reports/lXX-YYYYMMDD/TRIAGE.md`，各輪報告一起 commit；strict 的比例當誤報率記在 `review_cases/RESULTS.md`。第一次：L6b 整頁 70 個 BLOCK，fix 66、strict 2、needs-source 2；第二輪 76 個單位又標 21 個。L6b 遺忘表定為「記錯的先標記失效」，題庫同步。）
 - 2026-11-11（**審查者的測試題與 checklist 版本**。起因：L6b 第 2 章「歸納是風險最高的寫入……Reflection 讀好幾筆觀察」一段，James 請 Claude 評可讀性並問怎麼減少 feedback 次數；這一章 11-10 用 v14 審過兩輪，這段仍留著；11-11 用同一份舊 prompt 重審，審查者其實標得到它。第一次量測：5 個沒寫進 prompt 的事件抓到 5 個，但審查者把 14%–71% 的單位標成 BLOCK，誤報率還沒量（`guide/review_cases/RESULTS.md`）。加 R15 別名（同一個東西兩個名字，讀者分不出是一個還是兩個）、R16 例子對得上主張（鐵律多一種「只靠主張、例子對不上」）；Checklist 版本 16。新增 `guide/review_cases/`（8 個事件）與 `tools/review_eval.py`（量 recall），`guide/review_log.tsv` 與 `tools/review_status.py`（哪些章用哪一版審過，11-11 以前照 commit 訊息回填）；`verify.sh` 多一行提示。事件先當測試題、不先貼進 prompt 當例子。）
 - 2026-11-09（`tools/review_pack.py`：本文延伸、深入區塊標題後面的 `<span>` 標籤（「不是 slide 的內容」「查證」）另外印成「〔頁面上的標籤：…〕」。L6 `#x5` 兩輪審查都把「漏抓與誤判不是 slide 的內容」讀成一句話，是包的誤報。）
 - 2026-11-07（新增〈審查者的雜訊〉：L6 第 2–4 章沒改、審三次，BLOCK 13／17／15，11 個單位三次都標；判斷方向看多數決的單位，不看總數。新工具 `tools/review_noise.py`。skill 的成本估計同步。）

@@ -65,9 +65,9 @@ python3 -I tools/review_pack.py docs/lXX.html --chapter i2 i5 --prefix > notes/r
 
 ## 5. push 與回報
 
-- `notes/review/` 不 commit（在 `.gitignore`）。
+- `notes/review/` 是暫存。審完把各輪報告和 `TRIAGE.md`（每個 BLOCK 判 fix／strict／needs-source 和一句理由，見 `REVIEW_READABILITY.md`〈誰判斷要不要修〉）複製到 `guide/review_reports/lXX-YYYYMMDD/`，和頁面一起 commit。
 - 照 WORKFLOW D push。
-- 回覆 James：貼第一輪的 BLOCK 清單（定位、我讀到的、原因）和每條修了什麼，一條兩行；再貼「最難讀的三處」。他不讀頁面，讀這個。
+- 回覆 James：只給數字（幾個 BLOCK、fix／strict／needs-source 各幾個）、要他知道的決定，和 `guide/review_reports/` 那個資料夾的連結。哪些要修由作者判斷，不列清單請他挑（2026-11-11）。
 
 修完第二輪、沒有 BLOCK 之後，記下這些章用哪一版 checklist 審過，和頁面一起 commit：
 
