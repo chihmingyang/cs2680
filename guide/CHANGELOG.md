@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-11（L7 整頁可讀性審查（v16）並照 slides 加四張圖：第 7 章六格折線圖與 23 個 benchmark 的時間軸、第 3 章 Pareto 示意圖、第 4 章題數橫條圖；L7 閱讀時間 55 分。取捨在 V7_DECISIONS，審查紀錄在 review_reports/l07-20261111。）
 - 2026-11-11（腳本表加 `review_eval.py`、`review_status.py`。）
 - 2026-11-11（腳本表加 `check_numbers.py`；`verify.sh`、`quiz.py` 兩列同步。）
 - 2026-11-10（L6b 補 Anthropic〈The components of agent memory〉：五個新小節 `#i1-5`、`#i2-6`、`#i2-7`、`#i3-5`、`#i4-6`，延伸閱讀加一篇本文補的「推薦」；L6b 20 分 → 30 分。取捨在 V7_DECISIONS，來源在 sources/l06.md。）
