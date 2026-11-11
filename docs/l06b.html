@@ -64,9 +64,9 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/6_agent_design_3.pdf" target="_blank" rel="noopener">6_agent_design_3.pdf ↗</a></li>
       <li><span class="k">頁數</span>31</li>
       <li><span class="k">同一份 slides</span>另一半是 <a href="l06.html">L6 Agent 可靠性</a></li>
-      <li><span class="k">閱讀</span><span class="read-time">約 30 分鐘</span></li>
-      <li><span class="k">註與延伸</span><span class="deep-time">約 6 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 40 分鐘</span></li>
+      <li><span class="k">註與延伸</span><span class="deep-time">約 9 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 50 分鐘</span></li>
     </ul>
   </header>
 
@@ -216,7 +216,7 @@
               <p>讓 agent 自己挑時，只有 36.36% 的題目挑到對的前例，<strong>結果比沒有記憶還差</strong>。另一種東西佔的是同一個位置：人事先寫好、每個 session 都自動讀進 context 的說明檔。它也不保證有幫助：<a href="https://arxiv.org/abs/2602.11988" target="_blank" rel="noopener">Evaluating AGENTS.md</a>（ETH Zurich 等，2026-02）量的是 <code>AGENTS.md</code> 這類 repo 層的 context file：放在 repo 裡、寫給 coding agent 的說明檔，agent 每個 session 都會讀。它發現這種檔案一般不提高任務的成功率，推論成本卻平均多 20% 以上；在裡面寫 repo 概覽沒有幫助，寫這個 repo 非標準的做法（和一般慣例不同的地方）才有用。</p>
               <p id="i1-2"><b>記憶是一份沒有人通知你過期的副本。</b>L5〈<a href="l05.html#i7">狀態與時間</a>〉說過，讀進 context 的事實是一份會過期的副本。Memory 把這件事拉長到跨 session：來源改了，沒有人通知它。所以有兩條規則：</p>
               <ol>
-                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call，副本卻會過期。</li>
+                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。這條規則比的是兩個成本：重新取得要花多少，和副本過期時會錯多少。重新取得很貴、內容又很少變的資訊值得存一份，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照第 2 章帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
                 <li><b>記了的，用之前再確認。</b>能驗證的先驗證，一個 tool call 就能抓到過期的記憶：</li>
               </ol>
               <figure class="file"><figcaption>terminal：記憶當線索，不當事實（本文補的例子）</figcaption><pre><code class="lang-sh"># 一條 2026-04-03 記下的筆記：Auth lives in src/auth/login.py
@@ -281,7 +281,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </div>
               </details>
               <p>本文的判斷：因為上面的不對稱，<strong>預設往右邊靠</strong>，再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
-              <p id="i1-5"><b>往右靠，用「說明用途」來做，不要把條件寫死（本文補的）。</b>「預設往右邊靠」有兩種做法。一種是在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶是做什麼用的，值不值得記交給它判斷，下面叫它「說明用途」；上一段「至少要記什麼」的規則可以和它並用。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉量了這兩種做法。題目來自 CL-Bench 1.0（一個測 agent 長期使用記憶的 benchmark）：agent 查資料庫回答一連串問題，每一題開一個新的 session，答完會看到正確答案，這時它可以把學到的事寫進一個記憶資料夾，下一題只帶著這個資料夾。分數是每題得分的平均，0 到 1。</p>
+              <p id="i1-5"><b>往右靠，用「說明用途」來做，不要把條件寫死（本文補的）。</b>「預設往右邊靠」有兩種做法。一種是在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶是做什麼用的，值不值得記交給它判斷，下面叫它「說明用途」；上一段「至少要記什麼」的規則可以和它並用。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉量了這兩種做法：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。圖裡比的是記憶的效益，也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 262" role="img" aria-label="橫條圖：記憶的效益，也就是有記憶的分數減沒有記憶的分數，分數 0 到 1。每個 model 兩條，上面是只說明記憶的用途，下面是加一條「只記失敗」的規則。Opus 5 從 0.264 掉到 0.030。Opus 4.7 從 0.317 掉到 0.167。Sonnet 4.6 從 0.034 掉到 0.014。">
@@ -305,10 +305,18 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                   <text x="170" y="252" class="dg-c">青色：只告訴 model 記憶是做什麼用的。深紅：再加一條寫死的條件。</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：把寫入條件寫死，會不會比較好？在這組題目上不會：三個 model 的記憶效益都變小，Opus 5 從 0.264 掉到 0.030，幾乎歸零。依 Anthropic〈The components of agent memory〉（2026-11）的 CL-Bench 實驗。文章給的是每個 model 的效益少了多少（Opus 5 少 0.234、Opus 4.7 少 0.150、Sonnet 4.6 少 0.020）；每個 model 下面那條的長度，是本文用上面那條減掉這個數字算的。文章沒有交代每個數字跑了幾次。</figcaption>
-            </figure>
-              <p>Opus 5 原本靠記憶多拿 0.264 分，加了「只記失敗」之後<strong>只剩 0.030</strong>，幾乎等於沒有記憶。文章只報了結果，沒有說機制。本文的解讀是：這組題目答對時也有值得記的事，例如「這個答案確認過了」「這條規則驗證過了」，而寫死的條件把它們擋在門外。文章節錄了 Opus 5 在沒有這條限制時寫的筆記，裡面有兩類東西。一類來自答錯的題：錯在哪裡、下次要避開的陷阱。另一類來自答對或驗證過的題：確認過的答案、測試後成立的規則和它的證據。「只記失敗」只留得下前一類，後一類進不來。</p>
-              <p>弱一點的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以它沒有記憶時是 0.330，有記憶也只有 0.364，效益 0.034。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，分數是 0.641，效益變成 0.311，大約是原來的 9 倍。這兩句是在教它怎麼用記憶，沒有限制它記什麼，所以和「只記失敗」不是同一種規則。這段 prompt 因此要跟著 model 調：model 弱，就把使用記憶的步驟寫出來；model 強，寫用途就夠，限制它記什麼反而變成上限。換 model 的時候要重新量一次（第 4 章的測試集）。</p>
+              <figcaption>這張圖回答：把寫入條件寫死，會不會比較好？在這組題目上不會：三個 model 的記憶效益都變小，Opus 5 從 0.264 掉到 0.030，幾乎歸零。依 Anthropic〈The components of agent memory〉（2026-11）的 CL-Bench 實驗；題目怎麼出、數字怎麼來，在下面的註。</figcaption>
+</figure>
+<details class="gloss" id="n-clbench">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">CL-Bench 實驗：題目怎麼出、圖裡的數字怎麼來、限制在哪</span></summary>
+                <div class="gloss-body prose">
+                  <p>題目來自 CL-Bench 1.0，一個測 agent 長期使用記憶的 benchmark。Agent 查資料庫回答一連串問題，每一題開一個新的 session。答完會看到正確答案，這時它可以把學到的事寫進一個記憶資料夾。下一題只帶著這個資料夾。分數是每題得分的平均，0 到 1。</p>
+                  <p>文章給的是每個 model 的效益少了多少：Opus 5 少 0.234、Opus 4.7 少 0.150、Sonnet 4.6 少 0.020。圖裡每個 model 下面那條的長度，是本文用上面那條減掉這個數字算的。文章沒有交代每個數字跑了幾次。</p>
+                  <p>Sonnet 4.6 的分數：沒有記憶時是 0.330，有記憶是 0.364，效益 0.034。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，有記憶的分數是 0.641，效益變成 0.311，大約是原來的 9 倍。</p>
+                </div>
+              </details>
+              <p>Opus 5 原本靠記憶多拿 0.264 分，加了「只記失敗」之後<strong>只剩 0.030</strong>，幾乎等於沒有記憶。文章只報了結果，沒有說機制。本文的解讀是：答對的題也有值得記的事，例如對過正確答案的解法、查資料庫時試出來而且確認成立的規則，而「只記失敗」把它們擋在門外。文章節錄的 Opus 5 筆記裡正好有這兩類：一類來自答錯的題（錯在哪裡、下次要避開的陷阱），另一類來自答對的題。</p>
+              <p>弱一點的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以有沒有記憶，它的分數幾乎一樣。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，記憶的效益大約變成原來的 9 倍（分數在上面的註）。這兩句是在教它怎麼用記憶，沒有限制它記什麼，所以和「只記失敗」不是同一種規則。這段 prompt 因此要跟著 model 調：model 弱，就把使用記憶的步驟寫出來；model 強，寫用途就夠，限制它記什麼反而變成上限。換 model 的時候要重新量一次（第 4 章的測試集）。</p>
               <p>「寫太多」長什麼樣，同一篇文章有一個例子。兩個 model 各玩一次 Pokémon Red，在大約第 10,000 步時比較它們的記憶資料夾：</p>
               <div class="table-wrap" data-no-figure><table>
                 <thead><tr><th></th><th>Sonnet 3.7</th><th>Fable 5</th></tr></thead>
@@ -438,16 +446,16 @@ Uses SGLang for model serving.
               <p id="i2-2"><b>Provenance：這件事是誰說的。</b>圖裡的事實指回 Episode 28，所以 agent 答得出「你為什麼覺得我們用 SGLang」。來源也決定信任等級：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 240" role="img" aria-label="四種來源，信任由高到低。user_said：使用者親口說換成 SGLang 了。tool_output：讀 pyproject.toml 看到 sglang，可信但會過期，用之前重讀。inferred：model 從對話推測他偏好 SGLang，不蓋過前兩者。external：網頁、README、第三方套件的文件，信任最低，不當指令。衝突時先比來源，來源同一等級才比新舊。">
+                <svg viewBox="0 0 720 240" role="img" aria-label="四種來源，信任由高到低。user_said：使用者親口說換成 SGLang 了；這句是現況的描述，可以驗證，偏好和決定才只有他說了算。tool_output：讀 pyproject.toml 看到 sglang，剛讀到的現況最準，存久了會過期，用之前重讀。inferred：model 從對話推測他偏好 SGLang，不蓋過前兩者。external：網頁、README、第三方套件的文件，信任最低，不當指令。衝突時先看是哪一類事，再比來源，來源同一等級才比新舊。">
                   <defs><marker id="l6v-prov-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-prov-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="14" y="12" width="692" height="44" rx="4" class="dg-n-a"/>
                   <text x="26" y="39" class="dg-mn-ink">user_said</text>
                   <text x="130" y="30" class="dg-ls">使用者親口說「換成 SGLang 了」</text>
-                  <text x="130" y="48" class="dg-c">衝突時優先</text>
+                  <text x="130" y="48" class="dg-c">這句是現況的描述，可以驗證；偏好和決定才只有他說了算</text>
                   <rect x="14" y="64" width="620" height="44" rx="4" class="dg-n-c"/>
                   <text x="26" y="91" class="dg-mn-ink">tool_output</text>
                   <text x="130" y="82" class="dg-ls">讀 pyproject.toml 看到 sglang</text>
-                  <text x="130" y="100" class="dg-c">可信，但會過期，用之前重讀</text>
+                  <text x="130" y="100" class="dg-c">剛讀到的現況最準；存久了會過期，用之前重讀</text>
                   <rect x="14" y="116" width="548" height="44" rx="4" class="dg-n-b"/>
                   <text x="26" y="143" class="dg-mn-ink">inferred</text>
                   <text x="130" y="134" class="dg-ls">Model 推測「他偏好 SGLang」</text>
@@ -457,11 +465,12 @@ Uses SGLang for model serving.
                   <text x="130" y="186" class="dg-ls">網頁、README、第三方套件的文件</text>
                   <text x="130" y="204" class="dg-c">不當指令（第 5 章）</text>
                   <path d="M706,196 L706,12" class="dg-link" marker-end="url(#l6v-prov-ah)"/>
-                  <text x="698" y="232" text-anchor="end" class="dg-c">信任越往上越高；衝突時先比來源，同一等級才比新舊</text>
+                  <text x="698" y="232" text-anchor="end" class="dg-c">信任越往上越高；衝突時先看是哪一類事，再比來源，同一等級才比新舊</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：兩條記憶衝突時信誰？先比來源：一條網頁讀來的新資訊，不該蓋過使用者上週親口說的事。來源同一等級時才比新舊，新的關上舊的 valid_to，像上一張圖 vLLM 換成 SGLang（本文的整理）。</figcaption>
-            </figure>
+              <figcaption>這張圖回答：兩條記憶衝突時信誰？預設先比來源：一條網頁讀來的新資訊，不該蓋過使用者上週親口說的事。來源同一等級時才比新舊，新的關上舊的 valid_to，像上一張圖 vLLM 換成 SGLang。有一類衝突不照這個順序，下一段說明（本文的整理）。</figcaption>
+</figure>
+<p>這個順序有一個前提，要先看衝突的是哪一類事。使用者說的話有兩類。一類是他的偏好和決定，例如「回覆用中文」「這個專案不用 ORM」：這類事只有他自己說了算，沒有別的來源可以推翻。另一類是他對現況的描述，例如「我們換成 SGLang 了」：這句話講的是 repo 現在的樣子，而 repo 是 agent 自己讀得到的。沒有更新的證據時，他說的仍然是最好的資訊，所以贏過一篇網頁。但 agent 剛剛讀 <code>pyproject.toml</code>，依賴裡卻只看到 vllm 時，<strong>現況以剛讀到的為準</strong>：使用者說的是他記得的樣子，他可能記錯，改動也可能還沒 merge。這時 agent 照檔案裡的 vllm 做，同時把衝突告訴使用者（「你說換成 SGLang 了，但 <code>pyproject.toml</code> 裡還是 vllm」），請他確認是哪一種。這和第 1 章「記了的，用之前再確認」是同一條規則。剛讀到的 tool output 贏的只是「現在是什麼」；它存成記憶之後，就和其他記憶一樣會過期（本文的判斷）。</p>
               <p id="i2-6"><b>記憶疊成四層：最下層是原始紀錄，上面三層都是它的整理（本文補的）。</b>本章開頭的四種格式不必四選一。實際的系統同時存好幾種，並且分層：越整理過的放越上面。Anthropic 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉（2026-11）分成四層。對回開頭的四種格式：原始事件是最下面的 transcripts，摘要是一條 memory note，結構化狀態和 knowledge graph 是 memory representations；最上面的 injected context 是從這幾層挑出來、每次都載入的那一小份：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -495,7 +504,8 @@ Uses SGLang for model serving.
               <figcaption>這張圖回答：幾種格式怎麼一起用？疊成四層的金字塔。越上面越窄：內容越少、越常讀進 context，錯了影響也越大；最寬的底座 Transcripts（深紅）是其他三層的來源。分層依 Anthropic〈The components of agent memory〉（2026-11），每一層右邊的灰字（怎麼讀到它）是本文的整理。</figcaption>
             </figure>
               <p>這四層的關係，像資料庫的 log 和 view（本文的類比）。Log 只追加，記下每一筆發生過的事；view 是從 log 算出來的表，為了查得快而存在，算錯了可以丟掉、從 log 重算。Transcripts 是 log，上面三層都是 view。所以最下層不能省：<strong>筆記記錯時，只有原始紀錄說得出當時發生了什麼</strong>。這也是本章標題的另一種說法：transcripts 留著，上面三層寫壞了都能重做；沒留，上層的錯就沒有東西可以對。</p>
-              <p>有一樣東西不在這四層裡：compaction（L4〈<a href="l04.html">Context 管理</a>〉）。它在同一個 session 裡把舊的對話換成摘要，讓這個 session 跑得下去；它不跨 session，所以那篇文章不把它算成 memory。</p>
+<p>留著 transcripts 也有代價。完整的對話裡有使用者說過的每一句話，包括他不希望留下的。所以這一層需要自己的保存期限和讀取權限，使用者要求刪除時也要刪得到這一層（本章最後一節）。保存期限同時決定了能回頭修多久以前的錯：過了期限，那段時間寫錯的筆記就沒有原始紀錄可以對（本文的判斷）。</p>
+              <p>有一樣東西不在這四層裡：compaction（L4〈<a href="l04.html">Context 管理</a>〉）。Context 有長度上限，對話太長就放不下；compaction 在同一個 session 裡把舊的對話換成摘要，騰出空間。它不跨 session，所以那篇文章不把它算成 memory。</p>
               <p id="i2-3"><b>歸納是風險最高的寫入，因為寫的人是 model 自己。</b>本章開頭的例子，存的是使用者說過的一句話。歸納（課程叫 reflection，第 1 章六站裡的 Reflect）不一樣：model 讀好幾筆原始事件，自己寫出一條新的記憶，講的是這幾筆合起來看得出什麼。它在來源圖裡屬於 inferred 那一級。這句話沒有任何人說過，所以寫錯了也沒有原話可以對。來源圖裡信任最低的是 external（網頁、README），但第 1 章的規則不讓 external 的內容自動寫進 store；歸納寫出來的每一條卻都會進去。例如使用者在四段對話裡先後問了 vLLM、SGLang、TRT-LLM（三個都是 LLM serving engine）和 LLM scheduling（serving 時請求怎麼排），四個都屬於 LLM inference，也就是讓 model 產生回答的這一段系統。歸納這一步寫出：</p>
               <figure class="file"><figcaption>歸納（reflection）寫出來的一條記憶（欄位是本文的整理）</figcaption><pre><code class="lang-json">{
   "kind":       "hypothesis",                               // 這一條是推測，不是事實：讀的人要知道
@@ -555,7 +565,7 @@ Uses SGLang for model serving.
                 <li><b>在 session 裡寫。</b>事情剛發生，agent 最知道哪一件重要。代價是寫筆記會佔用做任務的步數，第 1 章的 Sonnet 3.7 就是極端的例子。</li>
                 <li><b>在 session 之間整理。</b>不打擾任務，也看得到好幾個 session。代價是另外花 compute，而且整理跑完之前，下一個 session 用不到結果。</li>
               </ul>
-              <p>兩種可以並用：session 裡只記一條短的線索，細的整理留到之後。整理多久跑一次，文章列為還沒解決的問題。它只提了方向：容易變的資訊優先拿去核對，常被讀到的記憶整理得勤一點；怎麼調、有沒有用，文章沒有量測。</p>
+              <p>兩種可以並用：session 裡只記一條短的線索，細的整理留到之後。整理多久跑一次還沒有定論：文章只提了方向（容易變的資訊優先拿去核對，常被讀到的記憶整理得勤一點），沒有量測。</p>
               <p id="i2-4"><b>遺忘是正式操作。</b>只進不出的 store，檢索會越來越慢、雜訊越來越多。要遺忘的理由有四個：過期、錯誤或衝突、隱私與安全、儲存與檢索的成本。做法也有四種：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>操作</th><th>做什麼</th><th>可逆嗎</th><th>適合（本文的整理）</th></tr></thead>
@@ -726,7 +736,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
                 </tbody>
               </table></div>
               <p>這是沒有算 prompt caching（重複的 prompt 開頭不重算、打折收費）的 input 量，折扣見 L8〈<a href="l08.html#i2-5">Input token</a>〉。k 也不是越小越好，太小時對的那條排不進來，要用第 4 章的測試集量出來。</p>
-              <p id="i3-5"><b>整理過的頁面要配搜尋，而且只在跨文件的題目上划算（本文補的）。</b>前面講的都是從 store 裡一條一條取回，這一節把這種做法統稱搜尋（下面的圖寫 search）。第 2 章四層裡的 memory representations 是另一條路：先花 compute 把資料整理成 wiki（一頁講一個主題、頁和頁互相連結），查的時候讀頁面。同一篇 Anthropic 的文章量了它值不值得。資料是一家軟體公司的內部檔案，約 350,000 個檔、4.2 億 token。Opus 5 的 agent 分 128 個 session 讀這些檔案、寫頁面、合併重複的頁、把頁面上的說法對回來源。這些整理本身要花 compute：照文章的圖，128 個 session 累計用掉約 1.28 億 token（比資料量 4.2 億 token 少；文章沒有說 agent 讀了其中多少檔案）。</p>
+              <p id="i3-5"><b>整理過的頁面要配搜尋，而且只在跨文件的題目上划算（本文補的）。</b>前面講的都是從 store 裡一條一條取回，這一節把這種做法統稱搜尋（下面的圖寫 search）。第 2 章四層裡的 memory representations 是另一條路：先花 compute 把資料整理成 wiki（一頁講一個主題、頁和頁互相連結），查的時候讀頁面。同一篇 Anthropic 的文章量了它值不值得：讓 agent 分好幾個 session，把一家軟體公司約 350,000 個內部檔案整理成 wiki，再拿 25 題比三種查法：只在原始檔案上搜尋（圖裡的 search；這個實驗裡原始檔案就是 store）、只讀 wiki、兩個一起用。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 218" role="img" aria-label="橫條圖：25 個問題，答案滿足了幾成評分項目。只用 search 53%。只用 wiki、整理了 2 個 session 時 13%。只用 wiki、整理了 128 個 session 時 48%。Wiki 加 search、整理了 128 個 session 時 61%。">
@@ -747,11 +757,21 @@ LIMIT 5;                                              -- top-k：k 決定要花�
                   <text x="250" y="212" class="dg-c">Wiki 單獨用，整理再久也沒有超過 search；兩個一起用才多 8 個百分點</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：花 compute 整理出一份 wiki，值得嗎？單獨用不值得，配 search 才有幫助。依 Anthropic〈The components of agent memory〉（2026-11）：資料是一家軟體公司約 350,000 個內部檔案，題目只有 25 題，文章沒有交代跑了幾次。</figcaption>
+              <figcaption>這張圖回答：花 compute 整理出一份 wiki，值得嗎？單獨用不值得，配 search 才有幫助。依 Anthropic〈The components of agent memory〉（2026-11）：題目只有 25 題，當方向看；實驗的細節在這一節最後的註。</figcaption>
             </figure>
-              <p>整理的 session 從 2 個增加到 128 個，只用 wiki 的分數跟著從 13% 爬到 48%，但始終沒有超過只用 search 的 53%。兩個一起用是 61%，比只用 search 多 8 個百分點；題目只有 25 題，這個差距不算大。文章還說兩個一起用時每題少用約 20,000 token，但沒有寫原本用多少、和哪一組比，只能知道方向。所以<strong>對原始資料的搜尋是底，wiki 是蓋在上面的地圖</strong>，不能拿 wiki 取代搜尋。</p>
-              <p>Wiki 幫得上忙的題目有一個特徵：答案要拼好幾份文件。同一篇文章在 Harvey LAB（一個法律任務的 benchmark）拿一樁併購案的文件出了 24 題，一半以上要跨文件，9 題要判斷或計算。文章只給了「要跨文件」和「要判斷或計算」兩類題合起來的數字：有 wiki 可讀的 agent 答對 87%，只用 search 的是 73%，差 14 個百分點，所以分不出其中多少來自跨文件（文章沒有寫這兩類題共幾題，也沒有寫明有 wiki 的那個 agent 有沒有同時用 search）。比較直接的證據在反面。這 24 題合起來是 Harvey LAB 的一個任務；同一個 benchmark 另外有兩個任務，wiki 沒幫上忙。一個任務的評分項目大多在同一份文件裡，用文字搜尋就找得到，wiki 沒有明顯的幫助。另一個任務的 wiki 寫到 203KB，是原始 10 份文件 115KB 的 1.77 倍，有些頁面還沒有任何連結：它只是把資料重寫了一遍，沒有變得更好查。</p>
-              <p>道理和第 1 章「能重讀的不要記」相同（本文的解讀）。Wiki 是預先算好的跨文件關聯。答案在一份文件裡時，search 一次就到，預先整理是白花的；答案要拼好幾份時，每次查都要重拼一次，預先拼好才省。決定要不要建 wiki，<strong>先看你的問題多常需要跨文件</strong>。這些數字是 Anthropic 量自家 model 的結果，題數也少，當方向看。</p>
+              <p>整理的 session 從 2 個增加到 128 個，只用 wiki 的分數跟著從 13% 爬到 48%，但始終沒有超過只用 search 的 53%。兩個一起用是 61%，比只用 search 多 8 個百分點。所以<strong>對原始資料的搜尋是底，wiki 是蓋在上面的地圖</strong>，不能拿 wiki 取代搜尋。</p>
+              <p>Wiki 幫得上忙的題目有一個特徵：答案要拼好幾份文件。同一篇文章在 Harvey LAB 這個法律 benchmark 的三個任務上看到正反兩面。第一個任務有一半以上的題要跨文件。在要跨文件、或要判斷和計算的那些題上，有 wiki 可讀的 agent 答對 87%，只用 search 的是 73%，差 14 個百分點（文章把這兩類題合在一起報，所以分不出這 14 個百分點有多少來自跨文件）。另外兩個任務 wiki 沒幫上忙。一個任務的答案大多在同一份文件裡，文字搜尋就找得到。另一個任務的 wiki 寫得比原始文件還長（1.77 倍），有些頁面沒有任何連結：它只是把資料重寫了一遍，沒有變得更好查。</p>
+              <p>道理接在第 1 章「能重讀的不要記」上，看的是重新取得的成本（本文的解讀）。Wiki 是預先算好的跨文件關聯。答案在一份文件裡時，search 一次就到，預先整理是白花的；答案要拼好幾份時，每次查都要重拼一次，預先拼好才省。決定要不要建 wiki，<strong>先看你的問題多常需要跨文件</strong>。</p>
+<details class="gloss" id="n-wiki">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">Wiki 實驗：資料量、整理花多少、法律任務的細節與限制</span></summary>
+                <div class="gloss-body prose">
+                  <p>資料是一家軟體公司的內部檔案，約 350,000 個檔、4.2 億 token。Opus 5 的 agent 分 128 個 session 讀這些檔案、寫頁面、合併重複的頁、把頁面上的說法對回來源。照文章的圖，128 個 session 累計用掉約 1.28 億 token。這比資料量 4.2 億 token 少；文章沒有說 agent 讀了其中多少檔案。</p>
+                  <p>題目只有 25 題，文章沒有交代跑了幾次，所以 8 個百分點的差距不算大。文章還說兩個一起用時每題少用約 20,000 token，但沒有寫原本用多少、和哪一組比，只能知道方向。</p>
+                  <p>法律任務的 benchmark 是 Harvey LAB。文章拿一樁併購案的文件出了 24 題，一半以上要跨文件，9 題要判斷或計算。87% 對 73% 只算這兩類題，不是 24 題全部，而且兩類合在一起報。文章沒有寫這兩類題共幾題，也沒有寫明有 wiki 的那個 agent 有沒有同時用 search。</p>
+                  <p>Harvey LAB 有好幾個任務，上面這 24 題屬於其中一個。Wiki 沒幫上忙的是另外兩個任務。寫得比原始文件長的那一個，wiki 是 203KB，原始 10 份文件是 115KB。</p>
+                  <p>這些數字都是 Anthropic 量自家 model 的結果。</p>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -891,12 +911,19 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               </div>
               <figcaption>這張圖回答：記憶由誰管？左邊和中間是課程的兩種，右邊是 2026 年出現的第三種（Claude Managed Agents，依 2026-11 的文件）。藍色是 harness，黃色是存放的地方。</figcaption>
             </figure>
-              <p id="i4-4"><b>本文的判斷（2026-11）：先用檔案。</b>分數幫不上忙。<a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta</a>（一家做 agent memory 系統的公司，2025-08）只給 agent 一個檔案和 grep、search_files 等工具，GPT-4o mini 在 LoCoMo（長對話回想的 benchmark，第 6 章）拿到 74.0%，高於另一家 memory 系統 Mem0 當時自報的 68.5%。但 74.0% 對 68.5% 這個比較是 Letta 做的，而 Letta 是 Mem0 的競爭者，用的也是 Letta 自家 agent 的檔案工具；而 Mem0 <a href="https://docs.mem0.ai/migration/platform-v2-to-v3" target="_blank" rel="noopener">換了演算法後，在 LoCoMo 自報 91.6</a>，反而高過 74.0%。三個數字是兩家各自量的，設定不同，不能互相比，<strong>也不能當選型的依據</strong>。選檔案的理由在別處：</p>
+              <p id="i4-4"><b>本文的判斷（2026-11）：先用檔案。</b><a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta</a>（一家做 agent memory 系統的公司，2025-08）量過最簡單的做法：不架 memory 系統，只給 agent 檔案和 grep、search_files 等檔案工具。這樣的 agent 在 LoCoMo（長對話回想的 benchmark，第 6 章）的分數是 74.0%。這說明檔案加關鍵字搜尋做得到基本的回想。但這個分數不能拿來和別家系統比高低：各家的分數是自己量的，設定不同，<strong>不能當選型的依據</strong>（下面的註有例子）。選檔案的理由在別處：</p>
               <ul>
                 <li><b>記錯時抓得到。</b>第 1 章說記錯的代價最高，而檔案人看得懂、改得動。獨立的 layer 要查才知道它記了什麼。</li>
                 <li><b>版本免費。</b>進 git 就有歷史，也能 diff，第 5 章的偵測要靠這個。</li>
                 <li><b>Policy 才是難的部分。</b>換 backend 不會替你決定該記什麼。難的既然不在 backend，就先用最簡單的那一種，把力氣留給 policy（本文的判斷）。</li>
-              </ul>
+</ul>
+<details class="gloss" id="n-letta">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">Letta 對 Mem0：為什麼這幾個分數不能互相比</span></summary>
+                <div class="gloss-body prose">
+                  <p>Letta 的 74.0% 用的是 GPT-4o mini 和 Letta 自家 agent 的檔案工具。Letta 拿它和另一家 memory 系統 Mem0 當時自報的 68.5% 比。這個比較是 Letta 做的，而 Letta 是 Mem0 的競爭者。</p>
+                  <p data-num-own="74.0">Mem0 <a href="https://docs.mem0.ai/migration/platform-v2-to-v3" target="_blank" rel="noopener">換了演算法後，在 LoCoMo 自報 91.6</a>，反而高過 74.0%。三個數字是兩家各自量的，設定不同，不能互相比。</p>
+                </div>
+              </details>
               <p>值得離開檔案的情況有三種：多個 agent 要共用、要依使用者隔離、要查「什麼時候變的」或「連到誰」。第一種的原因是<strong>本機檔案只在一台機器上</strong>，另一台機器、另一個 container 裡的 agent 讀不到。第二種的原因是檔案的權限只認得作業系統的帳號，不認得你服務裡的使用者，要隔離就得自己另寫一層檢查。第三種要的是時間和關聯的查詢，這是 graph database 的長處（上面的 backend 圖）。</p>
               <p>Anthropic 自己的兩個產品，剛好落在這條分界的兩邊。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 的每個 session 都在同一台開發者的電腦上跑，所以本機檔案就跨得了 session（<a class="tm" href="#n-cc">它在每個決定上的答案，列在下面標「查閱」的註</a>）。<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents</a> 的 session 跑在雲端，sandbox（執行 model 寫的 code 的隔離 container）要用時才配一個（L8〈<a href="l08.html#i9">Harness 架構</a>〉），下一個 session 拿到的是另一個新的 sandbox，所以寫在前一個 sandbox 裡的檔案留不到下一個 session，也給不了同時在跑的其他 session。所以它換成託管的 store，但仍掛載成目錄，agent 用同一套檔案工具（這兩個產品的對照是本文的判斷）。</p>
               <details class="gloss" id="n-cc">
@@ -971,7 +998,14 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               <figcaption>這張圖回答：幾個 agent 一起寫記憶，怎麼才不會互相蓋掉？讓每一頁只有一個寫入者；右邊的做法還加了一條「條款照原文抄」，57 個事實全留下是兩條一起的結果。粉色是出問題的共用表，青色是各自的頁。依 Anthropic〈The components of agent memory〉（2026-11）的合約任務。</figcaption>
             </figure>
               <p>改法有兩條，各修一個原因。一份合約一頁、每一頁只由一個 agent 寫，就沒有兩個人寫同一份的時候，<strong>衝突不是被解決，而是不會發生</strong>。條款照原文抄、不摘要，第 2 章說的「摘要會丟東西」就不會發生在這一步。改完之後 57 個事實都在。</p>
-              <p>這兩條改法是 Claude 自己繞一圈找到的（文章沒有說這一圈是寫表的那幾個 agent 之一做的、還是另開的 agent，也沒有提到要人核准）：先檢討報告漏了什麼，再提議修改「怎麼整理這批合約」的指示，然後照新的指示把整理出來的頁面重做一次。原本的指示只說要整理合約，沒有說整理出來的東西之後拿來做什麼，整理出來的就是那張摘要過的共用表。繞這一圈才發現報告的評分看的是合約條款，新的指示就把「條款要完整留下」放在第一位，上面兩條改法是從這裡來的。這和第 1 章是同一個結論：整理記憶的指示要寫明用途。另外，每個 agent 在自己的 session 裡寫，只看得到自己的 context，不知道別的 agent 寫了哪些頁。所以各寫各的之後，還要再跑一輪，專門看頁面和頁面之間對不對得上。文章的例子是這樣的一輪找到 6 頁裡有 9 個連結指向一個不存在的頁面，把它們改指到講同一份文件、已經存在的另一頁。</p>
+              <p>這兩條改法是 Claude 檢討報告漏了什麼之後自己提出的。原本的指示只說要整理合約，沒有說整理出來的東西之後拿來做什麼，整理出來的就是那張摘要過的共用表。檢討之後才發現報告的評分看的是合約條款，新的指示就把「條款要完整留下」放在第一位，上面兩條改法是從這裡來的。這和第 1 章是同一個結論：整理記憶的指示要寫明用途。另外，每個 agent 在自己的 session 裡寫，只看得到自己的 context，不知道別的 agent 寫了哪些頁。所以各寫各的之後，還要再跑一輪，專門看頁面和頁面之間對不對得上，例如有沒有連結指向不存在的頁面。</p>
+<details class="gloss" id="n-contracts">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">合約任務：那一輪檢討怎麼做、文章沒說的事</span></summary>
+                <div class="gloss-body prose">
+                  <p>那一輪檢討有三步：先檢討報告漏了什麼，再提議修改「怎麼整理這批合約」的指示，然後照新的指示把整理出來的頁面重做一次。文章沒有說這一輪是寫表的那幾個 agent 之一做的、還是另開的 agent，也沒有提到要人核准。</p>
+                  <p>對頁面的那一輪，文章的例子是找到 6 頁裡有 9 個連結指向一個不存在的頁面，把它們改指到講同一份文件、已經存在的另一頁。</p>
+                </div>
+              </details>
               <p id="i4-5" data-num-own="8 4"><span class="anchor" id="x2"></span><b>分數要自己量。</b>課程列的三個 benchmark（LoCoMo、LongMemEval、BEAM，<a class="tm" href="#n-metric">第 6 章有表</a>）都在考聊天歷史的回想，Coding agent 的記憶 2026 年才開始有人測：<a href="https://arxiv.org/html/2602.08316" target="_blank" rel="noopener">SWE-ContextBench</a> 量到直接給對的前例摘要，解出的題目只比沒有記憶多 8 個百分點，讓 agent 自己挑摘要反而少 4 個百分點（第 1 章）。現成的分數因此有兩個缺口：三個 benchmark 考的是聊天回想，不是你的用法；同一份記憶幫不幫得上忙，又要看你的檢索挑不挑得對。所以要自己做一組測試：</p>
               <figure class="file"><figcaption>memory_eval.yaml（示意：三組查詢各量一件事，本文補的）</figcaption><pre><code class="lang-yaml">should_recall:                         # 量 recall：這些都該取回
   - q: "which serving engine do we use"   expect: ["mem-28"]
@@ -1890,6 +1924,14 @@ budget:
      "at": [
       "#i2 圖3 內容"
      ]
+    },
+    {
+     "id": "k24.7",
+     "type": "condition",
+     "t": "比來源之前先看衝突的是哪一類事：使用者的偏好和決定以他說的為準；他對現況的描述（用哪個 engine、檔案在哪裡）可以驗證，和剛讀到的 tool output 衝突時以剛讀到的為準，並把衝突告訴使用者；這份 tool output 存成記憶之後一樣會過期。",
+     "at": [
+      "#i2 ¶6"
+     ]
     }
    ]
   },
@@ -1942,7 +1984,7 @@ budget:
      "type": "claim",
      "t": "歸納是風險最高的寫入，因為來源是 model 自己：系統自己寫、寫出來的每一條都進 store、沒有任何人說過這句話，寫錯了也沒有原話可以對。",
      "at": [
-      "#i2 ¶6"
+      "#i2 ¶7"
      ]
     },
     {
@@ -1950,7 +1992,7 @@ budget:
      "type": "misconception",
      "t": "信任最低的 external 不是風險最高的寫入：網頁、README 的內容依規則根本不會自動寫進來，歸納卻是系統自己在寫。",
      "at": [
-      "#i2 ¶6"
+      "#i2 ¶7"
      ]
     },
     {
@@ -1958,7 +2000,7 @@ budget:
      "type": "mechanism",
      "t": "Reflection 讀好幾筆觀察，寫出一條更高層的記憶，例如使用者先後問 vLLM、SGLang、TRT-LLM、LLM scheduling，歸納出「Frequent interest in LLM inference systems」。",
      "at": [
-      "#i2 ¶6",
+      "#i2 ¶7",
       "#i2 code2 內容"
      ]
     },
@@ -1968,7 +2010,7 @@ budget:
      "t": "歸納的輸出要附 confidence，並用 evidence 欄位連回原始觀察，這樣可以查證，也可以撤回。",
      "at": [
       "#i2 code2 內容",
-      "#i2 ¶7"
+      "#i2 ¶8"
      ]
     },
     {
@@ -1976,7 +2018,7 @@ budget:
      "type": "limit",
      "t": "少了 evidence 和 confidence 的歸納，典型失敗之一是 memory hallucination：把推測存成事實，例如「在 Harvard 唸書」變成「Harvard 的訪問學生」。",
      "at": [
-      "#i2 ¶7"
+      "#i2 ¶8"
      ]
     },
     {
@@ -1984,7 +2026,7 @@ budget:
      "type": "limit",
      "t": "另一種典型失敗是 overgeneralization：證據太少就歸納，一次事件變成長期偏好。",
      "at": [
-      "#i2 ¶7"
+      "#i2 ¶8"
      ]
     },
     {
@@ -1992,7 +2034,7 @@ budget:
      "type": "condition",
      "t": "歸納的時機是累積了夠多新證據，或事實發生衝突的時候。",
      "at": [
-      "#i2 ¶7"
+      "#i2 ¶8"
      ]
     },
     {
@@ -2000,7 +2042,7 @@ budget:
      "type": "claim",
      "t": "歸納出來的結論是推測（kind 標成 hypothesis、來源標成 inferred），只當背景參考，不當事實。",
      "at": [
-      "#i2 ¶7",
+      "#i2 ¶8",
       "#i2 code2 內容"
      ]
     },
@@ -2072,7 +2114,7 @@ budget:
      "type": "claim",
      "t": "遺忘是正式操作：只進不出的 store，檢索會越來越慢、雜訊越來越多。",
      "at": [
-      "#i2 ¶8"
+      "#i2 ¶10"
      ]
     },
     {
@@ -2080,7 +2122,7 @@ budget:
      "type": "claim",
      "t": "要遺忘的理由有四個：過期、錯誤或衝突、隱私與安全、儲存與檢索的成本。",
      "at": [
-      "#i2 ¶8"
+      "#i2 ¶10"
      ]
     },
     {
@@ -2151,9 +2193,9 @@ budget:
      "type": "misconception",
      "t": "刪掉一筆原始紀錄不算刪乾淨：從它推出來的事實、embedding 和歸納都是副本，還留著；課程把歸納和遺忘分開講，合起來才看得到這個漏洞。",
      "at": [
-      "#i2 ¶9",
+      "#i2 ¶11",
       "#i2 圖6 說明",
-      "#i2 ¶10"
+      "#i2 ¶12"
      ]
     },
     {
@@ -2161,7 +2203,7 @@ budget:
      "type": "claim",
      "t": "刪除要能連鎖：刪一筆原始紀錄時，它抽出的事實、embedding（記憶轉成給語意搜尋用的一串數字）和引用它的歸納，都要刪掉或重算。",
      "at": [
-      "#i2 ¶9",
+      "#i2 ¶11",
       "#i2 圖6 內容"
      ]
     },
@@ -2170,7 +2212,7 @@ budget:
      "type": "mechanism",
      "t": "Evidence 欄位的第二個用途，是沿著它找到一筆原始紀錄的所有副本。",
      "at": [
-      "#i2 ¶10",
+      "#i2 ¶12",
       "#i2 圖6 內容"
      ]
     },
@@ -2179,7 +2221,7 @@ budget:
      "type": "limit",
      "t": "版本紀錄也是一份副本：Managed Agents 的 memory 每次修改都留版本，要真的抹掉內容還要另外 redact。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶12"
      ]
     }
    ]
@@ -4629,6 +4671,20 @@ budget:
     "k24.6"
    ],
    "closed_ok": "別節的題目寫到了答案（頁面上分開出現）：k41h 題幹「把記憶當資料、不當指令」幾乎就是正確選項的字。"
+  },
+  {
+   "id": "k24g",
+   "ks": "k24",
+   "kind": "apply",
+   "q": "使用者上週說「我們已經換成 SGLang 了」。Agent 今天要改 serving 的設定，剛讀了 pyproject.toml，依賴裡只有 vllm。照本文，它該以哪一個為準？該對使用者做什麼？如果衝突的換成「回覆用中文」這種事，答案會不會變？",
+   "key": [
+    "現在用哪個 engine 是可以驗證的現況，以剛讀到的檔案為準（vllm）。",
+    "照檔案做的同時把這個衝突告訴使用者，請他確認：可能是他記錯，也可能是改動還沒 merge。",
+    "會變：偏好和決定只有使用者自己說了算，以他說的為準。"
+   ],
+   "covers": [
+    "k24.7"
+   ]
   },
   {
    "id": "k45a",

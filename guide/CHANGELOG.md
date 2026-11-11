@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-11（L6b 依一份外部評價調整：研究案例的實驗設定與但書收進四個 `details.gloss`「查閱」（`#n-clbench`、`#n-wiki`、`#n-letta`、`#n-contracts`），正文只留結論與圖；Provenance 補「先看衝突的是哪一類事」；補重讀成本、transcripts 的保存代價。題庫加 k24.7 與 k24g。取捨在 V7_DECISIONS，審查紀錄在 review_reports/l06b-20261111b/。L6b 閱讀時間 40 分。）
 - 2026-11-11（L7 整頁可讀性審查（v16）並照 slides 加四張圖：第 7 章六格折線圖與 23 個 benchmark 的時間軸、第 3 章 Pareto 示意圖、第 4 章題數橫條圖；L7 閱讀時間 55 分。取捨在 V7_DECISIONS，審查紀錄在 review_reports/l07-20261111。）
 - 2026-11-11（腳本表加 `review_eval.py`、`review_status.py`。）
 - 2026-11-11（腳本表加 `check_numbers.py`；`verify.sh`、`quiz.py` 兩列同步。）
