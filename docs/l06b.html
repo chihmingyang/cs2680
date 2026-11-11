@@ -515,10 +515,23 @@ Uses SGLang for model serving.
                  "ep-19 TRT-LLM", "ep-23 LLM scheduling"],  // 連回四筆原始事件（ep = episode）：可以查證，也可以撤回
   "created":    "2026-06-20"
 }</code></pre></figure>
-              <p>課程列了歸納的兩種典型失敗，snippet 的欄位各擋一種（哪個欄位擋哪一種，是本文的對應）。Memory hallucination 是推測被存成事實。課程的例子：原話是「在 Harvard 唸書」，存進去的卻是「Harvard 的訪問學生」；「訪問學生」這個身分是 model 推測的，沒有人說過。換成上面的例子，就是把「常問 LLM inference」存成「他是做 LLM inference 的工程師」。擋它的是 <code>kind: hypothesis</code>：之後讀到這一條，就知道它是推測，只當背景參考，不蓋過使用者說過的話。Overgeneralization 是證據太少就歸納：使用者只問過一次 vLLM，就被記成長期偏好。擋它的是 <code>evidence</code> 和 <code>confidence</code>：只連得回一筆事件的歸納，一眼看得出證據不夠，confidence 也只能標 low。所以課程說歸納要等累積了夠多新證據再做；另一個時機是幾條事實互相衝突或重複，這時本來就要把它們合起來看。歸納錯了也要能退：</p>
+              <p>課程列了歸納的兩種典型失敗，snippet 的欄位各擋一種（哪個欄位擋哪一種，是本文的對應）。Memory hallucination 是推測被存成事實。課程的例子：原話是「在 Harvard 唸書」，存進去的卻是「Harvard 的訪問學生」；「訪問學生」這個身分是 model 推測的，沒有人說過。換成上面的例子，就是把「常問 LLM inference」存成「他是做 LLM inference 的工程師」。擋它的是 <code>kind: hypothesis</code>：之後讀到這一條，就知道它是推測，只當背景參考，不蓋過使用者說過的話。Overgeneralization 是證據太少就歸納：使用者只問過一次 vLLM，就被記成長期偏好。擋它的是 <code>evidence</code> 和 <code>confidence</code>：只連得回一筆事件的歸納，一眼看得出證據不夠，confidence 也只能標 low。所以課程說歸納要等累積了夠多新證據再做；另一個時機是幾條事實互相衝突或重複，這時本來就要把它們合起來看。</p>
+              <p><b>歸納錯了要能退：原本的不動，結果另存。</b>上面的欄位讓讀的人知道一條歸納有多可信，但它們擋不住錯的歸納被寫進 store。寫錯了怎麼辦，可以從歸納的三個性質推出來（本文的推論）：</p>
+              <ul>
+                <li><b>它是有損的。</b>歸納把好幾條記憶合成一條，也把互相矛盾的幾條換成它認為最新的那一條。合錯了，被合掉的細節就不在 store 裡了。</li>
+                <li><b>它沒辦法當場驗。</b>Code 改壞了，測試會失敗。歸納寫錯了卻沒有原話可以對，要等之後某個 session 照著它做出奇怪的事才看得出來，而且很難追回是哪一次歸納造成的。</li>
+                <li><b>它的錯會滾大。</b>每個新的 session 開始時都會讀記憶。錯的歸納會改變 agent 的行為，這些行為變成新的 session 紀錄，下一次歸納又拿它們當證據。</li>
+              </ul>
+              <p>寫進去之前驗不了，寫進去之後又會擴散，剩下的辦法是<strong>保留反悔的能力</strong>：歸納不直接改原本的 store，把結果寫成另一份，原本的留著。部署新版本時也是這樣做的：新版本先放在旁邊，確認沒問題再把流量切過去，舊版本留著準備退回（blue-green deployment）。這個做法有三個代價：</p>
+              <ul>
+                <li><b>成本。</b>每次都重寫一整份 store，花的 token 隨讀進去的 session 紀錄變多而增加。</li>
+                <li><b>多一個切換的步驟。</b>新的 store 要有人或有程式換上去才會生效。歸納還在跑的時候，agent 如果繼續往舊的 store 寫，這些新記憶不會在新的那一份裡（本文的推論）。</li>
+                <li><b>誰來檢查。</b>人審最穩，但人審不了太多次，而且審一整份重寫過的 store，比審幾行修改難。讓程式自動換上去就沒有這個瓶頸；代價是錯的歸納會先影響 agent，發現之後才靠留著的舊 store 退回去。</li>
+              </ul>
+              <p>所以要不要每次都給人看，是依風險選的（本文的判斷）：出錯代價高的流程，或剛上線、還不知道歸納品質的時候，給人審；穩定之後自動換上，舊的 store 留一段時間。下面是一個照這個思路做的產品：</p>
               <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 150" role="img" aria-label="歸納做成可以丟棄的一步。輸入是一個 memory store 和 1 到 100 個 session 紀錄，輸入不動。非同步的 dream 工作產出一個新的 store。人看過之後，決定換上去或丟掉。">
+                <svg viewBox="0 0 720 150" role="img" aria-label="歸納做成可以丟棄的一步。輸入是一個 memory store 和 1 到 100 個 session 紀錄，輸入不動。非同步的 dream 工作產出一個新的 store。最後一步是換上去或丟掉，可以由人審，也可以自動。">
                   <defs><marker id="l6v-dream-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l6v-dream-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <path d="M174,42 L214,42 L214,74 L250,74" class="dg-link"/>
                   <path d="M174,106 L214,106 L214,74" class="dg-link"/>
@@ -538,11 +551,11 @@ Uses SGLang for model serving.
                   <text x="500" y="71.0" text-anchor="middle" class="dg-l">新的 store</text>
                   <text x="500" y="88.0" text-anchor="middle" class="dg-c">另存一份</text>
                   <rect x="606" y="48" width="100" height="52" rx="4" class="dg-n-focus"/>
-                  <text x="656" y="71.0" text-anchor="middle" class="dg-l-on">人看過</text>
-                  <text x="656" y="88.0" text-anchor="middle" class="dg-c-on">換上或丟掉</text>
+                  <text x="656" y="71.0" text-anchor="middle" class="dg-l-on">換上或丟掉</text>
+                  <text x="656" y="88.0" text-anchor="middle" class="dg-c-on">人審或自動</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：歸納錯了怎麼辦？把它做成可以丟棄的一步。Claude Managed Agents（Anthropic 的託管 agent 服務）有一個功能叫 dreams（research preview，2026-11 查），在背景整理記憶，歸納是它做的其中一件。它的做法：輸入不動，產出另一個 store，人看過再決定。</figcaption>
+              <figcaption>這張圖回答：上面的推論，實際的產品長什麼樣子？Claude Managed Agents（Anthropic 的託管 agent 服務）有一個功能叫 dreams（research preview，2026-11 查），在背景整理記憶，歸納是它做的其中一件。它不改輸入，產出另一個 store；這個 store 要掛到之後的 session 上才生效，不滿意就刪掉。文件沒有規定要人審：發布公告說可以選自動更新，也可以選先審過再生效。</figcaption>
             </figure>
               <p id="i2-7"><b>Session 之間的整理：把筆記對回原始紀錄（本文補的）。</b>上一張圖的 dream 工作，Anthropic 把這種做法叫 dreaming：agent 不做任務的時候，另外開 session 讀 transcripts 和現有的筆記。本文把它叫 session 之間的整理。它沿著四層做三件事：</p>
               <ul>
@@ -2049,8 +2062,11 @@ budget:
     {
      "id": "k25.9",
      "type": "mechanism",
-     "t": "歸納錯了要能退，所以把它做成可以丟棄的一步：例如 Managed Agents 的 dreams 讀一個 memory store 和 1 到 100 個 session 紀錄、輸入不動，非同步產出另一個 store，人看過再決定換上去或丟掉。",
+     "t": "歸納有損、沒辦法當場驗、錯了會滾大，所以要保留反悔的能力：原本的 store 不動，結果另存一份。例如 Managed Agents 的 dreams 讀一個 memory store 和 1 到 100 個 session 紀錄、輸入不動，非同步產出另一個 store；換上去之前要不要給人審，依風險選。",
      "at": [
+      "#i2 ¶9",
+      "#i2 ¶13",
+      "#i2 ¶17",
       "#i2 圖5 說明",
       "#i2 圖5 內容"
      ]
@@ -2114,7 +2130,7 @@ budget:
      "type": "claim",
      "t": "遺忘是正式操作：只進不出的 store，檢索會越來越慢、雜訊越來越多。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶19"
      ]
     },
     {
@@ -2122,7 +2138,7 @@ budget:
      "type": "claim",
      "t": "要遺忘的理由有四個：過期、錯誤或衝突、隱私與安全、儲存與檢索的成本。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶19"
      ]
     },
     {
@@ -2193,9 +2209,9 @@ budget:
      "type": "misconception",
      "t": "刪掉一筆原始紀錄不算刪乾淨：從它推出來的事實、embedding 和歸納都是副本，還留著；課程把歸納和遺忘分開講，合起來才看得到這個漏洞。",
      "at": [
-      "#i2 ¶11",
+      "#i2 ¶20",
       "#i2 圖6 說明",
-      "#i2 ¶12"
+      "#i2 ¶21"
      ]
     },
     {
@@ -2203,7 +2219,7 @@ budget:
      "type": "claim",
      "t": "刪除要能連鎖：刪一筆原始紀錄時，它抽出的事實、embedding（記憶轉成給語意搜尋用的一串數字）和引用它的歸納，都要刪掉或重算。",
      "at": [
-      "#i2 ¶11",
+      "#i2 ¶20",
       "#i2 圖6 內容"
      ]
     },
@@ -2212,7 +2228,7 @@ budget:
      "type": "mechanism",
      "t": "Evidence 欄位的第二個用途，是沿著它找到一筆原始紀錄的所有副本。",
      "at": [
-      "#i2 ¶12",
+      "#i2 ¶21",
       "#i2 圖6 內容"
      ]
     },
@@ -2221,7 +2237,7 @@ budget:
      "type": "limit",
      "t": "版本紀錄也是一份副本：Managed Agents 的 memory 每次修改都留版本，要真的抹掉內容還要另外 redact。",
      "at": [
-      "#i2 ¶12"
+      "#i2 ¶21"
      ]
     }
    ]
@@ -4893,23 +4909,23 @@ budget:
    "id": "k25g",
    "ks": "k25",
    "kind": "choice",
-   "q": "歸納錯了要能退。照 Claude Managed Agents 的 dreams（research preview），這一步怎麼設計？",
+   "q": "歸納寫錯了沒有原話可以對，錯的歸納又會被之後的 session 當成證據。照本文的推論，歸納這一步該怎麼設計？",
    "choices": [
     {
      "t": "直接改寫原本的記憶，錯了再從備份還原",
-     "why": "dreams 不改輸入：原本的 store 留著不動，產出的是另一個 store，人看過再決定要不要換上去。"
+     "why": "歸納是有損的：合錯了，被合掉的細節就不在了。備份只在你發現錯的時候有用，而歸納的錯要到之後的 session 才看得出來；所以本文的做法是原本的 store 不動，結果另存。"
     },
     {
-     "t": "原本的記憶不動，另外產出一份給人審",
+     "t": "原本的記憶不動，結果另存一份，確認後再換上",
      "ok": true
     },
     {
      "t": "每寫一條歸納前，先問使用者同不同意",
-     "why": "dreams 是非同步的工作，不是逐條問使用者；它產出另一個 store，人看過整份再決定換上去或丟掉。"
+     "why": "逐條問使用者，人很快就審不過來。本文的做法是整份另存、原本的留著；要不要給人審依風險選，也可以自動換上、靠舊的 store 退回。"
     }
    ],
    "key": [
-    "把歸納做成可以丟棄的一步：dreams 讀一個 memory store 和 1 到 100 個 session 紀錄，輸入不動，非同步產出另一個 store，人看過再決定換上去或丟掉。"
+    "歸納有損、沒辦法當場驗、錯了會滾大，所以原本的 store 不動，結果另存一份，確認後再換上；要不要給人審依風險選。Managed Agents 的 dreams 是這樣做的例子。"
    ],
    "covers": [
     "k25.9"
