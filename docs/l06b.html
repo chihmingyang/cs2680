@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261110d">
+<link rel="stylesheet" href="styles.css?v=20261112d">
 </head>
 <body>
 <header class="topbar">
@@ -283,45 +283,25 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </div>
               </details>
               <p>本文的判斷：因為上面的不對稱，預設往右邊靠，再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：<strong>使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」</strong>。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
-              <p id="i1-5"><b>往右靠，用「說明用途」來做，不要把條件寫死（本文補的）。</b>「預設往右邊靠」是少記一點，在寫入的當下就先挑，不像光譜左邊先全部留著再挑。挑有兩種做法，管的都是「記什麼」，差在誰來挑。一種是作者事先在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶做什麼用，值不值得記讓 model 看著當下的事情判斷，下面叫它「說明用途」。上一段「至少要記什麼」的規則可以和它並用：「抓使用者糾正」只保證這種情況一定記，其他事仍由 model 判斷，所以不算寫死；寫死是把「值不值得記」整個換成一條規則，規則以外的一律不記。對到上面的光譜圖，寫死條件接近右邊的「確定性規則」，「說明用途」則是讓正在寫入的 model 當場判斷，光譜圖沒有單獨列這一點。「說明用途」的 prompt 可以只有一句，例如「這個資料夾留給下一次的你：記下會讓你下次做得更好的事」（本文的例子）。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉建議的也是這樣：告訴 model 記憶做什麼用，哪些事值得記讓它自己判斷。文章用一個叫 CL-Bench 的 benchmark 量了寫死條件的代價：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。一組不加任何條件，prompt 只說有一個記憶資料夾可以用，連用途都沒寫，比「說明用途」還少一句。另一組再加上「只記失敗」。量測裡沒有「說明用途」這一組，但連用途都沒寫的那一組已經贏過寫死條件，寫上用途，只是多給 model 一個判斷的依據（本文的推論）。圖裡比的是記憶的效益，也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
-              <figure class="diagram">
+              <p id="i1-5"><b>往右靠，用「說明用途」來做，不要把條件寫死（本文補的）。</b>「預設往右邊靠」是少記一點，在寫入的當下就先挑，不像光譜左邊先全部留著再挑。挑有兩種做法，管的都是「記什麼」，差在誰來挑。一種是作者事先在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶做什麼用，值不值得記讓 model 看著當下的事情判斷，下面叫它「說明用途」。上一段「至少要記什麼」的規則可以和它並用：「抓使用者糾正」只保證這種情況一定記，其他事仍由 model 判斷，所以不算寫死；寫死是把「值不值得記」整個換成一條規則，規則以外的一律不記。對到上面的光譜圖，寫死條件接近右邊的「確定性規則」，「說明用途」則是讓正在寫入的 model 當場判斷，光譜圖沒有單獨列這一點。「說明用途」的 prompt 可以只有一句，例如「這個資料夾留給下一次的你：記下會讓你下次做得更好的事」（本文的例子）。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉建議的也是這樣：告訴 model 記憶做什麼用，哪些事值得記讓它自己判斷。文章用一個叫 CL-Bench 的 benchmark 量了寫死條件的代價：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。一組不加任何條件，prompt 只說有一個記憶資料夾可以用，連用途都沒寫，比「說明用途」還少一句。另一組再加上「只記失敗」。量測裡沒有「說明用途」這一組，但連用途都沒寫的那一組已經贏過寫死條件，寫上用途，只是多給 model 一個判斷的依據（本文的推論）。下面是文章的原圖。圖上的數字都繞著記憶的效益（圖上叫 gain from memory），也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
+              <figure class="diagram shot">
               <div class="scroll">
-                <svg viewBox="0 0 720 270" role="img" aria-label="橫條圖：記憶的效益，也就是有記憶的分數減沒有記憶的分數，分數 0 到 1。圖例在上方：青色是不加條件、由 model 判斷值不值得記；深紅是再加一條「只記失敗」；虛線框是加了之後少掉的部分。每個 model 兩條。Opus 5 從 0.264 掉到 0.030，少 0.234。Opus 4.7 從 0.317 掉到 0.167，少 0.150。Sonnet 4.6 從 0.034 掉到 0.014，少 0.020。">
-                  <text x="170" y="18" class="dg-cb">記憶的效益</text>
-                  <text x="242" y="18" class="dg-c">（有記憶的分數 − 沒有記憶的分數，0 到 1）</text>
-                  <rect x="170" y="31" width="14" height="13" rx="2" class="dg-n-a"/>
-                  <text x="190" y="42" class="dg-c">不加條件，由 model 判斷</text>
-                  <rect x="368" y="31" width="14" height="13" rx="2" class="dg-n-focus"/>
-                  <text x="388" y="42" class="dg-c">加「只記失敗」</text>
-                  <rect x="500" y="31" width="14" height="13" rx="2" class="dg-frame"/>
-                  <text x="520" y="42" class="dg-c">加了之後少掉的</text>
-                  <text x="158" y="77" text-anchor="end" class="dg-ls">Opus 5</text>
-                  <rect x="170" y="60" width="343.2" height="24" rx="2" class="dg-n-a"/>
-                  <text x="521.2" y="77" class="dg-cb">0.264</text>
-                  <rect x="170" y="88" width="39.0" height="24" rx="2" class="dg-n-focus"/>
-                  <rect x="209.0" y="88" width="304.2" height="24" rx="2" class="dg-frame"/>
-                  <text x="521.2" y="105" class="dg-k">0.030（少 0.234）</text>
-                  <text x="158" y="149" text-anchor="end" class="dg-ls">Opus 4.7</text>
-                  <rect x="170" y="132" width="412.1" height="24" rx="2" class="dg-n-a"/>
-                  <text x="590.1" y="149" class="dg-cb">0.317</text>
-                  <rect x="170" y="160" width="217.1" height="24" rx="2" class="dg-n-focus"/>
-                  <rect x="387.1" y="160" width="195.0" height="24" rx="2" class="dg-frame"/>
-                  <text x="590.1" y="177" class="dg-k">0.167（少 0.150）</text>
-                  <text x="158" y="221" text-anchor="end" class="dg-ls">Sonnet 4.6</text>
-                  <rect x="170" y="204" width="44.2" height="24" rx="2" class="dg-n-a"/>
-                  <text x="222.2" y="221" class="dg-cb">0.034</text>
-                  <rect x="170" y="232" width="18.2" height="24" rx="2" class="dg-n-focus"/>
-                  <rect x="188.2" y="232" width="26.0" height="24" rx="2" class="dg-frame"/>
-                  <text x="222.2" y="249" class="dg-k">0.014（少 0.020）</text>
-                </svg>
+                <img src="img/l06b-clbench-rule.webp" width="1600" height="922" loading="lazy" alt="文章的原圖，兩張長條圖。右半：加了「只記失敗」之後記憶的效益變了多少，長條從 0 往下畫。Opus 5 少 0.234（3 次），Opus 4.7 少 0.150（3 次），Sonnet 4.6 少 0.020（1 次）。左半：Sonnet 4.6 在 CL-Bench 的分數。沒有記憶（baseline）0.330，有記憶 0.364，有記憶再加上改過的 prompt（refined instruction）0.641，各跑 3 次，0.641 那一條的誤差線最長。兩條橫線是對照：Opus 5 有記憶 0.828，Opus 4.7 有記憶 0.700。">
               </div>
-              <figcaption>這張圖回答：把寫入條件寫死，會不會比較好？在這組題目上不會：三個 model 的記憶效益都變小（Sonnet 4.6 加「只記失敗」的那一組只跑了 1 次，它少的 0.020 只能看方向），虛線框是加了條件之後少掉的部分；Opus 5 從 0.264 掉到 0.030，幾乎歸零。依 Anthropic〈The components of agent memory〉（2026-11）的 CL-Bench 實驗；題目怎麼出、數字怎麼來，在下面的註。</figcaption>
+              <figcaption>這張圖回答：把寫入條件寫死，會不會比較好？在這組題目上不會。先看右半：長條往下多長，就是加了「只記失敗」之後，記憶的效益少了多少。Opus 5 少 0.234，它原本的效益是 0.264，所以只剩 0.030，幾乎歸零；Opus 4.7 少 0.150，原本是 0.317，剩 0.167。Sonnet 4.6 那一條只跑了 1 次（另外兩條各跑 3 次），少的 0.020 只能看方向。左半是另一個實驗，下面講 Sonnet 4.6 的那一段會用到。圖取自 Anthropic〈The components of agent memory〉（2026-11）的 CL-Bench 實驗；題目怎麼出、各 model 原本的效益怎麼來，在下面的註。</figcaption>
 </figure>
 <details class="gloss" id="n-clbench">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">CL-Bench 實驗：題目怎麼出、圖裡的數字怎麼來、限制在哪</span></summary>
                 <div class="gloss-body prose">
                   <p>題目來自 CL-Bench 1.0，一個測 agent 長期使用記憶的 benchmark。Agent 查資料庫回答一連串問題，每一題開一個新的 session。答完會看到正確答案，這時它可以把學到的事寫進一個記憶資料夾。下一題只帶著這個資料夾。分數是每題得分的平均，0 到 1。不加條件的那一組，文章只說「告訴 Claude 有一個記憶資料夾可以用」；「只記失敗」也只給了規則的名稱。兩者的 prompt 全文文章都沒有附。</p>
-                  <p>文章給的是每個 model 的效益少了多少：Opus 5 少 0.234、Opus 4.7 少 0.150、Sonnet 4.6 少 0.020。圖裡每個 model 下面那條的長度，是本文用上面那條減掉這個數字算的。文章的圖標了每個降幅跑幾次：Opus 5 和 Opus 4.7 加「只記失敗」的那一組各跑 3 次、取平均，Sonnet 4.6 加「只記失敗」的那一組只跑了 1 次。只有 1 次就分不出差距是規則造成的還是運氣，所以 Sonnet 4.6 少的 0.020 只能看方向。</p>
+                  <p>上面那張圖的右半只給每個 model 的效益少了多少：Opus 5 少 0.234、Opus 4.7 少 0.150、Sonnet 4.6 少 0.020。各 model 原本的效益要看文章的另一張圖（下面這張的左半）：斜線的長條是沒有記憶（stateless baseline），實心的是有記憶，兩條的差就是效益。用有記憶的分數減沒有記憶的分數：Opus 5 是 0.828 − 0.564 = 0.264，Opus 4.7 是 0.700 − 0.383 = 0.317，Sonnet 4.6 是 0.364 − 0.330 = 0.034。圖說裡「只剩 0.030」「剩 0.167」是本文用原本的效益減掉降幅算的，文章沒有直接給。</p>
+                  <figure class="diagram shot">
+              <div class="scroll">
+                <img src="img/l06b-clbench-models.webp" width="1600" height="889" loading="lazy" alt="文章的原圖。左半是長條圖：六個 model 在 CL-Bench 的分數，斜線是沒有記憶，實心是有記憶。每個 model 先寫沒有記憶、再寫有記憶：Opus 5.5 沒有記憶 0.655、有記憶 0.838；Sonnet 5.5 沒有 0.644、有 0.833；Opus 5 沒有 0.564、有 0.828；Opus 4.7 沒有 0.383、有 0.700；Sonnet 5 沒有 0.306、有 0.610；Sonnet 4.6 沒有 0.330、有 0.364。右半是折線圖：橫軸是第 1 到第 30 題，縱軸是到這一題為止的平均分數；六個 model 各兩條線，實線有記憶，虛線沒有記憶。">
+              </div>
+              <figcaption>這張圖回答：各 model 原本靠記憶多拿幾分？看左半每一組兩條的差。Sonnet 4.6 的兩條幾乎一樣高，其他五個 model 都差了 0.18 以上。右半是同一批數字照題號畫的：橫軸是第幾題（共 30 題），縱軸是到那一題為止的平均分數；同一個顏色的實線（有記憶）和虛線（沒有記憶）隔多遠，就是效益。圖取自 Anthropic〈The components of agent memory〉（2026-11）。</figcaption>
+</figure>
+                  <p>文章的圖標了每個降幅跑幾次：Opus 5 和 Opus 4.7 加「只記失敗」的那一組各跑 3 次、取平均，Sonnet 4.6 加「只記失敗」的那一組只跑了 1 次。只有 1 次就分不出差距是規則造成的還是運氣，所以 Sonnet 4.6 少的 0.020 只能看方向。</p>
                   <p>下面正文講 Sonnet 4.6 的那一段，用到另一個實驗：不加「只記失敗」，改成在 prompt 裡教它使用記憶，前後的分數如下。改之前：沒有記憶時是 0.330，有記憶是 0.364，效益 0.034。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句（猜測是它寫在筆記裡、還沒驗證過的推論）之後，有記憶的分數是 0.641，效益變成 0.311，大約是原來的 9 倍。0.330、0.364、0.641 這三個分數各跑 3 次、取平均；0.641 那一組三次之間差很多，文章圖上的誤差線大約從 0.50 畫到 0.78（本文從圖上讀的）。</p>
                 </div>
               </details>
@@ -573,7 +553,21 @@ Uses SGLang for model serving.
                 <li><b>歸納。</b>和上面是同一個動作，輸入換成散的筆記：讀好幾條，往上合成 wiki 這類結構。它值不值得做，第 3 章有量測。</li>
                 <li><b>換層。</b>每次都用得到的往上搬到 injected context；細節往下搬，原處留一個連結，讓最上層保持小（第 3 章）。</li>
               </ul>
-              <p>修錯最能說明為什麼要留 transcripts。Anthropic〈The components of agent memory〉的例子：Claude 玩 Pokémon Red，要從西邊走進 Mt. Moon 這個山洞，從東邊的出口出去，才到得了下一個城市 Cerulean City。入口旁有一棟叫 PokéCenter 的建築，Claude 拿它當地標；入口附近還有一個 ledge（只能往下跳的矮崖），跳下去就回到洞外來時的路上。Claude 在筆記裡把 PokéCenter 的位置寫錯了，寫成在東邊，也就是出口那一側，又把 Mt. Moon 標成「已通過」。照這兩條筆記，它以為自己已經在山洞的另一邊，其實它還在入口這一側。後來它從 ledge 跳了下去，回到洞外來時的路上。它用來認路的工具沒有顯示這一跳，所以它沒有發現自己掉回來了，繼續照著錯的筆記找路。文章比了三種條件，每種都讓 agent 做到累計 3,000 個遊戲動作：</p>
+              <figure class="diagram shot">
+              <div class="scroll">
+                <img src="img/l06b-layers-session.webp" width="1600" height="725" loading="lazy" alt="文章的原圖：session 進行中。左邊是 Session，右邊是 Next session，中間由上到下四層：Injected context、Memory representations、Memory notes、Transcripts。Session 只有兩條箭頭，一條指向 Memory notes（深色），一條指向 Transcripts。">
+                <img src="img/l06b-layers-dreaming.webp" width="1600" height="717" loading="lazy" alt="文章的原圖：session 之間。Session 和 Next session 中間是一個標著 Dreaming 的大框，框住同樣的四層。三條箭頭從最下面的 Transcripts 往上，分別指向 Memory notes、Memory representations、Injected context。相鄰兩層之間各有一對上下雙向的箭頭。">
+              </div>
+              <figcaption>這兩張圖回答：四層各在什麼時候被寫入？上圖是 session 進行中，只有下面兩層被寫入：transcripts 是這個 session 的事件紀錄，memory notes 是 agent（圖上寫 Claude）自己寫的筆記。下圖是 session 之間：dreaming 讀 transcripts，往上寫另外三層（從 Transcripts 出發的三條箭頭）；相鄰兩層之間還有成對的上下箭頭，表示內容也在這兩層之間往上合併、往下搬。上面三件事對到下圖：修錯是 Transcripts 指向 Memory notes 的那一條，拿原始紀錄去對筆記；歸納是 Memory notes 往上到 Memory representations 的箭頭；換層是 Memory representations 和 Injected context 之間那一對上下箭頭。圖取自 Anthropic〈The components of agent memory〉（2026-11）。</figcaption>
+</figure>
+              <p>修錯最能說明為什麼要留 transcripts。Anthropic〈The components of agent memory〉的例子：Claude 玩 Pokémon Red，要從西邊走進 Mt. Moon 這個山洞，從東邊的出口出去，才到得了下一個城市 Cerulean City。入口旁有一棟叫 PokéCenter 的建築，Claude 拿它當地標；入口附近還有一個 ledge（只能往下跳的矮崖），跳下去就回到洞外來時的路上。Claude 在筆記裡把 PokéCenter 的位置寫錯了，寫成在東邊，也就是出口那一側，又把 Mt. Moon 標成「已通過」。照這兩條筆記，它以為自己已經在山洞的另一邊，其實它還在入口這一側。後來它從 ledge 跳了下去，回到洞外來時的路上。它用來認路的工具沒有顯示這一跳，所以它沒有發現自己掉回來了，繼續照著錯的筆記找路。</p>
+              <figure class="diagram shot">
+              <div class="scroll">
+                <img src="img/l06b-mtmoon.webp" width="1600" height="858" loading="lazy" alt="文章的原圖：兩張並排的遊戲畫面，agent 站在同一個位置，旁邊的白圈標出同一處。左邊標題 Raw memory，Stored note is wrong：agent 的箭頭標著 Heads for the next city。右邊標題 Memory + dreaming，Offline pass corrected the note：agent 的箭頭標著 Heads back to the cave entrance。">
+              </div>
+              <figcaption>這張圖回答：同一個位置，筆記對不對差在哪？兩邊的 agent 站在同一個位置，都還沒過山洞。左邊帶著錯的筆記（Raw memory），以為山洞已經過了，往下一個城市走（Heads for the next city）。右邊的筆記在 session 之間改對了（Memory + dreaming），它知道自己還沒過山洞，走回洞口（Heads back to the cave entrance）。圖取自 Anthropic〈The components of agent memory〉（2026-11）。</figcaption>
+</figure>
+              <p>上面的經過是「有記憶、沒有整理」的情況。文章一共比了三種條件，每種都讓 agent 做到累計 3,000 個遊戲動作：</p>
               <div class="table-wrap" data-no-figure><table>
                 <thead><tr><th>條件</th><th>錯的筆記</th><th>結果</th></tr></thead>
                 <tbody>
@@ -582,8 +576,8 @@ Uses SGLang for model serving.
                   <tr><td>有記憶，跑過整理</td><td>整理時對照 transcript，發現 PokéCenter 的位置寫錯，改寫（「已通過」那一條有沒有改，文章沒說）</td><td>重新進洞，在第 1,935 個動作走到 Cerulean City</td></tr>
                 </tbody>
               </table></div>
-              <p>第二列和第 1 章的結論一致：帶著一條錯的筆記，結果沒有比沒有記憶好。第三列能修，靠的是兩樣東西都還在：寫下那條筆記時的 transcript，和一個回頭去對的步驟（文章沒有說每個條件跑了幾次、整理跑了幾輪，當例子看）。</p>
-              <p>修錯是在 session 之間做的。這帶出一個選擇：一件事要在 session 裡當場記，還是留到 session 之間再整理。兩個時機各有代價：</p>
+              <p>第二列和第 1 章的結論一致：帶著錯的筆記，結果沒有比沒有記憶好。第三列能修，靠的是兩樣東西都還在：寫下那條筆記時的 transcript，和一個回頭去對的步驟（文章沒有說每個條件跑了幾次、整理跑了幾輪，當例子看）。</p>
+              <p>修錯是在 session 之間做的。這帶出一個選擇：一件事要在 session 裡當場記，還是留到 session 之間再整理。兩個時機就是上面那兩張四層圖，各有代價：</p>
               <ul>
                 <li><b>在 session 裡寫。</b>事情剛發生，agent 最知道哪一件重要。代價是寫筆記會佔用做任務的步數，第 1 章的 Sonnet 3.7 就是極端的例子。</li>
                 <li><b>在 session 之間整理。</b>不打擾任務，也看得到好幾個 session。代價是另外花 compute，而且整理跑完之前，下一個 session 用不到結果。</li>

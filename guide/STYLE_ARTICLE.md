@@ -199,6 +199,7 @@
 - 舊 class（L1–L4 基礎題答案裡的圖還在用，不要用在新圖）：`dg-box`、`dg-box-soft`、`dg-box-accent`、`dg-frame`、`dg-line`、`dg-soft`、`dg-dash`、`dg-accent`、`dg-fill-ink`、`dg-fill-accent`、`dg-fill-soft`、`dg-t`、`dg-tb`、`dg-ts`、`dg-tm`、`dg-ta`。
 - marker id 加前綴，全站不能重複：文章本文用 `lNc-`（L9 → `l9c-ah`），基礎題答案用 `tkN-<題號>-`（L9 第 2 題 → `tk9-2-ah`）。
 - 箭頭要有標籤。舊畫法的文字 11–13px。viewBox 寬 600–760。數據圖照比例畫，標籤寫實際數值。
+- **直接放來源的原圖（2026-11-12）**：來源文章的圖已經把事情講清楚時，可以直接放原圖，不重畫：`<figure class="diagram shot"><div class="scroll"><img src="img/lXX-名稱.webp" width height loading="lazy" alt="…"></div><figcaption>…</figcaption></figure>`。圖檔放 `docs/img/`，縮到寬 1600 存 webp。`alt` 把圖用文字講一遍（審查包拿它當「圖 內容」）；figcaption 照舊先問題再結論，用中文說明圖上的英文標籤要看哪裡，最後寫「圖取自〈來源〉（年月）」。原圖沒有的數字（本文算的）在 figcaption 或註裡標明。第一例是 L6b 的 CL-Bench、四層與 Mt. Moon。
 - **數字表換成圖（2026-11-06）**：要讀者看出一組數字的趨勢、轉折或最佳點（「省下的越來越少」「最划算」），用照比例的橫條圖代替表：一列一個選項，標籤寫實際數值，最佳的那列用 `dg-l-key`／`dg-k`。結論說「最划算」時，兩邊的成本都要畫進圖（疊成兩色），不然圖上最短的那條會和結論相反。中間值（每段全對、平均跑幾次）放在列名下一行的 `dg-c`。例子：L6 3.1〈每段切幾步最划算〉。同一組數字不要表和圖各放一次，讀者要讀兩次：留圖，數字寫進圖的標籤；表裡有圖放不下的欄（公式、出處）才留表。`tools/find_figure_spots.py`（`verify.sh` 會跑）列出候選；判斷過、決定留著的表或段落加 `data-no-figure`（2026-11-07）。
 - **互動圖（2026-11-09）**：圖的結論取決於本文的假設（驗證算幾步、每步成功率這類可以換的數字），正文又得逐一列出「換成別的值會怎樣」時，加滑桿讓讀者自己換，正文只留一兩個代表值和規則。James 問 L6 3.1 的驗證成本固定 5 步、能不能調。做法：
   - HTML 裡的 SVG 是預設值的靜態圖，就是正文和題庫講的那一組數字；沒有 JS、審查包、`check_diagrams.py`、網頁編輯都讀它。`figure.diagram` 加 `data-calc="名字"`，滑桿放在 `div.calc[hidden]`（`div.scroll` 之後、`figcaption` 之前），`docs/calc.js` 顯示它、拖動時照同一條算式重畫 SVG 和 `aria-label`，回到預設值就還原成原本的 SVG。範例：L6 3.1〈每段切幾步最划算〉（`ckpt`）。

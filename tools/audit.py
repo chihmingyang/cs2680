@@ -41,6 +41,12 @@ for p in pages:
             continue
         if 'role="img"' not in svg or not re.search(r'aria-label="[^"]{8,}"', svg):
             problems.append(f"{p.name}: svg without role/aria-label: {svg[:80]}")
+    for img in re.findall(r"<img\b[^>]*>", raw):
+        m = re.search(r'src="([^"]+)"', img)
+        if not re.search(r'alt="[^"]{8,}"', img):
+            problems.append(f"{p.name}: img without alt: {img[:80]}")
+        if m and not m.group(1).startswith("http") and not (p.parent / m.group(1)).exists():
+            problems.append(f"{p.name}: img file missing: {m.group(1)}")
     for body in re.findall(r"<svg\b.*?</svg>", raw, re.S):
         if re.search(r'(fill|stroke)="#|style="[^"]*(color|fill|stroke)', body):
             problems.append(f"{p.name}: literal color inside svg")

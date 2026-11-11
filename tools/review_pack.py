@@ -147,6 +147,9 @@ def units_of(container, loc):
                 svg = next(c.find_all(lambda x: x.tag == "svg"), None)
                 if svg is not None and svg.attrs.get("aria-label"):
                     out.append((f"{loc} 圖{k} 內容", svg.attrs["aria-label"]))
+                for img in c.find_all(lambda x: x.tag == "img"):
+                    if img.attrs.get("alt"):
+                        out.append((f"{loc} 圖{k} 內容", img.attrs["alt"]))
                 calc = next(c.find_all(lambda x: x.tag == "div" and "calc" in x.cls()), None)
                 if calc is not None:
                     # interactive figure (calc.js): the sliders with their ranges, then the readout at the default

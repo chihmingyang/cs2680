@@ -25,6 +25,7 @@ def section(s, sid):
 def to_text(h):
     h = re.sub(r"<script\b.*?</script>|<style\b.*?</style>|<!--.*?-->", "", h, flags=re.S)
     h = re.sub(r'<svg\b[^>]*aria-label="([^"]*)"[^>]*>.*?</svg>', r"\n[FIG: \1]\n", h, flags=re.S)
+    h = re.sub(r'<img\b[^>]*alt="([^"]*)"[^>]*>', r"\n[FIG: \1]\n", h)
     h = re.sub(r"<svg\b.*?</svg>", "\n[FIG]\n", h, flags=re.S)
     h = re.sub(r"<figcaption>(.*?)</figcaption>", r"\n[caption: \1]\n", h, flags=re.S)
     h = re.sub(r'<span class="anchor" id="([^"]+)"></span>', r"{#\1} ", h)
