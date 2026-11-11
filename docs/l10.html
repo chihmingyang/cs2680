@@ -73,12 +73,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">GPU 用幾千個簡單的核心換 throughput。GPU 上的一個函式（kernel）要跑多久，看兩件事裡較慢的一件：從記憶體搬多少 byte，要做多少次浮點運算（FLOP）。LLM 一次產生一個 token（文字的一小段），叫 decode；每一步都把 model 的參數（weights）整份讀一遍、每個只用一次，所以一次只算一個請求（batch 1）時，<strong>只用到 H200 這張 GPU 約 0.5% 的算力</strong>。這堂要帶走一個判斷順序：先算瓶頸在哪一邊，再選改法，最後用對的數字量。</p>
+    <p class="thesis">先看一個例子。你在一張 H200（NVIDIA 的 GPU）上跑語言模型（下面叫 model），一次只服務一個請求。監控工具 nvidia-smi 顯示使用率 100%，字卻出得很慢。你的第一個念頭是 GPU 不夠快，要再買一張。其實這張 GPU 的運算能力只用到大約 0.5%。它的時間幾乎都花在搬資料：把 model 的參數（訓練出來的一大堆數字，就是 model 的本體）從 GPU 自己的記憶體讀到做運算的電路上。那個 100% 只代表「有程式在跑」。</p>
+    <p class="thesis">Model 的每一步運算，在 GPU 上是一段一段的小程式在跑，每一段叫一個 kernel。一個 kernel 要花多久，看兩件事裡比較慢的那一件：要從記憶體搬多少資料，和要做多少次運算。這堂回答的問題是：<strong>怎麼先算出瓶頸在哪一邊</strong>，再選改法，最後用對的數字確認。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>先算 arithmetic intensity。</b>每搬 1 byte 做幾個 FLOP，和 GPU 的門檻 ridge（H200 約每 byte 206 個 FLOP）比。低於門檻，<strong>要少搬資料，不是加算力</strong>：加大 batch、用更少位元的數字、縮小每個請求存著的前文（KV cache）、把幾個 kernel 合成一個（fusion）。</span></li>
-      <li><span><b>Decode 的帳在 bytes。</b>一批請求共用一份 weights，batch 越大越分攤得開；KV cache 是每個請求自己的，分攤不了，所以前文（context）越長，每產生一個 token 越慢。MoE 把每層的 weights 分成很多組（expert），每個 token 只用幾組，要更大的總 batch 才分攤得開。</span></li>
-      <li><span><b>量對再改，也別信假的加速。</b>監控工具 nvidia-smi 的 100% 只代表有 kernel 在跑；decode 要看頻寬用了幾成，一次讀完 prompt 的 prefill 要看算力用了幾成。AI 寫的 kernel，先確認它報的時間不低於物理下限，再用多組輸入驗證，<strong>才能相信它快</strong>。</span></li>
+      <li><span><b>先算每搬 1 byte 做了幾次運算。</b>這個比值叫 arithmetic intensity。每張 GPU 有一個門檻，H200 大約是每 byte 206 次運算。比值低於門檻，慢的是搬資料，這時加運算能力沒有用，要想辦法少搬；高於門檻，才是運算能力不夠（第 2 章）。</span></li>
+      <li><span><b>Model 逐字輸出時，慢的是搬資料。</b>Model 每產生一個 token（文字的一小段），都要把全部的參數讀一遍，而每個參數只拿來算一次：搬得多、算得少，比值遠低於門檻，所以例子裡運算能力幾乎閒著。改法是把很多請求併成一批一起算，一批叫一個 batch：參數讀一遍，整批請求一起用，<strong>batch 越大，每個請求分攤到的搬運越少</strong>。但每個請求還有自己的一份資料要讀，就是它到目前為止的對話算出來的中間結果；這一份別的請求用不到，分攤不了，對話越長就越慢（第 3 章）。</span></li>
+      <li><span><b>量對了再改，也別相信沒驗證過的加速。</b>Model 逐字輸出的階段，要看的是記憶體每秒能搬的量（叫記憶體頻寬）用了幾成；<strong>nvidia-smi 的 100% 沒有告訴你這個</strong>（第 4 章）。請 AI 改寫 kernel 之後，它如果回報快了很多，先算一下：照這張 GPU 的頻寬，搬完這些資料最少要多久？它報的時間比這個還短，就是量錯了。再用多組輸入確認，改寫後的 kernel 算出的答案和改寫前一樣（第 9 章）。</span></li>
     </ul>
+    <p class="readhow">第 5 到 8 章是晶片內部和幾種改法的細節，第 10 章是一張 GPU 以外的事（網路、故障、電力），需要時查。</p>
   </section>
 
   <div class="layout">

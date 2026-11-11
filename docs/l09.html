@@ -72,12 +72,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">LLM 一次只算出下一個 token（model 讀寫文字的單位，大約一個中文字），所以一個 request 分成兩段：prefill 一次算完整段 prompt，decode 每一步只產生一個 token。兩段的成本都由 model 的形狀決定，歸結成三個數字：權重（訓練好的參數）的 byte 數、每個 token 的運算量、每個 token 的 KV cache（留在 GPU 記憶體裡的中間結果）。這堂要帶走的是：用這三個數字，<strong>算出一個 model 在你的 GPU 上能同時服務幾人、每人的對話能多長</strong>，第一個字又要等多久。</p>
+    <p class="thesis">先看一個例子。公司買了 2 張 H200（NVIDIA 的 GPU），要在上面架 Llama 3 70B 給內部用；它是 Meta 的語言模型（下面叫 model）。Model 的本體是一大堆訓練出來的數字，叫參數；這個 model 有 700 億個，要整份放進 GPU 的記憶體才能跑。老闆問你三個問題：能同時給幾個人用？每個人的對話能多長？送出問題之後，第一個字要等多久？</p>
+    <p class="thesis">這三個問題不必實際架起來才知道，用 model 的幾個數字就算得出來。這堂回答的問題是：<strong>用哪幾個數字，算出一個 model 在你的 GPU 上撐得住多少</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>三個數字各卡一件事。</b>運算量卡 prefill，權重卡 decode 的每一步，KV cache 卡「同時的人數 × 每人的對話長度」。以 Llama 3 70B（Meta 的 700 億參數 model）跑在 2 張 H200（NVIDIA 的 GPU）上為例：GPU 記憶體扣掉權重，只放得下約 43 萬個 token 的 KV cache，由同時在跑的對話一起分。</span></li>
-      <li><span><b>Agent 的長對話省得下算力，省不下記憶體。</b>Agent 每呼叫一次 model，都把到目前為止的整段輸入（context）重送一次；prefix cache 讓重送的部分不用重算，但它的 KV cache 照樣佔著 GPU，所以<strong>能同時服務幾個 agent，多半先卡在 KV cache</strong>。</span></li>
-      <li><span><b>選 model 要看每個 token 的 KV，和它怎麼切字。</b>現在的 model 用不同方法縮小每個 token 的 KV：每一層裡的幾組計算共用一份 KV、壓縮後再存、只存最近一段，或換成固定大小的狀態，每個 token 的 KV 因此<strong>差到 13 倍</strong>。切字的規則（tokenizer）也不同：繁體中文一個字約 0.7 到 0.9 個 token，課程的「3 到 4 個字元一個 token」只適用英文。</span></li>
+      <li><span><b>一個請求分成兩段，各決定一種等待。</b>第一段叫 prefill：model 把你送進去的整段文字一次讀完，它決定第一個字要等多久。第二段叫 decode：model 一步只產生一個 token（它讀寫文字的單位，大約一個中文字），它決定之後每個字出來的速度（第 1 章）。</span></li>
+      <li><span><b>三個數字，各卡住一件事。</b>每個 token 要做多少運算，卡住 prefill，也就是老闆的第三個問題。參數總共佔多少記憶體，卡住 decode 每一步的速度。第三個數字是每個 token 的 KV cache 有多大：model 讀過的每個 token，都會留一份中間結果在 GPU 記憶體裡，叫 KV cache，對話還在就不能丟。它卡住同時的人數和每人的對話長度，也就是老闆的前兩個問題。GPU 的記憶體先放參數，剩下的才放 KV cache；例子裡剩下的空間<strong>只放得下約 43 萬個 token 的 KV cache</strong>，由所有同時在跑的對話一起分（第 4 章）。</span></li>
+      <li><span><b>老闆的前兩個問題是同一個。</b>人數和對話長度分的是同一塊記憶體：43 萬個 token，可以是很多人各聊一小段，也可以是少數人各聊很長，<strong>要多一邊，就得少另一邊</strong>。長對話還有一個特性：前面讀過的部分留著 KV cache，下一輪不用重算，所以省得下運算，省不下記憶體（第 3、4 章）。</span></li>
     </ul>
+    <p class="readhow">選 model 時要看它每個 token 的 KV cache 多大，不同的 model 之間最多差到 13 倍（第 6、7 章）。估 token 數時，繁體中文一個字約 0.7 到 0.9 個 token（第 8 章）。</p>
   </section>
 
   <div class="layout">

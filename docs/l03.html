@@ -71,13 +71,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這堂的 agent 指 Claude Code 這類會自己讀檔、跑指令、改 code 的 AI 助手。一個 agent 做不完時，放大產能只有三個方向：同時開更多 agent、把一件事交給另一個 agent 在乾淨的對話裡做完、讓一個 agent 跑更久。每個方向主要買到一樣東西，而且都有上限。所以這堂要帶走的是一個判斷：<strong>該不該加、能加多少、上限卡在哪裡</strong>。</p>
+    <p class="thesis">先看一個例子。你有一個大重構，一個 agent 要做兩天；這裡的 agent 指 Claude Code 這類會自己讀檔、跑指令、改 code 的 AI 助手，裡面做決定的是語言模型（下面叫 model）。你想：開 16 個 agent 同時做，應該快 16 倍。實際只快了大約 4 倍。任務要先切好才分得下去，16 份成果要一份一份合併，每一份你都要 review；這些事只能一件一件做，agent 再多也縮不短。到後來，16 個 agent 都在等你。</p>
+    <p class="thesis">一個 agent 做不完時，有三個方向可以放大產能：同時開更多 agent；讓一個 agent 自己跑更久，不用你每一步看著；把其中一件事交給另一個 agent 從頭做完，只把結果拿回來。這堂回答的問題是：<strong>每個方向能放大多少、上限卡在哪裡</strong>。下面三條是這堂的判斷，一個方向一條。</p>
     <ul class="core">
-      <li><span><b>加 agent 有上限。</b>規劃、合併、review 只能一件一件做，agent 再多也縮不短，所以它們決定上限：佔兩成時，16 個 agent 只快 4 倍。Agent 一多，衝突和溝通也變多，過了某個點還會變慢；能管幾個，最後由你 review 的速度決定。所以<strong>先縮短不能平行的部分，比加 agent 有效</strong>。</span></li>
-      <li><span><b>驗證決定你能放手多久。</b>同一個要求，agent 兩次可能做出不同的結果，所以要靠它外面的檢查：做完的條件要能用測試或指令檢查，判斷做完的要是另一個 model（做事的 model 容易替自己打高分），越難回退的工作給越少自主。</span></li>
-      <li><span><b>選做法看計畫在誰手上，改行為看誰保證。</b>只要結果就派一個小 agent 做完交摘要，要互相討論才組隊，多到一段對話協調不了才寫成 script 跑。一定要發生的事交給程式在固定時機執行，要判斷的才留給 model。要省 token（model 計費的單位），先看帳單：<strong>大宗是送進 model 的輸入</strong>，不是它寫的回答。</span></li>
+      <li><span><b>同時開更多 agent：上限由不能平行的那一段決定。</b>例子裡，切任務、合併、review 佔全部工作的兩成，這兩成只能照順序做。剩下的八成分給 16 個 agent 同時做，只要原本全部時間的二十分之一（八成除以 16）。兩成加二十分之一是四分之一，所以只快 4 倍。<strong>先縮短不能平行的那一段</strong>，比加 agent 有效；你同時管得了幾個 agent，最後由你 review 的速度決定（第 2、3 章）。</span></li>
+      <li><span><b>讓 agent 自己跑更久：能放手多久，由驗證決定。</b>你不看著，就要有別的東西替你檢查。所以「做完」的條件要寫成測試或指令查得出來的。測試查不了的部分，交給另一個 model 來判，不讓做事的那個判自己，因為它容易替自己說好話。做錯了越難復原的工作，越要你親自確認才往下走（第 4 章）。</span></li>
+      <li><span><b>把事情交出去：只要結果就派一個，要討論才組隊。</b>只要結果，就派另一個 agent 去做完、只交回一段摘要，這叫 subagent。幾個 agent 得互相討論才做得出來，才把它們組成一隊。要派的 agent 多到你在一段對話裡指揮不過來，才把分派的流程寫成一支 script 去跑。不管哪一種，一定要發生的步驟寫進程式，<strong>需要判斷的才留給 model</strong>（第 5 到 7 章）。</span></li>
     </ul>
-    <p class="readhow">建議先讀 L2 和 L4：第 8、9 章接 L2 講的擴充機制（skill、hook、plugin 這些不改 model、只改 agent 做事方式的設定），全篇一直用到 L4 講的 context 代價；沒時間讀，第 6 章的「前情」註有 L4 的摘要。</p>
+    <p class="readhow">第 8 到 10 章是三個實際的例子。建議先讀 L2 和 L4：第 8、9 章接 L2 講的擴充機制（skill、hook、plugin 這些不改 model、只改 agent 做事方式的設定），全篇一直用到 L4 講的 context 代價（每次送給 model 的文字都要付錢）；沒時間讀，第 6 章的「前情」註有 L4 的摘要。</p>
   </section>
 
   <div class="layout">

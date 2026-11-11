@@ -71,12 +71,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">Agent 是一個 loop：model 每一圈決定下一步，包在它外面的程式（harness，例如 Claude Code）去執行，再把結果接回去。Model 沒有記憶，所以 harness 每一圈都把整份 context（送進 model 的全部文字）重送一次。這一條事實決定了這堂的所有設計：tool 的輸出、prompt、舊的歷史，都是每一圈要再付一次的文字。所以這堂要帶走的不是第 8、9 章那五種找程式碼、四種改程式碼的方法名，而是<strong>判斷什麼值得進 context，進來之後怎麼處理</strong>。</p>
+    <p class="thesis">先看一個例子。你請 agent（會自己讀檔、跑指令、改 code 的 AI 助手）修一個 bug。前二十步很順；之後它開始重讀已經讀過的檔案，漏掉你一開始交代的限制，每一步也越來越慢、越來越貴。你沒有改過任何設定。</p>
+    <p class="thesis">原因在它每一步讀到的東西。Agent 裡做決定的是語言模型（下面叫 model），model 自己沒有記憶：包在它外面的程式（叫 harness）每一步都要把到目前為止的全部文字重送一次，這份文字叫 context。讀過的檔案、指令的輸出、舊的對話都留在裡面，所以越做越長。Context 越長，model 讀得越久，費用也照長度算，所以越來越慢、越來越貴。你一開始交代的限制還在裡面，但夾在一大堆輸出中間，model 越來越容易漏看。Context 還有長度上限，滿了就得丟東西。這堂回答的問題是：<strong>什麼值得進 context，進來之後怎麼處理</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>Agent 做不好，先查 harness，再換 model。</b>同一個 model，只改 harness 處理 context 的方式，解題數可以差 2 倍；但<strong>這個倍數只在 window 小到放不下時成立</strong>（window 是 model 一次能讀的長度上限）。Window 夠大時差距就沒了，要付的錢和舊資料的干擾還在。</span></li>
-      <li><span><b>管 context 有順序。</b>能不進來就不進來，進來了先用規則刪，<strong>有損又不可逆的摘要排最後</strong>。開頭也不要動：provider 會把算過的開頭存起來（prefix cache），下一圈開頭逐字相同才能打折重用，改一個字就整份重算。</span></li>
-      <li><span><b>Tool 的輸出就是 context。</b>Tool 要少而專用、輸出要短；錯誤訊息要告訴 model 下一步怎麼改，失敗要讓 model 下一圈就看得出來，不能回成功卻改錯。Prompt 的技巧（例如叫 model 一步步想）會隨 model 過期，這幾條不會。</span></li>
+      <li><span><b>Agent 做不好，先查 harness 怎麼處理 context，再考慮換 model。</b>有實驗拿同一個 model 解同一組題目，只改 harness 處理 context 的方式，解出的題數就差了 2 倍（在 context 小到放不下全部內容的情況下）。例子裡該先看的，是那二十步往 context 裡放了什麼（第 2 章）。</span></li>
+      <li><span><b>管 context 有三招，照這個順序用。</b>第一，不讓東西進來：例如測試跑完，只把失敗的那幾行交給 model。第二，已經進來的，用固定的規則刪：例如同一個檔案讀了第二次，就把舊的那次換成一行占位文字。第三，請 model 把舊的對話濃縮成一段摘要；這一招排最後，因為<strong>原文換成摘要之後，摘要沒寫到的細節就找不回來</strong>。三招都不要動 context 最前面固定的那一段，也就是給 model 的總指示和工具的說明：提供 model 的廠商會把算過的開頭存起來，下一步的開頭一字不差，就能便宜地重用（第 3 到 5 章）。</span></li>
+      <li><span><b>工具回傳的每一個字，都是 context。</b>工具（tool）是 agent 能叫用的動作，例如讀檔、跑指令、改檔。給它的工具要少而專用，回傳的內容要短。工具出錯時，訊息要寫出下一步該怎麼改；改檔失敗了要明白回報失敗，<strong>不能回報成功、檔案卻沒改對</strong>（第 6 章）。</span></li>
     </ul>
+    <p class="readhow">第 7 到 9 章是跑指令、找程式碼、改程式碼三類工具的做法，需要時查。第 10 章講怎麼寫給 model 的指示（prompt）：個別的寫法技巧會隨 model 換代失效，上面三條不會。</p>
   </section>
 
   <div class="layout">

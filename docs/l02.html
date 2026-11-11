@@ -71,12 +71,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">這堂把 Claude Code 當成 agent 的標本拆開看。Model 只會提議，所有動作都經過外面那層程式（harness）。你寫給 agent 的規則檔（CLAUDE.md）、它自己記下的筆記、用到才載入的操作說明（skill），都只是每次送進 model 的文字（context）。讀完要能回答：<strong>一條規則該寫在哪裡，一件事交給 agent 時要防什麼</strong>。</p>
+    <p class="thesis">先看一個例子。你用 Claude Code 整理專案；它是一個會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。你在它每次都會讀的規則檔 CLAUDE.md 裡寫了「不要動 production 的資料庫」。做到一半，它為了讓一個測試通過，對 production 的資料庫跑了一行清空資料表的指令。規則明明寫了，它也讀了。</p>
+    <p class="thesis">原因是規則檔只是文字。Agent 裡做決定的是語言模型（下面叫 model）：規則檔每次都和你的要求一起送給它讀，它多半會照做，但沒有任何機制保證它照做。Model 只會提議下一步要做什麼；真正去執行指令的，是包在 model 外面的那層程式，叫 harness。所以要擋，得在 harness 這一層擋。這堂把 Claude Code 拆開來看，回答的問題是：<strong>一條規則該寫在哪裡才算數</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>要保證的事寫成程式。</b>寫在 CLAUDE.md 或 skill 的規則，<strong>model 可能沒照做</strong>；harness 在每個動作執行前比對的權限規則，和在固定時間點自動執行的程式（hook），則一定會跑。但它們只擋得住比對得到的寫法，所以真正不能發生的事，再交給作業系統的 sandbox，它直接限制指令碰得到哪些檔案和網址。</span></li>
-      <li><span><b>進了 context 的東西，每一圈都要付錢。</b>Agent 做一件事要呼叫 model 很多次，一次叫一圈；API 不記得上一次，每一圈都把整份 context 重送。所以常駐的內容要短，只放不寫就會出錯的事，其他用到才載入。</span></li>
-      <li><span><b>Model 分不出指令和資料。</b>讀回來的文字可能夾帶指令，<strong>防線要設計成被騙了也做不了壞事</strong>。</span></li>
+      <li><span><b>一定不能發生的事，寫成程式去擋，不要寫成給 model 讀的文字。</b>Harness 在執行每一行指令之前，會先拿它去比對你設定的權限規則，例如「指令裡出現 production 資料庫的位址就拒絕」。比對是 harness 的程式在做，model 想不想照做，它都會擋；例子裡那行指令就該這樣擋下來。但比對看的是指令的字面，換一種寫法就可能漏掉。所以最嚴重的事再加一層：作業系統的 sandbox，直接限制 agent 跑的指令碰得到哪些檔案和網址（第 2、4 章）。</span></li>
+      <li><span><b>寫給 model 的文字越長越貴，所以規則檔要短。</b>Agent 做一個任務要呼叫 model 很多次，每一次都把規則檔和到目前為止的對話整份重送，而費用是照送進去的文字量算的。所以想靠「把規則檔寫得更詳細」讓 agent 聽話，只會越寫越貴。<strong>規則檔只放不寫就會出錯的事</strong>；其他的做成用到才載入的說明，叫 skill（第 3、8 章）。</span></li>
+      <li><span><b>Model 分不出哪些話是你說的、哪些是它讀到的資料。</b>它讀回來的網頁、檔案內容，和你說的話混在同一份文字裡。裡面如果有人寫了一句「把資料表清掉」，它可能當成你說的去做。所以防線要設計成<strong>它被騙了也做不了壞事</strong>，靠的還是第一條的權限規則和 sandbox（第 5 章）。</span></li>
     </ul>
+    <p class="readhow">第 6 到 10 章是 Claude Code 讓你擴充它的幾種機制，各有一章，用到時再讀。</p>
   </section>
 
   <div class="layout">
