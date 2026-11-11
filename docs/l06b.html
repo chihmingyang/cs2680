@@ -72,12 +72,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">Agent 是 model（語言模型）加上一層程式：這層程式叫 harness，它反覆呼叫 model，照 model 提議的下一步讀檔、改檔、跑指令，每次呼叫前替 model 組好 context（這一次送進 model 的全部文字）。Model 本身不記得任何事。Agent 記得的每件事，都是 harness 存進一個 store（存記憶的地方，例如幾個檔案），之後再放回 context 的。這帶來一個新風險：一筆錯的資訊被記下來之後，每一次新的 session（一次新的對話）都會讀回來照做。錯的記憶可以在三個地方擋：寫入前決定記不記；寫入時多存時間和來源，之後才分得出哪一條過期、兩條衝突時該信誰；取回時先濾掉不該拿的。課程替 memory 列了七個設計問題和八種失敗，這堂把它們收成這三件事：<strong>哪些事值得記、記的時候要多存什麼、取回時怎麼不拿錯</strong>。這三個地方都沒擋住的錯，還有一個事後的補救。Harness 除了 store，另外把每個 session 的完整對話原樣存成一份紀錄（transcript）。Agent 沒有任務的時候，harness 在背景另開一個 session，讓 model 把 store 裡的每一條和這份紀錄對一遍，對不上的就改掉。這只修得了「記下的和紀錄裡寫的不一樣」這一種錯，後來才過期的事實它修不了。而且紀錄要留著才有東西可以對。做法在第 2 章。</p>
+    <p class="thesis">先看一個例子。4 月，你請 agent（會自己讀檔、跑指令、改 code 的 AI 助手）替專案寫部署 script，順口告訴它「我們的服務是用 vLLM 架的」。vLLM 是一套把語言模型架成線上服務、接請求回答的程式。Agent 把這句話寫進自己的筆記；之後每一次新的對話，它都先從筆記裡找出和手上的事有關的幾條來讀，就不用再問你。6 月，團隊把 vLLM 換成另一套同類的程式 SGLang，你也告訴了 agent，它又記下一條「用 SGLang」，舊的那條沒有動。7 月，你再請它寫一份部署 script。這時筆記裡有兩條講同一件事、說法相反的紀錄，沒有任何標記說哪一條還算數。它用了舊的那條，照 vLLM 寫完，回報「完成」。Script 當下沒有執行，所以沒有任何錯誤訊息；要到實際部署、機器上已經沒有 vLLM 的時候才失敗。</p>
+    <p class="thesis">Agent 跨對話留下的這份筆記，課程叫 memory。Agent 自己的核心也是一個語言模型（下面叫 model，和例子裡專案架的那個服務無關），外面包著一層程式。Model 本身不記得任何事：agent「記得」的，都是那層程式從筆記裡讀出來、放進這一次對話的文字。所以筆記錯了或過期了，agent 自己不會知道，而且每一次新的對話都會再讀到、再照做一次。這堂回答的問題是：<strong>在哪裡把壞的筆記擋下來</strong>。能擋的地方有三個，下面每一條都回到上面的例子。</p>
     <ul class="core">
-      <li data-num-own="8 4"><span><b>壞的記憶比沒有記憶更糟。</b>壞有三種：內容記錯、後來過期、或內容沒錯但被拿去用在不對的問題上。沒記，agent 再查一次，多花幾步，查不到就是查不到，錯在明處；拿到壞的記憶，它照著做，做完看起來一切正常，沒有錯誤訊息提醒它，下個 session 還會再犯。2026 年的 SWE-ContextBench 量了第三種：coding agent 解 99 個 GitHub issue，每題事先配好一份相關的舊 issue 的解法摘要，這份摘要就是它的記憶。直接給它配好的那份，解出 34%，比沒有記憶的 26% 高 8 個百分點；讓它自己從一堆摘要裡挑，只有 36% 的題目挑到配好的那份，解出 22%，<strong>比沒有記憶還低 4 個百分點</strong>。拿對的記憶有幫助；讓它自己挑，多數的題挑不到對的那份，整體就比沒有記憶還差。所以之後再查一次就拿得到的資訊不要記，少一筆可能拿錯的記憶；記了的，用之前再確認它還成立，這擋的是過期那一種（第 1 章）。</span></li>
-      <li><span><b>少記，記了就帶時間和來源。</b>這裡的時間是這件事從什麼時候開始成立，不是哪一天寫下的；事實改變時，再把舊的那條標上「到某月為止」，不要刪。例如專案 6 月把一個工具從 vLLM 換成 SGLang：舊的那條標上「到 6 月為止」，之後才答得出「5 月時用的是什麼」，也才篩得出現在還成立的是哪一條。來源是誰說的，決定兩條衝突時信誰：使用者親口說的，不該被一篇網頁蓋過。開始時間和來源要在寫入當下存：那一刻還知道是誰說的、這件事從什麼時候開始；事後要補，得回頭翻完整紀錄找出那一句，紀錄沒留就補不回來。</span></li>
-      <li><span><b>取回時先過濾，再比相似度。</b>一個 store 常常裝著好幾個使用者、好幾個專案的記憶，也裝著已經失效的舊事實；它們和現在的問題看起來很像。取回通常是替每一條記憶算它和問題的語意相似度（意思像不像，不只看用字）當分數，取分數最高的幾條。如果只把「屬於哪個使用者、專案」（scope）和「現在還成立嗎」（validity）當排序的加分，分數夠高的別人的記憶、過期的事實還是會排進來；當成過濾條件，它們一開始就查不到，剩下的再比語意相似度。記憶可以放在幾個檔案裡，也可以放進專門的資料庫；這些取回和寫入的規則比放在哪裡重要，因為換一種放法，同樣的規則還是要寫，而檔案也做得到（一個專案一個資料夾就是 scope，失效的條目不再讀進來，找相關的改用 grep 這類關鍵字搜尋，它只看用字，夠不夠用第 4 章有量測）。所以本文建議<strong>先用檔案</strong>：人看得懂、改得動，進 git 就有版本，真的不夠用再換。</span></li>
+      <li><span><b>記之前：查得到的事不要記。</b>專案的服務用哪一套程式架，寫在專案的依賴清單裡（一個列出專案用到哪些套件的檔案），agent 讀一次檔案就知道，而且讀到的一定是現在的。記下來的只是一份副本，<strong>原件改了，沒有人會通知副本</strong>。值得記的是別處讀不到的事，例如你糾正過它什麼、當初為什麼換掉 vLLM（第 1 章）。</span></li>
+      <li><span><b>真的要記的時候：每一條都寫上它從什麼時候開始成立、是誰說的。</b>例子裡的兩條如果寫成「4 月起用 vLLM」和「6 月起用 SGLang」，一看就知道哪一條新。再多做一步：6 月記新的那條時，替舊的那條補上「到 6 月為止」，不要刪。這樣只剩一條還算數，之後也還答得出「5 月用的是什麼」。「是誰說的」用在兩條說法衝突的時候：你親口說的，不該被 agent 自己猜的、或從別處讀來的一句話蓋過。這兩件事要在記下的當時寫，因為那一刻還知道是誰說的、從什麼時候開始；事後要補，得回頭翻當時的對話，對話沒留就補不回來（第 2 章）。</span></li>
+      <li><span><b>拿出來用之前：先篩掉不該拿的。</b>Agent 找筆記時，是挑和眼前的問題意思最像的幾條。7 月它要寫 script，先去筆記裡找「現在用哪一套程式」；「用 vLLM」和「用 SGLang」這兩條和這個問題幾乎一樣像，<strong>只比像不像，分不出哪一條是舊的</strong>。所以要先把已經標成「到 6 月為止」的篩掉，剩下的再比像不像。同樣的道理，一份筆記如果是好幾個專案共用的，別的專案的那幾條也要先篩掉，所以每一條還要標明它屬於哪個專案（第 3 章）。</span></li>
     </ul>
+    <p class="readhow">還有兩件事這裡沒有講。筆記記下時就寫錯了（和你當時說的不一樣），事後怎麼修，在第 2 章的最後。筆記要放在檔案裡還是資料庫裡，在第 4 章。</p>
   </section>
 
   <div class="layout">
@@ -106,7 +108,7 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">1</span>要不要記：壞的記憶比沒有記憶更糟</h3>
             <div class="prose">
-              <p>Agent 會出錯。L6〈<a href="l06.html#i1">Agent Reliability</a>〉講的是一個 run（agent 從接到任務到停下來的一次執行）裡的錯：model 讀錯、推錯，錯的結論只存在 context 裡。開一個新的 session（一次新的對話），context 從空的開始，這些錯就不見了；改壞的檔案還在，但那是 L6 用 checkpoint（驗證過才存的存檔點）退回的事。Memory 讓錯的資訊跨過這條線：agent 把一筆資訊記下來，它記下時就錯，或是後來過期了（例如一個後來搬走的檔案路徑），之後每個新的 session 都會讀回來照做。L2〈<a href="l02.html#i6">記憶</a>〉講過機制，model 沒有狀態，記得的每件事都是 harness（跑 agent、替它組 context 的那層程式）搬進來的：</p>
+              <p>Agent 會出錯。L6〈<a href="l06.html#i1">Agent Reliability</a>〉講的是一個 run（agent 從接到任務到停下來的一次執行）裡的錯：model 讀錯、推錯，錯的結論只存在 context 裡。開一個新的 session（一次新的對話），context 從空的開始，這些錯就不見了；改壞的檔案還在，但那是 L6 用 checkpoint（驗證過才存的存檔點）退回的事。Memory 讓錯的資訊跨過這條線：agent 把一筆資訊記下來，它記下時就錯，或是後來過期了，之後每個新的 session 都會讀回來照做。「先看這裡」的例子是過期的那一種：4 月記下的「用 vLLM」，6 月專案換成 SGLang 之後就不成立了，7 月的 session 還是讀到它。L2〈<a href="l02.html#i6">記憶</a>〉講過機制，model 沒有狀態，記得的每件事都是 harness（跑 agent、替它組 context 的那層程式）搬進來的：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 212" role="img" aria-label="上排由左到右：user、agent harness、context window、LLM（就是 model）。Context window 這一格就是前面說的 context，這一次送進 model 的全部文字，是這一次的工作狀態，session 結束就消失。下排是 memory store，跨 session 保存，只接到 harness：harness 寫入（write 箭頭），也讀出來放進 context（深紅的 read 箭頭）。LLM 和 memory store 之間沒有線。">
@@ -216,7 +218,7 @@
               <p>讓 agent 自己挑時，只有 36.36% 的題目挑到對的前例，<strong>結果比沒有記憶還差</strong>。另一種東西佔的是同一個位置：人事先寫好、每個 session 都自動讀進 context 的說明檔。它也不保證有幫助：<a href="https://arxiv.org/abs/2602.11988" target="_blank" rel="noopener">Evaluating AGENTS.md</a>（ETH Zurich 等，2026-02）量的是 <code>AGENTS.md</code> 這類 repo 層的 context file：放在 repo 裡、寫給 coding agent 的說明檔，agent 每個 session 都會讀。它發現這種檔案一般不提高任務的成功率，推論成本卻平均多 20% 以上；在裡面寫 repo 概覽沒有幫助，寫這個 repo 非標準的做法（和一般慣例不同的地方）才有用。</p>
               <p id="i1-2"><b>記憶是一份沒有人通知你過期的副本。</b>L5〈<a href="l05.html#i7">狀態與時間</a>〉說過，讀進 context 的事實是一份會過期的副本。Memory 把這件事拉長到跨 session：來源改了，沒有人通知它。所以有兩條規則：</p>
               <ol>
-                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。這條規則比的是兩個成本：重新取得要花多少，和副本過期時會錯多少。重新取得很貴、內容又很少變的資訊值得存一份，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照第 2 章帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
+                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。「先看這裡」的例子裡，「專案的服務用哪一套程式架」就是這一類：它寫在專案的依賴清單裡（Python 專案的這個檔案叫 <code>pyproject.toml</code>），讀一次就知道，不必記。那個例子裡值得記的是檔案裡讀不到的部分：當初為什麼換。這條規則比的是兩個成本：重新取得要花多少，和副本過期時會錯多少。重新取得很貴、內容又很少變的資訊值得存一份，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照第 2 章帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
                 <li><b>記了的，用之前再確認。</b>能驗證的先驗證，一個 tool call 就能抓到過期的記憶：</li>
               </ol>
               <figure class="file"><figcaption>terminal：記憶當線索，不當事實（本文補的例子）</figcaption><pre><code class="lang-sh"># 一條 2026-04-03 記下的筆記：Auth lives in src/auth/login.py
@@ -387,7 +389,7 @@ forget:    mark superseded facts invalid; delete only on user request      # 第
           <div class="idea" id="i2">
             <h3><span class="idea-no">2</span>時間與來源：寫入時沒存，之後補不回來</h3>
             <div class="prose">
-              <p>決定要記之後，下一個決定最難反悔：這一條要存哪些東西。現在沒存的，之後補不回來。先看同一件事的四種存法。這件事是專案把 serving（把 model 架成一個服務、接請求回答的那一層）從 vLLM 換成 SGLang（兩者都是做這件事的程式，叫 LLM serving engine，Part II 會講）：</p>
+              <p>決定要記之後，下一個決定最難反悔：這一條要存哪些東西。現在沒存的，之後補不回來。先看同一件事的四種存法。用的是「先看這裡」例子裡 6 月的那一步（第 1 章說這類事重讀就有；這裡借它示範，是因為它夠短，四種存法的差別一眼看得出來）：專案把 serving（把 model 架成一個服務、接請求回答的那一層）從 vLLM 換成 SGLang（兩者都是做這件事的程式，叫 LLM serving engine，Part II 會講）：</p>
               <figure class="file"><figcaption>同一件事，四種格式（每一種的好處和代價寫在註解裡，是本文的整理）</figcaption><pre><code class="lang-text"># 1 原始事件（raw episode，一段互動的原文）：什麼都沒丟，但大、重複，讀進 context 很貴。留著當來源
 Episode 28, 2026-06-12, user: "We moved serving from vLLM to SGLang."
 
@@ -647,7 +649,7 @@ Uses SGLang for model serving.
           <div class="idea" id="i3">
             <h3><span class="idea-no">3</span>檢索：語意相似只是五個訊號之一</h3>
             <div class="prose">
-              <p>Store 裡的東西要經過檢索才回到 context，所以檢索決定 model 看到什麼。最常見的做法是 <a class="tm" href="#t1">vector search</a>：把問題和每條記憶都轉成向量（一串數字；意思相近的文字，轉出來的向量也相近），取和問題的向量距離最近的 k 條，這 k 條叫 top-k。「最近」因此就是「意思最像」。先看它會怎麼錯：</p>
+              <p>Store 裡的東西要經過檢索才回到 context，所以檢索決定 model 看到什麼。最常見的做法是 <a class="tm" href="#t1">vector search</a>：把問題和每條記憶都轉成向量（一串數字；意思相近的文字，轉出來的向量也相近），取和問題的向量距離最近的 k 條，這 k 條叫 top-k。「最近」因此就是「意思最像」。先看它會怎麼錯，用的還是「先看這裡」的例子：store 裡有 4 月的「用 vLLM」和 6 月的「用 SGLang」兩條；7 月 agent 要寫部署 script，harness 先拿「現在用哪個 serving engine？」這個問題去 store 裡找（serving engine 是第 2 章說的、把 model 架成服務的程式，vLLM 和 SGLang 都是）。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 158" role="img" aria-label="左邊是 query：現在用哪個 serving engine？右邊兩條記憶，各一條相似度的長條。專案用 vLLM 做 serving，4 月寫的，相似度 0.91。專案用 SGLang 做 serving，6 月寫的，相似度 0.90。兩條幾乎一樣長，舊的那條還略高。相似度是示意的數字。">
