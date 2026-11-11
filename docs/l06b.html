@@ -73,10 +73,10 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
     <p class="thesis">先看一個例子。4 月，你請 agent（會自己讀檔、跑指令、改 code 的 AI 助手）替專案寫部署 script，順口告訴它「我們的服務是用 vLLM 架的」。vLLM 是一套把語言模型架成線上服務、接請求回答的程式。Agent 把這句話寫進自己的筆記；之後每一次新的對話，它都先從筆記裡找出和手上的事有關的幾條來讀，就不用再問你。6 月，團隊把 vLLM 換成另一套同類的程式 SGLang，你也告訴了 agent，它又記下一條「用 SGLang」，舊的那條沒有動。7 月，你再請它寫一份部署 script。這時筆記裡有兩條講同一件事、說法相反的紀錄，沒有任何標記說哪一條還算數。它用了舊的那條，照 vLLM 寫完，回報「完成」。過程中沒有任何錯誤訊息，要到部署失敗你才發現。</p>
-    <p class="thesis">Agent 跨對話留下的這份筆記，課程叫 memory。筆記錯了或過期了，agent 自己不會知道，每一次新的對話都會再照做一次。這堂回答的問題是：<strong>在哪裡把壞的筆記擋下來</strong>。能擋的地方有三個，下面每一條都回到上面的例子。</p>
+    <p class="thesis">Agent 跨對話留下的這份筆記，課程叫 memory。筆記錯了或過期了，agent 自己不會知道，每一次新的對話都會再照做一次。這堂回答的問題是：在哪裡把壞的筆記擋下來。能擋的地方有三個，下面每一條都回到上面的例子。</p>
     <ul class="core">
       <li><span><b>記之前：查得到的事不要記。</b>專案的服務用哪一套程式架，寫在專案的依賴清單裡（一個列出專案用到哪些套件的檔案），agent 讀一次檔案就知道，而且讀到的一定是現在的。記下來的只是一份副本，<strong>原件改了，沒有人會通知副本</strong>。值得記的是別處讀不到的事，例如你糾正過它什麼、當初為什麼換掉 vLLM（第 1 章）。</span></li>
-      <li><span><b>真的要記的時候：每一條都寫上它從什麼時候開始成立、是誰說的。</b>例子裡的兩條如果寫成「4 月起用 vLLM」和「6 月起用 SGLang」，一看就知道哪一條新。再多做一步：6 月記新的那條時，替舊的那條補上「到 6 月為止」，不要刪。這樣只剩一條還算數，之後也還答得出「5 月用的是什麼」。「是誰說的」用在兩條說法衝突的時候：你親口說的，不該被 agent 自己猜的、或從別處讀來的一句話蓋過。這兩件事要在記下的當時寫，事後很難補（第 2 章）。</span></li>
+      <li><span><b>真的要記的時候：每一條都寫上它從什麼時候開始成立、是誰說的。</b>例子裡的兩條如果寫成「4 月起用 vLLM」和「6 月起用 SGLang」，一看就知道哪一條新。再多做一步：6 月記新的那條時，替舊的那條補上「到 6 月為止」，不要刪。這樣只剩一條還算數，之後也還答得出「5 月用的是什麼」。「是誰說的」用在兩條說法衝突的時候：你親口說的，不該被 agent 自己猜的、或從別處讀來的一句話蓋過。這兩件事<strong>要在記下的當時寫，事後很難補</strong>（第 2 章）。</span></li>
       <li><span><b>拿出來用之前：先篩掉不該拿的。</b>Agent 找筆記時，是挑和眼前的問題意思最像的幾條。7 月它要寫 script，先去筆記裡找「現在用哪一套程式」；「用 vLLM」和「用 SGLang」這兩條和這個問題幾乎一樣像，<strong>只比像不像，分不出哪一條是舊的</strong>。所以要先把已經標成「到 6 月為止」的篩掉，剩下的再比像不像（第 3 章）。</span></li>
     </ul>
     <p class="readhow">還有兩件事這裡沒有講。筆記記下時就寫錯了（和你當時說的不一樣），事後怎麼修，在第 2 章的最後。筆記要放在檔案裡還是資料庫裡，在第 4 章。</p>
@@ -282,7 +282,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                   <p>評估時要分開量寫入和檢索：該取回卻沒取回，可能是當初沒寫（寫入漏了），也可能是寫了沒找到（課程叫 retrieval miss）。兩種原因修法不同，一個改寫入 policy，一個改檢索。</p>
                 </div>
               </details>
-              <p>本文的判斷：因為上面的不對稱，<strong>預設往右邊靠</strong>，再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
+              <p>本文的判斷：因為上面的不對稱，預設往右邊靠，再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：<strong>使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」</strong>。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
               <p id="i1-5"><b>往右靠，用「說明用途」來做，不要把條件寫死（本文補的）。</b>「預設往右邊靠」有兩種做法。一種是在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶是做什麼用的，值不值得記交給它判斷，下面叫它「說明用途」；上一段「至少要記什麼」的規則可以和它並用。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉量了這兩種做法：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。圖裡比的是記憶的效益，也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
               <figure class="diagram">
               <div class="scroll">
@@ -317,7 +317,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                   <p>Sonnet 4.6 的分數：沒有記憶時是 0.330，有記憶是 0.364，效益 0.034。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，有記憶的分數是 0.641，效益變成 0.311，大約是原來的 9 倍。</p>
                 </div>
               </details>
-              <p>Opus 5 原本靠記憶多拿 0.264 分，加了「只記失敗」之後<strong>只剩 0.030</strong>，幾乎等於沒有記憶。文章只報了結果，沒有說機制。本文的解讀是：答對的題也有值得記的事，例如對過正確答案的解法、查資料庫時試出來而且確認成立的規則，而「只記失敗」把它們擋在門外。文章節錄的 Opus 5 筆記裡正好有這兩類：一類來自答錯的題（錯在哪裡、下次要避開的陷阱），另一類來自答對的題。</p>
+              <p>Opus 5 原本靠記憶多拿 0.264 分，加了「只記失敗」<strong>之後只剩 0.030，幾乎等於沒有記憶</strong>。文章只報了結果，沒有說機制。本文的解讀是：答對的題也有值得記的事，例如對過正確答案的解法、查資料庫時試出來而且確認成立的規則，而「只記失敗」把它們擋在門外。文章節錄的 Opus 5 筆記裡正好有這兩類：一類來自答錯的題（錯在哪裡、下次要避開的陷阱），另一類來自答對的題。</p>
               <p>弱一點的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以有沒有記憶，它的分數幾乎一樣。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，記憶的效益大約變成原來的 9 倍（分數在上面的註）。這兩句是在教它怎麼用記憶，沒有限制它記什麼，所以和「只記失敗」不是同一種規則。這段 prompt 因此要跟著 model 調：model 弱，就把使用記憶的步驟寫出來；model 強，寫用途就夠，限制它記什麼反而變成上限。換 model 的時候要重新量一次（第 4 章的測試集）。</p>
               <p>「寫太多」長什麼樣，同一篇文章有一個例子。兩個 model 各玩一次 Pokémon Red，在大約第 10,000 步時比較它們的記憶資料夾：</p>
               <div class="table-wrap" data-no-figure><table>
@@ -329,8 +329,8 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                   <tr><td>遊戲進度（徽章數，破關要 8 個）</td><td>1 個</td><td>4 個</td></tr>
                 </tbody>
               </table></div>
-              <p>Sonnet 3.7 記的多半是遊戲畫面每一步都看得到的狀態，遊戲一往前走，這些紀錄就過期了。在第 10,000 步前後，它連續 17 步沒有做任何遊戲動作，只在新增 6 個檔、刪掉 9 個檔。Fable 5 只記畫面上看不到、要自己推出來的事。這和上面「能重讀的不要記」是同一條規則：<strong>下一步自己看得到的不記，要重新推一次才知道的才記</strong>。兩個 model 的能力本來就不同，又各只跑一次，所以這是例子，不是對照實驗。</p>
-              <p>回到規則怎麼寫。上面說「值不值得記」不要寫死；另一類規則仍然要寫死：後果收不回來的邊界。外部內容不自動寫入（第 5 章）、別人的記憶查不到（第 3 章）、使用者要求刪除就刪（第 2 章），這三條由程式擋，不交給 model 判斷。兩類的差別在錯了能不能補。多記或少記一條，之後還補得回來：記錯的可以標成失效，第 2 章講的 session 之間的整理（〈先看這裡〉說的事後補救：背景另開一個 session，把 store 對回紀錄）也會回頭修。邊界錯一次就補不回來：別人的資料已經洩漏、網頁裡的指令已經被照做、使用者要求刪掉的資料已經又被讀出來用了（這個分法是本文的判斷）。</p>
+              <p>Sonnet 3.7 記的多半是遊戲畫面每一步都看得到的狀態，遊戲一往前走，這些紀錄就過期了。在第 10,000 步前後，它連續 17 步沒有做任何遊戲動作，只在新增 6 個檔、刪掉 9 個檔。Fable 5 只記畫面上看不到、要自己推出來的事。這和上面「能重讀的不要記」是同一條規則：下一步自己看得到的不記，要重新推一次才知道的才記。兩個 model 的能力本來就不同，又各只跑一次，所以這是例子，不是對照實驗。</p>
+              <p>回到規則怎麼寫。上面說「值不值得記」不要寫死；<strong>另一類規則仍然要寫死：後果收不回來的邊界</strong>。外部內容不自動寫入（第 5 章）、別人的記憶查不到（第 3 章）、使用者要求刪除就刪（第 2 章），這三條由程式擋，不交給 model 判斷。兩類的差別在錯了能不能補。多記或少記一條，之後還補得回來：記錯的可以標成失效，第 2 章講的 session 之間的整理（〈先看這裡〉說的事後補救：背景另開一個 session，把 store 對回紀錄）也會回頭修。邊界錯一次就補不回來：別人的資料已經洩漏、網頁裡的指令已經被照做、使用者要求刪掉的資料已經又被讀出來用了（這個分法是本文的判斷）。</p>
               <p id="i1-4"><b>每一站都要有一條寫下來的規則。</b>一條記憶從寫入到失效經過六站：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -409,7 +409,7 @@ Uses SGLang for model serving.
                   <p>Knowledge graph 把事實存成節點和邊：「專案 X」—使用—「vLLM」，每條邊可以帶時間和來源，也能順著邊找相關的事實。代價是寫入時要先從文字裡抽出節點（實體）和邊（關係），這一步通常靠 LLM，會出錯。第 6 章的 Graphiti 就是這種 store。</p>
                 </div>
               </details>
-              <p>四種格式裡，第二種（摘要）的問題最常見：<strong>摘要丟掉了「以前用 vLLM」</strong>，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：一條摘要給 prompt，加一個指向原始 episode（那一次互動的完整紀錄）的 pointer。不管選哪一種格式，下面兩個欄位都要留。</p>
+              <p>四種格式裡，第二種（摘要）的問題最常見：摘要丟掉了「以前用 vLLM」，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：一條摘要給 prompt，加一個指向原始 episode（那一次互動的完整紀錄）的 pointer。不管選哪一種格式，下面兩個欄位都要留。</p>
               <p id="i2-1"><b>Valid time：新事實不刪舊的。</b>Valid time 是一件事實成立的那段時間。系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是每條記憶帶兩個時間欄位，<code>valid_from</code>（從什麼時候開始成立）和 <code>valid_to</code>（到什麼時候為止）：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -444,7 +444,7 @@ Uses SGLang for model serving.
               </div>
               <figcaption>這張圖回答：事實改變時要怎麼存？關上舊的 valid_to，不刪除。所以「現在用什麼」和「5 月用什麼」都答得出來，也查得到是誰說的。</figcaption>
             </figure>
-              <p>Valid time 和寫入時間是兩件事。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 的 memory 檔記的是 <code>modified</code>，也就是什麼時候記下；它能提醒「這條有點舊了」，說不出事實在哪段時間成立。少了 valid_from 和 valid_to 這兩個欄位，<strong>第 3 章的過濾就無從做起</strong>。</p>
+              <p><strong>Valid time 和寫入時間是兩件事</strong>。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 的 memory 檔記的是 <code>modified</code>，也就是什麼時候記下；它能提醒「這條有點舊了」，說不出事實在哪段時間成立。少了 valid_from 和 valid_to 這兩個欄位，第 3 章的過濾就無從做起。</p>
               <p id="i2-2"><b>Provenance：這件事是誰說的。</b>圖裡的事實指回 Episode 28，所以 agent 答得出「你為什麼覺得我們用 SGLang」。來源也決定信任等級：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -524,7 +524,7 @@ Uses SGLang for model serving.
                 <li><b>它沒辦法當場驗。</b>Code 改壞了，測試會失敗。歸納沒有對應的測試：<code>evidence</code> 查得到這一條看過哪幾筆事件，查不到它的結論對不對，因為這句話沒有人說過。要等之後某個 session 照著它做出奇怪的事才看得出來。那時紀錄裡看得到的是 agent 的行為，不會標出是哪一條記憶造成的，所以很難追回是哪一次歸納寫錯。</li>
                 <li><b>它的錯會滾大。</b>每個新的 session 開始時都會讀記憶。錯的歸納會改變 agent 的行為，這些行為變成新的 session 紀錄，下一次歸納又拿它們當證據。</li>
               </ul>
-              <p>三個性質合起來，就推得出做法。歸納有損，所以被拿掉的原文要留在某個地方。寫進去之前驗不了，寫進去之後又會擴散，所以發現錯的時候要能整份退回去。做法是：歸納不直接改原本的 store，把結果寫成另一份；之後的 session 改讀新的這一份（下面叫「換上去」），原本的留著。發現錯了，就讓 session 改回去讀原本的那一份。部署新版本時也是這樣做的：新版本放在旁邊，把流量切過去，舊版本留著，出問題就切回來（blue-green deployment）。比起直接改原本的 store，這個做法有三個代價：</p>
+              <p>三個性質合起來，就推得出做法。歸納有損，所以被拿掉的原文要留在某個地方。寫進去之前驗不了，寫進去之後又會擴散，所以發現錯的時候要能整份退回去。做法是：<strong>歸納不直接改原本的 store，把結果寫成另一份</strong>；之後的 session 改讀新的這一份（下面叫「換上去」），原本的留著。發現錯了，就讓 session 改回去讀原本的那一份。部署新版本時也是這樣做的：新版本放在旁邊，把流量切過去，舊版本留著，出問題就切回來（blue-green deployment）。比起直接改原本的 store，這個做法有三個代價：</p>
               <ul>
                 <li><b>成本。</b>直接改只要寫有變的那幾條。另存一份要多存一整份 store，沒變的記憶也要重新寫一次。</li>
                 <li><b>多一個換上去的步驟。</b>新的 store 要有人或有程式換上去才會生效。歸納還在跑的時候，agent 如果繼續往舊的 store 寫，這些新記憶不會在新的那一份裡（本文的推論）。</li>
@@ -682,7 +682,7 @@ Uses SGLang for model serving.
                   <p>Embedding model 把一段文字轉成一串數字，也就是向量。意思相近的文字，向量也相近。建索引時每條記憶算一個向量存起來；查詢時把 query 也轉成向量，找出距離最近的 k 筆，這就是 top-k。L4〈<a href="l04.html#t1">Embedding 與 semantic search</a>〉用它找程式碼，這裡用它找記憶，機制相同。</p>
                 </div>
               </details>
-              <p>相似度量的是「意思像不像」。哪一條是現在的、是誰的、誰說的，都不在文字的意思裡，所以要在寫入時存成欄位（第 2 章）。</p>
+              <p>相似度量的是「意思像不像」。<strong>哪一條是現在的、是誰的、誰說的，都不在文字的意思裡</strong>，所以要在寫入時存成欄位（第 2 章）。</p>
               <p id="i3-1"><b>五個訊號，放在不同的位置。</b>訊號是檢索時決定一條記憶要不要取回、排第幾的一項依據（本文的整理）；位置是它用在檢索流程的哪一步：排序之前的過濾、排序本身、排序之後的調分，或是不走檢索、直接常駐。語意相似只是其中一個訊號：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -728,7 +728,7 @@ Uses SGLang for model serving.
                   <tr><td><b>Provenance</b></td><td>誰說的、信心多少、證據在哪</td><td>調分數</td><td>把推測當成事實（memory hallucination）</td></tr>
                 </tbody>
               </table></div>
-              <p id="i3-2"><b>過濾還是排序，差別在後果。</b>Scope 只當排序分數時，別人的記憶仍可能排進 top-k；這是跨使用者的洩漏，<strong>發生一次就收不回來</strong>。Validity 只當排序分數時，過期的事實會和現在的事實並列。所以這兩個要在 vector search 之前就排除。用 SQL 加 pgvector（讓 Postgres 能存向量、算向量距離的 extension）寫，差別在 WHERE 和 ORDER BY：</p>
+              <p id="i3-2"><b>過濾還是排序，差別在後果。</b>Scope 只當排序分數時，別人的記憶仍可能排進 top-k；這是<strong>跨使用者的洩漏，發生一次就收不回來</strong>。Validity 只當排序分數時，過期的事實會和現在的事實並列。所以這兩個要在 vector search 之前就排除。用 SQL 加 pgvector（讓 Postgres 能存向量、算向量距離的 extension）寫，差別在 WHERE 和 ORDER BY：</p>
               <figure class="file"><figcaption>recall.sql（示意：過濾放 WHERE，排序放 ORDER BY，本文補的）</figcaption><pre><code class="lang-text">SELECT fact, source, confidence
 FROM memories
 WHERE user_id = $user AND project = $project          -- scope：硬過濾，別人的記憶查不到
@@ -926,11 +926,11 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               </div>
               <figcaption>這張圖回答：記憶由誰管？左邊和中間是課程的兩種，右邊是 2026 年出現的第三種（Claude Managed Agents，依 2026-11 的文件）。藍色是 harness，黃色是存放的地方。</figcaption>
             </figure>
-              <p id="i4-4"><b>本文的判斷（2026-11）：先用檔案。</b><a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta</a>（一家做 agent memory 系統的公司，2025-08）量過最簡單的做法：不架 memory 系統，只給 agent 檔案和 grep、search_files 等檔案工具。這樣的 agent 在 LoCoMo（長對話回想的 benchmark，第 6 章）的分數是 74.0%。這說明檔案加關鍵字搜尋做得到基本的回想。但這個分數不能拿來和別家系統比高低：各家的分數是自己量的，設定不同，<strong>不能當選型的依據</strong>（下面的註有例子）。選檔案的理由在別處：</p>
+              <p id="i4-4"><b>本文的判斷（2026-11）：先用檔案。</b><a href="https://www.letta.com/blog/benchmarking-ai-agent-memory" target="_blank" rel="noopener">Letta</a>（一家做 agent memory 系統的公司，2025-08）量過最簡單的做法：不架 memory 系統，只給 agent 檔案和 grep、search_files 等檔案工具。這樣的 agent 在 LoCoMo（長對話回想的 benchmark，第 6 章）的分數是 74.0%。這說明檔案加關鍵字搜尋做得到基本的回想。但這個分數不能拿來和別家系統比高低：<strong>各家的分數是自己量的，設定不同，不能當選型的依據</strong>（下面的註有例子）。選檔案的理由在別處：</p>
               <ul>
                 <li><b>記錯時抓得到。</b>第 1 章說記錯的代價最高，而檔案人看得懂、改得動。獨立的 layer 要查才知道它記了什麼。</li>
                 <li><b>版本免費。</b>進 git 就有歷史，也能 diff，第 5 章的偵測要靠這個。</li>
-                <li><b>Policy 才是難的部分。</b>換 backend 不會替你決定該記什麼。難的既然不在 backend，就先用最簡單的那一種，把力氣留給 policy（本文的判斷）。</li>
+                <li><b>Policy 才是難的部分。</b>換 backend 不會替你決定該記什麼。難的既然不在 backend，<strong>就先用最簡單的那一種，把力氣留給 policy</strong>（本文的判斷）。</li>
 </ul>
 <details class="gloss" id="n-letta">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Letta 對 Mem0：為什麼這幾個分數不能互相比</span></summary>
@@ -939,7 +939,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
                   <p data-num-own="74.0">Mem0 <a href="https://docs.mem0.ai/migration/platform-v2-to-v3" target="_blank" rel="noopener">換了演算法後，在 LoCoMo 自報 91.6</a>，反而高過 74.0%。三個數字是兩家各自量的，設定不同，不能互相比。</p>
                 </div>
               </details>
-              <p>值得離開檔案的情況有三種：多個 agent 要共用、要依使用者隔離、要查「什麼時候變的」或「連到誰」。第一種的原因是<strong>本機檔案只在一台機器上</strong>，另一台機器、另一個 container 裡的 agent 讀不到。第二種的原因是檔案的權限只認得作業系統的帳號，不認得你服務裡的使用者，要隔離就得自己另寫一層檢查。第三種要的是時間和關聯的查詢，這是 graph database 的長處（上面的 backend 圖）。</p>
+              <p>值得離開檔案的情況有三種：多個 agent 要共用、要依使用者隔離、要查「什麼時候變的」或「連到誰」。第一種的原因是本機檔案只在一台機器上，另一台機器、另一個 container 裡的 agent 讀不到。第二種的原因是檔案的權限只認得作業系統的帳號，不認得你服務裡的使用者，要隔離就得自己另寫一層檢查。第三種要的是時間和關聯的查詢，這是 graph database 的長處（上面的 backend 圖）。</p>
               <p>Anthropic 自己的兩個產品，剛好落在這條分界的兩邊。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code</a> 的每個 session 都在同一台開發者的電腦上跑，所以本機檔案就跨得了 session（<a class="tm" href="#n-cc">它在每個決定上的答案，列在下面標「查閱」的註</a>）。<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents</a> 的 session 跑在雲端，sandbox（執行 model 寫的 code 的隔離 container）要用時才配一個（L8〈<a href="l08.html#i9">Harness 架構</a>〉），下一個 session 拿到的是另一個新的 sandbox，所以寫在前一個 sandbox 裡的檔案留不到下一個 session，也給不了同時在跑的其他 session。所以它換成託管的 store，但仍掛載成目錄，agent 用同一套檔案工具（這兩個產品的對照是本文的判斷）。</p>
               <details class="gloss" id="n-cc">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Claude Code 的 memory，每個決定的答案</span></summary>
@@ -1104,7 +1104,7 @@ budget:
                   <tr><td><b>偵測</b></td><td>定期 diff 記憶檔；同一個 session 裡讀了外部內容又寫記憶就警示；出事時依來源批次刪除</td><td>規則</td></tr>
                 </tbody>
               </table></div>
-              <p><strong>動作這一站最值得先做</strong>，因為不管記憶是否中毒都有效。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code 的文件</a>也這樣寫：memory 是 context，不是強制設定，要擋動作就用 PreToolUse hook（在每次 tool 執行之前觸發的 hook，可以直接擋下這次呼叫）。<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents 的文件</a>則提醒前面幾站一旦漏掉的後果：一次成功的 injection 就能把惡意內容寫進 store，之後的 session 會當成可信的記憶讀回來。「先做動作這一站」這個取捨是本文的判斷。</p>
+              <p><strong>動作這一站最值得先做，因為不管記憶是否中毒都有效</strong>。<a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Claude Code 的文件</a>也這樣寫：memory 是 context，不是強制設定，要擋動作就用 PreToolUse hook（在每次 tool 執行之前觸發的 hook，可以直接擋下這次呼叫）。<a href="https://platform.claude.com/docs/en/managed-agents/memory" target="_blank" rel="noopener">Managed Agents 的文件</a>則提醒前面幾站一旦漏掉的後果：一次成功的 injection 就能把惡意內容寫進 store，之後的 session 會當成可信的記憶讀回來。「先做動作這一站」這個取捨是本文的判斷。</p>
             </div>
           </div>
 
