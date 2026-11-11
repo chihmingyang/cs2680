@@ -379,8 +379,8 @@ forget:    mark superseded facts invalid; delete only on user request      # 第
           <div class="idea" id="i2">
             <h3><span class="idea-no">2</span>時間與來源：寫入時沒存，之後補不回來</h3>
             <div class="prose">
-              <p>決定要記之後，下一個決定最難反悔：這一條要存哪些東西。現在沒存的，之後補不回來。先看同一件事的四種存法。這件事是專案把 serving 從 vLLM 換成 SGLang（兩者都是 LLM serving engine，Part II 會講）：</p>
-              <figure class="file"><figcaption>同一件事，四種格式：原始事件什麼都沒丟，另外三種各丟一種東西（註解是本文的整理）</figcaption><pre><code class="lang-text"># 1 原始事件（raw episode，一段互動的原文）：什麼都沒丟，但大、重複，讀進 context 很貴。留著當來源
+              <p>決定要記之後，下一個決定最難反悔：這一條要存哪些東西。現在沒存的，之後補不回來。先看同一件事的四種存法。這件事是專案把 serving（把 model 架成一個服務、接請求回答的那一層）從 vLLM 換成 SGLang（兩者都是做這件事的程式，叫 LLM serving engine，Part II 會講）：</p>
+              <figure class="file"><figcaption>同一件事，四種格式，各有代價：原始事件最完整、也最佔空間，另外三種省空間、但各有缺口（註解是本文的整理）</figcaption><pre><code class="lang-text"># 1 原始事件（raw episode，一段互動的原文）：什麼都沒丟，但大、重複，讀進 context 很貴。留著當來源
 Episode 28, 2026-06-12, user: "We moved serving from vLLM to SGLang."
 
 # 2 摘要（summary）：最省 token，適合常駐。丟掉過程、以前的值、為什麼
@@ -396,11 +396,11 @@ Uses SGLang for model serving.
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Knowledge graph 與結構化狀態：兩種「有形狀」的記憶</span></summary>
                 <div class="gloss-body prose">
                   <p>結構化狀態是一張固定欄位的表：serving_engine = SGLang、timezone = Asia/Taipei。查詢快、不會含糊，但欄位要事先定好。</p>
-                  <p>Knowledge graph 把事實存成節點和邊：「專案 X」—使用—「vLLM」，每條邊可以帶時間和來源，也能順著邊找相關的事實。代價是寫入時要先抽出實體和關係，這一步通常靠 LLM，會出錯。第 6 章的 Graphiti 就是這種 store。</p>
+                  <p>Knowledge graph 把事實存成節點和邊：「專案 X」—使用—「vLLM」，每條邊可以帶時間和來源，也能順著邊找相關的事實。代價是寫入時要先從文字裡抽出節點（實體）和邊（關係），這一步通常靠 LLM，會出錯。第 6 章的 Graphiti 就是這種 store。</p>
                 </div>
               </details>
               <p>四種格式裡，第二種（摘要）的問題最常見：<strong>摘要丟掉了「以前用 vLLM」</strong>，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：一條摘要給 prompt，加一個指向原始 episode（那一次互動的完整紀錄）的 pointer。不管選哪一種格式，下面兩個欄位都要留。</p>
-              <p id="i2-1"><b>Valid time：新事實不刪舊的。</b>系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是每條記憶帶兩個時間欄位：</p>
+              <p id="i2-1"><b>Valid time：新事實不刪舊的。</b>Valid time 是一件事實成立的那段時間。系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是每條記憶帶兩個時間欄位，<code>valid_from</code>（從什麼時候開始成立）和 <code>valid_to</code>（到什麼時候為止）：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 226" role="img" aria-label="一條時間軸，從 2026 年 4 月到現在。上面一條記憶：Project serves models with vLLM，從 4 月到 6 月，狀態 superseded，紀錄留著。下面一條記憶：Project serves models with SGLang，從 6 月開始，右端開放，狀態 current。6 月有一條深紅的線，標示 valid_to 關上。第二條記憶指向來源 Episode 28，原話是 We moved serving from vLLM to SGLang。">
@@ -496,16 +496,16 @@ Uses SGLang for model serving.
             </figure>
               <p>這四層的關係，像資料庫的 log 和 view（本文的類比）。Log 只追加，記下每一筆發生過的事；view 是從 log 算出來的表，為了查得快而存在，算錯了可以丟掉、從 log 重算。Transcripts 是 log，上面三層都是 view。所以最下層不能省：<strong>筆記記錯時，只有原始紀錄說得出當時發生了什麼</strong>。這也是本章標題的另一種說法：transcripts 留著，上面三層寫壞了都能重做；沒留，上層的錯就沒有東西可以對。</p>
               <p>有一樣東西不在這四層裡：compaction（L4〈<a href="l04.html">Context 管理</a>〉）。它在同一個 session 裡把舊的對話換成摘要，讓這個 session 跑得下去；它不跨 session，所以那篇文章不把它算成 memory。</p>
-              <p id="i2-3"><b>歸納是風險最高的寫入，因為來源是 model 自己。</b>External 的信任雖然更低，但第 1 章的規則根本不讓它自動寫進來。歸納卻是系統自己在寫，寫出來的每一條都會進 store，而且沒有任何人說過這句話，寫錯了也沒有原話可以對。Reflection 讀好幾筆觀察，寫出一條更高層的記憶。例如 agent 先後碰到使用者問 vLLM、SGLang、TRT-LLM、LLM scheduling：</p>
-              <figure class="file"><figcaption>reflection 的輸出（欄位是本文的整理）</figcaption><pre><code class="lang-json">{
-  "kind":       "hypothesis",                               // 不是事實，是推測：讀的人要知道
+              <p id="i2-3"><b>歸納是風險最高的寫入，因為寫的人是 model 自己。</b>本章開頭的例子，存的是使用者說過的一句話。歸納（課程叫 reflection，第 1 章六站裡的 Reflect）不一樣：model 讀好幾筆原始事件，自己寫出一條新的記憶，講的是這幾筆合起來看得出什麼。它在來源圖裡屬於 inferred 那一級。這句話沒有任何人說過，所以寫錯了也沒有原話可以對。來源圖裡信任最低的是 external（網頁、README），但第 1 章的規則不讓 external 的內容自動寫進 store；歸納寫出來的每一條卻都會進去。例如使用者在四段對話裡先後問了 vLLM、SGLang、TRT-LLM（三個都是 LLM serving engine）和 LLM scheduling（serving 時請求怎麼排），四個都屬於 LLM inference，也就是讓 model 產生回答的這一段系統。歸納這一步寫出：</p>
+              <figure class="file"><figcaption>歸納（reflection）寫出來的一條記憶（欄位是本文的整理）</figcaption><pre><code class="lang-json">{
+  "kind":       "hypothesis",                               // 這一條是推測，不是事實：讀的人要知道
   "text":       "Frequent interest in LLM inference systems",
-  "confidence": "medium",
+  "confidence": "medium",                                   // 只有四筆證據
   "evidence":   ["ep-12 vLLM", "ep-15 SGLang",
-                 "ep-19 TRT-LLM", "ep-23 LLM scheduling"],  // 連回四筆觀察：可以查證，也可以撤回
+                 "ep-19 TRT-LLM", "ep-23 LLM scheduling"],  // 連回四筆原始事件（ep = episode）：可以查證，也可以撤回
   "created":    "2026-06-20"
 }</code></pre></figure>
-              <p>少了上面 snippet 裡的 evidence 和 confidence 欄位，就是兩種典型的失敗。Memory hallucination 是把推測存成事實：「在 Harvard 唸書」變成「Harvard 的訪問學生」。Overgeneralization 是證據太少就歸納：一次事件變成長期偏好。歸納的時機是累積夠多新證據、或事實衝突的時候；歸納出來的結論要標成 inferred，當背景參考，不當事實。錯了也要能退：</p>
+              <p>課程列了歸納的兩種典型失敗，snippet 的欄位各擋一種（哪個欄位擋哪一種，是本文的對應）。Memory hallucination 是推測被存成事實。課程的例子：原話是「在 Harvard 唸書」，存進去的卻是「Harvard 的訪問學生」；「訪問學生」這個身分是 model 推測的，沒有人說過。換成上面的例子，就是把「常問 LLM inference」存成「他是做 LLM inference 的工程師」。擋它的是 <code>kind: hypothesis</code>：之後讀到這一條，就知道它是推測，只當背景參考，不蓋過使用者說過的話。Overgeneralization 是證據太少就歸納：使用者只問過一次 vLLM，就被記成長期偏好。擋它的是 <code>evidence</code> 和 <code>confidence</code>：只連得回一筆事件的歸納，一眼看得出證據不夠，confidence 也只能標 low。所以課程說歸納要等累積了夠多新證據再做；另一個時機是幾條事實互相衝突或重複，這時本來就要把它們合起來看。歸納錯了也要能退：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 150" role="img" aria-label="歸納做成可以丟棄的一步。輸入是一個 memory store 和 1 到 100 個 session 紀錄，輸入不動。非同步的 dream 工作產出一個新的 store。人看過之後，決定換上去或丟掉。">
@@ -532,17 +532,17 @@ Uses SGLang for model serving.
                   <text x="656" y="88.0" text-anchor="middle" class="dg-c-on">換上或丟掉</text>
                 </svg>
               </div>
-              <figcaption>這張圖回答：歸納錯了怎麼辦？把它做成可以丟棄的一步。依 Claude Managed Agents（Anthropic 的託管 agent 服務）的 dreams（research preview，2026-11 查）：輸入不動，產出另一個 store，人看過再決定。</figcaption>
+              <figcaption>這張圖回答：歸納錯了怎麼辦？把它做成可以丟棄的一步。Claude Managed Agents（Anthropic 的託管 agent 服務）有一個功能叫 dreams（research preview，2026-11 查），在背景整理記憶，歸納是它做的其中一件。它的做法：輸入不動，產出另一個 store，人看過再決定。</figcaption>
             </figure>
-              <p id="i2-7"><b>Session 之間的整理：把筆記對回原始紀錄（本文補的）。</b>上面這種離線跑的整理，Anthropic 叫 dreaming：agent 不做任務的時候，另外開 session 讀 transcripts 和現有的筆記，沿著四層做三件事：</p>
+              <p id="i2-7"><b>Session 之間的整理：把筆記對回原始紀錄（本文補的）。</b>上一張圖的 dream 工作，Anthropic 把這種做法叫 dreaming：agent 不做任務的時候，另外開 session 讀 transcripts 和現有的筆記。本文把它叫 session 之間的整理。它沿著四層做三件事：</p>
               <ul>
                 <li><b>修錯。</b>把筆記和 transcripts 對一遍，改掉記錯的那幾條。</li>
-                <li><b>往上整理。</b>把散的筆記合成 wiki 這類結構。上面講的歸納是這一件；它值不值得做，第 3 章有量測。</li>
+                <li><b>歸納。</b>和上面是同一個動作，輸入換成散的筆記：讀好幾條，往上合成 wiki 這類結構。它值不值得做，第 3 章有量測。</li>
                 <li><b>換層。</b>每次都用得到的往上搬到 injected context；細節往下搬，原處留一個連結，讓最上層保持小（第 3 章）。</li>
               </ul>
               <p>修錯最能說明為什麼要留 transcripts。同一篇文章的例子：Claude 玩 Pokémon Red，要從西邊走進 Mt. Moon 這個山洞，從東邊的出口出去，才到得了下一個城市 Cerulean City。入口旁有一棟叫 PokéCenter 的建築，Claude 拿它當地標；入口附近還有一個 ledge（只能往下跳的矮崖），跳下去就回到洞外來時的路上。Claude 在筆記裡把 PokéCenter 的位置寫錯了，寫成在東邊，也就是出口那一側，又把 Mt. Moon 標成「已通過」。照這兩條筆記，它以為自己已經在山洞的另一邊，其實它還在入口這一側。後來它從 ledge 跳了下去，回到洞外來時的路上。它用來認路的工具沒有顯示這個落差，所以它沒有發現自己掉回來了，繼續照著錯的筆記找路。文章比了三種條件，每種都讓 agent 做到累計 3,000 個遊戲動作：</p>
               <div class="table-wrap" data-no-figure><table>
-                <thead><tr><th>條件</th><th>那條錯的筆記</th><th>結果</th></tr></thead>
+                <thead><tr><th>條件</th><th>錯的筆記</th><th>結果</th></tr></thead>
                 <tbody>
                   <tr><td>沒有記憶</td><td>沒有筆記</td><td>沒有走到 Cerulean City（山洞另一邊的城市）</td></tr>
                   <tr><td>有記憶，沒有整理</td><td>一直留著</td><td>從 ledge 掉下去 3 次，最後走回出發的 Pewter City，也沒有走到</td></tr>

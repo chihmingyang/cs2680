@@ -69,7 +69,24 @@ python3 -I tools/review_pack.py docs/lXX.html --chapter i2 i5 --prefix > notes/r
 - 照 WORKFLOW D push。
 - 回覆 James：貼第一輪的 BLOCK 清單（定位、我讀到的、原因）和每條修了什麼，一條兩行；再貼「最難讀的三處」。他不讀頁面，讀這個。
 
+修完第二輪、沒有 BLOCK 之後，記下這些章用哪一版 checklist 審過，和頁面一起 commit：
+
+```bash
+python3 -I tools/review_status.py mark lXX i2 i5      # 不寫章就是整頁
+python3 -I tools/review_status.py status lXX          # 還有哪些章是「舊規則」「改過」「沒審過」
+```
+
 ## 6. 校準：James 說審查沒抓到
+
+**先存成測試題，再改規則。** 在 `guide/review_cases/<id>.md` 記這個事件（格式在 `tools/review_eval.py` 開頭：頁面、修改前的 commit、章、原文裡幾個字）。改完 checklist 或 prompt 之後：
+
+```bash
+python3 -I tools/review_eval.py pack                  # 每個事件一份審查包，寫到 notes/review/cases/
+# 每個事件開一個全新的審查者（同第 2 步），報告寫到 notes/review/cases/<id>-report.md；不說哪個單位是事件
+python3 -I tools/review_eval.py score                 # recall：James 抱怨過的地方，審查者先擋下幾成
+```
+
+新事件要抓得到，舊事件不能掉；結果記一行到 `guide/review_cases/RESULTS.md`。新事件的原文先不要貼進 `reviewer-prompt.md` 當例子（貼了就不能當測試題，要標 `in_prompt: yes`）；先改條文的說法。
 
 James 看頁面還是說看不懂，或抽查發現審查者標錯：
 

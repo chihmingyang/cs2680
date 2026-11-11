@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-11（腳本表加 `review_eval.py`、`review_status.py`。）
 - 2026-11-11（腳本表加 `check_numbers.py`；`verify.sh`、`quiz.py` 兩列同步。）
 - 2026-11-10（L6b 補 Anthropic〈The components of agent memory〉：五個新小節 `#i1-5`、`#i2-6`、`#i2-7`、`#i3-5`、`#i4-6`，延伸閱讀加一篇本文補的「推薦」；L6b 20 分 → 30 分。取捨在 V7_DECISIONS，來源在 sources/l06.md。）
 - 2026-11-10（首頁課程地圖的 chip 也改成英文，例如 Memory Design、Reliability、Eval；層名本來就是英文。）
@@ -73,6 +74,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-11（I：審完跑 `review_status.py mark`；選要審的章時也看 `status` 的「舊規則」「改過」；James 說看不懂先加 `guide/review_cases/` 再改規則、跑 `review_eval.py`。）
 - 2026-11-11（J 的第 1 層加 check_numbers。）
 
 - 2026-11-10（加 K〈一份 slides 拆成幾堂〉：用 DAG 決定切點、key 加字母、章號重編、舊連結 `#moved`、題庫 `moved_from`、別頁連結、檢查與審查。第一例是 L6 → L6／L6b。）
@@ -151,6 +153,7 @@
 
 ## REVIEW_READABILITY.md
 
+- 2026-11-11（**審查者的測試題與 checklist 版本**。起因：L6b 第 2 章「歸納是風險最高的寫入……Reflection 讀好幾筆觀察」一段，James 請 Claude 評可讀性並問怎麼減少 feedback 次數；這一章 11-10 用 v14 審過兩輪，這段仍留著；11-11 用同一份舊 prompt 重審，審查者其實標得到它。第一次量測：5 個沒寫進 prompt 的事件抓到 5 個，但審查者把 14%–71% 的單位標成 BLOCK，誤報率還沒量（`guide/review_cases/RESULTS.md`）。加 R15 別名（同一個東西兩個名字，讀者分不出是一個還是兩個）、R16 例子對得上主張（鐵律多一種「只靠主張、例子對不上」）；Checklist 版本 16。新增 `guide/review_cases/`（8 個事件）與 `tools/review_eval.py`（量 recall），`guide/review_log.tsv` 與 `tools/review_status.py`（哪些章用哪一版審過，11-11 以前照 commit 訊息回填）；`verify.sh` 多一行提示。事件先當測試題、不先貼進 prompt 當例子。）
 - 2026-11-09（`tools/review_pack.py`：本文延伸、深入區塊標題後面的 `<span>` 標籤（「不是 slide 的內容」「查證」）另外印成「〔頁面上的標籤：…〕」。L6 `#x5` 兩輪審查都把「漏抓與誤判不是 slide 的內容」讀成一句話，是包的誤報。）
 - 2026-11-07（新增〈審查者的雜訊〉：L6 第 2–4 章沒改、審三次，BLOCK 13／17／15，11 個單位三次都標；判斷方向看多數決的單位，不看總數。新工具 `tools/review_noise.py`。skill 的成本估計同步。）
 - 2026-11-07（**校準：審查者不能看後文**。L1 tldr「聊天是 1 次、750 token、105 token」第二輪放行：審查者拿整頁 pack，先讀過第 1 章的長條圖，又能照位置把三個數字對回前一組，所以重述得出來。原則 2 改成前文全給、後文不給（`review_pack.py --prefix`），tldr 單獨一個審查者；原則 6 加三種入口的讀者；鐵律改成「你知道不算，後面寫的不算」，每個單位寫「靠：」；加 R12 數字（BLOCK）、R13 後文（BLOCK）、R14 章首（NIT）（R11 已由同日另一個 session 的「來回對照」用掉，R12 管一個單位自己的數字，R11 管跨列、圖文之間的對照）；作者的修法加數字與後文兩條；`reviewer-prompt.md` 同步，這句收成例子一。審查包一律帶頁首（eyebrow、h1）當上下文。James 2026-11-07 同意：「審 tldr 時當作沒讀過後面」太窄，同樣的漏洞每一章都有。）

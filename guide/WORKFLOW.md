@@ -234,7 +234,12 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 2. 開一個**全新的** subagent 當審查者（general-purpose，不是 fork），只給它 `reviewer-prompt.md` 和這個 pack。它對每個單位寫「我讀到的」和「靠：」，照 R1–R14 標 BLOCK／NIT，最後列「最難讀的三處」。
 3. 作者修 BLOCK（照 `rewrite-with-example`），跑 `check_article.py`（表格格子現在有 R5、R6 的 lint）。
 4. 第二輪只審被標過的單位。最多兩輪；還有 BLOCK 就留給 James。
-5. push。回覆 James 貼 BLOCK 清單和修法，不貼全文。
+5. `python3 -I tools/review_status.py mark lXX <審過的章>`：記下這些章用現在這版 checklist 審過（`guide/review_log.tsv`，要 commit）。
+6. push。回覆 James 貼 BLOCK 清單和修法，不貼全文。
+
+要審哪些章，除了這次改的，也看 `python3 -I tools/review_status.py status lXX`：「舊規則」是審過之後 checklist 加了條目的章，「改過」是審過之後文字動了的章。Checklist 一加條目，全站的章都會變成「舊規則」；不必一次重審，動到那一堂時順手把 `stale lXX` 列的章一起審（2026-11-11）。
+
+James 說看不懂而審查沒抓到：先在 `guide/review_cases/` 加一個測試題，再改 checklist 或 prompt，改完跑 `tools/review_eval.py`（`REVIEW_READABILITY.md`〈審查者的測試題〉）。
 
 `notes/review/` 不 commit。James 說「看不懂」而審查沒抓到，先改 checklist 或 `reviewer-prompt.md`，見 `REVIEW_READABILITY.md` 末段。
 
