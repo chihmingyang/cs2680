@@ -98,6 +98,10 @@ bash tools/verify.sh lXX     # 之後每一輪都用這個：check_article、che
 
 照 `.claude/skills/readability-review/SKILL.md`：新寫的一堂全部章都審：tldr 一個審查者（`--chapter tldr`），各章用 `--chapter … --prefix`，單位超過 300 就分成兩段各一個審查者，開全新的 subagent 讀，BLOCK 修完、第二輪過了才收尾。七個 subagent 一天改七堂的時候沒有這一步，L6 的「穩定偏正面」就是這樣漏出去的。
 
+## 6c. 標紅字（2026-11-11 起，審查過了才做）
+
+寫作和修 BLOCK 時不放 `<strong>`。第二輪沒有 BLOCK、`review_status.py mark` 之後，照 `.claude/skills/mark-red/SKILL.md` 整頁標一次（`tools/red_path.py lXX`）。Subagent 寫章的時候也不標，由收尾的 session 做。
+
 ## 7. 收尾
 
 - `guide/CHANGELOG.md` 的「README.md」一節最上面加一行。規則變了就寫進 STYLE_ARTICLE 第 0 節，並在 CHANGELOG 的「STYLE_ARTICLE.md」一節加一行。

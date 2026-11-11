@@ -130,6 +130,8 @@ diff /tmp/before.txt /tmp/after.txt                    # 只能差行號和句�
 
 ### 8. 可讀性審查、寫回規則、commit、push
 
+- 改寫的句子先不放 `<strong>`；審查過了、`review_status.py mark` 之後，照 `.claude/skills/mark-red/SKILL.md` 把你改的那一章的紅字看一次（`tools/red_path.py lXX iN`），再 push。
+
 - 先照 `.claude/skills/readability-review/SKILL.md` 跑一次審查：`review_pack.py --since origin/main --prefix` 只審你改的那一章，前面的章當上下文（改的是 tldr 就用 `--chapter tldr`，單獨審），開一個全新的 subagent 讀，BLOCK 修完才往下。這一步是 2026-11-06 加的：你改順的段落，要由一個沒看過原段的人確認真的順了。
 - `guide/CHANGELOG.md` 的「README.md」一節最上面加一行，說改了哪一段、為什麼。
 - 新的寫法（例如「名詞註可以放表和 code」）寫進 `guide/STYLE_ARTICLE.md` 對應的節。

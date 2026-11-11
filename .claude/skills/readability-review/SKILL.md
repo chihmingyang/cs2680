@@ -76,6 +76,8 @@ python3 -I tools/review_status.py mark lXX i2 i5      # 不寫章就是整頁
 python3 -I tools/review_status.py status lXX          # 還有哪些章是「舊規則」「改過」「沒審過」
 ```
 
+審查記完之後，下一步是標紅字：照 `.claude/skills/mark-red/SKILL.md`（`tools/red_path.py lXX <審過的章>`）。修 BLOCK 的時候不要順手加紅字。
+
 ## 6. 校準：James 說審查沒抓到
 
 **先存成測試題，再改規則。** 在 `guide/review_cases/<id>.md` 記這個事件（格式在 `tools/review_eval.py` 開頭：頁面、修改前的 commit、章、原文裡幾個字）。改完 checklist 或 prompt 之後：

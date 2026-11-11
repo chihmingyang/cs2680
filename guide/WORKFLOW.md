@@ -245,6 +245,19 @@ James 說看不懂而審查沒抓到：先在 `guide/review_cases/` 加一個測
 
 ---
 
+## I2. 標紅字：審查過了才做（2026-11-11 起）
+
+紅字（`<strong>`）不在寫作或修 BLOCK 的時候標，獨立成 I 之後、D 之前的一步。操作在 `.claude/skills/mark-red/SKILL.md`，標準在 `STYLE_ARTICLE.md` 6c。
+
+理由（James 2026-11-11）：審查會改字，先標的紅字會落在改掉的句子上；紅字是整章的掃讀路徑，名額有限，要小標都定了才分配得了；審查紀錄只算文字，審完再搬 `<strong>` 不會讓紀錄失效。
+
+1. `python3 -I tools/red_path.py lXX [章]`：那幾章不是 ok（沒審過、改過、舊規則）就擋下來，先回 I。過了就印掃讀路徑：章名、`<b>` 小標、紅字，加上提示（小標後面沒有紅字、靠上下文才懂、只有數字、重複小標）。
+2. 只讀這條路徑，照 6c 的三個檢查決定紅字放哪裡。
+3. 只加、刪、移 `<strong>`，不改字。要改字才標得好的地方記下來，留給那一章下一次審查。
+4. `review_status.py status lXX` 仍然全 ok、`verify.sh lXX` 沒有紅字的 warn，照 D push。
+
+寫作的 skill（`idea-first-lecture`、`rewrite-with-example`、`fact-check-extension`）寫新段落時不放 `<strong>`；原本有的留著，審完再由這一步整章看一次。
+
 ## J. CI：push 後自動檢查（2026-11-07 起）
 
 James 問：每次改一章，能不能像 CI 的 regression test 一樣，確保每次修改都往好的方向。CI 證明不了「更好」，只證明測試寫到的地方沒有變壞，所以分三層，由便宜到貴：

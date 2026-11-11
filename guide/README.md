@@ -62,6 +62,7 @@
 | `review_noise.py` | 比對同一包的幾份審查報告：每份的 BLOCK／NIT 數、哪些單位每次都被標、兩兩重疊、「最難讀的三處」重疊。量審查者的雜訊用（2026-11-07）。 |
 | `quiz.py` | 題庫：`init` 從頁面的小節產生節的骨架；`spec` 印給列觀念的 agent 讀的文字；`merge` 把 subagent 寫的 points／題目併進頁面；`check` 題庫和頁面的小節對不對得上、`evidence` 以外的每個觀念（`points`）都有題目測到、選項只有數字的題給 warn（verify.sh 會跑）；`coverage` 列出每個觀念被哪幾題測到；`exam` 出作答包；`closed`／`closedcheck` 閉卷測試；`grade` 對定位、出評分包；`report` 彙整與比較各次結果；`exam`、`closed`、`grade` 可用題號、節號或章號挑題。流程見 `build-quiz` skill，規則見 `guide/QUIZ.md`（2026-11-08）。 |
 | `check_numbers.py` | 頁面引用外部來源的數字對不對得上 `guide/sources/lXX.md`：寫出來源的那一句起到段尾，每個數字都要在來源檔那一筆裡；題庫裡 `evidence` 類觀念的數字要在來源檔、也要還在那一章的正文。本文自己的數字加 `data-num-own`。來源檔有 `check_numbers: strict` 的講次（L6、L6b）對不上就讓 `verify.sh` 失敗，其他只提示。規則見 `guide/QUIZ.md`〈數字對照〉（2026-11-11）。 |
+| `red_path.py` | 標紅字用（WORKFLOW I2）：`red_path.py lXX [章]` 先確認那幾章的可讀性審查是 ok，不是就擋下來；過了印掃讀路徑（章名、`<b>` 小標、紅字）和提示。只讀不寫（2026-11-11）。 |
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
 | `insert_digest.py` | 把 `notes/digests/lXX-rN.html` 的摘要片段插進該篇的 `li`、重寫 `rg-intro` 的篇數，並檢查錨點、頁碼、長度與「別誤讀」。`--check` 只驗證。 |
 | `dag.py` | 觀念 DAG：`--check` 檢查 `docs/dag.json`（無環、難度沿邊不降、src 錨點存在、每章都被蓋到或在 excluded），不帶參數就重寫 `docs/dag.html`。規則見 `guide/DAG.md`（2026-11-08）。 |
