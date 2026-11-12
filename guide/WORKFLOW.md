@@ -36,7 +36,7 @@
    ```bash
    mkdir -p /home/claude/cs2680/{notes,shots}
    ```
-4. 要寫內容時，讀 `guide/STYLE_ARTICLE.md` 和 `guide/STYLE_BASIC.md`；改延伸閱讀的摘要時再讀 `guide/STYLE_DIGEST.md`。
+4. 要寫內容時，讀 `guide/STYLE_ARTICLE.md` 和 `guide/STYLE_BASIC.md`。
 
 ---
 
@@ -148,9 +148,9 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
 python3 -I tools/assemble_ideas.py docs/l05.html notes/l05   # 換掉 #s-ideas、填分鐘數、重建本頁目錄
 ```
 
-接著手動改延伸閱讀摘要、首頁 chip 與別頁連進來的 `#iN`（`grep -o 'l05.html#[a-z0-9-]*' docs/*.html`），再跑 B4 的檢查。片段留在 `notes/`（不 commit），改完就可以刪。
+接著手動改首頁 chip 與別頁連進來的 `#iN`（`grep -o 'l05.html#[a-z0-9-]*' docs/*.html`），再跑 B4 的檢查。片段留在 `notes/`（不 commit），改完就可以刪。
 
-延伸閱讀的摘要（`details.rg-dg`，必讀與推薦都有）怎麼寫、怎麼插入，見 `guide/STYLE_DIGEST.md`。
+每堂最後一段是「原文出處」（2026-11-13 起，只列標題與連結），規則在 `guide/STYLE_ARTICLE.md`〈3 原文出處〉；延伸閱讀的摘要已停用。
 
 ---
 

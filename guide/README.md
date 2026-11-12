@@ -6,7 +6,7 @@
 
 - 讀書會站台「CS2680 觀念導讀」：https://chihmingyang.github.io/cs2680/
 - 課程：Harvard CS2680 Modern AI Systems: Agents and System Optimizations（Fall 2026，Juncheng Yang）。課程沒有錄影，讀書會讀 slides。
-- 每一堂有三段（2026-11-09 起；之前第 2 段是問題討論，已拿掉）：核心觀念、動手試試、延伸閱讀。核心觀念依想法的重要性排，不照 slides 的順序，不寫頁碼（STYLE_ARTICLE 第 0 節），課程漏掉的主題查原始來源補上，標「本文補的」。名詞在正文裡解釋，或用收合註 `details.gloss`；題目放在每一節後面的小測（`guide/QUIZ.md`，目前只有 L6）、延伸閱讀導讀（必讀與推薦的每一篇附摘要；選讀、查閱不附）。
+- 每一堂有三段（2026-11-09 起；之前第 2 段是問題討論，已拿掉）：核心觀念、動手試試、原文出處（2026-11-13 起；之前是延伸閱讀，摘要、導讀、等級都拿掉，只留標題與連結）。核心觀念依想法的重要性排，不照 slides 的順序，不寫頁碼（STYLE_ARTICLE 第 0 節），課程漏掉的主題查原始來源補上；正文不提 slides 怎麼寫、不標「本文補的」（2026-11-13，STYLE_ARTICLE 第 0 節，L4 先改，其他講次陸續改）。名詞在正文裡解釋，或用收合註 `details.gloss`；題目放在每一節後面的小測（`guide/QUIZ.md`，目前只有 L6）。
 - 每一堂的章數與閱讀時間（2026-11-03）：L1 10 章 30 分、L2 10 章 35 分、L3 10 章 45 分、L4 10 章 40 分、L5 9 章 25 分、L6 10 章 30 分（2026-11-10 拆成 L6 可靠性 5 章 20 分、L6b memory 6 章 20 分；同日 L6b 補 Anthropic 的 agent memory 研究文後 30 分；2026-11-12 L6b 照記憶的四層重排成 7 章，同日拿掉兩段 Pokémon 的例子後 45 分）、L7 10 章 35 分、L8 10 章 35 分；L9 10 章 40 分、L10 10 章 55 分、L11 10 章 35 分（2026-11-06）。為什麼這樣排、補了什麼、刪了什麼，見 `guide/V7_DECISIONS.md`；外部事實的來源、數字與查詢日期見 `guide/sources/lXX.md`。
 - 事實會過時的地方，要改就重抓：L2、L3、L4、L6、L8 的 Claude Code 細節依 2026-11 的官方文件；L3 的 repo 依 2026-11-03（Superpowers v7.0.1、mattpocock/skills 1.3.2、Caveman 4.0.1、`deepseek-ai/dsh-superagent-prototype` 2026-10-31）；L7 的 benchmark 現況與 L8 的單價依 2026-11-03。L3 的 `#x1`（Caveman 評論查證）、`#x2`（SWE-Shift 查證）是 James 要留的本文延伸。L9 的每 token KV 表依 2026-11-06 的 config.json，中文 token 數是本文用六個 tokenizer 實測（重現方法在 `guide/sources/l09.md`）；L10 的 GPU 規格與 AI 寫 kernel 的案例依 2026-11-06；L11 的 Claude Code 細節依 2026-11 的官方文件，第 5 章引的兩串 GitHub issue 到 2026-11-06 都沒有官方回覆，有變化就重抓。
 - **一堂不綁一份 slides**（2026-11-10，James）：堂依觀念切，不依 slides 切。一份 slides 講了兩個互不依賴的觀念就拆成兩堂，編號沿用加字母：舊 L6 拆成 L6〈Agent 可靠性〉（`l06.html`）和 L6b〈Agent memory〉（`l06b.html`），兩堂都指同一份 `6_agent_design_3.pdf`、共用 `slides/l06-notes.md` 與 `guide/sources/l06.md`。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
@@ -18,8 +18,8 @@
 
 | 東西 | 位置 | 說明 |
 |---|---|---|
-| 站台檔案 | `docs/`（index、l01–l11、l06b、l02-readings、styles.css、app.js、code.js、calc.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
-| 撰寫規範 | `guide/STYLE_ARTICLE.md`、`guide/STYLE_DIGEST.md` | 寫新講次或改內容前先讀。DIGEST 是延伸閱讀裡必讀與推薦摘要的規範。`STYLE_BASIC.md`（基礎題）2026-11-09 停用。 |
+| 站台檔案 | `docs/`（index、l01–l11、l06b、styles.css、app.js、code.js、calc.js） | 唯一來源。push 到 `main` 後 GitHub Pages 自動更新。 |
+| 撰寫規範 | `guide/STYLE_ARTICLE.md`、`guide/STYLE_DIGEST.md` | 寫新講次或改內容前先讀。DIGEST 是延伸閱讀摘要的規範，2026-11-13 停用。`STYLE_BASIC.md`（基礎題）2026-11-09 停用。 |
 | 可讀性審查 | `guide/REVIEW_READABILITY.md` | 改正文後、push 前，另一個 agent 讀一遍的 checklist 與報告格式。James 說看不懂就先回來改這份。 |
 | v7 的決定與來源 | `guide/V7_DECISIONS.md`、`guide/sources/lXX.md` | 每堂怎麼排、補、刪；外部事實的來源與查證紀錄。 |
 | 工作流程 | `guide/WORKFLOW.md` | 開工、新講次、修改、發布。 |
@@ -31,7 +31,6 @@
 | 互動圖 | `docs/calc.js`、`figure.diagram[data-calc]` | 拖滑桿換假設、圖照算式重畫；HTML 裡是預設值的靜態圖。目前只有 L6 3.1（2026-11-09）。規則在 `STYLE_ARTICLE.md` 第 6 節〈互動圖〉。 |
 | CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是「問 Claude」。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
-| L2 readings 的逐篇導讀 | `docs/l02-readings.html` | 只有 L2 有，10 篇全寫；l02.html 的延伸閱讀連到它。其他講次用頁內的必讀摘要。 |
 
 已停用（2026-10-19）：
 
@@ -65,7 +64,6 @@
 | `check_numbers.py` | 頁面引用外部來源的數字對不對得上 `guide/sources/lXX.md`：寫出來源的那一句起到段尾，每個數字都要在來源檔那一筆裡；題庫裡 `evidence` 類觀念的數字要在來源檔、也要還在那一章的正文。本文自己的數字加 `data-num-own`。來源檔有 `check_numbers: strict` 的講次（L6、L6b）對不上就讓 `verify.sh` 失敗，其他只提示。規則見 `guide/QUIZ.md`〈數字對照〉（2026-11-11）。 |
 | `red_path.py` | 標紅字用（WORKFLOW I2）：`red_path.py lXX [章]` 先確認那幾章的可讀性審查是 ok，不是就擋下來；過了印掃讀路徑（章名、`<b>` 小標、紅字）和提示。只讀不寫（2026-11-11）。 |
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
-| `insert_digest.py` | 把 `notes/digests/lXX-rN.html` 的摘要片段插進該篇的 `li`、重寫 `rg-intro` 的篇數，並檢查錨點、頁碼、長度與「別誤讀」。`--check` 只驗證。 |
 | `dag.py` | 觀念 DAG：`--check` 檢查 `docs/dag.json`（無環、難度沿邊不降、src 錨點存在、每章都被蓋到或在 excluded），不帶參數就重寫 `docs/dag.html`。規則見 `guide/DAG.md`（2026-11-08）。 |
 
 以上腳本在 2026-10-19 對 L1–L8 全部通過。

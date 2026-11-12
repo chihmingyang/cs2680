@@ -1,5 +1,5 @@
 /* CS2680 觀念導讀 — code snippet colors, loaded on every page that has code
-   (lecture pages and l02-readings.html). No storage, no network. */
+   (lecture pages). No storage, no network. */
 /* Code snippets: IDE-style token colors. Each pre > code is plain text in the
    HTML; this reads its text once, splits it into tokens and rebuilds it with
    span.tk-* (styles.css has the colors). The characters stay the same, so

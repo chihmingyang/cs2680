@@ -7,7 +7,7 @@ description: James 要把某一堂（docs/lXX.html）改成「L5 的模式」「
 
 範本是 `docs/l05.html`（2026-11-03 完成）。規則在 `guide/STYLE_ARTICLE.md` 第 0 節。L1–L8 都已改完（2026-11-03），各堂的取捨在 `guide/V7_DECISIONS.md`，之後用於新講次或重做一堂。一個 session 只改一堂，做完再開下一個；要同時改多堂，一堂一個 subagent，簡報是同目錄的 `subagent-brief.md`，整合方法見 `guide/WORKFLOW.md` H。
 
-**新講次**（沒有舊頁面，2026-11-06 L9–L11 起）：骨架用 `tools/new_lecture.py` 建，動手試試、延伸閱讀也寫成片段（`try.html`、`wrap.html`）由 `assemble_v7.py` 一起組；第 5 步的錨點與保留段落不適用。好幾堂同時寫，一堂一個 subagent，簡報是同目錄的 `new-lecture-brief.md`，接線照 `guide/WORKFLOW.md` B5。
+**新講次**（沒有舊頁面，2026-11-06 L9–L11 起）：骨架用 `tools/new_lecture.py` 建，動手試試、原文出處也寫成片段（`try.html`、`wrap.html`）由 `assemble_v7.py` 一起組；第 5 步的錨點與保留段落不適用。好幾堂同時寫，一堂一個 subagent，簡報是同目錄的 `new-lecture-brief.md`，接線照 `guide/WORKFLOW.md` B5。
 
 James 的期待（2026-11-02、11-03）：
 
@@ -52,8 +52,7 @@ EOF
 問兩件事：這堂的論證有沒有不完整的地方（L5：權限隔離擋不住流回來的文字）？2025–2026 年業界或論文有沒有改變結論（L5：Cognition 2026 的讀寫分界）？
 
 - 用 WebSearch／WebFetch 查原始來源，記下作者、日期、數字。只有一家公司的經驗要寫明「不是對照實驗」。
-- 延伸閱讀裡已經有的文章，先讀頁面上的摘要，不要重查。
-- 補進正文的章，在 `nav.map` 的小字標「本文補的」。
+- 補進正文的章不標「本文補的」，正文也不寫「課程說…」「slides 的例子是…」（2026-11-13，STYLE_ARTICLE 第 0 節〈不提 slides 怎麼寫〉）。
 
 ## 4. 寫核心觀念
 
@@ -70,16 +69,16 @@ EOF
 
 ## 5. 保留其他段落，修好連結
 
-v7 頁面是三段：1 核心觀念、2 動手試試、3 延伸閱讀（2026-11-09 拿掉問題討論；題目改放每一節後面的小測，`guide/QUIZ.md`）。沒有「架構」段。
+v7 頁面是三段：1 核心觀念、2 動手試試、3 原文出處（2026-11-13 之前叫延伸閱讀；2026-11-09 拿掉問題討論；題目改放每一節後面的小測，`guide/QUIZ.md`）。沒有「架構」段。
 
 ```bash
 grep -o 'lXX\.html#[A-Za-z0-9_-]*' docs/*.html | grep -v '^docs/lXX' | sort | uniq -c   # 別頁連進來的錨點
 ```
 
 - 別頁連進來的錨點：連到新章節（改那一頁的 href 與連結文字），或在新頁面相同內容的段落保留同一個 id（L5 保留了 `t1`、`t2`、`t3`）。
-- 動手試試、延伸閱讀從舊頁面整段搬過來。kicker 的段號是 2、3，「第 2 段動手試試」這類文字一起確認。
-- 延伸閱讀摘要裡連到舊章節、舊本文延伸（`#xN`）的地方也改。改完確認沒有殘留：`grep -o 'href="#[^"]*"' docs/lXX.html` 的每個目標都存在。
-- 側欄 `li.sn-lec.is-here` 由 `assemble_v7.py` 重建：四個 `sn-sec`（先看這裡、核心觀念、動手試試、延伸閱讀），核心觀念底下列每章（`sn-sub`），每章的粗體小標當第三層（`sn-sub2`，小標的 `<p>` 要有 id）。
+- 動手試試、原文出處從舊頁面整段搬過來。kicker 的段號是 2、3，「第 2 段動手試試」這類文字一起確認。
+- 動手試試裡連到舊章節、舊本文延伸（`#xN`）的地方也改。改完確認沒有殘留：`grep -o 'href="#[^"]*"' docs/lXX.html` 的每個目標都存在。
+- 側欄 `li.sn-lec.is-here` 由 `assemble_v7.py` 重建：四個 `sn-sec`（先看這裡、核心觀念、動手試試、原文出處），核心觀念底下列每章（`sn-sub`），每章的粗體小標當第三層（`sn-sub2`，小標的 `<p>` 要有 id）。
 - 文字裡不寫別堂的章號（「L4 2.6」），寫 L4〈概念名〉。錨點用 `tools/anchor_map.py list`、`check` 對照，`apply` 改別頁的連結。
 - `h1`、`p.en-title` 不改，否則每一頁的側欄都要重建（`add_lecture.py --check` 會報）。
 - 首頁 `index.html` 的課程地圖 chip 連到哪一章，一起改。

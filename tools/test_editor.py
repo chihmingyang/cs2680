@@ -136,7 +136,7 @@ def main():
     args = ap.parse_args()
     httpd, port = serve()
     base = f"http://127.0.0.1:{port}"
-    pages = sorted(p.name for p in SITE.glob("*.html") if "app.js" in p.read_text(encoding="utf-8"))  # l02-readings.html has its own script
+    pages = sorted(p.name for p in SITE.glob("*.html") if "app.js" in p.read_text(encoding="utf-8"))
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
 

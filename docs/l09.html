@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261112d">
+<link rel="stylesheet" href="styles.css?v=20261113a">
 </head>
 <body>
 <header class="topbar">
@@ -45,7 +45,7 @@
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec is-here"><a class="sn-row" href="l09.html" aria-current="page"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">一個 request 的一生</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Model 一次只算出下一個 token</a></li><li><a class="sn-sub2" href="#i1-2">Prefill 的副產品：KV cache</a></li><li><a class="sn-sub2" href="#i1-3">Schedule：每一步重新決定誰上車</a></li><li><a class="sn-sub2" href="#i1-4">什麼時候停</a></li><li><a class="sn-sub2" href="#i1-5">Agent 的每一圈，都是一次完整的 request</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Model 的骨架</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Vector：一個 token 變成一串數字</a></li><li><a class="sn-sub2" href="#i2-2">矩陣乘法：model 幾乎所有的計算</a></li><li><a class="sn-sub2" href="#i2-3">一疊相同的 block</a></li><li><a class="sn-sub2" href="#i2-4">參數放在哪裡</a></li><li><a class="sn-sub2" href="#i2-5">三個數字裡，兩個已經出來了</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Attention</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">每個 token 產生三個 vector</a></li><li><a class="sn-sub2" href="#i3-2">分數、mask、softmax</a></li><li><a class="sn-sub2" href="#i3-3">成本：n 個 token，n² 個分數</a></li><li><a class="sn-sub2" href="#i3-4">為什麼要存 KV cache</a></li><li><a class="sn-sub2" href="#i3-5">Multi-head：64 個小 attention 一起跑</a></li><li><a class="sn-sub2" href="#i3-6">GQA：讓好幾個 query head 共用一組 K、V</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">三個數字</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">FLOPs → prefill 要多久</a></li><li><a class="sn-sub2" href="#i4-2">Weights → decode 一步至少多久</a></li><li><a class="sn-sub2" href="#i4-3">KV cache → 記憶體裝得下幾個人、多長</a></li><li><a class="sn-sub2" href="#i4-4">Agent 的帳：算力省得下，記憶體省不下</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">MoE（混合專家）</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">兩個參數數，各管一本帳</a></li><li><a class="sn-sub2" href="#i5-2">什麼時候選 MoE</a></li><li><a class="sn-sub2" href="#i5-3">Decode 時讀幾個 expert：batch 越大越多</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">改 KV cache 的架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">做法 1：Sliding window，讓大多數層只看最近 w 個 token</a></li><li><a class="sn-sub2" href="#i6-2">做法 2：MLA，每個 token 只存一個壓縮過的 vector</a></li><li><a class="sn-sub2" href="#i6-3">做法 3：Linear attention，用固定大小的 state 取代越長越大的 cache</a></li><li><a class="sn-sub2" href="#i6-4">做法 4：State-space model，每個 channel 一個小 state</a></li><li><a class="sn-sub2" href="#i6-5">做法 5：Sparse attention，每個 query 只讀 top-k 個 token</a></li><li><a class="sn-sub2" href="#i6-6">本文的判斷：方向是混合，不是二選一</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">能自己架的 model</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">同一條公式，代入 config.json 的幾個欄位</a></li><li><a class="sn-sub2" href="#i7-2">表上沒有的：固定大小的部分</a></li><li><a class="sn-sub2" href="#i7-3">本文的判斷：選 model 時，每個 token 的 KV 和參數一樣重要</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Tokenizer</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">BPE：從 byte 開始，把最常一起出現的兩塊合併</a></li><li><a class="sn-sub2" href="#i8-2">詞彙越大，token 越少，embedding 也越大</a></li><li><a class="sn-sub2" href="#i8-3">中文：一個字 3 個 byte，切成幾個 token 要看詞彙表</a></li><li><a class="sn-sub2" href="#i8-4">本文實測：繁體中文一個字約 0.7 到 0.9 個 token</a></li><li><a class="sn-sub2" href="#i8-5">這改變三件事</a></li><li><a class="sn-sub2" href="#i8-6">串流時的半個字</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Sampling</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">從分數到機率：temperature</a></li><li><a class="sn-sub2" href="#i9-2">只從前幾名裡抽：top-k 與 top-p</a></li><li><a class="sn-sub2" href="#i9-3">設定也改變輸出有多長</a></li><li><a class="sn-sub2" href="#i9-4">Temperature 0 也不保證每次相同</a></li><li><a class="sn-sub2" href="#i9-5">託管的 model 開始不讓你調</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l09.html" aria-current="page"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">一個 request 的一生</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Model 一次只算出下一個 token</a></li><li><a class="sn-sub2" href="#i1-2">Prefill 的副產品：KV cache</a></li><li><a class="sn-sub2" href="#i1-3">Schedule：每一步重新決定誰上車</a></li><li><a class="sn-sub2" href="#i1-4">什麼時候停</a></li><li><a class="sn-sub2" href="#i1-5">Agent 的每一圈，都是一次完整的 request</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Model 的骨架</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Vector：一個 token 變成一串數字</a></li><li><a class="sn-sub2" href="#i2-2">矩陣乘法：model 幾乎所有的計算</a></li><li><a class="sn-sub2" href="#i2-3">一疊相同的 block</a></li><li><a class="sn-sub2" href="#i2-4">參數放在哪裡</a></li><li><a class="sn-sub2" href="#i2-5">三個數字裡，兩個已經出來了</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Attention</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">每個 token 產生三個 vector</a></li><li><a class="sn-sub2" href="#i3-2">分數、mask、softmax</a></li><li><a class="sn-sub2" href="#i3-3">成本：n 個 token，n² 個分數</a></li><li><a class="sn-sub2" href="#i3-4">為什麼要存 KV cache</a></li><li><a class="sn-sub2" href="#i3-5">Multi-head：64 個小 attention 一起跑</a></li><li><a class="sn-sub2" href="#i3-6">GQA：讓好幾個 query head 共用一組 K、V</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">三個數字</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">FLOPs → prefill 要多久</a></li><li><a class="sn-sub2" href="#i4-2">Weights → decode 一步至少多久</a></li><li><a class="sn-sub2" href="#i4-3">KV cache → 記憶體裝得下幾個人、多長</a></li><li><a class="sn-sub2" href="#i4-4">Agent 的帳：算力省得下，記憶體省不下</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">MoE（混合專家）</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">兩個參數數，各管一本帳</a></li><li><a class="sn-sub2" href="#i5-2">什麼時候選 MoE</a></li><li><a class="sn-sub2" href="#i5-3">Decode 時讀幾個 expert：batch 越大越多</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">改 KV cache 的架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">做法 1：Sliding window，讓大多數層只看最近 w 個 token</a></li><li><a class="sn-sub2" href="#i6-2">做法 2：MLA，每個 token 只存一個壓縮過的 vector</a></li><li><a class="sn-sub2" href="#i6-3">做法 3：Linear attention，用固定大小的 state 取代越長越大的 cache</a></li><li><a class="sn-sub2" href="#i6-4">做法 4：State-space model，每個 channel 一個小 state</a></li><li><a class="sn-sub2" href="#i6-5">做法 5：Sparse attention，每個 query 只讀 top-k 個 token</a></li><li><a class="sn-sub2" href="#i6-6">本文的判斷：方向是混合，不是二選一</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">能自己架的 model</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">同一條公式，代入 config.json 的幾個欄位</a></li><li><a class="sn-sub2" href="#i7-2">表上沒有的：固定大小的部分</a></li><li><a class="sn-sub2" href="#i7-3">本文的判斷：選 model 時，每個 token 的 KV 和參數一樣重要</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Tokenizer</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">BPE：從 byte 開始，把最常一起出現的兩塊合併</a></li><li><a class="sn-sub2" href="#i8-2">詞彙越大，token 越少，embedding 也越大</a></li><li><a class="sn-sub2" href="#i8-3">中文：一個字 3 個 byte，切成幾個 token 要看詞彙表</a></li><li><a class="sn-sub2" href="#i8-4">本文實測：繁體中文一個字約 0.7 到 0.9 個 token</a></li><li><a class="sn-sub2" href="#i8-5">這改變三件事</a></li><li><a class="sn-sub2" href="#i8-6">串流時的半個字</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Sampling</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">從分數到機率：temperature</a></li><li><a class="sn-sub2" href="#i9-2">只從前幾名裡抽：top-k 與 top-p</a></li><li><a class="sn-sub2" href="#i9-3">設定也改變輸出有多長</a></li><li><a class="sn-sub2" href="#i9-4">Temperature 0 也不保證每次相同</a></li><li><a class="sn-sub2" href="#i9-5">託管的 model 開始不讓你調</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
@@ -66,7 +66,7 @@
       <li><span class="k">頁數</span>51</li>
       <li><span class="k">閱讀</span><span class="read-time">約 35 分鐘</span></li>
       <li><span class="k">註與查閱</span><span class="deep-time">約 3 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 45 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 40 分鐘</span></li>
     </ul>
   </header>
 
@@ -692,7 +692,7 @@
 
     <p>q 和 k 的內積是 128 個乘積的和，維度越大，數值通常越大。</p>
     <p>太大的分數進 softmax，權重會幾乎全部集中在一個 token，訓練時的梯度變得很小。</p>
-    <p>除以 √dk（√128 ≈ 11.3）把分數拉回穩定的範圍。這是 2017 年 Attention Is All You Need 的設計，見延伸閱讀。</p>
+    <p>除以 √dk（√128 ≈ 11.3）把分數拉回穩定的範圍。這是 2017 年 Attention Is All You Need 的設計，見<a href="#wrap">原文出處</a>。</p>
   </div>
 </details>
               <p id="i3-3"><b>成本：n 個 token，n² 個分數。</b>每一層、每個 head 都要替每一對 token 算一個分數，n 個 token 就是 n × n 個，所以 <strong>context 加倍，分數變 4 倍</strong>。課程估每一層約 4n²d 次運算，QKᵀ 和 AV 各佔一半：一個 head 的一個分數是 128 個乘積的和，約 2 × 128 次運算，64 個 head 合起來是 2 × 8,192 = 2d，n² 對 token 就是 2n²d；AV 依權重加總 v，也是 2n²d。Causal mask 讓實際要算的約少一半。如果把 S 整個存下來，n = 8,192 時是 8,192² × 64 個 head × 80 層 × 2 byte，約 690 GB，比 model 本身還大。所以實作上用 FlashAttention 一塊一塊算 softmax，從不存下完整的 S；它怎麼做到，見 L10〈<a href="l10.html#i7-3">FlashAttention</a>〉。</p>
@@ -2087,7 +2087,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
             </figure>
     <p>LLaDA（2025）是從頭訓練的 8B masked diffusion model，slides 說用了 2.3T token，表現和 Llama 3 8B 接近。</p>
     <p>Dream 7B（2025）從 Qwen2.5 7B 的權重開始，網路本身還是 Transformer。</p>
-    <p>課程的延伸閱讀頁說，LLaDA 和 KV caching 不相容。生成 n 個 token 不再需要 n 步，步數變成延遲與品質的取捨。</p>
+    <p>課程網站的 readings 頁說，LLaDA 和 KV caching 不相容。生成 n 個 token 不再需要 n 步，步數變成延遲與品質的取捨。</p>
   </div>
 </details>
               <details class="gloss" id="n-mtp">
@@ -2261,192 +2261,27 @@ T=1.5: P(stop)=0.081  mean length  12.2  hit max_tokens 0%</code></pre></figure>
         </div>
       </section>
 
-      <!-- ===================== 3 延伸閱讀 ===================== -->
-      <section class="wrap" id="wrap" aria-label="延伸閱讀">
-        <p class="kicker">3 · 延伸閱讀</p>
-        <h2>延伸閱讀</h2>
-        <p class="rg-intro">教授為這一講列了 15 篇（<a href="https://cs2680.com/readings/oct-19.html" target="_blank" rel="noopener">官方清單 10/19 ↗</a>），分七組：BPE、Transformer 的原始論文與兩篇導讀、現在 decoder block 的兩個零件、Llama 3 的完整規格、一篇算帳的部落格、四篇 MoE，以及三篇不走固定深度自迴歸的新方向。官方頁面沒有必讀與選讀之分，等級是本站的建議。「必讀」與「推薦」的 4 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和本文哪幾章有關，以及原文哪幾節值得看。</p>
-        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
-        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 60 分鐘：先讀 The Illustrated Transformer 的 self-attention 與 multi-head 兩節，再讀 Transformer Inference Arithmetic 的 kv cache、capacity、flops counting 三節。前者給形狀，後者給帳。</p></div></div>
-        <h3 class="rg-h">從文字到 token <small>From text to tokens</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/1508.07909" target="_blank" rel="noopener">Neural Machine Translation of Rare Words with Subword Units</a><span class="rg-meta">Sennrich 等 · 論文 · 2015 · 挑段約 15 分</span></div>
-          <p class="rg-s">BPE 的出處：從字元開始，反覆合併最常相鄰的一對，用有限的詞彙處理罕見字。第 8 章的 byte-level BPE 是它的延伸。</p>
-          <p class="rg-g"><b>導讀</b>讀演算法那一節和那段短短的 Python。問：詞彙表大一點、小一點，各付出什麼？對照第 8 章 Llama 2 到 Llama 3 的例子。</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">Transformer <small>The Transformer</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Attention Is All You Need</a><span class="rg-meta">Vaswani 等 · 論文 · 2017 · 挑段約 25 分</span></div>
-          <p class="rg-s">Transformer 的原始論文：只用 attention 的 encoder-decoder。看 3.2 節的式子和 Table 1 的 O(n² · d)。</p>
-          <p class="rg-g"><b>導讀</b>帶著第 3 章的式子去讀 3.2 節。問：哪些運算是矩陣乘法？哪些東西會在 token 之間留下來？</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>提出 Transformer：完全用 attention、不用 recurrence 和 convolution 的 encoder-decoder。整段可以平行算，訓練快很多；WMT 2014 英翻德 28.4 BLEU，英翻法 41.8 BLEU。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>第 3 章〈<a href="#i3">Attention</a>〉的 softmax(QKᵀ / √dk)V、multi-head、causal mask，都出自這篇的 3.2 節。它的 Table 1 把 self-attention 每層的成本寫成 O(n² · d)，就是第 3 章的「n 個 token，n² 個分數」。當時的 base model 是 512 維、8 個 head、6 層，形狀和今天一樣，只是放大。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>Scaled dot-product attention。</b>Attention(Q, K, V) = softmax(QKᵀ / √dk)V。除以 √dk，因為維度大時內積變大，softmax 會落到梯度極小的區域。</li>
-              <li><b>Multi-head。</b>8 個 head，每個 dk = dv = 64；總運算和一個全寬的 head 差不多。</li>
-              <li><b>Attention 的三種用法。</b>Encoder 的 self-attention、decoder 的 self-attention（用 mask 擋住後面的位置）、encoder-decoder attention。</li>
-              <li><b>為什麼用 self-attention。</b>每層 O(n² · d)，但循序的步驟是 O(1)；n 小於 d 時，比 recurrent 層快。</li>
-              <li><b>規模與訓練。</b>Base model 6 層、d_model 512、d_ff 2,048；8 張 P100，base 約 12 小時，big 約 3.5 天。</li>
-              <li><b>Head 數有甜蜜點。</b>只用 1 個 head 比最好的設定低 0.9 BLEU，head 太多也會變差；16 個 head 和 8 個打平，32 個就掉下來。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>第 5 節訓練的細節（optimizer、regularization）；6.3 節的英文句法分析。</li>
-              <li><b>值得看原文：</b>3.2 節和 Figure 2 的兩張圖；第 4 節的 Table 1；6.2 節 Table 3 的 A 列，看 head 數怎麼影響品質。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「O(n²) 是 2017 年的老問題，現在已經解決了。」FlashAttention 讓 n² 的分數矩陣不必存下來，運算量還是隨 n² 成長；KV cache 也照樣隨 n 成長。第 6 章的架構，就是在處理這兩件事。</p></div></div>
-          </div></details>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://jalammar.github.io/illustrated-transformer/" target="_blank" rel="noopener">The Illustrated Transformer</a><span class="rg-meta">Jay Alammar · 部落格 · 2018 · 約 30 分</span></div>
-          <p class="rg-s">一張張圖走過 Transformer 的每一個張量，是讀論文之前理解形狀最快的方法。</p>
-          <p class="rg-g"><b>導讀</b>一邊讀，一邊把它的 512 維、8 個 head 換成 Llama 3 70B 的 8,192 維、64 個 head。問：圖上哪些部分，今天的 decoder-only LLM 用不到？</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>用一張張圖，把 2017 年的 Transformer 從輸入走到輸出：embedding、self-attention 的 q、k、v、multi-head、位置編碼、residual，再到 decoder 與最後的 linear 加 softmax。它是理解形狀最快的路，但畫的是翻譯用的 encoder-decoder。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>第 2 章〈<a href="#i2">Model 的骨架</a>〉與第 3 章〈<a href="#i3">Attention</a>〉的 Q、K、V、√dk、softmax、multi-head，在這篇都有逐步的圖。差別在規模與結構：它的 vector 是 512 維、8 個 head，Llama 3 70B 是 8,192 維、64 個 head；它有 encoder，今天的 LLM 只用 decoder 那一半。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>每個字先變成 512 維的 vector。</b>只有最底層吃 embedding，上面每一層吃下面一層的輸出。</li>
-              <li><b>Self-attention 分六步。</b>乘三個矩陣得到 64 維的 q、k、v；q 和每個 k 內積打分；除以 8（√64）；softmax；用分數加權 v；加總得到輸出。</li>
-              <li><b>整段一起算就是矩陣乘法。</b>把 vector 疊成 X，乘 WQ、WK、WV 得到 Q、K、V，六步變成一條式子。</li>
-              <li><b>Multi-head 是 8 組獨立的 q、k、v。</b>8 個輸出接起來，再乘 WO 混回一個矩陣；不同的 head 會注意不同的字。</li>
-              <li><b>位置要另外加。</b>Attention 不知道順序，所以每個 embedding 加上一個位置編碼；每個子層也都有 residual 和 layer normalization。</li>
-              <li><b>Decoder 一次產生一個字。</b>產生的字送回輸入；它的 self-attention 把未來的位置設成 −∞。最後的 linear 加 softmax 輸出整個詞彙表的機率。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>開頭的 black box 比喻；「Recap of Training」與「The Loss Function」兩節，講的是訓練。</li>
-              <li><b>值得看原文：</b>「Self-Attention in Detail」的六步圖，和第 3 章的式子逐一對照；「The Beast With Many Heads」把 8 個 head 接起來的大圖；「The Decoder Side」的動畫。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「LLM 就長這張圖的樣子。」圖上是 2017 年翻譯用的 encoder-decoder，有 encoder 和 encoder-decoder attention，位置用 sinusoidal。今天的 LLM 只留 decoder 並加上 causal mask，常改用 RMSNorm、RoPE、GQA。作者在頁首也說，新的內容寫在他的書裡。</p></div></div>
-          </div></details>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://nlp.seas.harvard.edu/annotated-transformer/" target="_blank" rel="noopener">The Annotated Transformer</a><span class="rg-meta">Harvard NLP · 程式導讀 · 2018 · 挑段約 30 分</span></div>
-          <p class="rg-s">把論文逐段配上可以執行的程式，補上論文沒寫明的細節。</p>
-          <p class="rg-g"><b>導讀</b>只讀 attention 和 multi-head 那兩段程式，對照第 3 章的形狀。問：causal mask 寫在程式的哪一行？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">現在的 decoder block <small>The decoder block in current models</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://arxiv.org/abs/1910.07467" target="_blank" rel="noopener">Root Mean Square Layer Normalization</a><span class="rg-meta">Zhang、Sennrich · 論文 · 2019 · 約 10 分</span></div>
-          <p class="rg-s">RMSNorm：拿掉 LayerNorm 減平均的那一步，只除以均方根；論文報告不同 model 的執行時間少 7% 到 64%。</p>
-          <p class="rg-g"><b>導讀</b>第 2 章說 norm 的參數不到萬分之一。問：參數這麼少，為什麼它的速度還值得在意？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://arxiv.org/abs/2002.05202" target="_blank" rel="noopener">GLU Variants Improve Transformer</a><span class="rg-meta">Noam Shazeer · 論文 · 2020 · 約 10 分</span></div>
-          <p class="rg-s">把 FFN 換成有 gate 的版本，品質比 ReLU、GELU 好。SwiGLU 有三個矩陣，所以第 2 章的 FFN 是 3 · d · dff。</p>
-          <p class="rg-g"><b>導讀</b>問：FFN 從兩個矩陣變成三個，參數要維持一樣多，中間的寬度該怎麼調？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">完整規格的 dense model <small>A dense model sized end to end</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">The Llama 3 Herd of Models</a><span class="rg-meta">Meta · 論文 · 2024 · 只查表約 10 分</span></div>
-          <p class="rg-s">課程算帳用的 model。Table 3 列出 8B、70B、405B 的層數、寬度、FFN 寬度、head 與 KV head 的數量。</p>
-          <p class="rg-g"><b>導讀</b>不用讀完，查 Table 3，用第 2 章的公式自己算一次 70B 的參數。問：405B 也只有 8 個 KV head，每個 token 的 KV cache 是多少？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">權重、運算與 KV cache <small>Weights, FLOPs, and the KV cache</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://kipp.ly/transformer-inference-arithmetic/" target="_blank" rel="noopener">Transformer Inference Arithmetic</a><span class="rg-meta">kipply · 部落格 · 2022 · 約 40 分</span></div>
-          <p class="rg-s">從第一原理算權重的 byte、每個 token 的運算、KV cache，再和 GPU 的算力與頻寬比較。第 4 章的原型。</p>
-          <p class="rg-g"><b>導讀</b>用 Llama 3 70B 重算它的 capacity 一節：扣掉權重，2 張 H200 放得下多少 token？和第 4 章的 43 萬對一下。</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 40 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>用第一原理估 Transformer 推論的成本：每個 token 的 KV cache 幾 byte、一張卡放得下多少 token、每個 token 要多少運算、什麼時候卡在頻寬、什麼時候卡在算力。最後拿實測對照，看估算差在哪裡。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>這篇是第 4 章〈<a href="#i4">三個數字</a>〉的原型：KV cache 的公式、每個 token 約 2 × 參數次運算、扣掉權重剩多少 token，都是這篇的算法。它寫於 2022 年，KV cache 用 MHA 的 head 數算，今天要換成第 3 章〈<a href="#i3">Attention</a>〉的 KV head 數。頻寬與算力的部分見 L10。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>KV cache 每個 token 是 2 · 2 · n_layers · n_heads · d_head byte。</b>第一個 2 是 k 和 v，第二個 2 是 16 bit。沒有 cache，取樣的時間隨長度的平方成長。</li>
-              <li><b>容量的算法。</b>52B 的 model 權重約 104 GB，至少要 3 張 40 GB 的 A100；剩約 16 GB，每個 token 約 0.002 GB，放得下約 8,000 個 token。</li>
-              <li><b>每個 token 約 2 × 參數次運算。</b>每個參數在矩陣乘 vector 裡做一次乘加；每層的權重約 12 · d_model²。</li>
-              <li><b>小 batch 卡頻寬，大 batch 卡算力。</b>A100 是 312 TFLOPS、1.5 TB/s，比值約 208；batch 小於它時，時間由讀權重決定。</li>
-              <li><b>Softmax、layernorm 看的是 byte，不是 FLOPs。</b>這類運算在 52B 的 model 約佔 5% 的時間。</li>
-              <li><b>和實測對照。</b>13B 的 model 單卡估 16.8 ms，實測 22.0 ms；修正頻寬效率與中間運算後約 20.7 ms。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>「model parallelism」的通訊量細節，多 GPU 是後面講次的主題；結尾的練習題。</li>
-              <li><b>值得看原文：</b>「kv cache」與「capacity」兩節，和第 4 章的 token 預算一起讀；「flops counting」逐項數出 12 · d_model²；「comparing against real benchmarks」看估算差在哪裡。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「KV cache 要用 head 數算。」文章寫在 GQA 普及之前。Llama 3 70B 有 64 個 query head，但只有 8 個 KV head；用 64 算會高估 8 倍。</p></div></div>
-          </div></details>
-          </li>
-        </ol>
-        <h3 class="rg-h">Mixture of experts <small>Mixture of experts</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2101.03961" target="_blank" rel="noopener">Switch Transformer</a><span class="rg-meta">Fedus 等 · 論文 · 2021 · 挑段約 20 分</span></div>
-          <p class="rg-s">簡化 MoE 的 routing，把 model 放大到上兆個參數；和 T5 比，同樣的運算下預訓練最多快 7 倍。</p>
-          <p class="rg-g"><b>導讀</b>讀 routing 與負載平衡的部分。問：一個 expert 收到太多 token 時怎麼辦？這對 serving 的負載平衡意味著什麼？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2401.04088" target="_blank" rel="noopener">Mixtral of Experts</a><span class="rg-meta">Jiang 等 · 論文 · 2024 · 約 30 分</span></div>
-          <p class="rg-s">8 個 expert 選 2 個的 open-weight MoE：47B 個參數，每個 token 用 13B，追平 Llama 2 70B。</p>
-          <p class="rg-g"><b>導讀</b>先看架構表，再看 routing 的分析。問：expert 沒有依主題分工，對 serving 的負載是好事還是壞事？</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>Mixtral 8x7B 每一層有 8 個 FFN expert，router 替每個 token 挑 2 個。每個 token 可用 47B 個參數，實際只用 13B；多數 benchmark 追平或超過 Llama 2 70B，數學、程式、多語言明顯較好。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>第 5 章〈<a href="#i5">MoE</a>〉的「記憶體跟著總參數，運算跟著 active 參數」，這篇寫得最直接：active 參數決定推論的運算，總參數決定記憶體。第 5 章的表裡 Mixtral 是 46.7B 與 12.9B，來自 slides；論文寫成 47B 與 13B。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>架構。</b>32 層、4,096 維、32 個 query head、8 個 KV head、32K context、32,000 個 token 的詞彙；每層 8 個 expert，每個 token 用 2 個。</li>
-              <li><b>Gate 是 Softmax(TopK(x · Wg))。</b>只對前 2 名做 softmax，兩個 expert 的輸出加權相加；expert 是 SwiGLU 的 FFN。</li>
-              <li><b>成績。</b>MMLU 70.6% 對 Llama 2 70B 的 69.9%，HumanEval 40.2% 對 29.3%，GSM8K 74.4% 對 69.6%；HellaSwag、WinoGrande、TriviaQA 則是 Llama 2 70B 較高。</li>
-              <li><b>Serving。</b>記憶體看總參數；用 expert parallelism 時要注意負載平衡，避免某張 GPU 過載。</li>
-              <li><b>Expert 沒有依主題分工。</b>只有數學稍微不同；routing 比較跟著語法，例如 Python 的 self 和縮排常送到同一個 expert。</li>
-              <li><b>連續的 token 常選同一個 expert。</b>第 15、31 層明顯高於隨機，這影響負載平衡與快取。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>長 context 的 passkey 測試、bias 的 benchmark、instruct 版本的訓練。</li>
-              <li><b>值得看原文：</b>第 2 節的架構表與 gate 的式子；Table 2 與 Llama 2 70B 的逐項比較；第 5 節 routing analysis 的圖。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 20 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「8x7B 就是 56B 個參數。」8 個 expert 只取代 FFN，attention 和 embedding 共用，所以總數是 47B。記憶體要放 47B，每個 token 的運算只看 13B。</p></div></div>
-          </div></details>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2401.06066" target="_blank" rel="noopener">DeepSeekMoE</a><span class="rg-meta">Dai 等 · 論文 · 2024 · 挑段約 20 分</span></div>
-          <p class="rg-s">把 expert 切得更細、多挑幾個，再固定幾個 shared expert；16B 的版本用約 40% 的運算追上 LLaMA2 7B。</p>
-          <p class="rg-g"><b>導讀</b>讀兩個策略的那一節。問：expert 切得更細，多 GPU 時每個 token 要送的訊息變多還是變少？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2412.19437" target="_blank" rel="noopener">DeepSeek-V3 Technical Report</a><span class="rg-meta">DeepSeek-AI · 技術報告 · 2024 · 挑段約 30 分</span></div>
-          <p class="rg-s">671B 個參數、每個 token 用 37B 的 MoE，用 MLA 縮小 KV cache，並用 multi-token prediction 當訓練目標。</p>
-          <p class="rg-g"><b>導讀</b>讀 2.1 節的 MLA 與 DeepSeekMoE，對照第 5、6 章。問：MLA 每層存 512 + 64 個數，和 GQA 比省在哪裡、多花在哪裡？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">不只是固定深度的自迴歸 <small>Beyond a fixed-depth autoregressive stack</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2502.05171" target="_blank" rel="noopener">Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach</a><span class="rg-meta">Geiping 等 · 論文 · 2025 · 挑段約 20 分</span></div>
-          <p class="rg-s">把一個 block 重複跑，推論時決定跑幾圈；3.5B 個參數、800B token，運算最多等同 50B 參數。</p>
-          <p class="rg-g"><b>導讀</b>對照第 10 章的 looped transformer。問：圈數變成每個 request 都能調的參數時，scheduler 要多知道什麼？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2502.09992" target="_blank" rel="noopener">Large Language Diffusion Models</a><span class="rg-meta">Nie 等 · 論文 · 2025 · 挑段約 20 分</span></div>
-          <p class="rg-s">LLaDA：從頭訓練的 8B masked diffusion model，in-context learning 和 LLaMA3 8B 有得比；課程的清單說它和 KV caching 不相容。</p>
-          <p class="rg-g"><b>導讀</b>讀生成的那一節。問：不能用 KV cache 時，第 4 章的哪一個數字變成瓶頸？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2508.15487" target="_blank" rel="noopener">Dream 7B: Diffusion Large Language Models</a><span class="rg-meta">Ye 等 · 論文 · 2025 · 挑段約 20 分</span></div>
-          <p class="rg-s">從 autoregressive model 的權重開始訓練的 diffusion LM，能任意順序生成、補中間的文字，並在品質與速度之間調整。</p>
-          <p class="rg-g"><b>導讀</b>問：步數變成每個 request 的延遲與品質設定時，你會怎麼訂 SLA？</p>
-          </li>
+      <!-- ===================== 3 原文出處 ===================== -->
+      <section class="wrap" id="wrap" aria-label="原文出處">
+        <p class="kicker">3 · 原文出處</p>
+        <h2>原文出處</h2>
+        <p class="rg-intro">教授為這一講列的 15 篇閱讀（<a href="https://cs2680.com/readings/oct-19.html" target="_blank" rel="noopener">官方清單 10/19 ↗</a>）。要對照原文時從這裡找，不必讀；本文引用的其他來源列在頁尾。</p>
+        <ol class="rg rg-src">
+          <li><a class="rg-t" href="https://arxiv.org/abs/1508.07909" target="_blank" rel="noopener">Neural Machine Translation of Rare Words with Subword Units</a><span class="rg-meta">Sennrich 等 · 論文 · 2015</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Attention Is All You Need</a><span class="rg-meta">Vaswani 等 · 論文 · 2017</span></li>
+          <li><a class="rg-t" href="https://jalammar.github.io/illustrated-transformer/" target="_blank" rel="noopener">The Illustrated Transformer</a><span class="rg-meta">Jay Alammar · 部落格 · 2018</span></li>
+          <li><a class="rg-t" href="https://nlp.seas.harvard.edu/annotated-transformer/" target="_blank" rel="noopener">The Annotated Transformer</a><span class="rg-meta">Harvard NLP · 2018</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/1910.07467" target="_blank" rel="noopener">Root Mean Square Layer Normalization</a><span class="rg-meta">Zhang、Sennrich · 論文 · 2019</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2002.05202" target="_blank" rel="noopener">GLU Variants Improve Transformer</a><span class="rg-meta">Noam Shazeer · 論文 · 2020</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">The Llama 3 Herd of Models</a><span class="rg-meta">Meta · 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://kipp.ly/transformer-inference-arithmetic/" target="_blank" rel="noopener">Transformer Inference Arithmetic</a><span class="rg-meta">kipply · 部落格 · 2022</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2101.03961" target="_blank" rel="noopener">Switch Transformer</a><span class="rg-meta">Fedus 等 · 論文 · 2021</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2401.04088" target="_blank" rel="noopener">Mixtral of Experts</a><span class="rg-meta">Jiang 等 · 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2401.06066" target="_blank" rel="noopener">DeepSeekMoE</a><span class="rg-meta">Dai 等 · 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2412.19437" target="_blank" rel="noopener">DeepSeek-V3 Technical Report</a><span class="rg-meta">DeepSeek-AI · 技術報告 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2502.05171" target="_blank" rel="noopener">Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach</a><span class="rg-meta">Geiping 等 · 論文 · 2025</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2502.09992" target="_blank" rel="noopener">Large Language Diffusion Models</a><span class="rg-meta">Nie 等 · 論文 · 2025</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2508.15487" target="_blank" rel="noopener">Dream 7B: Diffusion Large Language Models</a><span class="rg-meta">Ye 等 · 論文 · 2025</span></li>
         </ol>
 
         <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>

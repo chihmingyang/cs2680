@@ -18,7 +18,7 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 
 1. `.claude/skills/idea-first-lecture/SKILL.md`：流程。第 2、3、4、6 步照做；第 1 步的開工已做好；第 5 步（保留段落、修錨點）不適用，這堂沒有舊頁面；第 7 步由主線做。
 2. `guide/STYLE_ARTICLE.md`：第 0 節（`sed -n 10,23p`）是 v7 規則，衝突時它優先。再讀第 1 節定位、第 3 節頁面結構、第 4 節（名詞註 `details.gloss`、`a.tm`、並列項目、問題討論、動手試試、延伸閱讀）、第 5 節語言、第 6 節圖（v6.0 畫法）、第 6b 節 code snippet、第 6c 節紅字。第 3 行是很長的更新紀錄，不用讀。
-3. `guide/STYLE_BASIC.md` 全文（v7 一節優先）與 `guide/STYLE_DIGEST.md` 全文。
+3. `guide/STYLE_BASIC.md` 全文（v7 一節優先）。
 4. 範本：`python3 -I tools/page_text.py docs/l05.html` 看文字與章法；markup 用 Grep／Read（offset、limit）看 `docs/l05.html` 的 `tldr`、`header.part-head`、`nav.map`、第 3、4 章、`#qset-basic`、`#qset-adv`、`.quiz`、`#s-try`、`#wrap`。L8（`docs/l08.html`）的基礎題也是 v7 重出的，可以對照。頁面 200–350 KB，不要整個 Read。
 5. `slides/lXX-notes.md` 全文：事實的來源，最後有 readings 清單。
 6. `guide/V7_DECISIONS.md`：別堂怎麼排份量、補、刪，照同樣的思路。
@@ -87,11 +87,9 @@ meta 的「註」標籤照頁面實際有的收合內容改（L5 是「前情註
 
 2–4 個 `details.ex`。Part II 的講次多半是觀念類：估算、設計、用 python 驗證一個現象，附解答與輸出。程式碼要在這個環境實際跑過，輸出照實貼上；需要 GPU 或沒辦法在這裡跑的（`nvidia-smi`、`nsys`），寫明「本文沒有實際跑過」並依官方文件寫。
 
-## 延伸閱讀
+## 原文出處（2026-11-13 之前叫延伸閱讀）
 
-- 清單在 `slides/lXX-notes.md` 最後（教授選的，頁面沒有必讀／選讀之分）。等級（必讀、推薦、選讀、查閱）、時間估計、導讀切入點是本站的建議。照課程網站的分組寫 `h3.rg-h`。
-- 必讀 2–3 篇、推薦 2–3 篇，每篇照 `STYLE_DIGEST.md` 寫摘要（要真的讀原文；讀不到就降成選讀，或在片段開頭的註解寫明讀到哪裡）。其他篇只寫 `rg-s` 與 `rg-g`。v7 的摘要「跟這堂課的關係」連到本頁的章〈`#iN`〉，不寫 slide 頁碼。
-- 摘要可以先寫成 `notes/digests/lXX-rN.html`，用 `tools/insert_digest.py` 插進組好的頁面（它也會改 `rg-intro` 的篇數句），或直接寫進 `wrap.html`。用 insert_digest 的話，之後重跑 assemble 會蓋掉，要再插一次；最後一律跑 `insert_digest.py docs/lXX.html notes/digests/lXX-r*.html --check`。
+- 清單在 `slides/lXX-notes.md` 最後。只列標題、連結和 `rg-meta`（作者或出處 · 類型 · 年份），放在一個 `ol.rg.rg-src`，不分組、不寫等級、時間、導讀、摘要。格式見 `STYLE_ARTICLE.md`〈3 原文出處〉。
 - `p.rg-intro` 寫教授列了幾篇、官方清單連結。
 
 ## 檢查

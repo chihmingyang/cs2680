@@ -2,7 +2,7 @@
 """Final audit across all lecture pages (read-only).
 
 Checks per page:
-  - internal links: lXX.html / index.html / l02-readings.html targets exist; #anchors exist
+  - internal links: lXX.html / index.html targets exist; #anchors exist
     in the page; lXX.html#anchor targets exist in that page
   - every <svg> that is not aria-hidden has role="img" and a non-empty aria-label
   - no literal colors inside svg (fill="#..", stroke="#..", style=...color)

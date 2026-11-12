@@ -13,7 +13,7 @@ Usage:
 What you get (docs/lXX.html; refuses to overwrite unless --force):
   head, topbar (← previous lecture, "LX / N"), this page's sidenav (built like add_lecture.py would),
   main[data-lecture][data-pdf][data-pages-total], lecture-head (eyebrow with「· 依想法重組」, h1, en-title, meta),
-  placeholder tldr and #s-ideas, #s-try, #wrap (rg-legend, readmark),
+  placeholder tldr and #s-ideas, #s-try, #wrap (原文出處, readmark),
   pager (← previous, 回總覽), fineprint, scripts. Copied from docs/l05.html, the v7 template.
 
 Then write the fragments in notes/lXX/ (head.html, i1.html…, tldr.html, fineprint.html, and the whole
@@ -64,7 +64,6 @@ def main():
                     rf'\1\n      <a href="{prev["key"]}.html" rel="prev">← L{prev["no"]}</a>\n'
                     rf'      <span class="here">L{no} / {no}</span>\n    \2', topbar, flags=re.S)
     aside = tpl[tpl.index('<aside class="sidenav"'):tpl.index("</aside>") + len("</aside>")]
-    legend = re.search(r'[ \t]*<p class="rg-legend">.*?</p>\n', tpl).group(0)
     readmark = re.search(r'[ \t]*<label class="readmark">.*?</label>\n', tpl).group(0)
 
     if len(a.pdf) == 1:
@@ -135,12 +134,12 @@ def main():
         </div>
       </section>
 
-      <!-- ===================== 3 延伸閱讀 ===================== -->
-      <section class="wrap" id="wrap" aria-label="延伸閱讀">
-        <p class="kicker">3 · 延伸閱讀</p>
-        <h2>延伸閱讀</h2>
+      <!-- ===================== 3 原文出處 ===================== -->
+      <section class="wrap" id="wrap" aria-label="原文出處">
+        <p class="kicker">3 · 原文出處</p>
+        <h2>原文出處</h2>
         <p class="rg-intro">（待寫）</p>
-{legend}        <ol class="rg">
+        <ol class="rg rg-src">
         </ol>
 
 {readmark}      </section>

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261112d">
+<link rel="stylesheet" href="styles.css?v=20261113a">
 </head>
 <body>
 <header class="topbar">
@@ -46,7 +46,7 @@
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
 <li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l10.html" aria-current="page"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">GPU 的設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Latency 和 throughput 是兩個目標</a></li><li><a class="sn-sub2" href="#i1-2">GPU 怎麼藏住等待：切換 warp</a></li><li><a class="sn-sub2" href="#i1-3">SIMT：程式為一個 thread 寫，硬體一次跑 32 個</a></li><li><a class="sn-sub2" href="#i1-4">Divergence：同一個 warp 走不同分支，兩邊都要走一次</a></li><li><a class="sn-sub2" href="#i1-5">四個取捨</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Roofline</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">三個單位</a></li><li><a class="sn-sub2" href="#i2-2">三個規格決定每顆 GPU 的上限</a></li><li><a class="sn-sub2" href="#i2-3">一條公式</a></li><li><a class="sn-sub2" href="#i2-4">Arithmetic intensity 和 ridge</a></li><li><a class="sn-sub2" href="#i2-5">四種常見的 op</a></li><li><a class="sn-sub2" href="#i2-6">趨勢：精度越低，ridge 越往右</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Decode</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Batch 1：每個 weight 只用一次</a></li><li><a class="sn-sub2" href="#i3-2">三個槓桿</a></li><li><a class="sn-sub2" href="#i3-3">Batch 拉高 weights 的 intensity，拉不動 attention</a></li><li><a class="sn-sub2" href="#i3-4">Context 越長，每一步越慢</a></li><li><a class="sn-sub2" href="#i3-5">本文補的：MoE 會把 batch 分給各個 expert</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">晶片裡面</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">H200 的版面</a></li><li><a class="sn-sub2" href="#i4-2">一個 SM 分成四個 partition</a></li><li><a class="sn-sub2" href="#i4-3">Tensor Core：一條指令做一小塊矩陣乘法</a></li><li><a class="sn-sub2" href="#i4-4">記憶體階層：越近越快，也越小</a></li><li><a class="sn-sub2" href="#i4-5">Little's law：頻寬要靠路上的 bytes</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">量測</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">nvidia-smi 量的是「有沒有 kernel 在跑」</a></li><li><a class="sn-sub2" href="#i5-2">MFU：prefill 和訓練看算力用了多少</a></li><li><a class="sn-sub2" href="#i5-3">MBU：decode 看頻寬用了多少</a></li><li><a class="sn-sub2" href="#i5-4">四個 counter，各看一個單元</a></li><li><a class="sn-sub2" href="#i5-5">讀 counter：先找哪個單元在忙</a></li><li><a class="sn-sub2" href="#i5-6">先看 timeline，再看 kernel</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">GPU 程式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">CPU 和 GPU 是兩台機器</a></li><li><a class="sn-sub2" href="#i6-2">Kernel 為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-3">Graph compiler：你寫 model，compiler 寫 kernel</a></li><li><a class="sn-sub2" href="#i6-4">Tile language：為一整塊寫，不為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-5">五層抽象：越往下，控制越多，成本越高</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Kernel 之內</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">Fusion：中間值不回 HBM</a></li><li><a class="sn-sub2" href="#i7-2">Attention 的問題：n × n 的中間值</a></li><li><a class="sn-sub2" href="#i7-3">FlashAttention：一塊一塊算，S 不離開晶片</a></li><li><a class="sn-sub2" href="#i7-4">Online softmax：不看完整列也能算對</a></li><li><a class="sn-sub2" href="#i7-5">四代 FlashAttention：每一代修上一代的瓶頸</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Kernel 之間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">SM 之間：最後一輪只用到兩成的 SM</a></li><li><a class="sn-sub2" href="#i8-2">Split-KV：decode 的 attention 要沿 KV cache 切</a></li><li><a class="sn-sub2" href="#i8-3">Launch 之間：CUDA Graphs、PDL 與 megakernel</a></li><li><a class="sn-sub2" href="#i8-4">GPU 之間：把通訊藏在計算後面</a></li><li><a class="sn-sub2" href="#i8-5">本文的判斷：多數團隊選 engine，不寫這些</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">AI 寫的 kernel</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">本文補的：2025–2026 年的五個案例</a></li><li><a class="sn-sub2" href="#i9-2">漏洞集中在五個地方</a></li><li><a class="sn-sub2" href="#i9-3">Speed of light：roofline 給的時間下限</a></li><li><a class="sn-sub2" href="#i9-4">本文的判斷：驗收一個 AI 寫的 kernel，五個檢查</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">一張卡之外</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">Scale-up 和 scale-out</a></li><li><a class="sn-sub2" href="#i10-2">出了這台機器，慢一個數量級</a></li><li><a class="sn-sub2" href="#i10-3">故障：16K 張 GPU，約每 3 小時中斷一次</a></li><li><a class="sn-sub2" href="#i10-4">電力：一櫃 120 kW，要液冷</a></li><li><a class="sn-sub2" href="#i10-5">水：用掉的和取用的不一樣</a></li></ol></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l10.html" aria-current="page"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">GPU 的設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Latency 和 throughput 是兩個目標</a></li><li><a class="sn-sub2" href="#i1-2">GPU 怎麼藏住等待：切換 warp</a></li><li><a class="sn-sub2" href="#i1-3">SIMT：程式為一個 thread 寫，硬體一次跑 32 個</a></li><li><a class="sn-sub2" href="#i1-4">Divergence：同一個 warp 走不同分支，兩邊都要走一次</a></li><li><a class="sn-sub2" href="#i1-5">四個取捨</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Roofline</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">三個單位</a></li><li><a class="sn-sub2" href="#i2-2">三個規格決定每顆 GPU 的上限</a></li><li><a class="sn-sub2" href="#i2-3">一條公式</a></li><li><a class="sn-sub2" href="#i2-4">Arithmetic intensity 和 ridge</a></li><li><a class="sn-sub2" href="#i2-5">四種常見的 op</a></li><li><a class="sn-sub2" href="#i2-6">趨勢：精度越低，ridge 越往右</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Decode</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Batch 1：每個 weight 只用一次</a></li><li><a class="sn-sub2" href="#i3-2">三個槓桿</a></li><li><a class="sn-sub2" href="#i3-3">Batch 拉高 weights 的 intensity，拉不動 attention</a></li><li><a class="sn-sub2" href="#i3-4">Context 越長，每一步越慢</a></li><li><a class="sn-sub2" href="#i3-5">本文補的：MoE 會把 batch 分給各個 expert</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">晶片裡面</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">H200 的版面</a></li><li><a class="sn-sub2" href="#i4-2">一個 SM 分成四個 partition</a></li><li><a class="sn-sub2" href="#i4-3">Tensor Core：一條指令做一小塊矩陣乘法</a></li><li><a class="sn-sub2" href="#i4-4">記憶體階層：越近越快，也越小</a></li><li><a class="sn-sub2" href="#i4-5">Little's law：頻寬要靠路上的 bytes</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">量測</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">nvidia-smi 量的是「有沒有 kernel 在跑」</a></li><li><a class="sn-sub2" href="#i5-2">MFU：prefill 和訓練看算力用了多少</a></li><li><a class="sn-sub2" href="#i5-3">MBU：decode 看頻寬用了多少</a></li><li><a class="sn-sub2" href="#i5-4">四個 counter，各看一個單元</a></li><li><a class="sn-sub2" href="#i5-5">讀 counter：先找哪個單元在忙</a></li><li><a class="sn-sub2" href="#i5-6">先看 timeline，再看 kernel</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">GPU 程式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">CPU 和 GPU 是兩台機器</a></li><li><a class="sn-sub2" href="#i6-2">Kernel 為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-3">Graph compiler：你寫 model，compiler 寫 kernel</a></li><li><a class="sn-sub2" href="#i6-4">Tile language：為一整塊寫，不為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-5">五層抽象：越往下，控制越多，成本越高</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Kernel 之內</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">Fusion：中間值不回 HBM</a></li><li><a class="sn-sub2" href="#i7-2">Attention 的問題：n × n 的中間值</a></li><li><a class="sn-sub2" href="#i7-3">FlashAttention：一塊一塊算，S 不離開晶片</a></li><li><a class="sn-sub2" href="#i7-4">Online softmax：不看完整列也能算對</a></li><li><a class="sn-sub2" href="#i7-5">四代 FlashAttention：每一代修上一代的瓶頸</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Kernel 之間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">SM 之間：最後一輪只用到兩成的 SM</a></li><li><a class="sn-sub2" href="#i8-2">Split-KV：decode 的 attention 要沿 KV cache 切</a></li><li><a class="sn-sub2" href="#i8-3">Launch 之間：CUDA Graphs、PDL 與 megakernel</a></li><li><a class="sn-sub2" href="#i8-4">GPU 之間：把通訊藏在計算後面</a></li><li><a class="sn-sub2" href="#i8-5">本文的判斷：多數團隊選 engine，不寫這些</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">AI 寫的 kernel</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">本文補的：2025–2026 年的五個案例</a></li><li><a class="sn-sub2" href="#i9-2">漏洞集中在五個地方</a></li><li><a class="sn-sub2" href="#i9-3">Speed of light：roofline 給的時間下限</a></li><li><a class="sn-sub2" href="#i9-4">本文的判斷：驗收一個 AI 寫的 kernel，五個檢查</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">一張卡之外</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">Scale-up 和 scale-out</a></li><li><a class="sn-sub2" href="#i10-2">出了這台機器，慢一個數量級</a></li><li><a class="sn-sub2" href="#i10-3">故障：16K 張 GPU，約每 3 小時中斷一次</a></li><li><a class="sn-sub2" href="#i10-4">電力：一櫃 120 kW，要液冷</a></li><li><a class="sn-sub2" href="#i10-5">水：用掉的和取用的不一樣</a></li></ol></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
@@ -65,9 +65,9 @@
       <li><span class="k">Slides 10/21</span><a href="https://cs2680.com/slides/10_llm_serving_basics_2a.pdf" target="_blank" rel="noopener">10_llm_serving_basics_2a.pdf ↗</a></li>
       <li><span class="k">Slides 11/02</span><a href="https://cs2680.com/slides/10_llm_serving_basics_2b.pdf" target="_blank" rel="noopener">10_llm_serving_basics_2b.pdf ↗</a></li>
       <li><span class="k">頁數</span>96（2a 41、2b 55）</li>
-      <li><span class="k">閱讀</span><span class="read-time">約 50 分鐘</span></li>
-      <li><span class="k">註與查閱</span><span class="deep-time">約 7 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 65 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 55 分鐘</span></li>
+      <li><span class="k">註與查閱</span><span class="deep-time">約 8 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 70 分鐘</span></li>
     </ul>
   </header>
 
@@ -2580,229 +2580,29 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
         </div>
       </section>
 
-      <!-- ===================== 3 延伸閱讀 ===================== -->
-      <section class="wrap" id="wrap" aria-label="延伸閱讀">
-        <p class="kicker">3 · 延伸閱讀</p>
-        <h2>延伸閱讀</h2>
-        <p class="rg-intro">教授為這一講列了 17 篇（<a href="https://cs2680.com/readings/oct-21.html" target="_blank" rel="noopener">官方清單 10/21 ↗</a>），分成 8 組，頁面沒有必讀與選讀之分，每篇的「Why read it」說明是課程網站用 AI 產生的。等級與時間是本站的建議。「必讀」與「推薦」的 5 篇各附一段摘要：3 分鐘讀完它的主張與數字、它和 slides 重疊的部分，以及原文哪幾節值得看。</p>
-        <p class="rg-legend"><span><span class="rgm" data-level="3"><i></i><i></i><i></i></span>必讀</span><span><span class="rgm" data-level="2"><i></i><i></i><i></i></span>推薦</span><span><span class="rgm" data-level="1"><i></i><i></i><i></i></span>選讀或查閱</span><span>時間是專注閱讀的估計；等級是本站的建議，不是課程要求</span></p>
-        <div class="callout"><span class="tag">最短路徑</span><div><p>只有約 60 分鐘：先讀 Making Deep Learning Go Brrrr（判斷瓶頸的方法），再看 FlashAttention 論文的演算法一節（少搬 bytes 的範例），最後掃 FlashAttention-4 的硬體不對稱表（瓶頸怎麼隨硬體移動）。</p></div></div>
-        <h3 class="rg-h">GPU 的程式模型 <small>The GPU programming model</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/" target="_blank" rel="noopener">CUDA C++ Programming Guide</a><span class="rg-meta">NVIDIA · 文件 · 查閱用</span></div>
-          <p class="rg-s">CUDA 的官方手冊：thread 與記憶體的階層、kernel 的寫法、非同步執行。課程網站建議要做決定時再查，不要從頭讀。</p>
-          <p class="rg-g"><b>導讀</b>讀完第 6 章〈GPU 程式〉後，查 thread hierarchy 和 memory hierarchy 兩部分，對照本頁的 grid、block、warp 圖。</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">效能模型 <small>The performance model</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://doi.org/10.1145/1498765.1498785" target="_blank" rel="noopener">Roofline: An Insightful Visual Performance Model for Multicore Architectures</a><span class="rg-meta">Williams、Waterman、Patterson · CACM 論文 · 2009 · 挑段約 25 分</span></div>
-          <p class="rg-s">Roofline 的原始論文：效能由頻寬的斜線和算力的平頂決定，ridge 點說明一台機器多難吃滿。</p>
-          <p class="rg-g"><b>導讀</b>論文裡 2009 年機器的 ridge 只有 0.33 到 6.7 FLOP/B。開場問：H200 的 206、Rubin FP4 的 1,591，代表今天哪些 kernel 會掉到斜坡上？</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 25 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>一個 kernel 能跑多快，由兩個屋頂中較低的那個決定：頻寬乘以 operational intensity 的斜線，和峰值算力的平頂。兩者的交點叫 ridge point，說明一台機器要多高的 intensity 才吃得滿。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i2">Roofline：kernel 的時間由較慢的那一邊決定</a>〉直接用這個模型；論文的 operational intensity 就是本頁的 arithmetic intensity。差別在年代：論文的四台機器 ridge 只有 0.33 到 6.7 FLOP/B，H200 的 BF16 是 206，所以今天落在斜坡上的 kernel 比 2009 年多得多。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>Intensity 量的是 DRAM 的流量。</b>定義是每 byte DRAM 流量做幾個運算，量在 cache 和主記憶體之間，所以 cache 的效果已經算進去。</li>
-              <li><b>兩個屋頂取較低者。</b>平頂是峰值算力，斜線是頻寬乘以 intensity；log-log 圖上斜線的斜率是 1。</li>
-              <li><b>Ridge 越右，peak 越難拿到。</b>作者把 ridge 當成「這台機器多難用滿」的指標，並提醒設計晶片的人要注意它。</li>
-              <li><b>Ceiling 告訴你先做哪個最佳化。</b>算力那邊是 ILP、SIMD、乘加平衡；頻寬那邊是 unit-stride 存取、memory affinity、software prefetch，由易到難排。</li>
-              <li><b>四台機器、四個 kernel。</b>Xeon 6.7、Opteron X4 4.4、Cell 0.65、UltraSPARC T2+ 0.33 FLOP/B；SpMV、LBMHD、Stencil、3D FFT 的 intensity 在 0.25 到 1.64，中位數 0.60，都低於兩台 x86 的 ridge。</li>
-              <li><b>幾個常見的誤解。</b>把 cache 加大，四個 kernel 裡有三個的 intensity 不會變；模型不限於浮點運算；一台機器的 roofline 只要算一次。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>四台機器逐一的架構說明，以及各 kernel 的實作細節。</li>
-              <li><b>值得看原文：</b>開頭那張基本的 roofline 圖，和加上 ceiling 之後的圖；四台機器的 ridge 對照；最後的 fallacies 一節。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Roofline 告訴你 kernel 會跑多快。」它給的是上限。實際速度可能遠低於屋頂，例如本頁第 5 章那種兩個單元都不忙的 latency-bound。Intensity 也不是演算法固定的性質：同一個運算，tiling 和 fusion 會改變搬的 bytes。</p></div></div>
-          </div></details>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://horace.io/brrr_intro.html" target="_blank" rel="noopener">Making Deep Learning Go Brrrr From First Principles</a><span class="rg-meta">Horace He · 部落格 · 2022 · 約 30 分</span></div>
-          <p class="rg-s">把深度學習的時間分成 compute、memory bandwidth、overhead 三種瓶頸，各有各的解法。這一講最好讀的入門。</p>
-          <p class="rg-g"><b>導讀</b>開場問：你最近跑的一個模型落在哪一種？用文中「batch 加倍」的測試判斷一次。</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>深度學習程式的時間花在三個地方：compute、memory bandwidth、overhead。先判斷是哪一種，再選對應的改法，否則改了也沒用。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i2">Roofline</a>〉的 compute-bound 和 memory-bound，這篇再加上第三種 overhead-bound。〈<a href="#i5">量測</a>〉的 batch 加倍測試與 nvidia-smi 的讀法、〈<a href="#i4">晶片裡面</a>〉非矩陣乘法慢很多的例子都出自這篇；它對 memory-bound 開的藥方 fusion，在〈<a href="#i7">Kernel 之內</a>〉。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>三種瓶頸、三種解法。</b>Compute-bound 用 Tensor Core 或更多硬體；bandwidth-bound 用 operator fusion，加算力沒用；overhead-bound 用 tracing、fusion、避開 Python 或 JIT。</li>
-              <li><b>工廠的比喻。</b>算力是工廠，頻寬是倉庫到工廠的運輸，overhead 是發指令。算力長得比頻寬快，工廠就在等材料。</li>
-              <li><b>非矩陣乘法占的時間遠多於 FLOP。</b>A100 的矩陣乘法 312 TFLOPS，其他運算 19.5。BERT 裡非矩陣乘法只占 0.2% 的 FLOP，normalization 和 pointwise 的 FLOP/s 卻比矩陣乘法低 250 倍和 700 倍。</li>
-              <li><b>Elementwise 運算幾乎都卡在頻寬。</b>A100 每秒 1.5 TB 只搬得動約 4,000 億個 FP32 數字，同時間能做約 20 兆次運算；每個元素要上百個運算才會換成 compute-bound。</li>
-              <li><b>Fusion 省的是記憶體來回。</b><code>x.cos().cos()</code> 分開做要 4 次全域記憶體讀寫，fuse 之後 2 次，約快 2 倍。</li>
-              <li><b>Overhead 很大，但能藏。</b>Python 每秒約 3,200 萬次加法；eager PyTorch 對小 tensor 每秒約 28 萬個 op。Kernel 夠大時，非同步的排隊會把它藏起來。</li>
-              <li><b>怎麼判斷。</b>Batch 加倍、時間只多約 10%，是 overhead-bound；profiler 的 GPU 時間軸有空檔；達到 peak 的 80%，至少有 80% 是 compute-bound。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>開頭的動機和結尾的總結表，本頁第 2、5 章已經講過。</li>
-              <li><b>值得看原文：</b>Bandwidth 一節重複乘法的 microbenchmark 圖（到約 64 次才轉成 compute-bound）；Overhead 一節的 profiler 截圖。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 30 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「nvidia-smi 的 GPU-Util 很高，所以是 compute-bound。」作者只拿 GPU-Util 檢查 overhead：它量的是有 kernel 在跑的時間比例，不是算力用了多少。要判斷是不是 compute-bound，看達到的 FLOP/s 占 peak 多少。</p></div></div>
-          </div></details>
-          </li>
-        </ol>
-        <h3 class="rg-h">FlashAttention <small>FlashAttention needs your attention</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="3" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">必讀</span><a class="rg-t" href="https://arxiv.org/abs/2205.14135" target="_blank" rel="noopener">FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</a><span class="rg-meta">arXiv 2205.14135 · 論文 · 2022 · 挑段約 30 分</span></div>
-          <p class="rg-s">用 tiling 和 online softmax 讓 n × n 的分數矩陣不寫回 HBM，結果精確，記憶體隨長度線性成長。</p>
-          <p class="rg-g"><b>導讀</b>從 IO 的角度看 attention：它的 FLOP 沒變，為什麼會快好幾倍？請認領的人用本頁第 7 章的兩張圖開場。</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>Attention 慢在 HBM 的讀寫，不在 FLOP。FlashAttention 用 tiling 和 online softmax 一塊一塊算，n × n 的中間矩陣不寫回 HBM；結果是精確的，記憶體隨長度線性成長。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i7">Kernel 之內：少搬資料，FlashAttention 是範例</a>〉的資料流圖和 online softmax 都來自這篇；它是〈<a href="#i2">Roofline</a>〉判斷出 memory-bound 之後「少搬 bytes」最好的例子。同一章的表接著講 FA2 到 FA4。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>先看記憶體，再看 FLOP。</b>A100 的 HBM 有 40–80 GB、1.5–2.0 TB/s；每個 SM 的 SRAM 只有 192 KB，108 個 SM 合計約 19 TB/s，快一個數量級，小很多。</li>
-              <li><b>標準 attention 把 S、P 寫進 HBM。</b>存取次數是 Ω(Nd + N²)；FlashAttention 是 O(N²d²M⁻¹)，M 是 SRAM 的大小，在常見的 d 和 M 下最多少 9 倍。</li>
-              <li><b>Tiling 加上 running max 與 sum。</b>Q 切塊、K 和 V 一塊一塊讀進 SRAM，維護每列的 m 和 ℓ；合併兩塊時乘上 e^(mᵢ − m) 換算，結果是精確的 softmax。</li>
-              <li><b>Backward 用重算換記憶體。</b>只存輸出 O 和 (m, ℓ)，backward 時在 SRAM 重算 S 和 P；FLOP 變多，仍比從 HBM 讀快。</li>
-              <li><b>結果。</b>GPT-2 的 attention 快 7.6 倍；BERT-large（長度 512）端到端快 15%；GPT-2（1K）快 3 倍；long-range arena（1K–4K）快 2.4 倍；第一個在 Path-X 與 Path-256（64K，63.1%）超過隨機猜的 Transformer。</li>
-              <li><b>有下限。</b>作者證明沒有任何精確的 attention 演算法，能在所有 SRAM 大小下都漸近地更少存取 HBM。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>Related work；block-sparse 的變體（除非要的是近似 attention）。</li>
-              <li><b>值得看原文：</b>Section 3.1 的 tiling 推導和 Algorithm 1；IO complexity 的定理；Figure 1 的示意圖。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 30 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「FlashAttention 是一種近似的 attention，用品質換速度。」主體演算法是精確的，和標準 attention 算出相同的結果；論文裡的 block-sparse 版本才是近似。它也沒有減少 FLOP，省下的是 HBM 的讀寫。</p></div></div>
-          </div></details>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2307.08691" target="_blank" rel="noopener">FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning</a><span class="rg-meta">arXiv 2307.08691 · 論文 · 2023 · 挑段約 20 分</span></div>
-          <p class="rg-s">演算法不變，改工作的切法：沿 sequence 平行，減少非 matmul 的運算；slides 給的速度約是 FA1 的 2 倍。</p>
-          <p class="rg-g"><b>導讀</b>和 FA1 對照：同一個 online softmax，只改切法，為什麼能快一倍？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2407.08608" target="_blank" rel="noopener">FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision</a><span class="rg-meta">arXiv 2407.08608 · 論文 · 2024 · 挑段約 25 分</span></div>
-          <p class="rg-s">為 Hopper 重寫：TMA、warp specialization、softmax 和 GEMM 重疊、FP8。</p>
-          <p class="rg-g"><b>導讀</b>把每一招對到本頁第 7 章開頭的四個目標：它在少搬資料、藏住等待、露出平行，還是換更快的指令？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2603.05451" target="_blank" rel="noopener">FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling</a><span class="rg-meta">arXiv 2603.05451 · 論文 · 2026 · 挑段約 30 分</span></div>
-          <p class="rg-s">B200 的 Tensor Core 加倍、exp 單元沒有，瓶頸移到 softmax；這篇示範怎麼依硬體的不對稱重新設計 kernel。</p>
-          <p class="rg-g"><b>導讀</b>從硬體不對稱的那張表開場：下一代 GPU 如果 exp 單元也加倍，瓶頸會移到哪裡？</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>B200 的 Tensor Core 吞吐加倍，算 exp 的單元和 shared memory 的頻寬卻沒變，瓶頸從矩陣乘法移到 softmax。FA4 重新設計 pipeline、用 FMA 單元分擔一部分 exp、跳過不必要的 rescale，最高到 1,613 TFLOP/s，約 peak 的 71%。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i7">Kernel 之內</a>〉那張 Hopper 對 Blackwell 的 cycle 圖用的就是這篇的數字，它是「晶片裡每個單元都有自己的屋頂」的例子。TMEM 和 2-CTA MMA 的背景在〈<a href="#i4">晶片裡面</a>〉的查閱註。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>不對稱的成長。</b>BF16 MMA 每個 SM 每個 clock 8,192 個 FLOP，Hopper 是 4,096；MUFU 的 exp 一樣是 16 個（B300 才加倍）；shared memory 一樣每個 clock 128 bytes。</li>
-              <li><b>算出瓶頸。</b>一塊 128 × 128、head 維度 128 的 forward：MMA 1,024 cycle、exp 1,024、shared memory 768，MMA 和 exp 並列最慢。</li>
-              <li><b>用軟體算 exp。</b>Cody-Waite 的範圍縮減加上多項式，在 FMA 單元上和 MUFU 平行；每列只模擬 10–25%，三次多項式在 BF16 下 99% 的輸入和硬體差不到 1 ULP。</li>
-              <li><b>條件式 rescale。</b>Running max 增加不到 256 倍時跳過 rescale，最後的正規化會補回；整個 warp 一起決定，避免 divergence。</li>
-              <li><b>Pipeline 與分工。</b>每個 CTA 輪流算兩塊 Q tile；兩組 warp 做 softmax、一組做 correction、一組驅動 Tensor Core 和 TMA；結果放在 TMEM。</li>
-              <li><b>Backward。</b>用 2-CTA MMA、TMEM，dQ 的 atomic 減半；deterministic 模式最高約為非 deterministic 的 75% 速度。</li>
-              <li><b>結果。</b>B200、BF16、head 維度 128：最高 1,613 TFLOP/s，比 cuDNN 9.13 快 1.1–1.3 倍、比 Triton 快 2.1–2.7 倍。全部用 CuTe-DSL（Python）寫，編譯比 C++ 樣板快 20–30 倍。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>attention 與前幾代 FlashAttention 的背景，本頁第 7 章已經講過。</li>
-              <li><b>值得看原文：</b>硬體不對稱的表與 roofline 式的 cycle 分析；exp 模擬的精度表；forward pipeline 的分工圖。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 30 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「FA4 比 cuDNN 快，所以 B200 上一定要用 FA4。」論文自己說，新版的 cuDNN 已經吸收了許多做法，效能相近。要帶走的是瓶頸怎麼隨硬體移動，以及怎麼先算出瓶頸再設計 kernel，不是哪一個函式庫比較快。</p></div></div>
-          </div></details>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://iaroslavelistratov.github.io/b200-attention" target="_blank" rel="noopener">B200 Attention Kernel from Scratch to Near-SOTA in 60 Diagrams</a><span class="rg-meta">Iaroslav Elistratov · 部落格 · 2026 · 挑段約 30 分</span></div>
-          <p class="rg-s">在 B200 上從零寫 attention kernel，一次改一處、每一版都量，逐步接近 FlashAttention-4（課程網站的說明；本站 2026-11 抓取時遭到阻擋，沒有讀到原文）。</p>
-          <p class="rg-g"><b>導讀</b>挑相鄰的兩個版本，用 roofline 解釋那一處改動為什麼變快。</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">Serving engine 裡的 attention kernel <small>Attention kernels inside a serving engine</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2501.01005" target="_blank" rel="noopener">FlashInfer: Efficient and Customizable Attention Engine for LLM Inference Serving</a><span class="rg-meta">arXiv 2501.01005 · 論文 · 2025 · 挑段約 25 分</span></div>
-          <p class="rg-s">把分頁、ragged 的 KV cache 統一成 block-sparse 格式，用 JIT 產生 attention 的變體，排程和 CUDA Graphs 相容；SGLang、vLLM 都用它。摘要報告 inter-token latency 比 compiler backend 少 29–69%。</p>
-          <p class="rg-g"><b>導讀</b>對照本頁第 8 章的 split-KV：batch 裡長短不一的請求，它怎麼分配給 SM？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2604.15464" target="_blank" rel="noopener">Ragged Paged Attention: A High-Performance and Flexible LLM Inference Kernel for TPU</a><span class="rg-meta">arXiv 2604.15464 · 論文 · 2026 · 挑段約 20 分</span></div>
-          <p class="rg-s">在 TPU 上原生實作 paged attention（課程網站的說明）。</p>
-          <p class="rg-g"><b>導讀</b>和 FlashInfer 對照：沒有 SIMT、只有 systolic array 的晶片上，分頁的 KV 怎麼讀？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">Kernel fusion <small>Kernel fusion</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2406.06858" target="_blank" rel="noopener">FLUX: Fast Software-based Communication Overlap On GPUs Through Kernel Fusion</a><span class="rg-meta">arXiv 2406.06858 · 論文 · 2024 · 挑段約 20 分</span></div>
-          <p class="rg-s">把 tensor parallelism 的通訊細切後 fuse 進 GEMM，最多藏住 96% 的通訊；8 張 GPU 上 prefill、decode 比 vLLM 快最多 1.66 倍、1.30 倍。</p>
-          <p class="rg-g"><b>導讀</b>本頁第 8 章的通訊重疊圖就是它。開場問：切得越細，多出來的成本在哪裡？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">Compiler 與 megakernel <small>Compilers and mega-kernels</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/1802.04799" target="_blank" rel="noopener">TVM: An Automated End-to-End Optimizing Compiler for Deep Learning</a><span class="rg-meta">arXiv 1802.04799 · 論文 · 2018 · 挑段約 25 分</span></div>
-          <p class="rg-s">深度學習 compiler 的經典：把「算什麼」和「怎麼排程」分開，再為每種硬體產生程式碼。</p>
-          <p class="rg-g"><b>導讀</b>對照第 6 章的五層抽象：TVM 把哪些決定交給 compiler，哪些留給人？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2405.05751" target="_blank" rel="noopener">Mirage: A Multi-Level Superoptimizer for Tensor Programs</a><span class="rg-meta">arXiv 2405.05751 · 論文 · 2024 · 挑段約 25 分</span></div>
-          <p class="rg-s">在 kernel、thread block、thread 三層一起搜尋等價的程式，並檢查等價性（課程網站的說明）。</p>
-          <p class="rg-g"><b>導讀</b>和第 9 章對照：自動搜尋 kernel 時，它怎麼保證結果是對的？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://arxiv.org/abs/2512.22219" target="_blank" rel="noopener">MPK: A Compiler and Runtime for Mega-Kernelizing Tensor Programs</a><span class="rg-meta">arXiv 2512.22219 · 論文 · 2025 · 挑段約 20 分</span></div>
-          <p class="rg-s">把多 GPU 的 model 編譯成一個常駐的 megakernel（課程網站的說明）；slides 的 megakernel 一頁引用它。</p>
-          <p class="rg-g"><b>導讀</b>和第 8 章 Hazy Research 手寫的 megakernel 比：自動編譯要處理哪些相依和同步？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">Scheduler 與 kernel 之間的 runtime <small>The runtime between the scheduler and the kernel</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">查閱</span><a class="rg-t" href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-graphs" target="_blank" rel="noopener">CUDA C++ Programming Guide：CUDA Graphs</a><span class="rg-meta">NVIDIA · 文件 · 查閱用</span></div>
-          <p class="rg-s">把一串工作錄一次、一次送出，適合形狀固定的 decode step。</p>
-          <p class="rg-g"><b>導讀</b>讀第 8 章的 CUDA Graph 範例後，查它的限制：形狀和記憶體位址要固定，對 batch 大小一直在變的 serving 代表什麼？</p>
-          </li>
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="1" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">選讀</span><a class="rg-t" href="https://doi.org/10.1145/3620665.3640366" target="_blank" rel="noopener">PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation</a><span class="rg-meta">ASPLOS 論文 · 2024 · 挑段約 25 分</span></div>
-          <p class="rg-s"><code>torch.compile</code> 的論文：從 Python bytecode 抓計算圖，用 guard 決定何時重新編譯，再由 TorchInductor 產生 kernel（課程網站的說明）。</p>
-          <p class="rg-g"><b>導讀</b>開場問：你們的 model 哪裡會讓計算圖斷掉？guard 失效時要重新編譯幾次？</p>
-          </li>
-        </ol>
-        <h3 class="rg-h">量測 <small>Measurements</small></h3>
-        <ol class="rg">
-          <li>
-          <div class="rg-top"><span class="rgm" data-level="2" aria-hidden="true"><i></i><i></i><i></i></span><span class="rg-lvl">推薦</span><a class="rg-t" href="https://arxiv.org/abs/2512.01644" target="_blank" rel="noopener">A Systematic Characterization of LLM Inference on GPUs</a><span class="rg-meta">arXiv 2512.01644 · 論文 · 2025 · 挑段約 40 分</span></div>
-          <p class="rg-s">在 A100 和 Jetson Orin 上量 prefill、decode 的時間花在哪裡，含 dense 與 MoE、單卡與多卡，整理成 31 條 insight。</p>
-          <p class="rg-g"><b>導讀</b>用它的實測檢查本頁的估算：decode 的 intensity、MoE 的 FFN、TP 的通訊比例，哪一個和你的直覺差最多？</p>
-          <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 40 分</span></summary><div class="hint digest">
-            <div class="dg-one"><p><b>一句話：</b>在 A100 和 Jetson Orin 上用 vLLM 量 dense 與 MoE model 的 prefill、decode，從現象、硬體原因到多卡擴展，整理成 31 條 insight。核心是 prefill 和 decode 卡在不同的資源。</p></div>
-            <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i3">Decode</a>〉的 MoE 一節引用它量到的 FFN intensity。它量到的 prefill 與 decode intensity，和〈<a href="#i2">Roofline</a>〉的估算一致；〈<a href="#i5">量測</a>〉講的 DRAM 利用率與 warp stall，它都有實測。</p>
-            <p class="tk-h">壓縮後的重點</p>
-            <ol>
-              <li><b>設定。</b>4 張 A100 80GB 與一台 Jetson AGX Orin；vLLM 0.9.2、BF16、eager mode；Llama-3-8B、Qwen2.5-7B／32B，以及 MoE 的 Qwen3-30B-A3B（30.5B 參數裡每個 token 用 3.3B）。</li>
-              <li><b>時間花在哪。</b>Qwen2.5-7B 輸出 128 個 token 時，輸入短則 decode 主導，超過約 2K 個輸入 token 後 prefill 主導。前 5 個 kernel 占 prefill 九成以上、decode 八成五以上，FFN 加 attention 占 94–96%。</li>
-              <li><b>Roofline 實測。</b>Prefill 的 intensity 約 55–100，compute-bound；decode 約 1–10，memory-bound。FFN 從約 95 掉到約 8 FLOP/B。</li>
-              <li><b>硬體計數器。</b>從 prefill 到 decode，DRAM 利用率增加 48–56%，L2 命中率下降 54–59%；decode 時 Pipeline Busy 的 stall 只剩約 3–4%。</li>
-              <li><b>Batch 的轉折點。</b>吞吐的成長越來越小，每個 token 的延遲一直上升；作者把過了轉折點的區域叫 latency trap。</li>
-              <li><b>MoE。</b>比同等的 dense model，prefill 快 4.56 倍、decode 快 2.39 倍；decode 時 routing 占 18.6–28.1%，是第二大的成本；FFN intensity 約 8，dense 是 15.74。</li>
-              <li><b>多卡。</b>Qwen2.5-32B 長輸入時，TP2 把 prefill 從 1.24 s 縮到 0.66 s；對話類的短請求反而是單卡最好，TP4 時 decode 的通訊超過 60%。</li>
-            </ol>
-            <p class="tk-h">原文怎麼讀</p>
-            <ul>
-              <li><b>可以跳過：</b>背景與 related work；Jetson 的章節（除非你做 edge）。</li>
-              <li><b>值得看原文：</b>Table 3 各階段由哪個 operator 主導；roofline 與 warp stall 的分析；MoE 與多卡的章節。</li>
-              <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 40 分。</li>
-            </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「這些數字可以直接套到 H100、H200。」它是 A100 上、vLLM 的 eager mode（沒有 CUDA Graphs）量的。絕對數字和 overhead 的比例會隨硬體與 engine 的設定改變，能帶走的是趨勢：decode 是 memory-bound、MoE 的 intensity 更低、短請求不值得切到多卡。</p></div></div>
-          </div></details>
-          </li>
+      <!-- ===================== 3 原文出處 ===================== -->
+      <section class="wrap" id="wrap" aria-label="原文出處">
+        <p class="kicker">3 · 原文出處</p>
+        <h2>原文出處</h2>
+        <p class="rg-intro">教授為這一講列的 17 篇閱讀（<a href="https://cs2680.com/readings/oct-21.html" target="_blank" rel="noopener">官方清單 10/21 ↗</a>）。要對照原文時從這裡找，不必讀；本文引用的其他來源列在頁尾。</p>
+        <ol class="rg rg-src">
+          <li><a class="rg-t" href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/" target="_blank" rel="noopener">CUDA C++ Programming Guide</a><span class="rg-meta">NVIDIA · 文件</span></li>
+          <li><a class="rg-t" href="https://doi.org/10.1145/1498765.1498785" target="_blank" rel="noopener">Roofline: An Insightful Visual Performance Model for Multicore Architectures</a><span class="rg-meta">Williams、Waterman、Patterson · CACM 論文 · 2009</span></li>
+          <li><a class="rg-t" href="https://horace.io/brrr_intro.html" target="_blank" rel="noopener">Making Deep Learning Go Brrrr From First Principles</a><span class="rg-meta">Horace He · 部落格 · 2022</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2205.14135" target="_blank" rel="noopener">FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</a><span class="rg-meta">arXiv 2205.14135 · 論文 · 2022</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2307.08691" target="_blank" rel="noopener">FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning</a><span class="rg-meta">arXiv 2307.08691 · 論文 · 2023</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2407.08608" target="_blank" rel="noopener">FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision</a><span class="rg-meta">arXiv 2407.08608 · 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2603.05451" target="_blank" rel="noopener">FlashAttention-4: Algorithm and Kernel Pipelining Co-Design for Asymmetric Hardware Scaling</a><span class="rg-meta">arXiv 2603.05451 · 論文 · 2026</span></li>
+          <li><a class="rg-t" href="https://iaroslavelistratov.github.io/b200-attention" target="_blank" rel="noopener">B200 Attention Kernel from Scratch to Near-SOTA in 60 Diagrams</a><span class="rg-meta">Iaroslav Elistratov · 部落格 · 2026</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2501.01005" target="_blank" rel="noopener">FlashInfer: Efficient and Customizable Attention Engine for LLM Inference Serving</a><span class="rg-meta">arXiv 2501.01005 · 論文 · 2025</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2604.15464" target="_blank" rel="noopener">Ragged Paged Attention: A High-Performance and Flexible LLM Inference Kernel for TPU</a><span class="rg-meta">arXiv 2604.15464 · 論文 · 2026</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2406.06858" target="_blank" rel="noopener">FLUX: Fast Software-based Communication Overlap On GPUs Through Kernel Fusion</a><span class="rg-meta">arXiv 2406.06858 · 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/1802.04799" target="_blank" rel="noopener">TVM: An Automated End-to-End Optimizing Compiler for Deep Learning</a><span class="rg-meta">arXiv 1802.04799 · 論文 · 2018</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2405.05751" target="_blank" rel="noopener">Mirage: A Multi-Level Superoptimizer for Tensor Programs</a><span class="rg-meta">arXiv 2405.05751 · 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2512.22219" target="_blank" rel="noopener">MPK: A Compiler and Runtime for Mega-Kernelizing Tensor Programs</a><span class="rg-meta">arXiv 2512.22219 · 論文 · 2025</span></li>
+          <li><a class="rg-t" href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-graphs" target="_blank" rel="noopener">CUDA C++ Programming Guide：CUDA Graphs</a><span class="rg-meta">NVIDIA · 文件</span></li>
+          <li><a class="rg-t" href="https://doi.org/10.1145/3620665.3640366" target="_blank" rel="noopener">PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation</a><span class="rg-meta">ASPLOS 論文 · 2024</span></li>
+          <li><a class="rg-t" href="https://arxiv.org/abs/2512.01644" target="_blank" rel="noopener">A Systematic Characterization of LLM Inference on GPUs</a><span class="rg-meta">arXiv 2512.01644 · 論文 · 2025</span></li>
         </ol>
         <p class="rg-fn">本文範例的依據（2026-11 查詢）：NVIDIA <a href="https://github.com/NVIDIA/cuda-samples/blob/03309a2d4275a9186b748e033ee5f90a11492a2f/Samples/0_Introduction/vectorAdd/vectorAdd.cu" target="_blank" rel="noopener">cuda-samples 的 vectorAdd</a>、Triton 的 <a href="https://triton-lang.org/main/getting-started/tutorials/01-vector-add.html" target="_blank" rel="noopener">vector add tutorial</a>、PyTorch 2.8 的 <a href="https://docs.pytorch.org/docs/2.8/generated/torch.compile.html" target="_blank" rel="noopener">torch.compile 文件</a>、NVIDIA 的 <a href="https://docs.nvidia.com/dl-cuda-graph/cuda-graph-basics/cuda-graph.html" target="_blank" rel="noopener">CUDA Graph 文件</a>與 <a href="https://docs.nvidia.com/cuda/archive/13.3.1/cuda-runtime-api/group__CUDART__GRAPH.html" target="_blank" rel="noopener">CUDA 13.3 runtime API</a>、<a href="https://docs.nvidia.com/datacenter/dcgm/latest/learn/modules/profiling.html" target="_blank" rel="noopener">DCGM 4.6 的 profiling metrics</a>、<a href="https://docs.Nvidia.com/deploy/nvml-api/structnvmlUtilization__t.html" target="_blank" rel="noopener">NVML 的 utilization 定義</a>、<a href="https://docs.nvidia.com/nsight-compute/pdf/NsightComputeCli.pdf" target="_blank" rel="noopener">Nsight Compute CLI 文件</a>。</p>
 

@@ -20,7 +20,7 @@ Fragments in the folder (notes/ is git-ignored):
 
 What it does:
   - replaces the tldr and #s-ideas, removes #s-arch
-  - renumbers the sections: 1 核心觀念, 2 動手試試, 3 延伸閱讀 (問題討論 removed 2026-11-09) (HTML comments and kickers)
+  - renumbers the sections: 1 核心觀念, 2 動手試試, 3 原文出處 (問題討論 removed 2026-11-09) (HTML comments and kickers)
   - eyebrow gets「· 依想法重組」, the meta row「頁碼」goes away, the styles.css link copies l05.html's version
   - rebuilds this page's own three-level sidenav line from the h3s and the <p id="…"><b>小標</b> paragraphs
 
@@ -34,7 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_article as ca  # noqa: E402
 
-SECTIONS = {"動手試試": 2, "延伸閱讀": 3}  # 2026-11-09: 問題討論 removed
+SECTIONS = {"動手試試": 2, "原文出處": 3}  # 2026-11-09: 問題討論 removed
 
 
 def clean(html):
@@ -72,7 +72,7 @@ def v7_secs(s):
     return (sec("tldr-h", "", "先看這裡") + "</li>"
             + sec("s-ideas", 1, "核心觀念") + f'<ol class="sn-subs">{"".join(subs)}</ol></li>'
             + sec("s-try", 2, "動手試試") + "</li>"
-            + sec("wrap", 3, "延伸閱讀") + "</li>")
+            + sec("wrap", 3, "原文出處") + "</li>")
 
 
 def replace_section(s, sid, frag_text):

@@ -79,11 +79,11 @@ python3 -I tools/check_article.py docs/lXX.html --pages N --pdf FILE.pdf --fix-t
 
 `assemble_v7.py` 會處理：tldr、`#s-ideas`、拿掉 `#s-arch`、段號與 kicker、eyebrow、meta、CSS 版本、本頁的側欄。用法寫在檔頭。長頁面分章寫，不要一次寫完。
 
-其他保留段落（動手試試、延伸閱讀）整段留著，要改的是指過去的地方：
+其他保留段落（動手試試、原文出處）整段留著，要改的是指過去的地方：
 
-- 延伸閱讀摘要、動手試試裡提到舊章節的地方都改。檢查殘留：
+- 動手試試裡提到舊章節的地方都改。檢查殘留：
   ```bash
-  grep -n '第 [0-9] 段\|架構圖\|s-arch' docs/lXX.html | cut -c1-160     # 段號現在是 2 動手試試、3 延伸閱讀（2026-11-09 拿掉問題討論），架構段沒了
+  grep -n '第 [0-9] 段\|架構圖\|s-arch' docs/lXX.html | cut -c1-160     # 段號現在是 2 動手試試、3 原文出處（2026-11-09 拿掉問題討論），架構段沒了
   python3 -I tools/page_text.py docs/lXX.html wrap | grep -n '\b2\.[0-9]\|本文延伸'
   python3 -I tools/page_text.py docs/lXX.html s-try | grep -n '\b2\.[0-9]\|本文延伸'
   ```
