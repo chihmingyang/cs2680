@@ -135,6 +135,13 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
 4. 對改過的講次頁跑 `bash tools/verify.sh lXX`（B4 的檢查加 `audit.py`，一次跑完）。
 5. 發布（D）。
 
+**補新材料之前，先判斷它是內容還是骨架**（2026-11-12）。James 轉來一篇文章、或查到新的來源要補進一堂時，先問：這份材料有沒有提供一個能串起整頁的模型（分層、流程、分類）？
+
+- 沒有：它是內容，補成小節，章號、錨點、題庫都不動。
+- 有：它是骨架。拿它和現在的章序比，照 `STYLE_ARTICLE.md` 第 0 節〈章的順序〉判斷哪一個讀起來順。新模型比較順就重排，不要只加小節。重排的成本（錨點、題庫對位、DAG、別頁連結）是一次性的，讀不順是每個讀者每次都付。
+
+起因：2026-11-10 補 Anthropic〈The components of agent memory〉到 L6b 時，為了不動章號、錨點和題庫，把四層模型塞成第 2 章的第三節；兩天後 James 讀起來不順，整頁照四層重排。重排一堂的做法：`notes/lXX/` 放一支 build script，從 `git show HEAD:docs/lXX.html` 讀舊頁、依 `<p id="iN-M">` 切成小節、照新順序組回去；同一支 script 改 id／href、題庫的 `scope`／`from`／`after`／`at`、正文與題庫裡的「第 N 章」（逐條列出、照出現順序換，不要用規則猜）。之後改 `l06.html` 這類頁面的 `#moved` 表、別頁連進來的連結、`dag.json` 的 `src`，跑 `verify.sh`，整頁重審（搬動會改變「名詞第一次出現在哪」，不能只審新寫的句子）。
+
 大改一堂的核心觀念（2026-10-29 L5、L6 的做法）：每章寫成一個片段 `notes/lXX/iN.html`（開一組的那章把 `p.idea-group` 放在最前面），`head.html` 放 `section#s-ideas` 的開頭到 `<div class="ideas">`（`nav.map` 的分鐘數寫 `__iN__`），要改 tldr 或架構的讀圖重點就再放 `tldr.html`、`arch.html`，然後：
 
 ```bash

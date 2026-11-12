@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-12（**L6b 照記憶的四層重排**：六章 → 七章（Transcripts、Memory notes、Memory representations、Injected context、跨層的操作、安全、目錄），James 讀起來不順、自己畫的是四層；新寫 `#i1-3` transcripts 的兩張表與各章開頭；錨點、題庫位置、`l06.html` 的 `#moved` 表、DAG 的 `src` 跟著改。加「章的順序：有依賴就照依賴排」一條。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 直接放 Anthropic〈The components of agent memory〉的原圖（James 要求試著復用）：1 章〈往右靠〉的效益圖換成原文 Figure 5，`#n-clbench` 註加 Figure 3；2 章〈Session 之間的整理〉加四層圖兩張（session 進行中、dreaming）與 Mt. Moon 對照圖。圖檔在 `docs/img/`（webp，寬 1600）；新寫法 `figure.diagram.shot` 記在 STYLE_ARTICLE 第 6 節；`review_pack.py`、`page_text.py` 讀 `img` 的 `alt`，`audit.py` 檢查 `alt` 與檔案存在。）
 - 2026-11-12（L6b 1 章〈往右靠，用「說明用途」來做〉依 James 的可讀性回饋與重讀原文修正：CL-Bench 的對照組其實只說「有記憶資料夾可用」、沒有說明用途，正文與註改寫；圖 6 改成圖例在上、只標數字、虛線框標出少掉的部分（標絕對差距，不標百分比）；Sonnet 4.6 的 0.034 → 0.311 搬進正文；「強的 model 寫用途就夠」補上文章只在 Sonnet 4.6 試過；Pokémon 段補過渡與和主張的關係；最後一段先講「錯了能不能補」再列邊界。Opus 5 筆記改照文章的描述（規則附證據、之前的答案、陷阱），不再說分成答錯／答對兩類。審查紀錄在 review_reports/l06b-20261112/。）
 - 2026-11-11（腳本表加 `red_path.py`；新 skill `mark-red`。）
@@ -79,6 +80,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-12（C 加〈補新材料之前，先判斷它是內容還是骨架〉與重排一堂的做法。起因是 L6b 補 Anthropic 研究文時只加小節、沒換骨架。）
 - 2026-11-11（加 I2〈標紅字：審查過了才做〉：紅字獨立成 I 之後、D 之前的一步，`red_path.py` 當關卡；寫作的 skill 不放 `<strong>`。）
 - 2026-11-11（I：審完跑 `review_status.py mark`；選要審的章時也看 `status` 的「舊規則」「改過」；James 說看不懂先加 `guide/review_cases/` 再改規則、跑 `review_eval.py`。）
 - 2026-11-11（J 的第 1 層加 check_numbers。）
@@ -101,6 +103,7 @@
 - 2026-10-21（討論改為每堂一串、只放基礎題）。
 
 ## STYLE_ARTICLE.md
+- 2026-11-12（第 0 節加〈章的順序：有依賴就照依賴排，重要性不靠章序表達〉：獨立的想法照份量排；資料流、層次照依賴排，每章開頭先說這一層是什麼；一堂只有一張地圖。L6b 第一個照這條重排。）
 - 2026-11-11（6c 加「什麼時候標」：可讀性審查過了才標，只搬標籤不改字。）
 - 2026-11-11（6c 紅字：寫明目的是掃讀路徑（只讀 h3、`<b>`、紅字推得回論證），加三個檢查（`<b>` 是題目、紅字是答案；離開上下文看得懂；標意思不只標數字）；優先順序改成結論與做法第一、數字第三。L6b 依此重標 17 處，數量 25 → 26，文字沒改。）
 - 2026-11-11（第 2 節第 6 點改寫：「先看這裡」從摘要改成案例導讀，四塊固定寫法；L1–L11 與 L6b 全部照這個形式重寫，每堂 tldr 單獨審兩輪。審查紀錄在 `review_reports/tldr-20261111d/`。）
@@ -174,6 +177,7 @@
 - 2026-11-06（第一次用在新講次：L9–L11，10 個審查者，第一輪 33／71／21 BLOCK，第二輪剩 2／12／5，主線修完、沒有第三輪。「作者怎麼用報告」加兩條：第二輪的定位附第一輪的「我讀到的」（作者加段落後定位會移動）；新頁接到全站後就地改 HTML、不從片段重組。skill 第 4 步同步。十個審查者加三個作者修改碰到一次 5 小時的用量上限，大堂分給審查者時留意）。
 
 ## QUIZ.md
+- 2026-11-12（L6b 重排章節：31 節、173 題的 id 不變，節的 `from`、整合題的 `after`、`scope`（6 章 → 7 章）、points 的 `at` 跟著新位置改；k33 與 20 幾題裡的章號改寫。新寫的 `#i1-3` 沒有題，併在 k45 這一節裡。）
 - 2026-11-11（**讀者自測優先**：James 讀 L6 發現有些題問論文的數字，定了優先順序：讀者自測比 regression test 重要，數字背後的含義才是重點。加〈讀者自測優先〉：判準是遷移；帶數字的題分三種；量測類觀念寫成「發現 → 所以」；觀念清單加 `evidence` 類，不出題。加〈數字對照〉：新的 `tools/check_numbers.py` 拿頁面引用來源的數字對 `guide/sources/lXX.md`，接進 `verify.sh`，L6、L6b 標 strict。`quiz.py check` 放行 `evidence`、擋只測 `evidence` 的題、選項只有數字給 warn。L6 題庫照改：106 題變 102 題。L6b 來源檔補三個漏記的數字（重開原文核對過）。build-quiz 的 points-prompt、writer-brief 同步。）
 - 2026-11-10（L6b 補五個小節的題：新節 k44–k48、20 題；用「只改了某一節」的維護流程，觀念由主線列。〈各堂題庫〉加一列。）
 
@@ -194,6 +198,7 @@
 - 2026-11-08（新增。James 2026-11-07 提：內容拆成有連貫性的 knowledge section，學完一節做 unit 題、最後做整合題，同一批題當 CI 第 2 層的 regression test。節＝文章自己的小節；題庫放在頁面的 `<script id="quiz">`；L6 第 1–4 章 pilot：16 節、22 題 unit、3 題整合。基準全過，mutation 刪 K4 算式後 3 題轉紅；從 k1b、k14b、k4a 學到三條出題規則。）
 
 ## DAG.md
+- 2026-11-12（L6b 重排後只改五個節點的 `src` 與 excluded 的 `l06b#i7`；四層（log 在下、view 在上）還沒有自己的節點。）
 
 - 2026-11-10（講次 key 可以帶字母：L6 拆成 `l06`（Agent reliability）與 `l06b`（Agent memory），`src` 與 `excluded` 跟著改；`dag.py` 的講次標籤與排序改用字串。）
 - 2026-11-09（第二版：節點改以心智模型為單位，加 `kind`（concept／practice）、concept 不能依賴 practice 的檢查；根收成 next-token 函數；產品名的節點改成一般觀念、案例降成例子；93 個節點 152 條邊。首頁課程地圖加連結。）
