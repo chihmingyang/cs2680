@@ -46,7 +46,7 @@
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
 <li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l10.html" aria-current="page"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">GPU 的設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Latency 和 throughput 是兩個目標</a></li><li><a class="sn-sub2" href="#i1-2">GPU 怎麼藏住等待：切換 warp</a></li><li><a class="sn-sub2" href="#i1-3">SIMT：程式為一個 thread 寫，硬體一次跑 32 個</a></li><li><a class="sn-sub2" href="#i1-4">Divergence：同一個 warp 走不同分支，兩邊都要走一次</a></li><li><a class="sn-sub2" href="#i1-5">四個取捨</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Roofline</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">三個單位</a></li><li><a class="sn-sub2" href="#i2-2">三個規格決定每顆 GPU 的上限</a></li><li><a class="sn-sub2" href="#i2-3">一條公式</a></li><li><a class="sn-sub2" href="#i2-4">Arithmetic intensity 和 ridge</a></li><li><a class="sn-sub2" href="#i2-5">四種常見的 op</a></li><li><a class="sn-sub2" href="#i2-6">趨勢：精度越低，ridge 越往右</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Decode</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Batch 1：每個 weight 只用一次</a></li><li><a class="sn-sub2" href="#i3-2">三個槓桿</a></li><li><a class="sn-sub2" href="#i3-3">Batch 拉高 weights 的 intensity，拉不動 attention</a></li><li><a class="sn-sub2" href="#i3-4">Context 越長，每一步越慢</a></li><li><a class="sn-sub2" href="#i3-5">本文補的：MoE 會把 batch 分給各個 expert</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">量測</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">nvidia-smi 量的是「有沒有 kernel 在跑」</a></li><li><a class="sn-sub2" href="#i4-2">MFU：prefill 和訓練看算力用了多少</a></li><li><a class="sn-sub2" href="#i4-3">MBU：decode 看頻寬用了多少</a></li><li><a class="sn-sub2" href="#i4-4">四個 counter，各看一個單元</a></li><li><a class="sn-sub2" href="#i4-5">讀 counter：先找哪個單元在忙</a></li><li><a class="sn-sub2" href="#i4-6">先看 timeline，再看 kernel</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">晶片裡面</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">H200 的版面</a></li><li><a class="sn-sub2" href="#i5-2">一個 SM 分成四個 partition</a></li><li><a class="sn-sub2" href="#i5-3">Tensor Core：一條指令做一小塊矩陣乘法</a></li><li><a class="sn-sub2" href="#i5-4">記憶體階層：越近越快，也越小</a></li><li><a class="sn-sub2" href="#i5-5">Little's law：頻寬要靠路上的 bytes</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">GPU 程式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">CPU 和 GPU 是兩台機器</a></li><li><a class="sn-sub2" href="#i6-2">Kernel 為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-3">Graph compiler：你寫 model，compiler 寫 kernel</a></li><li><a class="sn-sub2" href="#i6-4">Tile language：為一整塊寫，不為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-5">五層抽象：越往下，控制越多，成本越高</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Kernel 之內</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">Fusion：中間值不回 HBM</a></li><li><a class="sn-sub2" href="#i7-2">Attention 的問題：n × n 的中間值</a></li><li><a class="sn-sub2" href="#i7-3">FlashAttention：一塊一塊算，S 不離開晶片</a></li><li><a class="sn-sub2" href="#i7-4">Online softmax：不看完整列也能算對</a></li><li><a class="sn-sub2" href="#i7-5">四代 FlashAttention：每一代修上一代的瓶頸</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Kernel 之間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">SM 之間：最後一輪只用到兩成的 SM</a></li><li><a class="sn-sub2" href="#i8-2">Split-KV：decode 的 attention 要沿 KV cache 切</a></li><li><a class="sn-sub2" href="#i8-3">Launch 之間：CUDA Graphs、PDL 與 megakernel</a></li><li><a class="sn-sub2" href="#i8-4">GPU 之間：把通訊藏在計算後面</a></li><li><a class="sn-sub2" href="#i8-5">本文的判斷：多數團隊選 engine，不寫這些</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">AI 寫的 kernel</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">本文補的：2025–2026 年的五個案例</a></li><li><a class="sn-sub2" href="#i9-2">漏洞集中在四個地方</a></li><li><a class="sn-sub2" href="#i9-3">Speed of light：roofline 給的時間下限</a></li><li><a class="sn-sub2" href="#i9-4">本文的判斷：驗收一個 AI 寫的 kernel，五個檢查</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">一張卡之外</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">Scale-up 和 scale-out</a></li><li><a class="sn-sub2" href="#i10-2">出了這台機器，慢一個數量級</a></li><li><a class="sn-sub2" href="#i10-3">故障：16K 張 GPU，約每 3 小時中斷一次</a></li><li><a class="sn-sub2" href="#i10-4">電力：一櫃 120 kW，要液冷</a></li><li><a class="sn-sub2" href="#i10-5">水：用掉的和取用的不一樣</a></li></ol></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l10.html" aria-current="page"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">GPU 的設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Latency 和 throughput 是兩個目標</a></li><li><a class="sn-sub2" href="#i1-2">GPU 怎麼藏住等待：切換 warp</a></li><li><a class="sn-sub2" href="#i1-3">SIMT：程式為一個 thread 寫，硬體一次跑 32 個</a></li><li><a class="sn-sub2" href="#i1-4">Divergence：同一個 warp 走不同分支，兩邊都要走一次</a></li><li><a class="sn-sub2" href="#i1-5">四個取捨</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Roofline</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">三個單位</a></li><li><a class="sn-sub2" href="#i2-2">三個規格決定每顆 GPU 的上限</a></li><li><a class="sn-sub2" href="#i2-3">一條公式</a></li><li><a class="sn-sub2" href="#i2-4">Arithmetic intensity 和 ridge</a></li><li><a class="sn-sub2" href="#i2-5">四種常見的 op</a></li><li><a class="sn-sub2" href="#i2-6">趨勢：精度越低，ridge 越往右</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Decode</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Batch 1：每個 weight 只用一次</a></li><li><a class="sn-sub2" href="#i3-2">三個槓桿</a></li><li><a class="sn-sub2" href="#i3-3">Batch 拉高 weights 的 intensity，拉不動 attention</a></li><li><a class="sn-sub2" href="#i3-4">Context 越長，每一步越慢</a></li><li><a class="sn-sub2" href="#i3-5">本文補的：MoE 會把 batch 分給各個 expert</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">晶片裡面</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">H200 的版面</a></li><li><a class="sn-sub2" href="#i4-2">一個 SM 分成四個 partition</a></li><li><a class="sn-sub2" href="#i4-3">Tensor Core：一條指令做一小塊矩陣乘法</a></li><li><a class="sn-sub2" href="#i4-4">記憶體階層：越近越快，也越小</a></li><li><a class="sn-sub2" href="#i4-5">Little's law：頻寬要靠路上的 bytes</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">量測</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">nvidia-smi 量的是「有沒有 kernel 在跑」</a></li><li><a class="sn-sub2" href="#i5-2">MFU：prefill 和訓練看算力用了多少</a></li><li><a class="sn-sub2" href="#i5-3">MBU：decode 看頻寬用了多少</a></li><li><a class="sn-sub2" href="#i5-4">四個 counter，各看一個單元</a></li><li><a class="sn-sub2" href="#i5-5">讀 counter：先找哪個單元在忙</a></li><li><a class="sn-sub2" href="#i5-6">先看 timeline，再看 kernel</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">GPU 程式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">CPU 和 GPU 是兩台機器</a></li><li><a class="sn-sub2" href="#i6-2">Kernel 為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-3">Graph compiler：你寫 model，compiler 寫 kernel</a></li><li><a class="sn-sub2" href="#i6-4">Tile language：為一整塊寫，不為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-5">五層抽象：越往下，控制越多，成本越高</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Kernel 之內</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">Fusion：中間值不回 HBM</a></li><li><a class="sn-sub2" href="#i7-2">Attention 的問題：n × n 的中間值</a></li><li><a class="sn-sub2" href="#i7-3">FlashAttention：一塊一塊算，S 不離開晶片</a></li><li><a class="sn-sub2" href="#i7-4">Online softmax：不看完整列也能算對</a></li><li><a class="sn-sub2" href="#i7-5">四代 FlashAttention：每一代修上一代的瓶頸</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Kernel 之間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">SM 之間：最後一輪只用到兩成的 SM</a></li><li><a class="sn-sub2" href="#i8-2">Split-KV：decode 的 attention 要沿 KV cache 切</a></li><li><a class="sn-sub2" href="#i8-3">Launch 之間：CUDA Graphs、PDL 與 megakernel</a></li><li><a class="sn-sub2" href="#i8-4">GPU 之間：把通訊藏在計算後面</a></li><li><a class="sn-sub2" href="#i8-5">本文的判斷：多數團隊選 engine，不寫這些</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">AI 寫的 kernel</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">本文補的：2025–2026 年的五個案例</a></li><li><a class="sn-sub2" href="#i9-2">漏洞集中在四個地方</a></li><li><a class="sn-sub2" href="#i9-3">Speed of light：roofline 給的時間下限</a></li><li><a class="sn-sub2" href="#i9-4">本文的判斷：驗收一個 AI 寫的 kernel，五個檢查</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">一張卡之外</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">Scale-up 和 scale-out</a></li><li><a class="sn-sub2" href="#i10-2">出了這台機器，慢一個數量級</a></li><li><a class="sn-sub2" href="#i10-3">故障：16K 張 GPU，約每 3 小時中斷一次</a></li><li><a class="sn-sub2" href="#i10-4">電力：一櫃 120 kW，要液冷</a></li><li><a class="sn-sub2" href="#i10-5">水：用掉的和取用的不一樣</a></li></ol></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="延伸閱讀"><span class="sn-n">3</span><span class="sn-t">延伸閱讀</span></a></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
@@ -73,14 +73,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">先看這裡</h2>
-    <p class="thesis">先看一個例子。你在一張 H200（NVIDIA 的 GPU）上跑語言模型（下面叫 model），一次只服務一個請求。監控工具 nvidia-smi 顯示使用率 100%，字卻出得很慢。你的第一個念頭是 GPU 不夠快，要再買一張。其實這張 GPU 的運算能力只用到大約 0.5%。它的時間幾乎都花在搬資料：把 model 的參數（訓練出來的一大堆數字，就是 model 的本體）從 GPU 自己的記憶體讀到做運算的電路上。那個 100% 只代表「有程式在跑」。</p>
-    <p class="thesis">Model 的每一步運算，在 GPU 上是一段一段的小程式在跑，每一段叫一個 kernel。一個 kernel 要花多久，看兩件事裡比較慢的那一件：要從記憶體搬多少資料，和要做多少次運算。這堂回答的問題是：<strong>怎麼先算出瓶頸在哪一邊</strong>，再選改法，最後用對的數字確認。下面三條是這堂的判斷。</p>
+    <p class="thesis">先看一個例子。你在一張 H200（NVIDIA 的 GPU）上跑語言模型（下面叫 model），一次只服務一個請求。監控工具 nvidia-smi 顯示使用率 100%，字卻出得很慢。你的第一個念頭是 GPU 不夠快，要再買一張。其實這張 GPU 的運算能力只用到大約 0.5%（第 3 章用規格算出這個數字）。它的時間幾乎都花在搬資料：把 model 的參數（訓練出來的一大堆數字，就是 model 的本體）從 GPU 自己的記憶體讀到做運算的電路上。那個 100% 只代表「有程式在跑」。</p>
+    <p class="thesis">Model 的每一步運算，在 GPU 上是一段一段的小程式在跑，每一段叫一個 kernel。一個 kernel 要花多久，看兩件事裡比較慢的那一件：要從記憶體搬多少資料，和要做多少次運算。搬資料和運算可以同時進行，所以快的那一件會被慢的那一件蓋過去，時間不是兩者相加。這堂回答的問題是：<strong>怎麼先算出瓶頸在哪一邊</strong>，再選改法，最後用對的數字確認。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>先算每搬 1 byte 做了幾次運算。</b>這個比值叫 arithmetic intensity。每張 GPU 有一個門檻，H200 大約是每 byte 206 次運算。比值低於門檻，慢的是搬資料，這時加運算能力沒有用，要想辦法少搬；高於門檻，才是運算能力不夠（第 2 章）。</span></li>
-      <li><span><b>Model 逐字輸出時，慢的是搬資料。</b>Model 每產生一個 token（文字的一小段），都要把全部的參數讀一遍，而每個參數只拿來算一次：搬得多、算得少，比值遠低於門檻，所以例子裡運算能力幾乎閒著。改法是把很多請求併成一批一起算，一批叫一個 batch：參數讀一遍，整批請求一起用，<strong>batch 越大，每個請求分攤到的搬運越少</strong>。但每個請求還有自己的一份資料要讀，就是它到目前為止的對話算出來的中間結果；這一份別的請求用不到，分攤不了，對話越長就越慢（第 3 章）。</span></li>
-      <li><span><b>量對了再改，也別相信沒驗證過的加速。</b>Model 逐字輸出的階段，要看的是記憶體每秒能搬的量（叫記憶體頻寬）用了幾成；<strong>nvidia-smi 的 100% 沒有告訴你這個</strong>（第 4 章）。請 AI 改寫 kernel 之後，它如果回報快了很多，先算一下：照這張 GPU 的頻寬，搬完這些資料最少要多久？它報的時間比這個還短，就是量錯了。再用多組輸入確認，改寫後的 kernel 算出的答案和改寫前一樣（第 9 章）。</span></li>
+      <li><span><b>先算每搬 1 byte 做了幾次運算。</b>這個比值叫 arithmetic intensity。每張 GPU 有一個門檻：它每秒能做的運算次數，除以它每秒能從記憶體搬的 byte 數，也就是搬來的每 1 byte 要配幾次運算，運算電路才不會停下來等資料。H200 大約是每 byte 206 次運算。比值低於門檻，慢的是搬資料，這時加運算能力沒有用，要想辦法少搬；高於門檻，才是運算能力不夠（第 2 章）。</span></li>
+      <li><span><b>Model 逐字輸出時，慢的是搬資料。</b>Model 一次輸出一個 token（文字的一小段，中文大約一個字），每產生一個 token，都要把全部的參數讀一遍：晶片上的儲存加起來約一百多 MB，放不下十幾到上百 GB 的參數，上一步讀過的留不住，下一步只能再從 GPU 的記憶體讀一次，而每個參數只拿來算一次：搬得多、算得少，比值遠低於門檻，所以例子裡運算能力幾乎閒著。改法是把很多請求併成一批一起算，一批叫一個 batch：參數讀一遍，整批請求一起用，<strong>batch 越大，每個請求分攤到的搬運越少</strong>。但每個請求還有自己的一份資料要讀，就是它到目前為止的對話算出來的中間結果：新的 token 要參考前面的每一個字，所以每產生一個 token，這份中間結果也要整份從記憶體讀一遍。這一份別的請求用不到，分攤不了；對話越長，這個請求每一步要讀的就越多，每個字也就出得越慢（第 3 章）。</span></li>
+      <li><span><b>量對了再改，也別相信沒驗證過的加速。</b>Model 逐字輸出的階段，要看的是記憶體每秒能搬的量（叫記憶體頻寬）用了幾成；<strong>nvidia-smi 的 100% 沒有告訴你這個</strong>（第 5 章）。請 AI 改寫 kernel 之後，它如果回報快了很多，先算一下：照這張 GPU 的頻寬，搬完這些資料最少要多久？它報的時間比這個還短，就是量錯了。再用多組輸入確認，改寫後的 kernel 算出的答案和改寫前一樣（第 9 章）。</span></li>
     </ul>
-    <p class="readhow">第 5 到 8 章是晶片內部和幾種改法的細節，第 10 章是一張 GPU 以外的事（網路、故障、電力），需要時查。</p>
+    <p class="readhow">第 4 章打開晶片內部，第 6 到 8 章是幾種改法的細節，第 10 章是一張 GPU 以外的事（網路、故障、電力），需要時查。</p>
   </section>
 
   <div class="layout">
@@ -89,17 +89,17 @@
         <header class="part-head">
           <p class="kicker">1 · 核心觀念</p>
           <h2>先判斷卡在記憶體還是算力，再決定怎麼改</h2>
-          <p class="lede">兩份 deck（10/21 的 GPU 基礎與架構、11/02 的程式與 kernel）合成一篇，十章依重要性排，不照 slides 的順序：前四章判斷 GPU 卡在哪裡、怎麼量；第 5 章打開晶片，說明前面的數字從哪裡來；接著三章是寫程式與最佳化的手法；最後兩章是要防的：假的加速，以及一張卡之外的限制。標「本文補的」是課程沒講、本文加上的。</p>
+          <p class="lede">兩份 deck（10/21 的 GPU 基礎與架構、11/02 的程式與 kernel）合成一篇，不照 slides 的順序，照「後一章用到前一章」排。前三章先把 GPU 當成規格表上的幾個數字來估算：GPU 為什麼這樣設計、roofline 怎麼判斷卡在算力還是頻寬、decode 為什麼卡在頻寬。第 4 章打開晶片，看這些上限在什麼條件下才拿得到；第 5 章的量測，看的就是晶片裡這些單元忙不忙。接著三章是寫程式與最佳化：選哪一層寫、一個 kernel 之內、kernel 之間。最後兩章是要防的：假的加速，以及一張卡之外的限制。標「本文補的」是課程沒講、本文加上的。</p>
         </header>
         <nav class="map" aria-label="章節">
-          <p class="map-g">一定要會：先判斷 GPU 卡在哪裡</p>
+          <p class="map-g">先估算：GPU 卡在算力還是頻寬</p>
           <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">GPU 的設計<small>用幾千個簡單的核心換 throughput</small></span><span class="map-m">約 5 分</span></a>
           <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">Roofline<small>kernel 的時間由較慢的那一邊決定</small></span><span class="map-m">約 5 分</span></a>
           <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">Decode<small>batch 1 只用到 0.5% 的算力；MoE 一節是本文補的</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">量測<small>nvidia-smi 的 100% 只代表有 kernel 在跑</small></span><span class="map-m">約 5 分</span></a>
-          <p class="map-g">底層：晶片裡面</p>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">晶片裡面<small>Tensor Core 算得快，記憶體要靠平行才供得上</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">要用時會做：寫程式與最佳化</p>
+          <p class="map-g">往下一層：晶片裡面，以及怎麼量</p>
+          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">晶片裡面<small>Tensor Core 算得快，記憶體要靠平行才供得上</small></span><span class="map-m">約 4 分</span></a>
+          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">量測<small>nvidia-smi 的 100% 只代表有 kernel 在跑</small></span><span class="map-m">約 5 分</span></a>
+          <p class="map-g">改程式：選哪一層寫，再改 kernel 之內與之間</p>
           <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">GPU 程式<small>為一個 thread 寫，從最高的抽象層開始</small></span><span class="map-m">約 5 分</span></a>
           <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">Kernel 之內<small>少搬資料，FlashAttention 是範例</small></span><span class="map-m">約 6 分</span></a>
           <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">Kernel 之間<small>把 SM、launch 和 GPU 之間的空等拿掉</small></span><span class="map-m">約 5 分</span></a>
@@ -470,7 +470,7 @@
                 <li><b>放棄單一 thread 的速度。</b>時脈不高，也不先猜分支往下做，循序的程式慢很多。換到的是面積和電力都給了幾千個運算單元。</li>
                 <li><b>放棄自動的平行。</b>CPU 會在一個 thread 裡自己找出能同時做的指令；GPU 要你自己給它夠多的 thread，約 27 萬個才填得滿 132 個 SM，工作小的時候晶片大半閒著。換到的是延遲靠切換 warp 藏住，不靠 cache 和猜測。</li>
                 <li><b>放棄各自的控制流程。</b>32 個 thread 共用一條指令流，分支不同就要輪流跑（上一段的 divergence）。換到的是取一次指令、解碼一次，就能驅動 32 個 core。</li>
-                <li><b>放棄每個 thread 的大記憶體。</b>滿載時 registers 加 shared memory（SM 上給同一個 thread block 共用的晶片內記憶體；thread block 是程式一次交給一個 SM 的一批 thread，第 6 章講，這塊記憶體第 5 章細講），平均每個 thread 只有約 240 bytes。換到的是所有 thread 的狀態都留在晶片上，切換 warp 才不花時間。</li>
+                <li><b>放棄每個 thread 的大記憶體。</b>滿載時 registers 加 shared memory（SM 上給同一個 thread block 共用的晶片內記憶體；thread block 是程式一次交給一個 SM 的一批 thread，第 6 章講，這塊記憶體第 4 章細講），平均每個 thread 只有約 240 bytes。換到的是所有 thread 的狀態都留在晶片上，切換 warp 才不花時間。</li>
               </ul>
               <p>本文的判斷：讀者最常撞到的是第二個取捨。LLM 適合 GPU，因為 model 處理的每個 token（文字切成的小段）都用同一組 weights（model 的參數）做同樣的矩陣乘法，可以大量平行。但 decode 一次只產生一個 token，<strong>每一步的工作量太小</strong>，問題有兩層：讀進來的每個 weight 只做一次乘加，運算單元多半在等 HBM 送資料；有些步驟能平行的工作也不多，填不滿 132 個 SM（第 8 章）。下一章先把前一層算成數字：每搬 1 byte 做幾個 FLOP。</p>
             </div>
@@ -498,7 +498,7 @@
               </table></div>
               <p id="i2-3"><b>一條公式。</b>Kernel 是在 GPU 上跑的一個函式，CPU 發一次 launch，它就跑一次。搬資料和算數字可以同時進行，所以 kernel 的時間取兩者較慢的那一個：</p>
               <figure class="file"><figcaption>kernel 的時間（下限）</figcaption><pre><code class="lang-text">kernel 時間 ≈ max( 搬的 bytes ÷ 頻寬 , 算的 FLOPs ÷ peak 算力 )</code></pre></figure>
-              <p>用 L9 算過的 Llama 3 8B 代進去：BF16 的 weights 約 16 GB，每個 token 約 16 GFLOP（2 × 參數量，見 L9〈<a href="l09.html#i4">三個數字</a>〉）。H200 的頻寬是 4.8 TB/s，BF16 peak 是 989 TFLOP/s：</p>
+              <p>用 L9 算過的 Llama 3 8B 代進去：BF16 的 weights 約 16 GB，每個 token 約 16 GFLOP（2 × 參數量，見 L9〈<a href="l09.html#i5">三個數字</a>〉）。H200 的頻寬是 4.8 TB/s，BF16 peak 是 989 TFLOP/s：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>情境</th><th>搬的 bytes</th><th>算的 FLOPs</th><th>bytes ÷ 頻寬</th><th>FLOPs ÷ peak</th><th>時間</th></tr></thead>
                 <tbody>
@@ -646,13 +646,13 @@
                   <tr><td>2006</td><td>Tesla G80</td><td>繪圖用的幾種核心合成一種通用核心（unified shader）；CUDA 讓你用 C 寫 kernel，thread 分組成 block，同一個 block 共用晶片上的 shared memory</td></tr>
                   <tr><td>2010</td><td>Fermi C2050</td><td>真正的 L1／L2 cache；記憶體錯誤更正（ECC）；各種記憶體共用一個位址空間，指標不必分是哪一種；快的 FP64（科學計算用的 64 位元浮點）</td></tr>
                   <tr><td>2012</td><td>Kepler K20X</td><td>同一個 warp 的 thread 直接交換 register 的值（warp shuffle）；kernel 可以自己再 launch kernel（dynamic parallelism）；GPU 有 32 條工作佇列，多個 CPU 執行緒能同時送工作（Hyper-Q）</td></tr>
-                  <tr><td>2014</td><td>Maxwell M40</td><td>SM 分成四個 partition（第 5 章）；每瓦效能提升</td></tr>
+                  <tr><td>2014</td><td>Maxwell M40</td><td>SM 分成四個 partition（第 4 章）；每瓦效能提升</td></tr>
                   <tr><td>2016</td><td>Pascal P100</td><td>HBM2（疊在 GPU 旁邊的高頻寬記憶體）；GPU 之間的高速連線 NVLink；CPU 和 GPU 共用位址空間、缺頁時自動搬資料的 unified memory；FP16 比 FP32 快 2 倍</td></tr>
-                  <tr><td>2017</td><td>Volta V100</td><td>Tensor Core（專做小塊矩陣乘法的電路，第 5 章）；warp 裡每個 thread 記得自己執行到哪裡（independent thread scheduling），分支後的兩條路可以交錯推進，例如一條路在等鎖時先跑另一條；但同一時間仍只跑一條路，第 1 章 divergence 的代價還在；L1 和 shared memory 合成一塊</td></tr>
+                  <tr><td>2017</td><td>Volta V100</td><td>Tensor Core（專做小塊矩陣乘法的電路，第 4 章）；warp 裡每個 thread 記得自己執行到哪裡（independent thread scheduling），分支後的兩條路可以交錯推進，例如一條路在等鎖時先跑另一條；但同一時間仍只跑一條路，第 1 章 divergence 的代價還在；L1 和 shared memory 合成一塊</td></tr>
                   <tr><td>2018</td><td>Turing T4</td><td>Tensor Core 也能算 8 位元、4 位元的整數（INT8／INT4）；光線追蹤用的 ray tracing core</td></tr>
-                  <tr><td>2020</td><td>Ampere A100</td><td>給 AI 用的兩種格式 TF32、BF16；每 4 個數有 2 個是零時跳過不算的 2:4 sparsity；資料從 HBM 直接進 shared memory 的 cp.async（第 5 章）；把一張 GPU 切成幾張獨立小 GPU 的 MIG；40 MB 的 L2</td></tr>
-                  <tr><td>2022</td><td>Hopper H100</td><td>FP8；一條指令搬一整塊 tile 的 TMA（第 5 章）；相鄰的 SM 組成 cluster，能讀彼此的 shared memory（DSMEM）；4 個 warp 一起發的非同步矩陣乘法指令 wgmma；保護使用中資料的 confidential computing</td></tr>
-                  <tr><td>2024</td><td>Blackwell B200</td><td>兩顆 die 包成一顆 GPU；FP6／FP4，每一小塊數字共用一個縮放倍數（block scaling）；放矩陣乘法結果的 TMEM（第 5 章）；新一代 Tensor Core 指令 tcgen05；72 張 GPU 用 NVLink 連成一組的 NVL72（第 10 章）</td></tr>
+                  <tr><td>2020</td><td>Ampere A100</td><td>給 AI 用的兩種格式 TF32、BF16；每 4 個數有 2 個是零時跳過不算的 2:4 sparsity；資料從 HBM 直接進 shared memory 的 cp.async（第 4 章）；把一張 GPU 切成幾張獨立小 GPU 的 MIG；40 MB 的 L2</td></tr>
+                  <tr><td>2022</td><td>Hopper H100</td><td>FP8；一條指令搬一整塊 tile 的 TMA（第 4 章）；相鄰的 SM 組成 cluster，能讀彼此的 shared memory（DSMEM）；4 個 warp 一起發的非同步矩陣乘法指令 wgmma；保護使用中資料的 confidential computing</td></tr>
+                  <tr><td>2024</td><td>Blackwell B200</td><td>兩顆 die 包成一顆 GPU；FP6／FP4，每一小塊數字共用一個縮放倍數（block scaling）；放矩陣乘法結果的 TMEM（第 4 章）；新一代 Tensor Core 指令 tcgen05；72 張 GPU 用 NVLink 連成一組的 NVL72（第 10 章）</td></tr>
                   <tr><td>2025</td><td>Blackwell Ultra B300</td><td>288 GB 的 HBM3e；NVIDIA 自己的 FP4 格式（NVFP4）dense 15 PFLOP/s，即 15,000 TFLOP/s；算 exp 的單元變快；FP64 大減</td></tr>
                   <tr><td>2026</td><td>Rubin NVL72</td><td>HBM4、NVLink 6、更大的 TMEM 與 shared memory（初步）</td></tr>
                 </tbody>
@@ -670,7 +670,7 @@
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Prefill、decode 與 model 的三個數字（L1、L9）</span></summary>
                 <div class="gloss-body prose">
                   <p>L1 講過，一個請求在 GPU 上分兩段。Prefill 一次讀完整段 prompt，決定第一個 token 多快出來（TTFT）。Decode 一次產生一個 token，重複到輸出結束，決定之後每個 token 的間隔（TPOT）。見 L1〈<a href="l01.html#t1">Prefill 與 decode</a>〉。</p>
-                  <p>L9 從 model 的形狀算出三個數字。Weights：參數量 × 2 bytes（BF16）。計算：每個 token 約 2 × 參數量個 FLOP。KV cache：每個 token 在每一層存 K 和 V，大小是 2 × 層數 × KV head 數 × head 維度 × 2 bytes。Llama 3 8B 是 16 GB、16 GFLOP、每個 token 128 KiB；Llama 3 70B 是 141 GB、141 GFLOP、每個 token 320 KB。推導見 L9〈<a href="l09.html#i4">三個數字</a>〉。</p>
+                  <p>L9 從 model 的形狀算出三個數字。Weights：參數量 × 2 bytes（BF16）。計算：每個 token 約 2 × 參數量個 FLOP。KV cache：每個 token 在每一層存 K 和 V，大小是 2 × 層數 × KV head 數 × head 維度 × 2 bytes。Llama 3 8B 是 16 GB、16 GFLOP、每個 token 128 KiB；Llama 3 70B 是 141 GB、141 GFLOP、每個 token 320 KB。推導見 L9〈<a href="l09.html#i5">三個數字</a>〉。</p>
                 </div>
               </details>
               <p id="i3-1"><b>Batch 1：每個 weight 只用一次。</b>Decode 一步要把全部 weights 從 HBM 讀一遍，每個 weight（2 bytes）只做一次 multiply-add（2 FLOPs），intensity 約 1 FLOP/B。H200 的 ridge 是 206，所以它只能跑到 4.8 TB/s × 1 ≈ 5 TFLOP/s。Slides 把這題當小考，選項是約 50%、約 10%、約 2%、不到 1%：答案是最後一個，<strong>batch 1 的 decode 只用到約 0.5% 的算力</strong>。Prefill 剛好相反：2,048 個 token 共用同一次讀取，intensity 約 2,048，貼在屋頂上，只有更快的算力或更少的 FLOP 才有用。</p>
@@ -762,7 +762,7 @@
               <figcaption>Context 變長，一步 decode 慢在哪裡？藍色的 weights 每一步讀一次，和長度無關；粉色的 KV cache 隨 batch × 長度成長。32K 時 KV cache（深紅）已經是 weights 的 4 倍多，一步的時間是 1K 的 4.7 倍。依 slides 的數字，時間 = 總 bytes ÷ 4.8 TB/s。</figcaption>
             </figure>
               <p>換成每個請求的速度上限（本文用同一組數字算的，實際會更慢）：1K 時每秒 263 個 token，32K 時只剩 57 個。32K 時一步要讀 84.8 GB，其中 68.7 GB 是 KV cache。所以 <strong>長 context 的 decode 由 KV cache 的頻寬決定</strong>，成本主要在記憶體，不在算力。同一張 GPU 上，batch 和 context 搶的是同一個東西：每一步能讀的 bytes。</p>
-              <p id="i3-5"><b>本文補的：MoE 會把 batch 分給各個 expert。</b>上面的分析假設每個 token 都用同一組 weights，dense model 是這樣。MoE（mixture of experts，L9〈<a href="l09.html#i5">MoE</a>〉）把每一層的 FFN 換成很多組，每一組叫一個 expert，每個 token 只送到其中幾組。FFN（feed-forward network）是每一層在 attention 之後的那幾個大矩陣乘法，每個 token 各自算，占了 model 大部分的 weights。DeepSeek-V3 每層有 256 個 routed expert，每個 token 用 8 個（L9 的表寫成 257 個裡用 9 個，多的那 1 個是所有 token 都用的 shared expert）。所以一步 batch B 個 token，每個 routed expert 平均只分到 B × 8 ÷ 256 = B ÷ 32 個：</p>
+              <p id="i3-5"><b>本文補的：MoE 會把 batch 分給各個 expert。</b>上面的分析假設每個 token 都用同一組 weights，dense model 是這樣。MoE（mixture of experts，L9〈<a href="l09.html#i4">MoE</a>〉）把每一層的 FFN 換成很多組，每一組叫一個 expert，每個 token 只送到其中幾組。FFN（feed-forward network）是每一層在 attention 之後的那幾個大矩陣乘法，每個 token 各自算，占了 model 大部分的 weights。DeepSeek-V3 每層有 256 個 routed expert，每個 token 用 8 個（L9 的表寫成 257 個裡用 9 個，多的那 1 個是所有 token 都用的 shared expert）。所以一步 batch B 個 token，每個 routed expert 平均只分到 B × 8 ÷ 256 = B ÷ 32 個：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 248" role="img" aria-label="左右兩個面板。左邊是 dense model：256 個 token 都送進同一組 FFN weights，所以每個 weight 讀一次用 256 次。右邊是 MoE，DeepSeek-V3 的設定：256 個 token 經過 router，每個 token 只送到 256 個 routed expert 裡的 8 個；畫出 E0 到 E7 和省略號，每個 expert 平均只分到約 8 個 token，每個 weight 讀一次只用約 8 次，深紅色。">
@@ -822,161 +822,10 @@
           </div>
 
           <div class="idea" id="i4">
-            <h3><span class="idea-no">4</span>量測：nvidia-smi 的 100% 只代表有 kernel 在跑</h3>
+            <h3><span class="idea-no">4</span>晶片裡面：Tensor Core 算得快，記憶體要靠平行才供得上</h3>
             <div class="prose">
-              <p>前三章是估算。實際跑起來，GPU 用得好不好要量。最常見的錯是看 nvidia-smi 的 GPU-Util：batch 1 的 decode 只用到 0.5% 的算力，它照樣顯示 100%。這一章講該看哪些數字，以及看到之後怎麼判斷下一步。</p>
-              <p id="i4-1"><b>nvidia-smi 量的是「有沒有 kernel 在跑」。</b>NVML（nvidia-smi 背後的函式庫）的文件把 GPU utilization 定義成：過去一段取樣時間裡，有一個以上 kernel 在執行的時間比例。只要 kernel 一個接一個，數字就是 100%，不管 kernel 用了幾個 SM、Tensor Core（GPU 上專做矩陣乘法的電路，第 5 章）忙不忙：</p>
-              <figure class="diagram">
-              <div class="scroll">
-                <svg viewBox="0 0 720 214" role="img" aria-label="示意圖，batch 1 的 decode 跑了一段時間。第一列是有沒有 kernel 在跑：一個接一個的 kernel 把整條時間填滿，nvidia-smi 顯示 100%。第二列是 HBM 在傳資料的時間比例（DRAM activity），黃色，畫成約三分之二。第三列是 Tensor Core 在算的時間比例（Tensor activity），只有每個 kernel 裡的一小條，畫成約 0.5%，深紅色。兩列都是忙碌的時間比例，不是頻寬或算力用了幾成。">
-                  <defs><marker id="l10v-sm-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l10v-sm-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <text x="12" y="45" class="dg-cb">有 kernel 在跑？</text>
-                  <rect x="160" y="24" width="360" height="30" rx="2" class="dg-n-n"/>
-                  <text x="530" y="45" class="dg-mn-ink">nvidia-smi：100%</text>
-                  <text x="12" y="97" class="dg-cb">HBM 在傳資料？</text>
-                  <rect x="160" y="76" width="360" height="30" rx="2" class="dg-n-n"/>
-                  <text x="530" y="97" class="dg-mn-ink">DRAM activity ≈ 67%</text>
-                  <text x="12" y="149" class="dg-cb">Tensor Core 在算？</text>
-                  <rect x="160" y="128" width="360" height="30" rx="2" class="dg-n-n"/>
-                  <text x="530" y="149" class="dg-k">Tensor activity ≈ 0.5%</text>
-                  <rect x="161.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
-                  <text x="190.0" y="44" text-anchor="middle" class="dg-mn">k1</text>
-                  <rect x="163.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
-                  <rect x="187.0" y="128" width="3" height="30" class="dg-n-focus"/>
-                  <rect x="221.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
-                  <text x="250.0" y="44" text-anchor="middle" class="dg-mn">k2</text>
-                  <rect x="223.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
-                  <rect x="247.0" y="128" width="3" height="30" class="dg-n-focus"/>
-                  <rect x="281.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
-                  <text x="310.0" y="44" text-anchor="middle" class="dg-mn">k3</text>
-                  <rect x="283.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
-                  <rect x="307.0" y="128" width="3" height="30" class="dg-n-focus"/>
-                  <rect x="341.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
-                  <text x="370.0" y="44" text-anchor="middle" class="dg-mn">k4</text>
-                  <rect x="343.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
-                  <rect x="367.0" y="128" width="3" height="30" class="dg-n-focus"/>
-                  <rect x="401.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
-                  <text x="430.0" y="44" text-anchor="middle" class="dg-mn">k5</text>
-                  <rect x="403.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
-                  <rect x="427.0" y="128" width="3" height="30" class="dg-n-focus"/>
-                  <rect x="461.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
-                  <text x="490.0" y="44" text-anchor="middle" class="dg-mn">k6</text>
-                  <rect x="463.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
-                  <rect x="487.0" y="128" width="3" height="30" class="dg-n-focus"/>
-                  <text x="160" y="196" class="dg-c">同一段時間：nvidia-smi 只看第一列</text>
-                </svg>
-              </div>
-              <figcaption>nvidia-smi 的 100% 量的是哪一列？只有第一列：有沒有 kernel 在跑。Batch 1 的 decode 讓 kernel 一個接一個，所以是 100%；但 Tensor Core 只有很小一段時間在算（深紅）。後兩列是本章後面表上的兩個 counter，量的都是忙碌的時間比例。示意圖：67% 和 0.5% 借用本章 MBU 一段和第 3 章的數字，只表示量級。</figcaption>
-            </figure>
-              <p>所以 <strong>拿 nvidia-smi 做容量規劃會買錯 GPU</strong>：一台 0.5% 的 GPU 和一台 70% 的 GPU 都顯示 100%。它只適合回答一件事：GPU 有沒有在等 CPU。Horace He 的〈Making Deep Learning Go Brrrr〉也這樣用它：數字低，表示 kernel 之間有空檔。</p>
-              <figure class="file"><figcaption>terminal：每秒印一次兩個 utilization（本文沒有實際跑過）</figcaption><pre><code class="lang-sh">$ nvidia-smi --query-gpu=utilization.gpu,utilization.memory --format=csv -l 1
-# utilization.gpu    有 kernel 在跑的時間比例，不是算力用了多少
-# utilization.memory HBM 有讀寫的時間比例，也不是頻寬用了多少
-# -l 1               每 1 秒印一列，Ctrl-C 停止</code></pre></figure>
-              <p id="i4-2"><b>MFU：prefill 和訓練看算力用了多少。</b>MFU（model FLOPs utilization）是實際的 model FLOP/s ÷ peak FLOP/s。分子只算 model 本身需要的 FLOP：推論時每處理一個 token 約 2N 個（N 是參數量），prefill 讀進的和 decode 產生的 token 都算。2N 是只跑 forward（從輸入算到輸出的那一趟）的量；訓練還要算 backward 求梯度，約 6N。分母是 Tensor Core 的 dense peak，也就是不算 sparsity 的峰值。Slides 的例子是 8 張 H100 跑 Llama 2 70B，每張每秒 3,040 個 token；slides 沒有說是 prefill 還是 decode、用哪種精度跑，所以這個例子只用來示範算法，不對照下面的經驗值：</p>
-              <div class="table-wrap"><table>
-                <thead><tr><th></th><th>算法</th><th>結果</th></tr></thead>
-                <tbody>
-                  <tr><td>每個 token 的 FLOP</td><td>2 × 70B</td><td>約 140 GFLOP</td></tr>
-                  <tr><td>實際的 model FLOP/s</td><td>每張 3,040 tok/s × 140 GFLOP</td><td>約 426 TFLOP/s</td></tr>
-                  <tr><td>MFU，分母用 FP8 dense peak</td><td>426 ÷ 1,979</td><td><b>約 22%</b></td></tr>
-                  <tr><td>MFU，分母換成 BF16 dense peak</td><td>426 ÷ 989</td><td>約 43%</td></tr>
-                </tbody>
-              </table></div>
-              <p>本文算的提醒：slides 的 1,979 是 H100 的 FP8 dense peak，slides 自己的 ridge 表也用這個值。同一個速度，分母換成 BF16 的 989，MFU 就變成 43%，所以 <strong>報 MFU 要寫明分母是哪一個精度</strong>。Slides 給的經驗值是：訓練 35–45%，推論的 prefill 40–60%，decode 10–40%（slides 沒寫這組數字的分母是哪一個精度的 peak，只能當粗略的範圍）。MFU 偏低通常有四個原因：</p>
-              <ul>
-                <li>多張 GPU 之間的通訊沒有藏在計算後面。</li>
-                <li>把 model 的層切給幾張 GPU 接力算（pipeline parallelism）時，一批資料剛進來和快做完時，有幾段 GPU 沒事做，這段空檔叫 bubble。</li>
-                <li>Memory-bound 的 kernel，例如 normalization（把每個 token 的那串數字縮放到同一個尺度的運算）、softmax。</li>
-                <li>訓練時為了省記憶體重算的 FLOP（activation checkpointing），不算進分子。</li>
-              </ul>
-              <p>MFU 把「硬體能做多少」和「軟體用了多少」分開：它量的是軟體把手上的 GPU 用到幾成，和這張 GPU 本身多快無關。所以比較兩套軟體、兩種設定時，MFU 比 tokens/s 公平；要挑哪張 GPU，還是看 tokens/s 和成本。</p>
-              <p id="i4-3"><b>MBU：decode 看頻寬用了多少。</b>MBU（model bandwidth utilization）是實際的 bytes/s ÷ peak 頻寬。Decode 一步要讀的 bytes 是全部 weights 加上讀到的 KV cache。例子：Llama 3 8B、BF16、batch 1、H200，每個 token 要讀 16 GB；跑到 200 tok/s 時是 16 GB × 200 = 3.2 TB/s，MBU = 3.2 ÷ 4.8 ≈ 67%。規則是 <strong>prefill 和訓練報 MFU，decode 報 MBU</strong>：batch 小的 decode，MFU 本來就低，拿它比較只會看到雜訊。</p>
-              <p>Serving 另外常報三個數字：延遲達標時每張 GPU 的 tokens/s（只報 tokens/s 不報延遲，數字可以靠加大 batch 灌高）、每個 token 的能耗（平均功率 ÷ tokens/s），以及每百萬 token 的成本：（每 GPU 小時的價格 ÷（tokens/s × 3,600））× 10⁶。假設每小時 3 美元、每秒 1,000 個 token，約 0.83 美元，這是 L8〈<a href="l08.html#i1">成本公式</a>〉裡單價的來源。</p>
-              <p id="i4-4"><b>四個 counter，各看一個單元。</b>nvidia-smi 之外，NVIDIA 的 DCGM（Data Center GPU Manager）能讀到每個單元的忙碌程度。定義依 DCGM 文件（2026-10 更新）：</p>
-              <div class="table-wrap"><table>
-                <thead><tr><th>Counter</th><th>量什麼</th><th>DCGM field</th></tr></thead>
-                <tbody>
-                  <tr><td><b>GPU utilization</b><br><small>nvidia-smi 的那個數字</small></td><td>有一個以上 kernel 在跑的時間比例</td><td>203</td></tr>
-                  <tr><td><b>SM activity</b></td><td>每個 SM 上至少有一個 warp 的時間比例，對全部 SM 平均。Warp 在等記憶體也算</td><td>1002</td></tr>
-                  <tr><td><b>SM occupancy</b></td><td>SM 上常駐的 warp ÷ 最多能放的 warp（H200 是 64）</td><td>1003</td></tr>
-                  <tr><td><b>Tensor activity</b></td><td>Tensor Core 的 pipe 在忙的 cycle 比例</td><td>1004</td></tr>
-                  <tr><td><b>DRAM activity</b></td><td>HBM 在送或收資料的 cycle 比例</td><td>1005</td></tr>
-                </tbody>
-              </table></div>
-              <p>DCGM 文件對 SM activity 的說法是：0.8 以上是有效使用 GPU 的必要條件，但不充分；低於 0.5 多半是沒用好。原因在表的第二列：warp 在等記憶體也算 active，所以 <strong>SM activity 高，不代表有在算</strong>。</p>
-              <figure class="file"><figcaption>terminal：DCGM 一次看五個 counter（指令依 slides，欄位依 DCGM 4.6 文件，2026-11 查）</figcaption><pre><code class="lang-sh">$ dcgmi dmon -e 203,1002,1003,1004,1005
-# -e 後面是 field ID，一個 ID 印一欄，值是 0 到 1 的比例（203 是百分比）
-# 203  GPU utilization（文件標為 deprecated，新的 ID 是 1613，同一個量）
-# 1002 SM activity   1003 SM occupancy   1004 Tensor activity   1005 DRAM activity
-
-# 官方文件的範例：1001、1004、1005 三欄，GPU 0 開始跑 Tensor Core 的負載
-$ dcgmi dmon -e 1001,1004,1005
-# Entity  GRACT  TENSO  DRAMA
-    GPU 0  0.000  0.000  0.000
-    GPU 0  0.552  0.527  0.000
-    GPU 0  0.969  0.928  0.000</code></pre></figure>
-              <p id="i4-5"><b>讀 counter：先找哪個單元在忙。</b>Slides 把這些 counter 排成三個問題：</p>
-              <figure class="diagram">
-              <div class="scroll">
-                <svg viewBox="0 0 720 404" role="img" aria-label="讀 counter 的決策樹。第一問：GPU 忙嗎，nvidia-smi 接近 100%？否：kernel 之間有空檔，可能是 CPU 發 kernel 太慢或資料載入慢，看 Nsight Systems 的 timeline，考慮 CUDA Graphs（把一串 launch 錄下來一次送出，第 8 章）。是：第二問：SM 忙嗎，SM activity 高嗎？否：thread block 太少，填不滿 SM，加大 batch 或讓每個 kernel 有更多 block。是：第三問：哪個單元在忙？三個結果：DRAM activity 高是 memory-bound，用 MBU 判斷；Tensor activity 高是 compute-bound，用 MFU 判斷；兩個都低是 latency-bound，用 Nsight Compute 看單一 kernel。">
-                  <defs><marker id="l10v-tr-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l10v-tr-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <rect x="14" y="14" width="260" height="54" rx="4" class="dg-n-b"/>
-                  <text x="144" y="38.0" text-anchor="middle" class="dg-l">1. GPU 忙嗎？</text>
-                  <text x="144" y="55.0" text-anchor="middle" class="dg-c">nvidia-smi 接近 100%</text>
-                  <rect x="330" y="14" width="376" height="54" rx="4" class="dg-n-n"/>
-                  <text x="518" y="38.0" text-anchor="middle" class="dg-l">kernel 之間有空檔：CPU 發太慢、資料載入慢</text>
-                  <text x="518" y="55.0" text-anchor="middle" class="dg-c">→ Nsight Systems 的 timeline、CUDA Graphs</text>
-                  <rect x="14" y="104" width="260" height="54" rx="4" class="dg-n-b"/>
-                  <text x="144" y="128.0" text-anchor="middle" class="dg-l">2. SM 忙嗎？</text>
-                  <text x="144" y="145.0" text-anchor="middle" class="dg-c">SM activity 高</text>
-                  <rect x="330" y="104" width="376" height="54" rx="4" class="dg-n-n"/>
-                  <text x="518" y="128.0" text-anchor="middle" class="dg-l">thread block 太少，填不滿 132 個 SM</text>
-                  <text x="518" y="145.0" text-anchor="middle" class="dg-c">→ 加大 batch，或讓 kernel 有更多 block</text>
-                  <rect x="14" y="194" width="260" height="54" rx="4" class="dg-n-b"/>
-                  <text x="144" y="218.0" text-anchor="middle" class="dg-l">3. 哪個單元在忙？</text>
-                  <text x="144" y="235.0" text-anchor="middle" class="dg-c">DRAM activity、Tensor activity</text>
-                  <path d="M274,41 L330,41" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
-                  <text x="302.0" y="33" text-anchor="middle" class="dg-cb">否</text>
-                  <path d="M274,131 L330,131" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
-                  <text x="302.0" y="123" text-anchor="middle" class="dg-cb">否</text>
-                  <path d="M144,68 L144,104" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
-                  <text x="154" y="90" class="dg-cb">是</text>
-                  <path d="M144,158 L144,194" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
-                  <text x="154" y="180" class="dg-cb">是</text>
-                  <path d="M144,248 L144,268 L118,268 L118,292 M144,268 L360,268 L360,292 M360,268 L602,268 L602,292" class="dg-link"/>
-                  <rect x="14" y="292" width="208" height="96" rx="4" class="dg-n-c"/>
-                  <text x="118" y="318" text-anchor="middle" class="dg-l">DRAM 高</text>
-                  <text x="118" y="344" text-anchor="middle" class="dg-mn-ink">memory-bound</text>
-                  <text x="118" y="370" text-anchor="middle" class="dg-c">看 MBU</text>
-                  <rect x="256" y="292" width="208" height="96" rx="4" class="dg-n-a"/>
-                  <text x="360" y="318" text-anchor="middle" class="dg-l">Tensor 高</text>
-                  <text x="360" y="344" text-anchor="middle" class="dg-mn-ink">compute-bound</text>
-                  <text x="360" y="370" text-anchor="middle" class="dg-c">看 MFU</text>
-                  <rect x="498" y="292" width="208" height="96" rx="4" class="dg-n-focus"/>
-                  <text x="602" y="318" text-anchor="middle" class="dg-l-on">兩個都低</text>
-                  <text x="602" y="344" text-anchor="middle" class="dg-mn-on">latency-bound</text>
-                  <text x="602" y="370" text-anchor="middle" class="dg-c-on">Nsight Compute</text>
-                </svg>
-              </div>
-              <figcaption>看到一組 counter，下一步做什麼？由上往下問三題，先排除空檔和閒置的 SM，再看是哪個單元在忙。兩個都低的情況（深紅）最難：單元沒在忙，也沒在搬資料，通常在等同步或一串相依的小操作，要打開單一 kernel 看。依 slides 的決策樹重畫。</figcaption>
-            </figure>
-              <p id="i4-6"><b>先看 timeline，再看 kernel。</b>Counter 告訴你哪一類問題，兩個 profiler 告訴你在哪裡。Nsight Systems 畫出整段執行的時間軸，找出慢的區段；Nsight Compute 解釋單一 kernel 為什麼慢：</p>
-              <figure class="file"><figcaption>terminal：先看 timeline，再看一個 kernel（本文沒有實際跑過，選項依 Nsight 文件）</figcaption><pre><code class="lang-sh">$ nsys profile -o run ./app          # Nsight Systems：記錄整段執行，輸出 run.nsys-rep
-                                     # 看 CPU thread、CUDA API、copy、kernel 在時間軸上的位置
-                                     # 找 kernel 之間的空檔、序列化的 stream、launch overhead
-$ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 vec_add 的 kernel
-                                     # --set full 收全部的 section：speed of light、記憶體流量、warp stall
-                                     # 每個 kernel 會重跑好幾次來收 counter，所以它量到的時間只能拿來互相比較</code></pre></figure>
-              <p>流程是：nsys 找出慢的區段，ncu 解釋其中一個 kernel，一次只改一件事，再量一次，和 L8〈<a href="l08.html#i4">淨節省</a>〉在同一組任務上比較的紀律一樣。還有一個不用工具的檢查來自 Horace He：把 batch 加倍，時間只多 10% 左右，就可能是 overhead-bound，時間花在 CPU 和 kernel launch，不在 GPU 上。這條檢查分不出另一種情況：小 batch 的 decode 卡在讀 weights，batch 加倍時要讀的 bytes 幾乎不變（第 3 章），時間也只多一點。兩者要用 nsys 的 timeline 分開：kernel 之間有大段空檔是 overhead-bound；kernel 一個接一個、DRAM activity 高，是 memory-bound。</p>
-            </div>
-          </div>
-
-          <div class="idea" id="i5">
-            <h3><span class="idea-no">5</span>晶片裡面：Tensor Core 算得快，記憶體要靠平行才供得上</h3>
-            <div class="prose">
-              <p>前四章把 GPU 當成三個數字。這一章打開晶片，看 peak 和頻寬在什麼條件下才拿得到：<strong>peak 只屬於矩陣乘法，頻寬只屬於同時有夠多資料在路上的程式</strong>。第 7、8 章的每一種最佳化，都是在滿足這兩個條件。</p>
-              <p id="i5-1"><b>H200 的版面。</b>Slides 用 H200 當例子。132 個 SM 共用一個 L2 和六個 HBM stack，每個 SM 有自己的 registers 和 256 KB 的 SRAM（晶片上的靜態記憶體，比 HBM 快得多，也小得多）；這 256 KB 在下一張圖裡叫 L1／shared memory：</p>
+              <p>前三章只拿規格表上的數字看 GPU，主要是第 2 章三個規格裡的算力（peak）和頻寬。這一章打開晶片，看這兩個上限在什麼條件下才拿得到：<strong>peak 只屬於矩陣乘法，頻寬只屬於同時有夠多資料在路上的程式</strong>。「在路上」指已經發出讀取、還沒送到的資料，本章最後一節的 Little's law 會算要多少。第 7、8 章的每一種最佳化，都是在滿足這兩個條件。</p>
+              <p id="i4-1"><b>H200 的版面。</b>Slides 用 H200 當例子。132 個 SM 共用一個 L2 和六個 HBM stack，每個 SM 有自己的 registers 和 256 KB 的 SRAM（晶片上的靜態記憶體，比 HBM 快得多，也小得多）；這 256 KB 在後面放大一個 SM 的圖裡叫 L1／shared memory：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 330" role="img" aria-label="H200 的版面。中間是 132 個小方塊，排成 12 乘 11，代表 132 個 SM，其中一個是深紅色，標註每個 SM 有 registers 和 256 KB SRAM。SM 下面是所有 SM 共用的 L2 cache，50 MB。左右各三個 HBM3e stack，每個 24 GB，六個合計 141 GB 可用，頻寬 4.8 TB/s。最右邊一個箭頭標著 NVLink，900 GB/s，是兩個方向合計，每個方向 450 GB/s，連到其他 GPU。">
@@ -1146,7 +995,7 @@ $ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 ve
               </div>
               <figcaption>H200 由哪些部分組成？132 個 SM 共用一個 50 MB 的 L2，再接到六個 HBM3e stack（6 × 24 GB，可用 141 GB，4.8 TB/s）。灰色是 HBM，藍色是 L2，黃色是通往其他 GPU 的 NVLink（900 GB/s 是兩個方向合計，每個方向 450 GB/s）。依 slides 引用的 Hopper whitepaper 與 H200 datasheet。</figcaption>
             </figure>
-              <p id="i5-2"><b>一個 SM 分成四個 partition。</b>第 1 章說每個 SM 有 4 個 warp scheduler，它們各自帶著一份 register 和一組運算單元，就是四個 partition：</p>
+              <p id="i4-2"><b>一個 SM 分成四個 partition。</b>第 1 章說每個 SM 有 4 個 warp scheduler，它們各自帶著一份 register 和一組運算單元，就是四個 partition：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 300" role="img" aria-label="一個 SM 分成四個 partition，左右並排。每個 partition 由上到下是：warp scheduler，每個 cycle 發一條 warp 指令；64 KB registers；32 個 FP32 core；一個 Tensor Core，深紅色。四個 partition 下面是共用的 L1／shared memory，256 KB。最上面註記：最多 64 個 warp、2,048 個 thread 常駐。">
@@ -1199,7 +1048,7 @@ $ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 ve
               </div>
               <figcaption>一個 SM 裡面長什麼樣？四個 partition 各有一個 warp scheduler，每個 cycle 各發一條 warp 指令，所以一個 SM 每個 cycle 最多發四條。每個 partition 有一個 Tensor Core（深紅），矩陣乘法由它做；其他運算交給 FP32 core。</figcaption>
             </figure>
-              <p id="i5-3"><b>Tensor Core：一條指令做一小塊矩陣乘法。</b>LLM 的 FLOP 超過 99% 是矩陣乘法，softmax 和 normalization 只占很小一部分。Tensor Core 是專門做 D = A × B + C 的電路，一條指令處理一整塊：</p>
+              <p id="i4-3"><b>Tensor Core：一條指令做一小塊矩陣乘法。</b>LLM 的 FLOP 超過 99% 是矩陣乘法，softmax 和 normalization 只占很小一部分。Tensor Core 是專門做 D = A × B + C 的電路，一條指令處理一整塊：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 200" role="img" aria-label="一條 Tensor Core 指令的形狀：D 等於 A 乘 B 加 C。A 是 16 乘 16 的方塊，B 是 16 乘 8，C 和 D 都是 16 乘 8，照比例畫成小格子。右邊寫著：一條 mma 指令做 2,048 次 multiply-add，等於 64 條 FMA 的 warp 指令。">
@@ -1337,7 +1186,7 @@ $ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 ve
                 </tbody>
               </table></div>
               <p>所以 roofline 的屋頂只屬於矩陣乘法，softmax、normalization 這類運算跑在 FP32 core 上，屋頂只有 Tensor Core 的 1/15。Horace He 的〈Making Deep Learning Go Brrrr〉用 BERT 舉例：非矩陣乘法的運算只占 0.2% 的 FLOP，但 normalization 達到的 FLOP/s 比矩陣乘法低 250 倍，pointwise 運算（每個數字各自算一次，例如每個數都加上同一個常數）低 700 倍，所以 <strong>它們占的時間遠多於 FLOP 的比例</strong>。FlashAttention 是把 attention 整段算在晶片上的 kernel（第 7 章），它的第四版 FlashAttention-4 就卡在這裡：B200 的 Tensor Core 變快了，算 exp 的單元沒有。</p>
-              <p id="i5-4"><b>記憶體階層：越近越快，也越小。</b>資料從 HBM 到運算單元，中間經過好幾層。依 slides 引用的 Hopper 量測（Luo 等，2024）：</p>
+              <p id="i4-4"><b>記憶體階層：越近越快，也越小。</b>資料從 HBM 到運算單元，中間經過好幾層。依 slides 引用的 Hopper 量測（Luo 等，2024）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>層</th><th>容量</th><th>Latency</th><th>頻寬</th></tr></thead>
                 <tbody>
@@ -1349,7 +1198,7 @@ $ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 ve
                 </tbody>
               </table></div>
               <p>Kernel 最佳化大多是在這張表上搬家：把會重複用的資料放到上面幾層，<strong>讓 HBM 只讀一次</strong>。第 7 章的 fusion 和 FlashAttention 都是這個做法。</p>
-              <p id="i5-5"><b>Little's law：頻寬要靠路上的 bytes。</b>HBM 的頻寬不是自動拿到的。Little's law 是排隊理論的一條定律：系統裡平均有多少東西，等於到達率乘以每件停留的時間。換成記憶體的說法：</p>
+              <p id="i4-5"><b>Little's law：頻寬要靠路上的 bytes。</b>HBM 的頻寬不是自動拿到的。Little's law 是排隊理論的一條定律：系統裡平均有多少東西，等於到達率乘以每件停留的時間。換成記憶體的說法：</p>
               <figure class="file"><figcaption>Little's law，用在記憶體上</figcaption><pre><code class="lang-text">頻寬 = 路上的 bytes ÷ latency
 H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每個約 9 KB
 寫法直接的 kernel：32 warps × 32 threads × 4 bytes = 4 KB／SM
@@ -1432,6 +1281,157 @@ H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每
               </table></div>
                 </div>
               </details>
+            </div>
+          </div>
+
+          <div class="idea" id="i5">
+            <h3><span class="idea-no">5</span>量測：nvidia-smi 的 100% 只代表有 kernel 在跑</h3>
+            <div class="prose">
+              <p>前三章估算 GPU 最快能多快，上一章再看這些上限由晶片裡的哪個單元決定。實際跑起來，GPU 用得好不好要量。最常見的錯是看 nvidia-smi 的 GPU-Util：batch 1 的 decode 只用到 0.5% 的算力，它照樣顯示 100%。這一章講該看哪些數字，以及看到之後怎麼判斷下一步。</p>
+              <p id="i5-1"><b>nvidia-smi 量的是「有沒有 kernel 在跑」。</b>NVML（nvidia-smi 背後的函式庫）的文件把 GPU utilization 定義成：過去一段取樣時間裡，有一個以上 kernel 在執行的時間比例。只要 kernel 一個接一個，數字就是 100%，不管 kernel 用了幾個 SM、Tensor Core（上一章那個專做矩陣乘法的電路）忙不忙：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 214" role="img" aria-label="示意圖，batch 1 的 decode 跑了一段時間。第一列是有沒有 kernel 在跑：一個接一個的 kernel 把整條時間填滿，nvidia-smi 顯示 100%。第二列是 HBM 在傳資料的時間比例（DRAM activity），黃色，畫成約三分之二。第三列是 Tensor Core 在算的時間比例（Tensor activity），只有每個 kernel 裡的一小條，畫成約 0.5%，深紅色。兩列都是忙碌的時間比例，不是頻寬或算力用了幾成。">
+                  <defs><marker id="l10v-sm-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l10v-sm-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="12" y="45" class="dg-cb">有 kernel 在跑？</text>
+                  <rect x="160" y="24" width="360" height="30" rx="2" class="dg-n-n"/>
+                  <text x="530" y="45" class="dg-mn-ink">nvidia-smi：100%</text>
+                  <text x="12" y="97" class="dg-cb">HBM 在傳資料？</text>
+                  <rect x="160" y="76" width="360" height="30" rx="2" class="dg-n-n"/>
+                  <text x="530" y="97" class="dg-mn-ink">DRAM activity ≈ 67%</text>
+                  <text x="12" y="149" class="dg-cb">Tensor Core 在算？</text>
+                  <rect x="160" y="128" width="360" height="30" rx="2" class="dg-n-n"/>
+                  <text x="530" y="149" class="dg-k">Tensor activity ≈ 0.5%</text>
+                  <rect x="161.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
+                  <text x="190.0" y="44" text-anchor="middle" class="dg-mn">k1</text>
+                  <rect x="163.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
+                  <rect x="187.0" y="128" width="3" height="30" class="dg-n-focus"/>
+                  <rect x="221.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
+                  <text x="250.0" y="44" text-anchor="middle" class="dg-mn">k2</text>
+                  <rect x="223.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
+                  <rect x="247.0" y="128" width="3" height="30" class="dg-n-focus"/>
+                  <rect x="281.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
+                  <text x="310.0" y="44" text-anchor="middle" class="dg-mn">k3</text>
+                  <rect x="283.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
+                  <rect x="307.0" y="128" width="3" height="30" class="dg-n-focus"/>
+                  <rect x="341.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
+                  <text x="370.0" y="44" text-anchor="middle" class="dg-mn">k4</text>
+                  <rect x="343.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
+                  <rect x="367.0" y="128" width="3" height="30" class="dg-n-focus"/>
+                  <rect x="401.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
+                  <text x="430.0" y="44" text-anchor="middle" class="dg-mn">k5</text>
+                  <rect x="403.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
+                  <rect x="427.0" y="128" width="3" height="30" class="dg-n-focus"/>
+                  <rect x="461.0" y="24" width="58.0" height="30" rx="2" class="dg-n-a"/>
+                  <text x="490.0" y="44" text-anchor="middle" class="dg-mn">k6</text>
+                  <rect x="463.0" y="76" width="40.2" height="30" rx="2" class="dg-n-b"/>
+                  <rect x="487.0" y="128" width="3" height="30" class="dg-n-focus"/>
+                  <text x="160" y="196" class="dg-c">同一段時間：nvidia-smi 只看第一列</text>
+                </svg>
+              </div>
+              <figcaption>nvidia-smi 的 100% 量的是哪一列？只有第一列：有沒有 kernel 在跑。Batch 1 的 decode 讓 kernel 一個接一個，所以是 100%；但 Tensor Core 只有很小一段時間在算（深紅）。後兩列是本章後面表上的兩個 counter，量的都是忙碌的時間比例。示意圖：67% 和 0.5% 借用本章 MBU 一段和第 3 章的數字，只表示量級。</figcaption>
+            </figure>
+              <p>所以 <strong>拿 nvidia-smi 做容量規劃會買錯 GPU</strong>：一台 0.5% 的 GPU 和一台 70% 的 GPU 都顯示 100%。它只適合回答一件事：GPU 有沒有在等 CPU。Horace He 的〈Making Deep Learning Go Brrrr〉也這樣用它：數字低，表示 kernel 之間有空檔。</p>
+              <figure class="file"><figcaption>terminal：每秒印一次兩個 utilization（本文沒有實際跑過）</figcaption><pre><code class="lang-sh">$ nvidia-smi --query-gpu=utilization.gpu,utilization.memory --format=csv -l 1
+# utilization.gpu    有 kernel 在跑的時間比例，不是算力用了多少
+# utilization.memory HBM 有讀寫的時間比例，也不是頻寬用了多少
+# -l 1               每 1 秒印一列，Ctrl-C 停止</code></pre></figure>
+              <p id="i5-2"><b>MFU：prefill 和訓練看算力用了多少。</b>MFU（model FLOPs utilization）是實際的 model FLOP/s ÷ peak FLOP/s。分子只算 model 本身需要的 FLOP：推論時每處理一個 token 約 2N 個（N 是參數量），prefill 讀進的和 decode 產生的 token 都算。2N 是只跑 forward（從輸入算到輸出的那一趟）的量；訓練還要算 backward 求梯度，約 6N。分母是 Tensor Core 的 dense peak，也就是不算 sparsity 的峰值。Slides 的例子是 8 張 H100 跑 Llama 2 70B，每張每秒 3,040 個 token；slides 沒有說是 prefill 還是 decode、用哪種精度跑，所以這個例子只用來示範算法，不對照下面的經驗值：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th></th><th>算法</th><th>結果</th></tr></thead>
+                <tbody>
+                  <tr><td>每個 token 的 FLOP</td><td>2 × 70B</td><td>約 140 GFLOP</td></tr>
+                  <tr><td>實際的 model FLOP/s</td><td>每張 3,040 tok/s × 140 GFLOP</td><td>約 426 TFLOP/s</td></tr>
+                  <tr><td>MFU，分母用 FP8 dense peak</td><td>426 ÷ 1,979</td><td><b>約 22%</b></td></tr>
+                  <tr><td>MFU，分母換成 BF16 dense peak</td><td>426 ÷ 989</td><td>約 43%</td></tr>
+                </tbody>
+              </table></div>
+              <p>本文算的提醒：slides 的 1,979 是 H100 的 FP8 dense peak，slides 自己的 ridge 表也用這個值。同一個速度，分母換成 BF16 的 989，MFU 就變成 43%，所以 <strong>報 MFU 要寫明分母是哪一個精度</strong>。Slides 給的經驗值是：訓練 35–45%，推論的 prefill 40–60%，decode 10–40%（slides 沒寫這組數字的分母是哪一個精度的 peak，只能當粗略的範圍）。MFU 偏低通常有四個原因：</p>
+              <ul>
+                <li>多張 GPU 之間的通訊沒有藏在計算後面。</li>
+                <li>把 model 的層切給幾張 GPU 接力算（pipeline parallelism）時，一批資料剛進來和快做完時，有幾段 GPU 沒事做，這段空檔叫 bubble。</li>
+                <li>Memory-bound 的 kernel，例如 normalization（把每個 token 的那串數字縮放到同一個尺度的運算）、softmax。</li>
+                <li>訓練時為了省記憶體重算的 FLOP（activation checkpointing），不算進分子。</li>
+              </ul>
+              <p>MFU 把「硬體能做多少」和「軟體用了多少」分開：它量的是軟體把手上的 GPU 用到幾成，和這張 GPU 本身多快無關。所以比較兩套軟體、兩種設定時，MFU 比 tokens/s 公平；要挑哪張 GPU，還是看 tokens/s 和成本。</p>
+              <p id="i5-3"><b>MBU：decode 看頻寬用了多少。</b>MBU（model bandwidth utilization）是實際的 bytes/s ÷ peak 頻寬。Decode 一步要讀的 bytes 是全部 weights 加上讀到的 KV cache。例子：Llama 3 8B、BF16、batch 1、H200，每個 token 要讀 16 GB；跑到 200 tok/s 時是 16 GB × 200 = 3.2 TB/s，MBU = 3.2 ÷ 4.8 ≈ 67%。規則是 <strong>prefill 和訓練報 MFU，decode 報 MBU</strong>：batch 小的 decode，MFU 本來就低，拿它比較只會看到雜訊。</p>
+              <p>Serving 另外常報三個數字：延遲達標時每張 GPU 的 tokens/s（只報 tokens/s 不報延遲，數字可以靠加大 batch 灌高）、每個 token 的能耗（平均功率 ÷ tokens/s），以及每百萬 token 的成本：（每 GPU 小時的價格 ÷（tokens/s × 3,600））× 10⁶。假設每小時 3 美元、每秒 1,000 個 token，約 0.83 美元，這是 L8〈<a href="l08.html#i1">成本公式</a>〉裡單價的來源。</p>
+              <p id="i5-4"><b>四個 counter，各看一個單元。</b>nvidia-smi 之外，NVIDIA 的 DCGM（Data Center GPU Manager）能讀到每個單元的忙碌程度。定義依 DCGM 文件（2026-10 更新）：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Counter</th><th>量什麼</th><th>DCGM field</th></tr></thead>
+                <tbody>
+                  <tr><td><b>GPU utilization</b><br><small>nvidia-smi 的那個數字</small></td><td>有一個以上 kernel 在跑的時間比例</td><td>203</td></tr>
+                  <tr><td><b>SM activity</b></td><td>每個 SM 上至少有一個 warp 的時間比例，對全部 SM 平均。Warp 在等記憶體也算</td><td>1002</td></tr>
+                  <tr><td><b>SM occupancy</b></td><td>SM 上常駐的 warp ÷ 最多能放的 warp（H200 是 64）</td><td>1003</td></tr>
+                  <tr><td><b>Tensor activity</b></td><td>Tensor Core 的 pipe 在忙的 cycle 比例</td><td>1004</td></tr>
+                  <tr><td><b>DRAM activity</b></td><td>HBM 在送或收資料的 cycle 比例</td><td>1005</td></tr>
+                </tbody>
+              </table></div>
+              <p>DCGM 文件對 SM activity 的說法是：0.8 以上是有效使用 GPU 的必要條件，但不充分；低於 0.5 多半是沒用好。原因在表的第二列：warp 在等記憶體也算 active，所以 <strong>SM activity 高，不代表有在算</strong>。</p>
+              <figure class="file"><figcaption>terminal：DCGM 一次看五個 counter（指令依 slides，欄位依 DCGM 4.6 文件，2026-11 查）</figcaption><pre><code class="lang-sh">$ dcgmi dmon -e 203,1002,1003,1004,1005
+# -e 後面是 field ID，一個 ID 印一欄，值是 0 到 1 的比例（203 是百分比）
+# 203  GPU utilization（文件標為 deprecated，新的 ID 是 1613，同一個量）
+# 1002 SM activity   1003 SM occupancy   1004 Tensor activity   1005 DRAM activity
+
+# 官方文件的範例：1001、1004、1005 三欄，GPU 0 開始跑 Tensor Core 的負載
+$ dcgmi dmon -e 1001,1004,1005
+# Entity  GRACT  TENSO  DRAMA
+    GPU 0  0.000  0.000  0.000
+    GPU 0  0.552  0.527  0.000
+    GPU 0  0.969  0.928  0.000</code></pre></figure>
+              <p id="i5-5"><b>讀 counter：先找哪個單元在忙。</b>Slides 把這些 counter 排成三個問題：</p>
+              <figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 404" role="img" aria-label="讀 counter 的決策樹。第一問：GPU 忙嗎，nvidia-smi 接近 100%？否：kernel 之間有空檔，可能是 CPU 發 kernel 太慢或資料載入慢，看 Nsight Systems 的 timeline，考慮 CUDA Graphs（把一串 launch 錄下來一次送出，第 8 章）。是：第二問：SM 忙嗎，SM activity 高嗎？否：thread block 太少，填不滿 SM，加大 batch 或讓每個 kernel 有更多 block。是：第三問：哪個單元在忙？三個結果：DRAM activity 高是 memory-bound，用 MBU 判斷；Tensor activity 高是 compute-bound，用 MFU 判斷；兩個都低是 latency-bound，用 Nsight Compute 看單一 kernel。">
+                  <defs><marker id="l10v-tr-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l10v-tr-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <rect x="14" y="14" width="260" height="54" rx="4" class="dg-n-b"/>
+                  <text x="144" y="38.0" text-anchor="middle" class="dg-l">1. GPU 忙嗎？</text>
+                  <text x="144" y="55.0" text-anchor="middle" class="dg-c">nvidia-smi 接近 100%</text>
+                  <rect x="330" y="14" width="376" height="54" rx="4" class="dg-n-n"/>
+                  <text x="518" y="38.0" text-anchor="middle" class="dg-l">kernel 之間有空檔：CPU 發太慢、資料載入慢</text>
+                  <text x="518" y="55.0" text-anchor="middle" class="dg-c">→ Nsight Systems 的 timeline、CUDA Graphs</text>
+                  <rect x="14" y="104" width="260" height="54" rx="4" class="dg-n-b"/>
+                  <text x="144" y="128.0" text-anchor="middle" class="dg-l">2. SM 忙嗎？</text>
+                  <text x="144" y="145.0" text-anchor="middle" class="dg-c">SM activity 高</text>
+                  <rect x="330" y="104" width="376" height="54" rx="4" class="dg-n-n"/>
+                  <text x="518" y="128.0" text-anchor="middle" class="dg-l">thread block 太少，填不滿 132 個 SM</text>
+                  <text x="518" y="145.0" text-anchor="middle" class="dg-c">→ 加大 batch，或讓 kernel 有更多 block</text>
+                  <rect x="14" y="194" width="260" height="54" rx="4" class="dg-n-b"/>
+                  <text x="144" y="218.0" text-anchor="middle" class="dg-l">3. 哪個單元在忙？</text>
+                  <text x="144" y="235.0" text-anchor="middle" class="dg-c">DRAM activity、Tensor activity</text>
+                  <path d="M274,41 L330,41" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
+                  <text x="302.0" y="33" text-anchor="middle" class="dg-cb">否</text>
+                  <path d="M274,131 L330,131" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
+                  <text x="302.0" y="123" text-anchor="middle" class="dg-cb">否</text>
+                  <path d="M144,68 L144,104" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
+                  <text x="154" y="90" class="dg-cb">是</text>
+                  <path d="M144,158 L144,194" class="dg-link" marker-end="url(#l10v-tr-ah)"/>
+                  <text x="154" y="180" class="dg-cb">是</text>
+                  <path d="M144,248 L144,268 L118,268 L118,292 M144,268 L360,268 L360,292 M360,268 L602,268 L602,292" class="dg-link"/>
+                  <rect x="14" y="292" width="208" height="96" rx="4" class="dg-n-c"/>
+                  <text x="118" y="318" text-anchor="middle" class="dg-l">DRAM 高</text>
+                  <text x="118" y="344" text-anchor="middle" class="dg-mn-ink">memory-bound</text>
+                  <text x="118" y="370" text-anchor="middle" class="dg-c">看 MBU</text>
+                  <rect x="256" y="292" width="208" height="96" rx="4" class="dg-n-a"/>
+                  <text x="360" y="318" text-anchor="middle" class="dg-l">Tensor 高</text>
+                  <text x="360" y="344" text-anchor="middle" class="dg-mn-ink">compute-bound</text>
+                  <text x="360" y="370" text-anchor="middle" class="dg-c">看 MFU</text>
+                  <rect x="498" y="292" width="208" height="96" rx="4" class="dg-n-focus"/>
+                  <text x="602" y="318" text-anchor="middle" class="dg-l-on">兩個都低</text>
+                  <text x="602" y="344" text-anchor="middle" class="dg-mn-on">latency-bound</text>
+                  <text x="602" y="370" text-anchor="middle" class="dg-c-on">Nsight Compute</text>
+                </svg>
+              </div>
+              <figcaption>看到一組 counter，下一步做什麼？由上往下問三題，先排除空檔和閒置的 SM，再看是哪個單元在忙。兩個都低的情況（深紅）最難：單元沒在忙，也沒在搬資料，通常在等同步或一串相依的小操作，要打開單一 kernel 看。依 slides 的決策樹重畫。</figcaption>
+            </figure>
+              <p id="i5-6"><b>先看 timeline，再看 kernel。</b>Counter 告訴你哪一類問題，兩個 profiler 告訴你在哪裡。Nsight Systems 畫出整段執行的時間軸，找出慢的區段；Nsight Compute 解釋單一 kernel 為什麼慢：</p>
+              <figure class="file"><figcaption>terminal：先看 timeline，再看一個 kernel（本文沒有實際跑過，選項依 Nsight 文件）</figcaption><pre><code class="lang-sh">$ nsys profile -o run ./app          # Nsight Systems：記錄整段執行，輸出 run.nsys-rep
+                                     # 看 CPU thread、CUDA API、copy、kernel 在時間軸上的位置
+                                     # 找 kernel 之間的空檔、序列化的 stream、launch overhead
+$ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 vec_add 的 kernel
+                                     # --set full 收全部的 section：speed of light、記憶體流量、warp stall
+                                     # 每個 kernel 會重跑好幾次來收 counter，所以它量到的時間只能拿來互相比較</code></pre></figure>
+              <p>流程是：nsys 找出慢的區段，ncu 解釋其中一個 kernel，一次只改一件事，再量一次，和 L8〈<a href="l08.html#i5">淨節省</a>〉在同一組任務上比較的紀律一樣。還有一個不用工具的檢查來自 Horace He：把 batch 加倍，時間只多 10% 左右，就可能是 overhead-bound，時間花在 CPU 和 kernel launch，不在 GPU 上。這條檢查分不出另一種情況：小 batch 的 decode 卡在讀 weights，batch 加倍時要讀的 bytes 幾乎不變（第 3 章），時間也只多一點。兩者要用 nsys 的 timeline 分開：kernel 之間有大段空檔是 overhead-bound；kernel 一個接一個、DRAM activity 高，是 memory-bound。</p>
             </div>
           </div>
 
@@ -1580,7 +1580,7 @@ def add(x, y):
                 <svg viewBox="0 0 720 392" role="img" aria-label="選抽象層的流程，由上往下。先 profile。第一問：時間花在 kernel 之間的空檔嗎？是：用 CUDA Graphs，或 torch.compile 的 reduce-overhead。否：第二問：慢的 op 有現成的 kernel 嗎？是：直接用，例如 cuBLAS、FlashAttention、FlashInfer。否：第三問：只是沒有 fuse，或少一個 op？是：用 Triton 或 Helion，幾小時。否：第四問：GEMM 或 attention 要逼近 peak？是：CUTLASS、CuTe、ThunderKittens，幾週，每一代 GPU 要重做。否：不規則的工作，用 CUDA C++，深紅色。">
                   <defs><marker id="l10v-lv-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l10v-lv-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="14" y="10" width="270" height="36" rx="4" class="dg-n-n"/>
-                  <text x="149" y="33.0" text-anchor="middle" class="dg-ls">先 profile（第 4 章）</text>
+                  <text x="149" y="33.0" text-anchor="middle" class="dg-ls">先 profile（第 5 章）</text>
                   <path d="M149,46 L149,66" class="dg-link" marker-end="url(#l10v-lv-ah)"/>
                   <rect x="14" y="66" width="270" height="44" rx="4" class="dg-n-b"/>
                   <text x="149" y="93.0" text-anchor="middle" class="dg-ls">時間花在 kernel 之間的空檔？</text>
@@ -2064,8 +2064,8 @@ for (int t = 0; t &lt; max_tokens; t++)
               </div>
               <figcaption>Tensor parallelism 的通訊為什麼拖慢 GEMM？分開的 kernel 要等整個 collective（AllGather、ReduceScatter 這類多張 GPU 一起做的通訊）做完才開始算（深紅）。把通訊 fuse 進 GEMM 之後，每個 tile 的資料一到就算，算完的 tile 直接寫到它的擁有者那張 GPU。依 slides 與 FLUX 論文的描述重畫，長度是示意。</figcaption>
             </figure>
-              <p>FLUX（2024）把通訊 fuse 進 GEMM 的 tile：一列資料到了就開始算，每個 tile 的結尾直接寫給它的擁有者那張 GPU，不另外起 kernel。論文報告 <strong>最多能藏住 96% 的通訊</strong>，8 張 GPU 上 prefill 比 vLLM 快最多 1.66 倍、decode 快 1.30 倍。MoE 有另一種通訊：每個 token 要送到別張 GPU 上的 8 個 expert，算完再收回來（all-to-all）。DeepSeek 的 DeepEP 把一個 batch 拆成兩個 micro-batch，一個在算時，另一個在傳。它有兩種 kernel：decode 用的 low-latency kernel 只走 RDMA（讓網卡直接讀寫另一台機器上 GPU 記憶體的網路傳輸），傳輸在背景由網卡完成、不占 SM；prefill 和訓練用的 normal kernel，機內走 NVLink、跨機走 RDMA。<a href="https://github.com/deepseek-ai/DeepEP" target="_blank" rel="noopener">DeepEP 的 README</a> 量的是 normal kernel，用的 GPU 是 H800：H100 為了出口限制調低 NVLink 頻寬的版本，README 寫它的 NVLink 實際上限約 160 GB/s，比第 5 章 H200 每個方向的 450 GB/s 低。量到的結果是：機內 8 張 GPU 之間，把 token 送去 expert 的 dispatch 約 153 GB/s，接近這個上限；跨機的 dispatch 約 43 GB/s，走 400 Gb/s 的 RDMA 網卡，接近上限約 50 GB/s。</p>
-              <p id="i8-5"><b>本文的判斷：多數團隊選 engine，不寫這些。</b>這一章的手法幾乎都已經在 serving engine 裡：vLLM 和 SGLang 用 FlashInfer、CUDA Graphs，DeepEP 和 DeepGEMM 也是開源的。讀者要做的決定通常是兩件：<strong>選一個做了這些的 engine</strong>，再用 Nsight Systems 的 timeline 確認 kernel 之間沒有大空檔、通訊有藏在計算後面。看到空檔，回到第 4 章的決策樹。</p>
+              <p>FLUX（2024）把通訊 fuse 進 GEMM 的 tile：一列資料到了就開始算，每個 tile 的結尾直接寫給它的擁有者那張 GPU，不另外起 kernel。論文報告 <strong>最多能藏住 96% 的通訊</strong>，8 張 GPU 上 prefill 比 vLLM 快最多 1.66 倍、decode 快 1.30 倍。MoE 有另一種通訊：每個 token 要送到別張 GPU 上的 8 個 expert，算完再收回來（all-to-all）。DeepSeek 的 DeepEP 把一個 batch 拆成兩個 micro-batch，一個在算時，另一個在傳。它有兩種 kernel：decode 用的 low-latency kernel 只走 RDMA（讓網卡直接讀寫另一台機器上 GPU 記憶體的網路傳輸），傳輸在背景由網卡完成、不占 SM；prefill 和訓練用的 normal kernel，機內走 NVLink、跨機走 RDMA。<a href="https://github.com/deepseek-ai/DeepEP" target="_blank" rel="noopener">DeepEP 的 README</a> 量的是 normal kernel，用的 GPU 是 H800：H100 為了出口限制調低 NVLink 頻寬的版本，README 寫它的 NVLink 實際上限約 160 GB/s，比第 4 章 H200 每個方向的 450 GB/s 低。量到的結果是：機內 8 張 GPU 之間，把 token 送去 expert 的 dispatch 約 153 GB/s，接近這個上限；跨機的 dispatch 約 43 GB/s，走 400 Gb/s 的 RDMA 網卡，接近上限約 50 GB/s。</p>
+              <p id="i8-5"><b>本文的判斷：多數團隊選 engine，不寫這些。</b>這一章的手法幾乎都已經在 serving engine 裡：vLLM 和 SGLang 用 FlashInfer、CUDA Graphs，DeepEP 和 DeepGEMM 也是開源的。讀者要做的決定通常是兩件：<strong>選一個做了這些的 engine</strong>，再用 Nsight Systems 的 timeline 確認 kernel 之間沒有大空檔、通訊有藏在計算後面。看到空檔，回到第 5 章的決策樹。</p>
             </div>
           </div>
 
@@ -2565,7 +2565,7 @@ cheat_async    0.009 ms    516x   6.966 ms   0.8x</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>有 NVIDIA GPU 的話：量一個真的 kernel<span>第 4、6 章</span></summary>
+            <summary>有 NVIDIA GPU 的話：量一個真的 kernel<span>第 5、6 章</span></summary>
             <div class="exbody">
               <p>這一段要 NVIDIA GPU、CUDA Toolkit、Nsight 和 DCGM，本文沒有實際跑過，指令依 2026-11 查到的官方文件，輸出請以實際為準。用第 6 章的 <code>vec_add.cu</code>，把 n 改大到 64M 個元素，讓 kernel 夠長。</p>
               <figure class="file"><figcaption>terminal：從 timeline 到單一 kernel（本文沒有實際跑過）</figcaption><pre><code class="lang-sh">$ nvcc -O2 -o vec_add vec_add.cu
@@ -2619,7 +2619,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
               <li><b>值得看原文：</b>開頭那張基本的 roofline 圖，和加上 ceiling 之後的圖；四台機器的 ridge 對照；最後的 fallacies 一節。</li>
               <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 25 分。</li>
             </ul>
-            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Roofline 告訴你 kernel 會跑多快。」它給的是上限。實際速度可能遠低於屋頂，例如本頁第 4 章那種兩個單元都不忙的 latency-bound。Intensity 也不是演算法固定的性質：同一個運算，tiling 和 fusion 會改變搬的 bytes。</p></div></div>
+            <div class="callout caution"><span class="tag">別誤讀</span><div><p>「Roofline 告訴你 kernel 會跑多快。」它給的是上限。實際速度可能遠低於屋頂，例如本頁第 5 章那種兩個單元都不忙的 latency-bound。Intensity 也不是演算法固定的性質：同一個運算，tiling 和 fusion 會改變搬的 bytes。</p></div></div>
           </div></details>
           </li>
           <li>
@@ -2629,7 +2629,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>深度學習程式的時間花在三個地方：compute、memory bandwidth、overhead。先判斷是哪一種，再選對應的改法，否則改了也沒用。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i2">Roofline</a>〉的 compute-bound 和 memory-bound，這篇再加上第三種 overhead-bound。〈<a href="#i4">量測</a>〉的 batch 加倍測試與 nvidia-smi 的讀法、〈<a href="#i5">晶片裡面</a>〉非矩陣乘法慢很多的例子都出自這篇；它對 memory-bound 開的藥方 fusion，在〈<a href="#i7">Kernel 之內</a>〉。</p>
+            <p>本頁〈<a href="#i2">Roofline</a>〉的 compute-bound 和 memory-bound，這篇再加上第三種 overhead-bound。〈<a href="#i5">量測</a>〉的 batch 加倍測試與 nvidia-smi 的讀法、〈<a href="#i4">晶片裡面</a>〉非矩陣乘法慢很多的例子都出自這篇；它對 memory-bound 開的藥方 fusion，在〈<a href="#i7">Kernel 之內</a>〉。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>三種瓶頸、三種解法。</b>Compute-bound 用 Tensor Core 或更多硬體；bandwidth-bound 用 operator fusion，加算力沒用；overhead-bound 用 tracing、fusion、避開 Python 或 JIT。</li>
@@ -2642,7 +2642,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
             </ol>
             <p class="tk-h">原文怎麼讀</p>
             <ul>
-              <li><b>可以跳過：</b>開頭的動機和結尾的總結表，本頁第 2、4 章已經講過。</li>
+              <li><b>可以跳過：</b>開頭的動機和結尾的總結表，本頁第 2、5 章已經講過。</li>
               <li><b>值得看原文：</b>Bandwidth 一節重複乘法的 microbenchmark 圖（到約 64 次才轉成 compute-bound）；Overhead 一節的 profiler 截圖。</li>
               <li><b>時間：</b>只讀摘要約 3 分；照上面挑著看原文約 30 分。</li>
             </ul>
@@ -2695,7 +2695,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 30 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>B200 的 Tensor Core 吞吐加倍，算 exp 的單元和 shared memory 的頻寬卻沒變，瓶頸從矩陣乘法移到 softmax。FA4 重新設計 pipeline、用 FMA 單元分擔一部分 exp、跳過不必要的 rescale，最高到 1,613 TFLOP/s，約 peak 的 71%。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i7">Kernel 之內</a>〉那張 Hopper 對 Blackwell 的 cycle 圖用的就是這篇的數字，它是「晶片裡每個單元都有自己的屋頂」的例子。TMEM 和 2-CTA MMA 的背景在〈<a href="#i5">晶片裡面</a>〉的查閱註。</p>
+            <p>本頁〈<a href="#i7">Kernel 之內</a>〉那張 Hopper 對 Blackwell 的 cycle 圖用的就是這篇的數字，它是「晶片裡每個單元都有自己的屋頂」的例子。TMEM 和 2-CTA MMA 的背景在〈<a href="#i4">晶片裡面</a>〉的查閱註。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>不對稱的成長。</b>BF16 MMA 每個 SM 每個 clock 8,192 個 FLOP，Hopper 是 4,096；MUFU 的 exp 一樣是 16 個（B300 才加倍）；shared memory 一樣每個 clock 128 bytes。</li>
@@ -2782,7 +2782,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
           <details class="rg-dg"><summary>摘要<span>讀約 3 分；原文約 40 分</span></summary><div class="hint digest">
             <div class="dg-one"><p><b>一句話：</b>在 A100 和 Jetson Orin 上用 vLLM 量 dense 與 MoE model 的 prefill、decode，從現象、硬體原因到多卡擴展，整理成 31 條 insight。核心是 prefill 和 decode 卡在不同的資源。</p></div>
             <p class="tk-h">跟這堂課的關係</p>
-            <p>本頁〈<a href="#i3">Decode</a>〉的 MoE 一節引用它量到的 FFN intensity。它量到的 prefill 與 decode intensity，和〈<a href="#i2">Roofline</a>〉的估算一致；〈<a href="#i4">量測</a>〉講的 DRAM 利用率與 warp stall，它都有實測。</p>
+            <p>本頁〈<a href="#i3">Decode</a>〉的 MoE 一節引用它量到的 FFN intensity。它量到的 prefill 與 decode intensity，和〈<a href="#i2">Roofline</a>〉的估算一致；〈<a href="#i5">量測</a>〉講的 DRAM 利用率與 warp stall，它都有實測。</p>
             <p class="tk-h">壓縮後的重點</p>
             <ol>
               <li><b>設定。</b>4 張 A100 80GB 與一台 Jetson AGX Orin；vLLM 0.9.2、BF16、eager mode；Llama-3-8B、Qwen2.5-7B／32B，以及 MoE 的 Qwen3-30B-A3B（30.5B 參數裡每個 token 用 3.3B）。</li>

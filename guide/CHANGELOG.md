@@ -5,6 +5,7 @@
 
 ## README.md
 - 2026-11-12（L6b 拿掉兩段 Pokémon 的例子（James：「我認為是多的」）：第 2 章記憶資料夾的比較整段刪；第 5 章 Mt. Moon 只留結論一段，原圖 `l06b-mtmoon.webp` 刪掉。加兩段「本文的推論」：第 4 章〈誰決定什麼時候讀寫〉控制權跟著 model 實測的行為分、不跟著大小分；第 5 章〈Session 之間的整理〉兩個時機可以用不同的 model（Letta 的 sleep-time agent）與要顧的兩件事。起因是 James 轉來他和 Gemini 的討論，取捨在 V7_DECISIONS。L6b 閱讀 50 → 45 分。）
+- 2026-11-12（L9、L10 照「章的順序」檢查：L9 不重排，只改 lede；L10 第 4、5 章對調，晶片在前、量測在後，nav.map 組名改成這堂的骨架，首頁 chip 與 dag.json 跟著改。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 第 6 章補三處審查留下的 needs-source，重讀 Cisco、MINJA v5、arXiv 2601.05504：Anthropic「使用者完全可信」推到什麼、98.2%／76.8% 是 6 種設定的平均、54 筆的分母論文沒給（82 筆滿分裡的 54 筆）。來源檔同步。）
 - 2026-11-12（**L6b 照記憶的四層重排**：六章 → 七章（Transcripts、Memory notes、Memory representations、Injected context、跨層的操作、安全、目錄），James 讀起來不順、自己畫的是四層；新寫 `#i1-3` transcripts 的兩張表與各章開頭；錨點、題庫位置、`l06.html` 的 `#moved` 表、DAG 的 `src` 跟著改。加「章的順序：有依賴就照依賴排」一條。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 直接放 Anthropic〈The components of agent memory〉的原圖（James 要求試著復用）：1 章〈往右靠〉的效益圖換成原文 Figure 5，`#n-clbench` 註加 Figure 3；2 章〈Session 之間的整理〉加四層圖兩張（session 進行中、dreaming）與 Mt. Moon 對照圖。圖檔在 `docs/img/`（webp，寬 1600）；新寫法 `figure.diagram.shot` 記在 STYLE_ARTICLE 第 6 節；`review_pack.py`、`page_text.py` 讀 `img` 的 `alt`，`audit.py` 檢查 `alt` 與檔案存在。）
@@ -105,6 +106,7 @@
 - 2026-10-21（討論改為每堂一串、只放基礎題）。
 
 ## STYLE_ARTICLE.md
+- 2026-11-12（第 0 節〈章的順序〉的判斷法加一個訊號：名詞第一次出現只能往後指「第 N 章」，就是依賴倒過來了；例子是 L10 的量測與晶片。）
 - 2026-11-12（第 0 節加〈章的順序：有依賴就照依賴排，重要性不靠章序表達〉：獨立的想法照份量排；資料流、層次照依賴排，每章開頭先說這一層是什麼；一堂只有一張地圖。L6b 第一個照這條重排。）
 - 2026-11-11（6c 加「什麼時候標」：可讀性審查過了才標，只搬標籤不改字。）
 - 2026-11-11（6c 紅字：寫明目的是掃讀路徑（只讀 h3、`<b>`、紅字推得回論證），加三個檢查（`<b>` 是題目、紅字是答案；離開上下文看得懂；標意思不只標數字）；優先順序改成結論與做法第一、數字第三。L6b 依此重標 17 處，數量 25 → 26，文字沒改。）

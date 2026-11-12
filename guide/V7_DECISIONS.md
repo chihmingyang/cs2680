@@ -93,6 +93,7 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 ## L9 LLM 的結構與 serving 的帳（10 章，40 分）
 
 - **排法。** 一定要會（1 request 的一生、2 骨架與參數、3 attention 與 KV cache、4 三個數字）：每個 serving 與買 GPU 的決定都從這裡算，算錯就是買錯硬體、答應錯的 SLA，難挽回也推不出來；章內照依賴排，先兩段，再零件，最後算帳。選 model 時看的（5 MoE、6 改 KV 的架構、7 現在的 model、8 tokenizer）：機制能從第 4 章推，但要有數字才能選；model 名會過時，原則寫正文、表格標查詢日。自己架時會調的（9 sampling）：改錯便宜、託管 model 已經不給調。需要時查（10）：looped、diffusion、MTP 能從三個數字推出，也還不是主流。
+- **2026-11-12，照〈章的順序〉檢查（README 記著 L9、L10 是資料流型，還沒檢查）：不重排。** 用 STYLE_ARTICLE 第 0 節的判斷法，把各章寫成名詞問「不先講 A，B 講得清楚嗎」：1 request 的一生 → 2 骨架 → 3 attention → 4 三個數字是一條依賴鏈，本來就照順序排；5 MoE、6 改 KV 的架構都只接在第 4 章的帳上，7 現在的 model 接在 6 上，順序對。Tokenizer 在資料流上是最上游（文字 → token），但這一章的判斷（中文一個字算幾個 token、詞彙大小的代價）要先有第 2 章的 embedding 表和第 4 章的帳才講得清楚，所以排在後面才是依賴順序；sampling 同理，它改的是輸出長度，要先有第 1、4 章。`dag.json` 也一致：tokenizer、sampling 只依賴 next-token。一堂只有一張地圖也成立：第 1 章的六段圖是 request 的流程，第 2 章的圖是放大其中的 model，兩張不互搶全貌。只改了 `part-head` 的 lede：原本寫「十章依重要性排」，改成說明前四章為什麼這樣接、後面各章接在哪裡。
 - **補。** 每 token 的 KV（第 7 章）：課程只算 Llama 3 70B；六個 open-weight model 依官方 config.json 算出 24 到 320 KiB，差 13 倍，結論變成「參數多的 model 可能放得下更多長 context 的人」（計算，不是量測）。中文的 token 數（第 8 章）：slides 的「3–4 字元一個 token」是英文；本文用六個 tokenizer 實測本站 50,315 個繁體字，0.71–0.91 token／字（GPT-4 的 cl100k 是 1.36），繁體比同段簡體多 6–23%，和 DeepSeek、Qwen 的官方經驗值與 Bailong（2024）一致。Token 預算併進第 4 章，不標本文補的（方法來自延伸閱讀的 kipply）。
 - **刪。** RMSNorm、pre-norm、√dk 收成名詞註。690 GB 的 S、FlashAttention、roofline 一句帶過連 L10。Continuous batching 只寫 slides 講的（11/04 的主場）。Temperature 0 不保證相同連 L1，不重講。
 - **更正 slides。** 320 KB 實際是 327,680 byte，所以 64 個 request 是 1,819 GB，不是 1,779 GB（頁面註明）；「Serving is hard」的 token ID 是示意，改用 Llama 3 tokenizer 的實際輸出。
@@ -102,10 +103,11 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 
 - **兩份 deck 一篇。** 10/21 的 2a 與 11/02 的 2b 封面是同一堂，James 定合成一篇。
 - **排法。** 一定要會（1 GPU 的設計、2 roofline、3 decode、4 量測）：瓶頸在 bytes 還是 FLOP，決定之後每種改法有沒有用；拿 nvidia-smi 做容量規劃會買錯 GPU，代價大又看不出來；第 1 章是第一次接觸 GPU 的讀者的前提。底層（5 晶片裡面）：解釋 peak 只屬於矩陣乘法、頻寬靠 bytes in flight，不改變多數人的決定，但第 7、8 章要用；規格會過時，收成查閱。要用時會做（6 程式、7 kernel 之內、8 kernel 之間）：只有要寫或選 kernel 的人用到；先講抽象層回答要不要往下寫，手法的名字會過時，結論收成「選有這些手法的 engine」。要防的（9 AI 寫的 kernel、10 一張卡之外）：錯了事後才發現，代價大。
+- **2026-11-12，照〈章的順序〉重排：晶片裡面（原第 5 章）搬到量測（原第 4 章）前面。** 原本照重要性把「一定要會」的四章（設計、roofline、decode、量測）排在前面，「底層」的晶片排第 5 章。照依賴檢查：量測的 counter 是一個單元一個（SM、Tensor Core、HBM），讀者在第 4 章第一次看到 Tensor Core 時只有一個「第 5 章」的指路；晶片那一章本身只用到第 1 章的 warp 和第 2 章的 peak、頻寬，沒有用到量測。所以量測依賴晶片，反過來不成立，兩章對調。其他章的依賴本來就順：1 → 2 → 3，晶片 → 6 GPU 程式（shared memory、thread block）→ 7 kernel 之內 → 8 kernel 之間。nav.map 的組名從重要性（一定要會、底層、要用時會做）改成這一堂的骨架：先估算 → 往下一層（晶片、量測）→ 改程式 → 要防的；量測的重要性改由「先看這裡」第三條和小字表達。改動：兩章的 id 對調（`#i4` 晶片、`#i5` 量測，小節跟著換），頁內的「第 4／5 章」逐條改（第 1 章的 shared memory 註、第 2 章 GPU 世代表五處、第 6 章圖的「先 profile」、第 8 章兩處、動手試試、延伸閱讀兩處、tldr 兩處），量測開頭改成「前三章估算……上一章再看這些上限由晶片裡的哪個單元決定」，晶片開頭「前四章」改「前三章」；首頁兩個 chip 的連結、`dag.json` 的 `src` 對調，gpu-measurement 加一條 deps chip-internals。審查紀錄在 review_reports/l10-20261112/。
 - **補。** AI 寫的 kernel 怎麼量錯（第 9 章整章）：課程只有一句提醒；METR、Sakana 與 robust-kbench（加速從 3.13x 降到 1.49x）、CUDA-L1（另開 stream 騙過計時）、KernelBench v0.1、Hacker-fixer loop（2025-02 到 2026-06），收成五個驗收檢查，第一個是 roofline 的 speed of light。MoE 把 batch 分給各 expert（第 3 章一節）：slides 的 batching 結論只對 dense 成立；DeepSeek 2025-02 的推論系統說明（EP144）與 2025-12 的 A100 量測。
 - **刪。** 課務；GPU 世代、各精度 ridge 表、TMA／TMEM、其他晶片、編譯到 SASS 收成查閱（會過時）；最佳化清單併成第 7 章開頭的四個目標；batching、quantization、speculative decoding 各一句（後面的講次）。
 - **更正 slides。** Little's law 那頁是 4 KB 不是 512 B；A100 到 Rubin 的頻寬是 10.8 倍不是約 9 倍，BF16 的 ridge 也沒有一路右移；MFU 22% 的分母是 FP8 peak，換成 BF16 是 43%；故障原因的 8%／17%／30% 用 Llama 3 論文 Table 5 確認。
-- **待決定。** 55 分鐘比其他堂長（可讀性審查補了約 20 個名詞的解釋，從 50 分變 55 分）；要縮的話，第 5 章可以整章改成查閱（約省 4 分）。
+- **待決定。** 55 分鐘比其他堂長（可讀性審查補了約 20 個名詞的解釋，從 50 分變 55 分）；要縮的話，第 4 章〈晶片裡面〉（2026-11-12 前是第 5 章）可以整章改成查閱（約省 4 分）。
 - **可讀性審查（push 前，WORKFLOW I）。** 第一輪 71 BLOCK：tldr 約 20 個先用後講的名詞、查閱表的硬體名詞與「–」、幾個對不起來的數字（Llama 3 故障 58.7% 對圖上加起來的 55.9%，差的是沒畫出的兩個小類；NVLink 900 是兩個方向合計，每個方向 450；EP144 × 2 = 288 是 256 個 expert 加 32 份備份）。作者另外更正兩處沒被標的：Llama 3 8B 的 GQA 是 g = 4，不是 8；slides 列的是三個 GPU 丟時間的地方，第四個是人的時間。第二輪剩 12 BLOCK、1 NIT，主線修，沒有審第三輪。
 
 ## L11 作業回饋與 agent 的十個陷阱（10 章，35 分）
