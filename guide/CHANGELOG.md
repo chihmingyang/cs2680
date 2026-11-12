@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-13（L6b 用詞改成英文術語（James：「不是應該統一用英文 reflect 之類的？」）：當名詞用的「歸納」全頁改成 reflection（89 處，含題庫；「歸納出」「歸納成」當一般動詞的留著）；dreaming 的三件事改成 correct、reflection、promote 與 demote，並註明各是誰的用詞。`CLAUDE.md` 加一條：開工先跑 `review_status.py status`，checklist 加條目時只拿新條目掃舊章。）
 - 2026-11-13（L6b 第 5 章：James 問 Reflect、Forget 和後面的 dreaming 是不是重疊。是：前兩個是操作，dreaming 是時機。開頭那一段改寫，加一張對照表（修錯、歸納、換層各是哪一站的操作、session 裡做不做得到）和 compaction／GC 的類比。）
 - 2026-11-13（L6b 第 4 章接上 RAG：James 問「這不就是 RAG 流程嗎？」。第 2 段點名 RAG 與 semantic search；`#i4-1` 改寫成「在 RAG 上多加四個訊號」，順序是已知 → 為什麼不夠 → 新增；章標題、nav.map、側欄、dag.html 跟著改。圖、表、SQL、題庫沒動。）
 - 2026-11-13（L10 整堂可讀性重審（v16）：兩輪 112 + 16 BLOCK 全修，第 9 章漏洞改成五類，A100 頻寬與 70B KV cache 的單位統一。取捨在 V7_DECISIONS，審查紀錄在 review_reports/l10-20261113/。）
