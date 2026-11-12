@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-12（L6b 拿掉兩段 Pokémon 的例子（James：「我認為是多的」）：第 2 章記憶資料夾的比較整段刪；第 5 章 Mt. Moon 只留結論一段，原圖 `l06b-mtmoon.webp` 刪掉。加兩段「本文的推論」：第 4 章〈誰決定什麼時候讀寫〉控制權跟著 model 實測的行為分、不跟著大小分；第 5 章〈Session 之間的整理〉兩個時機可以用不同的 model（Letta 的 sleep-time agent）與三個代價。起因是 James 轉來他和 Gemini 的討論，取捨在 V7_DECISIONS。L6b 閱讀 50 → 45 分。）
 - 2026-11-12（L6b 第 6 章補三處審查留下的 needs-source，重讀 Cisco、MINJA v5、arXiv 2601.05504：Anthropic「使用者完全可信」推到什麼、98.2%／76.8% 是 6 種設定的平均、54 筆的分母論文沒給（82 筆滿分裡的 54 筆）。來源檔同步。）
 - 2026-11-12（**L6b 照記憶的四層重排**：六章 → 七章（Transcripts、Memory notes、Memory representations、Injected context、跨層的操作、安全、目錄），James 讀起來不順、自己畫的是四層；新寫 `#i1-3` transcripts 的兩張表與各章開頭；錨點、題庫位置、`l06.html` 的 `#moved` 表、DAG 的 `src` 跟著改。加「章的順序：有依賴就照依賴排」一條。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 直接放 Anthropic〈The components of agent memory〉的原圖（James 要求試著復用）：1 章〈往右靠〉的效益圖換成原文 Figure 5，`#n-clbench` 註加 Figure 3；2 章〈Session 之間的整理〉加四層圖兩張（session 進行中、dreaming）與 Mt. Moon 對照圖。圖檔在 `docs/img/`（webp，寬 1600）；新寫法 `figure.diagram.shot` 記在 STYLE_ARTICLE 第 6 節；`review_pack.py`、`page_text.py` 讀 `img` 的 `alt`，`audit.py` 檢查 `alt` 與檔案存在。）
@@ -178,6 +179,7 @@
 - 2026-11-06（第一次用在新講次：L9–L11，10 個審查者，第一輪 33／71／21 BLOCK，第二輪剩 2／12／5，主線修完、沒有第三輪。「作者怎麼用報告」加兩條：第二輪的定位附第一輪的「我讀到的」（作者加段落後定位會移動）；新頁接到全站後就地改 HTML、不從片段重組。skill 第 4 步同步。十個審查者加三個作者修改碰到一次 5 小時的用量上限，大堂分給審查者時留意）。
 
 ## QUIZ.md
+- 2026-11-12（L6b 刪掉兩段 Pokémon 例子之後，刪觀念 k44.5、k44.6、k46.2 與題目 k44d、k44e、k46a；170 題 unit。新加的兩段推論還沒有題。）
 - 2026-11-12（L6b 重排章節：31 節、173 題的 id 不變，節的 `from`、整合題的 `after`、`scope`（6 章 → 7 章）、points 的 `at` 跟著新位置改；k33 與 20 幾題裡的章號改寫。新寫的 `#i1-3` 沒有題，併在 k45 這一節裡。）
 - 2026-11-11（**讀者自測優先**：James 讀 L6 發現有些題問論文的數字，定了優先順序：讀者自測比 regression test 重要，數字背後的含義才是重點。加〈讀者自測優先〉：判準是遷移；帶數字的題分三種；量測類觀念寫成「發現 → 所以」；觀念清單加 `evidence` 類，不出題。加〈數字對照〉：新的 `tools/check_numbers.py` 拿頁面引用來源的數字對 `guide/sources/lXX.md`，接進 `verify.sh`，L6、L6b 標 strict。`quiz.py check` 放行 `evidence`、擋只測 `evidence` 的題、選項只有數字給 warn。L6 題庫照改：106 題變 102 題。L6b 來源檔補三個漏記的數字（重開原文核對過）。build-quiz 的 points-prompt、writer-brief 同步。）
 - 2026-11-10（L6b 補五個小節的題：新節 k44–k48、20 題；用「只改了某一節」的維護流程，觀念由主線列。〈各堂題庫〉加一列。）

@@ -64,7 +64,7 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/6_agent_design_3.pdf" target="_blank" rel="noopener">6_agent_design_3.pdf ↗</a></li>
       <li><span class="k">頁數</span>31</li>
       <li><span class="k">同一份 slides</span>另一半是 <a href="l06.html">L6 Agent 可靠性</a></li>
-      <li><span class="k">閱讀</span><span class="read-time">約 50 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
       <li><span class="k">註與延伸</span><span class="deep-time">約 10 分鐘</span>，收合</li>
       <li><span class="k">全部展開</span><span class="full-time">約 60 分鐘</span></li>
     </ul>
@@ -388,18 +388,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
               </details>
               <p>為什麼寫死一條條件，傷害會這麼大？寫死的條件是作者事先猜「哪些事以後有用」，猜的時候還沒看到題目，model 寫筆記時卻正看著題目和答案，通常比作者猜得準。條件一寫死，model 能記的就只剩作者猜中的那一部分，所以<strong>條件變成上限，擋掉的是 model 本來會記、而且有用的事</strong>。文章只報了結果，沒有說機制，這是本文的解讀。文章只說，對 Opus 5、Opus 4.7 這類比 Sonnet 4.6 強的 model，讓它自己判斷值不值得記，比事先寫死條件有效。被擋掉的是什麼，可以對照文章對 Opus 5 筆記的描述：多數條目是一條它自己試出來的規則，附上它怎麼知道這條成立；另外有之前題目的答案，和它一路發現的陷阱。「只記失敗」把記憶限縮成答錯那幾題的教訓；model 在答對的題裡試出來、而且確認成立的查詢規則，就沒有地方放了（本文的解讀）。</p>
               <p>比較舊、比較弱的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以有記憶只比沒有記憶多 0.034 分。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，記憶的效益從 0.034 升到 0.311，和 Opus 5、Opus 4.7 不加這兩句時的效益（0.264、0.317）差不多。0.311 這個數字要打折看：加了這兩句的那一組跑了 3 次，三次的分數差很多，0.311 是用它們的平均算的。而且這一組有記憶的平均分數是 0.641，仍然低於 Opus 4.7 有記憶時的 0.700。這兩句教的是讀記憶、驗證猜測的步驟，沒有限制它記什麼，所以和上面「不要把條件寫死」不衝突，和「只記失敗」也不是同一種規則：限制記什麼，會擋掉有用的筆記；教它讀和驗證，是補上它自己不會做的步驟。所以記憶相關的 prompt 要跟著 model 調：model 弱，就把讀記憶、驗證猜測的步驟寫出來；model 強，寫用途就夠，也不要限制它記什麼。這兩句文章只在 Sonnet 4.6 上試過，沒有說對 Opus 5 有沒有幫助，只說這類引導對比較舊的 model 幫助最大，所以換 model 的時候要重新量一次（第 5 章的測試集）。</p>
-              <p>上面講的是記憶沒有發揮作用的兩種情況：條件寫死，有用的事被擋在外面；model 不去讀，記了也白記。另一個方向的失敗是記太多。同一篇文章有一個例子：兩個 model 各玩一次 Pokémon Red，開局時各拿到一個可以讀寫的記憶資料夾，在大約第 10,000 步時比較這兩個資料夾（文章沒有說兩者的 prompt 是否相同）：</p>
-              <div class="table-wrap" data-no-figure><table>
-                <thead><tr><th></th><th>Sonnet 3.7</th><th>Fable 5</th></tr></thead>
-                <tbody>
-                  <tr><td>記憶檔的數量</td><td>413 個檔，分在 225 個資料夾</td><td>10 個檔</td></tr>
-                  <tr><td>總字元數</td><td>977,930</td><td>43,406</td></tr>
-                  <tr><td>記了什麼</td><td>每一場戰鬥、每個道具、每個角色各一個檔</td><td>目前的目標、接下來的關卡和路線的計畫、試出來的打法、怎麼用記憶的規則</td></tr>
-                  <tr><td>遊戲進度（徽章數，破關要 8 個）</td><td>1 個</td><td>4 個</td></tr>
-                </tbody>
-              </table></div>
-              <p>Sonnet 3.7 記的多半是發生過的事和畫面上看得到的狀態：每一場戰鬥、每個道具、每個角色。遊戲一往前走，這些紀錄就過期或用不到了，它只好一直回頭修。在第 10,000 步前後（文章的「步」是 agent 做的每一個動作，讀寫記憶檔也算一步），它連續 17 步沒有做任何遊戲動作，只忙著新增 6 個檔、刪掉 9 個檔：記太多的代價不只是佔空間，維護記憶還會吃掉做事的步數。Fable 5 只記畫面上看不到、要自己推出來的事。這和上面「能重讀的不要記」是同一條規則：下一步自己看得到的不記，要重新推一次才知道的才記。文章沒有提到 Sonnet 3.7 被規則限制，它是自己認定每件事都可能有用，才全部記下。所以把「記什麼」交給 model 判斷，效果取決於 model 的判斷力。Sonnet 3.7 比上面的 Sonnet 4.6 更舊，弱的地方也不同：Sonnet 4.6 是記了不讀，Sonnet 3.7 是分不出什麼值得記，就全部記下。這種 model 也許要另外引導，但文章沒有測過哪種引導對它有效（本文的解讀）。兩個 model 的能力本來就不同，又各只跑一次，所以這是例子，不是對照實驗。</p>
-              <p>回到規則怎麼寫。規則分兩類，分法是錯了能不能補（這個分法是本文的判斷）。交給 model 判斷「值不值得記」，結果會有偏差：該記的漏了，或不必記的記多了。這兩種都還補得回來：漏記的，下次遇到同樣的情況還能再記；記多的，第 5 章的〈Session 之間的整理〉會在背景另開一個 session，把 store 對回原始紀錄，順便合併、刪掉用不到的筆記。所以「值不值得記」不要寫死，交給 model。<strong>後果收不回來的邊界則要寫死</strong>：別人的資料洩漏了、網頁裡的指令被照做了、使用者要求刪掉的資料又被讀出來用了，事後都補不回來。這類邊界有三條：外部內容不自動寫入（第 6 章）、別人的記憶查不到（第 4 章）、使用者要求刪除就刪（第 5 章）。它們由程式擋，不交給 model 判斷，例如寫入記憶的那段程式碼直接拒絕來源是網頁的內容，model 怎麼判斷都寫不進去。</p>
+              <p>最後是規則怎麼寫。規則分兩類，分法是錯了能不能補（這個分法是本文的判斷）。交給 model 判斷「值不值得記」，結果會有偏差：該記的漏了，或不必記的記多了。這兩種都還補得回來：漏記的，下次遇到同樣的情況還能再記；記多的，第 5 章的〈Session 之間的整理〉會在背景另開一個 session，把 store 對回原始紀錄，順便合併、刪掉用不到的筆記。所以「值不值得記」不要寫死，交給 model。<strong>後果收不回來的邊界則要寫死</strong>：別人的資料洩漏了、網頁裡的指令被照做了、使用者要求刪掉的資料又被讀出來用了，事後都補不回來。這類邊界有三條：外部內容不自動寫入（第 6 章）、別人的記憶查不到（第 4 章）、使用者要求刪除就刪（第 5 章）。它們由程式擋，不交給 model 判斷，例如寫入記憶的那段程式碼直接拒絕來源是網頁的內容，model 怎麼判斷都寫不進去。</p>
               <p>決定要記之後，接著是這一條要帶哪些欄位。第 1 章說過，寫入時沒存的，之後補不回來。不管存成四種格式的哪一種，下面兩個欄位都要留。</p>
               <p id="i2-5"><b>Valid time：新事實不刪舊的。</b>Valid time 是一件事實成立的那段時間。系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是每條記憶帶兩個時間欄位，<code>valid_from</code>（從什麼時候開始成立）和 <code>valid_to</code>（到什麼時候為止）：</p>
               <figure class="diagram">
@@ -896,6 +885,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               </div>
               <figcaption>這張圖回答：誰決定什麼時候讀寫？黃色是程式的判斷點；Model-controlled 那一列的 LLM 標成深紅，表示判斷交給 model，虛線表示它想呼叫哪個 memory tool 就呼叫哪個。讀和寫可以各選一種。</figcaption>
             </figure>
+              <p>三種裡，讀要選哪一種，看的是這個 model 實際會不會自己去讀（本文的推論；寫要怎麼選，在第 2 章〈<a href="#i2-3">寫入 policy</a>〉）。第 2 章的量測裡，Sonnet 4.6 不提示時，不到一半的題目會先讀記憶；同一篇文章說比它新一代的 Sonnet 5 大約九成會先讀。這兩個是同一個等級的前後兩代，Anthropic 另有更強的 Opus 等級。所以會不會讀，不能從 model 的等級猜，把讀交給 model（model-controlled）之前要先量。量出來不會讀，有兩種補法，先試輕的。輕的是在 prompt 裡把步驟寫出來，也就是第 2 章說的「model 弱就寫步驟」：Sonnet 4.6 加了「回答前先讀記憶」「把猜測拿去測試」兩句，記憶的效益就和 Opus 5、Opus 4.7 差不多。還不夠，才改成由程式去查。每一圈都查（automatic）最穩，代價是每一圈多一次查詢，用不到的記憶也會進 context。由程式先判斷這一圈要不要查（runtime-controlled）省一些，代價是要多寫判斷的規則。不管選哪一種，換 model 就用第 5 章的測試集重量一次。</p>
             </div>
           </div>
 
@@ -969,29 +959,14 @@ forget:    mark superseded facts invalid; delete only on user request      # 第
               </div>
               <figcaption>這兩張圖回答：四層各在什麼時候被寫入？上圖是 session 進行中，只有下面兩層被寫入：transcripts 是這個 session 的事件紀錄，memory notes 是 agent（圖上寫 Claude）自己寫的筆記。下圖是 session 之間：dreaming 讀 transcripts，往上寫另外三層（從 Transcripts 出發的三條箭頭）；相鄰兩層之間還有成對的上下箭頭，表示內容也在這兩層之間往上合併、往下搬。上面三件事對到下圖：修錯是 Transcripts 指向 Memory notes 的那一條，拿原始紀錄去對筆記；歸納是 Memory notes 往上到 Memory representations 的箭頭；換層是 Memory representations 和 Injected context 之間那一對上下箭頭。圖取自 Anthropic〈The components of agent memory〉（2026-11）。</figcaption>
 </figure>
-              <p>修錯最能說明為什麼要留 transcripts。Anthropic〈The components of agent memory〉的例子：Claude 玩 Pokémon Red，要從西邊走進 Mt. Moon 這個山洞，從東邊的出口出去，才到得了下一個城市 Cerulean City。入口旁有一棟叫 PokéCenter 的建築，Claude 拿它當地標；入口附近還有一個 ledge（只能往下跳的矮崖），跳下去就回到洞外來時的路上。Claude 在筆記裡把 PokéCenter 的位置寫錯了，寫成在東邊，也就是出口那一側，又把 Mt. Moon 標成「已通過」。照這兩條筆記，它以為自己已經在山洞的另一邊，其實它還在入口這一側。後來它從 ledge 跳了下去，回到洞外來時的路上。它用來認路的工具沒有顯示這一跳，所以它沒有發現自己掉回來了，繼續照著錯的筆記找路。</p>
-              <figure class="diagram shot">
-              <div class="scroll">
-                <img src="img/l06b-mtmoon.webp" width="1600" height="858" loading="lazy" alt="文章的原圖：兩張並排的遊戲畫面，agent 站在同一個位置，旁邊的白圈標出同一處。左邊標題 Raw memory，Stored note is wrong：agent 的箭頭標著 Heads for the next city。右邊標題 Memory + dreaming，Offline pass corrected the note：agent 的箭頭標著 Heads back to the cave entrance。">
-              </div>
-              <figcaption>這張圖回答：同一個位置，筆記對不對差在哪？兩邊的 agent 站在同一個位置，都還沒過山洞。左邊帶著錯的筆記（Raw memory），以為山洞已經過了，往下一個城市走（Heads for the next city）。右邊的筆記在 session 之間改對了（Memory + dreaming），它知道自己還沒過山洞，走回洞口（Heads back to the cave entrance）。圖取自 Anthropic〈The components of agent memory〉（2026-11）。</figcaption>
-</figure>
-              <p>上面的經過是「有記憶、沒有整理」的情況。文章一共比了三種條件，每種都讓 agent 做到累計 3,000 個遊戲動作：</p>
-              <div class="table-wrap" data-no-figure><table>
-                <thead><tr><th>條件</th><th>錯的筆記</th><th>結果</th></tr></thead>
-                <tbody>
-                  <tr><td>沒有記憶</td><td>沒有筆記</td><td>沒有走到 Cerulean City（山洞另一邊的城市）</td></tr>
-                  <tr><td>有記憶，沒有整理</td><td>一直留著</td><td>從 ledge 掉下去 3 次，最後走回出發的 Pewter City，也沒有走到</td></tr>
-                  <tr><td>有記憶，跑過整理</td><td>整理時對照 transcript，發現 PokéCenter 的位置寫錯，改寫（「已通過」那一條有沒有改，文章沒說）</td><td>重新進洞，在第 1,935 個動作走到 Cerulean City</td></tr>
-                </tbody>
-              </table></div>
-              <p>第二列和第 2 章的結論一致：帶著錯的筆記，結果沒有比沒有記憶好。第三列能修，靠的是兩樣東西都還在：<strong>寫下那條筆記時的 transcript，和一個回頭去對的步驟</strong>（文章沒有說每個條件跑了幾次、整理跑了幾輪，當例子看）。</p>
+              <p>修錯最能說明為什麼要留 transcripts。筆記記錯的時候，agent 自己看不出來：它讀到的只有那條筆記，會一直照著做。修得了，靠的是兩樣東西都還在：<strong>寫下那條筆記時的 transcript，和一個回頭去對的步驟</strong>。</p>
               <p>修錯是在 session 之間做的。這帶出一個選擇：一件事要在 session 裡當場記，還是留到 session 之間再整理。兩個時機就是上面那兩張四層圖，各有代價：</p>
               <ul>
-                <li><b>在 session 裡寫。</b>事情剛發生，agent 最知道哪一件重要。代價是寫筆記會佔用做任務的步數，第 2 章的 Sonnet 3.7 就是極端的例子。</li>
+                <li><b>在 session 裡寫。</b>事情剛發生，agent 最知道哪一件重要。代價是寫筆記會佔用做任務的步數。</li>
                 <li><b>在 session 之間整理。</b>不打擾任務，也看得到好幾個 session。代價是另外花 compute，而且整理跑完之前，下一個 session 用不到結果。</li>
               </ul>
               <p>兩種可以並用：session 裡只記一條短的線索，細的整理留到之後。整理多久跑一次還沒有定論：文章只提了方向（容易變的資訊優先拿去核對，常被讀到的記憶整理得勤一點），沒有量測。</p>
+              <p>兩個時機還可以交給不同的 model（本文的推論）。Session 裡的 model 有人在等它回應，要選快的；session 之間的整理沒有人在等，可以交給比較慢、比較強的 model。Letta 在 2025-04 推出的 <a href="https://letta.com/blog/sleep-time-compute" target="_blank" rel="noopener">sleep-time agent</a> 就是這樣拆的：一個 agent 負責回應，另一個在背景改寫前一個的記憶，兩個各自設定用哪個 model，Letta 建議背景那一個用比較強的。拆成兩個 model 之後，多了兩件事要顧。第一，負責回應的是比較弱的那個 model，它不一定會自己去讀記憶。它不讀，背景整理得再好也用不到，所以要照第 4 章〈<a href="#i4-5">誰決定什麼時候讀寫</a>〉先量。第二，比較強的 model 一次會改寫很多條筆記，寫出來的又是歸納，錯了會滾大，所以結果要另存一份、能整份退回（第 3 章〈<a href="#i3-5">歸納</a>〉）。另外，session 之間的整理本身也不是每次都划算。Letta 的論文〈<a href="https://arxiv.org/html/2504.13171v1" target="_blank" rel="noopener">Sleep-time Compute</a>〉（2025-04）在數學題上量到：使用者之後會問什麼，越能從手上已有的資料猜出來，事先整理的幫助越大（本文只讀了這篇論文的摘要）。</p>
               <p id="i5-2"><b>遺忘是正式操作。</b><strong>只進不出的 store，檢索會越來越慢、雜訊越來越多</strong>。要遺忘的理由有四個：過期、錯誤或衝突、隱私與安全、儲存與檢索的成本。做法也有四種：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>操作</th><th>做什麼</th><th>可逆嗎</th><th>適合（本文的整理）</th></tr></thead>
@@ -1852,22 +1827,6 @@ budget:
      "id": "k44.4",
      "type": "condition",
      "t": "弱的 model 不太用記憶：Sonnet 4.6 的 prompt 寫出「回答前先讀記憶」「把猜測拿去測試」後，分數從 0.364 升到 0.641。這種句子教的是怎麼用記憶，不是限制記什麼；prompt 要跟著 model 調，換 model 要重新量。",
-     "at": [
-      "#k44"
-     ]
-    },
-    {
-     "id": "k44.5",
-     "type": "claim",
-     "t": "Pokémon 的例子：下一步自己看得到的不記，要重新推一次才知道的才記。Sonnet 3.7 寫了 413 個檔只拿 1 個徽章，Fable 5 只寫 10 個檔拿 4 個。",
-     "at": [
-      "#k44"
-     ]
-    },
-    {
-     "id": "k44.6",
-     "type": "limit",
-     "t": "Pokémon 的比較只是例子，不是對照實驗：兩個 model 能力不同，又各只跑一次。",
      "at": [
       "#k44"
      ]
@@ -2833,14 +2792,6 @@ budget:
      "id": "k46.1",
      "type": "mechanism",
      "t": "Dreaming 是 agent 不做任務時另開 session，讀 transcripts 和現有筆記做三件事：修錯、往上整理成 wiki 這類結構、在層和層之間搬內容讓最上層保持小。",
-     "at": [
-      "#k46"
-     ]
-    },
-    {
-     "id": "k46.2",
-     "type": "claim",
-     "t": "Mt. Moon 的例子：帶著沒修正的錯筆記，agent 掉下 ledge 3 次、沒走到 Cerulean City，和沒有記憶一樣沒到；整理時對照 transcript 改寫後，在第 1,935 個動作走到。",
      "at": [
       "#k46"
      ]
@@ -4423,59 +4374,6 @@ budget:
     "k44.4",
     "k44.1"
    ]
-  },
-  {
-   "id": "k44d",
-   "ks": "k44",
-   "kind": "choice",
-   "q": "Pokémon 的例子裡，拿到 4 個徽章的 Fable 5 在記憶裡記了什麼？",
-   "choices": [
-    {
-     "t": "每一場戰鬥、每個道具、每個角色，各存成一個檔",
-     "why": "這是 Sonnet 3.7 的做法，它寫了 413 個檔，只拿到 1 個徽章。"
-    },
-    {
-     "t": "每一步的畫面狀態，方便之後回頭查",
-     "why": "畫面每一圈都看得到，記了很快就過期；本文說這類不記。"
-    },
-    {
-     "t": "畫面看不到、要自己推出來的事，像計畫和打法",
-     "ok": true
-    }
-   ],
-   "key": [
-    "畫面看不到、要自己推出來的事，像計畫和打法"
-   ],
-   "covers": [
-    "k44.5"
-   ]
-  },
-  {
-   "id": "k44e",
-   "ks": "k44",
-   "kind": "choice",
-   "q": "Sonnet 3.7 和 Fable 5 的 Pokémon 比較，本文說該怎麼看待它？",
-   "choices": [
-    {
-     "t": "當例子：兩個 model 能力不同，又各只跑一次",
-     "ok": true
-    },
-    {
-     "t": "當對照實驗：它證明記憶檔越少進度越快",
-     "why": "兩個 model 的能力本來就不同，進度的差別不能只算在記憶上。"
-    },
-    {
-     "t": "當設計規格：記憶檔控制在 10 個左右最好",
-     "why": "10 個只是這一次的數字，本文要的是「記什麼」的規則，不是檔案數。"
-    }
-   ],
-   "key": [
-    "當例子：兩個 model 能力不同，又各只跑一次"
-   ],
-   "covers": [
-    "k44.6"
-   ],
-   "closed_ok": "常識或推理：兩個不同的 model 各跑一次不能當對照實驗，推得出來；這題測的是本節的保留語。"
   },
   {
    "id": "k44f",
@@ -6277,32 +6175,6 @@ budget:
     "k21.3"
    ],
    "closed_ok": "別節的題目寫到了答案（頁面上分開出現）：k16a ✓「還沒有公認的最佳做法」排除 B「查證過的最佳做法」，k17b ✓「Harness」和 k7c ✓「prompt 看 model 照不照做」排除 A「model 就會照這六行去記」。"
-  },
-  {
-   "id": "k46a",
-   "ks": "k46",
-   "kind": "choice",
-   "q": "Mt. Moon 的三種條件裡，「有記憶、但那條錯的筆記沒有修正」的結果是什麼？",
-   "choices": [
-    {
-     "t": "比沒有記憶早一點走到 Cerulean City",
-     "why": "沒有記憶和沒修正的記憶都沒走到；錯的筆記沒有比沒有記憶好。"
-    },
-    {
-     "t": "掉下 ledge 3 次，沒有走到 Cerulean City",
-     "ok": true
-    },
-    {
-     "t": "在第 1,935 個動作走到 Cerulean City",
-     "why": "這是跑過整理、筆記改對之後的結果。"
-    }
-   ],
-   "key": [
-    "掉下 ledge 3 次，沒有走到 Cerulean City"
-   ],
-   "covers": [
-    "k46.2"
-   ]
   },
   {
    "id": "k46b",
