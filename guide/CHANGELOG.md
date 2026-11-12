@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-13（L6b 第 5 章：James 問 Reflect、Forget 和後面的 dreaming 是不是重疊。是：前兩個是操作，dreaming 是時機。開頭那一段改寫，加一張對照表（修錯、歸納、換層各是哪一站的操作、session 裡做不做得到）和 compaction／GC 的類比。）
 - 2026-11-13（L6b 第 4 章接上 RAG：James 問「這不就是 RAG 流程嗎？」。第 2 段點名 RAG 與 semantic search；`#i4-1` 改寫成「在 RAG 上多加四個訊號」，順序是已知 → 為什麼不夠 → 新增；章標題、nav.map、側欄、dag.html 跟著改。圖、表、SQL、題庫沒動。）
 - 2026-11-13（L10 整堂可讀性重審（v16）：兩輪 112 + 16 BLOCK 全修，第 9 章漏洞改成五類，A100 頻寬與 70B KV cache 的單位統一。取捨在 V7_DECISIONS，審查紀錄在 review_reports/l10-20261113/。）
 - 2026-11-12（L6b 拿掉兩段 Pokémon 的例子（James：「我認為是多的」）：第 2 章記憶資料夾的比較整段刪；第 5 章 Mt. Moon 只留結論一段，原圖 `l06b-mtmoon.webp` 刪掉。加兩段「本文的推論」：第 4 章〈誰決定什麼時候讀寫〉控制權跟著 model 實測的行為分、不跟著大小分；第 5 章〈Session 之間的整理〉兩個時機可以用不同的 model（Letta 的 sleep-time agent）與要顧的兩件事。起因是 James 轉來他和 Gemini 的討論，取捨在 V7_DECISIONS。L6b 閱讀 50 → 45 分。）

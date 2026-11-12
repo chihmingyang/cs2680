@@ -945,7 +945,16 @@ store:     markdown files under memory/, one topic per file                # 第
 retrieve:  load the index every session; read a topic file only on demand  # 第 3、4 章
 reflect:   merge records about the same key every 20 writes; keep evidence # 第 3 章
 forget:    mark superseded facts invalid; delete only on user request      # 第 5 章</code></pre></figure>
-              <p>前四站在第 2 到 4 章講過。下面講後兩站。Reflect 除了第 3 章的歸納，還包括 session 之間回頭修錯和搬動內容；然後是 Forget。最後講怎麼量整套記憶。</p>
+              <p>前四站在第 2 到 4 章講過。下面講後兩站，最後講怎麼量整套記憶。先分清楚兩件容易混的事。Reflect 和 Forget 是操作：對 store 裡已有的內容做什麼。下一節的 dreaming 是時機：這些操作在什麼時候做。這是兩個軸，所以下面兩節的內容會重疊：dreaming 做的三件事，每一件都是 Reflect 或 Forget 裡的一個操作，只是搬到 session 之間、在背景做。資料庫的 compaction 和 GC 也是這樣：合併和回收是操作，在背景跑是時機（本文的類比）。對照如下：</p>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Dreaming 做的事</th><th>它是哪一站的操作</th><th>在 session 裡也做得到嗎</th></tr></thead>
+                <tbody>
+                  <tr><td><b>修錯</b></td><td>Reflect 找出記錯的那一條；處理它用的是 Forget 的「標記失效」</td><td>做得到一部分：使用者當場糾正時可以改。沒有人糾正的錯，要等 session 之間對回 transcripts 才找得到</td></tr>
+                  <tr><td><b>歸納</b></td><td>Reflect，和第 3 章的歸納是同一個操作</td><td>做得到：上面 policy 的 <code>reflect</code> 那一行用寫入次數觸發（每 20 次寫入），不必等 session 結束</td></tr>
+                  <tr><td><b>換層</b></td><td>往上搬是 Reflect；往下搬就是 Forget 表裡的「分層移出」</td><td>做得到，但要看過好幾個 session 才知道哪一條常用，所以通常留到 session 之間</td></tr>
+                </tbody>
+              </table></div>
+              <p>這張表是本文的整理。Forget 的另外兩種做法不在表裡，因為它們不由 dreaming 做：永久刪除只在使用者要求時做，TTL 到期由 store 自己執行。</p>
               <p id="i5-1"><b>Session 之間的整理：把筆記對回原始紀錄（本文補的）。</b>第 3 章〈<a href="#i3-5">歸納</a>〉最後那張圖的 dream 工作，Anthropic 把這種做法叫 dreaming：agent 不做任務的時候，另外開 session 讀 transcripts 和現有的筆記。本文把它叫 session 之間的整理。它沿著四層做三件事：</p>
               <ul>
                 <li><b>修錯。</b>把筆記和 transcripts 對一遍，改掉記錯的那幾條。</li>
