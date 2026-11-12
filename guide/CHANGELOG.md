@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-13（L6b 第 4 章接上 RAG：James 問「這不就是 RAG 流程嗎？」。第 2 段點名 RAG 與 semantic search；`#i4-1` 改寫成「在 RAG 上多加四個訊號」，順序是已知 → 為什麼不夠 → 新增；章標題、nav.map、側欄、dag.html 跟著改。圖、表、SQL、題庫沒動。）
 - 2026-11-12（L6b 拿掉兩段 Pokémon 的例子（James：「我認為是多的」）：第 2 章記憶資料夾的比較整段刪；第 5 章 Mt. Moon 只留結論一段，原圖 `l06b-mtmoon.webp` 刪掉。加兩段「本文的推論」：第 4 章〈誰決定什麼時候讀寫〉控制權跟著 model 實測的行為分、不跟著大小分；第 5 章〈Session 之間的整理〉兩個時機可以用不同的 model（Letta 的 sleep-time agent）與要顧的兩件事。起因是 James 轉來他和 Gemini 的討論，取捨在 V7_DECISIONS。L6b 閱讀 50 → 45 分。）
 - 2026-11-12（L9、L10 照「章的順序」檢查：L9 不重排，只改 lede；L10 第 4、5 章對調，晶片在前、量測在後，nav.map 組名改成這堂的骨架，首頁 chip 與 dag.json 跟著改。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 第 6 章補三處審查留下的 needs-source，重讀 Cisco、MINJA v5、arXiv 2601.05504：Anthropic「使用者完全可信」推到什麼、98.2%／76.8% 是 6 種設定的平均、54 筆的分母論文沒給（82 筆滿分裡的 54 筆）。來源檔同步。）
@@ -106,6 +107,7 @@
 - 2026-10-21（討論改為每堂一串、只放基礎題）。
 
 ## STYLE_ARTICLE.md
+- 2026-11-13（第 1 節加〈業界的詞優先，先接上讀者已經會的東西〉與「讀者已知的詞」清單草稿。起因是 L6b 第 4 章把 RAG 寫成「五個訊號」。）
 - 2026-11-12（第 0 節〈章的順序〉的判斷法加一個訊號：名詞第一次出現只能往後指「第 N 章」，就是依賴倒過來了；例子是 L10 的量測與晶片。）
 - 2026-11-12（第 0 節加〈章的順序：有依賴就照依賴排，重要性不靠章序表達〉：獨立的想法照份量排；資料流、層次照依賴排，每章開頭先說這一層是什麼；一堂只有一張地圖。L6b 第一個照這條重排。）
 - 2026-11-11（6c 加「什麼時候標」：可讀性審查過了才標，只搬標籤不改字。）
@@ -171,6 +173,7 @@
 
 ## REVIEW_READABILITY.md
 
+- 2026-11-13（**R17 業界已有名字**，checklist v17。起因：L6b 第 4 章「五個訊號」審過兩輪，兩次都只替自創的詞補定義。R17 是鐵律「你知道不算」的例外。測試題 `l06b-i4-rag-renamed`。reviewer-prompt 同步；`review_eval.py` 還沒跑。）
 - 2026-11-11（**作者自己判斷要不要修，報告進 repo**。James：「這兩個決定你做就好，我也不知道有哪些要修」。每個 BLOCK 判 fix／strict／needs-source，寫進 `guide/review_reports/lXX-YYYYMMDD/TRIAGE.md`，各輪報告一起 commit；strict 的比例當誤報率記在 `review_cases/RESULTS.md`。第一次：L6b 整頁 70 個 BLOCK，fix 66、strict 2、needs-source 2；第二輪 76 個單位又標 21 個。L6b 遺忘表定為「記錯的先標記失效」，題庫同步。）
 - 2026-11-11（**審查者的測試題與 checklist 版本**。起因：L6b 第 2 章「歸納是風險最高的寫入……Reflection 讀好幾筆觀察」一段，James 請 Claude 評可讀性並問怎麼減少 feedback 次數；這一章 11-10 用 v14 審過兩輪，這段仍留著；11-11 用同一份舊 prompt 重審，審查者其實標得到它。第一次量測：5 個沒寫進 prompt 的事件抓到 5 個，但審查者把 14%–71% 的單位標成 BLOCK，誤報率還沒量（`guide/review_cases/RESULTS.md`）。加 R15 別名（同一個東西兩個名字，讀者分不出是一個還是兩個）、R16 例子對得上主張（鐵律多一種「只靠主張、例子對不上」）；Checklist 版本 16。新增 `guide/review_cases/`（8 個事件）與 `tools/review_eval.py`（量 recall），`guide/review_log.tsv` 與 `tools/review_status.py`（哪些章用哪一版審過，11-11 以前照 commit 訊息回填）；`verify.sh` 多一行提示。事件先當測試題、不先貼進 prompt 當例子。）
 - 2026-11-09（`tools/review_pack.py`：本文延伸、深入區塊標題後面的 `<span>` 標籤（「不是 slide 的內容」「查證」）另外印成「〔頁面上的標籤：…〕」。L6 `#x5` 兩輪審查都把「漏抓與誤判不是 slide 的內容」讀成一句話，是包的誤報。）
