@@ -5,6 +5,7 @@
 
 ## README.md
 - 2026-11-13（L6b 第 4 章接上 RAG：James 問「這不就是 RAG 流程嗎？」。第 2 段點名 RAG 與 semantic search；`#i4-1` 改寫成「在 RAG 上多加四個訊號」，順序是已知 → 為什麼不夠 → 新增；章標題、nav.map、側欄、dag.html 跟著改。圖、表、SQL、題庫沒動。）
+- 2026-11-13（L10 整堂可讀性重審（v16）：兩輪 112 + 16 BLOCK 全修，第 9 章漏洞改成五類，A100 頻寬與 70B KV cache 的單位統一。取捨在 V7_DECISIONS，審查紀錄在 review_reports/l10-20261113/。）
 - 2026-11-12（L6b 拿掉兩段 Pokémon 的例子（James：「我認為是多的」）：第 2 章記憶資料夾的比較整段刪；第 5 章 Mt. Moon 只留結論一段，原圖 `l06b-mtmoon.webp` 刪掉。加兩段「本文的推論」：第 4 章〈誰決定什麼時候讀寫〉控制權跟著 model 實測的行為分、不跟著大小分；第 5 章〈Session 之間的整理〉兩個時機可以用不同的 model（Letta 的 sleep-time agent）與要顧的兩件事。起因是 James 轉來他和 Gemini 的討論，取捨在 V7_DECISIONS。L6b 閱讀 50 → 45 分。）
 - 2026-11-12（L9、L10 照「章的順序」檢查：L9 不重排，只改 lede；L10 第 4、5 章對調，晶片在前、量測在後，nav.map 組名改成這堂的骨架，首頁 chip 與 dag.json 跟著改。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 第 6 章補三處審查留下的 needs-source，重讀 Cisco、MINJA v5、arXiv 2601.05504：Anthropic「使用者完全可信」推到什麼、98.2%／76.8% 是 6 種設定的平均、54 筆的分母論文沒給（82 筆滿分裡的 54 筆）。來源檔同步。）
