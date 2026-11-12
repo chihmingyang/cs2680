@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-12（L6b 第 6 章補三處審查留下的 needs-source，重讀 Cisco、MINJA v5、arXiv 2601.05504：Anthropic「使用者完全可信」推到什麼、98.2%／76.8% 是 6 種設定的平均、54 筆的分母論文沒給（82 筆滿分裡的 54 筆）。來源檔同步。）
 - 2026-11-12（**L6b 照記憶的四層重排**：六章 → 七章（Transcripts、Memory notes、Memory representations、Injected context、跨層的操作、安全、目錄），James 讀起來不順、自己畫的是四層；新寫 `#i1-3` transcripts 的兩張表與各章開頭；錨點、題庫位置、`l06.html` 的 `#moved` 表、DAG 的 `src` 跟著改。加「章的順序：有依賴就照依賴排」一條。取捨在 V7_DECISIONS。）
 - 2026-11-12（L6b 直接放 Anthropic〈The components of agent memory〉的原圖（James 要求試著復用）：1 章〈往右靠〉的效益圖換成原文 Figure 5，`#n-clbench` 註加 Figure 3；2 章〈Session 之間的整理〉加四層圖兩張（session 進行中、dreaming）與 Mt. Moon 對照圖。圖檔在 `docs/img/`（webp，寬 1600）；新寫法 `figure.diagram.shot` 記在 STYLE_ARTICLE 第 6 節；`review_pack.py`、`page_text.py` 讀 `img` 的 `alt`，`audit.py` 檢查 `alt` 與檔案存在。）
 - 2026-11-12（L6b 1 章〈往右靠，用「說明用途」來做〉依 James 的可讀性回饋與重讀原文修正：CL-Bench 的對照組其實只說「有記憶資料夾可用」、沒有說明用途，正文與註改寫；圖 6 改成圖例在上、只標數字、虛線框標出少掉的部分（標絕對差距，不標百分比）；Sonnet 4.6 的 0.034 → 0.311 搬進正文；「強的 model 寫用途就夠」補上文章只在 Sonnet 4.6 試過；Pokémon 段補過渡與和主張的關係；最後一段先講「錯了能不能補」再列邊界。Opus 5 筆記改照文章的描述（規則附證據、之前的答案、陷阱），不再說分成答錯／答對兩類。審查紀錄在 review_reports/l06b-20261112/。）
