@@ -40,7 +40,7 @@
 <li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">Cost, Latency &amp; Harness Architecture</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">成本公式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三個單位</a></li><li><a class="sn-sub2" href="#i1-2">成本是六項相乘</a></li><li><a class="sn-sub2" href="#i1-3">本文補的：公式少了分母</a></li><li><a class="sn-sub2" href="#i1-4">本文的判斷：比完平均，還要比邊際</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">錢花在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">每一步都重送整個 context</a></li><li><a class="sn-sub2" href="#i2-2">三種 token：量和單價方向相反</a></li><li><a class="sn-sub2" href="#i2-3">本文補的：換一組單價、換一份資料，結論還在嗎？</a></li><li><a class="sn-sub2" href="#i2-4">為什麼 turn 數是平方</a></li><li><a class="sn-sub2" href="#i2-5">留在 context 裡的 token，之後每一步都再付一次</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Prompt cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">只比開頭，差一個字就從那裡開始重算</a></li><li><a class="sn-sub2" href="#i3-2">命中率的帳</a></li><li><a class="sn-sub2" href="#i3-3">什麼會打斷它</a></li><li><a class="sn-sub2" href="#i3-4">本文補的：TTL 的帳</a></li><li><a class="sn-sub2" href="#i3-5">怎麼看命中率</a></li><li><a class="sn-sub2" href="#i3-6">能等的工作用 batch</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">淨節省</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個省法都有反向成本</a></li><li><a class="sn-sub2" href="#i4-2">算一次：compaction 幾步回本</a></li><li><a class="sn-sub2" href="#i4-3">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub2" href="#i4-4">優化是一個迴圈</a></li><li><a class="sn-sub2" href="#i4-5">本文的判斷：照這個順序看</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">少走幾步</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">先問這一步需要 LLM 嗎</a></li><li><a class="sn-sub2" href="#i5-2">少回頭：減少 turn</a></li><li><a class="sn-sub2" href="#i5-3">少呼叫：一次 call 做多個動作</a></li><li><a class="sn-sub2" href="#i5-4">重用計畫與 skill，任務重複才回本</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Model、effort 與 output</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Routing：三種時機</a></li><li><a class="sn-sub2" href="#i6-2">本文的判斷：換 model 要選在 context 小的時候</a></li><li><a class="sn-sub2" href="#i6-3">Effort：thinking 也算 output，最後幾分最貴</a></li><li><a class="sn-sub2" href="#i6-4">Output：量最少、單價最高，但不要從這裡開始</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">失敗的錢比你想的多</a></li><li><a class="sn-sub2" href="#i7-2">四個上限，數字從 trace 來</a></li><li><a class="sn-sub2" href="#i7-3">停止規則：上限之前先有進展檢查</a></li><li><a class="sn-sub2" href="#i7-4">本文的判斷：硬上限給沒人看的任務，互動 session 給可見度</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">完成時間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">完成時間看 critical path</a></li><li><a class="sn-sub2" href="#i8-2">先量：時間常常花在 tool</a></li><li><a class="sn-sub2" href="#i8-3">每個加速手段，錢往哪裡走</a></li><li><a class="sn-sub2" href="#i8-4">Speculation：先猜、先跑、再比對</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Harness 架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i9-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i9-3">取捨在哪裡</a></li><li><a class="sn-sub2" href="#i9-4">本文補的：一個 agent 也可能要把邊界推出去</a></li><li><a class="sn-sub2" href="#i9-5">本文的判斷：問三個問題，不數 agent</a></li><li><a class="sn-sub2" href="#i9-6">每個 harness 都把一個假設寫進結構</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">Cost, Latency &amp; Harness Architecture</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">成本公式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三個單位</a></li><li><a class="sn-sub2" href="#i1-2">成本是六項相乘</a></li><li><a class="sn-sub2" href="#i1-3">公式少了分母</a></li><li><a class="sn-sub2" href="#i1-4">本文的判斷：比完平均，還要比邊際</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">錢花在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">每一步都重送整個 context</a></li><li><a class="sn-sub2" href="#i2-2">三種 token：量和單價方向相反</a></li><li><a class="sn-sub2" href="#i2-3">換一組單價、換一份資料，結論還在嗎？</a></li><li><a class="sn-sub2" href="#i2-4">為什麼 turn 數是平方</a></li><li><a class="sn-sub2" href="#i2-5">留在 context 裡的 token，之後每一步都再付一次</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Prompt cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">只比開頭，差一個字就從那裡開始重算</a></li><li><a class="sn-sub2" href="#i3-2">命中率的帳</a></li><li><a class="sn-sub2" href="#i3-3">什麼會打斷它</a></li><li><a class="sn-sub2" href="#i3-4">TTL 的帳</a></li><li><a class="sn-sub2" href="#i3-5">怎麼看命中率</a></li><li><a class="sn-sub2" href="#i3-6">能等的工作用 batch</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">淨節省</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個省法都有反向成本</a></li><li><a class="sn-sub2" href="#i4-2">算一次：compaction 幾步回本</a></li><li><a class="sn-sub2" href="#i4-3">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub2" href="#i4-4">優化是一個迴圈</a></li><li><a class="sn-sub2" href="#i4-5">本文的判斷：照這個順序看</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">少走幾步</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">先問這一步需要 LLM 嗎</a></li><li><a class="sn-sub2" href="#i5-2">少回頭：減少 turn</a></li><li><a class="sn-sub2" href="#i5-3">少呼叫：一次 call 做多個動作</a></li><li><a class="sn-sub2" href="#i5-4">重用計畫與 skill，任務重複才回本</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Model、effort 與 output</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Routing：三種時機</a></li><li><a class="sn-sub2" href="#i6-2">本文的判斷：換 model 要選在 context 小的時候</a></li><li><a class="sn-sub2" href="#i6-3">Effort：thinking 也算 output，最後幾分最貴</a></li><li><a class="sn-sub2" href="#i6-4">Output：量最少、單價最高，但不要從這裡開始</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">失敗的錢比你想的多</a></li><li><a class="sn-sub2" href="#i7-2">四個上限，數字從 trace 來</a></li><li><a class="sn-sub2" href="#i7-3">停止規則：上限之前先有進展檢查</a></li><li><a class="sn-sub2" href="#i7-4">本文的判斷：硬上限給沒人看的任務，互動 session 給可見度</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">完成時間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">完成時間看 critical path</a></li><li><a class="sn-sub2" href="#i8-2">先量：時間常常花在 tool</a></li><li><a class="sn-sub2" href="#i8-3">每個加速手段，錢往哪裡走</a></li><li><a class="sn-sub2" href="#i8-4">Speculation：先猜、先跑、再比對</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Harness 架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i9-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i9-3">取捨在哪裡</a></li><li><a class="sn-sub2" href="#i9-4">一個 agent 也可能要把邊界推出去</a></li><li><a class="sn-sub2" href="#i9-5">本文的判斷：問三個問題，不數 agent</a></li><li><a class="sn-sub2" href="#i9-6">每個 harness 都把一個假設寫進結構</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
@@ -88,26 +88,8 @@
         <header class="part-head">
           <p class="kicker">1 · 核心觀念</p>
           <h2>帳怎麼算，錢和時間怎麼花才值得</h2>
-          <p class="lede">十章依重要性排，不照 slides 的順序：前四章把帳算對，接著兩章是壓低成本的槓桿，再來是防止失控、時間、harness 的邊界，最後一章是需要時再查的目錄。標「本文補的」是課程沒講、本文加上的。</p>
+          <p class="lede">十章依重要性排：前四章把帳算對，接著兩章是壓低成本的槓桿，再來是防止失控、時間、harness 的邊界，最後一章是需要時再查的目錄。</p>
         </header>
-        <nav class="map" aria-label="章節">
-          <p class="map-g">一定要會：先把帳算對</p>
-          <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">成本公式<small>六個乘數，分母要算成功的任務（分母是本文補的）</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">錢花在哪裡<small>大宗是重讀的 context</small></span><span class="map-m">約 5 分</span></a>
-          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">Prompt cache<small>沒命中的 token 貴 12 到 50 倍（TTL 的帳是本文補的）</small></span><span class="map-m">約 6 分</span></a>
-          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">淨節省<small>每個省法都有反向成本，要在同一組任務上量</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">要用時會做：照順序壓</p>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">少走幾步<small>先問要不要 LLM，再減 turn 與 step</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">Model、effort 與 output<small>錯了也便宜的步驟才值得省</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">要防的</p>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">上限<small>失控的任務要有人喊停</small></span><span class="map-m">約 2 分</span></a>
-          <p class="map-g">另一本帳：時間</p>
-          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">完成時間<small>看 critical path，錢看全部</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">底層：harness 的邊界</p>
-          <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">Harness 架構<small>看要隔離什麼、什麼要活得久（三個問題是本文補的）</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">需要時查</p>
-          <a class="map-row" href="#i10"><span class="map-no">10</span><span class="map-t">目錄<small>八個 harness、論文、系統層手段</small></span><span class="map-m">需要時查</span></a>
-        </nav>
 
         <div class="ideas">
           <div class="idea" id="i1">
@@ -156,9 +138,9 @@
 <p id="i1-2"><b>成本是六項相乘。</b>有了單位，一個產品的 agent 總花費可以寫成一條乘法。中間三項取決於 agent 做一個任務時實際走過的路，也就是依序走過的 turn 與 step，叫 trajectory：少繞路、少回頭，這三項就小。</p>
 <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 216" role="img" aria-label="上排是課程的成本公式：Users 乘 Sessions per User 乘 Turns per Session 乘 Steps per Turn 乘 Tokens per Step 乘 Price per Token。前兩項灰色，隨採用度成長，設計不去壓。中間三項青色，agent 走的 trajectory 越少繞路，這三項越小。最後一項黃色，隨單價縮小。下排是本文補的：每個成功任務的成本等於 Turns 乘 Steps 乘 Tokens 乘 Price，再除以成功率。成功率是深紅色。">
+                <svg viewBox="0 0 720 216" role="img" aria-label="上排是成本公式：Users 乘 Sessions per User 乘 Turns per Session 乘 Steps per Turn 乘 Tokens per Step 乘 Price per Token。前兩項灰色，隨採用度成長，設計不去壓。中間三項青色，agent 走的 trajectory 越少繞路，這三項越小。最後一項黃色，隨單價縮小。下排是每個成功任務的成本等於 Turns 乘 Steps 乘 Tokens 乘 Price，再除以成功率。成功率是深紅色。">
                   <defs><marker id="l8v-formula-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-formula-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <text x="14" y="20" class="dg-cb">整個產品的花費（課程）</text>
+                  <text x="14" y="20" class="dg-cb">整個產品的花費</text>
                   <rect x="14" y="30" width="100" height="50" rx="4" class="dg-n-n"/>
                   <text x="64" y="60.0" text-anchor="middle" class="dg-ls">Users</text>
                   <rect x="132" y="30" width="100" height="50" rx="4" class="dg-n-n"/>
@@ -187,7 +169,7 @@
                   <text x="123" y="106" text-anchor="middle" class="dg-c">隨採用度成長，不壓它</text>
                   <text x="418" y="106" text-anchor="middle" class="dg-c">trajectory 少繞路就縮小</text>
                   <text x="654" y="106" text-anchor="middle" class="dg-c">隨單價縮小</text>
-                  <text x="14" y="140" class="dg-cb">每個成功任務的成本（本文補的）</text>
+                  <text x="14" y="140" class="dg-cb">每個成功任務的成本</text>
                   <rect x="14" y="150" width="100" height="50" rx="4" class="dg-n-a"/>
                   <text x="64" y="172.0" text-anchor="middle" class="dg-ls">Turns</text>
                   <text x="64" y="189.0" text-anchor="middle" class="dg-c">/ 任務</text>
@@ -209,10 +191,10 @@
                   <text x="595" y="189.0" text-anchor="middle" class="dg-c-on">失敗的錢也要有人付</text>
                 </svg>
               </div>
-              <figcaption>花費由什麼決定？上排是課程的乘法，前兩項隨採用度成長，設計不去壓它，只動右邊四項。下排換成每個成功任務的成本，多一個分母：成功率。灰色代表有人用，青色和黃色是這堂的槓桿，深紅是課程沒寫的那一項。</figcaption>
+              <figcaption>花費由什麼決定？上排是乘法，前兩項隨採用度成長，設計不去壓它，只動右邊四項。下排換成每個成功任務的成本，多一個分母：成功率。灰色代表有人用，青色和黃色是這堂的槓桿，深紅是公式裡沒寫的那一項。</figcaption>
             </figure>
 <p>乘法的好處是每一項可以單獨優化，<strong>任何一項減半，總成本就減半</strong>。Uber 用同一條公式管全公司的 agent 支出：<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">2026 年 8 月的文章</a>說，半年內週活躍使用者成長 7 倍，固定 model 的每 session 成本從 6 月高峰降了 52%，前兩項讓它長，中間幾項才是優化目標。乘法的陷阱是一項省下的錢，可能從另一項補回來，第 4 章專門算這件事。</p>
-<p id="i1-3"><b>本文補的：公式少了分母。</b>這條公式算花了多少，沒有算買到什麼。L1 說過，agent 的目標是<a href="l01.html#i2">每個成功任務的成本</a>；一個便宜的設定如果常常失敗，<strong>失敗那幾次的錢還是要付</strong>。要算它，先定義三項：</p>
+<p id="i1-3"><b>公式少了分母。</b>這條公式算花了多少，沒有算買到什麼。L1 說過，agent 的目標是<a href="l01.html#i2">每個成功任務的成本</a>；一個便宜的設定如果常常失敗，<strong>失敗那幾次的錢還是要付</strong>。要算它，先定義三項：</p>
 <ul>
                 <li><b>每次嘗試的平均花費 c。</b>成功和失敗的 run 都算進去。</li>
                 <li><b>成功率 p。</b>成功的 run 佔全部的比例，由測試或 grader 判定，量法是 L7 的主題。</li>
@@ -285,7 +267,7 @@
               </div>
               <figcaption>每一步送出去的是什麼？新的只有最右邊的黃色和粉色兩小段（這一步新進來的內容、model 的 output），其他全部重送。所以 context 隨 step 累積，大部分 token 都是重讀。</figcaption>
             </figure>
-<p>教授用全班的 Claude Code session log 量過。主 agent 是你直接對話的那個 agent；subagent 是主 agent 派出去做一件子任務的另一個 agent，從乾淨的 context 開始，做完只把結果交回主 agent。主 agent 每一步送進 model 的 token，中位數 200K–300K（Assignment 1 是 208K，Assignment 2 是 301K），p90 到 600K–700K；subagent 的 context 小得多，中位數約 80K，p90 約 200K。到第 500 步左右，context 累積到 650K–670K。</p>
+<p>CS2680 用全班的 Claude Code session log 量過。主 agent 是你直接對話的那個 agent；subagent 是主 agent 派出去做一件子任務的另一個 agent，從乾淨的 context 開始，做完只把結果交回主 agent。主 agent 每一步送進 model 的 token，中位數 200K–300K（Assignment 1 是 208K，Assignment 2 是 301K），p90 到 600K–700K；subagent 的 context 小得多，中位數約 80K，p90 約 200K。到第 500 步左右，context 累積到 650K–670K。</p>
 <p id="i2-2"><b>三種 token：量和單價方向相反。</b>Model 讀 prompt 時，要替每個 token 算出一組中間結果（第 3 章會講，叫 KV cache）。Provider 會把算過的結果留一段時間，所以開頭和上一步完全相同的部分，不必重算，直接讀留下來的結果，這叫 <a href="l02.html#t1">prefix cache</a>，讀它的 token 叫 cache read。上一步沒出現過的內容要從頭算一次，叫 fresh input，算完會寫進 cache，所以也叫 cache write；model 自己產生的回覆叫 output。全班 Assignment 1 的 token 裡，<strong>97.6% 是 cache read</strong>。單價的方向相反，output 最貴：讀 prompt 時整段一起算，GPU 一次處理幾千個 token；model 產生回覆時卻一次只能出一個 token，這個階段叫 <a class="tm" href="#n-prefill">decode</a>。每出一個 token，都要把整個 model 的權重從記憶體讀一遍，GPU 大半時間在等這些資料搬過來，算力閒著也照樣佔著機器，所以分到每個 output token 的成本最高（第 3 章的註）。把量乘上單價，才知道錢花在哪裡：</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>Token 的種類</th><th>量</th><th>單價</th><th>量 × 單價</th><th>佔花費</th></tr></thead>
@@ -297,7 +279,7 @@
               </table></div>
 <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 136" role="img" aria-label="兩條 100% 堆疊長條。上面是 token 的量：cache read 98.8%，fresh input 1.0%，output 0.2%。下面是花的錢，用課程的量和 1 比 10 比 50 的單價算：cache read 83%，fresh input 8%，output 8%。">
+                <svg viewBox="0 0 720 136" role="img" aria-label="兩條 100% 堆疊長條。上面是 token 的量：cache read 98.8%，fresh input 1.0%，output 0.2%。下面是花的錢，用全班 log 的量和 1 比 10 比 50 的單價算：cache read 83%，fresh input 8%，output 8%。">
                   <defs><marker id="l8v-share-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-share-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <text x="14" y="42" class="dg-cb">Token 的量</text>
                   <rect x="110" y="22" width="582.92" height="34" class="dg-n-a"/>
@@ -318,14 +300,14 @@
               </div>
               <figcaption>量和錢為什麼不同比例？上面是 token 的量，下面把量乘上單價。Cache read 的單價最低，但量多得多，所以仍是最大一筆。長條照比例畫。</figcaption>
             </figure>
-<p>量與單價都是課程給的典型比例，花費是本文算的：100 + 10 + 10 = 120，再各除以 120。Cache read 的單價最低，量卻多約 100 倍，<strong>算下來仍佔約八成的花費</strong>。</p>
-<p id="i2-3"><b>本文補的：換一組單價、換一份資料，結論還在嗎？</b>上表的單價比 1 : 10 : 50，等於 cache read 收 base input（沒有任何折扣的一般 input 單價）的 0.1×。<a class="tm" href="#t2">2026-11-03 查官方定價</a>，Opus 5.5 和 Sonnet 5.5 收 0.05×，Fable 5.1 收 0.025×。量的比例也會變：華盛頓大學的 <a href="https://syfi.cs.washington.edu/blog/2026-06-25-tracelab/" target="_blank" rel="noopener">TraceLab</a>（2026-06）分析作者自己的 4,300 個 Claude Code 與 Codex session、55B token，cached input 52.56B，新 input 2.34B，output 186.9M。更重要的是新 input 裡只有 19% 真的是新內容，其他 81% 是舊內容重算一次，因為 cache 幾分鐘就過期，使用者停下來的時間常常更久。作者沒有算花費，下表是本文用倍率換算的：</p>
+<p>量是全班 session log 的比例，單價是 1 比 10 比 50，花費是本文算的：100 + 10 + 10 = 120，再各除以 120。Cache read 的單價最低，量卻多約 100 倍，<strong>算下來仍佔約八成的花費</strong>。</p>
+<p id="i2-3"><b>換一組單價、換一份資料，結論還在嗎？</b>上表的單價比 1 : 10 : 50，等於 cache read 收 base input（沒有任何折扣的一般 input 單價）的 0.1×。<a class="tm" href="#t2">2026-11-03 查官方定價</a>，Opus 5.5 和 Sonnet 5.5 收 0.05×，Fable 5.1 收 0.025×。量的比例也會變：華盛頓大學的 <a href="https://syfi.cs.washington.edu/blog/2026-06-25-tracelab/" target="_blank" rel="noopener">TraceLab</a>（2026-06）分析作者自己的 4,300 個 Claude Code 與 Codex session、55B token，cached input 52.56B，新 input 2.34B，output 186.9M。更重要的是新 input 裡只有 19% 真的是新內容，其他 81% 是舊內容重算一次，因為 cache 幾分鐘就過期，使用者停下來的時間常常更久。作者沒有算花費，下表是本文用倍率換算的：</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>情境</th><th>Cache read</th><th>過期重算</th><th>新內容</th><th>Output</th></tr></thead>
                 <tbody>
-                  <tr><td>課程的量，cache read 0.1×</td><td><b>83%</b></td><td>—</td><td>8%</td><td>8%</td></tr>
-                  <tr><td>課程的量，0.05×</td><td><b>71%</b></td><td>—</td><td>14%</td><td>14%</td></tr>
-                  <tr><td>課程的量，0.025×</td><td><b>56%</b></td><td>—</td><td>22%</td><td>22%</td></tr>
+                  <tr><td>全班 log 的量，cache read 0.1×</td><td><b>83%</b></td><td>—</td><td>8%</td><td>8%</td></tr>
+                  <tr><td>全班 log 的量，0.05×</td><td><b>71%</b></td><td>—</td><td>14%</td><td>14%</td></tr>
+                  <tr><td>全班 log 的量，0.025×</td><td><b>56%</b></td><td>—</td><td>22%</td><td>22%</td></tr>
                   <tr><td>TraceLab 的量，0.1×，寫入 1.25×</td><td><b>58%</b></td><td><b>26%</b></td><td>6%</td><td>10%</td></tr>
                   <tr><td>TraceLab 的量，0.05×，寫入 1.25×</td><td><b>41%</b></td><td><b>36%</b></td><td>9%</td><td>14%</td></tr>
                 </tbody>
@@ -508,7 +490,7 @@
 <ul>
                 <li><b>C。</b>這一步的 context 有多少 token。</li>
                 <li><b>h。</b>命中率，input 裡讀快取的比例。</li>
-                <li><b>r。</b>Cache read 的倍率，課程用 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
+                <li><b>r。</b>Cache read 的倍率，上面用 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
                 <li><b>w。</b>寫入 cache 的倍率，5 分鐘的 cache 是 1.25×。</li>
               </ul>
 <figure class="file"><figcaption>每一步 input 的花費（單位：base input token）</figcaption><pre><code class="lang-text">每一步 input 的花費 = C × (h × r + (1 − h) × w)</code></pre></figure>
@@ -540,7 +522,7 @@
                 </tbody>
               </table></div>
 <p>表的第 1 列有一個真實的例子：OpenAI 開發者社群有人<a href="https://community.openai.com/t/gpt-5-6-luna-costs-96-more-than-gpt-5-4-mini-in-a-controlled-multi-turn-responses-api-test/1386460" target="_blank" rel="noopener">回報</a> GPT-5.6 Luna 比 GPT-5.4 mini 貴 96%，token 數反而較少。追到最後，原因是他把會變的對話內容放在 top-level instructions，打斷了可重用的 prefix。搬出去之後溢價降到 16.7%。這是一位使用者自己回報的數字，他也拿帳單對過。</p>
-<p id="i3-4"><b>本文補的：TTL 的帳。</b>Cache 有壽命，叫 TTL（time to live）。Claude API 有兩種：5 分鐘，每次命中重新計時；1 小時，寫入收 2×。人一停下來，5 分鐘很快就到了：</p>
+<p id="i3-4"><b>TTL 的帳。</b>Cache 有壽命，叫 TTL（time to live）。Claude API 有兩種：5 分鐘，每次命中重新計時；1 小時，寫入收 2×。人一停下來，5 分鐘很快就到了：</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 190" role="img" aria-label="兩條時間軸，橫軸 0 到 40 分鐘。使用者在第 0、2、4 分鐘送 request，離開 26 分鐘，第 30、32 分鐘回來。5 分鐘 TTL：cache 活到第 9 分鐘就過期，第 30 分鐘的 request 沒命中，整個 context 以 1.25 倍重新寫入。1 小時 TTL：cache 一直活著，第一次寫入付 2 倍，第 30 分鐘的 request 仍是 cache read。">
@@ -620,7 +602,7 @@ $ claude -p "hello" --output-format json | jq '.usage.cache_creation'
   }
 }</code></pre></figure>
 <p>用 Claude Code 時，<code>/usage</code> 直接印出同樣的資訊。下面是官方文件的範例，本文依 Sonnet 4.6 的單價把那一行拆開，可以照著讀自己的帳單：</p>
-<figure class="file"><figcaption>terminal：/usage 的 Session 區塊（節錄官方文件的兩個範例；拆帳是本文補的，需要 v2.1.251 以上才有第二段）</figcaption><pre><code class="lang-text">&gt; /usage
+<figure class="file"><figcaption>terminal：/usage 的 Session 區塊（節錄官方文件的兩個範例；拆帳是本文加的，需要 v2.1.251 以上才有第二段）</figcaption><pre><code class="lang-text">&gt; /usage
 Total cost:            $0.55
 Usage by model:
    claude-sonnet-4-6:  1.2k input, 5.3k output, 940.0k cache read, 50.0k cache write ($0.55)
@@ -661,7 +643,7 @@ Prompt cache (main):   14 requests · 91% of input tokens from cache · 2 misses
                   <text x="658" y="212" class="dg-mn">5×</text>
                 </svg>
               </div>
-              <figcaption>同一個 token 可以差多少錢？以 base input 為 1×，最貴和最便宜差 100 倍，長條照比例畫。這是課程用的倍率；較新的 model cache read 更低，見下面的單價註。</figcaption>
+              <figcaption>同一個 token 可以差多少錢？以 base input 為 1×，最貴和最便宜差 100 倍，長條照比例畫。這是上面算式用的倍率；較新的 model cache read 更低，見下面的單價註。</figcaption>
             </figure>
 <details class="gloss" id="t2">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">單價（2026-11-03 查官方定價）</span></summary>
@@ -809,7 +791,7 @@ Prompt cache (main):   14 requests · 91% of input tokens from cache · 2 misses
 <p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。任務快結束時不要壓；換任務時用 <code>/clear</code>，它清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說它不花錢，代價是之前的內容全部不見；要繼續的長任務趁 cache 還熱時壓。還有一個趨勢值得注意：r 降到 0.05 時每步省的減半，三種情境的回本點變成 7、17、30 步。Cache read 越便宜，縮小 context 的回報越小，保住命中率的回報越大。</p>
 <p>真實系統的選擇也不同：Hermes Agent 在 context 用到 50% 就壓，Uber 等到 400K。OpenClaw 在壓之前，先讓 agent 跑一個使用者看不到的 turn，把重要的事寫進有日期的筆記檔（例如 <code>memory/2026-11-06.md</code>，存在 context 外面）。摘要漏掉的細節，之後還能從檔案搜回來，不必重做，等於替反向成本買保險。</p>
 <p id="i4-3"><span class="anchor" id="x1"></span><b>淨節省只能在同一組任務上量。</b>不同的任務本身步數就差很多，兩個設定若各跑一組任務，差別可能來自題目，而不是設定；同一個任務也有隨機性，跑兩次 step 數可能差一倍。所以比較兩個設定要用同一組任務、每題跑多次、看分布，方法見 L7〈<a href="l07.html#i4">雜訊</a>〉與〈<a href="l07.html#t5">標準誤</a>〉。題目還要分兩份：一份拿來調參，另一份沒用過的拿來報成績。Anthropic 的客服 benchmark 是例子：調參題上做到 98.9% 的新設定，在 14 張沒拿來調參的工單（held-out）上只有 90.5%，仍高於原設定的 78.6%，成本約是原設定的 1/5。<strong>拿來調參的題目不能拿來報成績</strong>，這是 L7 講的 leakage。</p>
-<p id="i4-4"><b>優化是一個迴圈。</b>上面的紀律可以收成四步，教授特別標了 Assignment 4 會用到：</p>
+<p id="i4-4"><b>優化是一個迴圈。</b>上面的紀律可以收成四步：</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 126" role="img" aria-label="四步的迴圈：跑並且記錄，記每個 call、token、等待；量，看錢和時間花在哪；只改一件事，例如 cache、routing、平行；同一組任務重測，看成功率、花費、p95 延遲。然後回到第一步。">
@@ -925,7 +907,7 @@ Prompt cache (main):   14 requests · 91% of input tokens from cache · 2 misses
               </div>
               <figcaption>這一步需要 LLM 嗎？四個問題只要有一個答「是」，這一步就改用程式或小的分類器做，不呼叫 LLM。少一次 LLM call，公式裡的 Steps per Turn 就少一，這一步的 token 也不用付。</figcaption>
             </figure>
-<figure class="file"><figcaption>terminal：把一件重複的事從 model 手上拿走（本文補的例子）</figcaption><pre><code># 第一次：請 agent 把規則寫成程式，只花這一次的 token
+<figure class="file"><figcaption>terminal：把一件重複的事從 model 手上拿走</figcaption><pre><code># 第一次：請 agent 把規則寫成程式，只花這一次的 token
 $ claude -p "讀 ci-logs/ 的範例，寫 triage.py：依錯誤訊息分類，分不出來的印到 unknown.txt"
 
 # 之後每天：直接跑，不花 token
@@ -984,7 +966,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
               </div>
               <figcaption>同樣的工作，model call 可以少幾次？每次 model call 都重讀整個 context。重讀量假設 context 從 200K 開始，每個 tool 結果加 2K。第 8 章會再用到這張圖：下面那條也比較快。</figcaption>
             </figure>
-<figure class="file"><figcaption>一次 model call 發出三個 tool call（格式照 Claude API，本文補的）</figcaption><pre><code class="lang-json">// model 的回覆：同一則 assistant 訊息裡有三個 tool_use
+<figure class="file"><figcaption>一次 model call 發出三個 tool call（格式照 Claude API）</figcaption><pre><code class="lang-json">// model 的回覆：同一則 assistant 訊息裡有三個 tool_use
 {"role": "assistant", "content": [
   {"type": "tool_use", "id": "call_01", "name": "read_file", "input": {"path": "src/auth/login.ts"}},
   {"type": "tool_use", "id": "call_02", "name": "read_file", "input": {"path": "src/auth/retry.ts"}},
@@ -1046,7 +1028,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
               </div>
               <figcaption>Routing 什麼時候選 model？三種時機，風險不同：第一列 router 選錯 model，整個 turn 都用錯；第二列失敗那次的錢白付；第三列每換一次 model（深紅箭頭），cache 都帶不走。</figcaption>
             </figure>
-<p>三種時機都把一部分工作交給便宜的 model，所以都有同一個風險，slide 寫成一句話：<strong>便宜的 model 規劃錯一次，後面很多步都白走</strong>。所以規劃留給大 model，routing 只省執行的步驟。Uber 的做法指向同一邊：主 model 負責拆解與評估，subagent 預設用便宜的 model，<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">作者說</a>這個預設是他們影響最大的槓桿，但沒有單獨列出它省了多少（一家公司的經驗，不是對照實驗）。該不該換，用第 1 章的 c ÷ p 在自己的任務上算：換成便宜的 model，c 少了多少、p 掉了多少。</p>
+<p>三種時機都把一部分工作交給便宜的 model，所以都有同一個風險，一句話就是：<strong>便宜的 model 規劃錯一次，後面很多步都白走</strong>。所以規劃留給大 model，routing 只省執行的步驟。Uber 的做法指向同一邊：主 model 負責拆解與評估，subagent 預設用便宜的 model，<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">作者說</a>這個預設是他們影響最大的槓桿，但沒有單獨列出它省了多少（一家公司的經驗，不是對照實驗）。該不該換，用第 1 章的 c ÷ p 在自己的任務上算：換成便宜的 model，c 少了多少、p 掉了多少。</p>
 <p id="i6-2"><b>本文的判斷：換 model 要選在 context 小的時候。</b>Cache 綁 model，每個 model 各有一份；換 model 時，整段 context 要用新 model 的寫入價重算。換回原 model 時，原來那份 cache 若還沒過期（5 分鐘內），只要寫入換走之後新增的部分；若已過期，又要全部重算。下表代入 2026-11-03 的<a class="tm" href="#t2">單價</a>，context 200K：</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>做法</th><th>這一步的 input 花費</th></tr></thead>
@@ -1274,7 +1256,7 @@ $ claude -p "跑測試並修好失敗的那一個"
               </div>
               <figcaption>Speculation 用什麼換什麼？猜中時，tool 的結果在 model 開口前就好了。猜錯時，時間沒有變差，但先跑的那次 tool call 白跑，結果要丟掉（負責猜的便宜 model call，猜中猜錯都要付）。有副作用的動作（寫檔、送出付款）跑了就收不回來，所以它只適合猜中率高、而且動作沒有副作用的情況。</figcaption>
             </figure>
-<p>課程留了一個開放問題：GPU、CPU、API 的預算有限時，怎麼排程這些投機的呼叫，讓省下的 critical path 時間大於白做的工。還沒有定論，所以它目前是研究方向，先做完上表的前幾列。</p>
+<p>還有一個開放問題：GPU、CPU、API 的預算有限時，怎麼排程這些投機的呼叫，讓省下的 critical path 時間大於白做的工。還沒有定論，所以它目前是研究方向，先做完上表的前幾列。</p>
 <details class="gloss" id="n-specdec">
                 <summary><span class="gloss-k">背景</span><span class="gloss-t">Speculative：這個名字從 CPU 和 speculative decoding 來</span></summary>
                 <div class="gloss-body prose">
@@ -1397,7 +1379,7 @@ $ claude -p "跑測試並修好失敗的那一個"
               </div>
               <figcaption>誰負責 sandbox？只有 microkernel 把它交給獨立的服務。Modular 抽出了介面，但介面是程式碼的邊界，不是安全邊界，provider 在本機跑就沒有隔離。</figcaption>
             </figure>
-<p id="i9-3"><b>取捨在哪裡。</b>課程的結論是 <strong>microkernel 用簡單和低開銷，換隔離、共用與擴展</strong>；單一 agent 用 monolithic，multi-agent 基礎設施用 microkernel，modular 是中間最常見的起點。</p>
+<p id="i9-3"><b>取捨在哪裡。</b>結論是 <strong>microkernel 用簡單和低開銷，換隔離、共用與擴展</strong>；單一 agent 用 monolithic，multi-agent 基礎設施用 microkernel，modular 是中間最常見的起點。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>比較項目</th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
                 <tbody>
@@ -1408,7 +1390,7 @@ $ claude -p "跑測試並修好失敗的那一個"
                   <tr><td>主要的新代價</td><td>元件耦合</td><td>Controller 越長越複雜</td><td>故障模式變多、端到端除錯更難</td></tr>
                 </tbody>
               </table></div>
-<p id="i9-4"><b>本文補的：一個 agent 也可能要把邊界推出去。</b>課程用 agent 的數量當選擇依據，Anthropic 的 <a href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Managed Agents</a>（2026-04）是一個反例。他們一開始把 session、harness、sandbox 放在同一個 container，碰到三個和 agent 數量無關的問題：container 掛了，session 就沒了；harness 的 bug、斷線、死掉的 container 從外面看都一樣，除錯要 shell 進一個可能放著使用者資料的環境；model 寫的 code 和 credential（API key、OAuth token 這類登入憑證）在同一個地方，一次 prompt injection（藏在網頁或檔案裡的指令，騙 model 照著做）就能叫 code 讀出 credential。於是拆成三塊：</p>
+<p id="i9-4"><b>一個 agent 也可能要把邊界推出去。</b>上面用 agent 的數量當選擇依據，Anthropic 的 <a href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Managed Agents</a>（2026-04）是一個反例。他們一開始把 session、harness、sandbox 放在同一個 container，碰到三個和 agent 數量無關的問題：container 掛了，session 就沒了；harness 的 bug、斷線、死掉的 container 從外面看都一樣，除錯要 shell 進一個可能放著使用者資料的環境；model 寫的 code 和 credential（API key、OAuth token 這類登入憑證）在同一個地方，一次 prompt injection（藏在網頁或檔案裡的指令，騙 model 照著做）就能叫 code 讀出 credential。於是拆成三塊：</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 300" role="img" aria-label="Anthropic Managed Agents 的三個元件。Session 是 append-only 的 event log，活得比另外兩個久。Harness 是 brain，呼叫 model、路由 tool，本身不存狀態；它和 session 之間的介面是 emitEvent、getEvents。Sandbox 是 hands，跑 code、改檔案；它和 harness 之間的介面是 execute(name, input)。Harness 掛了：開新的 harness，wake(sessionId)，讀 log 續跑。Sandbox 掛了：回報成 tool error，model 決定重試才配一個新的。最下面：credential 放在 vault，由 proxy 代打，sandbox 裡的 code 碰不到 credential，harness 也不知道。">
@@ -1466,7 +1448,7 @@ $ claude -p "跑測試並修好失敗的那一個"
           <div class="idea" id="i10">
             <h3><span class="idea-no">10</span>目錄：八個 harness、論文、系統層手段</h3>
             <div class="prose">
-<p>這一章<strong>不必讀完</strong>，需要時再查。先看這張表：課程列了八個 coding agent harness，每個用一句話說它的設計重心，右欄是最值得看的一個設計對應到本文哪裡。</p>
+<p>這一章<strong>不必讀完</strong>，需要時再查。先看這張表：這裡列八個 coding agent harness，每個用一句話說它的設計重心，右欄是最值得看的一個設計對應到本文哪裡。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>Harness</th><th>一句話</th><th>對應</th></tr></thead>
                 <tbody>
@@ -1495,7 +1477,7 @@ $ claude -p "跑測試並修好失敗的那一個"
                       <tr><td><b>Hermes Agent</b></td><td>會學習的 fork：harness 每隔一段時間發一次提醒（nudge），這時背景另開一個 agent 的分身（執行時複製出來的 agent，不是程式碼的 fork），回顧剛才的 turn，再修改 memory 和 skill，不碰正在進行的對話。最早的 compaction：context 用到 50% 就 compaction，八個裡最早。執行前先存：tool call 先寫進 session 資料庫，才允許副作用發生。</td><td>重用；成本；可靠性</td></tr>
                     </tbody>
                   </table></div>
-                  <p>左兩欄依課程的 slides；「解什麼問題」是本文的對照。Slides 替七個各列三個設計，Claude Code 沒有單獨一頁，它的機制在 L2。</p>
+                  <p>「解什麼問題」是本文的對照。Claude Code 的機制在 L2。</p>
                 </div>
               </details>
 <details class="gloss" id="t5">
@@ -1508,9 +1490,9 @@ $ claude -p "跑測試並修好失敗的那一個"
 <details class="gloss" id="n-papers">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">這堂列的論文：依省什麼分組</span></summary>
                 <div class="gloss-body prose">
-                  <p>課程標 ADVANCED，自行略讀。右欄每篇寫它的做法；slides 只替其中幾篇給了數字，有給的才列，本文沒有逐篇重讀，所以沒有數字的不補。課程另有一份按「省什麼成本、引入什麼成本」分類的筆記，連結在第 3 段〈<a href="#wrap">原文出處</a>〉開頭。</p>
+                  <p>進階內容，自行略讀。右欄每篇寫它的做法；本文沒有逐篇重讀，只有一部分附數字。課程另有一份按「省什麼成本、引入什麼成本」分類的筆記，連結在第 3 段〈<a href="#wrap">原文出處</a>〉開頭。</p>
                   <div class="table-wrap"><table>
-                    <thead><tr><th>省什麼</th><th>論文與做法<br><small>slides 有給數字的附數字</small></th></tr></thead>
+                    <thead><tr><th>省什麼</th><th>論文與做法</th></tr></thead>
                     <tbody>
                       <tr><td>重用計畫與經驗</td><td>Voyager 2023 存可執行的技能；SkillRL 2026 同時改進 skill library 與策略；ExpeL 2023 整理心得；ReasoningBank 2025 連失敗的 run 也留下策略；Test-Time Plan Caching 2025 重用計畫模板；Mem0 2025、LightMem 2025、SimpleMem 2026 是持久的對話記憶。</td></tr>
                       <tr><td>壓縮歷史</td><td>ACON 2025 把 context 峰值砍 26–54%；Active Context Compression 2026 少 23% token；TRACE 2026 量到反面：摘要本身會造成重工。</td></tr>
@@ -1574,7 +1556,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
         </header>
         <div class="exlist">
           <details class="ex">
-            <summary>寫一個 session 成本計算器<span>p.7、p.15</span></summary>
+            <summary>寫一個 session 成本計算器</summary>
             <div class="exbody">
               <p>用三個量建模：固定 prefix、每步新增的 fresh input、每步的 output。改參數就能回答「turn 加倍會怎樣」。</p>
               <figure class="file"><figcaption>cost.py</figcaption><pre><code>PRICE = {"cache": 0.30, "input": 3.00, "output": 15.00}   # USD per MTok, ratio 1:10:50
@@ -1592,7 +1574,7 @@ for steps in (40, 80):
             </div>
           </details>
           <details class="ex">
-            <summary>替每個任務設上限，並把結果記進 trace<span>p.26、p.38</span></summary>
+            <summary>替每個任務設上限，並把結果記進 trace</summary>
             <div class="exbody">
               <p>先把上限寫成設定檔。欄位名稱自訂，重點是四個上限與停止條件都有數字，而且來自 trace。</p>
               <figure class="file"><figcaption>budget.yaml</figcaption><pre><code>per_task:                 # 2x p95 of successful runs
@@ -1613,7 +1595,7 @@ on_limit: handoff_with_summary</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>要求精簡的結構化輸出<span>p.18–19</span></summary>
+            <summary>要求精簡的結構化輸出</summary>
             <div class="exbody">
               <p>三層控制 output：prompt 講清楚、schema 限制欄位、API 的上限當保險。</p>
               <figure class="file"><figcaption>prompt（範例）</figcaption><pre><code>Answer in at most 80 words. Return only JSON:
@@ -1638,7 +1620,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
             <summary>Assignment 3 概觀：三個指標就是本堂主題<span>8_assignment3.pdf</span></summary>
             <div class="exbody">
               <p>Assignment 3（MadsOpt）是一場 harness 競賽：26 個任務，分屬 3 種 container。評估離線，只連得到 <code>api.cs2680.com</code>。流程：dispatcher 把任務交給 agent → agent 產生 patch → 評估結果回到 agent，最多 5 個任務同時跑。有三種 model：Expert、Standard、Starter。</p>
-              <p>限制：每次 <code>evaluate()</code> 最多 35 分鐘，總共 4 小時；每天 $30，每次 run $10。26 個任務平均每題只有約 $0.38。三個指標：解出的任務數、每個解出任務的花費、每個解出任務的時間。花在沒解出任務上的錢與時間也會拉高後兩項，所以卡住的任務要早停（p.26）。</p>
+              <p>限制：每次 <code>evaluate()</code> 最多 35 分鐘，總共 4 小時；每天 $30，每次 run $10。26 個任務平均每題只有約 $0.38。三個指標：解出的任務數、每個解出任務的花費、每個解出任務的時間。花在沒解出任務上的錢與時間也會拉高後兩項，所以卡住的任務要早停。</p>
               <p>評分：leaderboard 80 分、writeup 10 分、影片 10 分。名次 r 決定分數：任一次提交達到 baseline（16 題），得 <code>max(81 − r, 50)</code>；否則 81 − r。最低要求解出 7 題。先穩定解出 16 題，等於保住 50 分。只上傳 <code>src.zip</code>；dispatcher 與評分腳本不要改。</p>
             </div>
           </details>

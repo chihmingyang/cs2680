@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-13（James：「你決定就好」「核心觀念 bullet point 拿掉，直接進入正文」。**不提 slides 怎麼寫**推到 L1–L10（約 330 處；L11 講課程自己的作業統計，照留；L7 留下飽和圖數字的出處）；題庫跟著改字，L7 刪三題只問「這張圖是誰整理的」的題（k22c、k26g、k31e）與對應的觀念。**核心觀念開頭的章節清單 `nav.map` 全站拿掉**，分組名與每章小字一起拿掉；首頁「怎麼讀」同步。）
 - 2026-11-13（**延伸閱讀改成「原文出處」**（James：「其實沒人會去看延伸閱讀，光看完原文就花時間了」）：L1–L11 的摘要、導讀、等級、最短路徑全刪，每篇只留標題與連結，全站少約 9 萬字；`l02-readings.html`、`insert_digest.py` 刪掉，`STYLE_DIGEST.md` 停用；正文裡「見延伸閱讀」的幾處改指原文出處，L5 一句指向 L7 摘要的話刪掉；首頁「怎麼讀」同步。**正文不提 slides 怎麼寫**（James：「我幾乎重寫了一半以上的內容」）：規則寫進 STYLE_ARTICLE 第 0 節，L4 先改（約 60 處：「課程列了…」「課程的例子」「本文補的」、動手試試的頁碼），其他講次待改。）
 - 2026-11-13（L6b 用詞改成英文術語（James：「不是應該統一用英文 reflect 之類的？」）：當名詞用的「歸納」全頁改成 reflection（89 處，含題庫；「歸納出」「歸納成」當一般動詞的留著）；dreaming 的三件事改成 correct、reflection、promote 與 demote，並註明各是誰的用詞。`CLAUDE.md` 加一條：開工先跑 `review_status.py status`，checklist 加條目時只拿新條目掃舊章。）
 - 2026-11-13（L6b 第 5 章：James 問 Reflect、Forget 和後面的 dreaming 是不是重疊。是：前兩個是操作，dreaming 是時機。開頭那一段改寫，加一張對照表（修錯、歸納、換層各是哪一站的操作、session 裡做不做得到）和 compaction／GC 的類比。）

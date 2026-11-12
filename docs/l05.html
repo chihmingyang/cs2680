@@ -87,24 +87,8 @@
         <header class="part-head">
           <p class="kicker">1 · 核心觀念</p>
           <h2>什麼時候值得拆，拆了怎麼不壞</h2>
-          <p class="lede">九章依重要性排，不照 slides 的順序：前三章決定要不要拆，接著兩章是派工與回報，再兩章是 agent 系統繼承的分散式系統問題，然後是安全，最後一章是需要時再查的目錄。標「本文補的」是課程沒講、本文加上的。</p>
+          <p class="lede">九章依重要性排：前三章決定要不要拆，接著兩章是派工與回報，再兩章是 agent 系統繼承的分散式系統問題，然後是安全，最後一章是需要時再查的目錄。</p>
         </header>
-        <nav class="map" aria-label="章節">
-          <p class="map-g">一定要會：決定要不要拆</p>
-          <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">根本的限制<small>agent 之間只能傳文字</small></span><span class="map-m">約 2 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">最重要的判斷<small>多數任務不該拆</small></span><span class="map-m">約 2 分</span></a>
-          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">最實用的分界<small>讀可以平行，寫留在單線（本文補的）</small></span><span class="map-m">約 2 分</span></a>
-          <p class="map-g">要用時會做：派工與回報</p>
-          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">派工<small>worker 的全部世界就是那段 prompt</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">回報<small>訊息只帶主張和證據，原文放檔案</small></span><span class="map-m">約 2 分</span></a>
-          <p class="map-g">底層：agent 系統就是分散式系統</p>
-          <a class="map-row" href="#i6"><span class="map-no">6</span><span class="map-t">送出去之後<small>timeout、冪等、partial failure</small></span><span class="map-m">約 4 分</span></a>
-          <a class="map-row" href="#i7"><span class="map-no">7</span><span class="map-t">狀態與時間<small>consistency、CAP、沒有全域時鐘、tracing</small></span><span class="map-m">約 4 分</span></a>
-          <p class="map-g">要防的</p>
-          <a class="map-row" href="#i8"><span class="map-no">8</span><span class="map-t">安全<small>傳回來的文字也不可信（本文補的）</small></span><span class="map-m">約 2 分</span></a>
-          <p class="map-g">需要時查</p>
-          <a class="map-row" href="#i9"><span class="map-no">9</span><span class="map-t">目錄<small>八種架構、通訊選項、兩個協定</small></span><span class="map-m">需要時查</span></a>
-        </nav>
 
         <div class="ideas">
           <div class="idea" id="i1">
@@ -224,7 +208,7 @@
               </div>
               <figcaption>本文的整理，把這一章和第 3、5 章的判斷畫成一條路（第 4 章的派工是決定拆之後的事，不在圖裡）。「回報走檔案」是第 5 章的做法：worker（接工作的 agent，上表叫它 subagent；第 4 章起都用 worker）把完整結果寫進檔案，訊息只帶路徑，主 agent 的 context 才不會被塞滿。圖裡沒畫的是權限隔離，它是另一個獨立的理由：網頁、別人的 issue 這類不可信內容裡可能夾著指令，交給一個沒有 shell、改不了檔案的 agent 去讀，指令就算被照做也做不了壞事，所以就算一個 agent 放得下，也值得拆出去（第 8 章）。</figcaption>
             </figure>
-              <p>這條路的第一格最重要。課程列的第一條設計原則就是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。如果任務不需要平行，也不需要把權限隔開（第 1 章表 1 那兩件一個 agent 做不到的事），一個 agent 又做得完，拆開只會付第 1 章的三種代價，換不到東西；Anthropic 也提醒，多數 coding 任務能真正平行的部分比研究少。實務上可以問一句：<strong>少了這個 agent，品質掉多少？</strong>第一次決定要不要拆時，就是拿 multi-agent 和單一 agent 比；掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以評估要先於架構，這是 L7 的主題。</p>
+              <p>這條路的第一格最重要。第一條設計原則就是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。如果任務不需要平行，也不需要把權限隔開（第 1 章表 1 那兩件一個 agent 做不到的事），一個 agent 又做得完，拆開只會付第 1 章的三種代價，換不到東西；Anthropic 也提醒，多數 coding 任務能真正平行的部分比研究少。實務上可以問一句：<strong>少了這個 agent，品質掉多少？</strong>第一次決定要不要拆時，就是拿 multi-agent 和單一 agent 比；掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以評估要先於架構，這是 L7 的主題。</p>
             </div>
           </div>
 
@@ -1248,7 +1232,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
               <details class="gloss" id="n-comm">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">通訊的選項：資料放在哪裡（三種 medium）、怎麼流（六種 channel）</span></summary>
                 <div class="gloss-body prose">
-                  <p>課程把通訊分成兩層，兩層分的是不同的事。Medium 分的是資料放在什麼載體上：一則訊息、一個共用的物件，或一個檔案。Channel 分的是資料怎麼流：給一個還是給全部、要不要訂閱、發問的一方要不要停下來等。</p>
+                  <p>通訊分成兩層，兩層分的是不同的事。Medium 分的是資料放在什麼載體上：一則訊息、一個共用的物件，或一個檔案。Channel 分的是資料怎麼流：給一個還是給全部、要不要訂閱、發問的一方要不要停下來等。</p>
                   <p>一種 channel 可以放在不同的 medium 上：共享 blackboard 這種 channel 可以放在 shared memory，也可以放在檔案或 git；artifact passing 這種 channel（一個 agent 把結果寫成檔案，另一個 agent 讀那個檔案，下圖第六格）用的是 files 這種 medium。另外兩個名字在這一頁有兩種用法，要分開：blackboard 在這裡是一種 channel（大家讀寫同一塊），在上面的架構表裡也是一種架構的名字，兩處說的是同一個做法，一個從資料怎麼流看、一個從誰協調看；shared memory 在這裡嚴格只指同一個 process 裡的物件（git repo 和一般檔案都算 files），上面混合系統圖說裡的 shared memory 則是泛稱，共享的 git 也這樣叫。</p>
                   <figure class="diagram">
 <div class="scroll">
@@ -1291,7 +1275,7 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
                   <text x="496" y="148" class="dg-c">交接的是檔案</text>
                 </svg>
 </div>
-<figcaption>三種 medium。課程的經驗法則是兩個 agent 之間的一條連線只用一種。同一件事有時發訊息、有時寫檔，收的一方就有兩個來源；兩個來源內容不同時，它分不出哪一份比較新（這個原因是本文的解釋）。</figcaption>
+<figcaption>三種 medium。經驗法則是兩個 agent 之間的一條連線只用一種。同一件事有時發訊息、有時寫檔，收的一方就有兩個來源；兩個來源內容不同時，它分不出哪一份比較新（這個原因是本文的解釋）。</figcaption>
 </figure>
                   <figure class="diagram">
 <div class="scroll">
@@ -1578,9 +1562,9 @@ $ git diff main | claude -p "Use three read-only subagents to review this diff:
             </div>
           </details>
           <details class="ex">
-            <summary>子任務規格範本，加上 granularity 的試算<span>p.21–23</span></summary>
+            <summary>子任務規格範本，加上 granularity 的試算</summary>
             <div class="exbody">
-              <p>欄位依 p.21，數字是假設的。貼進 DELEGATE 的 payload，或 subagent 的 prompt。p.23 的上限在 Claude Code 裡是 subagent 的 <code>maxTurns</code>，加上兩個環境變數：</p>
+              <p>數字是假設的。貼進 DELEGATE 的 payload，或 subagent 的 prompt。步數的上限在 Claude Code 裡是 subagent 的 <code>maxTurns</code>，加上兩個環境變數：</p>
               <figure class="file"><figcaption>terminal：subagent 的兩個上限</figcaption><pre><code>export CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1    # 深度，預設 3 層
 export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5    # 同時數量，預設 20</code></pre></figure>
               <figure class="file"><figcaption>subtask.yaml（簡化版）</figcaption><pre><code>objective:  Find storage-systems papers published in 2026
@@ -1591,20 +1575,20 @@ output:     JSON list of {title, date, contribution, eval_scale, url}
 done_when:  every item has a primary-source URL
 budget:     at most 30 tool calls or 10 minutes
 depends_on: none</code></pre></figure>
-              <p>拆之前先算一次。下面用 p.22 的公式算 slide 的 20 個 lookup。</p>
+              <p>拆之前先算一次。下面算 20 個 lookup 的例子。</p>
               <figure class="file"><figcaption>granularity.py</figcaption><pre><code>def t_multi(planning, critical_path, comm_each, n, merge):
     return planning + critical_path + comm_each * n + merge
 
-# p.22: 20 lookups x 5 s; 8 s dispatch+report per subtask
+# 20 lookups x 5 s; 8 s dispatch+report per subtask
 print(20 * 5)                       # 100  one agent
 print(t_multi(10, 5, 8, 20, 10))    # 185  20 subtasks
 print(t_multi(10, 25, 8, 4, 10))    # 77   4 subtasks</code></pre></figure>
             </div>
           </details>
           <details class="ex">
-            <summary>訊息 envelope、runtime 的 dispatch、冪等的接收端<span>p.31、p.33</span></summary>
+            <summary>訊息 envelope、runtime 的 dispatch、冪等的接收端</summary>
             <div class="exbody">
-              <p>Envelope 依 p.31；payload 放上一個範例的規格。Runtime 只看欄位就能行動。</p>
+              <p>Payload 放上一個範例的規格。Runtime 只看欄位就能行動。</p>
               <figure class="file"><figcaption>message.json</figcaption><pre><code>{
   "id": "msg-381",
   "task_id": "t-17",
@@ -1616,7 +1600,7 @@ print(t_multi(10, 25, 8, 4, 10))    # 77   4 subtasks</code></pre></figure>
   "payload": { "spec": "...subtask.yaml 的內容..." }
 }</code></pre></figure>
               <figure class="file"><figcaption>runtime.py（簡化版）</figcaption><pre><code>def on_message(msg):
-    if msg["hop"] == 0:                      # loop guard (p.36)
+    if msg["hop"] == 0:                      # loop guard
         return send_error(msg, "hop limit")
     if msg["type"] == "CANCEL":
         stop_task(msg["task_id"])            # no LLM call
@@ -1628,7 +1612,7 @@ print(t_multi(10, 25, 8, 4, 10))    # 77   4 subtasks</code></pre></figure>
 completed = PersistentStore("purchases")     # survives restarts
 
 def purchase(msg):
-    key = msg["task_id"]                     # idempotency key (p.33)
+    key = msg["task_id"]                     # idempotency key
     if key in completed:
         return completed[key]                # duplicate
     completed[key] = {"state": "working"}    # write BEFORE buying
@@ -1639,7 +1623,7 @@ def purchase(msg):
             </div>
           </details>
           <details class="ex">
-            <summary>最小的 A2A agent card<span>p.38</span></summary>
+            <summary>最小的 A2A agent card</summary>
             <div class="exbody">
               <p>每個 A2A server 在 <code>/.well-known/agent-card.json</code> 公開一張機器可讀的名片。欄位名稱依 A2A 1.0 規格，省略選填欄位。</p>
               <figure class="file"><figcaption>terminal：讀一張 agent card</figcaption><pre><code>curl https://travel.example.com/.well-known/agent-card.json</code></pre></figure>
@@ -1660,7 +1644,7 @@ def purchase(msg):
       "tags": ["travel", "booking"] }
   ]
 }</code></pre></figure>
-              <p>呼叫者從 card 得知：對方是誰、會什麼、去哪裡呼叫。Skills 是對方自己宣稱的，和 p.14 market 的出價一樣：card 說會訂機票，不保證訂得好。</p>
+              <p>呼叫者從 card 得知：對方是誰、會什麼、去哪裡呼叫。Skills 是對方自己宣稱的，和 market 架構裡的出價一樣：card 說會訂機票，不保證訂得好。</p>
             </div>
           </details>
         </div>
@@ -1991,7 +1975,7 @@ def purchase(msg):
     {
      "id": "k2.19",
      "type": "claim",
-     "t": "課程列的第一條設計原則是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。",
+     "t": "第一條設計原則是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。",
      "at": [
       "#i2 ¶3"
      ]
@@ -3963,7 +3947,7 @@ def purchase(msg):
    "covers": [
     "k2.19"
    ],
-   "q": "課程列的第一條設計原則是先問「真的需要 multi-agent 嗎」。本文說多數情況的答案是什麼？",
+   "q": "第一條設計原則是先問「真的需要 multi-agent 嗎」。本文說多數情況的答案是什麼？",
    "choices": [
     {
      "t": "不需要：單一 agent 就夠，多的 agent 常只帶來 overhead",
@@ -3979,7 +3963,7 @@ def purchase(msg):
     }
    ],
    "key": [
-    "課程的第一條設計原則是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。"
+    "第一條設計原則是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。"
    ],
    "closed_ok": "推理：設計原則寫成「真的需要嗎」這種反問，預設答案就是不需要；B、C 都不是對這個反問的回答"
   },

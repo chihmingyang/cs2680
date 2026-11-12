@@ -13,6 +13,7 @@
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。
 - James 也會在站台上直接改字（commit 訊息「網頁編輯：…」）或從頁面發問（label `ask` 的 issue），見 `guide/WORKFLOW.md` G。這些 issue 不是討論串，也不是錯誤回報。
 - 每一章通過的是哪一版可讀性 checklist，記在 `guide/review_log.tsv`（一章一行：版本、日期、當時文字的 hash）。開工先跑 `python3 -I tools/review_status.py status`：一堂一行，列出幾章是「舊規則」（審過之後 checklist 加了條目）、「改過」（審過之後文字動了）、「沒審過」。Checklist 加一條時，只拿新的那一條去掃「舊規則」的章，不必整份重審（2026-11-13 James）。
-- 正文不提 slides 怎麼寫、不標「本文補的」（2026-11-13 James：他已經重寫一半以上）。規則在 STYLE_ARTICLE 第 0 節〈不提 slides 怎麼寫〉；L4 已改，其他講次一堂一堂改，動到哪一堂就順手改那一堂。
+- 正文不提 slides 怎麼寫、不標「本文補的」（2026-11-13 James：他已經重寫一半以上）。規則在 STYLE_ARTICLE 第 0 節〈不提 slides 怎麼寫〉；L1–L10 已改；L11 講的是課程自己的作業統計，照留。
+- 核心觀念開頭不放章節清單 `nav.map`（2026-11-13 James：「直接進入正文」）；章的清單在側欄，排法寫在 `p.lede`。
 - 改內容直接改 HTML、跑檢查、push，在頁面上給他看；不先給純文字版等 OK（他幾乎不看）。
 - 回覆 James：重組、取捨這類決定，先講決策的邏輯（為什麼這樣排、補、刪），再列改了什麼、哪裡要他確認（2026-11-03：他要的是邏輯，不只是做了什麼）。小修改只列改了什麼。他的閱讀時間有限，不重貼全文。

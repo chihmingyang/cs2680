@@ -89,17 +89,8 @@
         <header class="part-head">
           <p class="kicker">1 · 核心觀念</p>
           <h2>怎麼把錯攔下來</h2>
-          <p class="lede">五章依重要性排，不照 slides 的順序。前四章講怎麼不讓錯誤拖垮長任務：先算錯誤怎麼累積，再講當場攔錯、失敗時退回多遠、出錯後在哪一層修；最後一章是需要時再查的目錄。這堂和 L6b〈<a href="l06b.html">Agent Memory</a>〉來自同一份 slides（9/28），依觀念拆成兩堂：這一堂的錯誤停在一個 run 裡，L6b 講錯誤被記下來之後怎麼辦。標「本文補的」是課程沒講、本文加上的。</p>
+          <p class="lede">五章依重要性排。前四章講怎麼不讓錯誤拖垮長任務：先算錯誤怎麼累積，再講當場攔錯、失敗時退回多遠、出錯後在哪一層修；最後一章是需要時再查的目錄。這堂和 L6b〈<a href="l06b.html">Agent Memory</a>〉來自同一份 slides（9/28），依觀念拆成兩堂：這一堂的錯誤停在一個 run 裡，L6b 講錯誤被記下來之後怎麼辦。</p>
         </header>
-        <nav class="map" aria-label="章節">
-          <p class="map-g">一定要會：長任務靠攔錯，不靠每步都對</p>
-          <a class="map-row" href="#i1"><span class="map-no">1</span><span class="map-t">錯誤相乘<small>每步 95%，50 步只剩 8%；該算的是沒攔下來的錯（後半本文補的）</small></span><span class="map-m">約 3 分</span></a>
-          <a class="map-row" href="#i2"><span class="map-no">2</span><span class="map-t">驗證<small>model 沒變強，8% 也能變 88%；檢查要真、要早（本文補的）</small></span><span class="map-m">約 5 分</span></a>
-          <a class="map-row" href="#i3"><span class="map-no">3</span><span class="map-t">Checkpoint 與上限<small>決定失敗時退回多遠、最多花多少</small></span><span class="map-m">約 8 分</span></a>
-          <a class="map-row" href="#i4"><span class="map-no">4</span><span class="map-t">失敗分層<small>同一個症狀有五個來源，在來源那一層修</small></span><span class="map-m">約 3 分</span></a>
-          <p class="map-g">需要時查</p>
-          <a class="map-row" href="#i5"><span class="map-no">5</span><span class="map-t">目錄<small>26 種 run 的失敗，五層各一張表</small></span><span class="map-m">需要時查</span></a>
-        </nav>
 
         <div class="ideas">
           <div class="idea" id="i1">
@@ -138,14 +129,14 @@ p = 0.95, n = 50  →  0.95 ^ 50 = 7.7%</code></pre></figure>
                 <thead><tr><th>每步成功率 p</th><th>5 步</th><th>10 步</th><th>20 步</th><th>50 步</th><th>100 步</th></tr></thead>
                 <tbody>
                   <tr><td>90%</td><td>59%</td><td>35%</td><td>12%</td><td>0.5%</td><td>0.003%</td></tr>
-                  <tr><td><b>95%（課程的例子）</b></td><td>77%</td><td>60%</td><td>36%</td><td><b>8%</b></td><td>0.6%</td></tr>
+                  <tr><td><b>95%</b></td><td>77%</td><td>60%</td><td>36%</td><td><b>8%</b></td><td>0.6%</td></tr>
                   <tr><td>98%</td><td>90%</td><td>82%</td><td>67%</td><td>36%</td><td>13%</td></tr>
                   <tr><td>99%</td><td>95%</td><td>90%</td><td>82%</td><td>61%</td><td>37%</td></tr>
                   <tr><td>99.9%</td><td>99.5%</td><td>99.0%</td><td>98.0%</td><td>95%</td><td>90%</td></tr>
                 </tbody>
               </table></div>
               <p>反過來算，要讓 50 步有 90% 全對，每步要 99.79%，等於約 475 步才錯一次；100 步要 99.89%。實際的 agent 離這個很遠：照 99.79% 算，十個 50 步的 run 只有一個會碰到錯；下面的量測裡，連最後成功的 run，七成途中都出過錯。而且每一步有多準由 model 和任務決定，寫 harness 的人改不了。所以<strong>長任務不能靠每一步都對</strong>。</p>
-              <p id="i1-1"><span class="anchor" id="t4"></span><b>本文的判斷：這條算式有兩個前提，真實的 run 兩個都不成立。</b>第一個前提是一步錯就整個 run 失敗，第二個是各步的成敗互相獨立。課程提醒真實的 run 比算式更差，因為錯誤會往後傳。2025–2026 年的量測顯示，真實的 run 有一處比算式好（第一個前提不成立），也有一處比算式差（第二個前提不成立）：</p>
+              <p id="i1-1"><span class="anchor" id="t4"></span><b>本文的判斷：這條算式有兩個前提，真實的 run 兩個都不成立。</b>第一個前提是一步錯就整個 run 失敗，第二個是各步的成敗互相獨立。2025–2026 年的量測顯示，真實的 run 有一處比算式好（第一個前提不成立），也有一處比算式差（第二個前提不成立）：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 256" role="img" aria-label="三條路。第一條：每一步都對，走到成功，成功的 run 裡佔 29%。第二條：第 3 步出錯，check 抓到，重做之後走到成功，成功的 run 裡佔 71%。第三條：第 3 步出錯沒有攔下來，後面每一步都建在錯的東西上，走到失敗。">
@@ -264,7 +255,7 @@ run 全對       = s ^ 50</code></pre></figure>
                 </tbody>
               </table></div>
               <p>第三列有量測。<a href="https://arxiv.org/abs/2510.20270" target="_blank" rel="noopener">ImpossibleBench</a>（CMU 與 Anthropic，2025-10）把測試改成和規格矛盾，任何通過都只能靠作弊。改法有兩種：Oneoff 改掉一個測試的期望值，讓它和規格矛盾。Conflicting 複製一個測試、給它不同的期望值，同一個輸入有兩個互相矛盾的答案，連測試之間都衝突。GPT-5 在 Oneoff 作弊 76%、在 Conflicting 54%；Claude Opus 4.1 在 Conflicting 50%。手法有改測試、讓 <code>==</code> 永遠成立、針對測試寫特例。Read-only 擋得住改測試，擋不住寫特例；給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 從 54% 降到 9%，Opus 4.1 降得少得多。這些是當時的 model，數字會變。寫給 agent 的任務可以這樣防：</p>
-              <figure class="file"><figcaption>任務 prompt：把「完成」寫成證據（本文補的）</figcaption><pre><code class="lang-text">&gt; 修 login 的 bug：tests/auth/test_login.py::test_expired_token 目前失敗。
+              <figure class="file"><figcaption>任務 prompt：把「完成」寫成證據</figcaption><pre><code class="lang-text">&gt; 修 login 的 bug：tests/auth/test_login.py::test_expired_token 目前失敗。
 &gt; 完成的定義：pytest tests/auth -q 全部通過，把指令和輸出貼給我。
 &gt; 不准改 tests/ 底下的檔案。改不動就停下來，告訴我卡在哪裡。</code></pre></figure>
               <p id="i2-2"><b>檢查要早。</b>檢查的時間點和準度一樣重要：</p>
@@ -299,7 +290,7 @@ run 全對       = s ^ 50</code></pre></figure>
               <figcaption>這張圖回答：等症狀出現再修來得及嗎？多半來不及。Failure as a Process（2026-07）在失敗的 run 上量到的典型值（中位數或約略值）：決定失敗的錯誤（decisive error）在第 7 步，救不回來的時間點（lock-in）約第 12 步，第一個看得到的症狀約第 16 步。這是好幾個量拼成的一條軸，不是某一條真實的 run。</figcaption>
             </figure>
               <p>Failure as a Process 也發現，失敗的 run 裡最常見的單一起因是<b>錯的前提</b>（false premise，30.7% 的失敗 run 有它）：agent 以為某件事成立，就照著做，其實不成立。它的案例裡，agent 第 2 步 <code>cd</code> 進一個不存在的目錄；tool 回給它的輸出是空的，錯誤訊息沒有傳回來，agent 把「沒有錯誤」讀成「成功」，之後 21 步都在錯的目錄裡做事，到第 23 步才看到 <code>not a git repository</code>。這 21 步全部白做，而且要退回去。確認前提只要一個 tool call、成本固定；錯誤每多走一步，要退的就多一步。所以<strong>最划算的檢查放在動手之前</strong>，像下面這樣：</p>
-              <figure class="file"><figcaption>terminal：動手之前先確認前提（本文補的）</figcaption><pre><code class="lang-sh">$ git rev-parse --show-toplevel     # 我在對的 repo 嗎？
+              <figure class="file"><figcaption>terminal：動手之前先確認前提</figcaption><pre><code class="lang-sh">$ git rev-parse --show-toplevel     # 我在對的 repo 嗎？
 /home/me/billing
 $ python --version                  # 跑的是我以為的版本嗎？
 Python 3.12.4
@@ -326,7 +317,7 @@ exit 0</code></pre></figure>
             </div>
             <div class="exlist deeplist">
             <details class="ex deep" id="x5">
-              <summary>本文延伸｜檢查會往兩個方向錯：漏抓與誤判<span>不是 slide 的內容</span></summary>
+              <summary>本文延伸｜檢查會往兩個方向錯：漏抓與誤判</summary>
               <div class="exbody prose">
               <p>本章的算式只算了檢查的一種錯。檢查拿這一步的結果做判斷：說「過」就放行，說「錯」就打回去重做。它可能往兩個方向判錯，所以一共有四種結果。下表的 p、detect 和本章開頭的意思一樣：p 是這一步第一次就做對的機率，detect 是這一步做錯時檢查抓到的機率。</p>
               <div class="table-wrap"><table>
@@ -338,7 +329,7 @@ exit 0</code></pre></figure>
               </table></div>
               <p>英文常把這兩種錯叫 false positive 和 false negative，但哪一種叫哪個名字，要看把哪一種判定當成 positive（陽性），而兩種當法都有人用。把「檢查說錯」當 positive，就像驗出病叫陽性：漏抓是 false negative（偽陰性），誤判是 false positive（偽陽性）。評估 agent 的 grader（判斷 agent 有沒有做完任務的程式）通常反過來，把「判過」當 positive，名字就對調：沒做對卻判過，叫 false positive。L7〈<a href="l07.html#i6">Grader</a>〉用的是後一種。為了不混淆，本文不用這兩個英文名字，直接說漏抓和誤判。</p>
               <p><b>把誤判算進去。</b>設 false_alarm 是檢查把做對的步驟判成錯的機率。打回去的步驟要重做。這裡的假設和本章的算式一樣：重做之後做對的機率是 retry_ok；重做的結果不再檢查，重做錯了就算這一步失敗。本章的算式也是這樣算的，它沒有「重試又錯、再檢查、再重試」那一項。</p>
-              <figure class="file"><figcaption>一步的成功率，加上誤判（本文補的）</figcaption><pre><code class="lang-text">s = p × (1 − false_alarm)          ← 做對了，放行
+              <figure class="file"><figcaption>一步的成功率，加上誤判</figcaption><pre><code class="lang-text">s = p × (1 − false_alarm)          ← 做對了，放行
   + p × false_alarm × retry_ok     ← 做對了，檢查誤判，重做之後還是對的
   + (1 − p) × detect × retry_ok    ← 做錯了，抓到了，重試成功
 
@@ -569,7 +560,7 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
               <figcaption>這張圖回答：前面幾件事接起來長什麼樣？一個 session 只做一個 feature（減少每段的步數），段尾做端對端驗證（錯誤攔在這一段裡，不帶到下一段），驗證過才 commit（checkpoint）。圖只畫段尾這一次驗證；它不取代第 2 章每一步之後的檢查，兩者並用（本章〈退回多遠〉那一段的開頭：便宜的檢查每步跑，貴的驗證才分段）。依 Anthropic 2025-11 的 harness（一家公司的經驗）。藍色是跨 session 的狀態，黃色是驗證，青色是 checkpoint。</figcaption>
             </figure>
               <p>這種形狀也會過時：同一家公司 2026 年寫道，<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">harness 的每個元件都是對 model 能力的假設</a>。例子是 context reset：每個 session 從空的 context 開始、靠檔案交接，原因是他們較早用的 Sonnet 4.5 接近 context 上限時會提早收尾；換到 Opus 4.5 之後這個行為大致消失，他們就拿掉定期清空，只靠壓縮對話（L4〈<a href="l04.html#i5">先用規則刪，最後才摘要</a>〉）。所以要不要照圖切成短 session，看你用的 model：它接近 context 上限時還會提早收尾，就照圖切；不會，一個 session 可以做不只一個 feature。不管哪一種，一段還是一個 feature：每段驗證過才 commit，錯的狀態就留在這一段。失敗退回時 context 也要退，錯的推理就不會帶偏下一次。這兩件照做，因為它們防的是錯誤往下傳，不是 context 快滿（本文的判斷）。怎麼當使用者跑長任務，在 L3〈<a href="l03.html#i4">終點</a>〉。回到圖裡靠檔案交接的那一格：progress.txt 是寫給下一個 session 讀的，這種跨 session 留下來、之後再讀回 context 的東西就是 memory，L6b〈<a href="l06b.html#i1">Agent Memory</a>〉接著講它會出什麼錯。</p>
-              <p id="i3-5"><b>上限：一直錯的時候什麼時候停。</b>課程的例子是跑了 200 步沒有進展。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 也量到兩件事。第一，agent 很少自己停：失敗的 run 裡，只有 18% 在錯誤已經救不回來之後很快停下，其他的繼續做下去。第二，一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修好通常很快，修了遠超過 5 步還沒好，就比典型的修好長很多，再修下去的價值變低，<strong>修太久就該停</strong>（本文的判斷；論文沒給兩組的比例）。Agent 自己不停，上限就要從外面加。上限有四種：</p>
+              <p id="i3-5"><b>上限：一直錯的時候什麼時候停。</b>例如跑了 200 步沒有進展，就該停下來。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 也量到兩件事。第一，agent 很少自己停：失敗的 run 裡，只有 18% 在錯誤已經救不回來之後很快停下，其他的繼續做下去。第二，一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修好通常很快，修了遠超過 5 步還沒好，就比典型的修好長很多，再修下去的價值變低，<strong>修太久就該停</strong>（本文的判斷；論文沒給兩組的比例）。Agent 自己不停，上限就要從外面加。上限有四種：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>上限</th><th>擋什麼</th><th>在 Claude Code 裡（<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">2026-11 的官方文件</a>）</th></tr></thead>
                 <tbody>
@@ -646,7 +637,7 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
               </details>
               <p>五種情況有一個共同點：<strong>agent 都沒有報錯，它只是照著錯的輸入做下去</strong>。這是它和程式 crash 最大的差別，所以不能等錯誤訊息，要自己去找。</p>
               <p id="i4-1"><b>先找第一個出錯的步驟，在那一層修。</b>拿到一個失敗的 run，從頭讀 trajectory，找第一個「輸出和輸入對不上」的步驟：</p>
-              <figure class="file"><figcaption>trajectory 節錄：第一個出錯的步驟在 tool（本文補的例子）</figcaption><pre><code class="lang-text">step 11  model: run ./run_tests.sh
+              <figure class="file"><figcaption>trajectory 節錄：第一個出錯的步驟在 tool</figcaption><pre><code class="lang-text">step 11  model: run ./run_tests.sh
 step 12  tool:  exit 0, stdout: ""                ← 第一個對不上：測試腳本找不到測試，卻回 0
 step 13  model: "All tests pass."                 ← 這一步的推論是合理的，輸入是錯的
 step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得到</code></pre></figure>
@@ -734,7 +725,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
               </div>
               <figcaption>這張圖回答：五層各該守什麼？一層一條原則，具體的 26 種失敗收在第 5 章。右欄是本文的整理。</figcaption>
             </figure>
-              <p id="i4-3"><span class="anchor" id="x4"></span><b>沒有紀錄，就不知道該改什麼。</b>這五條只是起點：課程的結語是，我們對大規模的 agent 了解不多，還沒有多少正式的最佳實踐。要知道你們該先補哪一條，得先有紀錄。團隊現在能做的有三件：</p>
+              <p id="i4-3"><span class="anchor" id="x4"></span><b>沒有紀錄，就不知道該改什麼。</b>這五條只是起點：業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。要知道你們該先補哪一條，得先有紀錄。團隊現在能做的有三件：</p>
               <ul>
                 <li><b>把五條原則寫成量得到的 policy。</b>例如把「每個 run 都要有上限」寫成「每個 <code>claude -p</code> 指令都帶 <code>--max-turns</code>」，再用一支 script 掃 log，數出沒帶的比例。寫成這樣，才說得出團隊跑的 run 有沒有照做。</li>
                 <li><b>記錄每個 run 的 trajectory。</b>每一步的輸入、輸出、tool 結果；多個 agent 時用 L5〈<a href="l05.html#i7-4">tracing</a>〉串起來。</li>
@@ -746,7 +737,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
           <div class="idea" id="i5">
             <h3><span class="idea-no">5</span>目錄：26 種 run 的失敗，依第 4 章的五層各一張表</h3>
             <div class="prose">
-              <p>這一章不必讀完，需要時再查。課程（CS2680 這堂）列了 26 種 run 的失敗，依第 4 章的五層各一張表。它們都是那五條原則沒守住的樣子，所以拿到一個症狀，<strong>先對回是哪一層</strong>，比記名字有用。Harness 那張表裡的「Memory 錯誤」是記憶出的錯：一條筆記寫下時是對的，後來過期了，harness 照樣把它放進 context，model 當成現在的事實照做；記憶怎麼出錯，L6b〈<a href="l06b.html#i7">目錄</a>〉另外列了八種。</p>
+              <p>這一章不必讀完，需要時再查。下面列 26 種 run 的失敗，依第 4 章的五層各一張表。它們都是那五條原則沒守住的樣子，所以拿到一個症狀，<strong>先對回是哪一層</strong>，比記名字有用。Harness 那張表裡的「Memory 錯誤」是記憶出的錯：一條筆記寫下時是對的，後來過期了，harness 照樣把它放進 context，model 當成現在的事實照做；記憶怎麼出錯，L6b〈<a href="l06b.html#i7">目錄</a>〉另外列了八種。</p>
               <details class="gloss" id="n-fail">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">26 種 run 的失敗：五層各一張表</span></summary>
                 <div class="gloss-body prose">
@@ -823,7 +814,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
         </header>
         <div class="exlist">
           <details class="ex">
-            <summary>用 python 算錯誤相乘、retry 與 checkpoint<span>p.22、p.30</span></summary>
+            <summary>用 python 算錯誤相乘、retry 與 checkpoint</summary>
             <div class="exbody">
               <p>先驗算第 1 章的 5 個數字，再算第 2 章的三種 retry 情境與第 3 章的 checkpoint 效果。</p>
               <figure class="file"><figcaption>compound.py</figcaption><pre><code>p, n = 0.95, 50
@@ -846,7 +837,7 @@ print(f"checkpoint every 10:   {(n // 10) * 10 / p**10:.0f} steps")</code></pre>
             </div>
           </details>
           <details class="ex">
-            <summary>給每個 run 設預算<span>p.26、p.30</span></summary>
+            <summary>給每個 run 設預算</summary>
             <div class="exbody">
               <p>Claude Code 的非互動模式（<code>-p</code>）有兩個對應的 flag，時間上限用系統的 <code>timeout</code> 指令。下面的數字是假設的：先量這類任務的 p95，再取兩倍當上限。</p>
               <figure class="file"><figcaption>terminal：給一個 run 設預算</figcaption><pre><code>timeout 24m claude -p "找出 tests/ 裡的 flaky test，隔離它，開 PR" \
@@ -2118,7 +2109,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     {
      "id": "k16.1",
      "type": "limit",
-     "t": "五層各一條的原則只是起點：課程的結語是我們對大規模的 agent 了解不多，還沒有多少正式的最佳實踐。",
+     "t": "五層各一條的原則只是起點：業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。",
      "at": [
       "#i4 ¶7"
      ]
@@ -4436,7 +4427,7 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
    "choices": [
     {
      "t": "因為五條只處理得了 26 種裡最常見的幾種",
-     "why": "五條不是挑出最常見的失敗，而是五層各一條原則。說只是起點，是因為課程的結語：我們對大規模的 agent 了解不多，還沒有多少正式的最佳實踐。"
+     "why": "五條不是挑出最常見的失敗，而是五層各一條原則。說只是起點，是因為業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。"
     },
     {
      "t": "因為大規模的 agent 所知還少，公認做法不多",
@@ -4444,11 +4435,11 @@ on_limit: stop_and_report # keep partial work</code></pre></figure>
     },
     {
      "t": "因為五條只適用 Claude Code 這個工具",
-     "why": "Claude Code 那一欄只是本文補的對應做法。說只是起點，是因為課程的結語：我們對大規模的 agent 了解不多，還沒有多少正式的最佳實踐。"
+     "why": "Claude Code 那一欄只是本文加的對應做法。說只是起點，是因為業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。"
     }
    ],
    "key": [
-    "課程的結語是，我們對大規模的 agent 了解不多，還沒有多少正式的最佳實踐。所以五條只是起點；要知道你們該先補哪一條，得先有紀錄。"
+    "業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。所以五條只是起點；要知道你們該先補哪一條，得先有紀錄。"
    ],
    "covers": [
     "k16.1"

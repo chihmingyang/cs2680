@@ -65,7 +65,7 @@ EOF
 5. 算式一步步算給讀者看：先定義每一項，再給公式，再列逐列算好的表（L5 第 4 章「拆多細」）。
 6. 不寫 slide 頁碼，`h3` 不放 `a.ref`。來源是外部文章時，在句子裡放連結。
 7. 分類、清單、協定細節收在最後一章「目錄」，或 `details.gloss`（`gloss-k` 寫「查閱」）。
-8. `section#s-ideas` 開頭放 `header.part-head`（kicker「1 · 核心觀念」、h2、p.lede），接著 `nav.map`，每章一列 `a.map-row`，分組用 `p.map-g`。
+8. （2026-11-13 起不放 `nav.map`，`p.lede` 之後直接接 `div.ideas`，見 STYLE_ARTICLE 第 0 節。）`section#s-ideas` 開頭放 `header.part-head`（kicker「1 · 核心觀念」、h2、p.lede），接著 `nav.map`，每章一列 `a.map-row`，分組用 `p.map-g`。
 
 ## 5. 保留其他段落，修好連結
 
