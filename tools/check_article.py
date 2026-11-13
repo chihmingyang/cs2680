@@ -172,6 +172,11 @@ def mark_target(n_units):
     return min(5, max(1, int(n_units / 200 + 0.5)))
 
 
+def mark_max(n_units):
+    # 2026-11-13 (James: L6b 的紅字可以再多一點): up to one per ~150 units
+    return max(mark_target(n_units), int(n_units / 150 + 0.5))
+
+
 def units(s):
     return len(CJK.findall(s)) + len(WORD.findall(s))
 
@@ -331,8 +336,8 @@ def main():
     print(f"  red marks: {len(p.strongs)} (" + ", ".join(f"{k or '?'} {v}" for k, v in per.items()) + ")")
     for i, n in cu.u.items():
         want, got = mark_target(n), per.get(i, 0) - deep.get(i, 0)
-        if not max(1, want - 1) <= got <= want:
-            print(f"  warn: chapter {i} has {got} red marks in its main prose; {n} units want {want}")
+        if not max(1, want - 1) <= got <= mark_max(n):
+            print(f"  warn: chapter {i} has {got} red marks in its main prose; {n} units want {want}–{mark_max(n)}")
         if deep.get(i, 0) > 1:
             print(f"  warn: chapter {i} has {deep[i]} red marks inside 深入/本文延伸 (max 1)")
     for k, want in (("tldr", 3), ("s-arch", 1)):
