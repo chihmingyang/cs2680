@@ -286,7 +286,7 @@ CREATE TABLE messages (
               <p>讓 agent 自己挑時，只有 36.36% 的題目挑到對的前例，<strong>結果比沒有記憶還差</strong>。另一種東西佔的是同一個位置：人事先寫好、每個 session 都自動讀進 context 的說明檔。它也不保證有幫助：<a href="https://arxiv.org/abs/2602.11988" target="_blank" rel="noopener">Evaluating AGENTS.md</a>（ETH Zurich 等，2026-02）量的是 <code>AGENTS.md</code> 這類 repo 層的 context file：放在 repo 裡、寫給 coding agent 的說明檔，agent 每個 session 都會讀。它發現這種檔案<strong>一般不提高任務的成功率，推論成本卻平均多 20% 以上</strong>；在裡面寫 repo 概覽沒有幫助，寫這個 repo 非標準的做法（和一般慣例不同的地方）才有用。</p>
               <p id="i2-2"><b>記憶是一份沒有人通知你過期的副本。</b>L5〈<a href="l05.html#i7">狀態與時間</a>〉說過，讀進 context 的事實是一份會過期的副本。Memory 把這件事拉長到跨 session：來源改了，沒有人通知它。所以有兩條規則：</p>
               <ol>
-                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。「先看這裡」的例子裡，「專案的服務用哪一套程式架」就是這一類：它寫在專案的依賴清單裡（Python 專案的這個檔案叫 <code>pyproject.toml</code>），讀一次就知道，不必記。那個例子裡值得記的是檔案裡讀不到的部分：當初為什麼換。這條規則比的是兩個成本：<strong>重新取得要花多少，和副本過期時會錯多少</strong>。重新取得很貴、內容又很少變的資訊值得存一份，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照本章最後兩節帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
+                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。「先看這裡」的例子裡，「專案的服務用哪一套程式架」就是這一類：它寫在專案的依賴清單裡（Python 專案的這個檔案叫 <code>pyproject.toml</code>），讀一次就知道，不必記。那個例子裡值得記的是檔案裡讀不到的部分：當初為什麼換。這條規則比的是兩個成本：<strong>重新取得要花多少，和副本過期時會錯多少</strong>。<strong>重新取得很貴、內容又很少變的資訊值得存一份</strong>，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照本章最後兩節帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
                 <li><b>記了的，用之前再確認。</b>能驗證的先驗證，<strong>一個 tool call 就能抓到過期的記憶</strong>：</li>
               </ol>
               <figure class="file"><figcaption>terminal：記憶當線索，不當事實</figcaption><pre><code class="lang-sh"># 一條 2026-04-03 記下的筆記：Auth lives in src/auth/login.py
