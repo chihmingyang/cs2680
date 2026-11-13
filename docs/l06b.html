@@ -164,7 +164,7 @@ Uses SGLang for model serving.
                   <p>Knowledge graph 把事實存成節點和邊：「專案 X」—使用—「vLLM」，每條邊可以帶時間和來源，也能順著邊找相關的事實。代價是寫入時要先從文字裡抽出節點（實體）和邊（關係），這一步通常靠 LLM，會出錯。第 7 章的 Graphiti 就是這種 store。</p>
                 </div>
               </details>
-              <p>四種格式裡，第二種（摘要）的問題最常見：摘要丟掉了「以前用 vLLM」，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：一條摘要給 prompt，加一個指向原始 episode（那一次互動的完整紀錄）的 pointer。<strong>不管選哪一種格式，時間和來源這兩個欄位都要留</strong>，第 2 章的最後兩節講。</p>
+              <p>四種格式裡，第二種（摘要）的問題最常見：摘要丟掉了「以前用 vLLM」，之後問「為什麼換掉 vLLM」，agent 連這個名字都不知道。所以實務上常常同時存兩種：<strong>一條摘要給 prompt，加一個指向原始 episode（那一次互動的完整紀錄）的 pointer</strong>。<strong>不管選哪一種格式，時間和來源這兩個欄位都要留</strong>，第 2 章的最後兩節講。</p>
               <p id="i1-2"><b>記憶疊成四層：最下層是原始紀錄，上面三層都是它的整理。</b>上面的四種格式不必四選一。實際的系統同時存好幾種，並且分層：越整理過的放越上面。Anthropic 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉（2026-11）分成四層。對回上面的四種格式：原始事件是最下面的 transcripts，摘要是一條 memory note，結構化狀態和 knowledge graph 是 memory representations；最上面的 injected context 是從這幾層挑出來、每次都載入的那一小份：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -286,7 +286,7 @@ CREATE TABLE messages (
               <p>讓 agent 自己挑時，只有 36.36% 的題目挑到對的前例，<strong>結果比沒有記憶還差</strong>。另一種東西佔的是同一個位置：人事先寫好、每個 session 都自動讀進 context 的說明檔。它也不保證有幫助：<a href="https://arxiv.org/abs/2602.11988" target="_blank" rel="noopener">Evaluating AGENTS.md</a>（ETH Zurich 等，2026-02）量的是 <code>AGENTS.md</code> 這類 repo 層的 context file：放在 repo 裡、寫給 coding agent 的說明檔，agent 每個 session 都會讀。它發現這種檔案<strong>一般不提高任務的成功率，推論成本卻平均多 20% 以上</strong>；在裡面寫 repo 概覽沒有幫助，寫這個 repo 非標準的做法（和一般慣例不同的地方）才有用。</p>
               <p id="i2-2"><b>記憶是一份沒有人通知你過期的副本。</b>L5〈<a href="l05.html#i7">狀態與時間</a>〉說過，讀進 context 的事實是一份會過期的副本。Memory 把這件事拉長到跨 session：來源改了，沒有人通知它。所以有兩條規則：</p>
               <ol>
-                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。「先看這裡」的例子裡，「專案的服務用哪一套程式架」就是這一類：它寫在專案的依賴清單裡（Python 專案的這個檔案叫 <code>pyproject.toml</code>），讀一次就知道，不必記。那個例子裡值得記的是檔案裡讀不到的部分：當初為什麼換。這條規則比的是兩個成本：<strong>重新取得要花多少，和副本過期時會錯多少</strong>。<strong>重新取得很貴、內容又很少變的資訊值得存一份</strong>，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照本章最後兩節帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
+                <li><b>能重讀的不要記。</b>路徑、架構、指令，程式碼和 git 裡都有，重讀只要一個 tool call（harness 替 model 執行一次動作，例如讀一個檔），副本卻會過期。「先看這裡」的例子裡，「專案的服務用哪一套程式架」就是這一類：它寫在專案的依賴清單裡（Python 專案的這個檔案叫 <code>pyproject.toml</code>），讀一次就知道，不必記。那個例子裡<strong>值得記的是檔案裡讀不到的部分：當初為什麼換</strong>。這條規則比的是兩個成本：<strong>重新取得要花多少，和副本過期時會錯多少</strong>。<strong>重新取得很貴、內容又很少變的資訊值得存一份</strong>，例如要讀完幾十個檔案才整理得出的模組關係；存的時候照本章最後兩節帶上時間和來源。第 3 章講的 wiki（預先把一批文件整理成互相連結的頁面）就是這種情況。</li>
                 <li><b>記了的，用之前再確認。</b>能驗證的先驗證，<strong>一個 tool call 就能抓到過期的記憶</strong>：</li>
               </ol>
               <figure class="file"><figcaption>terminal：記憶當線索，不當事實</figcaption><pre><code class="lang-sh"># 一條 2026-04-03 記下的筆記：Auth lives in src/auth/login.py
@@ -350,8 +350,8 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                   <p>評估時要分開量寫入和檢索：該取回卻沒取回，可能是當初沒寫（寫入漏了），也可能是寫了沒找到（叫 retrieval miss）。兩種原因修法不同，一個改寫入 policy，一個改檢索。</p>
                 </div>
               </details>
-              <p>本文的判斷：因為上面的不對稱，預設往右邊靠，也就是少記一點、寫入的當下就先挑（不是只照規則寫，下一段說明），再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：<strong>使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」</strong>。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
-              <p id="i2-4"><b>往右靠，用「說明用途」來做，不要把條件寫死。</b>「預設往右邊靠」是少記一點，在寫入的當下就先挑，不像光譜左邊先全部留著再挑。挑有兩種做法，管的都是「記什麼」，差在誰來挑。一種是作者事先在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶做什麼用，值不值得記讓 model 看著當下的事情判斷，下面叫它「說明用途」。上一段「至少要記什麼」的規則可以和它並用：「抓使用者糾正」只保證這種情況一定記，其他事仍由 model 判斷，所以不算寫死；寫死是把「值不值得記」整個換成一條規則，規則以外的一律不記。對到上面的光譜圖，寫死條件接近右邊的「確定性規則」，「說明用途」則是讓正在寫入的 model 當場判斷，光譜圖沒有單獨列這一點。「說明用途」的 prompt 可以只有一句，例如「這個資料夾留給下一次的你：記下會讓你下次做得更好的事」（本文的例子）。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉建議的也是這樣：告訴 model 記憶做什麼用，哪些事值得記讓它自己判斷。文章用一個叫 CL-Bench 的 benchmark 量了寫死條件的代價：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。一組不加任何條件，prompt 只說有一個記憶資料夾可以用，連用途都沒寫，比「說明用途」還少一句。另一組再加上「只記失敗」。量測裡沒有「說明用途」這一組，但<strong>連用途都沒寫的那一組已經贏過寫死條件</strong>，寫上用途，只是多給 model 一個判斷的依據（本文的推論）。下面是文章的原圖。圖上的數字都繞著記憶的效益（圖上叫 gain from memory），也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
+              <p>本文的判斷：因為上面的不對稱，<strong>預設往右邊靠，也就是少記一點、寫入的當下就先挑</strong>（不是只照規則寫，下一段說明），再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：<strong>使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」</strong>。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
+              <p id="i2-4"><b>往右靠，用「說明用途」來做，不要把條件寫死。</b>「預設往右邊靠」是少記一點，在寫入的當下就先挑，不像光譜左邊先全部留著再挑。挑有兩種做法，管的都是「記什麼」，差在誰來挑。一種是作者事先在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶做什麼用，值不值得記讓 model 看著當下的事情判斷，下面叫它「說明用途」。上一段「至少要記什麼」的規則可以和它並用：「抓使用者糾正」只保證這種情況一定記，其他事仍由 model 判斷，所以不算寫死；寫死是把「值不值得記」整個換成一條規則，規則以外的一律不記。對到上面的光譜圖，寫死條件接近右邊的「確定性規則」，「說明用途」則是讓正在寫入的 model 當場判斷，光譜圖沒有單獨列這一點。「說明用途」的 prompt 可以只有一句，例如「這個資料夾留給下一次的你：記下會讓你下次做得更好的事」（本文的例子）。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉建議的也是這樣：<strong>告訴 model 記憶做什麼用，哪些事值得記讓它自己判斷</strong>。文章用一個叫 CL-Bench 的 benchmark 量了寫死條件的代價：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。一組不加任何條件，prompt 只說有一個記憶資料夾可以用，連用途都沒寫，比「說明用途」還少一句。另一組再加上「只記失敗」。量測裡沒有「說明用途」這一組，但<strong>連用途都沒寫的那一組已經贏過寫死條件</strong>，寫上用途，只是多給 model 一個判斷的依據（本文的推論）。下面是文章的原圖。圖上的數字都繞著記憶的效益（圖上叫 gain from memory），也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
               <figure class="diagram shot">
               <div class="scroll">
                 <img src="img/l06b-clbench-rule.webp" width="1600" height="922" loading="lazy" alt="文章的原圖，兩張長條圖。右半：加了「只記失敗」之後記憶的效益變了多少，長條從 0 往下畫。Opus 5 少 0.234（3 次），Opus 4.7 少 0.150（3 次），Sonnet 4.6 少 0.020（1 次）。左半：Sonnet 4.6 在 CL-Bench 的分數。沒有記憶（baseline）0.330，有記憶 0.364，有記憶再加上改過的 prompt（refined instruction）0.641，各跑 3 次，0.641 那一條的誤差線最長。兩條橫線是對照：Opus 5 有記憶 0.828，Opus 4.7 有記憶 0.700。">
@@ -374,7 +374,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </div>
               </details>
               <p>為什麼寫死一條條件，傷害會這麼大？寫死的條件是作者事先猜「哪些事以後有用」，猜的時候還沒看到題目，model 寫筆記時卻正看著題目和答案，通常比作者猜得準。條件一寫死，model 能記的就只剩作者猜中的那一部分，所以<strong>條件變成上限，擋掉的是 model 本來會記、而且有用的事</strong>。文章只報了結果，沒有說機制，這是本文的解讀。文章只說，對 Opus 5、Opus 4.7 這類比 Sonnet 4.6 強的 model，讓它自己判斷值不值得記，比事先寫死條件有效。被擋掉的是什麼，可以對照文章對 Opus 5 筆記的描述：多數條目是一條它自己試出來的規則，附上它怎麼知道這條成立；另外有之前題目的答案，和它一路發現的陷阱。「只記失敗」把記憶限縮成答錯那幾題的教訓；model 在答對的題裡試出來、而且確認成立的查詢規則，就沒有地方放了（本文的解讀）。</p>
-              <p>比較舊、比較弱的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以有記憶只比沒有記憶多 0.034 分。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，記憶的效益從 0.034 升到 0.311，和 Opus 5、Opus 4.7 不加這兩句時的效益（0.264、0.317）差不多。0.311 這個數字要打折看：加了這兩句的那一組跑了 3 次，三次的分數差很多，0.311 是用它們的平均算的。而且這一組有記憶的平均分數是 0.641，仍然低於 Opus 4.7 有記憶時的 0.700。這兩句教的是讀記憶、驗證猜測的步驟，沒有限制它記什麼，所以和上面「不要把條件寫死」不衝突，和「只記失敗」也不是同一種規則：限制記什麼，會擋掉有用的筆記；教它讀和驗證，是補上它自己不會做的步驟。所以記憶相關的 prompt 要跟著 model 調：<strong>model 弱，就把讀記憶、驗證猜測的步驟寫出來；model 強，寫用途就夠</strong>，也不要限制它記什麼。這兩句文章只在 Sonnet 4.6 上試過，沒有說對 Opus 5 有沒有幫助，只說這類引導對比較舊的 model 幫助最大，所以換 model 的時候要重新量一次（第 5 章的測試集）。</p>
+              <p>比較舊、比較弱的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以有記憶只比沒有記憶多 0.034 分。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，記憶的效益從 0.034 升到 0.311，和 Opus 5、Opus 4.7 不加這兩句時的效益（0.264、0.317）差不多。0.311 這個數字要打折看：加了這兩句的那一組跑了 3 次，三次的分數差很多，0.311 是用它們的平均算的。而且這一組有記憶的平均分數是 0.641，仍然低於 Opus 4.7 有記憶時的 0.700。這兩句教的是讀記憶、驗證猜測的步驟，沒有限制它記什麼，所以和上面「不要把條件寫死」不衝突，和「只記失敗」也不是同一種規則：限制記什麼，會擋掉有用的筆記；教它讀和驗證，是補上它自己不會做的步驟。所以記憶相關的 prompt 要跟著 model 調：<strong>model 弱，就把讀記憶、驗證猜測的步驟寫出來；model 強，寫用途就夠</strong>，也不要限制它記什麼。這兩句文章只在 Sonnet 4.6 上試過，沒有說對 Opus 5 有沒有幫助，只說這類引導對比較舊的 model 幫助最大，所以<strong>換 model 的時候要重新量一次</strong>（第 5 章的測試集）。</p>
               <p>最後是規則怎麼寫。規則分兩類，分法是錯了能不能補（這個分法是本文的判斷）。交給 model 判斷「值不值得記」，結果會有偏差：該記的漏了，或不必記的記多了。這兩種都還補得回來：漏記的，下次遇到同樣的情況還能再記；記多的，第 5 章的〈Session 之間的整理〉會在背景另開一個 session，把 store 對回原始紀錄，順便合併、刪掉用不到的筆記。所以<strong>「值不值得記」不要寫死，交給 model</strong>。<strong>後果收不回來的邊界則要寫死</strong>：別人的資料洩漏了、網頁裡的指令被照做了、使用者要求刪掉的資料又被讀出來用了，事後都補不回來。這類邊界有三條：外部內容不自動寫入（第 6 章）、別人的記憶查不到（第 4 章）、使用者要求刪除就刪（第 5 章）。它們由程式擋，不交給 model 判斷，例如寫入記憶的那段程式碼直接拒絕來源是網頁的內容，model 怎麼判斷都寫不進去。</p>
               <p>決定要記之後，接著是這一條要帶哪些欄位。第 1 章說過，寫入時沒存的，原始紀錄刪了之後就補不回來。不管存成四種格式的哪一種，下面兩個欄位都要留。</p>
               <p id="i2-5"><b>Valid time：新事實不刪舊的。</b>Valid time 是一件事實成立的那段時間。系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是<strong>每條記憶帶兩個時間欄位</strong>，<code>valid_from</code>（從什麼時候開始成立）和 <code>valid_to</code>（到什麼時候為止）：</p>
@@ -613,7 +613,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
               <figcaption>這張圖回答：幾個 agent 一起寫記憶，怎麼才不會互相蓋掉？讓每一頁只有一個寫入者；右邊的做法還加了一條「條款照原文抄」，57 個事實全留下是兩條一起的結果。粉色是出問題的共用表，青色是各自的頁。依 Anthropic〈The components of agent memory〉（2026-11）的合約任務。</figcaption>
             </figure>
               <p>改法有兩條，各修一個原因。一份合約一頁、每一頁只由一個 agent 寫，就沒有兩個人寫同一份的時候，<strong>衝突不是被解決，而是不會發生</strong>。條款照原文抄、不摘要，第 1 章說的「摘要會丟東西」就不會發生在這一步。改完之後 57 個事實都在。</p>
-              <p>這兩條改法是 Claude 檢討報告漏了什麼之後自己提出的。原本的指示只說要整理合約，沒有說整理出來的東西之後拿來做什麼，整理出來的就是那張摘要過的共用表。檢討之後才發現報告的評分看的是合約條款，新的指示就把「條款要完整留下」放在第一位，上面兩條改法是從這裡來的。這和第 2 章是同一個結論：<strong>整理記憶的指示要寫明用途</strong>。另外，每個 agent 在自己的 session 裡寫，只看得到自己的 context，不知道別的 agent 寫了哪些頁。所以各寫各的之後，還要再跑一輪，專門看頁面和頁面之間對不對得上，例如有沒有連結指向不存在的頁面。</p>
+              <p>這兩條改法是 Claude 檢討報告漏了什麼之後自己提出的。原本的指示只說要整理合約，沒有說整理出來的東西之後拿來做什麼，整理出來的就是那張摘要過的共用表。檢討之後才發現報告的評分看的是合約條款，新的指示就把「條款要完整留下」放在第一位，上面兩條改法是從這裡來的。這和第 2 章是同一個結論：<strong>整理記憶的指示要寫明用途</strong>。另外，每個 agent 在自己的 session 裡寫，只看得到自己的 context，不知道別的 agent 寫了哪些頁。所以<strong>各寫各的之後，還要再跑一輪，專門看頁面和頁面之間對不對得上</strong>，例如有沒有連結指向不存在的頁面。</p>
 <details class="gloss" id="n-contracts">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">合約任務：那一輪檢討怎麼做、文章沒說的事</span></summary>
                 <div class="gloss-body prose">
@@ -631,7 +631,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                  "ep-19 TRT-LLM", "ep-23 LLM scheduling"],  // 連回四筆原始事件（ep = episode）：可以查證，也可以撤回
   "created":    "2026-06-20"
 }</code></pre></figure>
-              <p>Reflection 有兩種典型的失敗，snippet 的欄位各擋一種（哪個欄位擋哪一種，是本文的對應）。Memory hallucination 是推測被存成事實。例子：原話是「在 Harvard 唸書」，存進去的卻是「Harvard 的訪問學生」；「訪問學生」這個身分是 model 推測的，沒有人說過。換成上面的例子，就是把「常問 LLM inference」存成「他是做 LLM inference 的工程師」。擋它的是 <code>kind: hypothesis</code>：之後讀到這一條，就知道它是推測，只當背景參考，不蓋過使用者說過的話。Overgeneralization 是證據太少就做 reflection：使用者只問過一次 vLLM，就被記成長期偏好。擋它的是 <code>evidence</code> 和 <code>confidence</code>：只連得回一筆事件的 reflection，一眼看得出證據不夠，confidence 也只能標 low。所以 <strong>reflection 要等累積了夠多新證據再做</strong>；另一個時機是幾條事實互相衝突或重複，這時本來就要把它們合起來看。</p>
+              <p>Reflection 有兩種典型的失敗，snippet 的欄位各擋一種（哪個欄位擋哪一種，是本文的對應）。<strong>Memory hallucination 是推測被存成事實</strong>。例子：原話是「在 Harvard 唸書」，存進去的卻是「Harvard 的訪問學生」；「訪問學生」這個身分是 model 推測的，沒有人說過。換成上面的例子，就是把「常問 LLM inference」存成「他是做 LLM inference 的工程師」。擋它的是 <code>kind: hypothesis</code>：之後讀到這一條，就知道它是推測，只當背景參考，不蓋過使用者說過的話。<strong>Overgeneralization 是證據太少就做 reflection</strong>：使用者只問過一次 vLLM，就被記成長期偏好。擋它的是 <code>evidence</code> 和 <code>confidence</code>：只連得回一筆事件的 reflection，一眼看得出證據不夠，confidence 也只能標 low。所以 <strong>reflection 要等累積了夠多新證據再做</strong>；另一個時機是幾條事實互相衝突或重複，這時本來就要把它們合起來看。</p>
               <p><b>Reflection 錯了要能退：原本的 store 不動，結果另存一份。</b>上面的欄位讓之後讀到這一條的 agent 認得出它是推測、證據有多少，但錯的 reflection 還是會寫進 store。「能退」是指發現 reflection 寫錯之後，回得到 reflection 之前的那份 store。為什麼需要、要怎麼做，可以從 reflection 的三個性質推出來（本文的推論）：</p>
               <ul>
                 <li><b>它是有損的。</b>上面的例子裡，reflection 只是多寫一條，原本的四筆還在。但 store 越寫越多之後，reflection 也用來整理 store 本身：把重複的幾條合成一條，把互相矛盾的幾條換成 model 認為最新的那一條。這種 reflection 會拿掉原本的記憶；合錯了，被拿掉的細節就不在 store 裡了。</li>
@@ -640,8 +640,8 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
               </ul>
               <p>三個性質合起來，就推得出做法。Reflection 有損，所以被拿掉的原文要留在某個地方。寫進去之前驗不了，寫進去之後又會擴散，所以發現錯的時候要能整份退回去。做法是：<strong>Reflection 不直接改原本的 store，把結果寫成另一份</strong>；之後的 session 改讀新的這一份（下面叫「換上去」），原本的留著。發現錯了，就讓 session 改回去讀原本的那一份。部署新版本時也是這樣做的：新版本放在旁邊，把流量切過去，舊版本留著，出問題就切回來（blue-green deployment）。比起直接改原本的 store，這個做法有三個代價：</p>
               <ul>
-                <li><b>成本。</b>直接改只要寫有變的那幾條。另存一份要多存一整份 store，沒變的記憶也要重新寫一次。</li>
-                <li><b>多一個換上去的步驟。</b>新的 store 要有人或有程式換上去才會生效。Reflection 還在跑的時候，agent 如果繼續往舊的 store 寫，這些新記憶不會在新的那一份裡（本文的推論）。</li>
+                <li><b>成本。</b>直接改只要寫有變的那幾條。<strong>另存一份要多存一整份 store，沒變的記憶也要重新寫一次</strong>。</li>
+                <li><b>多一個換上去的步驟。</b><strong>新的 store 要有人或有程式換上去才會生效</strong>。Reflection 還在跑的時候，agent 如果繼續往舊的 store 寫，這些新記憶不會在新的那一份裡（本文的推論）。</li>
                 <li><b>誰來檢查。</b>換上去之前可以先給人看。人也沒有原話可以對，但看得出明顯不合理的 reflection，例如只有一筆證據就寫成長期偏好；看不出來的錯，還是要等換上去之後才會發現。人審的限制是審不了太多次，而且審一整份重寫過的 store，比審幾行修改難。讓程式自動換上去就沒有這個瓶頸；代價是錯的 reflection 會先影響 agent，發現之後才靠留著的舊 store 退回去。</li>
               </ul>
               <p>所以要不要每次都給人看，是依風險選的（本文的判斷）：<strong>出錯代價高的流程，或剛上線、還不知道 reflection 品質的時候，給人審</strong>；穩定之後自動換上，舊的 store 留一段時間。下面是一個照這個思路做的產品：</p>
@@ -698,7 +698,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
             </figure>
               <p>整理的 session 從 2 個增加到 128 個，只用 wiki 的分數跟著從 13% 爬到 48%，但始終沒有超過只用 search 的 53%。兩個一起用是 61%，比只用 search 多 8 個百分點。所以<strong>對原始資料的搜尋是底，wiki 是蓋在上面的地圖</strong>，不能拿 wiki 取代搜尋。</p>
               <p><strong>Wiki 幫得上忙的題目有一個特徵：答案要拼好幾份文件</strong>。同一篇文章在 Harvey LAB 這個法律 benchmark 的三個任務上看到正反兩面。第一個任務有一半以上的題要跨文件。在要跨文件、或要判斷和計算的那些題上，有 wiki 可讀的 agent 答對 87%，只用 search 的是 73%，差 14 個百分點（文章把這兩類題合在一起報，所以分不出這 14 個百分點有多少來自跨文件）。另外兩個任務 wiki 沒幫上忙。一個任務的答案大多在同一份文件裡，文字搜尋就找得到。另一個任務的 wiki 寫得比原始文件還長（1.77 倍），有些頁面沒有任何連結：它只是把資料重寫了一遍，沒有變得更好查。</p>
-              <p>道理接在第 2 章「能重讀的不要記」上，看的是重新取得的成本（本文的解讀）。Wiki 是預先算好的跨文件關聯。答案在一份文件裡時，search 一次就到，預先整理是白花的；答案要拼好幾份時，每次查都要重拼一次，預先拼好才省。決定要不要建 wiki，<strong>先看你的問題多常需要跨文件</strong>。</p>
+              <p>道理接在第 2 章「能重讀的不要記」上，看的是重新取得的成本（本文的解讀）。Wiki 是預先算好的跨文件關聯。<strong>答案在一份文件裡時，search 一次就到，預先整理是白花的</strong>；答案要拼好幾份時，每次查都要重拼一次，預先拼好才省。決定要不要建 wiki，<strong>先看你的問題多常需要跨文件</strong>。</p>
 <details class="gloss" id="n-wiki">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Wiki 實驗：資料量、整理花多少、法律任務的細節與限制</span></summary>
                 <div class="gloss-body prose">
@@ -750,7 +750,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </div>
               </details>
               <p>相似度量的是「意思像不像」。<strong>哪一條是現在的、是誰的、誰說的，都不在文字的意思裡</strong>，所以要在寫入時存成欄位（第 2 章）。</p>
-              <p id="i4-1"><b>在 RAG 上多加四個訊號。</b>RAG 的 semantic search 只用一個訊號排序：semantic match，就是上面的相似度。訊號（ranking signal）是搜尋系統的用詞，指決定一筆結果要不要取回、排第幾的一項依據。記憶要多加四個：<strong>scope（這條記憶是誰的）、validity（現在還成立嗎）、importance（漏掉它的代價多大）、provenance（誰說的）</strong>，一共五個。為什麼記憶不能省這四個：一般 RAG 的文件是人寫的，改版時通常覆蓋舊版，同一件事在索引裡只有一份。記憶是 agent 自己寫的，而且只往後加，所以同一件事會有新舊兩條，裡面還混著 agent 自己的推測（本文的判斷）。流程也是 RAG 常見的那一條：先用 metadata 過濾，再 vector search，再 rerank（重新排序）。下圖是五個訊號各用在哪一步。Importance 很高的規則另走一條路：不經過檢索，直接常駐：</p>
+              <p id="i4-1"><b>在 RAG 上多加四個訊號。</b>RAG 的 semantic search 只用一個訊號排序：semantic match，就是上面的相似度。訊號（ranking signal）是搜尋系統的用詞，指決定一筆結果要不要取回、排第幾的一項依據。記憶要多加四個：<strong>scope（這條記憶是誰的）、validity（現在還成立嗎）、importance（漏掉它的代價多大）、provenance（誰說的）</strong>，一共五個。為什麼記憶不能省這四個：一般 RAG 的文件是人寫的，改版時通常覆蓋舊版，同一件事在索引裡只有一份。記憶是 agent 自己寫的，而且只往後加，所以<strong>同一件事會有新舊兩條，裡面還混著 agent 自己的推測</strong>（本文的判斷）。流程也是 RAG 常見的那一條：<strong>先用 metadata 過濾，再 vector search，再 rerank</strong>（重新排序）。下圖是五個訊號各用在哪一步。Importance 很高的規則另走一條路：不經過檢索，直接常駐：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 226" role="img" aria-label="檢索 pipeline，由左到右：query；scope 過濾；validity 過濾；vector search 依語意排序；importance 與 provenance 調整分數；top-k；prompt。前兩格是硬過濾，不合的記憶直接丟掉，相似度再高也不會進 top-k。上方一條線繞過整條 pipeline，直接進 prompt，標著常駐規則：漏掉代價很高的規則不走檢索。">
@@ -872,7 +872,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
               </div>
               <figcaption>這張圖回答：誰決定什麼時候讀寫？黃色是程式的判斷點；Model-controlled 那一列的 LLM 標成深紅，表示判斷交給 model，虛線表示它想呼叫哪個 memory tool 就呼叫哪個。讀和寫可以各選一種。</figcaption>
             </figure>
-              <p>三種裡，讀要選哪一種，看的是這個 model 實際會不會自己去讀（本文的推論；寫要怎麼選，在第 2 章〈<a href="#i2-3">寫入 policy</a>〉）。第 2 章的量測裡，Sonnet 4.6 不提示時，不到一半的題目會先讀記憶；同一篇文章說比它新一代的 Sonnet 5 大約九成會先讀。這兩個是同一個等級的前後兩代，Anthropic 另有更強的 Opus 等級。所以<strong>會不會讀，不能從 model 的等級猜</strong>，把讀交給 model（model-controlled）之前要先量。量出來不會讀，有兩種補法，先試輕的。輕的是在 prompt 裡把步驟寫出來，也就是第 2 章說的「model 弱就寫步驟」：Sonnet 4.6 加了「回答前先讀記憶」「把猜測拿去測試」兩句，記憶的效益就和 Opus 5、Opus 4.7 差不多。還不夠，才改成由程式去查。每一圈都查（automatic）最穩，代價是每一圈多一次查詢，用不到的記憶也會進 context。由程式先判斷這一圈要不要查（runtime-controlled）省一些，代價是要多寫判斷的規則。不管選哪一種，換 model 就用第 5 章的測試集重量一次。</p>
+              <p>三種裡，讀要選哪一種，看的是這個 model 實際會不會自己去讀（本文的推論；寫要怎麼選，在第 2 章〈<a href="#i2-3">寫入 policy</a>〉）。第 2 章的量測裡，Sonnet 4.6 不提示時，不到一半的題目會先讀記憶；同一篇文章說比它新一代的 Sonnet 5 大約九成會先讀。這兩個是同一個等級的前後兩代，Anthropic 另有更強的 Opus 等級。所以<strong>會不會讀，不能從 model 的等級猜</strong>，把讀交給 model（model-controlled）之前要先量。<strong>量出來不會讀，有兩種補法，先試輕的</strong>。輕的是在 prompt 裡把步驟寫出來，也就是第 2 章說的「model 弱就寫步驟」：Sonnet 4.6 加了「回答前先讀記憶」「把猜測拿去測試」兩句，記憶的效益就和 Opus 5、Opus 4.7 差不多。還不夠，才改成由程式去查。每一圈都查（automatic）最穩，代價是每一圈多一次查詢，用不到的記憶也會進 context。由程式先判斷這一圈要不要查（runtime-controlled）省一些，代價是要多寫判斷的規則。不管選哪一種，換 model 就用第 5 章的測試集重量一次。</p>
             </div>
           </div>
 
@@ -944,7 +944,7 @@ forget:    mark superseded facts invalid; delete only on user request      # 第
               <p>這張表是本文的整理。Forget 的另外兩種做法不在表裡，因為它們不由 dreaming 做：永久刪除只在使用者要求時做，TTL 到期由 store 自己執行。</p>
               <p id="i5-1"><b>Session 之間的整理：把筆記對回原始紀錄。</b>第 3 章〈<a href="#i3-5">Reflection</a>〉最後那張圖的 dream 工作，Anthropic 把這種做法叫 dreaming：agent 不做任務的時候，另外開 session 讀 transcripts 和現有的筆記。本文把它叫 session 之間的整理。它沿著四層做三件事。Correct 和 promote 是 Anthropic 那篇文章的動詞，demote 是本文配 promote 取的（文章只說往下搬）：</p>
               <ul>
-                <li><b>Correct（修錯）。</b>把筆記和 transcripts 對一遍，改掉記錯的那幾條。</li>
+                <li><b>Correct（修錯）。</b><strong>把筆記和 transcripts 對一遍，改掉記錯的那幾條</strong>。</li>
                 <li><b>Reflection。</b>和第 3 章的 reflection 是同一個動作，輸入換成散的筆記：讀好幾條，往上合成 wiki 這類結構。它值不值得做，第 3 章有量測。</li>
                 <li><b>Promote 與 demote（換層）。</b>Promote 是把每次都用得到的往上搬到 injected context；demote 是把細節往下搬，原處留一個連結，讓最上層保持小（第 4 章）。</li>
               </ul>
@@ -958,8 +958,8 @@ forget:    mark superseded facts invalid; delete only on user request      # 第
               <p>Correct 最能說明為什麼要留 transcripts。<strong>筆記記錯的時候，agent 自己看不出來</strong>：它讀到的只有那條筆記，會一直照著做。修得了，靠的是兩樣東西都還在：<strong>寫下那條筆記時的 transcript，和一個回頭去對的步驟</strong>。</p>
               <p>Correct 是在 session 之間做的。這帶出一個選擇：一件事要在 session 裡當場記，還是留到 session 之間再整理。兩個時機就是上面那兩張四層圖，各有代價：</p>
               <ul>
-                <li><b>在 session 裡寫。</b>事情剛發生，agent 最知道哪一件重要。代價是寫筆記會佔用做任務的步數。</li>
-                <li><b>在 session 之間整理。</b>不打擾任務，也看得到好幾個 session。代價是另外花 compute，而且整理跑完之前，下一個 session 用不到結果。</li>
+                <li><b>在 session 裡寫。</b>事情剛發生，agent 最知道哪一件重要。<strong>代價是寫筆記會佔用做任務的步數</strong>。</li>
+                <li><b>在 session 之間整理。</b>不打擾任務，也看得到好幾個 session。<strong>代價是另外花 compute，而且整理跑完之前，下一個 session 用不到結果</strong>。</li>
               </ul>
               <p>兩種可以並用：<strong>session 裡只記一條短的線索，細的整理留到之後</strong>。整理多久跑一次還沒有定論：文章只提了方向（容易變的資訊優先拿去核對，常被讀到的記憶整理得勤一點），沒有量測。</p>
               <p>兩個時機還可以交給不同的 model（本文的推論）。Session 裡的 model 有人在等它回應，要選快的；session 之間的整理沒有人在等，可以交給比較慢、比較強的 model。Letta 在 2025-04 推出的 <a href="https://letta.com/blog/sleep-time-compute" target="_blank" rel="noopener">sleep-time agent</a> 就是這樣拆的：一個 agent 負責回應，另一個在背景改寫前一個的記憶，兩個各自設定用哪個 model，Letta 建議背景那一個用比較強的。拆成兩個 model 之後，多了兩件事要顧。第一，負責回應的是比較弱的那個 model，它不一定會自己去讀記憶。它不讀，背景整理得再好也用不到，所以要照第 4 章〈<a href="#i4-5">誰決定什麼時候讀寫</a>〉先量。第二，比較強的 model 一次會改寫很多條筆記，寫出來的又是 reflection，錯了會滾大，所以結果要另存一份、能整份退回（第 3 章〈<a href="#i3-5">Reflection</a>〉）。另外，session 之間的整理本身也不是每次都划算。Letta 的論文〈<a href="https://arxiv.org/html/2504.13171v1" target="_blank" rel="noopener">Sleep-time Compute</a>〉（2025-04）在數學題上量到：使用者之後會問什麼，越能從手上已有的資料猜出來，事先整理的幫助越大（本文只讀了這篇論文的摘要）。</p>
@@ -1096,7 +1096,7 @@ budget:
                   <tr><td><a href="https://arxiv.org/html/2503.03704v5" target="_blank" rel="noopener">MINJA</a>（2025-03，2026-02 修訂），學術實驗</td><td>攻擊者裝成一般使用者，只送查詢、不碰 store。查詢裡夾著引導的句子，讓 agent 自己寫出一段帶著攻擊者邏輯的推理；agent 照常把這段推理存成記憶，放進多人共用的 store（論文叫 memory bank）</td><td>之後別的使用者問到相似的問題，agent 取回那段推理照著做。條件是多人共用同一個 store</td></tr>
                 </tbody>
               </table></div>
-              <p>數字要看前提。MINJA 論文量了兩個比例，都是 6 種設定的平均（3 種 agent 配不同的 model 和資料集，每種設定測 9 組攻擊對象）：惡意內容真的存進 store 的（寫入成功率）98.2%，之後被取回、agent 照著做的（攻擊成功率）76.8%。<a href="https://arxiv.org/html/2601.05504v1" target="_blank" rel="noopener">後續的研究</a>（UMass，2026-01）在 GPT-4o-mini 上另外量了 store 一開始有沒有東西：store 是空的時候攻擊成功率 62%；先放進相關的正常記憶，同樣的攻擊掉到 6.67%，約是空 store 的九分之一（62% 和上面的 76.8% 出自兩篇論文、設定不同，不互相比）。所以空的 store 風險最高；表 1 又列了 MINJA 的前提是多人共用，合起來就是<strong>共用、空的 store 最危險</strong>。放了正常記憶之後，攻擊成功率是變低、不是歸零，這條路還在。</p>
+              <p>數字要看前提。MINJA 論文量了兩個比例，都是 6 種設定的平均（3 種 agent 配不同的 model 和資料集，每種設定測 9 組攻擊對象）：惡意內容真的存進 store 的（寫入成功率）98.2%，之後被取回、agent 照著做的（攻擊成功率）76.8%。<a href="https://arxiv.org/html/2601.05504v1" target="_blank" rel="noopener">後續的研究</a>（UMass，2026-01）在 GPT-4o-mini 上另外量了 store 一開始有沒有東西：store 是空的時候攻擊成功率 62%；先放進相關的正常記憶，同樣的攻擊掉到 6.67%，約是空 store 的九分之一（62% 和上面的 76.8% 出自兩篇論文、設定不同，不互相比）。所以空的 store 風險最高；表 1 又列了 MINJA 的前提是多人共用，合起來就是<strong>共用、空的 store 最危險</strong>。放了正常記憶之後，<strong>攻擊成功率是變低、不是歸零</strong>，這條路還在。</p>
               <p data-num-own="54 82 135" id="i6-2"><b>每一站一道防線，至少一道不靠 model 判斷。</b>這裡的站換成攻擊會經過的五站：寫入、儲存、檢索三站對應第 5 章的 Observe 與 Encode、Store、Retrieve，再加上記憶讀回來之後的動作，以及事後的偵測。<strong>只靠 LLM 過濾不夠</strong>：MINJA 論文試過叫 LLM 在寫入時過濾惡意內容：替一種 agent 量身寫的偵測 prompt，在那種 agent 上抓到 135 筆裡的 131 筆，同一段 prompt 換到另一種 agent 是 135 筆裡的 0 筆，通用版的 prompt 在後一種 agent 上也只抓到 135 筆裡的 53 筆；那篇後續研究（UMass）的過濾是讓 LLM 替要寫入的內容打信任分數，在 Gemini 2.0 Flash 上，拿到滿分、被存進去的 82 筆裡，有 54 筆是惡意查詢（論文沒有給惡意查詢的總數，所以算不出漏掉幾成）。各站的做法（本文的整理）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>站</th><th>防線</th><th>靠什麼</th></tr></thead>

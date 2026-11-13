@@ -173,8 +173,8 @@ def mark_target(n_units):
 
 
 def mark_max(n_units):
-    # 2026-11-13 (James: L6b 的紅字可以再多一點): up to one per ~150 units
-    return max(mark_target(n_units), int(n_units / 150 + 0.5))
+    # 2026-11-13 (James: L6b 的紅字可以再多一點): up to one per ~120 units
+    return max(mark_target(n_units), int(n_units / 120 + 0.5))
 
 
 def units(s):
