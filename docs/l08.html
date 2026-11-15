@@ -268,34 +268,69 @@
               <figcaption>每一步送出去的是什麼？新的只有最右邊的黃色和粉色兩小段（這一步新進來的內容、model 的 output），其他全部重送。所以 context 隨 step 累積，大部分 token 都是重讀。</figcaption>
             </figure>
 <p>Context 就這樣越滾越大。CS2680 全班的 Claude Code session log 裡，每一步送進 model 的 token，兩份作業的中位數分別是 208K 和 301K。</p>
-<p id="i2-2"><b>三種 token：量和單價方向相反。</b>重送的內容不必每次都從頭算。提供 model 的廠商（下面叫 provider）會把處理過的 context 留一段時間。下一步送來的 context，開頭和上一步完全相同的那一段，直接讀留下來的結果，這叫 <a href="l02.html#t1">prefix cache</a>，API 文件叫 prompt caching。讀它的 token 叫 cache read，下面也寫成「讀快取」，單價最低。上一步沒出現過的內容要從頭算一次，叫 fresh input。它算完會寫進 cache，所以也叫 cache write，下面說「寫入」「重算」都是指這一種。Model 自己產生的回覆叫 output，單價最高：model 產生回覆時（這個階段叫 <a class="tm" href="#n-prefill">decode</a>）一次只能出一個 token，GPU 的算力用不滿，分到每個 token 的成本就高。全班 session log 裡，三種 token 的量大約是 cache read 100、fresh input 1、output 0.2；單價大約是 cache read 1、fresh input 10、output 50，方向剛好相反：</p>
+<p id="i2-2"><b>三種 token：量和單價方向相反。</b>重送的內容不必每次都從頭算。提供 model 的廠商（下面叫 provider）會把處理過的 context 留一段時間。下一步送來的 context，開頭和上一步完全相同的那一段，直接讀留下來的結果。這個機制叫 <a href="l02.html#t1">prefix cache</a>，API 文件叫 prompt caching。有了它，每一步的 token 分成三種，各有各的單價：</p>
 <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 136" role="img" aria-label="兩條 100% 堆疊長條。上面是 token 的量：cache read 98.8%，fresh input 1.0%，output 0.2%。下面是花的錢，用全班 log 的量和 1 比 10 比 50 的單價算：cache read 83%，fresh input 8%，output 8%。">
-                  <defs><marker id="l8v-share-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-share-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <text x="14" y="42" class="dg-cb">Token 的量</text>
-                  <rect x="110" y="22" width="582.92" height="34" class="dg-n-a"/>
-                  <text x="401.46" y="44" text-anchor="middle" class="dg-l">cache read 98.8%</text>
-                  <rect x="692.92" y="22" width="5.9" height="34" class="dg-n-b"/>
-                  <rect x="698.8199999999999" y="22" width="1.1800000000000406" height="34" class="dg-n-d"/>
-                  <text x="700" y="15" text-anchor="end" class="dg-c">fresh input 1.0%、output 0.2%</text>
-                  <text x="14" y="112" class="dg-cb">花的錢</text>
-                  <rect x="110" y="92" width="491.6666666666667" height="34" class="dg-n-focus"/>
-                  <text x="355.83333333333337" y="114" text-anchor="middle" class="dg-l-on">cache read 83%</text>
-                  <rect x="601.6666666666667" y="92" width="49.166666666666664" height="34" class="dg-n-b"/>
-                  <text x="626.2500000000001" y="114" text-anchor="middle" class="dg-ls">8%</text>
-                  <rect x="650.8333333333334" y="92" width="49.166666666666664" height="34" class="dg-n-d"/>
-                  <text x="675.4166666666667" y="114" text-anchor="middle" class="dg-ls">8%</text>
-                  <text x="626.2500000000001" y="84" text-anchor="middle" class="dg-c">fresh</text>
-                  <text x="675.4166666666667" y="84" text-anchor="middle" class="dg-c">output</text>
+                <svg viewBox="0 0 720 200" role="img" aria-label="三列，一列一種 token。左邊一欄是名稱和說明，右邊三欄是量、單價、花的錢。Cache read（讀快取）是和上一步相同的開頭，直接讀留下來的結果，量 100、單價 1、佔花費 82%。Fresh input（API 的帳單叫 cache write）是上一步沒有的內容，從頭算，再寫進 cache，量 1、單價 12.5、佔花費 10%。Output 是 model 產生的回覆，量 0.2、單價 50、佔花費 8%。量由上往下越來越少，單價由上往下越來越高。">
+                  <text x="14" y="18" class="dg-c">一列一種 token</text>
+                  <text x="282" y="18" class="dg-cb">Token 的量</text>
+                  <text x="452" y="18" class="dg-cb">× 每個 token 的單價</text>
+                  <text x="604" y="18" class="dg-cb">= 花的錢</text>
+                  <text x="14" y="53" class="dg-cb">cache read（讀快取）</text>
+                  <text x="14" y="71" class="dg-ts">和上一步相同的開頭，直接讀留下來的結果</text>
+                  <rect x="282" y="45" width="130.0" height="22" class="dg-n-a"/>
+                  <text x="418.0" y="61" class="dg-ls">100</text>
+                  <rect x="452" y="45" width="2.2" height="22" class="dg-n-b"/>
+                  <text x="460.2" y="61" class="dg-ls">1</text>
+                  <rect x="604" y="45" width="69.7" height="22" class="dg-n-focus"/>
+                  <text x="679.7" y="61" class="dg-ls">82%</text>
+                  <line x1="14" y1="84" x2="706" y2="84" class="dg-soft-link"/>
+                  <text x="14" y="109" class="dg-cb">fresh input（帳單叫 cache write）</text>
+                  <text x="14" y="127" class="dg-ts">上一步沒有的內容，從頭算，再寫進 cache</text>
+                  <rect x="282" y="101" width="1.5" height="22" class="dg-n-a"/>
+                  <text x="289.5" y="117" class="dg-ls">1</text>
+                  <rect x="452" y="101" width="27.5" height="22" class="dg-n-b"/>
+                  <text x="485.5" y="117" class="dg-ls">12.5</text>
+                  <rect x="604" y="101" width="8.5" height="22" class="dg-n-focus"/>
+                  <text x="618.5" y="117" class="dg-ls">10%</text>
+                  <line x1="14" y1="140" x2="706" y2="140" class="dg-soft-link"/>
+                  <text x="14" y="165" class="dg-cb">output</text>
+                  <text x="14" y="183" class="dg-ts">model 產生的回覆</text>
+                  <rect x="282" y="157" width="1.5" height="22" class="dg-n-a"/>
+                  <text x="289.5" y="173" class="dg-ls">0.2</text>
+                  <rect x="452" y="157" width="110.0" height="22" class="dg-n-b"/>
+                  <text x="568.0" y="173" class="dg-ls">50</text>
+                  <rect x="604" y="157" width="6.8" height="22" class="dg-n-focus"/>
+                  <text x="616.8" y="173" class="dg-ls">8%</text>
                 </svg>
               </div>
-              <figcaption>量和錢為什麼不同比例？上面是 token 的量，下面把量乘上單價。Cache read 的單價最低，但量多得多，所以仍是最大一筆。長條照比例畫。</figcaption>
+              <figcaption>三種 token 各花多少錢？量最多的 cache read 單價最低，單價最高的 output 量最少；相乘之後，cache read 仍佔約八成。量是 CS2680 全班 session log 的比例，單價以 cache read 為 1，長條照比例畫。</figcaption>
             </figure>
-<p>把量乘上單價：cache read 是 100 × 1 = 100，fresh input 是 1 × 10 = 10，output 是 0.2 × 50 = 10，合計 120。Cache read 的單價最低，量卻是 fresh input 的 100 倍，<strong>算下來仍佔約八成的花費</strong>（100 ÷ 120）。</p>
-<p>換一組單價，結論還在。上面單價裡的 10 是沒有任何折扣的一般 input 單價，叫 base input；cache read 的 1 就是它的 0.1×。（Fresh input 寫進 cache 時要加價，收 base input 的 1.25×；上面簡化成 1×，結論不變。）較新的 model 收得更低：Opus 5.5 和 Sonnet 5.5 是 0.05×，Fable 5.1 是 0.025×（見<a class="tm" href="#t2">單價註</a>）。代入重算，0.05× 時 cache read 佔 71%，0.025× 時佔 56%，比例變小，但仍是最大的一筆。</p>
-<p id="i2-3"><b>Cache 會過期，過期的舊內容要重算一次。</b>全班的 log 看不出這一筆，要換一份資料才看得到。Cache 只留幾分鐘，使用者停下來的時間常常更久。過期之後，同一段舊內容要當成 fresh input 重算一次，照寫入 cache 的價格收 1.25×；讀快取只收 0.1× 到 0.025×，所以<strong>重算一個 token 的錢是讀快取的 12.5 到 50 倍</strong>。華盛頓大學的 <a href="https://syfi.cs.washington.edu/blog/2026-06-25-tracelab/" target="_blank" rel="noopener">TraceLab</a>（2026-06）分析自己實驗室的 coding agent session，把 fresh input 再拆開：只有 19% 真的是新內容，其他 81% 是過期後重算的舊內容。本文用上面的倍率換算這份資料：cache read 收 0.1× 時，讀快取佔花費的 58%、過期重算佔 26%；收 0.05× 時，讀快取佔 41%、過期重算佔 36%。兩種算法裡，<strong>讀快取加過期重算都約佔花費的八成</strong>。</p>
-<p>這決定了後面的順序。保住命中，就能把過期重算換成便宜的讀快取，而且不用丟掉任何內容。縮小 context 也能省，但要決定丟什麼，丟錯了要重做。Output 只佔一成上下，省掉一半也動不了多少。所以<strong>先保住命中率（第 3 章），再縮小 context，最後才管 output</strong>（第 6 章）。</p>
+<p>先看量和單價這兩欄，方向相反：量最多的 cache read 單價最低，單價最高的 output 量最少。Cache read 便宜，是因為 provider 只要讀留下來的結果，不用重算。Output 貴，是因為 GPU 讀 input 時可以把所有 token 一起算，產生回覆時（這個階段叫 <a class="tm" href="#n-prefill">decode</a>）卻一次只能出一個 token，同樣的時間算出的 token 少得多，分到每個 token 的成本就高。兩欄相乘就是「花的錢」那一欄：<strong>cache read 的單價最低，仍佔約八成的花費</strong>。</p>
+<p>圖上的單價是一組常見的比例。較新的 model 把 cache read 收得更低，只有圖上的一半到四分之一（見<a class="tm" href="#t2">單價註</a>）。這時 cache read 佔的比例會降到五到七成，仍是最大的一筆。</p>
+<p id="i2-3"><b>Cache 會過期，過期的舊內容要重算一次。</b>Cache 只留幾分鐘，使用者停下來的時間常常更久。過期之後，同一段舊內容要當成 fresh input 重算一次、再寫進 cache。在上圖的單價欄，這等於同一個 token 從 cache read 那一列掉到 fresh input 那一列：<strong>過期重算一個 token 的錢，是從 cache 讀它的 12.5 倍</strong>。Cache read 收得更低的 model，最多差到 50 倍。</p>
+<p>全班的 log 沒有把過期重算分出來。華盛頓大學的 <a href="https://syfi.cs.washington.edu/blog/2026-06-25-tracelab/" target="_blank" rel="noopener">TraceLab</a>（2026-06）分析自己實驗室的 coding agent session，把 fresh input 拆開看：81% 是過期後重算的舊內容，真正的新內容不到兩成。換算成花費：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 96" role="img" aria-label="一條 100% 堆疊長條，TraceLab 的 session 花費怎麼分：讀快取 58%，過期重算 26%，新內容 6%，output 10%。讀快取和過期重算上方有一個括號，標著重讀同一批舊內容，合計 84%。">
+                  <path d="M14,44 V32 H595.3 V44" class="dg-link-key"/>
+                  <text x="304.6" y="22" text-anchor="middle" class="dg-k">重讀同一批舊內容：合計 84%</text>
+                  <rect x="14.0" y="52" width="401.4" height="34" class="dg-n-focus"/>
+                  <text x="214.7" y="74" text-anchor="middle" class="dg-l-on">讀快取 58%</text>
+                  <rect x="415.4" y="52" width="179.9" height="34" class="dg-n-b"/>
+                  <text x="505.3" y="74" text-anchor="middle" class="dg-l">過期重算 26%</text>
+                  <rect x="595.3" y="52" width="41.5" height="34" class="dg-n-a"/>
+                  <text x="616.0" y="74" text-anchor="middle" class="dg-ls">6%</text>
+                  <rect x="636.8" y="52" width="69.2" height="34" class="dg-n-d"/>
+                  <text x="671.4" y="74" text-anchor="middle" class="dg-ls">10%</text>
+                  <text x="616.0" y="44" text-anchor="middle" class="dg-c">新內容</text>
+                  <text x="671.4" y="44" text-anchor="middle" class="dg-c">output</text>
+                </svg>
+              </div>
+              <figcaption>TraceLab 的 session，錢花在哪裡？讀快取和過期重算都是在重讀同一批舊內容，合計約八成。花費是本文用上一張圖的單價換算的，長條照比例畫。</figcaption>
+            </figure>
+<p>圖上的「讀快取」就是 cache read。<strong>讀快取和過期重算，付的都是重讀同一批舊內容的錢，兩項合計約佔花費的八成</strong>。</p>
+<p>這決定了後面的順序。Cache 留多久可以設定，所以過期重算大多避得開：讓 cache 撐過使用者的停頓，舊內容就還讀得到 cache（這叫命中），這筆錢換成便宜的讀快取，而且不用丟掉任何內容。縮小 context 也能省，但要決定丟什麼，丟錯了要重做。Output 只佔一成上下，省掉一半也動不了多少。所以<strong>先保住命中（第 3 章），再縮小 context（第 4 章），最後才管 output</strong>（第 6 章）。</p>
 <p id="i2-4"><span class="anchor" id="t1"></span><b>重送的總量隨 turn 數的平方成長。</b>第 k 個 turn 要把前面 k − 1 個 turn 的內容重送一次。定義 L 是每個 turn 新增的 token 數，k 是 turn 數，第 k 個 turn 送 kL，全部加起來：</p>
 <figure class="file"><figcaption>k 個 turn 送出的總量</figcaption><pre><code class="lang-text">總量 = L × (1 + 2 + … + k) = L × k(k + 1) ÷ 2</code></pre></figure>
 <figure class="diagram">
@@ -426,11 +461,11 @@
               </div>
               <figcaption>差一個字會怎樣？Cache 從第一個 token 往後比對，第一個不同的地方之後全部重算。青色是命中，黃色是新內容，深紅是那個時間戳，粉色是它後面本來可以命中卻要重算的部分。</figcaption>
             </figure>
-<p id="i3-2"><b>命中率的帳。</b>沒命中的 token 比命中的貴幾十倍，所以幾個百分點的差別會反映在帳單上。先定義四項：</p>
+<p id="i3-2"><b>命中率的帳。</b>沒命中的 token 比命中的貴幾十倍，所以幾個百分點的差別會反映在帳單上。先定義四項，兩個倍率都以 base input 為 1×，也就是沒有任何折扣的一般 input 單價：</p>
 <ul>
                 <li><b>C。</b>這一步的 context 有多少 token。</li>
                 <li><b>h。</b>命中率，input 裡讀快取的比例。</li>
-                <li><b>r。</b>Cache read 的倍率，上面用 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
+                <li><b>r。</b>Cache read 的倍率，第 2 章的圖用 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
                 <li><b>w。</b>寫入 cache 的倍率，5 分鐘的 cache 是 1.25×。</li>
               </ul>
 <figure class="file"><figcaption>每一步 input 的花費（單位：base input token）</figcaption><pre><code class="lang-text">每一步 input 的花費 = C × (h × r + (1 − h) × w)</code></pre></figure>
