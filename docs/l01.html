@@ -536,7 +536,7 @@
               <figcaption>Harness 的一個小決定，怎麼影響 serving？System prompt 是 harness 放在每次請求最前面的固定說明（角色、規則），後面接 tool 的定義和對話歷史。上例把現在的時間寫進它的開頭，時間每一步都不同，所以第一段就對不上。Prefix cache 從第一個 token 開始比對，遇到不同就停。粉色是要重算的，青色是命中的，黃色是真的新增的。127K 是重讀的 126K 加上新增的 857，都是 TraceLab 裡 Claude Code 每一步的中位數。</figcaption>
             </figure>
               <p>差距有多大？Claude Code 每一步的中位數是重讀 126K token、新增 857 token，沒有命中就要多算約 148 倍。<a href="https://www.manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus" target="_blank" rel="noopener">Manus</a> 2025 年的經驗文章把這個命中率稱為 production agent 最重要的單一指標（這是一家公司的經驗，不是對照實驗）。他們給的理由是價差：他們用的 model，命中的 input 每百萬 token $0.30，沒命中 $3，<strong>同樣的 token 差 10 倍</strong>。</p>
-              <p>Copilot 的 trace 也看得到上層的行為怎麼改變命中率：一個 turn 內平均 90%，跨 turn 掉到 55%，<strong>換 model 之後只剩 8%</strong>。跨 turn 時中間隔著人讀結果、想下一步的時間（第 8 章：中位數約 3 分鐘），別的請求可能已經把 cache 擠掉；換 model 時，舊 model 算出的中間結果新 model 用不上，幾乎全部要重算。這筆錢怎麼算，見 <a href="l08.html#i3">L8〈Prompt cache〉</a>（API 計價時對 prefix cache 的叫法）。</p>
+              <p>Copilot 的 trace 也看得到上層的行為怎麼改變命中率：一個 turn 內平均 90%，跨 turn 掉到 55%，<strong>換 model 之後只剩 8%</strong>。跨 turn 時中間隔著人讀結果、想下一步的時間（第 8 章：中位數約 3 分鐘），別的請求可能已經把 cache 擠掉；換 model 時，舊 model 算出的中間結果新 model 用不上，幾乎全部要重算。這筆錢怎麼算，見 <a href="l08.html#i3">L8〈Prefix cache〉</a>（API 計價時對 prefix cache 的叫法）。</p>
               <p>反過來，serving 也要知道上面在做什麼。傳統的 scheduler 一個請求一個請求排，例如先到先做，它不知道哪些請求屬於同一條鏈。一個跑很久的 agent 一圈接一圈送請求，它的 context 已經很大，每個請求都算得久；短 agent 的請求只要排在它後面，就得等它算完。短 agent 只要跑幾圈就能結束，可是每一圈都可能再等一次，短任務只能乾等（head-of-line blocking）。<a href="https://www.arxiv.org/abs/2502.13965" target="_blank" rel="noopener">Autellix</a>（2025）讓 serving engine 認得哪些請求屬於同一個 agent，依整個 agent 已經用掉的服務時間排程：用得越多的 agent，下一個請求排得越後面，短 agent 的請求就先過。短 agent 不再乾等，平均等待變短，所以負載要加得更重，latency 才會漲到原本的水準。作者的實驗把 latency 固定在同一個水準來比：這時每秒跑完的 agent 程式是 vLLM（常見的開源 serving engine）的 4 到 15 倍。Copilot 那篇得到同樣的結論：優化和排程的單位，要從單一請求移到整個 session。</p>
               <p id="i4-2"><b>看不到就不能優化：trace。</b>要知道問題在哪一層，得看到同一個任務穿過每一層的時間。微服務的做法是 distributed trace：每個服務記下自己處理請求的起訖時間和上一層是誰，這一段叫 span，同一個請求的 span 串起來就是一條 trace。Agent 的 trace 多了巢狀，變成一棵樹：</p>
               <figure class="diagram">
@@ -1171,7 +1171,7 @@ def test_model_properties():
                 <thead><tr><th>Workload 的性質</th><th>系統課題</th><th>哪裡講</th></tr></thead>
                 <tbody>
                   <tr><td>軌跡很長（trajectory：agent 一次任務走過的整條鏈，就是第 1 章的鏈）</td><td>狀態與 context 管理</td><td><a href="l04.html#i4">L4〈Context 管理〉</a>、<a href="l06.html#i3">L6</a>、<a href="l06b.html">L6b</a></td></tr>
-                  <tr><td>開頭一再重複</td><td>Prefix caching</td><td><a href="l08.html#i3">L8〈Prompt cache〉</a>（就是第 4 章的 prefix cache，API 計價時的叫法）；11/11</td></tr>
+                  <tr><td>開頭一再重複</td><td>Prefix caching</td><td><a href="l08.html#i3">L8〈Prefix cache〉</a>（就是第 4 章的 prefix cache，算 API 帳單的那一面）；11/11</td></tr>
                   <tr><td>Tool 之間有依賴</td><td>Dependency-aware scheduling</td><td>11/11</td></tr>
                   <tr><td>Tool 的 latency 變化大</td><td>非同步執行</td><td><a href="l08.html#i8">L8〈完成時間〉</a></td></tr>
                   <tr><td>多個 agent</td><td>Orchestration 與通訊</td><td><a href="l05.html">L5</a></td></tr>

@@ -140,3 +140,5 @@ NIT [#i2 ¶3]
 ## 每次「看不懂」都回到這裡
 
 James 說看不懂的地方，先問：checklist 哪一條該抓到卻沒抓到？**第一步是把它存成一個測試題**（`guide/review_cases/`，見上面〈審查者的測試題〉）。沒有對應的條目就加一條（R9…），並把 Checklist 版本加一；有條目但審查者沒抓到就改 `reviewer-prompt.md` 那一條的說法。改完跑 `review_eval.py`，確認這一題抓得到、其他題沒有掉。改完在 `guide/CHANGELOG.md` 的「REVIEW_READABILITY.md」一節最上面記一行。
+
+**也要問修法有沒有錯。** L8 第 2 章（2026-11-16）的審查沒有漏抓，是作者每條都用補字修，把一段修到超載。這種事件存測試題之外，還要改 readability-review skill 的〈修 BLOCK〉：那裡的修法順序是「刪、搬、合併，最後才補字」。

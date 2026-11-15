@@ -16,6 +16,9 @@ inline lists (STYLE_ARTICLE 4, v5.6): a <p> with 4+ items joined by ； warns (s
 table cells (REVIEW_READABILITY R5/R6, 2026-11-06): a <td> whose text is a source (link, or 公司／年月) + ：
 + fewer than 12 units warns "引用只有出處"; a hedge (單一公司／單方／不是對照實驗／數字會變) outside
 parentheses warns "保留語不在括號裡". Both are the mechanical half of the readability review.
+number load (REVIEW_READABILITY R18, 2026-11-16): a <p> with more than 5 numbers warns "一段太多數字"
+(chapter refs 第 N 章, L8, dates, model versions such as Opus 5.5 and code do not count; a worked
+calculation can opt out with <p data-inline>). The fix is a figure or table, not more labels.
 
 Reading times (400 text units per minute; a CJK character or an English word is 1 unit;
 under 15 min: round up; 15 min or more: nearest 5):
@@ -242,6 +245,28 @@ def inline_lists(html):
     return out
 
 
+NUM_SKIP = re.compile(r"第\s*\d+\s*[章段節列項]|\bL\d+b?\b|20\d\d(?:-\d\d){0,2}"
+                      r"|(?:Opus|Sonnet|Haiku|Fable|Mythos|GPT|Gemini|Claude|Llama|Qwen|DeepSeek)[ -]?\d+(?:\.\d+)*"
+                      r"|\b[A-Z]\d+\b|\bv\d+(?:\.\d+)*")
+NUM = re.compile(r"\d[\d,]*(?:\.\d+)?")
+NUM_LIMIT = 5
+
+
+def number_load(html):
+    """R18 (2026-11-16): (line, count, text) for each <p> with more than NUM_LIMIT numbers.
+    James on L8 第 2 章: 「一堆數字，可讀性會好嗎？…乾脆做圖」. Skips <p data-inline> (worked arithmetic)."""
+    out = []
+    for m in re.finditer(r"<p\b([^>]*)>(.*?)</p>", html, re.S):
+        if "data-inline" in m.group(1):
+            continue
+        txt = re.sub(r"<code>.*?</code>|<sup\b.*?</sup>", "", m.group(2), flags=re.S)
+        txt = NUM_SKIP.sub("", re.sub(r"<[^>]+>", "", txt))
+        n = len(NUM.findall(txt))
+        if n > NUM_LIMIT:
+            out.append((html.count("\n", 0, m.start()) + 1, n, re.sub(r"\s+", " ", txt).strip()))
+    return out
+
+
 HEDGES = ("單一公司", "單方經驗", "單方的經驗", "不是對照實驗", "數字會變", "一家的經驗")
 SOURCE_HEAD = re.compile(r"^(?:[A-Za-z][\w .&'-]{1,40}|[一-鿿]{2,12})?[（(]?(?:20\d\d(?:[-–]\d\d)?)[)）]?[：:]")
 
@@ -352,6 +377,8 @@ def main():
         print(f"  warn: line {line}: {txt.count('；') + 1} items joined by ；, use ul/ol: {txt[:40]}")
     for w in cell_warnings(html):
         print(f"  warn: {w}")
+    for line, n, txt in number_load(html):
+        print(f"  warn: line {line}: 一段太多數字（{n} 個），數字進圖或表，句子只講結論（R18）: {txt[:40]}")
     if args.fix_time:
         new = html
         for k, v in t.items():
