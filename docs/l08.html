@@ -95,7 +95,7 @@
 
         <div class="ideas">
           <div class="idea" id="i1">
-            <h3><span class="idea-no">1</span>成本公式：六個乘數，分母要算成功的任務</h3>
+            <h3><span class="idea-no">1</span>成本：六個乘數，分母要算成功的任務</h3>
             <div class="prose">
 <p>這堂問一件事：agent 的錢花在哪裡，怎麼花才值得。規模感可以看 <a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">Claude Code 的官方文件</a>：企業部署平均每位開發者每個活躍日約 $13，每月 $150–250（2026-11 查）。先定單位和公式，再談怎麼省。這裡只算 LLM 的費用，不算其他計算資源。</p>
 <p id="i1-1"><b>三個單位。</b>Session 是你和 agent 的一段對話，從開啟到關閉。Turn 從你送出一則訊息開始，到 agent 回覆你結束。一個 turn 裡 model 通常要跑好幾次：它看完訊息決定呼叫一個 tool，harness 執行完把結果送回去，它再看一次。一次 model call 加上它要求的 tool call，就是一個 step。</p>
@@ -196,7 +196,7 @@
               <figcaption>花費由什麼決定？上排是乘法，前兩項隨採用度成長，設計不去壓它，只動右邊四項。下排換成每個成功任務的成本，多一個分母：成功率。灰色代表有人用，青色和黃色是這堂的槓桿，深紅是上排沒有的那一項。</figcaption>
             </figure>
 <p>乘法的好處是每一項可以單獨優化，<strong>任何一項減半，總成本就減半</strong>。但一項省下的錢，可能從另一項補回來，第 4 章專門算這件事。</p>
-<p id="i1-3"><b>還要除以成功率。</b>上圖的上排算的是花了多少錢，沒算換到幾次成功。Agent 做一次任務，從開始到結束叫一次 run；這裡把一個 session 當成一個任務，所以一次 run 就是一個 session。Run 可能成功也可能失敗，<strong>失敗的 run 一樣要付錢</strong>。所以 L1 說 agent 要看的是<a href="l01.html#i2">每個成功任務的成本</a>，也就是上圖的下排：拿掉 Users 和 Sessions，從一個 session 的花費算起，再除以成功率。先看一個例子：</p>
+<p id="i1-3"><b>成功率。</b>上圖的上排算的是花了多少錢，沒算換到幾次成功。Agent 做一次任務，從開始到結束叫一次 run；這裡把一個 session 當成一個任務，所以一次 run 就是一個 session。Run 可能成功也可能失敗，<strong>失敗的 run 一樣要付錢</strong>。所以 L1 說 agent 要看的是<a href="l01.html#i2">每個成功任務的成本</a>，也就是上圖的下排：拿掉 Users 和 Sessions，從一個 session 的花費算起，再除以成功率。先看一個例子：</p>
 <figure class="file"><figcaption>每個成功任務的成本</figcaption><pre><code class="lang-text">每次 run 花 $1，成功率 25%
 → 平均試 4 次才成功 1 次
 → 每個成功任務花 $4
@@ -225,7 +225,7 @@
           </div>
 
           <div class="idea" id="i2">
-            <h3><span class="idea-no">2</span>錢花在哪裡：大宗是每一步重送的舊內容</h3>
+            <h3><span class="idea-no">2 每一步重送的舊內容最貴</span></h3>
             <div class="prose">
 <p>第 1 章的六個乘數裡，哪一項最值得動？先看錢實際花在哪裡。</p>
 <p id="i2-1"><b>每一步都重送整個 context。</b>一次 request 送給 model 的全部內容叫 context。Model 沒有記憶，它只知道這次 request 裡寫了什麼，<strong>所以每一步 harness 都把 system prompt</strong>（給 model 的固定指示）、tool 定義（它能呼叫哪些工具的說明）和整段歷史再送一次。從 harness 這邊看是重送，從 model 那邊看是重讀，下面這兩個詞指同一件事。</p>
@@ -272,7 +272,7 @@
               <figcaption>每一步送出去的是什麼？新的只有最右邊的黃色和粉色兩小段（這一步新進來的內容、model 的 output），其他全部重送。所以 context 隨 step 累積，大部分 token 都是重讀。</figcaption>
             </figure>
 <p>Context 就這樣越滾越大：開頭的 system prompt 和 tool 定義是固定的一段，之後每走一步，就再接上這一步新進來的內容（使用者的訊息或 tool 結果）和 model 的 output。Coding agent 讀一個檔案、跑一次測試，新進來的就是幾千 token；走個幾十步，context 就到幾十萬 token。</p>
-<p id="i2-2"><b>三種 token：量和單價方向相反。</b>重送的內容不必每次都從頭算。提供 model 的廠商（下面叫 provider）會把處理過的 context 留一段時間。下一步送來的 context，開頭和上一步完全相同的那一段，直接讀留下來的結果。這個機制叫 <a href="l02.html#t1">prefix cache</a>。有了它，每一步的 token 分成三種，名字是 API 帳單上的叫法，各有各的單價：</p>
+<p id="i2-2"><b>三種 token：</b>重送的內容不必每次都從頭算。提供 model 的廠商（下面叫 provider）會把處理過的 context 留一段時間。下一步送來的 context，開頭和上一步完全相同的那一段，直接讀留下來的結果。這個機制叫 <a href="l02.html#t1">prefix cache</a>。有了它，每一步的 token 分成三種，名字是 API 帳單上的叫法，各有各的單價：</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 200" role="img" aria-label="三列，一列一種 token。左邊一欄是名稱和說明，右邊三欄是量、單價、花的錢。Cache read 是 cache hit 的部分，直接讀留下來的結果，量 100、單價 1、佔花費 82%。Cache write 是 cache miss 的部分，從頭算，再寫進 cache，量 1、單價 12.5、佔花費 10%。Output 是 model 產生的回覆，量 0.2、單價 50、佔花費 8%。量由上往下越來越少，單價由上往下越來越高。">
