@@ -477,7 +477,7 @@
 <p id="i3-2"><b>Hit rate: </b>cache miss 的 token 比 cache hit 的貴幾十倍，所以 hit rate（input token 裡 cache hit 的比例）差幾個百分點，就會反映在帳單上。先定義四項，兩個倍率都以 base input 為 1×，也就是沒有任何折扣的一般 input 單價：</p>
 <ul>
                 <li><b>C。</b>這一步的 context 有多少 token。</li>
-                <li><b>h。</b>hit rate。</li>
+                <li><b>h。</b>hit rate。e</li>
                 <li><b>r。</b>Cache read 的倍率，常見的是 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
                 <li><b>w。</b>Cache write 的倍率，5 分鐘的 cache 是 1.25×。</li>
               </ul>
@@ -772,7 +772,7 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
                 <li><b>摘要寫進 cache。</b>3K × 1.25 = 3.75K。</li>
                 <li><b>丟掉的檔案要重讀。</b>17K × 1.25 = 21.25K。</li>
               </ol>
-<p>合計 60K。之後每一步少讀 160K，每步省 160K × 0.1 = 16K，所以 60K ÷ 16K ≈ 3.75，<strong>第 4 步回本</strong>。兩個常見的變化會把回本點往後推。第一，摘要漏了細節，多走 10 步重做：多走的每一步讀 40K 的 cache（4K），再寫入 5K 的新 tool 結果（6.25K），一步 10.25K（output 不計），10 步多付 102.5K，合計 162.5K。第二，閒置太久、cache 過期了才壓：摘要那次 call 要把 200K 當一般 input 重算，第 1 筆從 20K 變成 200K，合計 240K。</p>
+<p>合計 60K。之後每一步少讀 160K，每步省 160K × 0.1 = 16K，所以 60K ÷ 16K ≈ 3.75，<strong>第 4 步回本</strong>。兩個常見的變化會把回本點往後推：<br>1. 摘要漏了細節，多走 10 步重做：多走的每一步讀 40K 的 cache（4K），再寫入 5K 的新 tool 結果（6.25K），一步 10.25K（output 不計），10 步多付 102.5K，合計 162.5K。<br><br>2. 閒置太久、cache 過期了才壓：摘要那次 call 要把 200K 當一般 input 重算，第 1 筆從 20K 變成 200K，合計 240K。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>情境</th><th>一次付多少</th><th>幾步回本</th><th>還剩 5 步</th><th>還剩 40 步</th></tr></thead>
                 <tbody>
