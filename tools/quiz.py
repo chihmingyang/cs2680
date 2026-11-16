@@ -131,8 +131,13 @@ def check(path):
             errs.append(f"#{cid} 的開頭不屬於任何一節：sections 要有一節從 #{cid} 開始")
     qids = []
     used = set()
+    # unit_kinds: ["choice"]（2026-11-17 James：每小節的題目只給選擇題）：unit 只能是選擇題，
+    # 重點節改成至少 4 題選擇；應用與接點留給整合題。沒有這個欄位的題庫照舊（選擇＋應用）。
+    choice_only = q.get("unit_kinds") == ["choice"]
     for u in q["unit"]:
         qids.append(u["id"])
+        if choice_only and u.get("kind") != "choice":
+            errs.append(f'{u["id"]}：這份題庫的 unit 只出選擇題（unit_kinds），{u.get("kind")} 題改成選擇題或搬到整合題')
         if u["ks"] not in order:
             errs.append(f'{u["id"]}：節 {u["ks"]} 不存在')
         used.add(u["ks"])
@@ -174,7 +179,10 @@ def check(path):
             mine = [u for u in q["unit"] if u["ks"] == s["id"]]
             nc = sum(u.get("kind") == "choice" for u in mine)
             na = sum(u.get("kind") == "apply" for u in mine)
-            if nc + na < 4 or na < 1 or nc < 2:
+            if choice_only:
+                if nc < 4:
+                    errs.append(f'{s["id"]}（{s["title"]}）是重點觀念：至少 4 題選擇（現在 {nc}）')
+            elif nc + na < 4 or na < 1 or nc < 2:
                 errs.append(f'{s["id"]}（{s["title"]}）是重點觀念：至少 4 題，其中至少 2 題選擇、1 題應用（現在選擇 {nc}、應用 {na}）')
     # 正確選項最長、而且比錯的選項平均長 25% 以上：閉卷挑最長的就會對（QUIZ.md）。只警告，不擋。
     long = []

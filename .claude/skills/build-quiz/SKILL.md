@@ -19,6 +19,8 @@ description: 替一堂建題庫（每一節的小測與整合題）時用：Jame
 - `mkdir -p notes/quiz/lXX`。
 - 讀 `guide/QUIZ.md` 的〈讀者自測優先〉〈出題規則〉〈觀念涵蓋〉三節。讀者自測優先（2026-11-11）：題目問含義，不問精確值和出處；那一類在觀念清單標 `evidence`、不出題，數字由 `tools/check_numbers.py` 對照 `guide/sources/lXX.md`（`verify.sh` 會跑）。
 
+- **新題庫的 unit 只出選擇題**（2026-11-17 James，`guide/QUIZ.md`〈每小節只出選擇題〉）：`init` 之後在頁面的 JSON 加 `"unit_kinds": ["choice"]`；給出題 agent 的 prompt 多一行「這一堂的 unit 只出選擇題，照 brief 的〈只出選擇題的題庫〉」。問答題只有整合題，所以開卷的評分包只有整合題。下面寫到 apply 的地方，照 QUIZ.md 那一節讀。
+
 ## 1. 切節：`init`
 
 ```bash
