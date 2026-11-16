@@ -929,21 +929,42 @@
     if (get('cs2680.read.' + pills[i].getAttribute('data-read-key')) === '1') pills[i].hidden = false;
   }
 
-  /* 維護者工具: open any page once with ?edit and this browser keeps the pencil
-     and 問 Claude buttons; ?edit=off removes them. Members never load edit.js. */
+  /* 編輯工具: every page has a pencil in the top bar. edit.js (the editor and 留言) loads
+     only when it is pressed, and this browser then keeps the tools on every page
+     (?edit turns them on too; ?edit=off, or 收起編輯工具 in the panel, turns them off). */
   var ED_KEY = 'cs2680.ed.on';
   var edParam = location.search.match(/[?&]edit(?:=(\w+))?/);
   if (edParam) set(ED_KEY, edParam[1] === 'off' ? null : '1');
-  if (get(ED_KEY) === '1') {
+  function loadEditor(start) {
+    if (window.__cs2680edStart !== undefined) return;
+    window.__cs2680edStart = start;
     var edCss = document.createElement('link');
     edCss.rel = 'stylesheet';
     edCss.href = 'edit.css';
     document.head.appendChild(edCss);
-    /* wait for code.js: it runs right after this file and rewrites code blocks */
-    window.addEventListener('DOMContentLoaded', function () {
+    function addJs() {
       var edJs = document.createElement('script');
       edJs.src = 'edit.js';
       document.body.appendChild(edJs);
+    }
+    /* wait for code.js: it runs right after this file and rewrites code blocks */
+    if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', addJs);
+    else addJs();
+  }
+  if (get(ED_KEY) === '1') {
+    loadEditor('');
+  } else if (topbarInner && themeBtn) {
+    var edLaunch = document.createElement('button');
+    edLaunch.type = 'button';
+    edLaunch.className = 'theme-btn ed-launch';
+    edLaunch.title = '編輯這一頁';
+    edLaunch.setAttribute('aria-label', '編輯這一頁');
+    edLaunch.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10.6 2.6l2.8 2.8L5.5 13.3l-3.5.7.7-3.5zM9.2 4l2.8 2.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    edLaunch.addEventListener('click', function () {
+      set(ED_KEY, '1');
+      edLaunch.disabled = true;
+      loadEditor('edit');
     });
+    topbarInner.insertBefore(edLaunch, themeBtn);
   }
 })();

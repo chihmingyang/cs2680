@@ -1148,7 +1148,7 @@
     panelBody.textContent = '';
     if (reason) panelBody.appendChild(h('p', 'ed-note is-warn', reason));
     panelBody.appendChild(h('h3', 'ed-h', 'GitHub token'));
-    panelBody.appendChild(h('p', 'ed-note', '存檔和發問都用這個 token 呼叫 GitHub。它只存在這個瀏覽器。'));
+    panelBody.appendChild(h('p', 'ed-note', '存檔和留言都用這個 token 呼叫 GitHub，只有能寫入 cs2680 repo 的帳號（站台維護者）做得到。Token 只存在這個瀏覽器。'));
     var ol = h('ol', 'ed-steps');
     var li1 = h('li');
     var a = h('a', '', '開 GitHub 的建立頁');
@@ -1182,6 +1182,16 @@
     panelBody.appendChild(row);
     var msg = h('p', 'ed-note');
     panelBody.appendChild(msg);
+    var off = h('button', 'ed-exit', '收起編輯工具');
+    off.type = 'button';
+    off.title = '這個瀏覽器不再顯示編輯和留言的按鈕，只留頂端的鉛筆';
+    off.addEventListener('click', function () {
+      if (main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，要收起嗎？')) return;
+      store('cs2680.ed.on', null);
+      location.reload();
+    });
+    panelBody.appendChild(h('h3', 'ed-h', '這個瀏覽器'));
+    panelBody.appendChild(off);
     ok.addEventListener('click', function () {
       var value = input.value.trim();
       if (!value) { msg.textContent = '先貼上 token。'; return; }
@@ -1643,7 +1653,9 @@
   /* test hook: the patch logic, for tools/test_editor.py */
   window.__cs2680ed = { threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
 
-  if (/[?&]edit=now\b/.test(location.search)) setEditing(true);
+  /* the launcher pencil from app.js gives way to the real buttons */
+  Array.prototype.forEach.call(document.querySelectorAll('.ed-launch'), function (b) { b.remove(); });
+  if (/[?&]edit=now\b/.test(location.search) || window.__cs2680edStart === 'edit') setEditing(true);
   /* comment marks: after layout settles (fonts, figures) */
   if (document.readyState === 'complete') loadThreads();
   else window.addEventListener('load', function () { loadThreads(); });

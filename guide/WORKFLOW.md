@@ -189,7 +189,7 @@ git push origin main
 
 ## G. 線上編輯與留言（維護者工具）
 
-James 在站台上直接改字、問問題。一般成員看不到：`app.js` 只在這個瀏覽器開過 `?edit` 之後才載入 `docs/edit.js`、`docs/edit.css`（`?edit=off` 取消）。頁面上多兩個鈕：鉛筆（編輯）、對話框（留言）。
+James 在站台上直接改字、留言。每一頁頂端都有一個鉛筆（`app.js` 加的，2026-11-16 起；之前要在網址加 `?edit`）：按下去才載入 `docs/edit.js`、`docs/edit.css`，直接進編輯模式，這個瀏覽器之後每一頁都帶著編輯工具，頂端換成兩個鈕：鉛筆（編輯）、對話框（留言）。收起來：面板的設定（齒輪）裡按「收起編輯工具」，或網址加 `?edit=off`。成員也看得到那個鉛筆，但存檔、留言要能寫入 repo 的 token，他們按了只會看到設定 token 的說明。
 
 **編輯（`docs/edit.js`）**
 
@@ -225,7 +225,7 @@ James 直接改字，比在對話裡說「看不懂」更準：diff 精確指出
 
 **設定（各做一次）**
 
-1. 瀏覽器：開 `https://chihmingyang.github.io/cs2680/l03.html?edit`，按對話框鈕，照面板的步驟建 fine-grained token（只選 cs2680；Contents、Issues 都是 write），貼進去。Token 只存在這個瀏覽器的 localStorage，有效期 1 年。
+1. 瀏覽器：任一頁按頂端的鉛筆，再按對話框鈕，照面板的步驟建 fine-grained token（只選 cs2680；Contents、Issues 都是 write），貼進去。Token 只存在這個瀏覽器的 localStorage，有效期 1 年。
 （留言不需要 GitHub Action，所以不必再設 `CLAUDE_CODE_OAUTH_TOKEN`。）
 
 **改 `edit.js` 之後**：`python3 -I tools/test_editor.py`（用假的 GitHub API 在瀏覽器跑；全站每一段都要找得到原始碼位置，存檔的 diff 只能動到改過的段落；留言的標記、開串、回覆、解決）。測試要編輯的章是自動挑的（L3 第一個同時有清單、連結、圖、code、表的章），頁面重寫後不必改測試。

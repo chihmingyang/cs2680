@@ -7,7 +7,7 @@ Usage: python3 -I tools/test_editor.py [--shots DIR]
 2. On L3: edit, format, split and delete through the real UI, press 儲存, and diff the PUT body
    against the source. Only the touched blocks may change.
 3. A block changed on GitHub meanwhile is reported, and not overwritten.
-4. Members (no ?edit): edit.js is not loaded.
+4. A fresh browser: only the pencil, edit.js not loaded; the pencil opens edit mode; 收起編輯工具 undoes it.
 5. Comments: marks on the page, a new comment is an issue with the label comment, replies render escaped,
    replying drops answered, 解決 closes.
 """
@@ -160,8 +160,19 @@ def main():
         loaded = []
         page.on("request", lambda r: loaded.append(r.url))
         page.goto(f"{base}/l03.html", wait_until="load")
-        check(not any("edit." in u for u in loaded), "member page does not load edit.js / edit.css")
-        check(page.locator(".ed-open").count() == 0, "member page has no edit buttons")
+        check(not any("edit." in u for u in loaded), "a fresh browser does not load edit.js / edit.css")
+        check(page.locator(".ed-open").count() == 0 and page.locator(".ed-launch").count() == 1, "a fresh browser has only the pencil in the top bar")
+        page.locator(".ed-launch").click()
+        page.wait_for_selector(".ed-bar:not([hidden])")
+        check(page.locator(".ed-launch").count() == 0 and page.locator(".ed-open").count() == 2, "the pencil loads the editor, opens edit mode, and gives way to the real buttons")
+        page.reload(wait_until="load")
+        page.wait_for_selector(".ed-open")
+        check(page.locator(".ed-bar:not([hidden])").count() == 0, "after a reload the tools stay, edit mode does not")
+        page.locator(".ed-open").last.click()          # 留言 button with no token: settings
+        page.wait_for_selector(".ed-panel:not([hidden])")
+        page.get_by_role("button", name="收起編輯工具").click()
+        page.wait_for_selector(".ed-launch")
+        check(page.locator(".ed-open").count() == 0, "收起編輯工具 goes back to the plain pencil")
         ctx.close()
 
         ctx = browser.new_context(viewport={"width": 1280, "height": 900})
