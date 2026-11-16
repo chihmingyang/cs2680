@@ -10,6 +10,7 @@ Usage: python3 -I tools/test_editor.py [--shots DIR]
 4. A fresh browser: only the pencil, edit.js not loaded; the pencil opens edit mode; 收起編輯工具 undoes it.
    4b. The E key opens edit mode, Esc leaves it; on a wide screen the toolbar sits over the article column.
    2c. Formatting shortcuts (⌘⇧B, ⌘U, ⌘E) and Esc one step at a time.
+   2d. A chapter title's number (span.idea-no) cannot take typed text; text already inside moves out on save.
 5. Comments: marks on the page, a new comment is an issue with the label comment, replies render escaped,
    replying drops answered, 解決 closes.
 """
@@ -214,6 +215,17 @@ def main():
         page.goto(f"{base}/l03.html?edit=now", wait_until="load")
         page.wait_for_selector(".ed-bar")
         check(page.locator(".ed-save").first.is_disabled(), "save starts disabled")
+
+        # 2d. a chapter number stays a number (2026-11-16: a retyped L8 title landed inside span.idea-no)
+        fixed = page.evaluate("""() => { const h = document.createElement('h3');
+          h.innerHTML = '<span class="idea-no">2 新的章名</span>'; return window.__cs2680ed.cleanHtml(h); }""")
+        check(fixed == '<span class="idea-no">2</span>新的章名', f"title text typed into span.idea-no is moved after it on save ({fixed})")
+        h3 = page.locator("main .idea h3").first
+        h3.scroll_into_view_if_needed()
+        h3.click()
+        check(page.evaluate("() => document.querySelector('main .idea h3 .idea-no').getAttribute('contenteditable')") == "false",
+              "while a chapter title is open, its number cannot take the caret")
+        page.keyboard.press("Escape")
 
         # the chapter the test edits: the first one that has every kind of block the test touches
         # (pages get rewritten, so a fixed #i1 goes stale)

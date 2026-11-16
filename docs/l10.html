@@ -1340,7 +1340,7 @@ H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每
               </ul>
               <p>MFU 把「硬體能做多少」和「軟體用了多少」分開：它量的是軟體把手上的 GPU 用到幾成，和這張 GPU 本身多快無關。所以兩套軟體跑在不同的 GPU 上時，<strong>MFU 比 tokens/s 公平</strong>：tokens/s 高，可能只是那張 GPU 比較快。在同一張 GPU 上比，兩者是同一件事。<strong>要挑哪張 GPU，還是看 tokens/s 和成本</strong>。</p>
               <p id="i5-3"><b>MBU：decode 看頻寬用了多少。</b>MBU（model bandwidth utilization）是實際的 bytes/s ÷ peak 頻寬。Decode 一步要讀的 bytes 是全部 weights 加上讀到的 KV cache。例子：Llama 3 8B、BF16、batch 1、H200，每個 token 要讀 16 GB 的 weights；對話一千個 token 時，KV cache 約 0.13 GB，不到 weights 的 1%，先忽略。跑到 200 tok/s 時是 16 GB × 200 = 3.2 TB/s，MBU = 3.2 ÷ 4.8 ≈ 67%。規則是 <strong>prefill 和訓練報 MFU，decode 報 MBU</strong>：batch 小的 decode，MFU 本來就只有幾個百分點以下，看不出還有多少進步空間：就算 kernel 已經把頻寬用滿，MFU 還是很低。MBU 量的是真正的瓶頸，67% 表示離頻寬的上限還差三成多，這才是能改進的空間。</p>
-              <p>Serving 另外常報三個數字：延遲達標時每張 GPU 的 tokens/s（只報 tokens/s 不報延遲，數字可以靠加大 batch 灌高）、每個 token 的能耗（平均功率 ÷ tokens/s），以及每百萬 token 的成本：（每 GPU 小時的價格 ÷（tokens/s × 3,600））× 10⁶。假設每小時 3 美元、每秒 1,000 個 token，約 0.83 美元，這是 L8〈<a href="l08.html#i1">成本公式</a>〉裡單價的來源。</p>
+              <p>Serving 另外常報三個數字：延遲達標時每張 GPU 的 tokens/s（只報 tokens/s 不報延遲，數字可以靠加大 batch 灌高）、每個 token 的能耗（平均功率 ÷ tokens/s），以及每百萬 token 的成本：（每 GPU 小時的價格 ÷（tokens/s × 3,600））× 10⁶。假設每小時 3 美元、每秒 1,000 個 token，約 0.83 美元，這是 L8〈<a href="l08.html#i1">成本</a>〉裡單價的來源。</p>
               <p id="i5-4"><b>四個 counter，看 SM、Tensor Core、HBM 三個單元。</b>nvidia-smi 之外，NVIDIA 的 DCGM（Data Center GPU Manager）能讀到每個單元的忙碌程度。下表第一列是 nvidia-smi 那個數字，放著對照；後四列是 DCGM 多給的 counter，SM 有兩個。定義依 DCGM 文件（2026-10 更新）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Counter</th><th>量什麼</th><th>DCGM field</th></tr></thead>
@@ -2603,7 +2603,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
   </div>
 </main>
 </div>
-<script src="app.js?v=20261116c"></script>
+<script src="app.js?v=20261116d"></script>
 <script src="code.js"></script>
 </body>
 </html>

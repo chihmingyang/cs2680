@@ -60,8 +60,12 @@ def v7_secs(s):
     subs, refs = [], []
     for part in parts:
         iid = re.match(r'<div class="idea" id="(i\d+)">', part).group(1)
-        m = re.search(r'<h3>(?:<span class="idea-no">([\d.]+)</span>)?(.*?)</h3>', part, re.S)
+        m = re.search(r'<h3>(?:<span class="idea-no">(.*?)</span>)?(.*?)</h3>', part, re.S)
         no, title = m.group(1), clean(m.group(2))
+        if no is not None and not re.fullmatch(r"[\d.]+", no.strip()):
+            # 2026-11-16: an online edit put the L8 第 2 章 title inside the number; read as 查閱, the
+            # chapter moved under the rule. Stop instead of guessing.
+            raise SystemExit(f"{iid}: span.idea-no 只能放章號，現在是「{clean(no)}」；章名要放在 </span> 後面")
         short = title.split("：")[0].strip()
         if not no:
             refs.append((iid, short))
@@ -69,7 +73,7 @@ def v7_secs(s):
         # 小標 inside <details> are reference notes, not part of the chapter's outline
         top = re.sub(r"<details\b.*?</details>", "", part, flags=re.S)
         sub2 = re.findall(r'<p id="([^"]+)"[^>]*>(?:<span class="anchor" id="[^"]+"></span>)*<b>(.*?)</b>', top, re.S)
-        items = "".join(f'<li><a class="sn-sub2" href="#{sid}">{clean(st).rstrip("。")}</a></li>' for sid, st in sub2)
+        items = "".join(f'<li><a class="sn-sub2" href="#{sid}">{clean(st).rstrip("。：")}</a></li>' for sid, st in sub2)
         nested = f'<ol class="sn-sub2s">{items}</ol>' if items else ""
         subs.append(f'<li><a class="sn-sub" href="#{iid}"><span class="sn-n">{no}</span><span class="sn-t">{short}</span></a>{nested}</li>')
 

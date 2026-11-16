@@ -253,6 +253,13 @@
       var walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
       while (walker.nextNode()) walker.currentNode.nodeValue = walker.currentNode.nodeValue.replace(/ /g, ' ');
     }
+    /* span.idea-no keeps only the chapter number; any title text that got inside goes after it */
+    Array.prototype.forEach.call(box.querySelectorAll('.idea-no'), function (n) {
+      var m = /^\s*([\d.]+)\s*([\s\S]*)$/.exec(n.textContent);
+      if (!m || !m[2]) return;
+      n.textContent = m[1];
+      n.parentNode.insertBefore(document.createTextNode(m[2]), n.nextSibling);
+    });
     box.normalize();
     return box.innerHTML;
   }
@@ -320,6 +327,9 @@
     el.setAttribute('contenteditable', 'true');
     el.setAttribute('spellcheck', 'false');
     el.classList.add('ed-active');
+    /* the chapter number is not text to edit: retyping a whole h3 title once put the title
+       inside span.idea-no (L8 第 2 章, 2026-11-16), and the sidenav then read it as 查閱 */
+    Array.prototype.forEach.call(el.querySelectorAll('.idea-no'), function (n) { n.setAttribute('contenteditable', 'false'); });
   }
   function deactivate() {
     if (!active) return;
@@ -1779,7 +1789,7 @@
   topbarInner.insertBefore(editBtn, askBtn);
 
   /* test hook: the patch logic, for tools/test_editor.py */
-  window.__cs2680ed = { threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
+  window.__cs2680ed = { cleanHtml: cleanHtml, threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
 
   /* the launcher pencil from app.js gives way to the real buttons */
   Array.prototype.forEach.call(document.querySelectorAll('.ed-launch'), function (b) { b.remove(); });
