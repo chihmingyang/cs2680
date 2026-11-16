@@ -427,7 +427,7 @@
           </div>
 
           <div class="idea" id="i3">
-            <h3><span class="idea-no">3</span>Prefix cache 與單價：怎麼保住 cache hit，單價從哪裡來</h3>
+            <h3><span class="idea-no">3</span>Prefix cache</h3>
             <div class="prose">
 <p>第 2 章說重讀是大宗。重讀付得起，靠的是第 2 章那個 prefix cache；它一失效，帳單就變成另一個數字。這一章先把它的帳算完：它怎麼比對開頭、cache hit 的比例掉幾個百分點差多少、什麼會打斷它、cache 該留多久、怎麼看自己的數字。最後換到價目表本身：能等的工作排隊處理可以打折，以及每一種 token 的單價從哪裡來。</p>
 <p id="i3-1"><b>只比開頭，差一個字就從那裡開始重算。</b>Model 讀 context 時，每個 token 都會算出一組中間結果，這些結果只和它前面的 token 有關。所以 provider 留下來的結果只能從頭對起：下一次 request 從第一個 token 開始比對，相同的那一段直接重用，第一個不同的地方之後全部重算。Claude API 把 context 依 tools（tool 定義）→ system（system prompt）→ messages（對話歷史）的順序排，<strong>所以越前面的東西改了，要重算的越多</strong>。</p>
