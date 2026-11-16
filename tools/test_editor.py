@@ -11,6 +11,9 @@ Usage: python3 -I tools/test_editor.py [--shots DIR]
    4b. The E key opens edit mode, Esc leaves it; on a wide screen the toolbar sits over the article column.
    2c. Formatting shortcuts (⌘⇧B, ⌘U, ⌘E) and Esc one step at a time.
    2d. A chapter title's number (span.idea-no) cannot take typed text; text already inside moves out on save.
+   8. The left contents follow a changed 小標 (2026-11-17): edit.js rebuilds the page's own sidenav block
+      like assemble_v7.v7_secs on every page, and a save that changes a <p id><b>小標</b> puts the new
+      label in the same commit and on the open page.
 5. Comments: marks on the page, a new comment is an issue with the label comment, replies render escaped,
    replying drops answered, 解決 closes.
 """
@@ -22,7 +25,12 @@ import http.server
 import json
 import threading
 from pathlib import Path
+import re
+import sys
 from playwright.sync_api import sync_playwright
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import assemble_v7  # noqa: E402
 
 SITE = Path(__file__).resolve().parent.parent / "docs"
 problems = []
@@ -207,6 +215,17 @@ def main():
             src = (SITE / name).read_text(encoding="utf-8")
             res = page.evaluate(ROUNDTRIP, src)
             check(not res["missed"], f"{name}: {res['blocks']} blocks all located" + ("" if not res["missed"] else f"; missed {res['missed'][:5]}"))
+            # 8. the sidenav rebuild in edit.js gives the same block as the Python one, on the page as it is
+            # and with its first 小標 renamed (the case a web edit makes)
+            if 'class="sn-lec is-here"' in src and 'id="s-ideas"' in src and 'id="s-arch"' not in src:
+                renamed = re.sub(r'(<p id="i\d+-\d+"[^>]*>(?:<span class="anchor" id="[^"]+"></span>)*<b>)(.*?)(</b>)',
+                                 r"\1ZZ 改過的小標 : \3", src, count=1, flags=re.S)
+                for label, s in (("as is", src), ("小標 renamed", renamed)):
+                    new_line, old_line = assemble_v7.sidenav_line(s)
+                    check(page.evaluate("s => window.__cs2680ed.syncSidenav(s)", s) == s.replace(old_line, new_line),
+                          f"{name}: edit.js rebuilds the sidenav like assemble_v7 ({label})")
+            else:
+                check(page.evaluate("s => window.__cs2680ed.syncSidenav(s)", src) == src, f"{name}: no v7 sidenav, edit.js leaves it alone")
 
         # --- 2. real edits on L3
         src = (SITE / "l03.html").read_text(encoding="utf-8")
@@ -499,6 +518,33 @@ def main():
         page.wait_for_function("document.querySelectorAll('.ed-cmt-badge').length === 1")
         check(gh2.issues[0]["state"] == "closed", "解決 closes the issue and removes its mark")
         check(page.evaluate("CSS.highlights.get('ed-cmt-wait').size") == 1, "the other comment keeps its mark")
+
+        # --- 8. a renamed 小標 reaches the sidenav: in the commit and on the open page
+        src8 = (SITE / "l08.html").read_text(encoding="utf-8")
+        gh8 = FakeGitHub(src8)
+        p8 = ctx.new_page()
+        p8.on("pageerror", lambda e: errors.append(str(e)))
+        p8.route("https://api.github.com/**", gh8.handle)
+        p8.goto(f"{base}/l08.html?edit=now", wait_until="load")
+        p8.wait_for_selector(".ed-bar")
+        sid = p8.evaluate("() => document.querySelector('main .idea p[id] > b').parentElement.id")
+        lead = p8.locator(f"#{sid} > b").first
+        lead.scroll_into_view_if_needed()
+        lead.click()
+        p8.evaluate("""(id) => { const b = document.querySelector('#' + id + ' > b'); const r = document.createRange();
+          r.selectNodeContents(b); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }""", sid)
+        p8.keyboard.type("XQ")
+        p8.keyboard.press("Escape")
+        save_with(p8)
+        p8.wait_for_function("document.querySelector('.ed-status').textContent.includes('已存')")
+        put8 = gh8.puts[0]["text"] if gh8.puts else ""
+        want = assemble_v7.sidenav_line(put8)[0] if put8 else ""
+        check(bool(put8) and want in put8, "the saved file's sidenav matches its chapters")
+        side = p8.evaluate("id => (document.querySelector('#sidenav .sn-lec.is-here a[href=\"#' + id + '\"]') || {}).textContent || ''", sid)
+        check("XQ" in side, f"the open page's sidenav shows the new 小標 ({side})")
+        changed = changed_lines(src8, put8)
+        check(len(changed) <= 4, f"the sidenav change rides in the same small diff ({len(changed)} changed lines)")
+        p8.close()
 
         # --- narrow screen and dark mode
         if args.shots:

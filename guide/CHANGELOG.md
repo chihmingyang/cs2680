@@ -97,6 +97,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-17（G：網頁編輯存檔時一起重建這一頁的側欄（James：「右邊編輯文字後，左邊目錄不會跟著改」）。原因：側欄是靜態 HTML，存檔只換被改的那一段；`add_lecture.py --check` 在 CI 會亮燈，但沒人修。`edit.js` 加 `syncSidenav()`（`v7_secs` 的 JS 版）與畫面上的就地換字；`v7_secs` 的小標也去掉尾端半形冒號；`test_editor.py` 加第 8 項；L8 的〈hit rate〉〈batch job〉兩個小標先用 `--sync-own` 補上。edit.js、app.js 版本號加一。）
 - 2026-11-17（線上編輯（G）：James 重打 L8 第 2 章的章名時，字進了 `span.idea-no`，側欄把那一章當成查閱。`edit.js` 開著標題時章號不收游標、存檔時把章號裡的字移到後面；`assemble_v7.v7_secs` 遇到章號裡有字就停；`test_editor.py` 加 2d。）
 - 2026-11-16（C 加一步：改了章名或小標就跑 `add_lecture.py --sync-own`；見 README 的〈側欄與編號〉。）
 - 2026-11-16（**編輯模式快捷鍵**（James：「編輯模式要快捷鍵」）：`E` 進編輯模式（新瀏覽器也行，`app.js` 先載入編輯器）、`Esc` 一步一步退出、`⌘⇧B` 紅字、`⌘U`、`⌘E` code、`⌘⇧H` 螢光、`⌘⇧K` 黑、`⌘K` 連結、`⌘\` 清除、`⌘⌥M` 留言；原有 `⌘S`、`⌘B`、`⌘I`、`⌘Z`。按鈕 tooltip 寫上快捷鍵，表在 WORKFLOW G。`app.js?v=20261116b`，`edit.js`、`edit.css` 也加 `?v=`；`test_editor.py` 加 4b、2c 段。）

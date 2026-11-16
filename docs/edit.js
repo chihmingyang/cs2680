@@ -621,6 +621,70 @@
     return src;
   }
 
+  /* 側欄跟著改 (2026-11-17 James：「右邊編輯文字後，左邊目錄不會跟著改」). The left contents
+     are static HTML built from the chapters' h3 and the <p id><b>小標</b> lead-ins. A save that
+     changes one of those now rebuilds this page's own sidenav block in the same commit.
+     Port of tools/assemble_v7.py v7_secs(); tools/test_editor.py checks both give the same block
+     on every page. Returns null where the Python would stop (non-v7 page, a title inside the
+     chapter number), and the save then leaves the sidenav as it is. */
+  function clean(html) { return html.replace(/<[^>]+>/g, '').trim(); }
+  function subLabel(html) { return clean(html).replace(/[。：: ]+$/, ''); }
+  function v7Secs(src) {
+    var a = src.indexOf('id="s-ideas"');
+    var b = src.indexOf('id="s-try"');
+    if (a < 0 || b < a || src.indexOf('id="s-arch"') >= 0) return null;
+    var parts = src.slice(a, b).split(/(?=<div class="idea" id="i\d+">)/).slice(1);
+    var subs = [], refs = [], bad = false;
+    parts.forEach(function (part) {
+      var iid = /^<div class="idea" id="(i\d+)">/.exec(part)[1];
+      var m = /<h3>(?:<span class="idea-no">([\s\S]*?)<\/span>)?([\s\S]*?)<\/h3>/.exec(part);
+      if (!m) { bad = true; return; }
+      var no = m[1], short = clean(m[2]).split('：')[0].trim();
+      if (no !== undefined && !/^[\d.]+$/.test(no.trim())) { bad = true; return; }
+      if (!no) { refs.push([iid, short]); return; }
+      var top = part.replace(/<details\b[\s\S]*?<\/details>/g, '');
+      var re = /<p id="([^"]+)"[^>]*>(?:<span class="anchor" id="[^"]+"><\/span>)*<b>([\s\S]*?)<\/b>/g;
+      var items = '', s2;
+      while ((s2 = re.exec(top))) items += '<li><a class="sn-sub2" href="#' + s2[1] + '">' + subLabel(s2[2]) + '</a></li>';
+      subs.push('<li><a class="sn-sub" href="#' + iid + '"><span class="sn-n">' + no + '</span><span class="sn-t">' + short +
+        '</span></a>' + (items ? '<ol class="sn-sub2s">' + items + '</ol>' : '') + '</li>');
+    });
+    if (bad) return null;
+    function link(href, label, n) {
+      var num = n !== undefined ? '<span class="sn-n">' + n + '</span>' : '';
+      return '<a class="sn-sec" href="#' + href + '" data-spy data-short="' + label + '">' + num + '<span class="sn-t">' + label + '</span></a>';
+    }
+    refs.push(['s-try', '動手試試'], ['wrap', '原文出處']);
+    return '<li>' + link('tldr-h', '導讀', 0) + '</li>' +
+      '<li class="sn-ideas">' + link('s-ideas', '核心觀念') + '<ol class="sn-subs">' + subs.join('') + '</ol></li>' +
+      '<li class="sn-refs"><ol class="sn-refrow">' +
+      refs.map(function (r) { return '<li>' + link(r[0], r[1]) + '</li>'; }).join('') + '</ol></li>';
+  }
+  function syncSidenav(src) {
+    var m = /<li class="sn-lec is-here">[^\n]*?<ol class="sn-secs">/.exec(src);
+    if (!m) return src;
+    var end = src.indexOf('\n', m.index);
+    if (end < 0) return src;
+    var secs = v7Secs(src);
+    if (secs === null) return src;
+    return src.slice(0, m.index) + m[0] + secs + '</ol></li>' + src.slice(end);
+  }
+  /* the open page: change the labels in place (app.js has wired the links for scroll spy and
+     quiz ticks, so they are not replaced); a link added or removed shows after a reload */
+  function refreshSidenav(src) {
+    var nav = document.getElementById('sidenav');
+    if (!nav) return;
+    var re = /<a class="sn-sub2?" href="#([^"]+)">(?:<span class="sn-n">[^<]*<\/span><span class="sn-t">)?([^<]*)/g, m;
+    while ((m = re.exec(src))) {
+      var a = nav.querySelector('.sn-lec.is-here a[href="#' + m[1] + '"]');
+      if (!a) continue;
+      var t = a.classList.contains('sn-sub') ? a.querySelector('.sn-t') : (a.querySelector('.sn-qt') || a);
+      var label = h('span', null);
+      label.innerHTML = m[2];
+      if (t && t.textContent !== label.textContent) t.textContent = label.textContent;
+    }
+  }
+
   /* a short summary of this save; the starting text of the commit message */
   function summarize(roots) {
     var edited = 0, cut = 0, added = 0, pics = 0;
@@ -721,6 +785,7 @@
     say('儲存中…');
     var failed = [];
     var snippet = '';
+    var savedSrc = '';
     uploadImages(message).then(function () {
       return gh('/contents/' + filePath + '?ref=' + BRANCH);
     }).then(function (file) {
@@ -730,8 +795,9 @@
       if (!built.patches.length) throw new Error('nothing');
       var written = built.patches.filter(function (p) { return p.text; })[0];
       snippet = written ? written.text : '';
-      var next = applyPatches(src, built.patches);
+      var next = syncSidenav(applyPatches(src, built.patches));
       if (next === src) throw new Error('same');
+      savedSrc = next;
       return gh('/contents/' + filePath, {
         method: 'PUT',
         body: { message: message, content: toBase64(next), sha: file.sha, branch: BRANCH }
@@ -762,6 +828,7 @@
       });
       moveHandle(null);
       refreshCount();
+      refreshSidenav(savedSrc);
       var sha = res && res.commit && res.commit.sha ? res.commit.sha.slice(0, 7) : '';
       if (failed.length) {
         say('存了，但有 ' + failed.length + ' 處在 GitHub 上已被改過，沒有存（紅框）。請重新整理後再改那幾處。', 'warn');
@@ -1789,7 +1856,7 @@
   topbarInner.insertBefore(editBtn, askBtn);
 
   /* test hook: the patch logic, for tools/test_editor.py */
-  window.__cs2680ed = { cleanHtml: cleanHtml, threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
+  window.__cs2680ed = { cleanHtml: cleanHtml, syncSidenav: syncSidenav, threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
 
   /* the launcher pencil from app.js gives way to the real buttons */
   Array.prototype.forEach.call(document.querySelectorAll('.ed-launch'), function (b) { b.remove(); });

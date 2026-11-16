@@ -73,7 +73,7 @@ def v7_secs(s):
         # 小標 inside <details> are reference notes, not part of the chapter's outline
         top = re.sub(r"<details\b.*?</details>", "", part, flags=re.S)
         sub2 = re.findall(r'<p id="([^"]+)"[^>]*>(?:<span class="anchor" id="[^"]+"></span>)*<b>(.*?)</b>', top, re.S)
-        items = "".join(f'<li><a class="sn-sub2" href="#{sid}">{clean(st).rstrip("。：")}</a></li>' for sid, st in sub2)
+        items = "".join(f'<li><a class="sn-sub2" href="#{sid}">{clean(st).rstrip("。：: ")}</a></li>' for sid, st in sub2)
         nested = f'<ol class="sn-sub2s">{items}</ol>' if items else ""
         subs.append(f'<li><a class="sn-sub" href="#{iid}"><span class="sn-n">{no}</span><span class="sn-t">{short}</span></a>{nested}</li>')
 
