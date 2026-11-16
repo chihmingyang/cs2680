@@ -95,6 +95,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-16（**改稿當 review comment**（James：「我直接改文檔送 commit，當 code review 做，你根據我的改動去思考如何優化流程」）：G 加一節；新增 `tools/edit_digest.py`（list／show／mark：讀者看得到的 before／after 字級 diff）、`.claude/skills/learn-from-edit/`、`guide/edit_log.tsv`；CLAUDE.md 開工多跑 `edit_digest.py list`。本機或 GitHub 網頁上改，commit 訊息用「改稿：」開頭。）
 - 2026-11-12（C 加〈補新材料之前，先判斷它是內容還是骨架〉與重排一堂的做法。起因是 L6b 補 Anthropic 研究文時只加小節、沒換骨架。）
 - 2026-11-11（加 I2〈標紅字：審查過了才做〉：紅字獨立成 I 之後、D 之前的一步，`red_path.py` 當關卡；寫作的 skill 不放 `<strong>`。）
 - 2026-11-11（I：審完跑 `review_status.py mark`；選要審的章時也看 `status` 的「舊規則」「改過」；James 說看不懂先加 `guide/review_cases/` 再改規則、跑 `review_eval.py`。）

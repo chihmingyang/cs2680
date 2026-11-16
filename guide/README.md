@@ -24,7 +24,7 @@
 | v7 的決定與來源 | `guide/V7_DECISIONS.md`、`guide/sources/lXX.md` | 每堂怎麼排、補、刪；外部事實的來源與查證紀錄。 |
 | 工作流程 | `guide/WORKFLOW.md` | 開工、新講次、修改、發布。 |
 | 更新紀錄 | `guide/CHANGELOG.md` | `guide/` 各文件的更新紀錄，依文件分節，新的在最上面、一則一行。開工不必讀；要查某堂的來龍去脈就 `grep L3 guide/CHANGELOG.md`。設了 `merge=union`，不會衝突（2026-11-06 以前寫在各檔第 3 行）。 |
-| Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。`build-quiz`：替一堂建題庫，先列觀念再出題，開卷閉卷都過才 push。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
+| Skill | `.claude/skills/` | `rewrite-with-example`：James 說看不懂、不順、要案例或圖。`idea-first-lecture`：把一堂改成 v7 依想法重組，或寫一堂新講次（`new-lecture-brief.md`）。`fact-check-extension`：查證他轉來的評論，寫成本文延伸。`readability-review`：改正文後、push 前的可讀性審查。`build-quiz`：替一堂建題庫，先列觀念再出題，開卷閉卷都過才 push。`learn-from-edit`：James 親手改稿後，把 diff 當 review comment，回頭改流程（2026-11-16）。開工時呼叫 `register_repo_root` 後會自動進 skill 清單（WORKFLOW A1）。 |
 | 腳本 | `tools/` | 用法寫在每個檔案開頭。 |
 | 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前有 L6 與 L6b（2026-11-08 建在舊 L6，2026-11-09 補齊觀念涵蓋；2026-11-10 隨頁面拆開：L6 106 題 unit、3 題整合，L6b 152 題 unit、4 題整合，同日補五個小節後 172 題）、L5（2026-11-09，119 題 unit、7 題整合）和 L7（2026-11-10，265 題 unit、7 題整合；2026-11-13 刪三題後 262 題）。各堂的數字在 `guide/QUIZ.md`〈各堂題庫〉。 |
 | 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 以心智模型為單位的觀念依賴圖（concept／practice、三級難度、要先懂的邊）；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（英文頁，首頁課程地圖有連結，2026-11-09）。 |

@@ -202,6 +202,15 @@ James 在站台上直接改字、問問題。一般成員看不到：`app.js` �
 - 存檔不序列化整頁：用 GitHub Contents API 抓最新原始碼，用「tag＋原本的內容＋相同內容裡的第幾個」找到那一段，只換那幾個位元組，再 PUT 一個 commit。圖、表、code 這類區塊用文字找（`code.js` 會在執行時改寫 code，但字元不變）。那一段在 GitHub 上已被改過就標紅、不覆蓋。
 - 網頁編輯直接進 `main`，存檔時**不跑 `check_article.py`**；push 後 J 的 CI 會對全站跑一次，沒過 James 會收到信。所以每個 session 開工前先 `git pull`（D 的 rebase 已涵蓋）；James 手改的文字是他的決定，不要順手改回來。紅字數量超過規則只是 warn，下次碰到那一頁再看。
 
+**改稿當 review comment（2026-11-16 起）**
+
+James 直接改字，比在對話裡說「看不懂」更準：diff 精確指出哪幾個字有問題。所以他的改稿不只是一次修改，是給流程的 review comment。
+
+- 認得出他的改稿：commit 訊息以「網頁編輯：」（編輯器自動加）或「改稿：」（他在本機或 GitHub 網頁上改時自己加）開頭。想說原因就寫在摘要後面（「網頁編輯：L3 改 2 段 — 這句太繞」）；不寫也可以，Claude 會猜，猜不出才問。
+- 開工時跑 `python3 -I tools/edit_digest.py list`，有東西就先照 `.claude/skills/learn-from-edit/SKILL.md` 處理：逐處猜原因、對到規則、找出流程哪一步漏了（寫作 skill、審查者、修 BLOCK 的修法、紅字、還是根本沒有規則），修那一步，再掃全站同樣的情況。
+- 處理過的記在 `guide/edit_log.tsv`（commit、日期、類別、學到什麼）。同一類出現第二次，就當新規則的候選問他。
+- 他改的字不改回來；新規則照 C 先問他。
+
 **問 Claude（`.github/workflows/ask.yml`、`tools/ask_prompt.py`）**
 
 - 選一段文字 → 按「問 Claude」→ 頁面開一個 label 為 `ask` 的公開 issue。Workflow 用 James 訂閱的 token 跑 `claude -p`，把回答留言回去並關閉 issue；面板每 8 秒讀一次留言。接著問就是在同一串留言，關閉的 issue 也會再觸發。

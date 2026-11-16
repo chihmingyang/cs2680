@@ -12,6 +12,7 @@
 - 紅字（`<strong>`）獨立成一步，可讀性審查過了才標（2026-11-11 James）→ 照 `.claude/skills/mark-red/SKILL.md`；寫作時不放紅字。
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。
 - James 也會在站台上直接改字（commit 訊息「網頁編輯：…」）或從頁面發問（label `ask` 的 issue），見 `guide/WORKFLOW.md` G。這些 issue 不是討論串，也不是錯誤回報。
+- 他的改稿（「網頁編輯：」或「改稿：」開頭的 commit）是給流程的 review comment（2026-11-16 James）：開工跑 `python3 -I tools/edit_digest.py list`，有就先照 `.claude/skills/learn-from-edit/SKILL.md` 處理——找出流程哪一步該抓到卻沒抓到，修那一步，不只修那一處。
 - 每一章通過的是哪一版可讀性 checklist，記在 `guide/review_log.tsv`（一章一行：版本、日期、當時文字的 hash）。開工先跑 `python3 -I tools/review_status.py status`：一堂一行，列出幾章是「舊規則」（審過之後 checklist 加了條目）、「改過」（審過之後文字動了）、「沒審過」。Checklist 加一條時，只拿新的那一條去掃「舊規則」的章，不必整份重審（2026-11-13 James）。
 - 正文不提 slides 怎麼寫、不標「本文補的」（2026-11-13 James：他已經重寫一半以上）。規則在 STYLE_ARTICLE 第 0 節〈不提 slides 怎麼寫〉；L1–L10 已改；L11 講的是課程自己的作業統計，照留。
 - 核心觀念開頭不放章節清單 `nav.map`（2026-11-13 James：「直接進入正文」）；章的清單在側欄，排法寫在 `p.lede`。
