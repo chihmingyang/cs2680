@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-16（L8 閱讀連貫性檢查（James：「針對 L8 標題跟內容做閱讀連貫性檢查」）：第 3 章標題改成〈Prefix cache 與單價〉涵蓋後半的 batch 與〈單價從哪裡來〉，開頭段不再說「只帶過」；第 9 章標題補「共用」、開頭段承認換了問題並定義邊界；第 10 章標題補 speculation；第 2 章 output 為什麼貴的機制整段留給 3-7（prefill／decode 改在 3-7 定義）；修掉懸空的章號與數字（縮小 context 的出處、output 的 22%、duration_ms 從哪裡拿）；側欄三個舊小節名；動手試試的日期與 cost.py 的價格、名稱對齊正文（cache write 1.25×）。兩輪可讀性審查只審改過的單位（10 + 6 BLOCK，全修），紀錄在 review_reports/l08-20261116-coherence/；這些章在 review_log 仍是「改過」，等其餘各章精簡時整章重審。第 9、10 章和前八章的接縫（成本 → 架構）留給還沒做的 L8b 拆分。）
 - 2026-11-16（L8 第 1 章〈還要除以成功率〉改寫（James：「這些公式應該不難，但你講的很繞」）：刪掉 Uber 的數字句；「公式少了分母」＋c／p／retry tax 三項清單，改成先給一個例子（每次 $1、成功率 25% → 每個成功任務 $4）再給 c ÷ p；定義 run＝一個 session＝一個任務；「每次嘗試」統一成「每次 run」，表頭改成 Cost / run c、Cost / 成功 c ÷ p（James：「c 是什麼 cost 嗎？為什麼要讓讀者猜？」）。兩輪可讀性審查，紀錄在 review_reports/l08-20261116-i1/；第 1 章其餘舊 BLOCK 留到精簡時處理。）
 - 2026-11-16（James 讀 L8 第 3 章的前情註〈Prefill 與 decode〉，問「不是能用 batch processing 嗎？」，說「這一段非常重要，應該要有圖表跟細節展開」）：前情註 `#n-prefill` 換成正文小節 `#i3-7`〈單價從哪裡來〉，兩張照比例的圖（batch 變大時每個 output token 讀多少 byte；四種 context 長度下 prefill 與 decode 的 token/s），用 L9 第 4 章的規格推算，再用同一筆帳解釋 cache read、Batch API、fast mode 的價格。`#n-prefill` 留成錨點；`#i2-2` 的「一次只能出一個 token」補上 batching 補不滿、連到 `#i3-7`。推算在 `guide/sources/l08.md`。
 - 2026-11-16（**互動導讀頁**（James：「這裡面 execution 服務最抽象，無法理解」「做成交互式網頁由淺入深」）：新增 `docs/l08-exec.html`，八層由淺入深（一句話 → loop 的第 ③ 步 → 和 tool 的差別 → 同一段 Python 在三種架構的路徑 → 五種故障並排 → sandbox 生命週期模擬 → timeout 與 idempotency key → 自我檢查），L8 `#i9-2` 圖下加一行連過去；`audit.py` 的連結規則接受 `lXX-<字母>.html`。）
