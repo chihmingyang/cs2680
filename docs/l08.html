@@ -135,7 +135,7 @@
               </div>
               <figcaption>一個 turn 有幾個 step？這張圖裡 model 跑了兩次，所以是兩個 step。後面的帳都算在 step 上，因為每個 step 都是一次完整的 model call。</figcaption>
             </figure>
-<p id="i1-2"><b>成本是六項相乘。</b>有了單位，一個產品的 agent 總花費可以寫成一條乘法。<strong>中間三項取決於 agent 做一個任務時實際走過的路</strong>，也就是依序走過的 turn 與 step，叫 trajectory：少繞路、少回頭，這三項就小。</p>
+<p id="i1-2"><b>成本是六項相乘。</b>有了單位，一個產品的 agent 總花費可以寫成一條六項的乘法（下圖上排）。<strong>中間三項（Turns、Steps、Tokens）取決於 agent 做一個任務時實際走過的路</strong>，也就是依序走過的 turn 與 step，叫 trajectory：少繞路、少回頭，這三項就小。</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 216" role="img" aria-label="上排是成本公式：Users 乘 Sessions per User 乘 Turns per Session 乘 Steps per Turn 乘 Tokens per Step 乘 Price per Token。前兩項灰色，隨採用度成長，設計不去壓。中間三項青色，agent 走的 trajectory 越少繞路，這三項越小。最後一項黃色，隨單價縮小。下排是每個成功任務的成本等於 Turns 乘 Steps 乘 Tokens 乘 Price，再除以成功率。成功率是深紅色。">
@@ -191,19 +191,21 @@
                   <text x="595" y="189.0" text-anchor="middle" class="dg-c-on">失敗的錢也要有人付</text>
                 </svg>
               </div>
-              <figcaption>花費由什麼決定？上排是乘法，前兩項隨採用度成長，設計不去壓它，只動右邊四項。下排換成每個成功任務的成本，多一個分母：成功率。灰色代表有人用，青色和黃色是這堂的槓桿，深紅是公式裡沒寫的那一項。</figcaption>
+              <figcaption>花費由什麼決定？上排是乘法，前兩項隨採用度成長，設計不去壓它，只動右邊四項。下排換成每個成功任務的成本，多一個分母：成功率。灰色代表有人用，青色和黃色是這堂的槓桿，深紅是上排沒有的那一項。</figcaption>
             </figure>
-<p>乘法的好處是每一項可以單獨優化，<strong>任何一項減半，總成本就減半</strong>。Uber 用同一條公式管全公司的 agent 支出：<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">2026 年 8 月的文章</a>說，半年內週活躍使用者成長 7 倍，固定 model 的每 session 成本從 6 月高峰降了 52%，前兩項讓它長，中間幾項才是優化目標。乘法的陷阱是一項省下的錢，可能從另一項補回來，第 4 章專門算這件事。</p>
-<p id="i1-3"><b>公式少了分母。</b>這條公式算花了多少，沒有算買到什麼。L1 說過，agent 的目標是<a href="l01.html#i2">每個成功任務的成本</a>；一個便宜的設定如果常常失敗，<strong>失敗那幾次的錢還是要付</strong>。要算它，先定義三項：</p>
-<ul>
-                <li><b>每次嘗試的平均花費 c。</b>成功和失敗的 run 都算進去。</li>
-                <li><b>成功率 p。</b>成功的 run 佔全部的比例，由測試或 grader 判定，量法是 L7 的主題。</li>
-                <li><b>Retry tax 1 ÷ p。</b>平均要試幾次才成功一次。成功率 25%，就是 4 次的錢換 1 次成功。</li>
-              </ul>
-<figure class="file"><figcaption>每個成功任務的成本</figcaption><pre><code class="lang-text">每個成功任務的成本 = 總花費 ÷ 成功次數 = c ÷ p</code></pre></figure>
+<p>乘法的好處是每一項可以單獨優化，<strong>任何一項減半，總成本就減半</strong>。但一項省下的錢，可能從另一項補回來，第 4 章專門算這件事。</p>
+<p id="i1-3"><b>還要除以成功率。</b>上圖的上排算的是花了多少錢，沒算換到幾次成功。Agent 做一次任務，從開始到結束叫一次 run；這裡把一個 session 當成一個任務，所以一次 run 就是一個 session。Run 可能成功也可能失敗，<strong>失敗的 run 一樣要付錢</strong>。所以 L1 說 agent 要看的是<a href="l01.html#i2">每個成功任務的成本</a>，也就是上圖的下排：拿掉 Users 和 Sessions，從一個 session 的花費算起，再除以成功率。先看一個例子：</p>
+<figure class="file"><figcaption>每個成功任務的成本</figcaption><pre><code class="lang-text">每次 run 花 $1，成功率 25%
+→ 平均試 4 次才成功 1 次
+→ 每個成功任務花 $4
+
+寫成公式：每個成功任務的成本 = c ÷ p
+  c：每次 run 的平均花費，成功和失敗的 run 都算進去
+  p：成功率，成功的 run 佔全部的比例</code></pre></figure>
+<p>同一個 c，成功率越低，要付的倍數越大：p 是 50% 付 2 倍，25% 付 4 倍。成功與否由測試判定，或由另一個 model 打分（這個打分的角色叫 grader），怎麼量是 L7 的主題。</p>
 <p>Arize 和 Fireworks <a href="https://arize.com/blog/cost-per-successful-task-ai-model-benchmark.md" target="_blank" rel="noopener">2026 年 7 月實際量過</a>：Terminal-Bench 的 40 題、10 個 model，每個組合跑 6 次，共 2,400 次 run。下面取四列：</p>
 <div class="table-wrap"><table>
-                <thead><tr><th>Model</th><th>成功率 p</th><th>每次嘗試 c</th><th>每個成功任務</th><th>穩定解出<br>（6 次過 4 次）</th></tr></thead>
+                <thead><tr><th>Model</th><th>成功率 p</th><th>每次 run 的<br>平均花費 c</th><th>每個成功任務<br>的成本 c ÷ p</th><th>穩定解出<br>（6 次過 4 次）</th></tr></thead>
                 <tbody>
                   <tr><td>gpt-oss-120b</td><td>33%</td><td>$0.018</td><td>$0.054</td><td>8 / 40</td></tr>
                   <tr><td>GPT-5.5</td><td>67%</td><td>$0.424</td><td>$0.636</td><td>25 / 40</td></tr>
@@ -211,12 +213,12 @@
                   <tr><td>gemini-3.5-flash</td><td>23%</td><td>$0.288</td><td><b>$1.233</b></td><td>文章未列</td></tr>
                 </tbody>
               </table></div>
-<p>gemini-3.5-flash 每次嘗試比 GPT-5.5 便宜約三成，<strong>每個成功任務卻貴約 1.9 倍</strong>，<strong>只看單價或每次花費會選錯</strong>。這份實驗由 Arize 和賣 model 託管服務的 Fireworks 自己做，成功率有約 ±6 個百分點的誤差，作者也說結果只看方向，不是排行榜；價格是當時的，數字過幾個月就會變，算法不會。</p>
-<p id="i1-4"><b>本文的判斷：比完平均，還要比邊際。</b>只看上表也會選錯。gpt-oss-120b 每個成功任務最便宜，約是 GPT-5.5 的 1/12，但作者提醒，它便宜的部分原因是它只拿下自己做得到的題：40 題裡它穩定解出 8 題，GPT-5.5 是 25 題。每個成功任務的成本，是所有嘗試的花費除以成功次數。gpt-oss-120b 每次嘗試只要 0.018 美元，不到 GPT-5.5 的 1/20，所以它在做不到的題上失敗再多次，也只把自己的平均拉高一點；它的成功全落在自己做得到的那幾題。GPT-5.5 穩定解出的 25 題裡，至少 17 題是 gpt-oss-120b 解不穩的，這些成功也算進了 GPT-5.5 的平均；難題通常要跑更多步、花更多 token（作者沒有公布每題的花費，這半句是本文的推論）。<strong>兩個「每個成功任務」平均的是不同的一組成功，所以不能直接比</strong>：換成 gpt-oss-120b，<strong>帳單變小，產品做得到的事也一起變少</strong>。決定要不要換強的設定時，該比的是<strong>多成功一次得多花多少</strong>：</p>
+<p>gemini-3.5-flash 每次 run 比 GPT-5.5 便宜約三成，<strong>每個成功任務卻是 GPT-5.5 的約 1.9 倍</strong>，<strong>只看每次花費會選錯</strong>。這份實驗由 Arize 和賣 model 託管服務的 Fireworks 自己做，成功率有約 ±6 個百分點的誤差，作者也說結果只看方向，不是排行榜；價格是當時的，數字過幾個月就會變，算法不會。</p>
+<p id="i1-4"><b>本文的判斷：比完平均，還要比邊際。</b>只看上表也會選錯。gpt-oss-120b 每個成功任務最便宜，約是 GPT-5.5 的 1/12，但作者提醒，它便宜的部分原因是它只拿下自己做得到的題：40 題裡它穩定解出 8 題，GPT-5.5 是 25 題。每個成功任務的成本，是所有 run的花費除以成功次數。gpt-oss-120b 每次 run 只要 0.018 美元，不到 GPT-5.5 的 1/20，所以它在做不到的題上失敗再多次，也只把自己的平均拉高一點；它的成功全落在自己做得到的那幾題。GPT-5.5 穩定解出的 25 題裡，至少 17 題是 gpt-oss-120b 解不穩的，這些成功也算進了 GPT-5.5 的平均；難題通常要跑更多步、花更多 token（作者沒有公布每題的花費，這半句是本文的推論）。<strong>兩個「每個成功任務」平均的是不同的一組成功，所以不能直接比</strong>：換成 gpt-oss-120b，<strong>帳單變小，產品做得到的事也一起變少</strong>。決定要不要換強的設定時，該比的是<strong>多成功一次得多花多少</strong>：</p>
 <figure class="file"><figcaption>多成功一次的成本</figcaption><pre><code class="lang-text">多成功一次的成本 = (c 強 − c 弱) ÷ (p 強 − p 弱)
                 = ($0.424 − $0.018) ÷ (0.67 − 0.33)
                 ≈ $1.19</code></pre></figure>
-<p>再拿它比這個任務成功一次值多少。工程師自己做要半小時的任務，$1.19 很值得；一批可以重跑、錯了也無妨的分類，就不一定值得。<strong>後面每個槓桿都用 c ÷ p 判斷</strong>：它讓每次嘗試的花費 c（分子）少了多少，又讓成功率 p（分母）掉了多少；p 掉了，就用上面的算式算多成功一次的成本。</p>
+<p>再拿它比這個任務成功一次值多少。工程師自己做要半小時的任務，$1.19 很值得；一批可以重跑、錯了也無妨的分類，如果便宜的 model 多跑幾次也能做對，就不必多付這 $1.19。<strong>後面每個槓桿都用 c ÷ p 判斷</strong>：它讓每次 run 的花費 c（分子）少了多少，又讓成功率 p（分母）掉了多少；p 掉了，就用上面的算式算多成功一次的成本。</p>
             </div>
           </div>
 
