@@ -858,6 +858,23 @@
   /* Keep the bar in sight when a touch keyboard is open. iOS and iPadOS pan the visual
      viewport inside the layout viewport, and a sticky bar sits at the layout viewport's top,
      which is then above the screen. Shift the top bar down by the pan while editing. */
+  /* Put the tools right above the text: the toolbar rows take the article column's left edge
+     and width, so the mouse moves a short way between a paragraph and B, 重 or 儲存.
+     A narrow window has no side column, and the rows then fill the width as before. */
+  var column = main.querySelector('.content') || main;
+  function alignBar() {
+    if (!bar || bar.hidden) return;
+    var r = column.getBoundingClientRect();
+    var wide = r.width > 0 && r.left > 40;
+    bar.classList.toggle('is-aligned', wide);
+    if (wide) {
+      bar.style.setProperty('--ed-l', Math.round(r.left) + 'px');
+      bar.style.setProperty('--ed-w', Math.round(r.width) + 'px');
+    }
+  }
+  window.addEventListener('resize', alignBar);
+  window.addEventListener('load', alignBar);
+  if (window.ResizeObserver) new ResizeObserver(alignBar).observe(column);
   var vv = window.visualViewport;
   function pinBar() {
     if (!topbar) return;
@@ -882,6 +899,7 @@
     if (on) {
       if (!bar) buildBar();
       bar.hidden = false;
+      alignBar();
       indexBlocks();
       refreshCount();
     } else {
