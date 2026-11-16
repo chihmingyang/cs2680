@@ -20,9 +20,10 @@ Fragments in the folder (notes/ is git-ignored):
 
 What it does:
   - replaces the tldr and #s-ideas, removes #s-arch
-  - renumbers the sections: 1 核心觀念, 2 動手試試, 3 原文出處 (問題討論 removed 2026-11-09) (HTML comments and kickers)
+  - section kickers carry no number (2026-11-16: the sidenav numbers 0 導讀 and the chapters only);
+    the HTML comments keep theirs (this script finds the 動手試試 comment by it)
   - eyebrow gets「· 依想法重組」, the meta row「頁碼」goes away, the styles.css link copies l05.html's version
-  - rebuilds this page's own three-level sidenav line from the h3s and the <p id="…"><b>小標</b> paragraphs
+  - rebuilds this page's own sidenav line from the h3s and the <p id="…"><b>小標</b> paragraphs
 
 What it leaves to you: tk-rel lines, digests and any「第 N 段」text in the kept sections. Next step:
 check_article.py --fix-time. `h1` and `p.en-title` stay as they are.
@@ -49,16 +50,22 @@ def sidenav_line(s):
 
 
 def v7_secs(s):
-    """The sections of a v7 page for the sidenav: 先看這裡, 1 核心觀念 (chapters and their 小標), 2–3.
+    """The sections of a v7 page for the sidenav (2026-11-16 James): 0 導讀, the chapters on the
+    same level (each with its 小標), then one quiet line under a rule: 查閱 · 動手試試 · 原文出處.
+    查閱 is the chapter whose h3 has no idea-no (the old numbered 目錄 chapter). The 核心觀念 link
+    stays, hidden by CSS, so app.js keeps the chapters as the subs of one tracked section.
     add_lecture.py uses it too, so a new v7 page gets this block on its first wiring (2026-11-06)."""
     ideas = s[s.index('id="s-ideas"'):s.index('id="s-try"')]
     parts = re.split(r'(?=<div class="idea" id="i\d+">)', ideas)[1:]
-    subs = []
+    subs, refs = [], []
     for part in parts:
         iid = re.match(r'<div class="idea" id="(i\d+)">', part).group(1)
-        m = re.search(r'<h3><span class="idea-no">([\d.]+)</span>(.*?)</h3>', part, re.S)
+        m = re.search(r'<h3>(?:<span class="idea-no">([\d.]+)</span>)?(.*?)</h3>', part, re.S)
         no, title = m.group(1), clean(m.group(2))
         short = title.split("：")[0].strip()
+        if not no:
+            refs.append((iid, short))
+            continue
         # 小標 inside <details> are reference notes, not part of the chapter's outline
         top = re.sub(r"<details\b.*?</details>", "", part, flags=re.S)
         sub2 = re.findall(r'<p id="([^"]+)"[^>]*>(?:<span class="anchor" id="[^"]+"></span>)*<b>(.*?)</b>', top, re.S)
@@ -66,13 +73,15 @@ def v7_secs(s):
         nested = f'<ol class="sn-sub2s">{items}</ol>' if items else ""
         subs.append(f'<li><a class="sn-sub" href="#{iid}"><span class="sn-n">{no}</span><span class="sn-t">{short}</span></a>{nested}</li>')
 
-    def sec(href, n, label):
-        return f'<li><a class="sn-sec" href="#{href}" data-spy data-short="{label}"><span class="sn-n">{n}</span><span class="sn-t">{label}</span></a>'
+    def link(href, label, n=None):
+        num = f'<span class="sn-n">{n}</span>' if n is not None else ""
+        return f'<a class="sn-sec" href="#{href}" data-spy data-short="{label}">{num}<span class="sn-t">{label}</span></a>'
 
-    return (sec("tldr-h", "", "先看這裡") + "</li>"
-            + sec("s-ideas", 1, "核心觀念") + f'<ol class="sn-subs">{"".join(subs)}</ol></li>'
-            + sec("s-try", 2, "動手試試") + "</li>"
-            + sec("wrap", 3, "原文出處") + "</li>")
+    refs += [("s-try", "動手試試"), ("wrap", "原文出處")]
+    return ("<li>" + link("tldr-h", "導讀", 0) + "</li>"
+            + '<li class="sn-ideas">' + link("s-ideas", "核心觀念") + f'<ol class="sn-subs">{"".join(subs)}</ol></li>'
+            + '<li class="sn-refs"><ol class="sn-refrow">'
+            + "".join(f"<li>{link(h, t)}</li>" for h, t in refs) + "</ol></li>")
 
 
 def replace_section(s, sid, frag_text):
@@ -127,10 +136,10 @@ def main():
         sys.exit("no 問題討論 or 動手試試 comment")
     s = s[:start] + "\n" + new_ideas.lstrip("\n") + s[m.start():]
 
-    # section numbers
+    # section numbers: comments keep them, kickers drop them (2026-11-16)
     for name, n in SECTIONS.items():
         s = re.sub(rf'(<!-- =+ )\d( {name} =+ -->)', rf'\g<1>{n}\g<2>', s)
-        s = re.sub(rf'(<p class="kicker">)\d( · {name}</p>)', rf'\g<1>{n}\g<2>', s)
+    s = re.sub(r'(<p class="kicker">)\d · (核心觀念|動手試試|原文出處)(</p>)', r'\1\2\3', s)
 
     # eyebrow, meta, css version
     s = re.sub(r'(<p class="eyebrow">Lecture \d+[a-z]? · [\d-]+ · Part [IVX]+)(?: · 依想法重組)?(</p>)', r'\1 · 依想法重組\2', s)

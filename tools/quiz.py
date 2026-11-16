@@ -299,7 +299,7 @@ def exam(path, only=()):
         g = lc.split(" ")[0]
         if g != group:
             group = g
-            name = "先看這裡" if g == "#tldr" else titles.get(g[1:], g)
+            name = "導讀" if g == "#tldr" else titles.get(g[1:], g)
             print(f"\n### {g}　{name}")
         print(f"[{lc}] {tx}")
     print("\n## 題目\n")

@@ -4,7 +4,9 @@
 Usage:
   python3 -I tools/add_lecture.py docs/l09.html --sum "一句話摘要（首頁講次列表用）"
   python3 -I tools/add_lecture.py --check      # rebuild every sidenav in memory, write nothing,
-                                               # report pages whose sidenav would change
+                                               # report pages whose sidenav would change, and v7 pages
+                                               # whose own block no longer matches their chapters
+  python3 -I tools/add_lecture.py --sync-own   # rewrite those own blocks (assemble_v7.v7_secs)
 
 The new page must already pass check_article.py. Everything the
 script needs is read from that page:
@@ -260,6 +262,7 @@ def main():
     ap.add_argument("page", nargs="?")
     ap.add_argument("--sum")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--sync-own", action="store_true", help="rebuild each v7 page's own sidenav block from its chapters")
     ap.add_argument("--prepare", action="store_true")
     a = ap.parse_args()
     lecs = lectures()
@@ -271,14 +274,30 @@ def main():
             idx.write_text(s1, encoding="utf-8")
         print("index.html: " + ("publish wrapper removed" if s1 != s0 else "no wrapper (ok)"))
         a.check = True
+    if a.sync_own:
+        a.check = True
     if a.check:
         changed = []
+        stale = []
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import assemble_v7
         for p in sorted(SITE.glob("*.html")):
             s = read(p)
             if rebuild_sidenav(p.name, s, lecs, None) != s:
                 changed.append(p.name)
+            # 2026-11-16: a v7 page's own block must match its chapters and 小標 (edits to a 小標
+            # used to leave the sidenav behind). Fix: python3 -I tools/add_lecture.py --sync-own
+            if 'class="sn-lec is-here"' in s and 'id="s-ideas"' in s and 'id="s-arch"' not in s:
+                new, old = assemble_v7.sidenav_line(s)
+                if new != old:
+                    stale.append(p.name)
+                    if a.sync_own:
+                        p.write_text(s.replace(old, new), encoding="utf-8")
         print("sidenav would change in: " + (", ".join(changed) if changed else "nothing (in sync)"))
-        sys.exit(1 if changed else 0)
+        if stale:
+            print(("own sidenav block rebuilt in: " if a.sync_own else
+                   "own sidenav block out of date in (run --sync-own): ") + ", ".join(stale))
+        sys.exit(1 if changed or (stale and not a.sync_own) else 0)
     if not a.page or not a.sum:
         ap.error("give the new page and --sum")
     new = meta(Path(a.page).resolve())

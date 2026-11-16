@@ -132,8 +132,9 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
 1. 做 A。
 2. 修改 `docs/` 裡的檔案。規則以 `guide/STYLE_*.md` 為準；要改規則，先問 James。
 3. `punct.py` 只對新寫的片段跑，先 `--diff` 看它會改什麼。不要對整頁盲跑：頁面的數學式與英文片語要維持 ASCII（2026-10-19 這樣做過一次，改壞了 L4–L8 的算式，後來還原）。
-4. 對改過的講次頁跑 `bash tools/verify.sh lXX`（B4 的檢查加 `audit.py`，一次跑完）。
-5. 發布（D）。
+4. 改了章名（`h3`）或粗體小標，跑 `python3 -I tools/add_lecture.py --sync-own` 重建側欄（2026-11-16 起側欄直接列章與小標，`verify.sh` 會抓沒同步的頁）。
+5. 對改過的講次頁跑 `bash tools/verify.sh lXX`（B4 的檢查加 `audit.py`，一次跑完）。
+6. 發布（D）。
 
 **補新材料之前，先判斷它是內容還是骨架**（2026-11-12）。James 轉來一篇文章、或查到新的來源要補進一堂時，先問：這份材料有沒有提供一個能串起整頁的模型（分層、流程、分類）？
 

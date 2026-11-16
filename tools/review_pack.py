@@ -8,7 +8,7 @@ reviewer can ask "does this cell answer its header?".
 
 Usage:
   python3 -I tools/review_pack.py docs/l06.html                  # tldr + every chapter of 核心觀念
-  python3 -I tools/review_pack.py docs/l06.html --chapter i2 i5  # only these chapters ("tldr" selects 先看這裡)
+  python3 -I tools/review_pack.py docs/l06.html --chapter i2 i5  # only these chapters ("tldr" selects 導讀)
   python3 -I tools/review_pack.py docs/l06.html --since HEAD~1   # only chapters whose text changed since that git ref
   python3 -I tools/review_pack.py docs/l06.html --since HEAD --sections s-try wrap   # other sections too
   python3 -I tools/review_pack.py docs/l06.html --units          # just count the units (for the time budget)
@@ -244,7 +244,7 @@ def pack(root, chapter_ids=None, sections=(), prefix=False):
     items = []
     tldr = tldr_of(root)
     if tldr is not None:
-        items.append(("tldr", "先看這裡", "#tldr", tldr))
+        items.append(("tldr", "導讀", "#tldr", tldr))
     for ch in chapters(root):
         cid = ch.attrs.get("id", "?")
         h = next(ch.find_all(lambda x: x.tag == "h3"), None)

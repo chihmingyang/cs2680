@@ -447,7 +447,7 @@
   }
 
   function keepInView(el) {
-    if (!el || !nav) return;
+    if (!el || !nav || !el.getClientRects().length) return; /* the hidden 核心觀念 link (2026-11-16) */
     var box = nav.getBoundingClientRect();
     var r = el.getBoundingClientRect();
     if (!box.height) return;
@@ -588,7 +588,7 @@
         id: anchor.id,
         off: Math.round(line - anchor.getBoundingClientRect().top),
         p: Math.round(p * 1000) / 1000,
-        s: spy[active].link.getAttribute('data-short') || ''
+        s: whereText(active, sub)
       };
     } else {
       return;
@@ -600,6 +600,12 @@
     if (document.visibilityState === 'hidden') savePlace();
   });
 
+  /* where the reader is, in words: the chapter's name while inside a chapter
+     (the sidenav lists chapters directly since 2026-11-16), else the section's */
+  function whereText(active, sub) {
+    var t = sub && sub.link.querySelector('.sn-t');
+    return t ? t.textContent : (spy[active].link.getAttribute('data-short') || '');
+  }
   function readingLine() {
     return (topbar ? topbar.getBoundingClientRect().bottom : 0) + Math.min(160, window.innerHeight * 0.25);
   }
@@ -667,7 +673,7 @@
     lastActive = active;
     lastSub = sub;
     lastSub2 = sub2;
-    if (whereEl) whereEl.textContent = active >= 0 ? (spy[active].link.getAttribute('data-short') || '目錄') : '目錄';
+    if (whereEl) whereEl.textContent = active >= 0 ? (whereText(active, sub) || '目錄') : '目錄';
     keepInView(sub2 ? sub2.link : (sub ? sub.link : (active >= 0 ? spy[active].link : null)));
   }
   function requestSpy() {

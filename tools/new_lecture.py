@@ -100,7 +100,7 @@ def main():
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
-    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">（待寫）</p>
     <ul class="core">
       <li><span><b>（待寫）</b></span></li>
@@ -111,7 +111,7 @@ def main():
     <div class="content">
       <section class="part" id="s-ideas">
         <header class="part-head">
-          <p class="kicker">1 · 核心觀念</p>
+          <p class="kicker">核心觀念</p>
           <h2>（待寫）</h2>
           <p class="lede">（待寫）</p>
         </header>
@@ -126,7 +126,7 @@ def main():
       <!-- ===================== 2 動手試試 ===================== -->
       <section class="part" id="s-try">
         <header class="part-head">
-          <p class="kicker">2 · 動手試試</p>
+          <p class="kicker">動手試試</p>
           <h2>照著做一次</h2>
           <p class="lede">（待寫）點開才會展開。</p>
         </header>
@@ -136,7 +136,7 @@ def main():
 
       <!-- ===================== 3 原文出處 ===================== -->
       <section class="wrap" id="wrap" aria-label="原文出處">
-        <p class="kicker">3 · 原文出處</p>
+        <p class="kicker">原文出處</p>
         <h2>原文出處</h2>
         <p class="rg-intro">（待寫）</p>
         <ol class="rg rg-src">
@@ -153,7 +153,7 @@ def main():
   </div>
 </main>
 </div>
-<script src="app.js?v=20261116b"></script>
+<script src="app.js?v=20261116c"></script>
 <script src="code.js"></script>
 </body>
 </html>

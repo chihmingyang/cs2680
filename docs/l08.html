@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261113a">
+<link rel="stylesheet" href="styles.css?v=20261116a">
 </head>
 <body>
 <header class="topbar">
@@ -40,7 +40,7 @@
 <li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">Cost &amp; Latency</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">成本公式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三個單位</a></li><li><a class="sn-sub2" href="#i1-2">成本是六項相乘</a></li><li><a class="sn-sub2" href="#i1-3">還要除以成功率</a></li><li><a class="sn-sub2" href="#i1-4">本文的判斷：c ÷ p 最低的，不一定該選</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">錢花在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">每一步都重送整個 context</a></li><li><a class="sn-sub2" href="#i2-2">三種 token：量和單價方向相反</a></li><li><a class="sn-sub2" href="#i2-3">Cache 會過期，過期的舊內容要重算一次</a></li><li><a class="sn-sub2" href="#i2-4">重送的總量隨 turn 數的平方成長</a></li><li><a class="sn-sub2" href="#i2-5">留在 context 裡的 token，之後每一步都再付一次</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Prefix cache 與單價</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">只比開頭，差一個字就從那裡開始重算</a></li><li><a class="sn-sub2" href="#i3-2">Hit rate 的帳</a></li><li><a class="sn-sub2" href="#i3-3">什麼會打斷它</a></li><li><a class="sn-sub2" href="#i3-4">TTL 的帳</a></li><li><a class="sn-sub2" href="#i3-5">怎麼看 hit rate</a></li><li><a class="sn-sub2" href="#i3-6">能等的工作用 batch</a></li><li><a class="sn-sub2" href="#i3-7">單價從哪裡來</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">淨節省</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個省法都有反向成本</a></li><li><a class="sn-sub2" href="#i4-2">算一次：compaction 幾步回本</a></li><li><a class="sn-sub2" href="#i4-3">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub2" href="#i4-4">優化是一個迴圈</a></li><li><a class="sn-sub2" href="#i4-5">本文的判斷：照這個順序看</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">少走幾步</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">先問這一步需要 LLM 嗎</a></li><li><a class="sn-sub2" href="#i5-2">少回頭：減少 turn</a></li><li><a class="sn-sub2" href="#i5-3">少呼叫：一次 model call 做多個 tool call</a></li><li><a class="sn-sub2" href="#i5-4">重用計畫與 skill，任務重複才回本</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Model、effort 與 output</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Routing：三種時機</a></li><li><a class="sn-sub2" href="#i6-2">本文的判斷：換 model 要選在 context 小的時候</a></li><li><a class="sn-sub2" href="#i6-3">Effort：thinking 也算 output，分數的最後幾個百分點最貴</a></li><li><a class="sn-sub2" href="#i6-4">Output：量最少、單價最高，但不要從這裡開始</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">失敗的錢比你想的多</a></li><li><a class="sn-sub2" href="#i7-2">四個上限，數字從 trace 來</a></li><li><a class="sn-sub2" href="#i7-3">停止規則：上限之前先有進展檢查</a></li><li><a class="sn-sub2" href="#i7-4">本文的判斷：硬上限給沒人看的任務，互動 session 給可見度</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">完成時間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">完成時間看 critical path</a></li><li><a class="sn-sub2" href="#i8-2">先量：時間常常花在 tool</a></li><li><a class="sn-sub2" href="#i8-3">每個加速手段，錢往哪裡走</a></li><li><a class="sn-sub2" href="#i8-4">Speculation：先猜、先跑、再比對</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">Cost &amp; Latency</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">成本</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三個單位</a></li><li><a class="sn-sub2" href="#i1-2">成本是六項相乘</a></li><li><a class="sn-sub2" href="#i1-3">成功率</a></li><li><a class="sn-sub2" href="#i1-4">本文的判斷：c ÷ p 最低的，不一定該選</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Prefix cache 與單價</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">只比開頭，差一個字就從那裡開始重算</a></li><li><a class="sn-sub2" href="#i3-2">Hit rate 的帳</a></li><li><a class="sn-sub2" href="#i3-3">什麼會打斷它</a></li><li><a class="sn-sub2" href="#i3-4">TTL 的帳</a></li><li><a class="sn-sub2" href="#i3-5">怎麼看 hit rate</a></li><li><a class="sn-sub2" href="#i3-6">能等的工作用 batch</a></li><li><a class="sn-sub2" href="#i3-7">單價從哪裡來：同一組 GPU，每秒處理幾個 token</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">淨節省</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個省法都有反向成本</a></li><li><a class="sn-sub2" href="#i4-2">算一次：compaction 幾步回本</a></li><li><a class="sn-sub2" href="#i4-3">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub2" href="#i4-4">優化是一個迴圈</a></li><li><a class="sn-sub2" href="#i4-5">本文的判斷：照這個順序看</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">少走幾步</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">先問這一步需要 LLM 嗎</a></li><li><a class="sn-sub2" href="#i5-2">少回頭：減少 turn</a></li><li><a class="sn-sub2" href="#i5-3">少呼叫：一次 model call 做多個 tool call</a></li><li><a class="sn-sub2" href="#i5-4">重用計畫與 skill，任務重複才回本</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Model、effort 與 output</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Routing：三種時機</a></li><li><a class="sn-sub2" href="#i6-2">本文的判斷：換 model 要選在 context 小的時候</a></li><li><a class="sn-sub2" href="#i6-3">Effort：thinking 也算 output，分數的最後幾個百分點最貴</a></li><li><a class="sn-sub2" href="#i6-4">Output：量最少、單價最高，但不要從這裡開始</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">失敗的錢比你想的多</a></li><li><a class="sn-sub2" href="#i7-2">四個上限，數字從 trace 來</a></li><li><a class="sn-sub2" href="#i7-3">停止規則：上限之前先有進展檢查</a></li><li><a class="sn-sub2" href="#i7-4">本文的判斷：硬上限給沒人看的任務，互動 session 給可見度</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">完成時間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">完成時間看 critical path</a></li><li><a class="sn-sub2" href="#i8-2">先量：時間常常花在 tool</a></li><li><a class="sn-sub2" href="#i8-3">每個加速手段，錢往哪裡走</a></li><li><a class="sn-sub2" href="#i8-4">Speculation：先猜、先跑、再比對</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i2" data-spy data-short="2 每一步重送的舊內容最貴"><span class="sn-t">2 每一步重送的舊內容最貴</span></a></li><li><a class="sn-sec" href="#i9" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l08b.html"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
@@ -72,7 +72,7 @@
   </header>
 
   <section class="tldr" aria-labelledby="tldr-h">
-    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">先看一個例子。團隊的 agent（會自己讀檔、跑指令、連做很多步的 AI 程式）這個月的帳單比預期高出一大截。你把它用的語言模型（下面叫 model）換成便宜一級的，每個 token（model 計費的單位）的單價降了。下個月的帳單沒有降，做成的任務還變少了：便宜的 model 比較常失敗，失敗的任務要重跑，重跑的錢照付。</p>
     <p class="thesis">省錢的直覺常常是錯的，因為帳沒有算對。這堂不給一串省錢技巧，回答的問題是：<strong>帳要怎麼算，才知道該動哪一項</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
@@ -88,9 +88,9 @@
     <div class="content">
       <section class="part" id="s-ideas">
         <header class="part-head">
-          <p class="kicker">1 · 核心觀念</p>
+          <p class="kicker">核心觀念</p>
           <h2>帳怎麼算，錢和時間怎麼花才值得</h2>
-          <p class="lede">九章：前四章把帳算對，接著兩章是壓低成本的槓桿，再來是防止失控與完成時間，最後一章是需要時再查的目錄。</p>
+          <p class="lede">八章：前四章把帳算對，接著兩章是壓低成本的槓桿，第 7、8 章分別講防止失控和完成時間。相關論文、系統層的手段和 speculation 的研究收在最後的〈查閱〉，需要時再查。</p>
         </header>
 
         <div class="ideas">
@@ -1255,7 +1255,7 @@ $ claude -p "跑測試並修好失敗的那一個"
                 </tbody>
               </table></div>
 <p>表裡的 fast mode、平行 subagent、speculation 三列是用錢買時間。平行的代價有量過的例子：Claude Code 的 agent team 同時開幾個 Claude Code，各有自己的 context，一起做同一件事；<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說隊友都在 plan mode 時，它約用一般 session 的 7 倍 token。L5 引用的 Anthropic 研究系統讓幾個 agent 平行查資料，token 約是一般聊天的 15 倍。所以<strong>優化時間時，花費要一起量</strong>，反過來也一樣。</p>
-<p id="i8-4"><b>Speculation：先猜、先跑、再比對。</b>平行只能用在已知獨立的工作上。Speculative action 再往前一步：model 還沒決定的下一個動作，也先猜先跑。<a class="tm" href="#n-specdec">名字</a>來自 CPU 的 speculative execution。研究很活躍，猜什麼、靠什麼猜收在第 9 章；決策上只要記住條件：</p>
+<p id="i8-4"><b>Speculation：先猜、先跑、再比對。</b>平行只能用在已知獨立的工作上。Speculative action 再往前一步：model 還沒決定的下一個動作，也先猜先跑。<a class="tm" href="#n-specdec">名字</a>來自 CPU 的 speculative execution。研究很活躍，猜什麼、靠什麼猜收在〈查閱〉；決策上只要記住條件：</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 216" role="img" aria-label="兩張時序圖。猜中：main model 還在想的時候，便宜的 model 先猜下一個 tool call，tool 先跑；main model 發出同樣的 tool call 時結果已經好了，直接進下一步，省下等待。猜錯：main model 發出不同的 tool call，先跑的那次 tool call 白跑，結果丟掉，真正的 tool 再跑一次。">
@@ -1303,7 +1303,7 @@ $ claude -p "跑測試並修好失敗的那一個"
           </div>
 
           <div class="idea" id="i9">
-            <h3><span class="idea-no">9</span>目錄：論文、系統層手段、speculation</h3>
+            <h3>查閱：論文、系統層手段、speculation</h3>
             <div class="prose">
 <p>這一章<strong>不必讀完</strong>，需要時再查：這堂列的論文、決定單價底線的系統層手段、speculation 的研究。八個 harness 的目錄在 L8b〈<a href="l08b.html#i4">Harness Architecture</a>〉。</p>
 <details class="gloss" id="n-papers">
@@ -1369,7 +1369,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
       <!-- ===================== 2 動手試試 ===================== -->
       <section class="part" id="s-try">
         <header class="part-head">
-          <p class="kicker">2 · 動手試試</p>
+          <p class="kicker">動手試試</p>
           <h2>照著做一次</h2>
           <p class="lede">價格與 Claude Code 的設定依 2026 年 11 月的官方文件；單價之後的變動見核心觀念第 3 章的單價註。</p>
         </header>
@@ -1484,7 +1484,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
 
       <!-- ===================== 原文出處 ===================== -->
       <section class="wrap" id="wrap" aria-label="原文出處">
-        <p class="kicker">3 · 原文出處</p>
+        <p class="kicker">原文出處</p>
         <h2>原文出處</h2>
         <p class="rg-intro">教授為這一講列的 4 篇閱讀（<a href="https://cs2680.com/readings/oct-07.html" target="_blank" rel="noopener">官方清單 10/07 ↗</a>），另有一份把 40 多篇論文按「省什麼成本、引入什麼成本」分類的<a href="https://cs2680.com/notes/cost-effective-agents.html" target="_blank" rel="noopener">課程筆記</a>。要對照原文時從這裡找，不必讀；本文引用的其他來源列在頁尾。</p>
         <ol class="rg rg-src">
@@ -1508,7 +1508,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
 </main>
 </div>
 <script type="application/json" id="moved">{"to": "l08b.html", "ids": {"i9-1": "i1-1", "i9-2": "i1-2", "i9-3": "i1-3", "i9-4": "i2-1", "i9-5": "i3-1", "i9-6": "i4-1", "i10": "i4", "x3": "x2", "x4": "x1", "t5": "t5", "n-harness": "n-harness"}}</script>
-<script src="app.js?v=20261116b"></script>
+<script src="app.js?v=20261116c"></script>
 <script src="code.js"></script>
 </body>
 </html>
