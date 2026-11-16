@@ -26,7 +26,7 @@ for p in pages:
         if href.startswith("#"):
             if href[1:] not in ids:
                 problems.append(f"{p.name}: anchor {href} has no target")
-        elif re.fullmatch(r"(l\d\d[a-z]?(?:-readings)?|index)\.html(#[\w-]+)?", href):
+        elif re.fullmatch(r"(l\d\d[a-z]?(?:-[a-z]+)?|index)\.html(#[\w-]+)?", href):
             page, _, frag = href.partition("#")
             if not (SITE / page).exists():
                 problems.append(f"{p.name}: link to missing {href}")
