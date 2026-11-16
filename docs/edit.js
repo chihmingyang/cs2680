@@ -824,32 +824,34 @@
     bar = h('div', 'ed-bar ed-ui');
     var inner = h('div', 'ed-bar-inner gutter');
     inner.appendChild(tool('<b>B</b>', '粗體（黑色小標，⌘B）', function () { format('b'); }));
-    inner.appendChild(tool('<strong>重</strong>', '紅字重點', function () { format('strong'); }));
+    inner.appendChild(tool('<strong>重</strong>', '紅字重點（⌘⇧B）', function () { format('strong'); }));
     inner.appendChild(tool('<em>I</em>', '斜體（⌘I）', function () { format('em'); }));
-    inner.appendChild(tool('<u>U</u>', '底線', function () { format('u'); }));
-    inner.appendChild(tool('<code>&lt;/&gt;</code>', '行內 code', function () { format('code'); }));
-    inner.appendChild(tool('<mark>亮</mark>', '螢光標記', function () { format('mark'); }));
+    inner.appendChild(tool('<u>U</u>', '底線（⌘U）', function () { format('u'); }));
+    inner.appendChild(tool('<code>&lt;/&gt;</code>', '行內 code（⌘E）', function () { format('code'); }));
+    inner.appendChild(tool('<mark>亮</mark>', '螢光標記（⌘⇧H）', function () { format('mark'); }));
     inner.appendChild(h('span', 'ed-sep'));
-    inner.appendChild(tool('<i class="is-ink"></i>', '文字顏色：黑（只拿掉顏色；紅字重點變成黑色粗體；深色模式顯示成白色）', inkText, 'ed-swatch'));
+    inner.appendChild(tool('<i class="is-ink"></i>', '文字顏色：黑（只拿掉顏色；紅字重點變成黑色粗體；深色模式顯示成白色；⌘⇧K）', inkText, 'ed-swatch'));
     COLORS.forEach(function (c) {
       var b = tool('<i style="background:' + c.v + '"></i>', '文字顏色：' + c.name, function () { format('span', 'color: ' + c.v); }, 'ed-swatch');
       inner.appendChild(b);
     });
     inner.appendChild(h('span', 'ed-sep'));
-    inner.appendChild(tool('連結', '加或移除連結', setLink));
+    inner.appendChild(tool('連結', '加或移除連結（⌘K）', setLink));
     inner.appendChild(tool('貼圖', '選一張圖，放在目前這一段後面（也可以直接 ⌘V 貼上）', function () { pickImage(); }));
-    inner.appendChild(tool('清除', '清除選取文字的格式', clearFormat));
-    inner.appendChild(tool('留言', '對選取的文字留言', function () { openAsk(); }));
+    inner.appendChild(tool('清除', '清除選取文字的格式（⌘\\）', clearFormat));
+    inner.appendChild(tool('留言', '對選取的文字留言（⌘⌥M）', function () { openAsk(); }));
     statusEl = h('span', 'ed-status');
     inner.appendChild(statusEl);
     saveBtn = h('button', 'ed-save', '儲存');
     saveBtn.type = 'button';
+    saveBtn.title = '儲存（⌘S）';
     saveBtn.disabled = true;
     saveBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
     saveBtn.addEventListener('click', function () { askMessage(); });
     inner.appendChild(saveBtn);
     var done = h('button', 'ed-exit', '結束');
     done.type = 'button';
+    done.title = '結束編輯（Esc）';
     done.addEventListener('click', function () { setEditing(false); });
     inner.appendChild(done);
     bar.appendChild(inner);
@@ -1151,10 +1153,32 @@
   document.addEventListener('compositionend', function () {
     if (active) markDirty(active);
   });
+  /* Shortcuts, as in Confluence and Google Docs. Letters go by e.code, so a Chinese input
+     method or ⌥ (which turns M into µ) does not change them. The list is in WORKFLOW G. */
+  function typingIn(t) {
+    return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  }
   document.addEventListener('keydown', function (e) {
-    if (!editing) return;
+    if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
+    var mod = e.metaKey || e.ctrlKey;
+    var code = e.code || '';
+    /* E: edit this page (Confluence); outside a text field, no modifier */
+    if (!editing && code === 'KeyE' && !mod && !e.altKey && !e.shiftKey && !typingIn(e.target)) {
+      e.preventDefault(); setEditing(true); return;
+    }
+    /* ⌘⌥M: comment on the selected text (Google Docs), with or without edit mode */
+    if (mod && e.altKey && code === 'KeyM') { e.preventDefault(); openAsk(); return; }
+    if (e.key === 'Escape') {
+      /* one step back per press: panel, then the block being edited, then edit mode */
+      if (panel && !panel.hidden) { e.preventDefault(); closePanel(); return; }
+      if (editing && !active && !typingIn(e.target)) { e.preventDefault(); setEditing(false); return; }
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!editing || e.defaultPrevented) return;
     var mod = e.metaKey || e.ctrlKey;
     var k = (e.key || '').toLowerCase();
+    var code = e.code || '';
     if (mod && k === 's') { e.preventDefault(); askMessage(); return; }
     if (!active || e.isComposing || e.keyCode === 229) return;
     var rec = recs.get(active);
@@ -1164,9 +1188,15 @@
         if (e.shiftKey) restore(active, rec.redo, rec.undo);
         else restore(active, rec.undo, rec.redo);
       }
-    } else if (mod && k === 'b') { e.preventDefault(); format('b'); }
-    else if (mod && k === 'i') { e.preventDefault(); format('em'); }
-    else if (k === 'escape') { var was = active; deactivate(); was.blur(); }
+    } else if (mod && !e.altKey && code === 'KeyB') { e.preventDefault(); format(e.shiftKey ? 'strong' : 'b'); }
+    else if (mod && !e.altKey && !e.shiftKey && code === 'KeyI') { e.preventDefault(); format('em'); }
+    else if (mod && !e.altKey && !e.shiftKey && code === 'KeyU') { e.preventDefault(); format('u'); }
+    else if (mod && !e.altKey && !e.shiftKey && code === 'KeyE') { e.preventDefault(); format('code'); }
+    else if (mod && !e.altKey && e.shiftKey && code === 'KeyH') { e.preventDefault(); format('mark'); }
+    else if (mod && !e.altKey && e.shiftKey && code === 'KeyK') { e.preventDefault(); inkText(); }
+    else if (mod && !e.altKey && !e.shiftKey && code === 'KeyK') { e.preventDefault(); setLink(); }
+    else if (mod && !e.altKey && code === 'Backslash') { e.preventDefault(); clearFormat(); }
+    else if (k === 'escape') { e.preventDefault(); var was = active; deactivate(); was.blur(); }
     else if (k === 'enter') {
       e.preventDefault();
       if (e.shiftKey || !/^(P|LI)$/.test(active.tagName)) {
@@ -1716,14 +1746,14 @@
   var editBtn = h('button', 'theme-btn ed-ui ed-open');
   editBtn.type = 'button';
   editBtn.innerHTML = icon('M10.6 2.6l2.8 2.8L5.5 13.3l-3.5.7.7-3.5zM9.2 4l2.8 2.8');
-  editBtn.title = '編輯這一頁';
+  editBtn.title = '編輯這一頁（E；結束按 Esc）';
   editBtn.setAttribute('aria-label', '編輯這一頁');
   editBtn.setAttribute('aria-pressed', 'false');
   editBtn.addEventListener('click', function () { setEditing(!editing); });
   var askBtn = h('button', 'theme-btn ed-ui ed-open');
   askBtn.type = 'button';
   askBtn.innerHTML = icon('M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z');
-  askBtn.title = '留言';
+  askBtn.title = '留言（選字後 ⌘⌥M）';
   askBtn.setAttribute('aria-label', '留言');
   askBtn.addEventListener('click', function () {
     if (panel && !panel.hidden) closePanel();
@@ -1734,7 +1764,7 @@
   var fab = h('button', 'ed-fab ed-ui');
   fab.type = 'button';
   fab.innerHTML = icon('M10.6 2.6l2.8 2.8L5.5 13.3l-3.5.7.7-3.5zM9.2 4l2.8 2.8');
-  fab.title = '編輯這一頁';
+  fab.title = '編輯這一頁（E）';
   fab.setAttribute('aria-label', '編輯這一頁');
   fab.addEventListener('click', function () { setEditing(true); });
   document.body.appendChild(fab);

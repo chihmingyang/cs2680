@@ -8,6 +8,8 @@ Usage: python3 -I tools/test_editor.py [--shots DIR]
    against the source. Only the touched blocks may change.
 3. A block changed on GitHub meanwhile is reported, and not overwritten.
 4. A fresh browser: only the pencil, edit.js not loaded; the pencil opens edit mode; 收起編輯工具 undoes it.
+   4b. The E key opens edit mode, Esc leaves it; on a wide screen the toolbar sits over the article column.
+   2c. Formatting shortcuts (⌘⇧B, ⌘U, ⌘E) and Esc one step at a time.
 5. Comments: marks on the page, a new comment is an issue with the label comment, replies render escaped,
    replying drops answered, 解決 closes.
 """
@@ -173,6 +175,22 @@ def main():
         page.get_by_role("button", name="收起編輯工具").click()
         page.wait_for_selector(".ed-launch")
         check(page.locator(".ed-open").count() == 0, "收起編輯工具 goes back to the plain pencil")
+        ctx.close()
+
+        # --- 4b. E opens edit mode in a fresh browser too (app.js), and Esc closes it
+        ctx = browser.new_context(viewport={"width": 1280, "height": 900})
+        page = ctx.new_page()
+        page.goto(f"{base}/l03.html", wait_until="load")
+        page.keyboard.press("e")
+        page.wait_for_selector(".ed-bar:not([hidden])")
+        check(page.locator(".ed-launch").count() == 0, "E in a fresh browser loads the editor and opens edit mode")
+        check(page.locator(".ed-bar.is-aligned").count() == 1, "on a wide screen the toolbar sits over the article column")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(100)
+        check(page.locator(".ed-bar:not([hidden])").count() == 0, "Esc with no block open leaves edit mode")
+        page.keyboard.press("e")
+        page.wait_for_selector(".ed-bar:not([hidden])")
+        check(True, "E opens edit mode again once edit.js is loaded")
         ctx.close()
 
         ctx = browser.new_context(viewport={"width": 1280, "height": 900})
@@ -396,6 +414,25 @@ def main():
         page.locator('.ed-swatch[title^="文字顏色：藍"]').click()
         page.locator('.ed-swatch[title^="文字顏色：黑"]').click()
         check(page.locator('[data-ink="1"] span[style]').count() == 0, "黑 removes a colour span")
+
+        # --- 2c. formatting shortcuts: ⌘⇧B 紅字, ⌘U 底線, ⌘E code, Esc steps back
+        page.evaluate("""() => {
+          const p = [...document.querySelectorAll('main .idea .prose > p')].find(p => p.childNodes.length === 1 && p.textContent.length > 30 && p.getClientRects().length && !p.closest('details:not([open])'));
+          p.setAttribute('data-kb', '1'); p.scrollIntoView({ block: 'center' });
+        }""")
+        page.locator('[data-kb="1"]').click()
+        def select_kb(a, b):
+            page.evaluate(f"(() => {{ const t = document.querySelector('[data-kb]').firstChild; const r = document.createRange(); r.setStart(t, {a}); r.setEnd(t, {b}); getSelection().removeAllRanges(); getSelection().addRange(r); }})()")
+        select_kb(0, 4); page.keyboard.press("Control+Shift+B")
+        check(page.locator('[data-kb="1"] strong').count() == 1, "⌘⇧B makes the selection a red <strong>")
+        page.evaluate("(() => { const p = document.querySelector('[data-kb]'), t = p.lastChild; const r = document.createRange(); r.setStart(t, t.length - 4); r.setEnd(t, t.length); getSelection().removeAllRanges(); getSelection().addRange(r); })()")
+        page.keyboard.press("Control+U")
+        check(page.locator('[data-kb="1"] u').count() == 1, "⌘U underlines the selection")
+        page.evaluate("(() => { const p = document.querySelector('[data-kb]'), t = [...p.childNodes].find(n => n.nodeType === 3 && n.length > 10); const r = document.createRange(); r.setStart(t, 2); r.setEnd(t, 6); getSelection().removeAllRanges(); getSelection().addRange(r); })()")
+        page.keyboard.press("Control+E")
+        check(page.locator('[data-kb="1"] code').count() == 1, "⌘E makes the selection inline code")
+        page.keyboard.press("Escape")
+        check(page.locator(".ed-active").count() == 0 and page.locator(".ed-bar:not([hidden])").count() == 1, "the first Esc closes the block and keeps edit mode")
 
         # --- 5. comments (留言)
         # one comment Claude already answered, quoting a sentence that is on the page

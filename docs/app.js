@@ -940,11 +940,11 @@
     window.__cs2680edStart = start;
     var edCss = document.createElement('link');
     edCss.rel = 'stylesheet';
-    edCss.href = 'edit.css';
+    edCss.href = 'edit.css?v=20261116b';
     document.head.appendChild(edCss);
     function addJs() {
       var edJs = document.createElement('script');
-      edJs.src = 'edit.js';
+      edJs.src = 'edit.js?v=20261116b';
       document.body.appendChild(edJs);
     }
     /* wait for code.js: it runs right after this file and rewrites code blocks */
@@ -957,7 +957,7 @@
     var edLaunch = document.createElement('button');
     edLaunch.type = 'button';
     edLaunch.className = 'theme-btn ed-launch';
-    edLaunch.title = '編輯這一頁';
+    edLaunch.title = '編輯這一頁（E）';
     edLaunch.setAttribute('aria-label', '編輯這一頁');
     edLaunch.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10.6 2.6l2.8 2.8L5.5 13.3l-3.5.7.7-3.5zM9.2 4l2.8 2.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     edLaunch.addEventListener('click', function () {
@@ -966,5 +966,14 @@
       loadEditor('edit');
     });
     topbarInner.insertBefore(edLaunch, themeBtn);
+    /* E opens edit mode too (Confluence), outside a text field; edit.js takes the key over once loaded */
+    document.addEventListener('keydown', function (e) {
+      if (e.code !== 'KeyE' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.isComposing) return;
+      var t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (!edLaunch.isConnected || edLaunch.disabled) return;
+      e.preventDefault();
+      edLaunch.click();
+    });
   }
 })();
