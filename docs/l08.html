@@ -578,7 +578,7 @@
               </table></div>
 <p>完全沒停過才是 5 分鐘划算；<strong>只要停過一次，1 小時 TTL 就便宜三倍以上</strong>。第 2 章 TraceLab 那些重算的舊內容就是這樣來的。<strong>所以有人會停下來想的互動 session 用 1 小時</strong>。中間不等人的短任務用 5 分鐘，例如 subagent（你直接對話的 agent 派出去做一件子任務的另一個 agent），它落在表上沒有停頓的那一列；Uber 也是這樣設的。</p>
 <p>還有一個陷阱：TTL 從 request 開始時算，所以 <strong>agent 等一個跑超過 5 分鐘的測試，cache 一樣會過期</strong>。另一種做法是 keep-alive，在過期前送一個 request 續命。<strong>它也要錢，所以要先算省下的夠不夠付</strong>：Pi（一個開源的 coding agent harness，見 L8b〈<a href="l08b.html#i4">八個 harness</a>〉）只在預期省下 $0.05 以上才送。</p>
-<p id="i3-5"><b>hit rate。</b><strong>不要只看設定開了沒有，要看實際的數字</strong>。每個 API 回應的 <code>usage</code> 都分開列出 cache read 和 cache write 的 token 數，cache read 佔 input 總量的比例就是 hit rate。</p>
+<p id="i3-5"><b>hit rate: </b><strong>不要只看設定開了沒有，要看實際的數字</strong>。每個 API 回應的 <code>usage</code> 都分開列出 cache read 和 cache write 的 token 數，cache read 佔 input 總量的比例就是 hit rate。</p>
 <p id="i3-6"><b>batch job : </b>Batch 把 request 排隊處理，input 和 output 都打 5 折，多數在 1 小時內跑完，最長要等 24 小時。它適合批次跑評估題（eval）、回頭補算舊資料這類離線工作，正在和使用者互動的 agent 用不上。<b>Batch 的折扣可以和 cache 疊</b>，但同一批 request 什麼時候跑由 provider 決定，同時跑的讀不到彼此還沒寫好的 cache，所以 hit rate 不穩。<strong>一批常常跑超過 5 分鐘，所以共用同一段開頭的 batch 要搭配 1 小時 TTL</strong>。</p>
 <figure class="diagram">
               <div class="scroll">
