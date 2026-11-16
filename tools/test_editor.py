@@ -225,7 +225,7 @@ def main():
         # format a selection: red colour on the last word typed
         for _ in range(9):
             page.keyboard.press("Shift+ArrowLeft")
-        page.locator(".ed-swatch").nth(3).click()
+        page.locator('.ed-swatch[title^="文字顏色：藍"]').click()
         html_after = para.inner_html()
         check("color: var(--signal)" in html_after and "TYPEDTEXT" in html_after, "colour wraps the selection in a span with a theme token")
         # bold on the same selection
@@ -370,6 +370,32 @@ def main():
         p_after = page.evaluate("window.__p.getBoundingClientRect().top")
         check(abs(p_after - p_top) < 3, f"reading position holds when the toolbar opens ({p_top:.0f}→{p_after:.0f})")
         page.locator(".ed-exit").first.click()
+
+        # --- 2b. 黑: only the selected part of a red <strong> loses its colour and keeps its weight
+        page.goto("about:blank")
+        page.goto(f"{base}/l03.html?edit=now", wait_until="load")
+        page.wait_for_selector(".ed-bar")
+        info = page.evaluate("""() => {
+          const s = [...document.querySelectorAll('main .idea .prose > p strong')].find(s => s.childNodes.length === 1 && s.textContent.length >= 12);
+          s.closest('p').setAttribute('data-ink', '1');
+          s.setAttribute('data-ink-s', '1');
+          s.scrollIntoView({ block: 'center' });
+          return s.textContent;
+        }""")
+        page.locator('[data-ink="1"]').click()
+        page.evaluate("""() => {
+          const s = document.querySelector('[data-ink-s]'), t = s.firstChild;
+          const r = document.createRange(); r.setStart(t, 3); r.setEnd(t, 8);
+          getSelection().removeAllRanges(); getSelection().addRange(r);
+        }""")
+        page.locator('.ed-swatch[title^="文字顏色：黑"]').click()
+        got = page.evaluate("""() => { const p = document.querySelector('[data-ink="1"]');
+          return { b: [...p.querySelectorAll('b')].map(b => b.textContent), strong: [...p.querySelectorAll('strong')].map(s => s.textContent), text: p.textContent }; }""")
+        check(info[3:8] in got["b"] and info[:3] in got["strong"] and info[8:] in got["strong"] and info in got["text"].replace("\n", ""),
+              f"黑 turns only the selected part of a red <strong> into a black <b> ({got['b']} / {got['strong']})")
+        page.locator('.ed-swatch[title^="文字顏色：藍"]').click()
+        page.locator('.ed-swatch[title^="文字顏色：黑"]').click()
+        check(page.locator('[data-ink="1"] span[style]').count() == 0, "黑 removes a colour span")
 
         # --- 5. comments (留言)
         # one comment Claude already answered, quoting a sentence that is on the page

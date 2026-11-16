@@ -95,6 +95,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-16（編輯工具列加**黑**（James：「文字要有黑色選項」）：只拿掉選取部分的顏色，紅字 `strong` 變黑色粗體 `b`；觸控鍵盤打開時用 `visualViewport` 把頂端列（含工具列）移回畫面頂端（James：「編輯 bar 要能固定在最上面」；桌面 Chrome 本來就固定）。`test_editor.py` 加 2b 段。）
 - 2026-11-16（**編輯模式從頁面直接開**（James：「UI 上要可以直接操作編輯模式，不是給我一個連結」）：每一頁頂端都有鉛筆，按下去才載入 `edit.js` 並直接進編輯模式，之後這個瀏覽器保留編輯與留言的按鈕；設定面板加「收起編輯工具」。`app.js?v=20261116a`（含 `dag.py`、`new_lecture.py` 的範本）；`test_editor.py` 第 4 段改測這個流程。）
 - 2026-11-16（**留言取代「問 Claude」**（James：「要有編輯模式像編輯 Confluence page…要有方式可以直接在文檔發問或 comment，下一次 session 開 skill 掃描回答」）：頁面選字按「留言」開 label `comment` 的 issue，不再馬上跑 Action；被留言的原文標底色、右邊圓鈕（黃＝等 Claude、藍＝回答了），面板可回覆、解決。新增 `tools/comments.py`（list／reply）、`answer-comments` skill，label `comment`、`answered`；`test_editor.py` 第 5 段改測留言，要編輯的章改成自動挑（L3 改寫後 `#i1` 沒有清單，測試壞掉）。G 改寫，CLAUDE.md 開工多跑 `comments.py list`。）
 - 2026-11-16（**改稿當 review comment**（James：「我直接改文檔送 commit，當 code review 做，你根據我的改動去思考如何優化流程」）：G 加一節；新增 `tools/edit_digest.py`（list／show／mark：讀者看得到的 before／after 字級 diff）、`.claude/skills/learn-from-edit/`、`guide/edit_log.tsv`；CLAUDE.md 開工多跑 `edit_digest.py list`。本機或 GitHub 網頁上改，commit 訊息用「改稿：」開頭。）

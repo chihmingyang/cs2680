@@ -420,6 +420,71 @@
     markDirty(el);
     say('');
   }
+  /* 黑: take the colour off and leave the weight alone. A colour span is unwrapped; a red
+     <strong> becomes a black bold <b> (the site's two bolds, styles.css). Only the selected
+     part changes: a format around the selection is split at the selection's edges first. */
+  var COLORED = 'strong,span[style*="color"]';
+  function toInk(n) {
+    if (n.tagName === 'STRONG') {
+      var b = document.createElement('b');
+      while (n.firstChild) b.appendChild(n.firstChild);
+      n.parentNode.replaceChild(b, n);
+    } else {
+      unwrap(n);
+    }
+  }
+  function splitAround(up, r) {
+    var pre = document.createRange();
+    pre.setStart(up, 0);
+    pre.setEnd(r.startContainer, r.startOffset);
+    var post = document.createRange();
+    post.setStart(r.endContainer, r.endOffset);
+    post.setEnd(up, up.childNodes.length);
+    var a = pre.extractContents();
+    var z = post.extractContents();
+    if (a.textContent) { var c = up.cloneNode(false); c.appendChild(a); up.parentNode.insertBefore(c, up); }
+    if (z.textContent) { var d = up.cloneNode(false); d.appendChild(z); up.parentNode.insertBefore(d, up.nextSibling); }
+  }
+  function inkText() {
+    var r = selectionInActive();
+    if (!r) { say('先選取要改成黑色的文字', 'warn'); return; }
+    var el = active;
+    snapshot(el);
+    var ups = [];
+    var up = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement;
+    while (up && up !== el) {
+      if (up.matches(COLORED)) ups.push(up);
+      up = up.parentElement;
+    }
+    /* outermost first, so each split works on whole nodes */
+    ups.reverse().forEach(function (u) {
+      var cur = getSelection().getRangeAt(0);
+      splitAround(u, cur);
+      var keep = document.createRange();
+      keep.selectNodeContents(u);
+      var sel = getSelection();
+      sel.removeAllRanges();
+      sel.addRange(keep);
+      toInk(u);
+    });
+    var rr = getSelection().getRangeAt(0);
+    var frag = rr.extractContents();
+    Array.prototype.slice.call(frag.querySelectorAll(COLORED)).reverse().forEach(toInk);
+    var first = frag.firstChild;
+    var last = frag.lastChild;
+    rr.insertNode(frag);
+    el.normalize();
+    if (first && last && first.parentNode && last.parentNode) {
+      var again = document.createRange();
+      again.setStartBefore(first);
+      again.setEndAfter(last);
+      var sel2 = getSelection();
+      sel2.removeAllRanges();
+      sel2.addRange(again);
+    }
+    markDirty(el);
+    say('');
+  }
   function setLink() {
     var r = selectionInActive();
     if (!r) { say('先選取要加連結的文字', 'warn'); return; }
@@ -765,6 +830,7 @@
     inner.appendChild(tool('<code>&lt;/&gt;</code>', '行內 code', function () { format('code'); }));
     inner.appendChild(tool('<mark>亮</mark>', '螢光標記', function () { format('mark'); }));
     inner.appendChild(h('span', 'ed-sep'));
+    inner.appendChild(tool('<i class="is-ink"></i>', '文字顏色：黑（只拿掉顏色；紅字重點變成黑色粗體；深色模式顯示成白色）', inkText, 'ed-swatch'));
     COLORS.forEach(function (c) {
       var b = tool('<i style="background:' + c.v + '"></i>', '文字顏色：' + c.name, function () { format('span', 'color: ' + c.v); }, 'ed-swatch');
       inner.appendChild(b);
@@ -789,6 +855,19 @@
     bar.appendChild(inner);
     topbar.appendChild(bar);
   }
+  /* Keep the bar in sight when a touch keyboard is open. iOS and iPadOS pan the visual
+     viewport inside the layout viewport, and a sticky bar sits at the layout viewport's top,
+     which is then above the screen. Shift the top bar down by the pan while editing. */
+  var vv = window.visualViewport;
+  function pinBar() {
+    if (!topbar) return;
+    var off = vv && editing ? Math.max(0, Math.round(vv.offsetTop)) : 0;
+    topbar.style.transform = off ? 'translateY(' + off + 'px)' : '';
+  }
+  if (vv) {
+    vv.addEventListener('resize', pinBar);
+    vv.addEventListener('scroll', pinBar);
+  }
   function setEditing(on) {
     if (!on && main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，要結束編輯嗎？（修改會留在頁面上，重新整理就消失）')) return;
     editing = on;
@@ -811,6 +890,7 @@
       if (bar) bar.hidden = true;
     }
     editBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    pinBar();
     fab.classList.remove('is-shown');
     window.dispatchEvent(new Event('resize')); /* app.js re-measures the top bar */
     if (refEl) {
