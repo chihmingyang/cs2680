@@ -658,7 +658,7 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
               </div>
               <figcaption>Batch 變大，每個 output token 要讀的 byte 少多少？每個 request 的 context 都是 8K token。青色的權重攤給越多 request，就越短；深紅的 KV cache 每個 request 各一份，三根一樣長。Batch 52 是 GPU 記憶體放得下的最多 request（下一段算），這時 KV cache 已經佔一半。本文用 L9 的規格推算，長條照比例畫。</figcaption>
             </figure>
-<p data-num-own><b>Batch 的上限是記憶體，不是算力。</b>上面兩個上限差約兩百倍，意思是權重讀一次，要給約兩百個 token 用，算力才會用滿；這個比例在 roofline model 裡叫 ridge point（<a href="l10.html#i3">L10〈Decode〉</a>）。Decode 每一輪每個 request 只出一個 token，所以 batch 要約兩百個 request。但 batch 越大，KV cache 越多。上面的算式顯示，這兩張 GPU 扣掉權重，<a href="l09.html#i4-3">只放得下約 43 萬個 token 的 KV cache</a>；每個 request 的 context 是 8K 時，最多放 52 個，只有所需的四分之一左右。</p>
+<p data-num-own><b><span style="color: var(--key)">Batch 的上限是記憶體，不是算力</span>。</b><span style="color: var(--key)">上面兩個上限差約兩百</span>倍，意思是權重讀一次，要給約兩百個 token 用，算力才會用滿；這個比例在 roofline model 裡叫 ridge point（<a href="l10.html#i3">L10〈Decode〉</a>）。Decode 每一輪每個 request 只出一個 token，所以 batch 要約兩百個 request。但 batch 越大，KV cache 越多。上面的算式顯示，這兩張 GPU 扣掉權重，<a href="l09.html#i4-3">只放得下約 43 萬個 token 的 KV cache</a>；每個 request 的 context 是 8K 時，最多放 52 個，只有所需的四分之一左右。</p>
 <p data-num-own>放滿時，每一輪要讀的權重加 KV cache，差不多就是整塊 GPU 記憶體，所以一輪約 29 毫秒（上面的算式），和 context 長短無關。一輪替 batch 裡每個 request 各出一個 token，所以每秒產生的 token 數，看放得下幾個 request。Context 越長，同一筆記憶體放得下的 request 越少，decode 每秒產生的 token 就越少：</p>
 <figure class="diagram">
               <div class="scroll">
@@ -694,7 +694,7 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
               </div>
               <figcaption>同一段 context 長度，prefill 和 decode 每秒各處理幾個 token？Decode 的 batch 已經放到記憶體的上限，還是差 4 到 46 倍；context 越長，放得下的 request 越少，差得越多。Prefill 也隨 context 變慢，因為 attention 的運算量隨長度成長。本文用 L9 的規格推算，是理論上限，長條照比例畫。</figcaption>
             </figure>
-<p data-num-own>所以 batching 有用，但收不平。Context 短時（上圖的 4K、8K），它把和 prefill 的差距從兩百倍縮到幾倍；context 越長，差距又拉開。收不平的原因是 KV cache 攤不掉，而且它先用完記憶體，算力還沒用滿。API 的單價不隨 context 長度變（Claude 整個 1M context 同價，見<a class="tm" href="#t2">單價註</a>），本文的解讀是：output 約 5 倍是平均後的定價，不是每一種長度的成本。它和短 context 的差距同一量級；長 context 的 decode 實際上更貴，provider 用平均價把它攤掉。</p>
+<p data-num-own>所以 batching 有用，但幫助有限。Context 短時（上圖的 4K、8K），它把和 prefill 的差距從兩百倍縮到幾倍；context 越長，差距又拉開。收不平的原因是 KV cache 攤不掉，而且它先用完記憶體，算力還沒用滿。API 的單價不隨 context 長度變（Claude 整個 1M context 同價，見<a class="tm" href="#t2">單價註</a>），本文的解讀是：output 約 5 倍是平均後的定價，不是每一種長度的成本。它和短 context 的差距同一量級；長 context 的 decode 實際上更貴，provider 用平均價把它攤掉。</p>
 <p>同一筆帳也解釋了價目表上的另外三個價格。三個都是本文的解讀，provider 沒有公開成本：</p>
 <ul>
                 <li><b>Cache read 最便宜。</b>Prefix 的 KV cache 已經算好，連 prefill 的運算都省了。Provider 付的是把 KV cache 存著、再搬回 GPU 的成本。</li>
