@@ -4,6 +4,7 @@
 這個檔案設了 `merge=union`（`.gitattributes`）：兩個 session 同時加一行，git 兩行都留，不會衝突。
 
 ## README.md
+- 2026-11-16（L8 第 1 章〈本文的判斷〉改寫（James：「有點難理解」）：一段拆成三段：先講 c ÷ p 的假設（失敗就重跑，總會成功）只對做得到的題成立；再講兩個 c ÷ p 買到不同的成功；最後用 100 個任務的例子算出多成功一次 $1.19，再給公式，名詞用業界的 marginal cost。事件記在 review_cases/l08-i1-marginal.md。）
 - 2026-11-16（**L8 拆成 L8〈Cost & Latency〉與 L8b〈Harness Architecture〉**（James：「可以拆分」）：新頁 `docs/l08b.html` 4 章（三種邊界、拆邊界的理由、三個問題、八個 harness 的目錄），新寫導讀、lede、動手試試、原文出處；L8 剩 9 章，目錄章從第 10 章變第 9 章，`#moved` 把 `#i9-N`、`#i10`、`#x3`、`#x4`、`#t5`、`#n-harness` 轉到 L8b。首頁課程地圖、L6b、`l08-exec.html`、`dag.json` 跟著改。L8b 整堂重審兩輪（導讀 3 + 1、各章 31 + 7 BLOCK，fix 30、strict 15），紀錄在 review_reports/l08b-20261116/。做法記在 WORKFLOW K、取捨在 V7_DECISIONS 的 L8。）
 - 2026-11-16（L8 閱讀連貫性檢查（James：「針對 L8 標題跟內容做閱讀連貫性檢查」）：第 3 章標題改成〈Prefix cache 與單價〉涵蓋後半的 batch 與〈單價從哪裡來〉，開頭段不再說「只帶過」；第 9 章標題補「共用」、開頭段承認換了問題並定義邊界；第 10 章標題補 speculation；第 2 章 output 為什麼貴的機制整段留給 3-7（prefill／decode 改在 3-7 定義）；修掉懸空的章號與數字（縮小 context 的出處、output 的 22%、duration_ms 從哪裡拿）；側欄三個舊小節名；動手試試的日期與 cost.py 的價格、名稱對齊正文（cache write 1.25×）。兩輪可讀性審查只審改過的單位（10 + 6 BLOCK，全修），紀錄在 review_reports/l08-20261116-coherence/；這些章在 review_log 仍是「改過」，等其餘各章精簡時整章重審。第 9、10 章和前八章的接縫（成本 → 架構）留給還沒做的 L8b 拆分。）
 - 2026-11-16（L8 第 1 章〈還要除以成功率〉改寫（James：「這些公式應該不難，但你講的很繞」）：刪掉 Uber 的數字句；「公式少了分母」＋c／p／retry tax 三項清單，改成先給一個例子（每次 $1、成功率 25% → 每個成功任務 $4）再給 c ÷ p；定義 run＝一個 session＝一個任務；「每次嘗試」統一成「每次 run」，表頭改成 Cost / run c、Cost / 成功 c ÷ p（James：「c 是什麼 cost 嗎？為什麼要讓讀者猜？」）。兩輪可讀性審查，紀錄在 review_reports/l08-20261116-i1/；第 1 章其餘舊 BLOCK 留到精簡時處理。）
