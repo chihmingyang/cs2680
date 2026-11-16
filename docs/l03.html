@@ -1754,7 +1754,7 @@ FAIL src/api/client.test.ts
 <p id="i9-1"><b>先看帳單，再決定壓哪邊。</b>Caveman 的 README 說回答短 65%，聽起來很多。但 output 在 agent 的花費裡佔多少？</p>
 <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 172" role="img" aria-label="一條照比例畫的橫條，代表花費。Cache read 佔 83%，fresh input 佔 8%，output 佔 8%。Proxy 管得到前兩段，合計 92%；skill 只管得到 output，8%。">
+                <svg viewBox="0 0 720 172" role="img" aria-label="一條照比例畫的橫條，代表花費。Cache read 約 83%，cache write 約 8%，output 約 8%。Proxy 管得到前兩段，合計約 92%；skill 只管得到 output，約 8%。圖下方寫著：token 數 cache read : cache write : output ＝ 100 : 1 : 0.2，單價 ＝ 1 : 10 : 50。">
                   <defs><marker id="l3v-bill-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l3v-bill-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
                   <rect x="8" y="58" width="586.7" height="44" class="dg-n-c"/>
                   <rect x="594.7" y="58" width="58.7" height="44" class="dg-n-b"/>
@@ -1762,23 +1762,23 @@ FAIL src/api/client.test.ts
                   <text x="301" y="86" text-anchor="middle" class="dg-ls">cache read 83%</text>
                   <text x="624" y="86" text-anchor="middle" class="dg-ls">8%</text>
                   <text x="683" y="86" text-anchor="middle" class="dg-ls">8%</text>
-                  <text x="624" y="120" text-anchor="middle" class="dg-c">fresh input</text>
+                  <text x="624" y="120" text-anchor="middle" class="dg-c">cache write</text>
                   <text x="683" y="120" text-anchor="middle" class="dg-c">output</text>
                   <path d="M8,34 L8,46 L653,46 L653,34" class="dg-link-key"/>
                   <text x="327" y="26" text-anchor="middle" class="dg-k">proxy 管得到：92%</text>
                   <path d="M655,34 L655,46 L712,46 L712,34" class="dg-link"/>
                   <text x="683" y="26" text-anchor="middle" class="dg-cb">skill：8%</text>
-                  <text x="8" y="160" class="dg-c">依 L8 的比例：token 量 cache read 97.6%，單價 cache read : input : output ＝ 1 : 10 : 50</text>
+                  <text x="8" y="160" class="dg-c">token 數 cache read : cache write : output ＝ 100 : 1 : 0.2，單價 ＝ 1 : 10 : 50</text>
                 </svg>
               </div>
-              <figcaption>花費的大宗在哪裡？照比例畫，依全班 Assignment 1 的 Claude Code 資料與典型單價（L8）算。Cache read 是每一圈重送、開頭和上一圈相同而直接讀快取的部分，fresh input 是新內容。你的數字請自己算一次，算法在下表。</figcaption>
+              <figcaption>花費的大宗在哪裡？照比例畫：每一段的 token 數乘上它的單價（圖下方那一行）。Token 數的比例來自每一圈重送整個 context：context 有 200K token、這一圈新進來 2K、model 回覆 0.4K，就是 100 : 1 : 0.2（推法見 <a href="l08.html#i2-2">L8〈三種 token〉</a>）。Cache read 是開頭和上一圈相同、直接讀 cache 的部分，cache write 是新進來的內容。你的數字請自己算一次。</figcaption>
             </figure>
 <div class="table-wrap"><table>
 <thead><tr><th>做法</th><th>動到哪一段</th><th>那段佔花費</th><th>那段省多少</th><th>總花費少多少</th></tr></thead>
 <tbody>
 <tr><td>Skill，README 的數字</td><td>Output</td><td>8.3%</td><td>65%</td><td>5.4%</td></tr>
 <tr><td><a href="https://blog.jetbrains.com/ai/2026/07/speak-to-ai-agents-like-cavemen-tosave-tokens/" target="_blank" rel="noopener">Skill，JetBrains 的 agent 實測</a></td><td>Output</td><td>8.3%</td><td>8.5%</td><td><b>0.7%</b></td></tr>
-<tr><td><a href="https://github.com/JuliusBrussee/caveman/blob/main/docs/WRAP-BENCHMARK.md" target="_blank" rel="noopener">Proxy，Caveman 自己的 benchmark</a></td><td>Input 與 cache read</td><td>91.7%</td><td>33.2%</td><td><b>30.4%</b></td></tr>
+<tr><td><a href="https://github.com/JuliusBrussee/caveman/blob/main/docs/WRAP-BENCHMARK.md" target="_blank" rel="noopener">Proxy，Caveman 自己的 benchmark</a></td><td>Cache read 與 cache write</td><td>91.7%</td><td>33.2%</td><td><b>30.4%</b></td></tr>
 </tbody>
 </table></div>
 <p>總花費少多少 ＝ 那段佔花費 × 那段省多少。所以<strong>回答寫短對帳單幾乎沒影響，要省錢先壓輸入</strong>。這個結論換了單價、打了折都還成立，三個檢查：</p>
