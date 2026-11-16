@@ -429,7 +429,7 @@
           <div class="idea" id="i3">
             <h3><span class="idea-no">3</span>Prefix cache</h3>
             <div class="prose">
-<p>第 2 章說重讀是大宗。重讀付得起，靠的是第 2 章那個 prefix cache；它一失效，帳單就變成另一個數字。這一章先把它的帳算完：它怎麼比對開頭、cache hit 的比例掉幾個百分點差多少、什麼會打斷它、cache 該留多久、怎麼看自己的數字。最後換到價目表本身：能等的工作排隊處理可以打折，以及每一種 token 的單價從哪裡來。</p>
+<p>第 2 章說重讀是大宗。重讀付得起，靠的是第 2 章那個 prefix cache；它一失效，帳單就變成另一個數字。這一章先把它的帳算完：它怎麼比對開頭、幾個百分點的 cache miss 佔多少錢、什麼會打斷它、cache 該留多久、怎麼看自己的數字。最後換到價目表本身：能等的工作排隊處理可以打折，以及每一種 token 的單價從哪裡來。</p>
 <p id="i3-1"><b>只比開頭，差一個字就從那裡開始重算。</b>Model 讀 context 時，每個 token 都會算出一組中間結果，這些結果只和它前面的 token 有關。所以 provider 留下來的結果只能從頭對起：下一次 request 從第一個 token 開始比對，相同的那一段直接重用，第一個不同的地方之後全部重算。Claude API 把 context 依 tools（tool 定義）→ system（system prompt）→ messages（對話歷史）的順序排，<strong>所以越前面的東西改了，要重算的越多</strong>。</p>
 <figure class="diagram">
               <div class="scroll">
@@ -474,28 +474,28 @@
               </div>
               <figcaption>差一個字會怎樣？Cache 從第一個 token 往後比對，第一個不同的地方之後全部重算。青色是 cache hit，黃色是新內容，深紅是那個時間戳，粉色是它後面本來可以 cache hit 卻要重算的部分。</figcaption>
             </figure>
-<p id="i3-2"><b>Hit rate: </b>cache miss 的 token 比 cache hit 的貴幾十倍，所以 hit rate（input token 裡 cache hit 的比例）差幾個百分點，就會反映在帳單上。先定義四項，兩個倍率都以 base input 為 1×，也就是沒有任何折扣的一般 input 單價：</p>
-<ul>
-                <li><b>C。</b>這一步的 context 有多少 token。</li>
-                <li><b>h。</b>hit rate。e</li>
-                <li><b>r。</b>Cache read 的倍率，常見的是 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
-                <li><b>w。</b>Cache write 的倍率，5 分鐘的 cache 是 1.25×。</li>
-              </ul>
-<figure class="file"><figcaption>每一步 input 的花費（單位：base input token）</figcaption><pre><code class="lang-text">每一步 input 的花費 = C × (h × r + (1 − h) × w)</code></pre></figure>
-<p>下表把每一步 input 的花費，寫成全部 cache hit 時的幾倍：</p>
-<div class="table-wrap"><table>
-                <thead><tr><th>Hit rate h</th><th>input 花費 (r = 0.1× )</th><th>input 花費 (r = 0.05× )</th></tr></thead>
-                <tbody>
-                  <tr><td>100%</td><td>1 倍</td><td>1 倍</td></tr>
-                  <tr><td>99%</td><td>1.12 倍</td><td>1.24 倍</td></tr>
-                  <tr><td><b>95%</b></td><td><b>1.58 倍</b></td><td><b>2.20 倍</b></td></tr>
-                  <tr><td>90%</td><td>2.2 倍</td><td>3.4 倍</td></tr>
-                  <tr><td>80%</td><td>3.3 倍</td><td>5.8 倍</td></tr>
-                  <tr><td>50%</td><td>6.8 倍</td><td>13 倍</td></tr>
-                  <tr><td>0%</td><td>12.5 倍</td><td>25 倍</td></tr>
-                </tbody>
-              </table></div>
-<p><strong>Hit rate 從 99% 掉到 95%，input 的花費多四成</strong>（上表 r = 0.1× 那一欄）。Cache read 收得越便宜，同樣掉幾個百分點，多花的比例越大：右邊那一欄多了七成多。Cache write 還要加價，所以<strong>每次都 cache miss，比不開 cache 還貴 25%</strong>。<strong>Claude Code 團隊因此對 hit rate 設告警，太低就當事故處理</strong>（<a href="https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything" target="_blank" rel="noopener">他們的文章</a>）。</p>
+<p id="i3-2"><b>Hit rate: </b>每一步送進去的 context 裡，cache hit 的 token 佔多少比例，叫 hit rate。第 2 章〈<a href="#i2-3">Cache 會過期</a>〉算過：同一個 token，cache miss 時付的錢是 cache hit 時的 12.5 倍。所以 cache miss 的 token 就算很少，也會佔掉一大塊錢：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 142" role="img" aria-label="兩根水平長條，上下對照，hit rate 是 95%。上面一根是 context 的 token 量：cache hit 佔 95%，cache miss 佔 5%，只有尾端窄窄一段。下面一根是讀這段 context 花的錢，不含 output：cache hit 佔 60%，cache miss 佔 40%。兩條虛線把上面那一小段 5% 連到下面那一大段 40%。">
+                  <text x="14" y="49" class="dg-cb">Context 的 token 量</text>
+                  <rect x="170" y="32" width="456" height="26" class="dg-n-a"/>
+                  <text x="398" y="50" text-anchor="middle" class="dg-ls">cache hit 95%</text>
+                  <rect x="626" y="32" width="24" height="26" class="dg-n-d"/>
+                  <text x="650" y="22" text-anchor="end" class="dg-cb">cache miss 5%</text>
+                  <path d="M626,58 L458,98" class="dg-soft-link dg-dash"/>
+                  <path d="M650,58 L650,98" class="dg-soft-link dg-dash"/>
+                  <text x="14" y="115" class="dg-cb">讀 context 的錢</text>
+                  <rect x="170" y="98" width="288" height="26" class="dg-n-a"/>
+                  <text x="314" y="116" text-anchor="middle" class="dg-ls">cache hit 60%</text>
+                  <rect x="458" y="98" width="192" height="26" class="dg-n-d"/>
+                  <text x="554" y="116" text-anchor="middle" class="dg-ls">cache miss 40%</text>
+                </svg>
+              </div>
+              <figcaption>Hit rate 95% 時，那 5% 的 cache miss 花了多少錢？5% 的 token 付了四成的錢，因為 cache miss 的單價是 cache hit 的 12.5 倍。這裡只算讀 context 的錢，output 另外算；長條照比例畫。</figcaption>
+            </figure>
+<p>看上圖：<strong>hit rate 95% 聽起來很高，但 cache miss 的那 5% 付了四成的錢</strong>。Cache read 收得越低的 model，同樣的 5% 佔的比例越高。</p>
+<p>Cache miss 收的比原價還高。Claude API 的 prefix cache 可以不開；不開時，每個送進去的 token 照原價收，這個原價叫 base input。開了之後，cache miss 的 token 要寫進 cache，收 base input 的 1.25×。所以<strong>每次都 cache miss，比不開 cache 還貴 25%</strong>。<strong>Claude Code 團隊因此對 hit rate 設告警，太低就當事故處理</strong>（<a href="https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything" target="_blank" rel="noopener">他們的文章</a>）。</p>
 <p>實測也看得到這筆差距。<a href="https://arxiv.org/abs/2601.06007v1" target="_blank" rel="noopener">Don't Break the Cache</a>（2026-01）在同一組任務上故意破壞 cache 當對照組：開著 cache 的那一邊，成本低 28% 到 81%，依 model 而定；第一個 token 的等待時間（TTFT）則從進步 31% 到退步 9% 都有。<strong>省錢比較有把握，變快要自己量</strong>。</p>
 <p id="i3-3"><b>什麼會打斷它。</b>從上面的機制可以直接推出來。要 cache hit，三件事都要成立：算的是同一個 model、開頭一字不差、上次留下的結果還沒過期。所以打斷它的動作也只有三類：</p>
 <ul>
@@ -563,7 +563,7 @@
               </div>
               <figcaption>使用者離開 26 分鐘會怎樣？5 分鐘的 cache 早就過期，回來第一個 request 要把整個 context 重算一次、再寫進 cache。1 小時的 cache 第一次 cache write 較貴，回來時仍然讀得到，照 cache read 收。</figcaption>
             </figure>
-<p>哪一種划算，算得出來。定義 C 是停頓時的 context，G 是這一小時內新增的 token，k 是超過 5 分鐘、少於 1 小時的停頓次數，每次停頓後 5 分鐘 TTL 要重寫整個 context，1 小時 TTL 只要讀一次。平常每一步 cache read 的錢兩邊相同，下面略去，只比不同的部分：</p>
+<p>哪一種划算，算得出來。定義 C 是停頓時的 context，G 是這一小時內新增的 token，k 是超過 5 分鐘、少於 1 小時的停頓次數，r 是 cache read 相對於 base input 的倍率（這裡用 0.1）。每次停頓後 5 分鐘 TTL 要重寫整個 context，1 小時 TTL 只要讀一次。平常每一步 cache read 的錢兩邊相同，下面略去，只比不同的部分：</p>
 <figure class="file"><figcaption>一小時內的 cache 花費（單位：base input token）</figcaption><pre><code class="lang-text">5 分鐘 TTL = 1.25 × G + k × 1.25 × C
 1 小時 TTL = 2 × G    + k × r × C</code></pre></figure>
 <p>代入 C = 200K、G = 30K、r = 0.1：</p>
@@ -607,7 +607,7 @@
                   <text x="658" y="212" class="dg-mn">5×</text>
                 </svg>
               </div>
-              <figcaption>同一個 token 可以差多少錢？以 base input 為 1×，最貴和最便宜差 100 倍，長條照比例畫。這是上面算式用的倍率；較新的 model cache read 更低，見下面的單價註。</figcaption>
+              <figcaption>各種 token 的單價差多少？以 base input 為 1×，最便宜的 batch 加 cache read 和最貴的 output 差 100 倍，長條照比例畫。這一章算帳用的就是這組倍率；較新的 model cache read 更低，見下面的單價註。</figcaption>
             </figure>
 <details class="gloss" id="t2">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">單價（2026-11-03 查官方定價）</span></summary>
