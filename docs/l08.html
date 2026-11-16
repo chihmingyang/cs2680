@@ -207,7 +207,7 @@
 <p>同一個 c，成功率越低，要付的倍數越大：p 是 50% 付 2 倍，25% 付 4 倍。成功與否由測試判定，或由另一個 model 打分（這個打分的角色叫 grader），怎麼量是 L7 的主題。</p>
 <p>Arize 和 Fireworks <a href="https://arize.com/blog/cost-per-successful-task-ai-model-benchmark.md" target="_blank" rel="noopener">2026 年 7 月實際量過</a>：Terminal-Bench 的 40 題、10 個 model，每個組合跑 6 次，共 2,400 次 run。下面取四列：</p>
 <div class="table-wrap"><table>
-                <thead><tr><th>Model</th><th>成功率 p</th><th>Cost / run<br>c</th><th>Cost / 成功<br>c ÷ p</th><th>穩定解出<br>（6 次過 4 次）</th></tr></thead>
+                <thead><tr><th>Model</th><th>task 成功率 (p)</th><th>Cost(c) </th><th>Cost / 成功率<br>c ÷ p</th><th>穩定解出<br>（6 次過 4 次）</th></tr></thead>
                 <tbody>
                   <tr><td>gpt-oss-120b</td><td>33%</td><td>$0.018</td><td>$0.054</td><td>8 / 40</td></tr>
                   <tr><td>GPT-5.5</td><td>67%</td><td>$0.424</td><td>$0.636</td><td>25 / 40</td></tr>
@@ -215,7 +215,7 @@
                   <tr><td>gemini-3.5-flash</td><td>23%</td><td>$0.288</td><td><b>$1.233</b></td><td>文章未列</td></tr>
                 </tbody>
               </table></div>
-<p>gemini-3.5-flash 每次 run 比 GPT-5.5 便宜約三成，<strong>每個成功任務卻是 GPT-5.5 的約 1.9 倍</strong>，<strong>只看每次花費會選錯</strong>。這份實驗由 Arize 和賣 model 託管服務的 Fireworks 自己做，成功率有約 ±6 個百分點的誤差，作者也說結果只看方向，不是排行榜；價格是當時的，數字過幾個月就會變，算法不會。</p>
+<p>gemini-3.5-flash 每次 run 比 GPT-5.5 便宜約三成，<strong>每個成功任務卻是 GPT-5.5 的約 1.9 倍</strong>，<strong>只看每次花費會選錯</strong>。</p>
 <p id="i1-4"><b>本文的判斷：比完平均，還要比邊際。</b>只看上表也會選錯。gpt-oss-120b 每個成功任務最便宜，約是 GPT-5.5 的 1/12，但作者提醒，它便宜的部分原因是它只拿下自己做得到的題：40 題裡它穩定解出 8 題，GPT-5.5 是 25 題。每個成功任務的成本，是所有 run的花費除以成功次數。gpt-oss-120b 每次 run 只要 0.018 美元，不到 GPT-5.5 的 1/20，所以它在做不到的題上失敗再多次，也只把自己的平均拉高一點；它的成功全落在自己做得到的那幾題。GPT-5.5 穩定解出的 25 題裡，至少 17 題是 gpt-oss-120b 解不穩的，這些成功也算進了 GPT-5.5 的平均；難題通常要跑更多步、花更多 token（作者沒有公布每題的花費，這半句是本文的推論）。<strong>兩個「每個成功任務」平均的是不同的一組成功，所以不能直接比</strong>：換成 gpt-oss-120b，<strong>帳單變小，產品做得到的事也一起變少</strong>。決定要不要換強的設定時，該比的是<strong>多成功一次得多花多少</strong>：</p>
 <figure class="file"><figcaption>多成功一次的成本</figcaption><pre><code class="lang-text">多成功一次的成本 = (c 強 − c 弱) ÷ (p 強 − p 弱)
                 = ($0.424 − $0.018) ÷ (0.67 − 0.33)
