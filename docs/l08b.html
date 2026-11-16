@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L8b Harness Architecture · CS2680</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css?v=20261113a">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner gutter">
+    <button type="button" class="sn-open" aria-controls="sidenav" aria-expanded="false" title="開啟目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 4h12M2 8h12M2 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="sn-where">目錄</span></button>
+    <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
+    <nav class="lecnav" aria-label="講次">
+      <a href="l08.html" rel="prev">← L8</a>
+      <span class="here">L8b / 13</span>
+      <a href="l09.html" rel="next">L9 →</a>
+    </nav>
+  </div>
+  <div class="readbar" aria-hidden="true"><i></i></div>
+</header>
+
+<div class="shell">
+<aside class="sidenav" id="sidenav">
+<div class="sn-head"><span class="sn-title">目錄</span><button type="button" class="sn-close" aria-label="關閉目錄"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+<nav class="sn-nav" aria-label="課程目錄">
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row plain" href="index.html"><span class="sn-t">課程總覽</span></a></li>
+</ol>
+<p class="sn-label">Part I · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">Course Overview &amp; AI Systems</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">How Claude Code Works</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">Multi-agent Workflows</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l04.html"><span class="sn-no">L4</span><span class="sn-t">Context Management &amp; Tool Design</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent Architecture &amp; Communication</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">Cost &amp; Latency</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08b.html" aria-current="page"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">三種架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i1-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i1-3">取捨在哪裡</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">拆邊界的理由</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">一個 agent 也可能要把邊界推出去</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">三個問題</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">本文的判斷：問三個問題，不數 agent</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">目錄</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個 harness 都把一個假設寫進結構</a></li></ol></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
+</ol>
+<p class="sn-label">Part II · 講次</p>
+<ol class="sn-list">
+<li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
+</ol>
+<p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
+<p class="sn-label">讀書會</p>
+<ol class="sn-list">
+</ol>
+</nav>
+</aside>
+<div class="sn-scrim" hidden></div>
+<main class="page gutter article" data-lecture="l08b" data-format="article" data-pdf="8_agent_design_5.pdf" data-pages-total="54">
+  <header class="lecture-head">
+    <p class="eyebrow">Lecture 08b · 2026-10-07 · Part I · 依想法重組 · 和 L8 同一份 slides</p>
+    <h1>Harness Architecture</h1>
+    <p class="en-title">Advanced agent design I: Cost and performance — harness architecture</p>
+    <ul class="meta">
+      <li><span class="k">Slides</span><a href="https://cs2680.com/slides/8_agent_design_5.pdf" target="_blank" rel="noopener">8_agent_design_5.pdf ↗</a></li>
+      <li><span class="k">頁數</span>54</li>
+      <li><span class="k">同一份 slides</span>另一半是 <a href="l08.html">L8 Cost &amp; Latency</a></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 8 分鐘</span></li>
+      <li><span class="k">註與查閱</span><span class="deep-time">約 3 分鐘</span>，收合</li>
+      <li><span class="k">全部展開</span><span class="full-time">約 12 分鐘</span></li>
+    </ul>
+  </header>
+
+  <section class="tldr" aria-labelledby="tldr-h">
+    <h2 class="label" id="tldr-h">先看這裡</h2>
+    <p class="thesis">先看一個例子。Anthropic 有一個替使用者在雲端跑 agent 的服務，叫 Managed Agents。Agent 是會自己讀檔、跑指令、連做很多步的 AI 程式；包在語言模型（下面叫 model）外面、替它執行動作的那一層程式叫 harness。這個服務一開始把三樣東西放在同一個 container（把程式和它要用的檔案包在一起、和別的程式隔開的執行環境）裡：這段對話的紀錄（session）、harness、跑 model 寫的程式碼的隔離環境（sandbox）。他們碰到三個問題。Container 一掛，整段對話就沒了。出了問題，從外面分不出是 harness 有 bug 還是 container 死了，要登進一個放著使用者資料的環境除錯。Model 寫的程式碼和登入用的憑證（credential）放在同一個地方，agent 讀到的網頁裡只要藏一段騙 model 的文字（這叫 prompt injection），model 就可能照著寫出讀取憑證的程式碼。這三個問題，只跑一個 agent 也會碰到。</p>
+    <p class="thesis">這堂回答的問題是：<strong>跑 agent 的系統要拆成哪幾塊，塊和塊之間的邊界放在哪裡</strong>。例子裡的 session、harness、sandbox 就是三塊可以拆開的元件。L8 算的是錢和時間；邊界決定的是能換掉哪個元件、能隔離什麼、什麼掛了還能續跑。下面三條是這堂的判斷。</p>
+    <ul class="core">
+      <li><span><b>邊界有三種：函式呼叫、介面、協定。</b>例子裡三樣東西在同一個 container 的同一個程式裡，彼此是函式呼叫，最簡單也最快，但一個壞了全部一起壞，也分不出是哪一個壞了。抽成介面，元件可以換，但還在同一個程式裡，沒有隔離。用協定拆成獨立的服務，才能各自掛掉、各自換機器，<strong>代價是服務之間多了呼叫和故障，一個 request 出錯要到好幾個服務找 log</strong>（第 1 章）。</span></li>
+      <li><span><b>拆邊界先看失敗與安全，agent 有幾個只是其中一題。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，第一個回應反而來得更快：快的不是每一次呼叫，而是用不到 sandbox 的對話，不必再等它準備好（第 2 章）。</span></li>
+      <li><span><b>每一條邊界各問三個問題。</b>不可信的東西要和秘密隔開嗎？狀態要活得比程式本身久嗎？多個 agent 要共用同一份基礎設施嗎？三題都答「否」，例如自己筆電上跑的小工具：不讀外部網頁也不碰秘密、對話斷了重開就好、只有這一個 agent 在用，<strong>函式呼叫就夠了</strong>（第 3 章）。</span></li>
+    </ul>
+    <p class="readhow">八個開源 harness 的設計重心在第 4 章，需要時查。這堂假設讀過 L2〈<a href="l02.html">How Claude Code Works</a>〉：harness 每一步做什麼，tool、hook、subagent、MCP 是什麼。</p>
+  </section>
+
+  <div class="layout">
+
+    <div class="content">
+      <section class="part" id="s-ideas">
+        <header class="part-head">
+          <p class="kicker">1 · 核心觀念</p>
+          <h2>Harness 的邊界放在哪裡</h2>
+          <p class="lede">四章：第 1 章是三種邊界，第 2 章是一個真實的拆法和它的理由，第 3 章是本文的判斷，第 4 章是八個 harness 的目錄，需要時再查。</p>
+        </header>
+
+        <div class="ideas">
+          <div class="idea" id="i1">
+            <h3><span class="idea-no">1</span>三種架構：邊界是函式呼叫、介面，還是協定</h3>
+            <div class="prose">
+<p>跑 agent 的系統有幾個元件：決定下一步的迴圈（狹義的 harness）、tool、memory、執行程式碼的 sandbox。它們之間，邊界放在哪裡？邊界可以是同一個程式裡的函式呼叫、可以抽換的介面，或跨機器的協定。它決定你能換掉哪個元件，也決定三件事：不可信的程式碼能不能和秘密隔開、狀態能不能活得比 process 久（harness 掛了還能續跑）、多個 agent 能不能共用同一份基礎設施；而且<strong>改起來比調參數貴得多</strong>。把一個元件搬到另一個 process 或服務、中間改用協定溝通，下面叫「把邊界推出去」。第 3 章用這三個問題決定每一條邊界。</p>
+<p id="i1-1"><b>三種架構，差在呼叫跨過什麼邊界。</b>Monolithic 把一切放在同一個 process，modular 讓一個 controller 透過介面委派，microkernel 的核心只留協調，能力都是外部服務。決定下一步的迴圈在三種架構裡名字不同：monolithic 裡是 planner（決定下一步）加 executor（照著執行），modular 裡是 controller，microkernel 裡是 core 的 runtime；執行程式碼的元件則分別是 executor、sandbox provider、execution 服務：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 282" role="img" aria-label="三種 harness 架構的邊界。Monolithic：同一個 process 裡有 memory、tools、context、planner、executor，元件之間是函式呼叫。Modular：同一個 process 裡，controller 透過介面呼叫可抽換的 memory、tool、context、sandbox provider。Microkernel：core process 只留 runtime，管 state、scheduling、security；一條深紅色虛線是標準協定，線的另一邊是獨立部署的 memory、tool、execution 服務。">
+                  <defs><marker id="l8v-arch-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-arch-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="122" y="20" text-anchor="middle" class="dg-h">Monolithic</text>
+                  <rect x="8" y="30" width="228" height="190" rx="6" class="dg-panel"/>
+                  <text x="20" y="48" class="dg-mn">one process</text>
+                  <rect x="24" y="56" width="196" height="28" rx="4" class="dg-n-n"/>
+                  <text x="122" y="75.0" text-anchor="middle" class="dg-ls">memory</text>
+                  <rect x="24" y="88" width="196" height="28" rx="4" class="dg-n-n"/>
+                  <text x="122" y="107.0" text-anchor="middle" class="dg-ls">tools</text>
+                  <rect x="24" y="120" width="196" height="28" rx="4" class="dg-n-n"/>
+                  <text x="122" y="139.0" text-anchor="middle" class="dg-ls">context</text>
+                  <rect x="24" y="152" width="196" height="28" rx="4" class="dg-n-n"/>
+                  <text x="122" y="171.0" text-anchor="middle" class="dg-ls">planner</text>
+                  <rect x="24" y="184" width="196" height="28" rx="4" class="dg-n-n"/>
+                  <text x="122" y="203.0" text-anchor="middle" class="dg-ls">executor</text>
+                  <text x="122" y="242" text-anchor="middle" class="dg-cb">邊界：函式呼叫</text>
+                  <text x="122" y="262" text-anchor="middle" class="dg-c">最簡單，難換、難隔離</text>
+                  <text x="360" y="20" text-anchor="middle" class="dg-h">Modular</text>
+                  <rect x="246" y="30" width="228" height="190" rx="6" class="dg-panel"/>
+                  <text x="258" y="48" class="dg-mn">one process</text>
+                  <path d="M360,94 L360,118" class="dg-link"/>
+                  <path d="M305,118 L415,118" class="dg-link"/>
+                  <path d="M305,118 L305,128" class="dg-link" marker-end="url(#l8v-arch-ah)"/>
+                  <path d="M415,118 L415,128" class="dg-link" marker-end="url(#l8v-arch-ah)"/>
+                  <rect x="262" y="56" width="196" height="38" rx="4" class="dg-n-a"/>
+                  <text x="360" y="80.0" text-anchor="middle" class="dg-ls">controller（loop）</text>
+                  <text x="368" y="112" class="dg-cb">介面</text>
+                  <rect x="262" y="128" width="96" height="38" rx="4" class="dg-n-c"/>
+                  <text x="310" y="152.0" text-anchor="middle" class="dg-ls">Memory</text>
+                  <rect x="362" y="128" width="96" height="38" rx="4" class="dg-n-c"/>
+                  <text x="410" y="152.0" text-anchor="middle" class="dg-ls">Tool</text>
+                  <rect x="262" y="172" width="96" height="38" rx="4" class="dg-n-c"/>
+                  <text x="310" y="196.0" text-anchor="middle" class="dg-ls">Context</text>
+                  <rect x="362" y="172" width="96" height="38" rx="4" class="dg-n-c"/>
+                  <text x="410" y="196.0" text-anchor="middle" class="dg-ls">Sandbox</text>
+                  <text x="360" y="242" text-anchor="middle" class="dg-cb">邊界：介面</text>
+                  <text x="360" y="262" text-anchor="middle" class="dg-c">好換，同一個 failure domain</text>
+                  <text x="598" y="20" text-anchor="middle" class="dg-h">Microkernel</text>
+                  <rect x="484" y="30" width="228" height="76" rx="6" class="dg-panel"/>
+                  <text x="496" y="48" class="dg-mn">core process</text>
+                  <rect x="500" y="54" width="196" height="42" rx="4" class="dg-n-a"/>
+                  <text x="598" y="72.0" text-anchor="middle" class="dg-ls">runtime</text>
+                  <text x="598" y="89.0" text-anchor="middle" class="dg-c">state、scheduling、security</text>
+                  <path d="M484,122 L712,122" class="dg-link-key dg-dash"/>
+                  <text x="598" y="116" text-anchor="middle" class="dg-k">標準協定</text>
+                  <rect x="500" y="132" width="196" height="26" rx="4" class="dg-n-c"/>
+                  <text x="598" y="150.0" text-anchor="middle" class="dg-ls">memory 服務</text>
+                  <rect x="500" y="162" width="196" height="26" rx="4" class="dg-n-c"/>
+                  <text x="598" y="180.0" text-anchor="middle" class="dg-ls">tool 服務</text>
+                  <rect x="500" y="192" width="196" height="26" rx="4" class="dg-n-c"/>
+                  <text x="598" y="210.0" text-anchor="middle" class="dg-ls">execution 服務</text>
+                  <text x="598" y="242" text-anchor="middle" class="dg-k">邊界：協定</text>
+                  <text x="598" y="262" text-anchor="middle" class="dg-c">可獨立擴展，故障模式變多</text>
+                </svg>
+              </div>
+              <figcaption>邊界在哪裡？函式呼叫、介面、協定。責任從 agent 的程式碼移到介面，再移到服務；深紅虛線是這張圖要看的地方，線的外面可以換機器、可以獨立掛掉。</figcaption>
+            </figure>
+<figure class="file"><figcaption>Modular：元件變成可抽換的 provider</figcaption><pre><code class="lang-py">agent = CodingAgent(
+    memory_provider  = RedisMemory(),           # 介面 MemoryProvider，實作是 Redis
+    tool_provider    = MCPTools(),              # 介面 ToolProvider，實作是 MCP
+    context_provider = SlidingWindowContext(),  # 介面 ContextProvider
+    sandbox_provider = DockerSandbox(),         # 介面 SandboxProvider，實作是 Docker
+)
+# 要把 Docker 換成 Firecracker（AWS 的輕量 microVM）：改這一行，agent 的程式碼不動</code></pre></figure>
+<p>Microkernel 的名字借自作業系統：核心只做最少的事，檔案系統和驅動程式都是核心外的服務。L2 講的 <a href="l02.html#t5">MCP</a> 就是讓 tool 跑在 agent 程式外面的標準協定。Modular 的程式裡也可以用 MCP 接 tool：那一條邊界是協定，其他元件仍在同一個 process。</p>
+<p id="i1-2"><b>同一個動作，三條路徑。</b>用「執行一段 Python」比較三者：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 216" role="img" aria-label="同一段 Python 的三條路徑。Monolithic：agent 直接在本機執行 Python，跳數最少，隔離難強制。Modular：agent 呼叫 SandboxProvider.run(code)，由 provider 執行 Python，換 provider 不用改 agent。Microkernel：runtime 透過協定送執行請求給 execution 服務，服務配置 sandbox，sandbox 執行 Python 再回傳結果。配置、隔離、生命週期都歸 execution 服務。">
+                  <defs><marker id="l8v-path-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-path-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="14" y="36" class="dg-cb">Monolithic</text>
+                  <path d="M210,30 L240,30" class="dg-link" marker-end="url(#l8v-path-ah)"/>
+                  <rect x="120" y="10" width="90" height="40" rx="4" class="dg-n-a"/>
+                  <text x="165" y="35.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <rect x="240" y="10" width="130" height="40" rx="4" class="dg-n-n"/>
+                  <text x="305" y="35.0" text-anchor="middle" class="dg-ls">Python（本機）</text>
+                  <text x="384" y="35" class="dg-c">跳數最少，隔離難強制</text>
+                  <text x="14" y="102" class="dg-cb">Modular</text>
+                  <path d="M210,96 L240,96" class="dg-link" marker-end="url(#l8v-path-ah)"/>
+                  <path d="M450,96 L480,96" class="dg-link" marker-end="url(#l8v-path-ah)"/>
+                  <rect x="120" y="76" width="90" height="40" rx="4" class="dg-n-a"/>
+                  <text x="165" y="101.0" text-anchor="middle" class="dg-ls">agent</text>
+                  <rect x="240" y="76" width="210" height="40" rx="4" class="dg-n-c"/>
+                  <text x="345" y="101.0" text-anchor="middle" class="dg-ls">SandboxProvider.run(code)</text>
+                  <rect x="480" y="76" width="76" height="40" rx="4" class="dg-n-n"/>
+                  <text x="518" y="101.0" text-anchor="middle" class="dg-ls">Python</text>
+                  <text x="566" y="101" class="dg-c">換 provider 不改 agent</text>
+                  <text x="14" y="168" class="dg-cb">Microkernel</text>
+                  <path d="M210,162 L254,162" class="dg-link-key dg-dash" marker-end="url(#l8v-path-ak)"/>
+                  <path d="M394,162 L424,162" class="dg-link" marker-end="url(#l8v-path-ah)"/>
+                  <path d="M524,162 L554,162" class="dg-link" marker-end="url(#l8v-path-ah)"/>
+                  <rect x="120" y="142" width="90" height="40" rx="4" class="dg-n-a"/>
+                  <text x="165" y="167.0" text-anchor="middle" class="dg-ls">runtime</text>
+                  <rect x="254" y="142" width="140" height="40" rx="4" class="dg-n-focus"/>
+                  <text x="324" y="167.0" text-anchor="middle" class="dg-l-on">execution 服務</text>
+                  <rect x="424" y="142" width="100" height="40" rx="4" class="dg-n-c"/>
+                  <text x="474" y="167.0" text-anchor="middle" class="dg-ls">sandbox</text>
+                  <rect x="554" y="142" width="76" height="40" rx="4" class="dg-n-n"/>
+                  <text x="592" y="167.0" text-anchor="middle" class="dg-ls">Python</text>
+                  <text x="232" y="134" text-anchor="middle" class="dg-k">協定</text>
+                  <text x="254" y="204" class="dg-c">配置、隔離、生命週期都歸這個服務；多個 agent 可以共用同一池 sandbox</text>
+                </svg>
+              </div>
+              <figcaption>誰負責 sandbox？只有 microkernel 把它交給獨立的服務。Modular 抽出了介面，但介面是程式碼的邊界，不是安全邊界，provider 在本機跑就沒有隔離。</figcaption>
+            </figure>
+<p>Execution 服務如果還是很抽象，可以先玩<a href="l08-exec.html">互動導讀〈Execution 服務：誰替 agent 真正動手〉</a>：同一段 Python 在三種架構裡一步一步跑、故意讓它當掉或刪檔、看 sandbox 被回收，大約 15 分鐘。</p>
+<p id="i1-3"><b>取捨在哪裡。</b>結論是 <strong>microkernel 用簡單和低開銷，換隔離、共用與擴展</strong>；常見的選法是看 agent 的數量：單一 agent 用 monolithic，multi-agent 基礎設施用 microkernel，modular 是中間最常見的起點。第 2 章是這條選法的反例。</p>
+<div class="table-wrap"><table>
+                <thead><tr><th>比較項目</th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
+                <tbody>
+                  <tr><td>換元件</td><td>困難</td><td>容易</td><td>容易，協定相符時</td></tr>
+                  <tr><td>執行隔離</td><td>難強制</td><td>選用</td><td>架構上的重點</td></tr>
+                  <tr><td>獨立擴展</td><td>有限</td><td>可能</td><td>強</td></tr>
+                  <tr><td>通訊成本</td><td>低</td><td>低到中</td><td>可能較高</td></tr>
+                  <tr><td>主要的新代價</td><td>元件耦合</td><td>Controller 越長越複雜</td><td>故障模式變多、端到端除錯更難</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+
+          <div class="idea" id="i2">
+            <h3><span class="idea-no">2</span>拆邊界的理由：失敗與安全，不是 agent 的數量</h3>
+            <div class="prose">
+<p id="i2-1"><b>一個 agent 也可能要把邊界推出去。</b>第 1 章用 agent 的數量當選擇依據。「先看這裡」的例子，Anthropic 的 <a href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Managed Agents</a>（2026-04），是一個反例。他們一開始把 session、harness、sandbox 放在同一個 container，碰到三個和 agent 數量無關的問題：container 掛了，session 就沒了；harness 的 bug、斷線、死掉的 container 從外面看都一樣，除錯要 shell 進一個可能放著使用者資料的環境；model 寫的 code 和 credential（API key、OAuth token 這類登入憑證）在同一個地方，一次 prompt injection（藏在網頁或檔案裡的指令，騙 model 照著做）就能叫 code 讀出 credential。於是拆成三塊（下圖的 harness，就是第 1 章那個決定下一步的迴圈）：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 300" role="img" aria-label="Anthropic Managed Agents 的三個元件。Session 是 append-only 的 event log，活得比另外兩個久。Harness 是 brain，呼叫 model、路由 tool，本身不存狀態；它和 session 之間的介面是 emitEvent、getEvents。Sandbox 是 hands，跑 code、改檔案；它和 harness 之間的介面是 execute(name, input)。Harness 掛了：開新的 harness，wake(sessionId)，讀 log 續跑。Sandbox 掛了：回報成 tool error，model 決定重試才配一個新的。最下面：credential 放在 vault，由 proxy 代打，sandbox 裡的 code 碰不到 credential，harness 也不知道。">
+                  <defs><marker id="l8v-ma-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-ma-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <path d="M164,66 L284,66" class="dg-link" marker-start="url(#l8v-ma-ah)" marker-end="url(#l8v-ma-ah)"/>
+                  <path d="M434,66 L554,66" class="dg-link" marker-start="url(#l8v-ma-ah)" marker-end="url(#l8v-ma-ah)"/>
+                  <text x="224" y="42" text-anchor="middle" class="dg-mn">emitEvent</text>
+                  <text x="224" y="58" text-anchor="middle" class="dg-mn">getEvents</text>
+                  <text x="494" y="42" text-anchor="middle" class="dg-mn">execute(name,</text>
+                  <text x="494" y="58" text-anchor="middle" class="dg-mn">input) → string</text>
+                  <rect x="14" y="30" width="150" height="72" rx="4" class="dg-n-c"/>
+                  <text x="89" y="63.0" text-anchor="middle" class="dg-l">Session</text>
+                  <text x="89" y="80.0" text-anchor="middle" class="dg-c">append-only event log</text>
+                  <rect x="284" y="30" width="150" height="72" rx="4" class="dg-n-a"/>
+                  <text x="359" y="63.0" text-anchor="middle" class="dg-l">Harness（brain）</text>
+                  <text x="359" y="80.0" text-anchor="middle" class="dg-c">呼叫 model、路由 tool</text>
+                  <rect x="554" y="30" width="150" height="72" rx="4" class="dg-n-b"/>
+                  <text x="629" y="63.0" text-anchor="middle" class="dg-l">Sandbox（hands）</text>
+                  <text x="629" y="80.0" text-anchor="middle" class="dg-c">跑 code、改檔案</text>
+                  <text x="89" y="20" text-anchor="middle" class="dg-cb">活得最久</text>
+                  <text x="359" y="20" text-anchor="middle" class="dg-cb">不存狀態</text>
+                  <text x="629" y="20" text-anchor="middle" class="dg-cb">可以隨時換</text>
+                  <text x="359" y="128" text-anchor="middle" class="dg-cb">Harness 掛了</text>
+                  <text x="359" y="148" text-anchor="middle" class="dg-c">開新的 harness</text>
+                  <text x="359" y="166" text-anchor="middle" class="dg-c">wake(sessionId)，讀 log 續跑</text>
+                  <text x="629" y="128" text-anchor="middle" class="dg-cb">Sandbox 掛了</text>
+                  <text x="629" y="148" text-anchor="middle" class="dg-c">回報成 tool error</text>
+                  <text x="629" y="166" text-anchor="middle" class="dg-c">model 決定重試才配新的</text>
+                  <text x="89" y="128" text-anchor="middle" class="dg-cb">Session 放在外面</text>
+                  <text x="89" y="148" text-anchor="middle" class="dg-c">harness、container</text>
+                  <text x="89" y="166" text-anchor="middle" class="dg-c">死了，log 還在</text>
+                  <rect x="14" y="192" width="690" height="40" rx="4" class="dg-n-focus"/>
+                  <text x="359" y="217.0" text-anchor="middle" class="dg-l-on">Credential 放在 vault，由 proxy 代打</text>
+                  <text x="359" y="256" text-anchor="middle" class="dg-c">Sandbox 裡 model 寫的 code 碰不到 credential，harness 也不知道 credential</text>
+                  <text x="359" y="278" text-anchor="middle" class="dg-c">Prompt injection 能叫 code 讀環境變數，但環境變數裡已經沒有 credential</text>
+                </svg>
+              </div>
+              <figcaption>一個 agent 也需要把邊界推出去嗎？這是 Anthropic 2026 年 4 月描述的 Managed Agents。它拆開的理由是失敗與安全，和 agent 數量無關。Proxy 是 sandbox 外面的一層轉送：sandbox 裡的 code 呼叫外部服務時經過它，由它填上 credential。介面名稱依原文。</figcaption>
+            </figure>
+<p>結果和第 1 章的表有一處相反：跨邊界之後反而變快，<strong>第一個 token 的等待時間（time to first token，TTFT）p50 降約 60%、p95 降超過 90%</strong>。原因不在跨邊界本身：以前每個 session 都要先等 container 準備好，連用不到 sandbox 的 session 也一樣，拆開之後要用時才配。這是一家公司的經驗，不是對照實驗，文章也沒有談多出來的服務邊界要多少維運成本。</p>
+            </div>
+          </div>
+
+          <div class="idea" id="i3">
+            <h3><span class="idea-no">3</span>三個問題：每一條邊界各問一次，不數 agent</h3>
+            <div class="prose">
+<p id="i3-1"><span class="anchor" id="x1"></span><b>本文的判斷：問三個問題，不數 agent。</b>邊界不必一次全推出去，也不必三種架構選一種。每一條邊界各問它值不值得：</p>
+<div class="table-wrap"><table>
+                <thead><tr><th>問題</th><th>答「是」就推出去</th><th>代價</th></tr></thead>
+                <tbody>
+                  <tr><td>不可信的東西要和秘密隔開嗎？</td><td>Sandbox 和 credential 分開，秘密放在 sandbox 外面</td><td>多一段 proxy，多一種故障</td></tr>
+                  <tr><td>狀態要活得比 process 久嗎？</td><td>Session log 放在 harness 外面，掛了能續跑</td><td>每一步多一次寫入，要設計 log 的介面</td></tr>
+                  <tr><td>多個 agent 要共用同一份基礎設施嗎？</td><td>Tool、memory、sandbox 池做成服務</td><td>要有協定與版本，一掛全部受影響</td></tr>
+                </tbody>
+              </table></div>
+<p>三題都答「否」，例如自己筆電上跑的小工具：不讀外部網頁也不碰秘密、對話斷了重開就好、只有這一個 agent 在用，<strong>函式呼叫就夠了</strong>，microkernel 的優點用不到，只付代價。至於大家最擔心的通訊開銷，數字上通常不是問題：華盛頓大學分析 coding agent session 的 TraceLab（<a href="l08.html#i2-3">L8 第 2 章</a>）量到一次 model 生成約 13 秒，資料中心內的一次 RPC 通常是毫秒級，差上千倍。<strong>真正的代價是故障模式和除錯</strong>：一個 request 經過好幾個服務，出錯時 log 散在各處。所以每個 request 要帶 trace id，也就是在第一站產生、往下每個服務都原樣傳下去並寫進 log 的一個 ID；出事時用它把各服務的 log 串回同一個 request，見 L5〈<a href="l05.html#i7-4">Observability</a>〉。</p>
+            </div>
+          </div>
+
+          <div class="idea" id="i4">
+            <h3><span class="idea-no">4</span>目錄：八個 harness 的設計重心</h3>
+            <div class="prose">
+<p id="i4-1"><span class="anchor" id="x2"></span><b>每個 harness 都把一個假設寫進結構。</b>第 3 章的同一個問題，各家 harness 的答案不同，因為它們假設的部署環境不同。以第一題（不可信的東西要和秘密隔開嗎）為例：Codex CLI 先 sandbox 再詢問，假設隔離比詢問可靠，人問多了會不看就同意；Claude Code 的權限模式把判斷交給人或分類器，假設環境不一定能隔離。兩種假設都可能成立。讀下面八個 harness 時，可以問每個設計背後假設了什麼。</p>
+<p>下面的表<strong>不必讀完</strong>，需要時再查。這裡列八個 coding agent harness，每個用一句話說它的設計重心，右欄是最值得看的一個設計對應到哪一章。</p>
+<div class="table-wrap"><table>
+                <thead><tr><th>Harness</th><th>一句話</th><th>對應</th></tr></thead>
+                <tbody>
+                  <tr><td><b>Claude Code</b><br><small>Anthropic · TypeScript</small></td><td>Claude 外面包一層 policy 和有型別的 hook</td><td>L2 的機制</td></tr>
+                  <tr><td><b>Codex CLI</b><br><small>OpenAI · Rust</small></td><td>先 sandbox，再問人</td><td>第 1 章的隔離</td></tr>
+                  <tr><td><b>DeepSeek Harness</b><br><small>DeepSeek AI · TypeScript</small></td><td>什麼都是 plugin，連 loop 也是</td><td>本文沒有對應的章；值得看的是 <a class="tm" href="#t5">compare-and-swap 編輯</a>：model 讀過之後有人改了檔案，就拒絕寫入</td></tr>
+                  <tr><td><b>OpenCode</b><br><small>Anomaly（SST）· TypeScript/Bun</small></td><td>一個 session server，client 都很薄</td><td>第 1 章的邊界</td></tr>
+                  <tr><td><b>Pi</b><br><small>Mario Zechner / Earendil · TypeScript</small></td><td>小核心，用 TypeScript 擴充</td><td>L8〈<a href="l08.html#i3-4">TTL 的帳</a>〉的 keep-alive</td></tr>
+                  <tr><td><b>oh-my-pi</b><br><small>Can Bölük / Stencil Labs · TypeScript + Rust</small></td><td>Pi 的 fork，原生 tool 加 IDE 接進來</td><td>L8〈<a href="l08.html#i8-3">每個加速手段</a>〉的持久 shell</td></tr>
+                  <tr><td><b>OpenClaw</b><br><small>OpenClaw Foundation · TypeScript</small></td><td>聊天頻道的助理 gateway</td><td>L8〈<a href="l08.html#i4-2">compaction 幾步回本</a>〉：壓之前先寫記憶</td></tr>
+                  <tr><td><b>Hermes Agent</b><br><small>Nous Research · Python</small></td><td>會寫自己 skill 的 agent</td><td>L8〈<a href="l08.html#i4-2">compaction 幾步回本</a>〉：50% 就 compaction</td></tr>
+                </tbody>
+              </table></div>
+<details class="gloss" id="n-harness">
+                <summary><span class="gloss-k">查閱</span><span class="gloss-t">其他七個 harness 的全部設計：每一個在解什麼問題</span></summary>
+                <div class="gloss-body prose">
+                  <div class="table-wrap"><table>
+                    <thead><tr><th>Harness</th><th>獨特的設計</th><th>解什麼問題</th></tr></thead>
+                    <tbody>
+                      <tr><td><b>Codex CLI</b></td><td>先 sandbox 再核准：指令跑在無網路的 sandbox 裡，只有要出 sandbox 才問人。Patch 要符合一套 Lark grammar，hunk 用四輪比對找位置。</td><td>安全；patch 套錯位置</td></tr>
+                      <tr><td><b>DeepSeek Harness</b></td><td>Loop 也是 plugin：loop、adapter、tool、log、核准都是 plugin，用 YAML 層層覆蓋。每個 model request 是 session log 的一個凍結視圖，harness 只追加。Compare-and-swap 編輯：model 讀過之後檔案變了，就拒絕寫入。</td><td>想換掉任何一塊（連 loop）都不改核心；每個 request 都能從 log 重建，方便重播與除錯；多個 agent 改同一個檔時互相蓋掉</td></tr>
+                      <tr><td><b>OpenCode</b></td><td>Harness 是一個 server：TUI、SDK、web app 都用同一個 OpenAPI HTTP server。模糊比對的 edit 有大小上限：九種 replacer 從精確到 anchor 逐一嘗試，太大的模糊匹配拒絕。每一步存一個 snapshot：影子 git repo 讓 /undo 連檔案一起還原。</td><td>很多種 client 要接同一個 session（架構介於第 1 章的 modular 與 microkernel 之間）；模糊比對可能改錯地方；改壞了要連檔案一起還原</td></tr>
+                      <tr><td><b>Pi</b></td><td>最小核心：四個 tool，沒有 MCP、subagent、核准，其他都靠 extension。Cache 預熱有價格檢查：每送一次 keep-alive 都要付錢，所以只在預期省下 $0.05 以上時才送 keep-alive（在 prompt cache 過期前送一個 request 續命，見 L8〈<a href="l08.html#i3-4">TTL 的帳</a>〉）。函式庫給別的專案用：pi-ai 支援 42 家 model 供應商、10 種 wire API。</td><td>功能一多，核心就難維護，所以功能交給使用者用 extension 自己換（第 1 章的 modular）；keep-alive 本身要錢，送了可能不划算；同一套程式要能接很多家 model 供應商，也讓別的專案重用</td></tr>
+                      <tr><td><b>oh-my-pi</b></td><td>Hashline 編輯：每個 edit 帶一個 4 位 hex 的內容雜湊和行號，model 不必重打舊文字。IDE 在 process 裡：一個 shell 跨所有呼叫保持開著，原生 tool 提供搜尋、AST、LSP、debugger。特殊的 context 方法：snapcompact 把舊的 turn 畫成密集的文字圖片，能讀圖的 model 讀它約只要原文 1/3 的 input token；TTSR（Time Traveling Stream Rules）的規則平常不放進 context，model 的 output 一出現符合某個 regex 的內容，就停下生成、把那條規則加進對話、重新生成。</td><td>舊的 edit 要 model 把整段舊文字重打一次，output token 多；每次呼叫都重開 shell 要等；context 成本：舊歷史變便宜，規則只在用到時才佔 context</td></tr>
+                      <tr><td><b>OpenClaw</b></td><td>聊天 gateway 加 queue lane：27 種聊天頻道的訊息都可以進來；每個 session 只有一條 lane（佇列），不管訊息來自哪個頻道，都排進同一條，一次只跑一個 turn；queue mode 決定 agent 執行中收到的新訊息是插進目前這一輪、排到下一輪，還是中斷目前這一輪。Compaction 之前先寫記憶：先跑一個使用者看不到的 turn（silent turn），寫下有日期的筆記；之後的 recall 結合全文搜尋和向量搜尋。Fence、taint、sentinel：fence 隔離不可信的文字；讀過網路的 turn 標成 taint；agent 監看 secret 的 sentinel。</td><td>同一個 session 同時收到很多訊息時，兩個 turn 同時跑、互相搶 session 狀態；compaction 丟掉的細節之後找不回來；prompt injection 與洩密</td></tr>
+                      <tr><td><b>Hermes Agent</b></td><td>會學習的 fork：harness 每隔一段時間發一次提醒（nudge），這時背景另開一個 agent 的分身（執行時複製出來的 agent，不是程式碼的 fork），回顧剛才的 turn，再修改 memory 和 skill，不碰正在進行的對話。最早的 compaction：context 用到 50% 就 compaction，八個裡最早。執行前先存：tool call 先寫進 session 資料庫，才允許副作用發生。</td><td>同一類任務每次都要重新摸索做法；context 塞滿之前就壓，控制成本；tool call 中途斷掉時，從資料庫知道做到哪裡</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>「解什麼問題」是本文的對照。Claude Code 的機制在 L2。</p>
+                </div>
+              </details>
+<details class="gloss" id="t5">
+                <summary><span class="gloss-k">名詞</span><span class="gloss-t">Compare-and-swap 編輯：檔案改過就拒絕寫入</span></summary>
+                <div class="gloss-body prose">
+                  <p>名稱來自 CPU 的 compare-and-swap 指令：先比對目前的值是否仍是預期值，相同才寫入。DeepSeek Harness 記下 model 讀檔時的版本，寫入前再比對一次。</p>
+                  <p>Model 讀過之後，你或另一個 subagent 可能改了檔案。沒有檢查時，這次編輯會蓋掉別人的改動。oh-my-pi 的 hashline 編輯用行號指定位置，而檔案一改，行號就可能指到別的行，所以同樣需要這種檢查。它的 edit 除了行號，還帶一個從檔案內容算出的 4 位 hex 雜湊；雜湊和檔案目前的內容對不上，harness 就拒絕這次 edit。L5〈<a href="l05.html#i7-1">Consistency</a>〉用同一個機制處理這種互相蓋掉的寫入（lost update）。</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 2 動手試試 ===================== -->
+      <section class="part" id="s-try">
+        <header class="part-head">
+          <p class="kicker">2 · 動手試試</p>
+          <h2>照著做一次</h2>
+          <p class="lede">兩項都不用寫程式，合計約 25 分鐘。</p>
+        </header>
+        <div class="exlist">
+          <details class="ex">
+            <summary>玩互動導讀：execution 服務</summary>
+            <div class="exbody">
+              <p>同一段 Python 在三種架構裡一步一步跑、故意讓它當掉或刪檔、看 sandbox 怎麼回收：<a href="l08-exec.html">Execution 服務：誰替 agent 真正動手</a>，大約 15 分鐘。玩完再回頭看第 1 章那張「同一段 Python 的三條路徑」。</p>
+            </div>
+          </details>
+          <details class="ex">
+            <summary>替你自己的 agent 回答三個問題</summary>
+            <div class="exbody">
+              <p>挑一個你在用或想做的 agent，照第 3 章的三個問題，一題寫一段：答案、要推出去的是什麼、多出來的代價是什麼。答「否」的題目不推，元件之間留著函式呼叫。</p>
+              <figure class="file"><figcaption>boundaries.yaml（例：在 CI 上修測試的 agent，內容是示意）</figcaption><pre><code>isolate_untrusted_from_secrets:
+  answer: yes     # 它會跑 PR 裡別人寫的 code；deploy key 不能和這些 code 在同一個 sandbox
+  push_out: credential 放在 sandbox 外面，由 proxy 代打
+  cost: 多一段 proxy，多一種故障
+state_outlives_process:
+  answer: yes     # 一次修測試要跑半小時；CI 的機器中途被回收，要能接著做
+  push_out: session log 寫到 CI 機器外面
+  cost: 每一步多一次寫入，要設計 log 的格式
+shared_by_many_agents:
+  answer: no      # 只有這一個 agent 在用
+  push_out: 不推，tool 留在同一個 process</code></pre></figure>
+              <p>寫完拿第 4 章的八個 harness 對照：你的答案和哪一個 harness 的設計最像。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ===================== 原文出處 ===================== -->
+      <section class="wrap" id="wrap" aria-label="原文出處">
+        <p class="kicker">3 · 原文出處</p>
+        <h2>原文出處</h2>
+        <p class="rg-intro">這一堂取材自 L8 同一份 slides 的後段，教授列的閱讀在 <a href="l08.html#wrap">L8 的原文出處</a>。第 2 章的案例來自下面這篇；要對照原文時從這裡找，不必讀。</p>
+        <ol class="rg rg-src">
+          <li><a class="rg-t" href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Scaling Managed Agents: Decoupling the brain from the hands</a><span class="rg-meta">Anthropic · 工程文章 · 2026-04</span></li>
+        </ol>
+
+        <label class="readmark"><input type="checkbox" id="read-box"> 我讀完這一堂了（只存在你的瀏覽器）</label>
+      </section>
+
+      <nav class="pager" aria-label="上一堂與下一堂">
+        <a class="prev" href="l08.html"><span>← 上一堂 L8</span>Cost &amp; Latency</a>
+        <a class="next" href="l09.html"><span>下一堂 L9 →</span>LLM Inference Basics</a>
+      </nav>
+      <p class="fineprint">本文取材自 CS2680 L8 的 slides 後段與下列來源，但不照 slides 的順序；標明「本文」的段落是本文的判斷，不代表講者。原始 slides 與課程內容的版權屬於 Juncheng Yang 與 Harvard CS2680。來源：<a href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Scaling Managed Agents</a>（Anthropic，2026-04-08）。</p>
+    </div>
+  </div>
+</main>
+</div>
+<script src="app.js?v=20261110e"></script>
+<script src="code.js"></script>
+</body>
+</html>

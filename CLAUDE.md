@@ -7,7 +7,7 @@
 - 這個環境不能用 GitHub GraphQL，也不能改 repo 設定；用 `gh api` 的 REST endpoint。
 - 舊的 claude.ai artifact 已停用，不要再發布到它。
 - L1–L11（L6 另拆出 L6b）都是 v7 依想法重組的版面，三段：核心觀念、動手試試、原文出處（2026-11-13 James：延伸閱讀沒人看，縮成只有標題與連結；摘要、導讀、等級都刪了），各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
-- 一堂不綁一份 slides（2026-11-10 James）：依觀念切堂，一份 slides 可以拆成幾堂（L6 可靠性／L6b memory），幾份也可以併成一堂。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
+- 一堂不綁一份 slides（2026-11-10 James）：依觀念切堂，一份 slides 可以拆成幾堂（L6 可靠性／L6b memory；L8 成本與速度／L8b harness 架構），幾份也可以併成一堂。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
 - 替一堂建題庫（每一節的小測與整合題），或改了某一節要補題 → 照 `.claude/skills/build-quiz/SKILL.md`，一個 session 一堂，先做完那一堂的可讀性審查。
 - 紅字（`<strong>`）獨立成一步，可讀性審查過了才標（2026-11-11 James）→ 照 `.claude/skills/mark-red/SKILL.md`；寫作時不放紅字。
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。
@@ -15,6 +15,6 @@
 - 每一章通過的是哪一版可讀性 checklist，記在 `guide/review_log.tsv`（一章一行：版本、日期、當時文字的 hash）。開工先跑 `python3 -I tools/review_status.py status`：一堂一行，列出幾章是「舊規則」（審過之後 checklist 加了條目）、「改過」（審過之後文字動了）、「沒審過」。Checklist 加一條時，只拿新的那一條去掃「舊規則」的章，不必整份重審（2026-11-13 James）。
 - 正文不提 slides 怎麼寫、不標「本文補的」（2026-11-13 James：他已經重寫一半以上）。規則在 STYLE_ARTICLE 第 0 節〈不提 slides 怎麼寫〉；L1–L10 已改；L11 講的是課程自己的作業統計，照留。
 - 核心觀念開頭不放章節清單 `nav.map`（2026-11-13 James：「直接進入正文」）；章的清單在側欄，排法寫在 `p.lede`。
-- 精簡（2026-11-13 James 要內容稍微精簡）：砍支線，不壓句子。規則在 STYLE_ARTICLE 第 0 節〈精簡〉。L8 第 2、3 章是試做，等 James 看過；他說可以之後再做 L8 其餘各章、把 harness 架構（第 9 章與八個 harness）拆成 L8b，再推到別堂。細節在 `guide/V7_DECISIONS.md` 的 L8。
+- 精簡（2026-11-13 James 要內容稍微精簡）：砍支線，不壓句子。規則在 STYLE_ARTICLE 第 0 節〈精簡〉。L8 第 2、3 章是試做；harness 架構已拆成 L8b（2026-11-16 James：「可以拆分」）；L8 其餘各章的精簡、再推到別堂還沒做。細節在 `guide/V7_DECISIONS.md` 的 L8。
 - 改內容直接改 HTML、跑檢查、push，在頁面上給他看；不先給純文字版等 OK（他幾乎不看）。
 - 回覆 James：重組、取捨這類決定，先講決策的邏輯（為什麼這樣排、補、刪），再列改了什麼、哪裡要他確認（2026-11-03：他要的是邏輯，不只是做了什麼）。小修改只列改了什麼。他的閱讀時間有限，不重貼全文。

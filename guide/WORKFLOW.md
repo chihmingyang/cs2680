@@ -286,7 +286,7 @@ James 問：每次改一章，能不能像 CI 的 regression test 一樣，確�
 
 ## K. 一份 slides 拆成幾堂（2026-11-10 起）
 
-規則在 `STYLE_ARTICLE.md` 第 0 節〈一堂不綁一份 slides〉。第一例是 L6 → L6〈Agent 可靠性〉＋ L6b〈Agent memory〉，build script 在 `notes/l06split/`（不 commit；做法記在這裡）。
+規則在 `STYLE_ARTICLE.md` 第 0 節〈一堂不綁一份 slides〉。第一例是 L6 → L6〈Agent 可靠性〉＋ L6b〈Agent memory〉，build script 在 `notes/l06split/`（不 commit；做法記在這裡）。第二例是 L8 → L8〈Cost & Latency〉＋ L8b〈Harness Architecture〉（2026-11-16，`notes/l08split/build.py`）：原頁的目錄章從第 10 章變第 9 章，所以舊的 `l08.html#i9` 停在 L8 的目錄（第 4 點的限制），別頁連到 `#i9` 的連結要手改；`#i9-N`、`#i10`、`#x3`、`#x4`、`#t5`、`#n-harness` 照 `#moved` 表轉到 L8b。
 
 1. **先用 DAG 決定切在哪裡。** `docs/dag.json` 裡這堂各章的節點，分成兩組之後，組和組之間沒有 deps 邊，就是乾淨的切法。目錄章、動手試試的每一項、延伸閱讀的每一篇、fineprint 的每個來源、題庫的每一節，都依觀念歸到其中一組。
 2. **新頁的 key 是原編號加字母**（`l06b`）。`add_lecture.py`、`audit.py`、`verify.sh`、`dag.py`、`assemble_v7.py` 都接受 `lNN` 加一個小寫字母；`add_lecture.py` 會把新頁插在原堂之後：前一堂的下一堂、後一堂的上一堂、首頁列表的位置都跟著改。原堂在首頁的那一列（標題、英文、一句話、分鐘數）和前一堂 pager 裡的標題要手改。
