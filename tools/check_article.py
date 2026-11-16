@@ -250,6 +250,9 @@ NUM_SKIP = re.compile(r"第\s*\d+\s*[章段節列項]|\bL\d+b?\b|20\d\d(?:-\d\d)
                       r"|\b[A-Z]\d+\b|\bv\d+(?:\.\d+)*")
 NUM = re.compile(r"\d[\d,]*(?:\.\d+)?")
 NUM_LIMIT = 5
+# R19 (2026-11-16): course-internal data (the class's own logs and assignments) means nothing to readers
+# who never took CS2680. L11 is about the course's assignment statistics, so it is exempt.
+COURSE_DATA = re.compile(r"全班|兩份作業|Assignment\s*\d|同學")
 
 
 def number_load(html):
@@ -377,6 +380,11 @@ def main():
         print(f"  warn: line {line}: {txt.count('；') + 1} items joined by ；, use ul/ol: {txt[:40]}")
     for w in cell_warnings(html):
         print(f"  warn: {w}")
+    if not path.name.startswith("l11"):
+        body = re.sub(r"<[^>]+>", "", html.split('id="s-src"')[0])
+        for m in COURSE_DATA.finditer(body):
+            ctx = re.sub(r"\s+", " ", body[max(0, m.start() - 20):m.end() + 20])
+            print(f"  warn: 課程內部的數據「{m.group(0)}」：改寫成機制加一個讀者會算的例子（R19）: …{ctx}…")
     for line, n, txt in number_load(html):
         print(f"  warn: line {line}: 一段太多數字（{n} 個），數字進圖或表，句子只講結論（R18）: {txt[:40]}")
     if args.fix_time:
