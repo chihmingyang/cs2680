@@ -135,7 +135,7 @@ p = 0.95, n = 50  →  0.95 ^ 50 = 7.7%</code></pre></figure>
                   <tr><td>99.9%</td><td>99.5%</td><td>99.0%</td><td>98.0%</td><td>95%</td><td>90%</td></tr>
                 </tbody>
               </table></div>
-              <p>反過來算，要讓 50 步有 90% 全對，每步要 99.79%，等於約 475 步才錯一次；100 步要 99.89%。實際的 agent 離這個很遠：照 99.79% 算，十個 50 步的 run 只有一個會碰到錯；下面的量測裡，連最後成功的 run，七成途中都出過錯。而且每一步有多準由 model 和任務決定，寫 harness 的人改不了。所以<strong>長任務不能靠每一步都對</strong>。</p>
+              <p>反過來算，要讓 50 步有 90% 全對，每步要 99.79%，等於約 475 步才錯一次；100 步要 99.89%。實際的 agent 離這個很遠：照 99.79% 算，十個 50 步的 run 只有一個會碰到錯；下面的量測裡，連最後成功的 run，七成途中都出過錯。而且<strong>每一步有多準由 model 和任務決定，寫 harness 的人改不了</strong>。所以<strong>長任務不能靠每一步都對</strong>。</p>
               <p id="i1-1"><span class="anchor" id="t4"></span><b>本文的判斷：這條算式有兩個前提，真實的 run 兩個都不成立。</b>第一個前提是一步錯就整個 run 失敗，第二個是各步的成敗互相獨立。2025–2026 年的量測顯示，真實的 run 有一處比算式好（第一個前提不成立），也有一處比算式差（第二個前提不成立）：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -198,7 +198,7 @@ p = 0.95, n = 50  →  0.95 ^ 50 = 7.7%</code></pre></figure>
             </figure>
               <p data-num-own="29">比算式好的是一步錯不等於整趟失敗。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a>（UCL 與南京大學，2026-07）逐步標註了 Terminal-Bench（在 shell 裡完成任務的 benchmark）上 21 個系統的 1,794 條 trajectory（一趟執行的完整紀錄）：<strong>成功的 run 有 71% 途中碰過至少一個錯</strong>，只有 29% 一路沒出錯。<a href="https://snorkel.ai/blog/coding-agents-dont-need-to-be-perfect-they-need-to-recover/" target="_blank" rel="noopener">Snorkel</a>（2026-02）的資料也類似：通過和失敗的任務，每題的錯誤數差不多（2.09 與 2.71 個），差別在修復率（95.0% 與 73.5%）。兩份都是觀察，不是對照實驗。</p>
               <p>比算式差的是各步並不獨立：沒攔下來的錯會傳下去，越晚越難修。<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a>（Letta，2025-08）讓 agent 從之前失敗的 run 留下的環境接手，同一批 model 的平均成功率從 26.3% 掉到 11.2%。</p>
-              <p>所以算式不必丟，要換的是代入的 p：p 應該是「這一步沒有留下沒攔到的錯」的機率。換了定義，兩個前提就又站得住。第一個前提變成「留下一個沒攔到的錯，整趟就失敗」：當場攔下來重做的錯不算，這正是圖裡第二條和第三條路的差別。第二個前提：錯誤往後傳，只發生在已經留下一個沒攔到的錯之後，那時這個 run 已經算失敗了。算式要的只是「前面都沒留下錯時，這一步也沒留下錯」的機率，所以每步仍然可以乘起來。每步 5% 出錯，只要多數當場攔下來，p 就遠高於 95%，<strong>該壓低的是沒攔下來的錯</strong>。</p>
+              <p><strong>所以算式不必丟，要換的是代入的 p</strong>：<strong>p 應該是「這一步沒有留下沒攔到的錯」的機率</strong>。換了定義，兩個前提就又站得住。第一個前提變成「留下一個沒攔到的錯，整趟就失敗」：當場攔下來重做的錯不算，這正是圖裡第二條和第三條路的差別。第二個前提：錯誤往後傳，只發生在已經留下一個沒攔到的錯之後，那時這個 run 已經算失敗了。算式要的只是「前面都沒留下錯時，這一步也沒留下錯」的機率，所以每步仍然可以乘起來。每步 5% 出錯，只要多數當場攔下來，p 就遠高於 95%，<strong>該壓低的是沒攔下來的錯</strong>。</p>
               <p id="i1-2"><b>三個槓桿。</b>pⁿ 裡只有 n 和 p 兩個量，能動的做法有三種：減少 n，以及兩種提高 p 的辦法：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -224,7 +224,7 @@ p = 0.95, n = 50  →  0.95 ^ 50 = 7.7%</code></pre></figure>
               </div>
               <figcaption>這張圖回答：能動的有哪幾樣？pⁿ 裡只有 n 和 p，而「當場攔錯」是不靠 model 變強就把 p 提高的辦法。長條是 50 步全對的機率；「減少步數」那一列是每一段全對的機率（第 3 章）。</figcaption>
             </figure>
-              <p>三種做法裡，「讓每步更準」最直覺，但只靠它不夠：<a href="https://arxiv.org/abs/2602.16666v1" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a>（Princeton，2026-02）量了 15 個 model，能力進步帶來的可靠性進步很小。所以接下來兩章講另外兩種：第 2 章當場攔錯，第 3 章減少步數。同一條 pⁿ 在 L7 也會再出現：<a href="l07.html#i3">pass^k</a> 把 p 換成同一題跑一次成功的機率、n 換成跑的次數 k，問的是 k 次都成功的機率。</p>
+              <p><strong>三種做法裡，「讓每步更準」最直覺，但只靠它不夠</strong>：<a href="https://arxiv.org/abs/2602.16666v1" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a>（Princeton，2026-02）量了 15 個 model，<strong>能力進步帶來的可靠性進步很小</strong>。所以接下來兩章講另外兩種：第 2 章當場攔錯，第 3 章減少步數。同一條 pⁿ 在 L7 也會再出現：<a href="l07.html#i3">pass^k</a> 把 p 換成同一題跑一次成功的機率、n 換成跑的次數 k，問的是 k 次都成功的機率。</p>
             </div>
           </div>
 
@@ -243,7 +243,7 @@ run 全對       = s ^ 50</code></pre></figure>
                   <tr><td>檢查很準，但重試常常還是錯</td><td>100%</td><td>50%</td><td>97.5%</td><td>28%</td></tr>
                 </tbody>
               </table></div>
-              <p>Model 一點都沒變強，<strong>50 步的全對率從 8% 升到 88%</strong>。但檢查要準：漏兩成，就掉到 55%。檢查也會往另一個方向錯：把做對的步驟判成錯，打回去重做。上面的算式沒算這一種。把檢查調嚴，漏抓會變少；但多加的測試和規則本身也可能判錯，所以這一種錯通常會變多。冤枉到的步驟要重做，重做時可能把本來對的改壞，所以<strong>檢查不是越嚴越好</strong>，數字見本章最後的本文延伸〈<a href="#x5">檢查會往兩個方向錯</a>〉。另外，重試之前要確認這一步做兩次不會出事，這是 L5〈<a href="l05.html#i6">送出去之後</a>〉講的冪等。</p>
+              <p>Model 一點都沒變強，<strong>50 步的全對率從 8% 升到 88%</strong>。但檢查要準：漏兩成，就掉到 55%。檢查也會往另一個方向錯：把做對的步驟判成錯，打回去重做。上面的算式沒算這一種。把檢查調嚴，漏抓會變少；但多加的測試和規則本身也可能判錯，所以這一種錯通常會變多。冤枉到的步驟要重做，重做時可能把本來對的改壞，所以<strong>檢查不是越嚴越好</strong>，數字見本章最後的本文延伸〈<a href="#x5">檢查會往兩個方向錯</a>〉。另外，<strong>重試之前要確認這一步做兩次不會出事</strong>，這是 L5〈<a href="l05.html#i6">送出去之後</a>〉講的冪等。</p>
               <p id="i2-1"><b>檢查要真的抓得到。</b>detect 最容易高估，因為下面四種都看起來像檢查：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>看起來像檢查</th><th>為什麼抓不到</th><th>換成</th></tr></thead>
@@ -289,14 +289,14 @@ run 全對       = s ^ 50</code></pre></figure>
               </div>
               <figcaption>這張圖回答：等症狀出現再修來得及嗎？多半來不及。Failure as a Process（2026-07）在失敗的 run 上量到的典型值（中位數或約略值）：決定失敗的錯誤（decisive error）在第 7 步，救不回來的時間點（lock-in）約第 12 步，第一個看得到的症狀約第 16 步。這是好幾個量拼成的一條軸，不是某一條真實的 run。</figcaption>
             </figure>
-              <p>Failure as a Process 也發現，失敗的 run 裡最常見的單一起因是<b>錯的前提</b>（false premise，30.7% 的失敗 run 有它）：agent 以為某件事成立，就照著做，其實不成立。它的案例裡，agent 第 2 步 <code>cd</code> 進一個不存在的目錄；tool 回給它的輸出是空的，錯誤訊息沒有傳回來，agent 把「沒有錯誤」讀成「成功」，之後 21 步都在錯的目錄裡做事，到第 23 步才看到 <code>not a git repository</code>。這 21 步全部白做，而且要退回去。確認前提只要一個 tool call、成本固定；錯誤每多走一步，要退的就多一步。所以<strong>最划算的檢查放在動手之前</strong>，像下面這樣：</p>
+              <p>Failure as a Process 也發現，失敗的 run 裡最常見的單一起因是<b>錯的前提</b>（false premise，30.7% 的失敗 run 有它）：agent 以為某件事成立，就照著做，其實不成立。它的案例裡，agent 第 2 步 <code>cd</code> 進一個不存在的目錄；tool 回給它的輸出是空的，錯誤訊息沒有傳回來，agent 把「沒有錯誤」讀成「成功」，之後 21 步都在錯的目錄裡做事，到第 23 步才看到 <code>not a git repository</code>。<strong>這 21 步全部白做，而且要退回去</strong>。<strong>確認前提只要一個 tool call、成本固定</strong>；錯誤每多走一步，要退的就多一步。所以<strong>最划算的檢查放在動手之前</strong>，像下面這樣：</p>
               <figure class="file"><figcaption>terminal：動手之前先確認前提</figcaption><pre><code class="lang-sh">$ git rev-parse --show-toplevel     # 我在對的 repo 嗎？
 /home/me/billing
 $ python --version                  # 跑的是我以為的版本嗎？
 Python 3.12.4
 $ ls src/auth/login.py              # 記憶或文件裡的路徑還在嗎？
 ls: cannot access 'src/auth/login.py': No such file or directory</code></pre></figure>
-              <p id="i2-3"><b>不靠 model 自律。</b>寫在 prompt 裡的要求，model 可能照做，也可能不照做。要保證，就用 hook。以 Claude Code（Anthropic 在 terminal 裡用的 coding agent，本頁的例子都用它）為例，hook 是你寫好、登記在設定檔裡的 script，由 harness 在固定的時間點執行，不經過 model 的判斷，所以 model 繞不過去（機制在 L2〈<a href="l02.html#i7">Hook</a>〉）。Stop hook 在 agent 要結束時執行：下面這支跑測試，沒過就回 exit 2，Claude Code 就不讓它結束，並把 stderr 的訊息交給 model 繼續修。</p>
+              <p id="i2-3"><b>不靠 model 自律。</b><strong>寫在 prompt 裡的要求，model 可能照做，也可能不照做</strong>。<strong>要保證，就用 hook</strong>。以 Claude Code（Anthropic 在 terminal 裡用的 coding agent，本頁的例子都用它）為例，hook 是你寫好、登記在設定檔裡的 script，由 harness 在固定的時間點執行，不經過 model 的判斷，所以 model 繞不過去（機制在 L2〈<a href="l02.html#i7">Hook</a>〉）。Stop hook 在 agent 要結束時執行：下面這支跑測試，沒過就回 exit 2，Claude Code 就不讓它結束，並把 stderr 的訊息交給 model 繼續修。</p>
               <figure class="file"><figcaption>.claude/hooks/require-tests.sh：Claude Code 的 Stop hook（依 2026-11 的 Claude Code 官方文件）</figcaption><pre><code class="lang-sh">#!/bin/bash
 INPUT=$(cat)                                        # hook 從 stdin 收到一段 JSON
 if [ "$(echo "$INPUT" | jq -r '.stop_hook_active')" = "true" ]; then
@@ -390,7 +390,7 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
             <h3><span class="idea-no">3</span>Checkpoint 與上限：決定失敗時退回多遠、最多花多少</h3>
             <div class="prose">
               <p>驗證告訴你錯了。接下來要決定退回多遠，以及一直錯的時候什麼時候停。</p>
-              <p id="i3-1"><b>退回多遠，決定要多跑多少步。</b>第 2 章每一步都檢查，背後假設檢查不花成本。便宜的檢查（lint、型別檢查）確實可以每步跑；貴的檢查，例如跑整套測試、請另一個 agent 讀 diff，就不能每步都跑。做法是把 50 步切成幾段，每段結束時做一次貴的驗證：驗證過就存一個 checkpoint（可以退回的狀態），失敗就退回上一個 checkpoint，重跑這一段。</p>
+              <p id="i3-1"><b>退回多遠，決定要多跑多少步。</b>第 2 章每一步都檢查，背後假設檢查不花成本。便宜的檢查（lint、型別檢查）確實可以每步跑；<strong>貴的檢查，例如跑整套測試、請另一個 agent 讀 diff，就不能每步都跑</strong>。<strong>做法是把 50 步切成幾段，每段結束時做一次貴的驗證</strong>：驗證過就存一個 checkpoint（可以退回的狀態），失敗就退回上一個 checkpoint，重跑這一段。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 232" role="img" aria-label="兩條 50 步的進度條，第 23 步都出錯。上面沒有 checkpoint：第 50 步驗證才發現，退回第 0 步，白跑 50 步。下面每 10 步驗證並存一個 checkpoint：第 30 步驗證發現，退回第 20 步，白跑 10 步。">
@@ -487,20 +487,20 @@ false_alarm = 0 時，就是本章的算式</code></pre></figure>
             </figure>
               <p>同一個 run、同一個 model，只看灰色，從不分段切到每段 10 步，要跑的步數就從 <strong>650 步降到 84 步</strong>。再往下切，步數只剩每段 5 步 65、每段 2 步 55、每段 1 步 53，因為一步都不錯也要 50 步。黃色卻越來越長：每段 10 步共驗證約 8.4 次，成本 42；每段 1 步是 50 段，要驗證約 52.6 次，成本 263。兩筆加起來，每段 10 步的總成本 126（84 + 42）最省，每段 5 步是 130（65 + 65），只多 4 步。</p>
               <p>最省的段長取決於兩個假設，圖下的兩個滑桿各管一個。第一個是驗證有多貴：一次驗證只算 1 步時，最省的從每段 10 步換成每段 5 步。驗證完全不花成本時，總成本只剩步數，最省的是每段 1 步，總成本 53 步，也就是第 2 章每一步都檢查的情況。第二個是每步多可靠：每步 95% 等於平均每 20 步錯一次。升到 99%，平均每 100 步才錯一次。切短是為了少重跑，重跑本來就少，切短省下的步數不多，驗證次數就成了主要的帳，所以少驗證幾次比較划算，最省的變成每段 25 步。降到 90%，最省的變成每段 5 步。合起來是一條規則：<strong>驗證越貴、每步越可靠，段就切得越長</strong>。這張圖還假設段尾才發現失敗。如果段中途就有便宜的檢查先抓到錯，灰色還會再短一些。</p>
-              <p id="i3-2"><b>存什麼：驗證過的狀態，而且 context 也要退。</b>Context 是這一次送進 model 的全部文字，包括對話歷史（L4〈<a href="l04.html#i1">Context 的成本</a>〉）。沒驗證就存，存下來的狀態可能已經帶著錯，退回去錯還在。只退檔案也不夠：檔案退回去了，前面那段錯的推理還留在 context 裡，下一次會照著它再走一遍。<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a> 量到的是同一件事：讓 agent 接手一個失敗過的環境，比了三種接手方式（只給環境、環境加一段動作摘要、環境加完整的動作歷史），帶著完整歷史的表現最差，作者的解釋是錯的推理會繼續帶偏下一次。本文的做法是折衷：退回時不帶原本的對話，只留一句「這條路試過，為什麼失敗」。完整的對話已經量到會帶偏，什麼都不留，下一次又可能重走同一條路（本文的判斷）。</p>
+              <p id="i3-2"><b>存什麼：驗證過的狀態，而且 context 也要退。</b>Context 是這一次送進 model 的全部文字，包括對話歷史（L4〈<a href="l04.html#i1">Context 的成本</a>〉）。沒驗證就存，存下來的狀態可能已經帶著錯，退回去錯還在。只退檔案也不夠：檔案退回去了，前面那段錯的推理還留在 context 裡，下一次會照著它再走一遍。<a href="https://letta.com/blog/recovery-bench" target="_blank" rel="noopener">Recovery-Bench</a> 量到的是同一件事：讓 agent 接手一個失敗過的環境，比了三種接手方式（只給環境、環境加一段動作摘要、環境加完整的動作歷史），帶著完整歷史的表現最差，作者的解釋是錯的推理會繼續帶偏下一次。本文的做法是折衷：退回時不帶原本的對話，只留一句「這條路試過，為什麼失敗」。<strong>完整的對話已經量到會帶偏</strong>，什麼都不留，下一次又可能重走同一條路（本文的判斷）。</p>
               <p>工具能不能替你退？Claude Code 的 <code>/rewind</code> 能同時退 code 和對話，但有三個限制（<a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">2026-11 的官方文件</a>）：</p>
               <ul>
                 <li><b>你送出 prompt 時才存一個點。</b>一個 prompt 讓 agent 自己跑幾十步的長任務，中間沒有點可以退，只能退回開頭。</li>
                 <li><b>只追蹤它自己的檔案編輯 tool 改的檔案。</b>Agent 在 shell 裡跑指令改的檔案（<code>rm</code>、<code>mv</code>、會寫檔的 script）不在追蹤範圍。</li>
                 <li><b>Subagent 改的檔案多半也不還原。</b>Subagent 是主 agent 派出去做子任務的另一個 agent。</li>
               </ul>
-              <p>Git 沒有這三個限制。Commit 的時機由你決定，每段驗證過就存一個點；它記的是 repo 裡追蹤中的每個檔案，不管是 agent 的編輯 tool、shell 指令還是 subagent 改的，退回時一起退（<code>.gitignore</code> 排除的、還沒 add 過的新檔不在內）。但 git 只退檔案，context 要另外退：開一個新的 session 從退回的版本接著做，只帶上一句「這條路試過，為什麼失敗」，也就是上面的折衷。所以長任務的 checkpoint 用 git，每段驗證過就 commit 一次：</p>
+              <p>Git 沒有這三個限制。Commit 的時機由你決定，每段驗證過就存一個點；它記的是 repo 裡追蹤中的每個檔案，不管是 agent 的編輯 tool、shell 指令還是 subagent 改的，退回時一起退（<code>.gitignore</code> 排除的、還沒 add 過的新檔不在內）。<strong>但 git 只退檔案，context 要另外退</strong>：開一個新的 session 從退回的版本接著做，<strong>只帶上一句「這條路試過，為什麼失敗」</strong>，也就是上面的折衷。所以<strong>長任務的 checkpoint 用 git，每段驗證過就 commit 一次</strong>：</p>
               <figure class="file"><figcaption>terminal：驗證過才存，失敗就退回</figcaption><pre><code class="lang-sh">$ pytest -q &amp;&amp; git add -A &amp;&amp; git commit -m "parser: handle empty input"
 [main a1b2c3d] parser: handle empty input            # 測試過了才有這個 commit
 $ pytest -q                                          # 下一段做完，測試沒過
 FAILED tests/test_parser.py::test_nested
 $ git reset --hard a1b2c3d                           # 退回驗證過的版本，重做這一段</code></pre></figure>
-              <p id="i3-3"><b>回不去的動作。</b>Checkpoint 只退得了自己的檔案。付款、刪資料、對外發信，<strong>退不回來，也不能靠重試</strong>，要在發生之前把關。做法是由 harness 在執行前比對 allowlist（事先列好、可以自動執行的動作清單），不在清單上的就請人確認（L2〈<a href="l02.html#i4">權限</a>〉）；或把環境切開，讓 agent 碰不到正式環境。<a href="https://www.theregister.com/2025/07/22/replit_saastr_response/" target="_blank" rel="noopener">Replit 2025 年的事故</a>是例子：使用 Replit agent 的 SaaStr 創辦人 Jason Lemkin 說，agent 在 code freeze 期間刪了他的 production 資料庫；Replit 事後推出 dev、prod 資料庫自動分離（單一案例，事故經過是 Lemkin 一方的說法）。</p>
+              <p id="i3-3"><b>回不去的動作。</b>Checkpoint 只退得了自己的檔案。付款、刪資料、對外發信，<strong>退不回來，也不能靠重試</strong>，要在發生之前把關。做法是由 harness 在執行前比對 allowlist（事先列好、可以自動執行的動作清單），<strong>不在清單上的就請人確認</strong>（L2〈<a href="l02.html#i4">權限</a>〉）；或把環境切開，讓 agent 碰不到正式環境。<a href="https://www.theregister.com/2025/07/22/replit_saastr_response/" target="_blank" rel="noopener">Replit 2025 年的事故</a>是例子：使用 Replit agent 的 SaaStr 創辦人 Jason Lemkin 說，agent 在 code freeze 期間刪了他的 production 資料庫；Replit 事後推出 dev、prod 資料庫自動分離（單一案例，事故經過是 Lemkin 一方的說法）。</p>
               <p id="i3-4"><b>把長任務切成短 session。</b><a href="https://anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Anthropic 2025 年的長時間 harness</a>把前面幾件事接在一起。每個 session 從新的 context 開始，做一個 feature，驗證過就 commit，再把進度寫回檔案：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -559,8 +559,8 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
               </div>
               <figcaption>這張圖回答：前面幾件事接起來長什麼樣？一個 session 只做一個 feature（減少每段的步數），段尾做端對端驗證（錯誤攔在這一段裡，不帶到下一段），驗證過才 commit（checkpoint）。圖只畫段尾這一次驗證；它不取代第 2 章每一步之後的檢查，兩者並用（本章〈退回多遠〉那一段的開頭：便宜的檢查每步跑，貴的驗證才分段）。依 Anthropic 2025-11 的 harness（一家公司的經驗）。藍色是跨 session 的狀態，黃色是驗證，青色是 checkpoint。</figcaption>
             </figure>
-              <p>這種形狀也會過時：同一家公司 2026 年寫道，<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">harness 的每個元件都是對 model 能力的假設</a>。例子是 context reset：每個 session 從空的 context 開始、靠檔案交接，原因是他們較早用的 Sonnet 4.5 接近 context 上限時會提早收尾；換到 Opus 4.5 之後這個行為大致消失，他們就拿掉定期清空，只靠壓縮對話（L4〈<a href="l04.html#i5">先用規則刪，最後才摘要</a>〉）。所以要不要照圖切成短 session，看你用的 model：它接近 context 上限時還會提早收尾，就照圖切；不會，一個 session 可以做不只一個 feature。不管哪一種，一段還是一個 feature：每段驗證過才 commit，錯的狀態就留在這一段。失敗退回時 context 也要退，錯的推理就不會帶偏下一次。這兩件照做，因為它們防的是錯誤往下傳，不是 context 快滿（本文的判斷）。怎麼當使用者跑長任務，在 L3〈<a href="l03.html#i4">終點</a>〉。回到圖裡靠檔案交接的那一格：progress.txt 是寫給下一個 session 讀的，這種跨 session 留下來、之後再讀回 context 的東西就是 memory，L6b〈<a href="l06b.html#i1">Agent Memory</a>〉接著講它會出什麼錯。</p>
-              <p id="i3-5"><b>上限：一直錯的時候什麼時候停。</b>例如跑了 200 步沒有進展，就該停下來。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 也量到兩件事。第一，agent 很少自己停：失敗的 run 裡，只有 18% 在錯誤已經救不回來之後很快停下，其他的繼續做下去。第二，一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修好通常很快，修了遠超過 5 步還沒好，就比典型的修好長很多，再修下去的價值變低，<strong>修太久就該停</strong>（本文的判斷；論文沒給兩組的比例）。Agent 自己不停，上限就要從外面加。上限有四種：</p>
+              <p>這種形狀也會過時：同一家公司 2026 年寫道，<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">harness 的每個元件都是對 model 能力的假設</a>。例子是 context reset：每個 session 從空的 context 開始、靠檔案交接，原因是他們較早用的 Sonnet 4.5 接近 context 上限時會提早收尾；換到 Opus 4.5 之後這個行為大致消失，他們就拿掉定期清空，只靠壓縮對話（L4〈<a href="l04.html#i5">先用規則刪，最後才摘要</a>〉）。<strong>所以要不要照圖切成短 session，看你用的 model</strong>：它接近 context 上限時還會提早收尾，就照圖切；不會，一個 session 可以做不只一個 feature。不管哪一種，一段還是一個 feature：<strong>每段驗證過才 commit，錯的狀態就留在這一段</strong>。失敗退回時 context 也要退，錯的推理就不會帶偏下一次。這兩件照做，因為它們防的是錯誤往下傳，不是 context 快滿（本文的判斷）。怎麼當使用者跑長任務，在 L3〈<a href="l03.html#i4">終點</a>〉。回到圖裡靠檔案交接的那一格：progress.txt 是寫給下一個 session 讀的，這種跨 session 留下來、之後再讀回 context 的東西就是 memory，L6b〈<a href="l06b.html#i1">Agent Memory</a>〉接著講它會出什麼錯。</p>
+              <p id="i3-5"><b>上限：一直錯的時候什麼時候停。</b>例如跑了 200 步沒有進展，就該停下來。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 也量到兩件事。第一，agent 很少自己停：失敗的 run 裡，只有 18% 在錯誤已經救不回來之後很快停下，其他的繼續做下去。第二，一次修復從出錯算到修好或放棄：修好的中位數 5 步，沒修好的中位數 12 步。修好通常很快，修了遠超過 5 步還沒好，就比典型的修好長很多，再修下去的價值變低，<strong>修太久就該停</strong>（本文的判斷；論文沒給兩組的比例）。<strong>Agent 自己不停，上限就要從外面加</strong>。上限有四種：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>上限</th><th>擋什麼</th><th>在 Claude Code 裡（<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">2026-11 的官方文件</a>）</th></tr></thead>
                 <tbody>
@@ -635,7 +635,7 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
                   <p>所以「harness 的 context 截斷」是 harness 為了騰出 context，砍掉最舊的幾輪對話，或把太長的 tool 輸出砍短，錯誤訊息跟著不見；「tool 的靜默失敗」是 tool 失敗了卻回一個看起來正常的結果。看到輸出不完整，先問是誰砍的：harness 組 context 時砍的算 harness，tool 自己只回前 100 行算 tool（第 5 章的表）。L4〈<a href="l04.html#i6">Tool 設計</a>〉講怎麼修這兩層。</p>
                 </div>
               </details>
-              <p>五種情況有一個共同點：<strong>agent 都沒有報錯，它只是照著錯的輸入做下去</strong>。這是它和程式 crash 最大的差別，所以不能等錯誤訊息，要自己去找。</p>
+              <p>五種情況有一個共同點：<strong>agent 都沒有報錯，它只是照著錯的輸入做下去</strong>。這是它和程式 crash 最大的差別，<strong>所以不能等錯誤訊息，要自己去找</strong>。</p>
               <p id="i4-1"><b>先找第一個出錯的步驟，在那一層修。</b>拿到一個失敗的 run，從頭讀 trajectory，找第一個「輸出和輸入對不上」的步驟：</p>
               <figure class="file"><figcaption>trajectory 節錄：第一個出錯的步驟在 tool</figcaption><pre><code class="lang-text">step 11  model: run ./run_tests.sh
 step 12  tool:  exit 0, stdout: ""                ← 第一個對不上：測試腳本找不到測試，卻回 0
@@ -688,7 +688,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
               <figcaption>這張圖回答：第一個出錯的步驟要怪哪一層？從上往下問，第一個「否」就是來源層（本文的整理）。第三題只問 model 照它看到的東西推得對不對：上面 trajectory 的 step 13 推得合理，答「是」；step 12 的測試腳本找不到測試卻回 exit 0，第四題答「否」，來源在 tool。</figcaption>
             </figure>
               <p><strong>不要在症狀出現的地方修</strong>。例如症狀是 model 沒跑測試就宣布完成，來源卻是任務沒寫「完成」的定義。在這次對話裡補一句「記得跑測試」，只救這一個 run；下一個任務照樣沒寫，就會再犯。修在來源，是把完成的定義寫進每個任務都會帶到的地方，例如任務範本，或 CLAUDE.md（Claude Code 每個 session 都會載入的專案說明檔）。</p>
-              <p>換更強的 model，也只處理其中一層。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 把決定失敗的錯誤分成兩大類：57.9% 是 epistemic（認知的錯：agent 以為的狀態和實際不符，像第 2 章錯的前提），32.8% 是 competence（能力的錯：狀態沒看錯，事情卻做錯）。更強的 model 主要補後一類。前一類的來源常在 model 看到的東西：tool 回了錯的結果、context 少了資訊、環境和它以為的不同，這些要在 harness、tool、環境那幾層修（分類名照論文，中文說明與對應是本文的整理）。</p>
+              <p>換更強的 model，也只處理其中一層。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 把決定失敗的錯誤分成兩大類：57.9% 是 epistemic（認知的錯：agent 以為的狀態和實際不符，像第 2 章錯的前提），32.8% 是 competence（能力的錯：狀態沒看錯，事情卻做錯）。<strong>更強的 model 主要補後一類</strong>。前一類的來源常在 model 看到的東西：tool 回了錯的結果、context 少了資訊、環境和它以為的不同，這些要在 harness、tool、環境那幾層修（分類名照論文，中文說明與對應是本文的整理）。</p>
               <p id="i4-2"><b>五層各一條原則。</b>具體的失敗有 26 種（<a class="tm" href="#n-fail">查閱</a>），記這五條就夠了：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -725,9 +725,9 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
               </div>
               <figcaption>這張圖回答：五層各該守什麼？一層一條原則，具體的 26 種失敗收在第 5 章。右欄是本文的整理。</figcaption>
             </figure>
-              <p id="i4-3"><span class="anchor" id="x4"></span><b>沒有紀錄，就不知道該改什麼。</b>這五條只是起點：業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。要知道你們該先補哪一條，得先有紀錄。團隊現在能做的有三件：</p>
+              <p id="i4-3"><span class="anchor" id="x4"></span><b>沒有紀錄，就不知道該改什麼。</b>這五條只是起點：業界對大規模的 agent 了解還不多，還沒有多少正式的最佳實踐。<strong>要知道你們該先補哪一條，得先有紀錄</strong>。團隊現在能做的有三件：</p>
               <ul>
-                <li><b>把五條原則寫成量得到的 policy。</b>例如把「每個 run 都要有上限」寫成「每個 <code>claude -p</code> 指令都帶 <code>--max-turns</code>」，再用一支 script 掃 log，數出沒帶的比例。寫成這樣，才說得出團隊跑的 run 有沒有照做。</li>
+                <li><b>把五條原則寫成量得到的 policy。</b>例如把「每個 run 都要有上限」寫成「每個 <code>claude -p</code> 指令都帶 <code>--max-turns</code>」，再用一支 script 掃 log，數出沒帶的比例。<strong>寫成這樣，才說得出團隊跑的 run 有沒有照做</strong>。</li>
                 <li><b>記錄每個 run 的 trajectory。</b>每一步的輸入、輸出、tool 結果；多個 agent 時用 L5〈<a href="l05.html#i7-4">tracing</a>〉串起來。</li>
                 <li><b>定期看失敗來自哪一層。</b>失敗的分布就是你們的 roadmap。</li>
               </ul>
