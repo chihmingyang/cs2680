@@ -1416,7 +1416,7 @@ $ dcgmi dmon -e 1001,1004,1005
 $ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 vec_add 的 kernel
                                      # --set full 收全部的 section：speed of light、記憶體流量、warp stall
                                      # 每個 kernel 會重跑好幾次來收 counter，所以它量到的時間只能拿來互相比較</code></pre></figure>
-              <p>流程是：nsys 找出慢的區段，ncu 解釋其中一個 kernel，一次只改一件事，再量一次，和 L8〈<a href="l08.html#i5">淨節省</a>〉在同一組任務上比較的紀律一樣。還有一個不用工具的檢查來自 Horace He：把 batch 加倍，時間只多 10% 左右，就可能是 overhead-bound：時間花在 CPU 準備和送出 kernel（kernel launch）上，這部分每一步差不多是固定的，不隨 batch 變大，所以 batch 加倍時間也幾乎不變。這條檢查分不出另一種情況：小 batch 的 decode 卡在讀 weights，batch 加倍時要讀的 bytes 幾乎不變（第 3 章），時間也只多一點。<strong>兩者要用 nsys 的 timeline 分開</strong>：kernel 之間有大段空檔是 overhead-bound；kernel 一個接一個、DRAM activity 高，是 memory-bound。</p>
+              <p>流程是：nsys 找出慢的區段，ncu 解釋其中一個 kernel，一次只改一件事，再量一次，和 L8〈<a href="l08.html#i4-3">Net savings</a>〉在同一組任務上比較的紀律一樣。還有一個不用工具的檢查來自 Horace He：把 batch 加倍，時間只多 10% 左右，就可能是 overhead-bound：時間花在 CPU 準備和送出 kernel（kernel launch）上，這部分每一步差不多是固定的，不隨 batch 變大，所以 batch 加倍時間也幾乎不變。這條檢查分不出另一種情況：小 batch 的 decode 卡在讀 weights，batch 加倍時要讀的 bytes 幾乎不變（第 3 章），時間也只多一點。<strong>兩者要用 nsys 的 timeline 分開</strong>：kernel 之間有大段空檔是 overhead-bound；kernel 一個接一個、DRAM activity 高，是 memory-bound。</p>
             </div>
           </div>
 
