@@ -477,7 +477,7 @@
 <p id="i3-2"><b>Hit rate: </b>cache miss 的 token 比 cache hit 的貴幾十倍，所以 hit rate（input token 裡 cache hit 的比例）差幾個百分點，就會反映在帳單上。先定義四項，兩個倍率都以 base input 為 1×，也就是沒有任何折扣的一般 input 單價：</p>
 <ul>
                 <li><b>C。</b>這一步的 context 有多少 token。</li>
-                <li><b>h。</b>hit rate。</li>
+                <li><b>h。</b>hit rate。e</li>
                 <li><b>r。</b>Cache read 的倍率，常見的是 0.1×，Opus 5.5 和 Sonnet 5.5 是 0.05×。</li>
                 <li><b>w。</b>Cache write 的倍率，5 分鐘的 cache 是 1.25×。</li>
               </ul>
@@ -772,7 +772,7 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
                 <li><b>摘要寫進 cache。</b>3K × 1.25 = 3.75K。</li>
                 <li><b>丟掉的檔案要重讀。</b>17K × 1.25 = 21.25K。</li>
               </ol>
-<p>合計 60K。之後每一步少讀 160K，每步省 160K × 0.1 = 16K，所以 60K ÷ 16K ≈ 3.75，<strong>第 4 步回本</strong>。兩個常見的變化會把回本點往後推。第一，摘要漏了細節，多走 10 步重做：多走的每一步讀 40K 的 cache（4K），再寫入 5K 的新 tool 結果（6.25K），一步 10.25K（output 不計），10 步多付 102.5K，合計 162.5K。第二，閒置太久、cache 過期了才壓：摘要那次 call 要把 200K 當一般 input 重算，第 1 筆從 20K 變成 200K，合計 240K。</p>
+<p>合計 60K。之後每一步少讀 160K，每步省 160K × 0.1 = 16K，所以 60K ÷ 16K ≈ 3.75，<strong>第 4 步回本</strong>。兩個常見的變化會把回本點往後推：<br>1. 摘要漏了細節，多走 10 步重做：多走的每一步讀 40K 的 cache（4K），再寫入 5K 的新 tool 結果（6.25K），一步 10.25K（output 不計），10 步多付 102.5K，合計 162.5K。<br><br>2. 閒置太久、cache 過期了才壓：摘要那次 call 要把 200K 當一般 input 重算，第 1 筆從 20K 變成 200K，合計 240K。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>情境</th><th>一次付多少</th><th>幾步回本</th><th>還剩 5 步</th><th>還剩 40 步</th></tr></thead>
                 <tbody>
@@ -823,7 +823,7 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
               </div>
               <figcaption>壓完要多久才回本？三條線的斜率相同，因為每步省的一樣；差別在一開始付了多少。線穿過 0 的地方就是回本點。</figcaption>
             </figure>
-<p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。<strong>任務快結束時不要壓</strong>；換任務時用 <code>/clear</code>，它清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說它不花錢，代價是之前的內容全部不見；<strong>要繼續的長任務趁 cache 還熱時壓</strong>。還有一個趨勢值得注意：r 降到 0.05 時每步省的減半，三種情境的回本點變成 7、17、30 步。Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大。</p>
+<p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。<strong>任務快結束時不要壓</strong>；換任務時用 <code>/clear</code>，它清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說它不花錢，代價是之前的內容全部不見；<strong>要繼續的長任務趁 cache 還熱時壓</strong>。還有一個趨勢值得注意：r 降到 0.05 時每步省的減半，三種情境的回本點變成 7、17、30 步。<b><span style="color: var(--key)">Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大</span></b>。</p>
 <p>真實系統的選擇也不同：Hermes Agent 在 context 用到 50% 就壓，Uber 等到 400K。OpenClaw 在壓之前，先讓 agent 跑一個使用者看不到的 turn，把重要的事寫進有日期的筆記檔（例如 <code>memory/2026-11-06.md</code>，存在 context 外面）。<strong>摘要漏掉的細節，之後還能從檔案搜回來，不必重做</strong>，等於替 added cost 買保險。</p>
 <p id="i4-3"><span class="anchor" id="x1"></span><b>Net savings 只能在同一組任務上量。</b>不同的任務本身步數就差很多，兩個設定若各跑一組任務，差別可能來自題目，而不是設定；同一個任務也有隨機性，跑兩次 step 數可能差一倍。所以<strong>比較兩個設定要用同一組任務、每題跑多次、看分布</strong>，方法見 L7〈<a href="l07.html#i4">雜訊</a>〉與〈<a href="l07.html#t5">標準誤</a>〉。題目還要分兩份：一份拿來調參，另一份沒用過的拿來報成績。Anthropic 的客服 benchmark 是例子：調參題上做到 98.9% 的新設定，在 14 張沒拿來調參的工單（held-out）上只有 90.5%，仍高於原設定的 78.6%，成本約是原設定的 1/5。<strong>拿來調參的題目不能拿來報成績</strong>，這是 L7 講的 leakage。</p>
 <p id="i4-4"><b>優化是一個迴圈。</b>上面的紀律可以收成四步：</p>
