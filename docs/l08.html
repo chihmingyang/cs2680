@@ -40,7 +40,7 @@
 <li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">Cost, Latency &amp; Harness Architecture</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">成本公式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三個單位</a></li><li><a class="sn-sub2" href="#i1-2">成本是六項相乘</a></li><li><a class="sn-sub2" href="#i1-3">公式少了分母</a></li><li><a class="sn-sub2" href="#i1-4">本文的判斷：比完平均，還要比邊際</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">錢花在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">每一步都重送整個 context</a></li><li><a class="sn-sub2" href="#i2-2">三種 token：量和單價方向相反</a></li><li><a class="sn-sub2" href="#i2-3">Cache 會過期，過期的舊內容要重算一次</a></li><li><a class="sn-sub2" href="#i2-4">為什麼 turn 數是平方</a></li><li><a class="sn-sub2" href="#i2-5">留在 context 裡的 token，之後每一步都再付一次</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Prefix cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">只比開頭，差一個字就從那裡開始重算</a></li><li><a class="sn-sub2" href="#i3-2">Hit rate 的帳</a></li><li><a class="sn-sub2" href="#i3-3">什麼會打斷它</a></li><li><a class="sn-sub2" href="#i3-4">TTL 的帳</a></li><li><a class="sn-sub2" href="#i3-5">怎麼看 hit rate</a></li><li><a class="sn-sub2" href="#i3-6">能等的工作用 batch</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">淨節省</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個省法都有反向成本</a></li><li><a class="sn-sub2" href="#i4-2">算一次：compaction 幾步回本</a></li><li><a class="sn-sub2" href="#i4-3">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub2" href="#i4-4">優化是一個迴圈</a></li><li><a class="sn-sub2" href="#i4-5">本文的判斷：照這個順序看</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">少走幾步</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">先問這一步需要 LLM 嗎</a></li><li><a class="sn-sub2" href="#i5-2">少回頭：減少 turn</a></li><li><a class="sn-sub2" href="#i5-3">少呼叫：一次 model call 做多個 tool call</a></li><li><a class="sn-sub2" href="#i5-4">重用計畫與 skill，任務重複才回本</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Model、effort 與 output</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Routing：三種時機</a></li><li><a class="sn-sub2" href="#i6-2">本文的判斷：換 model 要選在 context 小的時候</a></li><li><a class="sn-sub2" href="#i6-3">Effort：thinking 也算 output，最後幾分最貴</a></li><li><a class="sn-sub2" href="#i6-4">Output：量最少、單價最高，但不要從這裡開始</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">失敗的錢比你想的多</a></li><li><a class="sn-sub2" href="#i7-2">四個上限，數字從 trace 來</a></li><li><a class="sn-sub2" href="#i7-3">停止規則：上限之前先有進展檢查</a></li><li><a class="sn-sub2" href="#i7-4">本文的判斷：硬上限給沒人看的任務，互動 session 給可見度</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">完成時間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">完成時間看 critical path</a></li><li><a class="sn-sub2" href="#i8-2">先量：時間常常花在 tool</a></li><li><a class="sn-sub2" href="#i8-3">每個加速手段，錢往哪裡走</a></li><li><a class="sn-sub2" href="#i8-4">Speculation：先猜、先跑、再比對</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Harness 架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i9-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i9-3">取捨在哪裡</a></li><li><a class="sn-sub2" href="#i9-4">一個 agent 也可能要把邊界推出去</a></li><li><a class="sn-sub2" href="#i9-5">本文的判斷：問三個問題，不數 agent</a></li><li><a class="sn-sub2" href="#i9-6">每個 harness 都把一個假設寫進結構</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08.html" aria-current="page"><span class="sn-no">L8</span><span class="sn-t">Cost, Latency &amp; Harness Architecture</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="先看這裡"><span class="sn-n"></span><span class="sn-t">先看這裡</span></a></li><li><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-n">1</span><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">成本公式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三個單位</a></li><li><a class="sn-sub2" href="#i1-2">成本是六項相乘</a></li><li><a class="sn-sub2" href="#i1-3">公式少了分母</a></li><li><a class="sn-sub2" href="#i1-4">本文的判斷：比完平均，還要比邊際</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">錢花在哪裡</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">每一步都重送整個 context</a></li><li><a class="sn-sub2" href="#i2-2">三種 token：量和單價方向相反</a></li><li><a class="sn-sub2" href="#i2-3">Cache 會過期，過期的舊內容要重算一次</a></li><li><a class="sn-sub2" href="#i2-4">為什麼 turn 數是平方</a></li><li><a class="sn-sub2" href="#i2-5">留在 context 裡的 token，之後每一步都再付一次</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Prefix cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">只比開頭，差一個字就從那裡開始重算</a></li><li><a class="sn-sub2" href="#i3-2">Hit rate 的帳</a></li><li><a class="sn-sub2" href="#i3-3">什麼會打斷它</a></li><li><a class="sn-sub2" href="#i3-4">TTL 的帳</a></li><li><a class="sn-sub2" href="#i3-5">怎麼看 hit rate</a></li><li><a class="sn-sub2" href="#i3-6">能等的工作用 batch</a></li><li><a class="sn-sub2" href="#i3-7">單價從哪裡來</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">淨節省</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">每個省法都有反向成本</a></li><li><a class="sn-sub2" href="#i4-2">算一次：compaction 幾步回本</a></li><li><a class="sn-sub2" href="#i4-3">淨節省只能在同一組任務上量</a></li><li><a class="sn-sub2" href="#i4-4">優化是一個迴圈</a></li><li><a class="sn-sub2" href="#i4-5">本文的判斷：照這個順序看</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">少走幾步</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">先問這一步需要 LLM 嗎</a></li><li><a class="sn-sub2" href="#i5-2">少回頭：減少 turn</a></li><li><a class="sn-sub2" href="#i5-3">少呼叫：一次 model call 做多個 tool call</a></li><li><a class="sn-sub2" href="#i5-4">重用計畫與 skill，任務重複才回本</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Model、effort 與 output</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Routing：三種時機</a></li><li><a class="sn-sub2" href="#i6-2">本文的判斷：換 model 要選在 context 小的時候</a></li><li><a class="sn-sub2" href="#i6-3">Effort：thinking 也算 output，最後幾分最貴</a></li><li><a class="sn-sub2" href="#i6-4">Output：量最少、單價最高，但不要從這裡開始</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">上限</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">失敗的錢比你想的多</a></li><li><a class="sn-sub2" href="#i7-2">四個上限，數字從 trace 來</a></li><li><a class="sn-sub2" href="#i7-3">停止規則：上限之前先有進展檢查</a></li><li><a class="sn-sub2" href="#i7-4">本文的判斷：硬上限給沒人看的任務，互動 session 給可見度</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">完成時間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">完成時間看 critical path</a></li><li><a class="sn-sub2" href="#i8-2">先量：時間常常花在 tool</a></li><li><a class="sn-sub2" href="#i8-3">每個加速手段，錢往哪裡走</a></li><li><a class="sn-sub2" href="#i8-4">Speculation：先猜、先跑、再比對</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Harness 架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i9-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i9-3">取捨在哪裡</a></li><li><a class="sn-sub2" href="#i9-4">一個 agent 也可能要把邊界推出去</a></li><li><a class="sn-sub2" href="#i9-5">本文的判斷：問三個問題，不數 agent</a></li><li><a class="sn-sub2" href="#i9-6">每個 harness 都把一個假設寫進結構</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">目錄</span></a></li></ol></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-n">2</span><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-n">3</span><span class="sn-t">原文出處</span></a></li></ol></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
@@ -308,7 +308,7 @@
               </div>
               <figcaption>三種 token 各花多少錢？量最多的 cache read 單價最低，單價最高的 output 量最少；相乘之後，cache read 仍佔約八成。量的比例來自每一步重送整個 context：例如 context 有 200K token，這一步新進來 2K、model 回覆 0.4K，就是圖上的 100、1、0.2。單價以 cache read 為 1，長條照比例畫。</figcaption>
             </figure>
-<p>先看量和單價這兩欄，方向相反：量最多的 cache read 單價最低，單價最高的 output 量最少。Cache read 便宜，是因為 provider 只要讀留下來的結果，不用重算。Output 貴，是因為 GPU 讀 input 時可以把所有 token 一起算，產生回覆時（這個階段叫 <a class="tm" href="#n-prefill">decode</a>）卻一次只能出一個 token，同樣的時間算出的 token 少得多，分到每個 token 的成本就高。兩欄相乘就是「花的錢」那一欄：<strong>cache read 的單價最低，仍佔約八成的花費</strong>。</p>
+<p>先看量和單價這兩欄，方向相反：量最多的 cache read 單價最低，單價最高的 output 量最少。Cache read 便宜，是因為 provider 只要讀留下來的結果，不用重算。Output 貴，是因為兩個階段讀 model 權重（參數）的次數不同。讀 input 的階段叫 prefill，GPU 把權重從記憶體讀一遍，就能算完幾千個 token。產生回覆的階段叫 decode，每產生一個 token 都要把權重再讀一遍。權重常常上百 GB，讀一遍要十幾毫秒，同樣的時間算出的 token 少得多，分到每個 token 的成本就高。把很多 request 排在一起 decode 能補回一部分，但補不滿，帳在第 3 章〈<a href="#i3-7">單價從哪裡來</a>〉。兩欄相乘就是「花的錢」那一欄：<strong>cache read 的單價最低，仍佔約八成的花費</strong>。</p>
 <p>圖上的單價是一組常見的比例。較新的 model 把 cache read 收得更低，只有圖上的一半到四分之一（見<a class="tm" href="#t2">單價註</a>）。這時 cache read 佔的比例會降到五到七成，仍是最大的一筆。</p>
 <p id="i2-3"><b>Cache 會過期，過期的舊內容要重算一次。</b>Cache 只留幾分鐘，使用者停下來的時間常常更久。<strong>過期之後，同一段舊內容讀不到 cache，變成 cache miss，要重算一次</strong>，照 cache write 收錢。所以 cache write 裝了兩種內容：真正的新內容，和過期之後重算的舊內容。在上圖的單價欄，這等於同一個 token 從 cache read 那一列掉到 cache write 那一列：<strong>cache miss 的 token，錢是 cache read 的 12.5 倍</strong>。Cache read 收得更低的 model，最多差到 50 倍。</p>
 <p>帳單上只看得到 cache write 的總量，分不出裡面哪些是新內容、哪些是過期之後重算的舊內容。華盛頓大學的 <a href="https://syfi.cs.washington.edu/blog/2026-06-25-tracelab/" target="_blank" rel="noopener">TraceLab</a>（2026-06）分析自己實驗室的 coding agent session，逐段比對內容之前有沒有送過，把 cache write 拆開看：81% 是過期之後重算的舊內容，真正的新內容不到兩成。換算成花費：</p>
@@ -622,13 +622,84 @@
                   <p>出處：<a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">Claude pricing</a>、<a href="https://developers.openai.com/api/docs/models/gpt-5.6-sol" target="_blank" rel="noopener">GPT-5.6 Sol</a>、<a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener">Gemini pricing</a>。其他 provider 的 cache 規則不同，例如 Gemini 4 Argon 的 prefix cache 不必設定，遇到共同的開頭自動打折；官方只列 cache read 的價格，沒有 cache write 的價格，所以表上寫「—」。</p>
                 </div>
               </details>
-<details class="gloss" id="n-prefill">
-                <summary><span class="gloss-k">前情</span><span class="gloss-t">Prefill 與 decode：output 為什麼比 input 貴</span></summary>
-                <div class="gloss-body prose">
-                  <p>L1 講過一個 request 分兩段。Prefill 一次處理整段輸入，幾千個 token 一起算，GPU 的算力用得滿。Decode 一次只產生 1 個 token，每產生一個都要把整個 model 的權重（model 的參數）從記憶體讀一遍，瓶頸在記憶體頻寬，GPU 大半時間在等資料。</p>
-                  <p>所以同樣一個 token，當 output 的成本比當 input 高得多，API 的定價把這個差距反映成約 5 倍。Cache read 連 prefill 都省了，只剩讀取，所以更便宜。細節見 L1〈<a href="l01.html#t1">Prefill 與 decode</a>〉。</p>
-                </div>
-              </details>
+<p id="i3-7"><span class="anchor" id="n-prefill"></span><b>單價從哪裡來：同一組 GPU，每秒處理幾個 token（throughput）。</b>上圖的倍率不是隨便訂的。Provider 的成本主要是 GPU 的時間，所以一個 token 的成本，約等於 GPU 每秒的花費除以它每秒處理幾個 token。比 input 和 output 的單價，就是比同一組 GPU 每秒能 prefill 幾個 token、能 decode 幾個 token。下面借 <a href="l09.html#i4">L9 算帳的那一組設定</a>：Llama 3 70B，一個 700 億參數的 model，跑在 2 張 NVIDIA H200 GPU 上。Provider 不公開自己的成本，所以下面的數字是本文的推算，是理論上限，只看量級。</p>
+<p><b>Prefill 卡在算力，叫 compute-bound。</b>每個 input token 都要和全部權重各做一次乘法、一次加法。Prompt 裡的幾千個 token 一起算，權重從記憶體讀一次就給它們全部用，所以讀的時間不是問題，GPU 的運算單元一直是忙的。每秒能算幾個 token，看 GPU 每秒能做幾次運算。</p>
+<p><b>Decode 卡在記憶體頻寬，叫 memory-bound。</b>Decode 每一輪只替一個 request 產生一個 token，卻要把全部權重從 GPU 記憶體讀一遍。這裡的「一輪」是 GPU 算出一個 token 的一次計算，不是 agent 的一步；agent 的一步要跑幾百輪才產生一段回覆。運算單元多半在等資料，每秒能產生幾個 token，看 GPU 每秒能從記憶體讀幾 byte。batch 只有一個 request 時，兩個上限算出來差約兩百倍：</p>
+<figure class="file"><figcaption>上限怎麼算（Llama 3 70B、2 張 H200）</figcaption><pre><code class="lang-text">權重      705 億個參數 × 2 byte（BF16 格式）= 141 GB
+GPU       2 張 H200 合計：每秒 1,978 TFLOP 運算，每秒從記憶體讀 9.6 TB，記憶體 282 GB
+
+prefill   每個 token：705 億個參數 × 2 次運算（一乘一加）= 141 GFLOP
+          每秒 ≤ 1,978 TFLOP ÷ 141 GFLOP ≈ 14,000 個 token
+decode    batch 1：每一輪讀 141 GB，9.6 TB ÷ 141 GB ≈ 68 輪，每秒 ≈ 68 個 token
+
+KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約 43 萬個 token
+放滿時    每一輪讀 ≈ 整塊記憶體 282 GB，282 GB ÷ 9.6 TB ≈ 29 毫秒</code></pre></figure>
+<p><b>Batching 攤掉權重，攤不掉 KV cache。</b>這裡的 batching 是 serving 系統把同時在跑的很多 request 排成一批、一起 decode，和上一節打折的 Batch API 是兩件事。權重讀一次，batch 裡每個 request 都拿它算出自己的下一個 token，權重的成本就攤給整個 batch。但每個 request 還要讀自己的 KV cache。KV cache 就是 3.1 說的「每個 token 算出的一組中間結果」，兩組向量，叫 K 和 V；新的 token 要回頭讀前文全部的 K、V，才算得出下一個 token，這一步叫 attention。Prefix cache 存的也是它。KV cache 只服務自己的 request，batch 再大也攤不掉。看下圖：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 176" role="img" aria-label="三根照比例的水平長條，每個 request 的 context 都是 8K token 時，每產生 1 個 output token 要從記憶體讀多少 byte。Batch 1 是 144 GB，幾乎全是青色的權重。Batch 8 是 20 GB，權重縮成八分之一。Batch 52，記憶體放滿，是 5.4 GB，青色的權重和深紅的 KV cache 各約一半。深紅的 KV cache 在三根長條上一樣長，2.7 GB，不隨 batch 變小。">
+                  <text x="14" y="36" class="dg-c">batch 1</text>
+                  <rect x="170" y="20" width="465.6" height="22" class="dg-n-a"/>
+                  <rect x="635.6" y="20" width="8.8" height="22" class="dg-n-focus"/>
+                  <text x="652.5" y="36" class="dg-mn">144 GB</text>
+                  <text x="14" y="72" class="dg-c">batch 8</text>
+                  <rect x="170" y="56" width="58.2" height="22" class="dg-n-a"/>
+                  <rect x="228.2" y="56" width="8.8" height="22" class="dg-n-focus"/>
+                  <text x="245.0" y="72" class="dg-mn">20 GB</text>
+                  <text x="14" y="108" class="dg-c">batch 52（放滿）</text>
+                  <rect x="170" y="92" width="9.0" height="22" class="dg-n-a"/>
+                  <rect x="179.0" y="92" width="8.8" height="22" class="dg-n-focus"/>
+                  <text x="195.8" y="108" class="dg-mn">5.4 GB，一半是 KV cache</text>
+                  <rect x="170" y="128" width="14" height="14" class="dg-n-a"/><text x="190" y="140" class="dg-c">權重：整個 batch 共用，攤給 B 個 request</text>
+                  <rect x="170" y="150" width="14" height="14" class="dg-n-focus"/><text x="190" y="162" class="dg-c">KV cache：每個 request 自己一份，攤不掉</text>
+                </svg>
+              </div>
+              <figcaption>Batch 變大，每個 output token 要讀的 byte 少多少？每個 request 的 context 都是 8K token。青色的權重攤給越多 request，就越短；深紅的 KV cache 每個 request 各一份，三根一樣長。Batch 52 是 GPU 記憶體放得下的最多 request（下一段算），這時 KV cache 已經佔一半。本文用 L9 的規格推算，長條照比例畫。</figcaption>
+            </figure>
+<p data-num-own><b>Batch 的上限是記憶體，不是算力。</b>上面兩個上限差約兩百倍，意思是權重讀一次，要給約兩百個 token 用，算力才會用滿；這個比例在 roofline model 裡叫 ridge point（<a href="l10.html#i3">L10〈Decode〉</a>）。Decode 每一輪每個 request 只出一個 token，所以 batch 要約兩百個 request。但 batch 越大，KV cache 越多。上面的算式顯示，這兩張 GPU 扣掉權重，<a href="l09.html#i4-3">只放得下約 43 萬個 token 的 KV cache</a>；每個 request 的 context 是 8K 時，最多放 52 個，只有所需的四分之一左右。</p>
+<p data-num-own>放滿時，每一輪要讀的權重加 KV cache，差不多就是整塊 GPU 記憶體，所以一輪約 29 毫秒（上面的算式），和 context 長短無關。一輪替 batch 裡每個 request 各出一個 token，所以每秒產生的 token 數，看放得下幾個 request。Context 越長，同一筆記憶體放得下的 request 越少，decode 每秒產生的 token 就越少：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 264" role="img" aria-label="四組照比例的水平長條，比較同一段 context 長度下，prefill 和 decode 每秒各處理幾個 token。Decode 的 batch 放到記憶體的上限。4K context：prefill 13,500，decode 3,560，batch 104，差 4 倍。8K：prefill 13,000，decode 1,780，batch 52，差 7 倍。32K：prefill 10,700，decode 445，batch 13，差 24 倍。80K：prefill 8,000，decode 174，batch 5，差 46 倍。">
+                  <text x="14" y="24" class="dg-cb">4K context</text>
+                  <text x="14" y="46" class="dg-k">差 4 倍</text>
+                  <rect x="170" y="10" width="443.7" height="18" class="dg-n-a"/>
+                  <text x="621.7" y="24" class="dg-mn">13,500</text>
+                  <rect x="170" y="32" width="116.9" height="18" class="dg-n-b"/>
+                  <text x="294.9" y="46" class="dg-mn">3,560（batch 104）</text>
+                  <text x="14" y="80" class="dg-cb">8K context</text>
+                  <text x="14" y="102" class="dg-k">差 7 倍</text>
+                  <rect x="170" y="66" width="428.0" height="18" class="dg-n-a"/>
+                  <text x="606.0" y="80" class="dg-mn">13,000</text>
+                  <rect x="170" y="88" width="58.4" height="18" class="dg-n-b"/>
+                  <text x="236.4" y="102" class="dg-mn">1,780（batch 52）</text>
+                  <text x="14" y="136" class="dg-cb">32K context</text>
+                  <text x="14" y="158" class="dg-k">差 24 倍</text>
+                  <rect x="170" y="122" width="353.1" height="18" class="dg-n-a"/>
+                  <text x="531.1" y="136" class="dg-mn">10,700</text>
+                  <rect x="170" y="144" width="14.6" height="18" class="dg-n-b"/>
+                  <text x="192.6" y="158" class="dg-mn">445（batch 13）</text>
+                  <text x="14" y="192" class="dg-cb">80K context</text>
+                  <text x="14" y="214" class="dg-k">差 46 倍</text>
+                  <rect x="170" y="178" width="261.6" height="18" class="dg-n-a"/>
+                  <text x="439.6" y="192" class="dg-mn">8,000</text>
+                  <rect x="170" y="200" width="5.7" height="18" class="dg-n-b"/>
+                  <text x="183.7" y="214" class="dg-mn">174（batch 5）</text>
+                  <rect x="170" y="238" width="14" height="14" class="dg-n-a"/><text x="190" y="250" class="dg-c">prefill（input）</text>
+                  <rect x="330" y="238" width="14" height="14" class="dg-n-b"/><text x="350" y="250" class="dg-c">decode（output），batch 放到記憶體上限</text>
+                  <text x="706" y="250" text-anchor="end" class="dg-c">token／秒</text>
+                </svg>
+              </div>
+              <figcaption>同一段 context 長度，prefill 和 decode 每秒各處理幾個 token？Decode 的 batch 已經放到記憶體的上限，還是差 4 到 46 倍；context 越長，放得下的 request 越少，差得越多。Prefill 也隨 context 變慢，因為 attention 的運算量隨長度成長。本文用 L9 的規格推算，是理論上限，長條照比例畫。</figcaption>
+            </figure>
+<p data-num-own>所以 batching 有用，但收不平。Context 短時（上圖的 4K、8K），它把和 prefill 的差距從兩百倍縮到幾倍；context 越長，差距又拉開。收不平的原因是 KV cache 攤不掉，而且它先用完記憶體，算力還沒用滿。API 的單價不隨 context 長度變（Claude 整個 1M context 同價，見<a class="tm" href="#t2">單價註</a>），所以 output 約 5 倍是平均後的定價，不是每一種長度的成本。它和短 context 的差距同一量級；長 context 的 decode 實際上更貴，provider 用平均價把它攤掉。</p>
+<p>同一筆帳也解釋了價目表上的另外三個價格。三個都是本文的解讀，provider 沒有公開成本：</p>
+<ul>
+                <li><b>Cache read 最便宜。</b>Prefix 的 KV cache 已經算好，連 prefill 的運算都省了。Provider 付的是把 KV cache 存著、再搬回 GPU 的成本。</li>
+                <li><b>Fast mode 比較貴。</b>Batch 放滿時，每個 request 每秒約拿到 34 個 token，batch 只有它一個時約 68 個。要每個 request 都快，batch 就要小，同一組 GPU 服務的 request 變少，每個 token 分到的成本就高。官方沒說 fast mode 怎麼做，只說價格 2 倍、output 速度最多 2.5 倍。縮小 batch 是方向一致的一種方式，但它最多只換到 68 ÷ 34 = 2 倍的速度，2.5 倍還要靠別的手法。</li>
+                <li><b>Batch API 打 5 折。</b>上面的帳假設 batch 一直放滿，實際上互動的 request 隨使用者來去，離峰時湊不滿；尖峰時 provider 還要留餘裕，因為 batch 越滿，每個 request 越慢（上一項）。Batch API 不用顧延遲，provider 可以把它排進離峰的空檔、湊滿再跑，GPU 的時間用得更滿。</li>
+              </ul>
+<p>GPU 為什麼算得快、讀得慢，以及 attention 讀 KV cache 為什麼吃不到 batching 的好處，見 <a href="l10.html#i3">L10〈Decode〉</a>。</p>
             </div>
           </div>
 
