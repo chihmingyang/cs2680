@@ -1,4 +1,4 @@
-/* CS2680 觀念導讀 — 維護者的線上編輯與「問 Claude」。
+/* CS2680 觀念導讀 — 維護者的線上編輯與留言。
    app.js loads this file only after the maintainer opened a page with ?edit once,
    so members never download it. Design notes: guide/WORKFLOW.md section G.
 
@@ -7,8 +7,8 @@
    position among identical blocks), replaces only those bytes, and commits.
    A block that changed on GitHub meanwhile is reported, not overwritten.
 
-   Ask: a question is an issue with the label "ask". .github/workflows/ask.yml runs
-   Claude Code on it and replies in a comment; this panel polls for the reply. */
+   Comments: a comment is an issue with the label "comment", shown on the page like a
+   Confluence inline comment. The next Claude session answers it (see the comments section). */
 (function () {
   var REPO = 'chihmingyang/cs2680';
   var OWNER = 'chihmingyang';
@@ -773,7 +773,7 @@
     inner.appendChild(tool('連結', '加或移除連結', setLink));
     inner.appendChild(tool('貼圖', '選一張圖，放在目前這一段後面（也可以直接 ⌘V 貼上）', function () { pickImage(); }));
     inner.appendChild(tool('清除', '清除選取文字的格式', clearFormat));
-    inner.appendChild(tool('問 Claude', '問 Claude 選取的文字', function () { openAsk(); }));
+    inner.appendChild(tool('留言', '對選取的文字留言', function () { openAsk(); }));
     statusEl = h('span', 'ed-status');
     inner.appendChild(statusEl);
     saveBtn = h('button', 'ed-save', '儲存');
@@ -1040,6 +1040,7 @@
     var el = active;
     window.clearTimeout(snapTimer);
     snapTimer = window.setTimeout(function () { markDirty(el); }, 300);
+    scheduleMarks();
   });
   document.addEventListener('beforeinput', function (e) {
     if (!editing || !active || !active.contains(e.target) || e.isComposing) return;
@@ -1108,9 +1109,9 @@
     panel = h('aside', 'ed-panel ed-ui');
     panel.hidden = true;
     var head = h('div', 'ed-panel-head');
-    var title = h('button', 'ed-panel-title', '問 Claude');
+    var title = h('button', 'ed-panel-title', '留言');
     title.type = 'button';
-    title.title = '回到這一頁的提問列表';
+    title.title = '回到這一頁的留言列表';
     title.addEventListener('click', function () { showList(); });
     head.appendChild(title);
     var gear = h('button', 'ed-panel-x');
@@ -1250,9 +1251,19 @@
     return out.join('');
   }
 
-  /* ---------- ask ---------- */
+  /* ---------- comments (留言) ----------
+     A comment is an issue with the label "comment", like a Confluence inline comment.
+     Nothing answers it at once: the next Claude session runs tools/comments.py and the
+     answer-comments skill, replies (marked <!-- cs2680:claude -->), adds the label "answered",
+     and often rewrites the page. James resolves it here (closes the issue) or replies, which
+     drops "answered" so the next session picks it up again.
+     Marks on the page use the CSS Custom Highlight API and badges outside <main>, so they
+     never touch the DOM that the editor saves. */
+  var LABEL = 'comment';
   var pollTimer = 0;
   function stopPoll() { window.clearTimeout(pollTimer); }
+  var threads = [];
+  var marksLayer = null;
 
   function anchorFor(node) {
     var el = node && node.nodeType === 1 ? node : node && node.parentElement;
@@ -1278,9 +1289,131 @@
   }
   function needToken() {
     if (store(TOKEN_KEY)) return false;
-    showSettings('發問要先設定 GitHub token。');
+    showSettings('留言要先設定 GitHub token。');
     return true;
   }
+  function isClaude(c) {
+    return c.user.login !== OWNER || (c.body || '').indexOf('cs2680:claude') >= 0;
+  }
+  function stateOf(issue) {
+    if (issue.state === 'closed') return 'done';
+    return (issue.labels || []).some(function (l) { return (l.name || l) === 'answered'; }) ? 'answered' : 'waiting';
+  }
+  var STATE_NAME = { waiting: '等 Claude 回答', answered: 'Claude 回答了，等你看', done: '已解決' };
+  function quoteOf(issue) {
+    var lines = (issue.body || '').split('\n').filter(function (l) { return /^>\s?/.test(l); });
+    return lines.map(function (l) { return l.replace(/^>\s?/, ''); }).join('\n');
+  }
+  function anchorOf(issue) {
+    var m = (issue.body || '').match(/anchor=([^\s>]*)/);
+    return m ? m[1] : '';
+  }
+
+  /* find the quoted text on the page; whitespace does not count */
+  function findRange(quote, anchor) {
+    var q = squeeze(quote || '');
+    if (!q) return null;
+    var walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        return n.parentElement.closest('svg,script,style,.ed-ui') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var flat = '';
+    var map = [];
+    for (var n = walker.nextNode(); n; n = walker.nextNode()) {
+      var t = n.nodeValue;
+      for (var i = 0; i < t.length; i++) {
+        if (/\s/.test(t[i])) continue;
+        flat += t[i];
+        map.push([n, i]);
+      }
+    }
+    var from = 0;
+    var a = anchor && document.getElementById(anchor);
+    if (a && main.contains(a)) {
+      for (var k = 0; k < map.length; k++) {
+        if (a.compareDocumentPosition(map[k][0]) & (Node.DOCUMENT_POSITION_FOLLOWING | Node.DOCUMENT_POSITION_CONTAINED_BY)) { from = k; break; }
+      }
+    }
+    var tries = [q, q.slice(0, 40), q.slice(-40)];
+    for (var j = 0; j < tries.length; j++) {
+      var s = tries[j];
+      if (!s) continue;
+      var at = flat.indexOf(s, from);
+      if (at < 0) at = flat.indexOf(s);
+      if (at < 0) continue;
+      var r = document.createRange();
+      r.setStart(map[at][0], map[at][1]);
+      var end = map[at + s.length - 1];
+      r.setEnd(end[0], end[1] + 1);
+      return r;
+    }
+    return null;
+  }
+  function drawMarks() {
+    if (!marksLayer) {
+      marksLayer = h('div', 'ed-cmt-layer ed-ui');
+      document.body.appendChild(marksLayer);
+    }
+    marksLayer.textContent = '';
+    var hl = window.CSS && CSS.highlights && window.Highlight;
+    var wait = hl ? new Highlight() : null;
+    var ans = hl ? new Highlight() : null;
+    var used = [];
+    /* the badge sits just right of the text column the quote is in */
+    function rightOf(node) {
+      var el = node.nodeType === 1 ? node : node.parentElement;
+      var col = el.closest('.prose, figure, .table-wrap, .idea, section') || main;
+      return col.getBoundingClientRect().right + window.pageXOffset;
+    }
+    threads.forEach(function (issue) {
+      var st = stateOf(issue);
+      if (st === 'done') return;
+      var r = findRange(quoteOf(issue), anchorOf(issue));
+      var top, right;
+      if (r) {
+        if (hl) (st === 'answered' ? ans : wait).add(r);
+        top = r.getBoundingClientRect().top + window.pageYOffset;
+        right = rightOf(r.startContainer);
+      } else {
+        var a = document.getElementById(anchorOf(issue));
+        if (!a || !main.contains(a)) return;
+        top = a.getBoundingClientRect().top + window.pageYOffset;
+        right = rightOf(a);
+      }
+      while (used.some(function (u) { return Math.abs(u - top) < 26; })) top += 26;
+      used.push(top);
+      var b = h('button', 'ed-cmt-badge is-' + st + (r ? '' : ' is-lost'));
+      b.type = 'button';
+      b.innerHTML = icon('M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z');
+      b.title = STATE_NAME[st] + (r ? '' : '（原文改過了，找不到那幾個字）') + '：' + titleText(issue);
+      b.setAttribute('aria-label', b.title);
+      b.style.top = top + 'px';
+      b.style.left = Math.min(right + 8, document.documentElement.clientWidth - 26) + 'px';
+      b.addEventListener('click', function () { showThread(issue.number); });
+      marksLayer.appendChild(b);
+    });
+    if (hl) {
+      CSS.highlights.set('ed-cmt-wait', wait);
+      CSS.highlights.set('ed-cmt-ans', ans);
+    }
+  }
+  function titleText(issue) { return issue.title.slice(pageTag.length + 3); }
+  function loadThreads() {
+    if (!store(TOKEN_KEY)) return Promise.resolve([]);
+    return gh('/issues?labels=' + LABEL + '&state=all&per_page=100&sort=updated').then(function (list) {
+      threads = (list || []).filter(function (i) { return i.title.indexOf('[' + pageTag + '] ') === 0 && i.user.login === OWNER && !i.pull_request; });
+      drawMarks();
+      return threads;
+    }).catch(function () { return []; });
+  }
+  var markTimer = 0;
+  function scheduleMarks() {
+    window.clearTimeout(markTimer);
+    markTimer = window.setTimeout(function () { if (threads.length) drawMarks(); }, 200);
+  }
+  window.addEventListener('resize', scheduleMarks);
+
   function composer(quote) {
     openPanel();
     stopPoll();
@@ -1290,45 +1423,41 @@
       var q = h('blockquote', 'ed-quote', quote.text.length > 600 ? quote.text.slice(0, 600) + '…' : quote.text);
       panelBody.appendChild(q);
     } else {
-      panelBody.appendChild(h('p', 'ed-note', '沒有選取文字。Claude 會看這一頁整頁。'));
+      panelBody.appendChild(h('p', 'ed-note', '沒有選取文字，這則留言對整頁。'));
     }
     var box = h('textarea', 'ed-input');
     box.rows = 5;
-    box.placeholder = '想問什麼？例如：這段的 fork 是什麼意思？';
+    box.placeholder = '哪裡看不懂、想問什麼、想怎麼改都可以。例如：這裡的 fork 是什麼？';
     panelBody.appendChild(box);
     var row = h('div', 'ed-row');
-    var ask = h('button', 'ed-save', '問');
-    ask.type = 'button';
-    ask.title = '只回答，不改站台';
-    var edit = h('button', 'ed-exit', '請 Claude 改站台');
-    edit.type = 'button';
-    edit.title = '照 rewrite-with-example 改 HTML、跑檢查、push';
-    row.appendChild(ask);
-    row.appendChild(edit);
+    var send = h('button', 'ed-save', '留言');
+    send.type = 'button';
+    row.appendChild(send);
     panelBody.appendChild(row);
     var msg = h('p', 'ed-note');
     panelBody.appendChild(msg);
-    panelBody.appendChild(h('p', 'ed-note', '問題會開成 repo 的公開 issue（label: ask），答完自動關閉。通常 1–3 分鐘。'));
-    function send(mode) {
+    panelBody.appendChild(h('p', 'ed-note', '留言存成 repo 的公開 issue（label: comment）。下一次 session 說「回答留言」，Claude 會回答；看不懂的地方會順便改文件。'));
+    send.addEventListener('click', function () {
       var text = box.value.trim();
-      if (!text) { msg.textContent = '先寫問題。'; box.focus(); return; }
-      ask.disabled = edit.disabled = true;
+      if (!text) { msg.textContent = '先寫留言。'; box.focus(); return; }
+      send.disabled = true;
       msg.textContent = '送出中…';
       var anchor = quote && quote.anchor ? quote.anchor : '';
-      var body = '<!-- cs2680:ask mode=' + mode + ' file=' + filePath + ' anchor=' + anchor + ' -->\n';
+      var body = '<!-- cs2680:comment file=' + filePath + ' anchor=' + anchor + ' -->\n';
       body += '頁面：https://' + OWNER + '.github.io/cs2680/' + fileName + (anchor ? '#' + anchor : '') + '\n\n';
       if (quote && quote.text) body += quote.text.split('\n').map(function (l) { return '> ' + l; }).join('\n') + '\n\n';
       body += text;
       var title = '[' + pageTag + '] ' + text.replace(/\s+/g, ' ').slice(0, 50);
-      gh('/issues', { method: 'POST', body: { title: title, body: body, labels: ['ask'] } }).then(function (issue) {
+      gh('/issues', { method: 'POST', body: { title: title, body: body, labels: [LABEL] } }).then(function (issue) {
+        threads.unshift(issue);
+        drawMarks();
+        getSelection().removeAllRanges();
         showThread(issue.number);
       }).catch(function (err) {
-        ask.disabled = edit.disabled = false;
+        send.disabled = false;
         msg.textContent = '送不出去：' + err.message;
       });
-    }
-    ask.addEventListener('click', function () { send('ask'); });
-    edit.addEventListener('click', function () { send('edit'); });
+    });
     box.focus();
   }
   function showList() {
@@ -1336,28 +1465,28 @@
     stopPoll();
     if (needToken()) return;
     panelBody.textContent = '';
-    var fresh = h('button', 'ed-save', '新問題');
-    fresh.type = 'button';
-    fresh.addEventListener('click', function () { openAsk(); });
-    panelBody.appendChild(fresh);
-    panelBody.appendChild(h('h3', 'ed-h', '這一頁問過的'));
-    var ul = h('ul', 'ed-threads');
-    panelBody.appendChild(ul);
+    panelBody.appendChild(h('p', 'ed-note', '選取一段文字，按「留言」。'));
     var wait = h('p', 'ed-note', '讀取中…');
     panelBody.appendChild(wait);
-    gh('/issues?labels=ask&state=all&per_page=50&sort=updated').then(function (list) {
-      wait.textContent = '';
-      var mine = (list || []).filter(function (i) { return i.title.indexOf('[' + pageTag + '] ') === 0 && i.user.login === OWNER; });
-      if (!mine.length) wait.textContent = '還沒有。選取一段文字，按「問 Claude」。';
-      mine.forEach(function (i) {
-        var li = h('li');
-        var b = h('button', 'ed-thread', i.title.slice(pageTag.length + 3));
-        b.type = 'button';
-        b.addEventListener('click', function () { showThread(i.number); });
-        li.appendChild(b);
-        ul.appendChild(li);
+    loadThreads().then(function (list) {
+      wait.textContent = list.length ? '' : '這一頁還沒有留言。';
+      ['waiting', 'answered', 'done'].forEach(function (st) {
+        var some = list.filter(function (i) { return stateOf(i) === st; });
+        if (st === 'done') some = some.slice(0, 10);
+        if (!some.length) return;
+        panelBody.appendChild(h('h3', 'ed-h', STATE_NAME[st] + '（' + some.length + '）'));
+        var ul = h('ul', 'ed-threads');
+        some.forEach(function (i) {
+          var li = h('li');
+          var b = h('button', 'ed-thread is-' + st, titleText(i));
+          b.type = 'button';
+          b.addEventListener('click', function () { showThread(i.number); });
+          li.appendChild(b);
+          ul.appendChild(li);
+        });
+        panelBody.appendChild(ul);
       });
-    }).catch(function (err) { wait.textContent = '讀不到：' + err.message; });
+    });
   }
   function showBubble(parent, who, md, isBot) {
     var box = h('div', 'ed-msg' + (isBot ? ' is-bot' : ''));
@@ -1368,7 +1497,9 @@
     parent.appendChild(box);
   }
   function stripMarker(body) {
-    return (body || '').replace(/<!--[\s\S]*?-->\s*/g, '').replace(/^頁面：\S+\s*/, '').trim();
+    /* the session environment appends a "Generated by Claude Code" footer to what it posts */
+    return (body || '').replace(/<!--[\s\S]*?-->\s*/g, '').replace(/^頁面：\S+\s*/, '')
+      .replace(/\n-{3,}\s*\n_Generated by \[Claude Code\]\([^)]*\)_\s*$/, '').trim();
   }
   function showThread(number) {
     openPanel();
@@ -1380,75 +1511,78 @@
     panelBody.appendChild(state);
     var box = h('textarea', 'ed-input');
     box.rows = 3;
-    box.placeholder = '接著問…';
+    box.placeholder = '接著問，或說還是看不懂哪裡…';
     panelBody.appendChild(box);
     var row = h('div', 'ed-row');
-    var ask = h('button', 'ed-save', '問');
-    ask.type = 'button';
-    var edit = h('button', 'ed-exit', '請 Claude 改站台');
-    edit.type = 'button';
-    row.appendChild(ask);
-    row.appendChild(edit);
+    var reply = h('button', 'ed-save', '回覆');
+    reply.type = 'button';
+    var resolve = h('button', 'ed-exit', '解決');
+    resolve.type = 'button';
+    row.appendChild(reply);
+    row.appendChild(resolve);
     panelBody.appendChild(row);
-    var seen = -1;
-    var started = Date.now();
+    var issue = null;
+    function setIssue(i) {
+      issue = i;
+      threads = threads.filter(function (t) { return t.number !== i.number; });
+      if ((i.labels || []).some(function (l) { return (l.name || l) === LABEL; })) threads.unshift(i);
+      var st = stateOf(i);
+      state.textContent = st === 'waiting' ? '等下一次 session 回答。開 session 說「回答留言」。' : st === 'done' ? '已解決。' : '';
+      resolve.textContent = st === 'done' ? '重新打開' : '解決';
+      drawMarks();
+    }
     function load() {
       Promise.all([gh('/issues/' + number), gh('/issues/' + number + '/comments?per_page=100')]).then(function (res) {
-        var issue = res[0];
-        /* only the maintainer and the workflow: this repo's issues are open to anyone */
+        /* only the maintainer and Claude: this repo's issues are open to anyone */
         var comments = (res[1] || []).filter(function (c) { return c.user.login === OWNER || c.user.login === 'github-actions[bot]'; });
-        if (comments.length !== seen) {
-          seen = comments.length;
-          log.textContent = '';
-          showBubble(log, '你', stripMarker(issue.body), false);
-          comments.forEach(function (c) {
-            var bot = c.user.login !== OWNER;
-            showBubble(log, bot ? 'Claude' : '你', stripMarker(c.body), bot);
-          });
-          panelBody.scrollTop = panelBody.scrollHeight;
-        }
-        var last = comments[comments.length - 1];
-        var answered = last && last.user.login !== OWNER;
-        if (answered) {
-          state.textContent = '';
-        } else {
-          var sec = Math.round((Date.now() - started) / 1000);
-          state.textContent = 'Claude 處理中…（' + sec + ' 秒）';
-          var run = h('a', '', '看執行狀況');
-          run.href = 'https://github.com/' + REPO + '/actions/workflows/ask.yml';
-          run.target = '_blank';
-          run.rel = 'noopener';
-          state.appendChild(document.createTextNode(' '));
-          state.appendChild(run);
-          pollTimer = window.setTimeout(load, 8000);
-        }
+        log.textContent = '';
+        showBubble(log, '你', stripMarker(res[0].body), false);
+        comments.forEach(function (c) {
+          var bot = isClaude(c);
+          showBubble(log, bot ? 'Claude' : '你', stripMarker(c.body), bot);
+        });
+        setIssue(res[0]);
+        panelBody.scrollTop = panelBody.scrollHeight;
       }).catch(function (err) {
-        state.textContent = '讀不到回覆：' + err.message;
-        pollTimer = window.setTimeout(load, 15000);
+        state.textContent = '讀不到：' + err.message;
       });
     }
-    function send(mode) {
+    reply.addEventListener('click', function () {
       var text = box.value.trim();
       if (!text) { box.focus(); return; }
-      ask.disabled = edit.disabled = true;
-      gh('/issues/' + number + '/comments', { method: 'POST', body: { body: '<!-- cs2680:ask mode=' + mode + ' -->\n' + text } }).then(function () {
+      reply.disabled = true;
+      gh('/issues/' + number + '/comments', { method: 'POST', body: { body: text } }).then(function () {
+        /* back to waiting: the next session answers it again */
+        var undo = issue && stateOf(issue) === 'answered' ? gh('/issues/' + number + '/labels/answered', { method: 'DELETE' }).catch(function () {}) : null;
+        var reopen = issue && issue.state === 'closed' ? gh('/issues/' + number, { method: 'PATCH', body: { state: 'open' } }) : null;
+        return Promise.all([undo, reopen]);
+      }).then(function () {
         box.value = '';
-        ask.disabled = edit.disabled = false;
-        started = Date.now();
-        stopPoll();
+        reply.disabled = false;
         load();
       }).catch(function (err) {
-        ask.disabled = edit.disabled = false;
+        reply.disabled = false;
         state.textContent = '送不出去：' + err.message;
       });
-    }
-    ask.addEventListener('click', function () { send('ask'); });
-    edit.addEventListener('click', function () { send('edit'); });
+    });
+    resolve.addEventListener('click', function () {
+      if (!issue) return;
+      resolve.disabled = true;
+      var open = issue.state === 'closed';
+      gh('/issues/' + number, { method: 'PATCH', body: open ? { state: 'open' } : { state: 'closed', state_reason: 'completed' } }).then(function (i) {
+        resolve.disabled = false;
+        setIssue(i);
+        if (!open) showList();
+      }).catch(function (err) {
+        resolve.disabled = false;
+        state.textContent = '改不了狀態：' + err.message;
+      });
+    });
     load();
   }
 
-  /* selecting text anywhere in the article offers the question */
-  var pop = h('button', 'ed-pop ed-ui', '問 Claude');
+  /* selecting text anywhere in the article offers a comment */
+  var pop = h('button', 'ed-pop ed-ui', '留言');
   pop.type = 'button';
   pop.hidden = true;
   document.body.appendChild(pop);
@@ -1481,8 +1615,8 @@
   var askBtn = h('button', 'theme-btn ed-ui ed-open');
   askBtn.type = 'button';
   askBtn.innerHTML = icon('M2.5 3.5h11v7.5H7l-3 2.5V11H2.5z');
-  askBtn.title = '問 Claude';
-  askBtn.setAttribute('aria-label', '問 Claude');
+  askBtn.title = '留言';
+  askBtn.setAttribute('aria-label', '留言');
   askBtn.addEventListener('click', function () {
     if (panel && !panel.hidden) closePanel();
     else if (currentQuote()) openAsk();
@@ -1507,7 +1641,10 @@
   topbarInner.insertBefore(editBtn, askBtn);
 
   /* test hook: the patch logic, for tools/test_editor.py */
-  window.__cs2680ed = { scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
+  window.__cs2680ed = { threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
 
   if (/[?&]edit=now\b/.test(location.search)) setEditing(true);
+  /* comment marks: after layout settles (fonts, figures) */
+  if (document.readyState === 'complete') loadThreads();
+  else window.addEventListener('load', function () { loadThreads(); });
 })();

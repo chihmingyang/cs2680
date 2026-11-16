@@ -183,13 +183,13 @@ git push origin main
 
 ## F. 讀成員的討論（2026-11-09 停用）
 
-頁面的「問題討論」段和各堂的 GitHub 討論串已拿掉、關閉，`discuss.py` 已刪（舊版在 git 歷史）。留言還在關閉的 issue 裡（label `L01`…`L11`）。label `ask` 的 issue 是「問 Claude」，見 G，照常運作。
+頁面的「問題討論」段和各堂的 GitHub 討論串已拿掉、關閉，`discuss.py` 已刪（舊版在 git 歷史）。留言還在關閉的 issue 裡（label `L01`…`L11`）。站台留言是 label `comment` 的 issue，見 G。
 
 ---
 
-## G. 線上編輯與「問 Claude」（維護者工具）
+## G. 線上編輯與留言（維護者工具）
 
-James 在站台上直接改字、問問題。一般成員看不到：`app.js` 只在這個瀏覽器開過 `?edit` 之後才載入 `docs/edit.js`、`docs/edit.css`（`?edit=off` 取消）。頁面上多兩個鈕：鉛筆（編輯）、對話框（問 Claude）。
+James 在站台上直接改字、問問題。一般成員看不到：`app.js` 只在這個瀏覽器開過 `?edit` 之後才載入 `docs/edit.js`、`docs/edit.css`（`?edit=off` 取消）。頁面上多兩個鈕：鉛筆（編輯）、對話框（留言）。
 
 **編輯（`docs/edit.js`）**
 
@@ -211,22 +211,24 @@ James 直接改字，比在對話裡說「看不懂」更準：diff 精確指出
 - 處理過的記在 `guide/edit_log.tsv`（commit、日期、類別、學到什麼）。同一類出現第二次，就當新規則的候選問他。
 - 他改的字不改回來；新規則照 C 先問他。
 
-**問 Claude（`.github/workflows/ask.yml`、`tools/ask_prompt.py`）**
+**留言（2026-11-16 起；取代「問 Claude」）**
 
-- 選一段文字 → 按「問 Claude」→ 頁面開一個 label 為 `ask` 的公開 issue。Workflow 用 James 訂閱的 token 跑 `claude -p`，把回答留言回去並關閉 issue；面板每 8 秒讀一次留言。接著問就是在同一串留言，關閉的 issue 也會再觸發。
-- 「問」只給唯讀工具。「請 Claude 改站台」多給 `Edit`、`Write`、`git`、`node --check`、`python3 -I tools/*`。內容問題照 `rewrite-with-example` 改；功能、版面、工具、規範也可以改（用途是 James 邊讀邊改進站台），跑檢查後 push。`.github/workflows/` 改不了，要改時只回覆改法。
-- 只有 `chihmingyang` 觸發得到；`ask_prompt.py` 也只把他和 workflow 的留言放進 prompt，別人的留言到不了 Claude。
+像 Confluence 的 inline comment：讀到看不懂、想問、想改的地方，選一段文字，按「留言」。
+
+- 留言存成 label `comment` 的公開 issue：title `[l03] 留言前 50 字`，body 有 `<!-- cs2680:comment file=… anchor=… -->`、頁面連結、`>` 引用的原文。
+- 頁面上（開過 `?edit` 的瀏覽器）：被留言的原文標底色，右邊空白處一個圓鈕。黃色是等 Claude，藍色是 Claude 回答了、等他看；按圓鈕打開那一串。標記用 CSS Custom Highlight API 畫、圓鈕放在 `<main>` 外面，所以存檔永遠不會帶到它們。原文被改到找不到那幾個字時，圓鈕改放在錨點旁邊、虛線框。
+- **不會馬上有人回答。** 下一個 session 開工跑 `python3 -I tools/comments.py list`，照 `.claude/skills/answer-comments/SKILL.md` 處理：看不懂的，答案寫回文件（照 rewrite-with-example、I 審查、D 發布），再回覆那一串、加 label `answered`。Session 的回覆以 James 的帳號送出，靠 `<!-- cs2680:claude -->` 標記認成 Claude。
+- 一串的狀態：open 沒有 `answered` ＝等 Claude；open 有 `answered` ＝等 James 看；closed ＝他按了「解決」。他在面板回覆會拿掉 `answered`（已解決的會重新打開），下一次 `list` 就再出現。
+- 只認 `chihmingyang` 開的串和他、Claude 的回覆；別人在這些公開 issue 底下的留言不進 prompt。
+
+舊的「問 Claude」（`.github/workflows/ask.yml`、`tools/ask_prompt.py`，label `ask`，GitHub Action 馬上用 `claude -p` 回答）頁面上不再開這種 issue：唯一一次實測（2026-11-02，#106）Action 沒跑完，而且它改站台時跳過可讀性審查。Workflow 檔留著沒刪（這個環境改不了 `.github/workflows/`）。
 
 **設定（各做一次）**
 
 1. 瀏覽器：開 `https://chihmingyang.github.io/cs2680/l03.html?edit`，按對話框鈕，照面板的步驟建 fine-grained token（只選 cs2680；Contents、Issues 都是 write），貼進去。Token 只存在這個瀏覽器的 localStorage，有效期 1 年。
-2. 自己的電腦（「問 Claude」才需要）：
-   ```bash
-   claude setup-token                                              # 印出訂閱用的長效 token
-   gh secret set CLAUDE_CODE_OAUTH_TOKEN -R chihmingyang/cs2680    # 貼上剛才的 token
-   ```
+（留言不需要 GitHub Action，所以不必再設 `CLAUDE_CODE_OAUTH_TOKEN`。）
 
-**改 `edit.js` 之後**：`python3 -I tools/test_editor.py`（用假的 GitHub API 在瀏覽器跑；全站每一段都要找得到原始碼位置，存檔的 diff 只能動到改過的段落）。
+**改 `edit.js` 之後**：`python3 -I tools/test_editor.py`（用假的 GitHub API 在瀏覽器跑；全站每一段都要找得到原始碼位置，存檔的 diff 只能動到改過的段落；留言的標記、開串、回覆、解決）。測試要編輯的章是自動挑的（L3 第一個同時有清單、連結、圖、code、表的章），頁面重寫後不必改測試。
 
 ---
 

@@ -8,7 +8,8 @@ Usage: python3 -I tools/test_editor.py [--shots DIR]
    against the source. Only the touched blocks may change.
 3. A block changed on GitHub meanwhile is reported, and not overwritten.
 4. Members (no ?edit): edit.js is not loaded.
-5. Ask panel: posting a question makes an issue with the label ask; the reply renders escaped.
+5. Comments: marks on the page, a new comment is an issue with the label comment, replies render escaped,
+   replying drops answered, 解決 closes.
 """
 import argparse
 import base64
@@ -77,17 +78,30 @@ class FakeGitHub:
             return reply({"commit": {"sha": "deadbeefcafe"}})
         if path == "/issues" and method == "POST":
             body = json.loads(req.post_data)
-            issue = {"number": len(self.issues) + 1, "title": body["title"], "body": body["body"], "labels": body["labels"], "user": {"login": "chihmingyang"}}
+            issue = {"number": len(self.issues) + 1, "title": body["title"], "body": body["body"], "state": "open",
+                     "labels": [{"name": l} for l in body["labels"]], "user": {"login": "chihmingyang"}}
             self.issues.append(issue)
-            # the fake workflow answers at once; includes a script tag to prove replies are escaped
-            self.comments[issue["number"]] = [{"user": {"login": "github-actions[bot]"}, "body": "**答案** `code`\n\n<script>window.__pwned=1</script>\n\n- 一\n- 二"}]
+            self.comments[issue["number"]] = []
             return reply(issue, 201)
         if path == "/issues":
-            return reply(self.issues)
+            return reply(self.issues[::-1])
+        parts = path.split("/")
         if path.endswith("/comments"):
-            return reply(self.comments.get(int(path.split("/")[2]), []))
+            n = int(parts[2])
+            if method == "POST":
+                c = {"user": {"login": "chihmingyang"}, "body": json.loads(req.post_data)["body"]}
+                self.comments.setdefault(n, []).append(c)
+                return reply(c, 201)
+            return reply(self.comments.get(n, []))
+        if len(parts) == 5 and parts[3] == "labels" and method == "DELETE":
+            issue = self.issues[int(parts[2]) - 1]
+            issue["labels"] = [l for l in issue["labels"] if l["name"] != parts[4]]
+            return reply(issue["labels"])
         if path.startswith("/issues/"):
-            return reply(self.issues[int(path.split("/")[2]) - 1])
+            issue = self.issues[int(parts[2]) - 1]
+            if method == "PATCH":
+                issue.update(json.loads(req.post_data))
+            return reply(issue)
         if path == "":
             return reply({"permissions": {"push": True}})
         reply({"message": "not found " + path}, 404)
@@ -172,10 +186,24 @@ def main():
         page.wait_for_selector(".ed-bar")
         check(page.locator(".ed-save").first.is_disabled(), "save starts disabled")
 
+        # the chapter the test edits: the first one that has every kind of block the test touches
+        # (pages get rewritten, so a fixed #i1 goes stale)
+        CH = page.evaluate("""() => {
+          const vis = e => e.getClientRects().length > 0;
+          for (const c of document.querySelectorAll('main .idea[id]')) {
+            const ps = [...c.querySelectorAll('.prose > p:not([class])')].filter(vis);
+            if (ps.length >= 4 && c.querySelector('.prose li') && c.querySelector('.prose a') &&
+                c.querySelector('figure.diagram figcaption') && c.querySelector('figure.file figcaption') &&
+                c.querySelector('.table-wrap')) return '#' + c.id;
+          }
+          return '';
+        }""")
+        check(bool(CH), f"L3 has a chapter with every kind of block the test edits ({CH})")
+
         # plain typing: first prose paragraph of chapter 1
         # locators re-resolve and the editor adds classes, so pin the test's blocks with an attribute first
-        page.evaluate("""() => document.querySelectorAll('#i1 .prose > p:not([class])').forEach((p, i) => p.setAttribute('data-t', i))""")
-        target = "#i1 .prose > p[data-t]"
+        page.evaluate("""(ch) => [...document.querySelectorAll(ch + ' .prose > p:not([class])')].filter(p => p.getClientRects().length).forEach((p, i) => p.setAttribute('data-t', i))""", CH)
+        target = CH + " .prose > p[data-t]"
         para = page.locator('[data-t="0"]')
         para.scroll_into_view_if_needed()
         before = para.inner_text()
@@ -206,7 +234,7 @@ def main():
         page.wait_for_timeout(400)
 
         # a list item gets emptied: it must disappear from the source
-        li = page.locator("#i1 .prose li").first
+        li = page.locator(f"{CH} .prose li").first
         li.scroll_into_view_if_needed()
         li_text = li.inner_text()
         li.click()
@@ -216,7 +244,7 @@ def main():
 
         # a link inside a block does not navigate while editing
         url_before = page.url
-        link = page.locator("#i1 .prose a.ref, #i1 .prose a").first
+        link = page.locator(f"{CH} .prose a.ref, {CH} .prose a").first
         if link.count():
             link.scroll_into_view_if_needed()
             link.click()
@@ -277,20 +305,20 @@ def main():
             page.locator(".ed-handle .ed-hbtn", has_text=label).first.click()
             page.wait_for_timeout(50)
         counts = lambda t: (t.count("<figure"), t.count('class="table-wrap"'), t.count("<details"))
-        fig_text = page.locator("#i1 figure.diagram figcaption").first.inner_text()[:14]
-        code_cap = page.locator("#i1 figure.file figcaption").first.inner_text()[:14]
-        handle_click("#i1 figure.diagram", "刪除這張圖")
+        fig_text = page.locator(f"{CH} figure.diagram figcaption").first.inner_text()[:14]
+        code_cap = page.locator(f"{CH} figure.file figcaption").first.inner_text()[:14]
+        handle_click(f"{CH} figure.diagram", "刪除這張圖")
         check(page.locator(".ed-deleted").count() == 1, "figure is marked, not gone yet")
-        handle_click("#i1 figure.diagram", "復原")
+        handle_click(f"{CH} figure.diagram", "復原")
         check(page.locator(".ed-deleted").count() == 0 and page.locator(".ed-dirty").count() == 0, "undo a delete: nothing left to save")
-        handle_click("#i1 figure.diagram", "刪除這張圖")
-        handle_click("#i1 figure.file", "刪除這段 code")
-        handle_click("#i1 .table-wrap", "刪除整張表")
-        handle_click("#i1 .prose > p:not(.ed-deleted)", "＋段落", 2)
+        handle_click(f"{CH} figure.diagram", "刪除這張圖")
+        handle_click(f"{CH} figure.file", "刪除這段 code")
+        handle_click(f"{CH} .table-wrap", "刪除整張表")
+        handle_click(f"{CH} .prose > p:not(.ed-deleted)", "＋段落", 2)
         page.keyboard.type("ADDEDPARA")
         page.keyboard.press("Escape")
         png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
-        tgt = page.locator("#i1 .prose > p:not(.ed-deleted)").nth(3)
+        tgt = page.locator(f"{CH} .prose > p:not(.ed-deleted)").nth(3)
         tgt.scroll_into_view_if_needed(); tgt.hover(); page.wait_for_timeout(200)
         with page.expect_file_chooser() as fc:
             page.locator(".ed-handle .ed-hbtn", has_text="＋圖").first.click()
@@ -332,34 +360,59 @@ def main():
         check(abs(p_after - p_top) < 3, f"reading position holds when the toolbar opens ({p_top:.0f}→{p_after:.0f})")
         page.locator(".ed-exit").first.click()
 
-        # --- 5. ask panel
+        # --- 5. comments (留言)
+        # one comment Claude already answered, quoting a sentence that is on the page
+        quote = page.evaluate("""() => { const p = [...document.querySelectorAll('main .idea .prose > p:not([class])')].find(p => p.textContent.trim().length > 40); return p.textContent.trim().slice(5, 30); }""")
+        gh2.issues.append({"number": 1, "title": "[l03] 這是什麼？", "state": "open", "user": {"login": "chihmingyang"},
+                           "labels": [{"name": "comment"}, {"name": "answered"}],
+                           "body": "<!-- cs2680:comment file=docs/l03.html anchor= -->\n頁面：x\n\n> " + quote + "\n\n這是什麼？"})
+        # a reply from a Claude session posts as the owner, with the marker; it has a script tag to prove replies are escaped
+        gh2.comments[1] = [{"user": {"login": "chihmingyang"}, "body": "<!-- cs2680:claude -->\n**答案** `code`\n\n<script>window.__pwned=1</script>\n\n- 一\n- 二\n\n---\n_Generated by [Claude Code](https://claude.ai/code)_"}]
         page.goto("about:blank")
         page.goto(f"{base}/l03.html", wait_until="load")
-        page.wait_for_selector(".ed-open")
-        para = page.locator("#i1 .prose > p:not([class])").first
-        para.scroll_into_view_if_needed()
-        box = para.bounding_box()
-        page.mouse.move(box["x"] + 5, box["y"] + 8)
-        page.mouse.down()
-        page.mouse.move(box["x"] + 150, box["y"] + 8)
-        page.mouse.up()
+        page.wait_for_selector(".ed-cmt-badge.is-answered")
+        check(page.evaluate("CSS.highlights.get('ed-cmt-ans').size") == 1, "an answered comment highlights its quote on the page")
+        check(page.locator("main .ed-cmt-badge").count() == 0, "comment badges live outside <main>, so a save never sees them")
+        # select a few words of a later paragraph (a mouse drag does not select in headless Chromium)
+        page.evaluate("""() => {
+          const p = [...document.querySelectorAll('main .idea .prose > p:not([class])')].filter(p => p.textContent.trim().length > 40)[3];
+          p.scrollIntoView({ block: 'center' });
+          const t = document.createTreeWalker(p, NodeFilter.SHOW_TEXT).nextNode();
+          const r = document.createRange(); r.setStart(t, 0); r.setEnd(t, Math.min(20, t.length));
+          getSelection().removeAllRanges(); getSelection().addRange(r);
+        }""")
         page.wait_for_selector(".ed-pop:not([hidden])")
+        check(page.locator(".ed-pop").inner_text() == "留言", "selecting text offers 留言")
         page.click(".ed-pop")
         page.wait_for_selector(".ed-panel textarea")
         check(page.locator(".ed-quote").count() == 1, "the panel quotes the selection")
         if args.shots:
-            page.screenshot(path=f"{args.shots}/ask-composer.png")
+            page.screenshot(path=f"{args.shots}/comment-composer.png")
         page.fill(".ed-panel textarea", "這段是什麼意思？")
         page.locator(".ed-panel .ed-save").click()
+        page.wait_for_selector(".ed-cmt-badge.is-waiting")
+        issue = gh2.issues[-1]
+        check([l["name"] for l in issue["labels"]] == ["comment"] and issue["title"].startswith("[l03] "), "a comment becomes an issue with the label comment")
+        check("cs2680:comment file=docs/l03.html anchor=" in issue["body"] and "\n> " in issue["body"], "issue body carries the file, anchor and quote")
+        check(page.evaluate("CSS.highlights.get('ed-cmt-wait').size") == 1, "the new comment highlights its quote")
+        check("等下一次 session" in page.locator(".ed-panel .ed-note").first.inner_text(), "a new comment says it waits for the next session")
+        page.locator(".ed-panel .ed-panel-x").last.click()   # the panel covers the right margin
+        page.locator(".ed-cmt-badge.is-answered").click()
         page.wait_for_selector(".ed-msg.is-bot")
-        issue = gh2.issues[0]
-        check(issue["labels"] == ["ask"] and issue["title"].startswith("[l03] "), "question becomes an issue with the label ask")
-        check("cs2680:ask mode=ask file=docs/l03.html anchor=" in issue["body"], "issue body carries the mode, file and anchor")
         bot = page.locator(".ed-msg.is-bot .ed-msg-body")
-        check(bot.locator("b").count() == 1 and bot.locator("li").count() == 2, "reply renders Markdown")
+        check(bot.locator("b").count() == 1 and bot.locator("li").count() == 2, "Claude's reply renders Markdown")
         check(page.evaluate("window.__pwned") is None and bot.locator("script").count() == 0, "reply HTML is escaped")
+        check("Generated by" not in bot.inner_text(), "the session's attribution footer is not shown")
         if args.shots:
-            page.screenshot(path=f"{args.shots}/ask-thread.png")
+            page.screenshot(path=f"{args.shots}/comment-thread.png")
+        page.fill(".ed-panel textarea", "還是不懂第二句")
+        page.locator(".ed-panel .ed-save").click()
+        page.wait_for_function("document.querySelectorAll('.ed-msg').length === 3")
+        check([l["name"] for l in gh2.issues[0]["labels"]] == ["comment"], "replying drops the label answered, so the next session answers again")
+        page.locator(".ed-panel .ed-exit").click()
+        page.wait_for_function("document.querySelectorAll('.ed-cmt-badge').length === 1")
+        check(gh2.issues[0]["state"] == "closed", "解決 closes the issue and removes its mark")
+        check(page.evaluate("CSS.highlights.get('ed-cmt-wait').size") == 1, "the other comment keeps its mark")
 
         # --- narrow screen and dark mode
         if args.shots:

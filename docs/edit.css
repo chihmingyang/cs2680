@@ -138,3 +138,19 @@ figure[data-ed-new] figcaption { min-height: 1.4em; cursor: text; }
 }
 .ed-fab.is-shown { opacity: 1; visibility: visible; transform: none; transition: opacity .12s, transform .12s; }
 .ed-fab svg { width: 18px; height: 18px; }
+
+/* comments: highlighted quote (CSS Custom Highlight API, no DOM change) and a badge in the right margin */
+::highlight(ed-cmt-wait) { background-color: color-mix(in srgb, var(--caution) 24%, transparent); }
+::highlight(ed-cmt-ans) { background-color: color-mix(in srgb, var(--signal) 18%, transparent); }
+.ed-cmt-layer { position: absolute; top: 0; left: 0; width: 0; height: 0; z-index: 30; }
+.ed-cmt-badge {
+  position: absolute; display: grid; place-items: center; width: 24px; height: 24px; padding: 0;
+  color: var(--sheet); background: var(--caution); border: 0; border-radius: 50%;
+  box-shadow: var(--shadow); cursor: pointer;
+}
+.ed-cmt-badge svg { width: 14px; height: 14px; }
+.ed-cmt-badge.is-answered { background: var(--signal); }
+.ed-cmt-badge.is-lost { opacity: .6; outline: 2px dashed var(--caution); outline-offset: 2px; }
+.ed-thread.is-waiting::before, .ed-thread.is-answered::before { content: ""; display: inline-block; width: .5rem; height: .5rem; margin-right: .4rem; border-radius: 50%; vertical-align: .1em; background: var(--caution); }
+.ed-thread.is-answered::before { background: var(--signal); }
+.ed-thread.is-done { color: var(--ink-soft); }

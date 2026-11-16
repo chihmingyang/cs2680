@@ -95,6 +95,7 @@
 - 2026-10-21（討論改為每堂一串；延伸閱讀的「推薦」也附摘要）。
 
 ## WORKFLOW.md
+- 2026-11-16（**留言取代「問 Claude」**（James：「要有編輯模式像編輯 Confluence page…要有方式可以直接在文檔發問或 comment，下一次 session 開 skill 掃描回答」）：頁面選字按「留言」開 label `comment` 的 issue，不再馬上跑 Action；被留言的原文標底色、右邊圓鈕（黃＝等 Claude、藍＝回答了），面板可回覆、解決。新增 `tools/comments.py`（list／reply）、`answer-comments` skill，label `comment`、`answered`；`test_editor.py` 第 5 段改測留言，要編輯的章改成自動挑（L3 改寫後 `#i1` 沒有清單，測試壞掉）。G 改寫，CLAUDE.md 開工多跑 `comments.py list`。）
 - 2026-11-16（**改稿當 review comment**（James：「我直接改文檔送 commit，當 code review 做，你根據我的改動去思考如何優化流程」）：G 加一節；新增 `tools/edit_digest.py`（list／show／mark：讀者看得到的 before／after 字級 diff）、`.claude/skills/learn-from-edit/`、`guide/edit_log.tsv`；CLAUDE.md 開工多跑 `edit_digest.py list`。本機或 GitHub 網頁上改，commit 訊息用「改稿：」開頭。）
 - 2026-11-12（C 加〈補新材料之前，先判斷它是內容還是骨架〉與重排一堂的做法。起因是 L6b 補 Anthropic 研究文時只加小節、沒換骨架。）
 - 2026-11-11（加 I2〈標紅字：審查過了才做〉：紅字獨立成 I 之後、D 之前的一步，`red_path.py` 當關卡；寫作的 skill 不放 `<strong>`。）
