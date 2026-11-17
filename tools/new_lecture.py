@@ -13,11 +13,11 @@ Usage:
 What you get (docs/lXX.html; refuses to overwrite unless --force):
   head, topbar (← previous lecture, "LX / N"), this page's sidenav (built like add_lecture.py would),
   main[data-lecture][data-pdf][data-pages-total], lecture-head (eyebrow with「· 依想法重組」, h1, en-title, meta),
-  placeholder tldr and #s-ideas, #s-try, #wrap (原文出處, readmark),
+  placeholder tldr and #s-ideas, #wrap (原文出處, readmark; 動手試試 removed 2026-11-17),
   pager (← previous, 回總覽), fineprint, scripts. Copied from docs/l05.html, the v7 template.
 
 Then write the fragments in notes/lXX/ (head.html, i1.html…, tldr.html, fineprint.html, and the whole
-sections try.html, wrap.html) and run tools/assemble_v7.py docs/lXX.html notes/lXX.
+section wrap.html) and run tools/assemble_v7.py docs/lXX.html notes/lXX.
 Wire it to the site last: add_lecture.py (WORKFLOW B5).
 """
 import argparse
@@ -123,18 +123,7 @@ def main():
         </div>
       </section>
 
-      <!-- ===================== 2 動手試試 ===================== -->
-      <section class="part" id="s-try">
-        <header class="part-head">
-          <p class="kicker">動手試試</p>
-          <h2>照著做一次</h2>
-          <p class="lede">（待寫）點開才會展開。</p>
-        </header>
-        <div class="exlist">
-        </div>
-      </section>
-
-      <!-- ===================== 3 原文出處 ===================== -->
+      <!-- ===================== 原文出處 ===================== -->
       <section class="wrap" id="wrap" aria-label="原文出處">
         <p class="kicker">原文出處</p>
         <h2>原文出處</h2>
@@ -153,7 +142,7 @@ def main():
   </div>
 </main>
 </div>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261119a"></script>
 <script src="code.js"></script>
 </body>
 </html>

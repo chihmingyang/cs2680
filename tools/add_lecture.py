@@ -158,8 +158,7 @@ def here_block(m):
     if has_beyond:
         parts.append(sec("s-beyond", str(k - 1), "延伸思考") + subs(beyond) + "</li>")
     parts += [
-        sec("s-try", str(k), "動手試試") + "</li>",
-        sec("wrap", str(k + 1), "原文出處") + "</li>",  # 2026-11-09: 問題討論 removed
+        sec("wrap", str(k), "原文出處") + "</li>",  # 2026-11-09: 問題討論 removed; 2026-11-17: 動手試試 removed
     ]
     return (f'<li class="sn-lec is-here"><a class="sn-row" href="{m["key"]}.html" aria-current="page">'
             f'<span class="sn-no">L{m["no"]}</span><span class="sn-t">{H.escape(m["title"], quote=False)}</span>'

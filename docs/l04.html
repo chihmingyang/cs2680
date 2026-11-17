@@ -35,7 +35,7 @@
 <li class="sn-lec"><a class="sn-row" href="l01.html"><span class="sn-no">L1</span><span class="sn-t">Course Overview &amp; AI Systems</span><span class="sn-ck" data-read-key="l01" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l02.html"><span class="sn-no">L2</span><span class="sn-t">How Claude Code Works</span><span class="sn-ck" data-read-key="l02" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l03.html"><span class="sn-no">L3</span><span class="sn-t">Multi-agent Workflows</span><span class="sn-ck" data-read-key="l03" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l04.html" aria-current="page"><span class="sn-no">L4</span><span class="sn-t">Context Management &amp; Tool Design</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">根本的限制</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">所以 context 有三種成本</a></li><li><a class="sn-sub2" href="#i1-2">注意力的成本，兩組實驗量過</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">最重要的判斷</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">倍數要連著條件讀</a></li><li><a class="sn-sub2" href="#i2-2">本文的判斷：window 大了還是要管，理由換了</a></li><li><a class="sn-sub2" href="#i2-3">怎麼查</a></li><li><a class="sn-sub2" href="#i2-4">Control loop 也是 harness 的工作</a></li><li><a class="sn-sub2" href="#i2-5">評估時要固定 harness</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Context 的結構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">兩件事要記</a></li><li><a class="sn-sub2" href="#i3-2">順序不是隨便排的：cache 只認開頭</a></li><li><a class="sn-sub2" href="#i3-3">正式產品把「開頭不動」當第一條規則</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">管理的順序</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">Admission：在門口把關</a></li><li><a class="sn-sub2" href="#i4-2">Offloading：放在外面，要用再讀</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">已經進來的</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">Transformation：用規則改 messages</a></li><li><a class="sn-sub2" href="#i5-2">不呼叫 LLM，不等於免費</a></li><li><a class="sn-sub2" href="#i5-3">本文的判斷：紀錄和 model 看到的東西要分開</a></li><li><a class="sn-sub2" href="#i5-4">Compaction：LLM 當最後手段</a></li><li><a class="sn-sub2" href="#i5-5">為什麼是這個順序</a></li><li><a class="sn-sub2" href="#i5-6">Context 會怎麼壞：五種失敗</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Tool 設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Model 眼中的 tool 只有三段文字</a></li><li><a class="sn-sub2" href="#i6-2">設計 tool 時最先要問的：輸出進了 context，下一步會更好嗎？</a></li><li><a class="sn-sub2" href="#i6-3">五條原則</a></li><li><a class="sn-sub2" href="#i6-4">錯誤要能教</a></li><li><a class="sn-sub2" href="#i6-5">預設冪等</a></li><li><a class="sn-sub2" href="#i6-6">那只給 shell 行不行</a></li><li><a class="sn-sub2" href="#i6-7">Tool 的輸出不一定要進 context</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Execution</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">五項各做什麼</a></li><li><a class="sn-sub2" href="#i7-2">既然 shell 都做得到，為什麼還要專用的 read、edit tool？</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Search</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">先認識兩個字：字面與 symbol</a></li><li><a class="sn-sub2" href="#i8-2">找法 1：grep 與 glob，依字面找</a></li><li><a class="sn-sub2" href="#i8-3">找法 2：semantic search，依意思找</a></li><li><a class="sn-sub2" href="#i8-4">找法 3：repo map，依結構找</a></li><li><a class="sn-sub2" href="#i8-5">找法 4：extrinsic signal，程式碼以外的證據</a></li><li><a class="sn-sub2" href="#i8-6">找法 5：LSP，依 symbol 找</a></li><li><a class="sn-sub2" href="#i8-7">為什麼先用 grep</a></li><li><a class="sn-sub2" href="#i8-8">Claude Code 選 grep，Cursor 兩個都要</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Edit</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">改法 1：整檔重寫</a></li><li><a class="sn-sub2" href="#i9-2">改法 2：unified diff</a></li><li><a class="sn-sub2" href="#i9-3">改法 3：search/replace</a></li><li><a class="sn-sub2" href="#i9-4">改法 4：AST 編輯</a></li><li><a class="sn-sub2" href="#i9-5">Search/replace 和 unified diff 差在哪</a></li><li><a class="sn-sub2" href="#i9-6">為什麼失敗的方式這麼要緊</a></li><li><a class="sn-sub2" href="#i9-7">另一派：沒有行號的 diff</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">Prompt</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">哪幾招已經過期</a></li><li><a class="sn-sub2" href="#i10-2">不會過期的四條原則</a></li><li><a class="sn-sub2" href="#i10-3">招式為什麼會過期</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l04.html" aria-current="page"><span class="sn-no">L4</span><span class="sn-t">Context Management &amp; Tool Design</span><span class="sn-ck" data-read-key="l04" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">根本的限制</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">所以 context 有三種成本</a></li><li><a class="sn-sub2" href="#i1-2">注意力的成本，兩組實驗量過</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">最重要的判斷</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">倍數要連著條件讀</a></li><li><a class="sn-sub2" href="#i2-2">本文的判斷：window 大了還是要管，理由換了</a></li><li><a class="sn-sub2" href="#i2-3">怎麼查</a></li><li><a class="sn-sub2" href="#i2-4">Control loop 也是 harness 的工作</a></li><li><a class="sn-sub2" href="#i2-5">評估時要固定 harness</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Context 的結構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">兩件事要記</a></li><li><a class="sn-sub2" href="#i3-2">順序不是隨便排的：cache 只認開頭</a></li><li><a class="sn-sub2" href="#i3-3">正式產品把「開頭不動」當第一條規則</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">管理的順序</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">Admission：在門口把關</a></li><li><a class="sn-sub2" href="#i4-2">Offloading：放在外面，要用再讀</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">已經進來的</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">Transformation：用規則改 messages</a></li><li><a class="sn-sub2" href="#i5-2">不呼叫 LLM，不等於免費</a></li><li><a class="sn-sub2" href="#i5-3">本文的判斷：紀錄和 model 看到的東西要分開</a></li><li><a class="sn-sub2" href="#i5-4">Compaction：LLM 當最後手段</a></li><li><a class="sn-sub2" href="#i5-5">為什麼是這個順序</a></li><li><a class="sn-sub2" href="#i5-6">Context 會怎麼壞：五種失敗</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">Tool 設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Model 眼中的 tool 只有三段文字</a></li><li><a class="sn-sub2" href="#i6-2">設計 tool 時最先要問的：輸出進了 context，下一步會更好嗎？</a></li><li><a class="sn-sub2" href="#i6-3">五條原則</a></li><li><a class="sn-sub2" href="#i6-4">錯誤要能教</a></li><li><a class="sn-sub2" href="#i6-5">預設冪等</a></li><li><a class="sn-sub2" href="#i6-6">那只給 shell 行不行</a></li><li><a class="sn-sub2" href="#i6-7">Tool 的輸出不一定要進 context</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Execution</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">五項各做什麼</a></li><li><a class="sn-sub2" href="#i7-2">既然 shell 都做得到，為什麼還要專用的 read、edit tool？</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Search</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">先認識兩個字：字面與 symbol</a></li><li><a class="sn-sub2" href="#i8-2">找法 1：grep 與 glob，依字面找</a></li><li><a class="sn-sub2" href="#i8-3">找法 2：semantic search，依意思找</a></li><li><a class="sn-sub2" href="#i8-4">找法 3：repo map，依結構找</a></li><li><a class="sn-sub2" href="#i8-5">找法 4：extrinsic signal，程式碼以外的證據</a></li><li><a class="sn-sub2" href="#i8-6">找法 5：LSP，依 symbol 找</a></li><li><a class="sn-sub2" href="#i8-7">為什麼先用 grep</a></li><li><a class="sn-sub2" href="#i8-8">Claude Code 選 grep，Cursor 兩個都要</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Edit</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">改法 1：整檔重寫</a></li><li><a class="sn-sub2" href="#i9-2">改法 2：unified diff</a></li><li><a class="sn-sub2" href="#i9-3">改法 3：search/replace</a></li><li><a class="sn-sub2" href="#i9-4">改法 4：AST 編輯</a></li><li><a class="sn-sub2" href="#i9-5">Search/replace 和 unified diff 差在哪</a></li><li><a class="sn-sub2" href="#i9-6">為什麼失敗的方式這麼要緊</a></li><li><a class="sn-sub2" href="#i9-7">另一派：沒有行號的 diff</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">Prompt</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">哪幾招已經過期</a></li><li><a class="sn-sub2" href="#i10-2">不會過期的四條原則</a></li><li><a class="sn-sub2" href="#i10-3">招式為什麼會過期</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent Architecture &amp; Communication</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
@@ -1735,112 +1735,7 @@ C lazy-load assets       impact 4, effort 1
         </div>
       </section>
 
-      <!-- ===================== 2 動手試試 ===================== -->
-      <section class="part" id="s-try">
-        <header class="part-head">
-          <p class="kicker">動手試試</p>
-          <h2>照著做一次</h2>
-          <p class="lede">範例不綁定任何 SDK，可以直接改成你的程式。點開才會展開。</p>
-        </header>
-        <div class="exlist">
-          <details class="ex">
-            <summary>Agent loop 的骨架</summary>
-            <div class="exbody">
-              <p>編號的註解就是 harness 設計者的四項工作。</p>
-              <figure class="file"><figcaption>agent.py</figcaption><pre><code>MAX_STEPS = 30
-
-def run_agent(task: str, tools: dict) -&gt; str:
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": task},
-    ]
-    schemas = [t.schema for t in tools.values()]   # 2. 送給 model 的 tool 定義
-    for _ in range(MAX_STEPS):
-        reply = call_model(messages, schemas)      # 1. 組出 context
-        messages.append(reply.message)
-        if not reply.tool_calls:                   # 沒有 tool call = 最終回答
-            return reply.text
-        for call in reply.tool_calls:
-            try:
-                tool = tools[call.name]
-                args = tool.validate(call.arguments)   # 3. model 的輸出不可信
-                result = tool.run(**args)
-            except Exception as err:               # 錯誤也回給 model
-                result = {"error": str(err)}
-            messages.append({
-                "role": "tool",
-                "tool_call_id": call.id,
-                "content": serialize(result),      # 4. shaping、截斷
-            })
-    raise RuntimeError(f"Agent stopped: hit MAX_STEPS={MAX_STEPS}")</code></pre></figure>
-              <p><code>messages</code> 每一圈都整份送給 model。<code>validate</code> 檢查 JSON、型別，以及路徑是否在 repo 外面。<code>MAX_STEPS</code> 讓卡住的 loop 明確失敗。</p>
-            </div>
-          </details>
-          <details class="ex">
-            <summary>Search/replace 與 unified diff，實際套一次</summary>
-            <div class="exbody">
-              <p>Search/replace 的輸入（Aider 的格式，簡化）。Tool 要求 SEARCH 段在檔案裡剛好出現一次。</p>
-              <figure class="file"><figcaption>SEARCH/REPLACE 區塊</figcaption><pre><code>src/api.ts
-&lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH
-const b = {
-  retries = 3,
-=======
-const b = {
-  retries = 5,
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</code></pre></figure>
-              <p>檔案裡有兩處 <code>retries = 3,</code>。只給這一行當 anchor，tool 要回「appears 2 times」；多帶一行 <code>const b = {</code>，就只改第二處。再套一次，要回「not found, read again」。</p>
-              <p>Unified diff 的行為用 git 驗證。先做一份 patch，再改檔案，看 <code>git apply</code> 怎麼說：</p>
-              <figure class="file"><figcaption>terminal</figcaption><pre><code>$ git diff -U1 &gt; patch.diff      # maxRetries = 3 改成 5
-$ git checkout client.ts
-
-# 1. 檔案最上面插 5 行
-$ git apply --check -v patch.diff
-Hunk #1 succeeded at 46 (offset 5 lines).
-
-# 2. formatter 改了 context 行
-$ git apply --check patch.diff
-error: patch failed: client.ts:41
-$ patch --dry-run -p1 &lt; patch.diff   # GNU patch 容許 fuzz
-Hunk #1 succeeded at 41 with fuzz 1.
-
-# 3. 兩個 hunk，一個過期：預設全有或全無，兩個都不套
-$ git apply two.diff
-error: patch failed: client.ts:41</code></pre></figure>
-              <p>結論：行號偏移還能救，context 行變了就失敗。Agent 用 diff，每次修改後要重新讀檔。</p>
-            </div>
-          </details>
-          <details class="ex">
-            <summary>不好與好的 tool 定義</summary>
-            <div class="exbody">
-              <figure class="file"><figcaption>不好：通用的 run_sql（JSON Schema；外層欄位名稱依 SDK 而定）</figcaption><pre><code>{
-  "name": "run_sql",
-  "description": "Run SQL on the production database.",
-  "input_schema": {
-    "type": "object",
-    "properties": {"query": {"type": "string"}},
-    "required": ["query"]
-  }
-}</code></pre></figure>
-              <figure class="file"><figcaption>好：專用的 search_orders</figcaption><pre><code>{
-  "name": "search_orders",
-  "description": "List one customer's orders, newest first. Use for order status, refund or shipping questions.",
-  "input_schema": {
-    "type": "object",
-    "properties": {
-      "customer_id": {"type": "string", "description": "Customer ID, e.g. C-10293"},
-      "status": {"type": "string", "enum": ["open", "shipped", "refunded"]},
-      "limit": {"type": "integer", "default": 10, "maximum": 50}
-    },
-    "required": ["customer_id"]
-  }
-}</code></pre></figure>
-              <p>差在哪：<code>run_sql</code> 要 model 先知道 table 和欄位，而且什麼都能做。<code>search_orders</code> 只能讀一位客戶的訂單，參數有型別與上限，輸出最多 50 筆。錯誤訊息的寫法見核心觀念〈<a href="#i6-4">錯誤要能教</a>〉。</p>
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <!-- ===================== 3 原文出處 ===================== -->
+      <!-- ===================== 2 原文出處 ===================== -->
       <section class="wrap" id="wrap" aria-label="原文出處">
         <p class="kicker">原文出處</p>
         <h2>原文出處</h2>
@@ -1877,7 +1772,7 @@ error: patch failed: client.ts:41</code></pre></figure>
   </div>
 </main>
 </div>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261119a"></script>
 <script src="code.js"></script>
 </body>
 </html>

@@ -14,14 +14,13 @@ Fragments in the folder (notes/ is git-ignored):
   i1.html …       one <div class="idea" id="iN"> per file; h3 = <span class="idea-no">N</span>主題：主張, no a.ref
   tldr.html       the whole <section class="tldr"> … </section>
   fineprint.html  optional: the whole <p class="fineprint"> … </p>
-  try.html        optional: the whole <section class="part" id="s-try"> … </section>
   wrap.html       optional: the whole <section class="wrap" id="wrap"> … </section>
                   A new lecture starts from tools/new_lecture.py's skeleton and fills all of these.
 
 What it does:
   - replaces the tldr and #s-ideas, removes #s-arch
   - section kickers carry no number (2026-11-16: the sidenav numbers 0 導讀 and the chapters only);
-    the HTML comments keep theirs (this script finds the 動手試試 comment by it)
+    the HTML comments keep theirs (this script finds the 原文出處 comment by it)
   - eyebrow gets「· 依想法重組」, the meta row「頁碼」goes away, the styles.css link copies l05.html's version
   - rebuilds this page's own sidenav line from the h3s and the <p id="…"><b>小標</b> paragraphs
 
@@ -35,7 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_article as ca  # noqa: E402
 
-SECTIONS = {"動手試試": 2, "原文出處": 3}  # 2026-11-09: 問題討論 removed
+SECTIONS = {"原文出處": 2}  # 2026-11-09: 問題討論 removed; 2026-11-17: 動手試試 removed
 
 
 def clean(html):
@@ -51,11 +50,12 @@ def sidenav_line(s):
 
 def v7_secs(s):
     """The sections of a v7 page for the sidenav (2026-11-16 James): 0 導讀, the chapters on the
-    same level (each with its 小標), then one quiet line under a rule: 查閱 · 動手試試 · 原文出處.
+    same level (each with its 小標), then one quiet line under a rule: 查閱 · 原文出處 (動手試試 removed
+    2026-11-17, James: good exercises moved to 整合題).
     查閱 is the chapter whose h3 has no idea-no (the old numbered 目錄 chapter). The 核心觀念 link
     stays, hidden by CSS, so app.js keeps the chapters as the subs of one tracked section.
     add_lecture.py uses it too, so a new v7 page gets this block on its first wiring (2026-11-06)."""
-    ideas = s[s.index('id="s-ideas"'):s.index('id="s-try"')]
+    ideas = s[s.index('id="s-ideas"'):s.index('id="wrap"')]
     parts = re.split(r'(?=<div class="idea" id="i\d+">)', ideas)[1:]
     subs, refs = [], []
     for part in parts:
@@ -81,7 +81,7 @@ def v7_secs(s):
         num = f'<span class="sn-n">{n}</span>' if n is not None else ""
         return f'<a class="sn-sec" href="#{href}" data-spy data-short="{label}">{num}<span class="sn-t">{label}</span></a>'
 
-    refs += [("s-try", "動手試試"), ("wrap", "原文出處")]
+    refs += [("wrap", "原文出處")]
     return ("<li>" + link("tldr-h", "導讀", 0) + "</li>"
             + '<li class="sn-ideas">' + link("s-ideas", "核心觀念") + f'<ol class="sn-subs">{"".join(subs)}</ol></li>'
             + '<li class="sn-refs"><ol class="sn-refrow">'
@@ -132,18 +132,19 @@ def main():
     b = s.index("</section>", a) + len("</section>")
     s = s[:a] + (frag / "tldr.html").read_text(encoding="utf-8").strip() + s[b:]
 
-    # #s-arch out, #s-ideas replaced; everything up to the 問題討論 comment goes
+    # #s-arch out, #s-ideas replaced; everything up to the next section's comment goes
     start = s.index('<div class="content">') + len('<div class="content">')
-    # pages built before 2026-11-09 still have the 問題討論 comment; later ones start at 動手試試
-    m = re.search(r'[ \t]*<!-- =+ \d 問題討論 =+ -->', s) or re.search(r'[ \t]*<!-- =+ \d 動手試試 =+ -->', s)
+    # the section after 核心觀念: 問題討論 (before 2026-11-09), 動手試試 (before 2026-11-17), now 原文出處
+    m = next((m for name in ("問題討論", "動手試試", "原文出處")
+              if (m := re.search(rf'[ \t]*<!-- =+ \d {name} =+ -->', s))), None)
     if not m:
-        sys.exit("no 問題討論 or 動手試試 comment")
+        sys.exit("no 原文出處 comment after #s-ideas")
     s = s[:start] + "\n" + new_ideas.lstrip("\n") + s[m.start():]
 
     # section numbers: comments keep them, kickers drop them (2026-11-16)
     for name, n in SECTIONS.items():
         s = re.sub(rf'(<!-- =+ )\d( {name} =+ -->)', rf'\g<1>{n}\g<2>', s)
-    s = re.sub(r'(<p class="kicker">)\d · (核心觀念|動手試試|原文出處)(</p>)', r'\1\2\3', s)
+    s = re.sub(r'(<p class="kicker">)\d · (核心觀念|原文出處)(</p>)', r'\1\2\3', s)
 
     # eyebrow, meta, css version
     s = re.sub(r'(<p class="eyebrow">Lecture \d+[a-z]? · [\d-]+ · Part [IVX]+)(?: · 依想法重組)?(</p>)', r'\1 · 依想法重組\2', s)
@@ -157,8 +158,8 @@ def main():
     if t.exists():
         s = re.sub(r'<p class="fineprint">.*?</p>', lambda _: t.read_text(encoding="utf-8").strip(), s, count=1, flags=re.S)
 
-    # new pages (tools/new_lecture.py): the other two sections can come from fragments too
-    for name, sid in (("try.html", "s-try"), ("wrap.html", "wrap")):
+    # new pages (tools/new_lecture.py): 原文出處 can come from a fragment too
+    for name, sid in (("wrap.html", "wrap"),):
         t = frag / name
         if t.exists():
             s = replace_section(s, sid, t.read_text(encoding="utf-8"))

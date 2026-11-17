@@ -47,7 +47,7 @@ def page_chapters(lec):
     p = SITE / f"{lec}.html"
     s = p.read_text(encoding="utf-8")
     ids = set(re.findall(r'\sid="([^"]+)"', s))
-    seg = s[s.index('id="s-ideas"'):s.index('id="s-try"')]
+    seg = s[s.index('id="s-ideas"'):s.index('id="wrap"')]
     chapters = {}
     for m in re.finditer(r'<div class="idea" id="(i\d+)">(.*?)(?=<div class="idea" id="i\d+">|$)', seg, re.S):
         h = re.search(r"<h3[^>]*>(.*?)</h3>", m.group(2), re.S)
@@ -836,7 +836,7 @@ def render(d, info, L, A):
   if (m && by[m[1]]) select(m[1], true);
 }})();
 </script>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261119a"></script>
 </body>
 </html>
 """

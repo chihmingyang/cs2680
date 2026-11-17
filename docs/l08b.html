@@ -41,7 +41,7 @@
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">Cost &amp; Latency</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l08b.html" aria-current="page"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">三種架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i1-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i1-3">取捨在哪裡</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">拆邊界的理由</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">一個 agent 也可能要把邊界推出去</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">三個問題</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">本文的判斷：問三個問題，不數 agent</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i4" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08b.html" aria-current="page"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">三種架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">三種架構，差在呼叫跨過什麼邊界</a></li><li><a class="sn-sub2" href="#i1-2">同一個動作，三條路徑</a></li><li><a class="sn-sub2" href="#i1-3">取捨在哪裡</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">拆邊界的理由</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">一個 agent 也可能要把邊界推出去</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">三個問題</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">本文的判斷：問三個問題，不數 agent</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i4" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
@@ -332,41 +332,6 @@
         </div>
       </section>
 
-      <!-- ===================== 2 動手試試 ===================== -->
-      <section class="part" id="s-try">
-        <header class="part-head">
-          <p class="kicker">動手試試</p>
-          <h2>照著做一次</h2>
-          <p class="lede">兩項都不用寫程式，合計約 25 分鐘。</p>
-        </header>
-        <div class="exlist">
-          <details class="ex">
-            <summary>玩互動導讀：execution 服務</summary>
-            <div class="exbody">
-              <p>同一段 Python 在三種架構裡一步一步跑、故意讓它當掉或刪檔、看 sandbox 怎麼回收：<a href="l08-exec.html">Execution 服務：誰替 agent 真正動手</a>，大約 15 分鐘。玩完再回頭看第 1 章那張「同一段 Python 的三條路徑」。</p>
-            </div>
-          </details>
-          <details class="ex">
-            <summary>替你自己的 agent 回答三個問題</summary>
-            <div class="exbody">
-              <p>挑一個你在用或想做的 agent，照第 3 章的三個問題，一題寫一段：答案、要推出去的是什麼、多出來的代價是什麼。答「否」的題目不推，元件之間留著函式呼叫。</p>
-              <figure class="file"><figcaption>boundaries.yaml（例：在 CI 上修測試的 agent，內容是示意）</figcaption><pre><code>isolate_untrusted_from_secrets:
-  answer: yes     # 它會跑 PR 裡別人寫的 code；deploy key 不能和這些 code 在同一個 sandbox
-  push_out: credential 放在 sandbox 外面，由 proxy 代打
-  cost: 多一段 proxy，多一種故障
-state_outlives_process:
-  answer: yes     # 一次修測試要跑半小時；CI 的機器中途被回收，要能接著做
-  push_out: session log 寫到 CI 機器外面
-  cost: 每一步多一次寫入，要設計 log 的格式
-shared_by_many_agents:
-  answer: no      # 只有這一個 agent 在用
-  push_out: 不推，tool 留在同一個 process</code></pre></figure>
-              <p>寫完拿〈查閱〉的八個 harness 對照：你的答案和哪一個 harness 的設計最像。</p>
-            </div>
-          </details>
-        </div>
-      </section>
-
       <!-- ===================== 原文出處 ===================== -->
       <section class="wrap" id="wrap" aria-label="原文出處">
         <p class="kicker">原文出處</p>
@@ -388,7 +353,7 @@ shared_by_many_agents:
   </div>
 </main>
 </div>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261119a"></script>
 <script src="code.js"></script>
 </body>
 </html>

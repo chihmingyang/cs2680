@@ -4,7 +4,7 @@
 Usage: python3 -I check_article.py docs/lXX.html --pages N --pdf FILE.pdf [--fix-time]
 
 Checks: tag balance; required sections (#s-ideas [#s-arch optional since v7; #s-background, #s-beyond optional]
-#s-try #wrap; 問題討論 removed 2026-11-09) and parts (tldr, diagram,
+#wrap; 問題討論 removed 2026-11-09; #s-try 動手試試 removed 2026-11-17 and now a problem if present) and parts (tldr, diagram,
 reading list ol.rg, pager, fineprint, read-time, full-time, read-box, sidenav);
 sidenav anchors; every a.ref points at the PDF with #page in 1..N;
 STE heuristics on prose; reading times;
@@ -45,7 +45,7 @@ STRONG_NOT_IN = {"b", "a", "code", "pre", "h1", "h2", "h3", "h4", "summary", "fi
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
 # s-beyond optional since 2026-10-26 (L4); s-background optional since 2026-10-27 (L4 merged it into #s-ideas)
-REQUIRED_IDS = ["s-ideas", "s-try", "wrap", "read-box", "sidenav"]  # 問題討論 removed 2026-11-09
+REQUIRED_IDS = ["s-ideas", "wrap", "read-box", "sidenav"]  # 問題討論 removed 2026-11-09, 動手試試 2026-11-17
 REQUIRED_CLASSES = ["section.tldr", "figure.diagram", "ol.rg", "nav.pager",
                     "p.fineprint", "span.read-time", "span.full-time", "aside.sidenav", "nav.lecnav"]
 
@@ -324,6 +324,8 @@ def main():
     for i in REQUIRED_IDS:
         if i not in p.ids:
             problems.append(f"missing #{i}")
+    if "s-try" in p.ids:  # 2026-11-17 James: 動手試試 拔掉，好的題目搬到整合題（guide/QUIZ.md）
+        problems.append("#s-try: 動手試試 2026-11-17 拿掉了；練習題寫成整合題（guide/QUIZ.md），正文要用的指令寫在正文")
     for c in REQUIRED_CLASSES:
         if c not in p.seen:
             problems.append(f"missing {c}")

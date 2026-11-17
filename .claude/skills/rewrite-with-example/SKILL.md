@@ -19,8 +19,7 @@ grep -n '<貼來的標題前幾個字>' docs/l0*.html
 讀前後各 20 行。要看三件事：
 
 - 上面是不是已經有一張圖或一段 code（例如 L3 的 gloss `#n-hook-files` 正上方就是 Superpowers 的 `hooks.json`）。有，就指過去，不要再貼一次。
-- 原文有沒有說「第 N 段動手試試的範例」。有，案例就要和那個範例一致，或寫明「完整版在那裡」。
-- 原文是正文、`details.gloss`、`details.deep` 還是動手試試。`gloss` 和動手試試不能放紅字 `<strong>`（STYLE_ARTICLE 6c）。
+- 原文是正文、`details.gloss` 還是 `details.deep`。`gloss` 不能放紅字 `<strong>`（STYLE_ARTICLE 6c）。
 
 ### 2. 診斷：對原文逐句找問題，寫出 2–3 個原因
 
@@ -144,7 +143,7 @@ diff /tmp/before.txt /tmp/after.txt                    # 只能差行號和句�
 
 - 不要把上方已經有的 code 再貼一次；指過去。
 - 不要為了短句切斷語氣；也不要為了湊「2–4 句」把案例或圖刪掉。有案例和圖的 gloss 可以長。
-- 不要在 `gloss`、`summary`、`figcaption`、動手試試裡放 `<strong>`。
+- 不要在 `gloss`、`summary`、`figcaption` 裡放 `<strong>`。
 - 不要憑印象寫第三方 repo 的檔名或欄位。
 - 不要盲跑 `punct.py` 寫回整頁；只用 `--diff` 看。
 - 圖看不懂時，不要加更多框去解釋；先減。

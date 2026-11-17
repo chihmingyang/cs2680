@@ -7,7 +7,7 @@ description: James 要把某一堂（docs/lXX.html）改成「L5 的模式」「
 
 範本是 `docs/l05.html`（2026-11-03 完成）。規則在 `guide/STYLE_ARTICLE.md` 第 0 節。L1–L8 都已改完（2026-11-03），各堂的取捨在 `guide/V7_DECISIONS.md`，之後用於新講次或重做一堂。一個 session 只改一堂，做完再開下一個；要同時改多堂，一堂一個 subagent，簡報是同目錄的 `subagent-brief.md`，整合方法見 `guide/WORKFLOW.md` H。
 
-**新講次**（沒有舊頁面，2026-11-06 L9–L11 起）：骨架用 `tools/new_lecture.py` 建，動手試試、原文出處也寫成片段（`try.html`、`wrap.html`）由 `assemble_v7.py` 一起組；第 5 步的錨點與保留段落不適用。好幾堂同時寫，一堂一個 subagent，簡報是同目錄的 `new-lecture-brief.md`，接線照 `guide/WORKFLOW.md` B5。
+**新講次**（沒有舊頁面，2026-11-06 L9–L11 起）：骨架用 `tools/new_lecture.py` 建，原文出處也寫成片段（`wrap.html`）由 `assemble_v7.py` 一起組（2026-11-17 起沒有動手試試）；第 5 步的錨點與保留段落不適用。好幾堂同時寫，一堂一個 subagent，簡報是同目錄的 `new-lecture-brief.md`，接線照 `guide/WORKFLOW.md` B5。
 
 James 的期待（2026-11-02、11-03）：
 
@@ -27,7 +27,7 @@ python3 -I tools/page_text.py docs/lXX.html   # 舊頁面的文字，圖印成 a
 python3 -I - <<'EOF'                          # 目前頁面的章節與每章的小標
 import re; s = open('docs/lXX.html', encoding='utf-8').read()
 for h in re.findall(r'<h3><span class="idea-no">([\d.]+)</span>(.*?)<a', s): print(h[0], re.sub('<[^>]+>', '', h[1]))
-for b in re.findall(r'<p[^>]*><b>(.*?)</b>', s[s.index('id="s-ideas"'):s.index('id="s-try"')]): print('  -', re.sub('<[^>]+>', '', b)[:50])
+for b in re.findall(r'<p[^>]*><b>(.*?)</b>', s[s.index('id="s-ideas"'):s.index('id="wrap"')]): print('  -', re.sub('<[^>]+>', '', b)[:50])
 EOF
 ```
 
@@ -70,15 +70,15 @@ EOF
 
 ## 5. 保留其他段落，修好連結
 
-v7 頁面是三段：1 核心觀念、2 動手試試、3 原文出處（2026-11-13 之前叫延伸閱讀；2026-11-09 拿掉問題討論；題目改放每一節後面的小測，`guide/QUIZ.md`）。沒有「架構」段。
+v7 頁面是兩段：核心觀念、原文出處（2026-11-13 之前叫延伸閱讀；2026-11-09 拿掉問題討論；2026-11-17 拿掉動手試試，練習題寫成整合題；題目改放每一節後面的小測，`guide/QUIZ.md`）。沒有「架構」段。
 
 ```bash
 grep -o 'lXX\.html#[A-Za-z0-9_-]*' docs/*.html | grep -v '^docs/lXX' | sort | uniq -c   # 別頁連進來的錨點
 ```
 
 - 別頁連進來的錨點：連到新章節（改那一頁的 href 與連結文字），或在新頁面相同內容的段落保留同一個 id（L5 保留了 `t1`、`t2`、`t3`）。
-- 動手試試、原文出處從舊頁面整段搬過來。kicker 不寫段號（2026-11-16），「第 2 段動手試試」這類文字改成段名。
-- 動手試試裡連到舊章節、舊本文延伸（`#xN`）的地方也改。改完確認沒有殘留：`grep -o 'href="#[^"]*"' docs/lXX.html` 的每個目標都存在。
+- 原文出處從舊頁面整段搬過來。kicker 不寫段號（2026-11-16）。
+- 原文出處裡連到舊章節、舊本文延伸（`#xN`）的地方也改。改完確認沒有殘留：`grep -o 'href="#[^"]*"' docs/lXX.html` 的每個目標都存在。
 - 側欄 `li.sn-lec.is-here` 由 `assemble_v7.py` 重建（2026-11-16 版）：`0 導讀`，接著每章（`sn-sub`，編號 1、2、3…）和它的粗體小標（`sn-sub2`，小標的 `<p>` 要有 id），分隔線下一行是 `查閱 · 動手試試 · 原文出處`。「核心觀念」的連結留在 HTML 裡、CSS 藏起來，給 app.js 追蹤。kicker 不寫段號。只改了章名或小標時，`python3 -I tools/add_lecture.py --sync-own` 重建。
 - 文字裡不寫別堂的章號（「L4 2.6」），寫 L4〈概念名〉。錨點用 `tools/anchor_map.py list`、`check` 對照，`apply` 改別頁的連結。
 - `h1`、`p.en-title` 不改，否則每一頁的側欄都要重建（`add_lecture.py --check` 會報）。

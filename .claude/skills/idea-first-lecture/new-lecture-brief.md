@@ -32,7 +32,7 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 - 講工具或流程時附具體範例：檔案內容、實際指令、對話怎麼打（`figure.file`，逐行註解）。只有概念他無法實踐。
 - 算式先定義每一項，再給公式，再列逐列算好的表。**所有計算用 python 驗算**，算錯是這種講次最容易出的錯。
 - 正文不寫 slide 頁碼，也不寫「slide 第幾頁說了什麼」。正文的判斷段落用「本文的判斷：…」開頭。
-- 知識點放正文的邏輯順序裡，收合只放查閱（`details.gloss`，`gloss-k` 寫「名詞」「前情」「背景」或「查閱」）。動手試試維持通用，不寫特定公司。
+- 知識點放正文的邏輯順序裡，收合只放查閱（`details.gloss`，`gloss-k` 寫「名詞」「前情」「背景」或「查閱」）。
 
 ## 份量、補、刪
 
@@ -74,7 +74,7 @@ James 的讀書會站台（https://chihmingyang.github.io/cs2680/ ）每一堂�
 - `head.html`：`section#s-ideas` 開頭、`header.part-head`（kicker「1 · 核心觀念」、h2、`p.lede`）、`nav.map`（分鐘數寫 `__i1__`）、`<div class="ideas">`。
 - `tldr.html`：整個 `section.tldr`（thesis 一段、`ul.core` 3 條，紅字剛好 3 處；句數不設上限，只讀 tldr 的人要讀得懂每一條，見 STYLE_ARTICLE 第 3 節第 6 點）。
 - `fineprint.html`：整個 `p.fineprint`，句型照 L5，列出外部來源。
-- `try.html`：整個 `section#s-try`；`wrap.html`：整個 `section#wrap`。
+- `wrap.html`：整個 `section#wrap`（2026-11-17 起沒有 `try.html`）。
 
 ```bash
 cd /home/claude/cs2680 && python3 -I tools/assemble_v7.py docs/lXX.html notes/lXX --base notes/lXX/base.html
@@ -83,9 +83,9 @@ cd /home/claude/cs2680 && python3 -I tools/check_article.py docs/lXX.html --page
 
 meta 的「註」標籤照頁面實際有的收合內容改（L5 是「前情註」）。`h1` 骨架已經有了；你覺得不貼切可以改（16 字以內），寫進回報，主線接到全站時會一起重建側欄。
 
-## 動手試試
+## 動手試試（2026-11-17 拿掉）
 
-2–4 個 `details.ex`。Part II 的講次多半是觀念類：估算、設計、用 python 驗證一個現象，附解答與輸出。程式碼要在這個環境實際跑過，輸出照實貼上；需要 GPU 或沒辦法在這裡跑的（`nvidia-smi`、`nsys`），寫明「本文沒有實際跑過」並依官方文件寫。
+不寫。估算、設計判斷這類練習，在回報裡列成整合題的候選（題目一句、用到哪幾章），建題庫時再寫（`guide/QUIZ.md`〈從動手試試搬來的題〉）。正文論證要用的程式碼寫在正文，要在這個環境實際跑過，輸出照實貼上。
 
 ## 原文出處（2026-11-13 之前叫延伸閱讀）
 

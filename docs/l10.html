@@ -47,7 +47,7 @@
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
 <li class="sn-lec"><a class="sn-row" href="l09.html"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l10.html" aria-current="page"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">GPU 的設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Latency 和 throughput 是兩個目標</a></li><li><a class="sn-sub2" href="#i1-2">GPU 怎麼藏住等待：切換 warp</a></li><li><a class="sn-sub2" href="#i1-3">SIMT：程式為一個 thread 寫，硬體一次跑 32 個</a></li><li><a class="sn-sub2" href="#i1-4">Divergence：同一個 warp 走不同分支，兩邊都要走一次</a></li><li><a class="sn-sub2" href="#i1-5">四個取捨</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Roofline</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">三個單位</a></li><li><a class="sn-sub2" href="#i2-2">三個規格決定每顆 GPU 的上限</a></li><li><a class="sn-sub2" href="#i2-3">一條公式</a></li><li><a class="sn-sub2" href="#i2-4">Arithmetic intensity 和 ridge</a></li><li><a class="sn-sub2" href="#i2-5">四種常見的 op</a></li><li><a class="sn-sub2" href="#i2-6">趨勢：精度越低，ridge 越往右</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Decode</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Batch 1：每個 weight 只用一次</a></li><li><a class="sn-sub2" href="#i3-2">三個槓桿</a></li><li><a class="sn-sub2" href="#i3-3">Batch 拉高 weights 的 intensity，拉不動 attention</a></li><li><a class="sn-sub2" href="#i3-4">Context 越長，每一步越慢</a></li><li><a class="sn-sub2" href="#i3-5">MoE 會把 batch 分給各個 expert</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">晶片裡面</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">H200 的版面</a></li><li><a class="sn-sub2" href="#i4-2">一個 SM 分成四個 partition</a></li><li><a class="sn-sub2" href="#i4-3">Tensor Core：一條指令做一小塊矩陣乘法</a></li><li><a class="sn-sub2" href="#i4-4">記憶體階層：越近越快，也越小</a></li><li><a class="sn-sub2" href="#i4-5">Little's law：頻寬要靠路上的 bytes</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">量測</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">nvidia-smi 量的是「有沒有 kernel 在跑」</a></li><li><a class="sn-sub2" href="#i5-2">MFU：prefill 和訓練看算力用了多少</a></li><li><a class="sn-sub2" href="#i5-3">MBU：decode 看頻寬用了多少</a></li><li><a class="sn-sub2" href="#i5-4">四個 counter，看 SM、Tensor Core、HBM 三個單元</a></li><li><a class="sn-sub2" href="#i5-5">讀 counter：先找哪個單元在忙</a></li><li><a class="sn-sub2" href="#i5-6">先看 timeline，再看 kernel</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">GPU 程式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">CPU 和 GPU 是兩台機器</a></li><li><a class="sn-sub2" href="#i6-2">Kernel 為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-3">Graph compiler：你寫 model，compiler 寫 kernel</a></li><li><a class="sn-sub2" href="#i6-4">Tile language：為一整塊寫，不為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-5">五層抽象：越往下，控制越多，成本越高</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Kernel 之內</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">Fusion：中間值不回 HBM</a></li><li><a class="sn-sub2" href="#i7-2">Attention 的問題：n × n 的中間值</a></li><li><a class="sn-sub2" href="#i7-3">FlashAttention：一塊一塊算，S 不離開晶片</a></li><li><a class="sn-sub2" href="#i7-4">Online softmax：不看完整列也能算對</a></li><li><a class="sn-sub2" href="#i7-5">四代 FlashAttention：每一代修上一代的瓶頸</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Kernel 之間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">SM 之間：最後一輪只用到兩成的 SM</a></li><li><a class="sn-sub2" href="#i8-2">Split-KV：decode 的 attention 要沿 KV cache 切</a></li><li><a class="sn-sub2" href="#i8-3">Launch 之間：CUDA Graphs、PDL 與 megakernel</a></li><li><a class="sn-sub2" href="#i8-4">GPU 之間：把通訊藏在計算後面</a></li><li><a class="sn-sub2" href="#i8-5">本文的判斷：多數團隊選 engine，不寫這些</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">AI 寫的 kernel</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">2025–2026 年的五個案例</a></li><li><a class="sn-sub2" href="#i9-2">漏洞集中在五個地方</a></li><li><a class="sn-sub2" href="#i9-3">Speed of light：roofline 給的時間下限</a></li><li><a class="sn-sub2" href="#i9-4">本文的判斷：驗收一個 AI 寫的 kernel，五個檢查</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">一張卡之外</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">Scale-up 和 scale-out</a></li><li><a class="sn-sub2" href="#i10-2">出了這台機器，慢一個數量級</a></li><li><a class="sn-sub2" href="#i10-3">故障：16K 張 GPU，約每 3 小時中斷一次</a></li><li><a class="sn-sub2" href="#i10-4">電力：一櫃 120 kW，要液冷</a></li><li><a class="sn-sub2" href="#i10-5">水：用掉的和取用的不一樣</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#s-try" data-spy data-short="動手試試"><span class="sn-t">動手試試</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l10.html" aria-current="page"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">GPU 的設計</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Latency 和 throughput 是兩個目標</a></li><li><a class="sn-sub2" href="#i1-2">GPU 怎麼藏住等待：切換 warp</a></li><li><a class="sn-sub2" href="#i1-3">SIMT：程式為一個 thread 寫，硬體一次跑 32 個</a></li><li><a class="sn-sub2" href="#i1-4">Divergence：同一個 warp 走不同分支，兩邊都要走一次</a></li><li><a class="sn-sub2" href="#i1-5">四個取捨</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Roofline</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">三個單位</a></li><li><a class="sn-sub2" href="#i2-2">三個規格決定每顆 GPU 的上限</a></li><li><a class="sn-sub2" href="#i2-3">一條公式</a></li><li><a class="sn-sub2" href="#i2-4">Arithmetic intensity 和 ridge</a></li><li><a class="sn-sub2" href="#i2-5">四種常見的 op</a></li><li><a class="sn-sub2" href="#i2-6">趨勢：精度越低，ridge 越往右</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Decode</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Batch 1：每個 weight 只用一次</a></li><li><a class="sn-sub2" href="#i3-2">三個槓桿</a></li><li><a class="sn-sub2" href="#i3-3">Batch 拉高 weights 的 intensity，拉不動 attention</a></li><li><a class="sn-sub2" href="#i3-4">Context 越長，每一步越慢</a></li><li><a class="sn-sub2" href="#i3-5">MoE 會把 batch 分給各個 expert</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">晶片裡面</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">H200 的版面</a></li><li><a class="sn-sub2" href="#i4-2">一個 SM 分成四個 partition</a></li><li><a class="sn-sub2" href="#i4-3">Tensor Core：一條指令做一小塊矩陣乘法</a></li><li><a class="sn-sub2" href="#i4-4">記憶體階層：越近越快，也越小</a></li><li><a class="sn-sub2" href="#i4-5">Little's law：頻寬要靠路上的 bytes</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">量測</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">nvidia-smi 量的是「有沒有 kernel 在跑」</a></li><li><a class="sn-sub2" href="#i5-2">MFU：prefill 和訓練看算力用了多少</a></li><li><a class="sn-sub2" href="#i5-3">MBU：decode 看頻寬用了多少</a></li><li><a class="sn-sub2" href="#i5-4">四個 counter，看 SM、Tensor Core、HBM 三個單元</a></li><li><a class="sn-sub2" href="#i5-5">讀 counter：先找哪個單元在忙</a></li><li><a class="sn-sub2" href="#i5-6">先看 timeline，再看 kernel</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">GPU 程式</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">CPU 和 GPU 是兩台機器</a></li><li><a class="sn-sub2" href="#i6-2">Kernel 為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-3">Graph compiler：你寫 model，compiler 寫 kernel</a></li><li><a class="sn-sub2" href="#i6-4">Tile language：為一整塊寫，不為一個 thread 寫</a></li><li><a class="sn-sub2" href="#i6-5">五層抽象：越往下，控制越多，成本越高</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Kernel 之內</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">Fusion：中間值不回 HBM</a></li><li><a class="sn-sub2" href="#i7-2">Attention 的問題：n × n 的中間值</a></li><li><a class="sn-sub2" href="#i7-3">FlashAttention：一塊一塊算，S 不離開晶片</a></li><li><a class="sn-sub2" href="#i7-4">Online softmax：不看完整列也能算對</a></li><li><a class="sn-sub2" href="#i7-5">四代 FlashAttention：每一代修上一代的瓶頸</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Kernel 之間</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">SM 之間：最後一輪只用到兩成的 SM</a></li><li><a class="sn-sub2" href="#i8-2">Split-KV：decode 的 attention 要沿 KV cache 切</a></li><li><a class="sn-sub2" href="#i8-3">Launch 之間：CUDA Graphs、PDL 與 megakernel</a></li><li><a class="sn-sub2" href="#i8-4">GPU 之間：把通訊藏在計算後面</a></li><li><a class="sn-sub2" href="#i8-5">本文的判斷：多數團隊選 engine，不寫這些</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">AI 寫的 kernel</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">2025–2026 年的五個案例</a></li><li><a class="sn-sub2" href="#i9-2">漏洞集中在五個地方</a></li><li><a class="sn-sub2" href="#i9-3">Speed of light：roofline 給的時間下限</a></li><li><a class="sn-sub2" href="#i9-4">本文的判斷：驗收一個 AI 寫的 kernel，五個檢查</a></li></ol></li><li><a class="sn-sub" href="#i10"><span class="sn-n">10</span><span class="sn-t">一張卡之外</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i10-1">Scale-up 和 scale-out</a></li><li><a class="sn-sub2" href="#i10-2">出了這台機器，慢一個數量級</a></li><li><a class="sn-sub2" href="#i10-3">故障：16K 張 GPU，約每 3 小時中斷一次</a></li><li><a class="sn-sub2" href="#i10-4">電力：一櫃 120 kW，要液冷</a></li><li><a class="sn-sub2" href="#i10-5">水：用掉的和取用的不一樣</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
 <p class="sn-soon"><a href="index.html#later-h">Part II 其他講次在 slides 公開後加入</a></p>
@@ -2135,7 +2135,7 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
                 <li><b>和同精度的強 baseline 比。</b>和 <code>torch.compile</code>、cuBLAS 比，不只和 eager PyTorch 比（一個 op 一個 kernel、照程式一行一行執行，沒經過 torch.compile；fast_p 比的就是它）。</li>
                 <li><b>讀 code。</b>CUDA 真的有執行、沒有偷偷改回 torch、沒有碰 harness 的狀態。<strong>分數最高的那幾個一律人看</strong>。</li>
               </ol>
-              <p>第一條最便宜，卻擋得住最誇張的那一類：參考實作多半離下限只有幾倍，報出十倍、百倍的加速，新 kernel 的時間通常已經比下限還短，<strong>大部分十倍、百倍的假加速都違反物理下限</strong>。例外是把參考實作變慢的那種（上表最後一列），新 kernel 本身不違反下限，要靠第五條讀 code。後四條擋的是比較小、比較像真的假加速：數字看起來合理，只看數字的人看不出來，要靠第二到第四條的自動檢查和第五條讀 code，所以 <strong>驗收的檢查做得越完整，agent 寫的 kernel 才越能信</strong>。「<a href="#s-try">動手試試</a>」第 3 題的 harness.py 用 numpy 寫了兩個假 kernel，重現快取結果和另開 stream 計時兩種作弊，可以自己跑一次。</p>
+              <p>第一條最便宜，卻擋得住最誇張的那一類：參考實作多半離下限只有幾倍，報出十倍、百倍的加速，新 kernel 的時間通常已經比下限還短，<strong>大部分十倍、百倍的假加速都違反物理下限</strong>。例外是把參考實作變慢的那種（上表最後一列），新 kernel 本身不違反下限，要靠第五條讀 code。後四條擋的是比較小、比較像真的假加速：數字看起來合理，只看數字的人看不出來，要靠第二到第四條的自動檢查和第五條讀 code，所以 <strong>驗收的檢查做得越完整，agent 寫的 kernel 才越能信</strong>。</p>
             </div>
           </div>
 
@@ -2363,209 +2363,7 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
         </div>
       </section>
 
-      <!-- ===================== 2 動手試試 ===================== -->
-      <section class="part" id="s-try">
-        <header class="part-head">
-          <p class="kicker">動手試試</p>
-          <h2>照著做一次</h2>
-          <p class="lede">前三個是 python，在本站的環境（2 核的雲端 VM，沒有 GPU）實際跑過，輸出照貼；第四個要 NVIDIA GPU，本文沒有實際跑過，依 2026-11 的官方文件寫。點開才會展開。</p>
-        </header>
-        <div class="exlist">
-          <details class="ex">
-            <summary>roofline.py：估一個 kernel 的下限和瓶頸<span>第 2、3 章</span></summary>
-            <div class="exbody">
-              <p>第 2 章的公式寫成十幾行。給 FLOPs 和 bytes，印出 intensity、時間下限、卡在哪一邊，以及最多用到幾成算力。數字是 H200 的 BF16，model 數字依 L9。</p>
-              <figure class="file"><figcaption>roofline.py</figcaption><pre><code class="lang-py"># roofline.py: estimate a kernel's lower-bound time and its bottleneck (H200 numbers)
-PEAK = 989e12      # BF16 dense Tensor Core FLOP/s
-BW = 4.8e12        # HBM bytes/s
-RIDGE = PEAK / BW  # ~206 FLOP/B
-
-
-def kernel(name, flops, nbytes):
-    t_mem, t_cmp = nbytes / BW, flops / PEAK
-    ai = flops / nbytes
-    bound = "memory" if t_mem &gt; t_cmp else "compute"
-    att = min(PEAK, BW * ai)
-    print(f"{name:&lt;24}{ai:&gt;9.1f}{max(t_mem, t_cmp) * 1e3:&gt;10.3f}  {bound:&lt;8}{att / PEAK * 100:&gt;6.1f}%")
-
-
-print(f"ridge = {RIDGE:.0f} FLOP/B")
-print(f"{'kernel':&lt;24}{'FLOP/B':&gt;9}{'ms':&gt;10}  {'bound':&lt;8}{'peak':&gt;7}")
-N, W = 8.03e9, 16.06e9                  # Llama 3 8B: parameters, BF16 weight bytes (L9)
-for b in (1, 32, 256):
-    kernel(f"decode weights, b={b}", 2 * N * b, W)
-kernel("prefill 2,048 tokens", 2 * N * 2048, W)
-n = 4096
-kernel("GEMM 4096^3 BF16", 2 * n ** 3, 3 * n * n * 2)
-kernel("vector add 1M FP32", 2 ** 20, 3 * 2 ** 20 * 4)
-
-print("\ncontext  KV GB  step ms  tok/s per request   (Llama 3 8B, batch 16)")
-kv_per_token = 2 * 32 * 8 * 128 * 2     # layers x KV heads x head dim x (K,V) x 2 bytes = 128 KiB
-for ctx in (1024, 8192, 32768):
-    total = 16.1e9 + 16 * ctx * kv_per_token
-    print(f"{ctx:&gt;7} {16 * ctx * kv_per_token / 1e9:&gt;6.1f} {total / BW * 1e3:&gt;8.1f} {BW / total:&gt;12.0f}")
-
-print("\nMoE, 8 of 256 routed experts (DeepSeek-V3): tokens per expert per step")
-for b in (64, 256, 6592):
-    print(f"  batch {b:&gt;5}: {b * 8 / 256:&gt;6.1f}")</code></pre></figure>
-              <figure class="file"><figcaption>roofline.py 的輸出（本文寫作時在 Linux、Python 3.13 上實際跑過）</figcaption><pre><code class="lang-text">$ python3 roofline.py
-ridge = 206 FLOP/B
-kernel                     FLOP/B        ms  bound      peak
-decode weights, b=1           1.0     3.346  memory     0.5%
-decode weights, b=32         32.0     3.346  memory    15.5%
-decode weights, b=256       256.0     4.157  compute  100.0%
-prefill 2,048 tokens       2048.0    33.257  compute  100.0%
-GEMM 4096^3 BF16           1365.3     0.139  compute  100.0%
-vector add 1M FP32            0.1     0.003  memory     0.0%
-
-context  KV GB  step ms  tok/s per request   (Llama 3 8B, batch 16)
-   1024    2.1      3.8          263
-   8192   17.2      6.9          144
-  32768   68.7     17.7           57
-
-MoE, 8 of 256 routed experts (DeepSeek-V3): tokens per expert per step
-  batch    64:    2.0
-  batch   256:    8.0
-  batch  6592:  206.0</code></pre></figure>
-              <p>讀法：batch 32 的 decode 時間和 batch 1 一樣是 3.3 ms，卻做了 32 倍的事，這就是 batching 的來源；batch 256 越過 ridge，時間開始由算力決定。改兩個地方再跑一次：把 <code>PEAK, BW</code> 換成 B200 的 2,250e12、8e12（ridge 約 281），看 batch 256 落在哪一邊；把 weights 改成 FP8（<code>W</code> 除以 2），看 batch 1 的 intensity 變成多少。</p>
-            </div>
-          </details>
-          <details class="ex">
-            <summary>measure.py：在一般的 CPU 上量到 roofline<span>第 2、3 章</span></summary>
-            <div class="exbody">
-              <p>Roofline 不只適用 GPU。這個程式用 numpy 在本站的環境量三件事：vector add（intensity 0.08）、2048 × 2048 的矩陣乘法，以及一個 256 MiB 的「weights 矩陣」乘上 1、8、32、128 欄，模擬不同 batch 的 decode。環境是 2 核的雲端 VM（Intel Xeon 2.1 GHz、numpy 2.5.3、OpenBLAS），共用主機，每次跑的數字會差兩成左右。</p>
-              <figure class="file"><figcaption>measure.py</figcaption><pre><code class="lang-py"># measure.py: the roofline on this machine's CPU (numpy). Same idea as on a GPU, smaller numbers.
-import time
-import numpy as np
-
-
-def best(f, reps=5):
-    f()                                    # warm up
-    ts = []
-    for _ in range(reps):
-        t = time.perf_counter(); f(); ts.append(time.perf_counter() - t)
-    return min(ts)
-
-
-n = 32 * 2 ** 20                           # 32M float32 = 128 MiB per array
-a, b, c = (np.ones(n, np.float32) for _ in range(3))
-t = best(lambda: np.add(a, b, out=c))
-flops, nbytes = n, 3 * n * 4               # 1 add per element; read a, b, write c
-print(f"vector add   {t * 1e3:7.1f} ms {flops / t / 1e9:7.1f} GFLOP/s {nbytes / t / 1e9:5.1f} GB/s  {flops / nbytes:6.2f} FLOP/B")
-
-m = 2048
-x, y = np.ones((m, m), np.float32), np.ones((m, m), np.float32)
-t = best(lambda: x @ y)
-flops, nbytes = 2 * m ** 3, 3 * m * m * 4
-print(f"matmul 2048  {t * 1e3:7.1f} ms {flops / t / 1e9:7.1f} GFLOP/s {nbytes / t / 1e9:5.1f} GB/s  {flops / nbytes:6.0f} FLOP/B")
-
-W = np.ones((8192, 8192), np.float32)      # a 256 MiB "weight matrix"
-for batch in (1, 8, 32, 128):              # like decode: one weight read serves `batch` tokens
-    X = np.ones((8192, batch), np.float32)
-    t = best(lambda: W @ X)
-    flops, nbytes = 2 * 8192 * 8192 * batch, W.nbytes + 2 * X.nbytes
-    print(f"W @ X, b={batch:&lt;3} {t * 1e3:7.1f} ms {flops / t / 1e9:7.1f} GFLOP/s {nbytes / t / 1e9:5.1f} GB/s  {flops / nbytes:6.1f} FLOP/B")</code></pre></figure>
-              <figure class="file"><figcaption>measure.py 的輸出（本文寫作時在一台 2 核的 Linux 虛擬機上實際跑過，Python 3.13、numpy 2.5.3）</figcaption><pre><code class="lang-text">$ python3 measure.py
-vector add      35.4 ms     0.9 GFLOP/s  11.4 GB/s    0.08 FLOP/B
-matmul 2048    106.5 ms   161.4 GFLOP/s   0.5 GB/s     341 FLOP/B
-W @ X, b=1      18.0 ms     7.5 GFLOP/s  14.9 GB/s     0.5 FLOP/B
-W @ X, b=8      36.1 ms    29.8 GFLOP/s   7.5 GB/s     4.0 FLOP/B
-W @ X, b=32     55.3 ms    77.6 GFLOP/s   4.9 GB/s    15.9 FLOP/B
-W @ X, b=128   129.9 ms   132.3 GFLOP/s   2.1 GB/s    62.1 FLOP/B</code></pre></figure>
-              <p>同一台機器，矩陣乘法每秒做的 FLOP 是 vector add 的約 180 倍，差別只在 intensity。下面四列是 batching：batch 從 1 變成 128，每秒的 FLOP 從 7.5 G 變成 132 G，每個 token 分到的時間從 18 ms 降到約 1 ms。這台 CPU 的 ridge 約是 161 GFLOP/s ÷ 13 GB/s ≈ 12 FLOP/B，所以 batch 32（16 FLOP/B）之後就接近算力的上限，增加的幅度變小。和 GPU 不同的是，b = 8 的時間就比 b = 1 多一倍：小矩陣在 OpenBLAS 裡沒有完全吃到頻寬。這是 CPU 函式庫的細節，結論不變。</p>
-            </div>
-          </details>
-          <details class="ex">
-            <summary>harness.py：兩個看起來很快的假 kernel<span>第 6、9 章</span></summary>
-            <div class="exbody">
-              <p>第 9 章的兩種作弊，用 numpy 重現。<code>cheat_cache</code> 依輸入的記憶體位址記住答案，同一個輸入重複計時就幾乎不花時間；<code>cheat_async</code> 把工作丟給背景的 worker 就返回，像把 kernel 丟到另一個 CUDA stream。兩個 harness 量同樣三個函式：naive 重複用同一個輸入、呼叫一返回就停表；strict 每次用新的輸入、等全部工作做完才停表，並且檢查每一個結果。</p>
-              <figure class="file"><figcaption>harness.py</figcaption><pre><code class="lang-py"># harness.py: two "fast kernels" that only look fast. A toy with numpy; the real cases used CUDA.
-import queue
-import threading
-import time
-import numpy as np
-
-
-def reference(x):                      # the reference implementation: relu(2x + 1)
-    return np.maximum(2 * x + 1, 0)
-
-
-_cache = {}
-def cheat_cache(x):                    # remembers outputs by the input's memory address
-    key = x.ctypes.data
-    if key not in _cache:
-        _cache[key] = reference(x)
-    return _cache[key]
-
-
-_stream = queue.Queue()                # a background worker, like an extra CUDA stream
-def _worker():
-    while True:
-        job = _stream.get(); job(); _stream.task_done()
-threading.Thread(target=_worker, daemon=True).start()
-
-def cheat_async(x):                    # queues the work and returns at once
-    out = np.empty_like(x)
-    _stream.put(lambda: np.copyto(out, reference(x)))
-    return out
-
-
-def sync():                            # the analogue of synchronizing the whole device
-    _stream.join()
-
-
-def naive(f, n=4_000_000, reps=20):    # one input reused; timer stops when the call returns
-    x = np.random.default_rng(0).standard_normal(n).astype(np.float32)
-    t = time.perf_counter()
-    for _ in range(reps):
-        f(x)
-    dt = (time.perf_counter() - t) / reps
-    sync()
-    return dt
-
-
-def strict(f, n=4_000_000, reps=20):   # fresh inputs, wait for all work, check every result
-    rng = np.random.default_rng(1)
-    xs = [rng.standard_normal(n).astype(np.float32) for _ in range(reps)]
-    total = 0.0
-    for x in xs:
-        t = time.perf_counter()
-        y = f(x)
-        sync()
-        total += time.perf_counter() - t
-        assert np.allclose(y, reference(x)), f.__name__
-    return total / reps
-
-
-ref_n, ref_s = naive(reference), strict(reference)
-print(f"{'':&lt;12}{'naive':&gt;10}{'':&gt;9}{'strict':&gt;10}")
-for f in (reference, cheat_cache, cheat_async):
-    n_t, s_t = (ref_n, ref_s) if f is reference else (naive(f), strict(f))
-    print(f"{f.__name__:&lt;12}{n_t * 1e3:8.3f} ms{ref_n / n_t:7.0f}x{s_t * 1e3:8.3f} ms{ref_s / s_t:6.1f}x")</code></pre></figure>
-              <figure class="file"><figcaption>harness.py 的輸出（本文寫作時在 Linux、Python 3.13、numpy 2.5.3 上實際跑過）</figcaption><pre><code class="lang-text">$ python3 harness.py
-                 naive             strict
-reference      4.424 ms      1x   5.515 ms   1.0x
-cheat_cache    0.378 ms     12x   6.175 ms   0.9x
-cheat_async    0.009 ms    516x   6.966 ms   0.8x</code></pre></figure>
-              <p>Naive 的 harness 報出 12 倍和 516 倍，strict 的 harness 下三者都在 1 倍上下，差異是共用主機的雜訊。可以再加第三種作弊試試：把輸出寫進同一個全域 buffer 重複回傳，看 strict 的哪一條擋住它。</p>
-            </div>
-          </details>
-          <details class="ex">
-            <summary>有 NVIDIA GPU 的話：量一個真的 kernel<span>第 5、6 章</span></summary>
-            <div class="exbody">
-              <p>這一段要 NVIDIA GPU、CUDA Toolkit、Nsight 和 DCGM，本文沒有實際跑過，指令依 2026-11 查到的官方文件，輸出請以實際為準。用第 6 章的 <code>vec_add.cu</code>，把 n 改大到 64M 個元素，讓 kernel 夠長。</p>
-              <figure class="file"><figcaption>terminal：從 timeline 到單一 kernel（本文沒有實際跑過）</figcaption><pre><code class="lang-sh">$ nvcc -O2 -o vec_add vec_add.cu
-$ nsys profile -o run ./vec_add            # 看兩次 memcpy H→D、kernel、memcpy D→H 各占多久
-$ nsys stats run.nsys-rep                  # 文字版的統計：每個 kernel 和 memcpy 的時間
-$ ncu --set full -k vec_add ./vec_add      # 看 Memory Throughput 和 Compute (SM) Throughput 哪個接近 100%
-$ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add 迴圈跑時看</code></pre></figure>
-              <p>預期看到的是：memcpy 走 PCIe，比 kernel 本身慢很多（第 6 章的 75 倍）；ncu 裡 vec_add 的 Memory Throughput 遠高於 Compute (SM) Throughput，是 memory-bound；dcgmi 的 DRAM activity 高、Tensor activity 接近 0。用時間算實際頻寬：64M 個 float 讀兩個、寫一個是 768 MiB，除以 kernel 的時間，再和你那張 GPU 的 HBM 頻寬比，就是這個 kernel 的頻寬利用率。</p>
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <!-- ===================== 3 原文出處 ===================== -->
+      <!-- ===================== 2 原文出處 ===================== -->
       <section class="wrap" id="wrap" aria-label="原文出處">
         <p class="kicker">原文出處</p>
         <h2>原文出處</h2>
@@ -2603,7 +2401,7 @@ $ dcgmi dmon -e 203,1002,1004,1005         # 另開一個 terminal，讓 vec_add
   </div>
 </main>
 </div>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261119a"></script>
 <script src="code.js"></script>
 </body>
 </html>

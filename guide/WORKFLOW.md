@@ -69,7 +69,7 @@ This is a lecture slide deck (PDF). Write page-by-page study notes so a student 
    cp docs/l09.html notes/l09/base.html
    ```
    骨架從 `docs/l05.html`（v7 範本）複製 head、topbar、側欄、延伸閱讀的 legend、pager。
-2. 依 `STYLE_ARTICLE.md` 寫片段放 `notes/l09/`：`head.html`、`i1.html`…、`tldr.html`、`fineprint.html`，以及整段的 `try.html`、`wrap.html`。組回頁面：`python3 -I tools/assemble_v7.py docs/l09.html notes/l09 --base notes/l09/base.html`。
+2. 依 `STYLE_ARTICLE.md` 寫片段放 `notes/l09/`：`head.html`、`i1.html`…、`tldr.html`、`fineprint.html`，以及整段的 `wrap.html`（2026-11-17 起沒有動手試試）。組回頁面：`python3 -I tools/assemble_v7.py docs/l09.html notes/l09 --base notes/l09/base.html`。
 3. 頁面很長，分章寫。交給 subagent 時（好幾堂同時寫時一堂一個），每個 subagent 把 HTML 寫進檔案（片段放 `notes/lXX/`），只回報路徑和要主線確認的事，不要把 HTML 貼在回報裡：HTML 貼在回報裡，同一段就會生成兩次（subagent 一次、主線 Edit 一次），而生成是 session 裡最慢的部分。好幾堂同時寫時，簡報是 `.claude/skills/idea-first-lecture/new-lecture-brief.md`：共用同一個 checkout（新頁面不改既有檔案，所以不需要 worktree），每個 subagent 只寫自己的 `docs/lXX.html`、`notes/lXX/`、`guide/sources/lXX.md`；跨新講次的連結先只連頁面，主線整合時補錨點（2026-11-06 L9–L11 這樣做）。
 
 ### B4. 驗證這一頁
@@ -89,7 +89,7 @@ python3 -I tools/shot_article.py docs/l09.html
   python3 -I - <<'EOF'
   import re, sys; sys.path.insert(0, 'tools'); import check_article as ca
   s = open('docs/l04.html', encoding='utf-8').read()
-  seg = s[s.index('id="s-ideas"'):s.index('id="s-try"')]
+  seg = s[s.index('id="s-ideas"'):s.index('id="wrap"')]
   ids = re.findall(r'<div class="idea" id="(i\d)">', seg)
   pos = [seg.index(f'<div class="idea" id="{i}">') for i in ids] + [len(seg)]
   for k, i in enumerate(ids):
@@ -319,7 +319,7 @@ James 問：每次改一章，能不能像 CI 的 regression test 一樣，確�
 
 規則在 `STYLE_ARTICLE.md` 第 0 節〈一堂不綁一份 slides〉。第一例是 L6 → L6〈Agent 可靠性〉＋ L6b〈Agent memory〉，build script 在 `notes/l06split/`（不 commit；做法記在這裡）。第二例是 L8 → L8〈Cost & Latency〉＋ L8b〈Harness Architecture〉（2026-11-16，`notes/l08split/build.py`）：原頁的目錄章從第 10 章變第 9 章，所以舊的 `l08.html#i9` 停在 L8 的目錄（第 4 點的限制），別頁連到 `#i9` 的連結要手改；`#i9-N`、`#i10`、`#x3`、`#x4`、`#t5`、`#n-harness` 照 `#moved` 表轉到 L8b。
 
-1. **先用 DAG 決定切在哪裡。** `docs/dag.json` 裡這堂各章的節點，分成兩組之後，組和組之間沒有 deps 邊，就是乾淨的切法。目錄章、動手試試的每一項、延伸閱讀的每一篇、fineprint 的每個來源、題庫的每一節，都依觀念歸到其中一組。
+1. **先用 DAG 決定切在哪裡。** `docs/dag.json` 裡這堂各章的節點，分成兩組之後，組和組之間沒有 deps 邊，就是乾淨的切法。目錄章、原文出處的每一篇、fineprint 的每個來源、題庫的每一節，都依觀念歸到其中一組。
 2. **新頁的 key 是原編號加字母**（`l06b`）。`add_lecture.py`、`audit.py`、`verify.sh`、`dag.py`、`assemble_v7.py` 都接受 `lNN` 加一個小寫字母；`add_lecture.py` 會把新頁插在原堂之後：前一堂的下一堂、後一堂的上一堂、首頁列表的位置都跟著改。原堂在首頁的那一列（標題、英文、一句話、分鐘數）和前一堂 pager 裡的標題要手改。
 3. **原頁保留留下來那一半的章號與錨點**，搬走的章在新頁從 1 重編：`id`／`href` 的 `iN`、`iN-M`、`span.idea-no`、正文與 SVG 裡的「第 N 章」、題庫的 `from`／`after`／`scope`／`at` 一起換。兩半之間的引用改成 L6〈章名〉＋連結。gloss（`n-context` 這類）兩頁都要用到的，各留一份或改連到主場那一堂。
 4. **舊連結**：原頁放 `<script type="application/json" id="moved">{"to": "l06b.html", "ids": {"i6": "i2", …}}</script>`（放在 `app.js` 前）。`app.js` 在網址的錨點不在這一頁時，照表轉到新頁。`add_anchors.py` 不會把表裡的 `xN` 再編給新的本文延伸。原頁新的章號若和搬走的舊章號相同（L6 的 `#i5` 現在是目錄章），舊連結會停在原頁，這一點沒有轉址。

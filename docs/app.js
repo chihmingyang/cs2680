@@ -951,7 +951,7 @@
     document.head.appendChild(edCss);
     function addJs() {
       var edJs = document.createElement('script');
-      edJs.src = 'edit.js?v=20261117b';
+      edJs.src = 'edit.js?v=20261119a';
       document.body.appendChild(edJs);
     }
     /* wait for code.js: it runs right after this file and rewrites code blocks */

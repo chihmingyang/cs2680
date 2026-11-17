@@ -734,7 +734,7 @@
   function subLabel(html) { return clean(html).replace(/[。：: ]+$/, ''); }
   function v7Secs(src) {
     var a = src.indexOf('id="s-ideas"');
-    var b = src.indexOf('id="s-try"');
+    var b = src.indexOf('id="wrap"');
     if (a < 0 || b < a || src.indexOf('id="s-arch"') >= 0) return null;
     var parts = src.slice(a, b).split(/(?=<div class="idea" id="i\d+">)/).slice(1);
     var subs = [], refs = [], bad = false;
@@ -757,7 +757,7 @@
       var num = n !== undefined ? '<span class="sn-n">' + n + '</span>' : '';
       return '<a class="sn-sec" href="#' + href + '" data-spy data-short="' + label + '">' + num + '<span class="sn-t">' + label + '</span></a>';
     }
-    refs.push(['s-try', '動手試試'], ['wrap', '原文出處']);
+    refs.push(['wrap', '原文出處']);
     return '<li>' + link('tldr-h', '導讀', 0) + '</li>' +
       '<li class="sn-ideas">' + link('s-ideas', '核心觀念') + '<ol class="sn-subs">' + subs.join('') + '</ol></li>' +
       '<li class="sn-refs"><ol class="sn-refrow">' +
