@@ -161,16 +161,6 @@
       qp.appendChild(mk('span', 'ksq-kind', uses ? '整合' : (KIND[u.kind] || '')));
       qp.appendChild(document.createTextNode(u.q));
       li.appendChild(qp);
-      if (uses) {
-        var up = mk('p', 'ksq-uses', '用到：');
-        uses.forEach(function (ks, i) {
-          if (i) up.appendChild(document.createTextNode('、'));
-          var a = mk('a', null, title[ks]);
-          a.href = '#' + startOf[ks];
-          up.appendChild(a);
-        });
-        li.appendChild(up);
-      }
       var ta = mk('textarea', 'ksq-ans');
       ta.rows = 3;
       ta.placeholder = '先寫下你的答案，再看要點（只存在這個瀏覽器）';
@@ -191,6 +181,18 @@
       var ul = mk('ul');
       u.key.forEach(function (t) { ul.appendChild(mk('li', null, t)); });
       box.appendChild(ul);
+      if (uses) {
+        /* 2026-11-17 James: 整合題考的是觀念，不先告訴讀者要用哪幾節。「用到」的連結
+           收在答案要點裡，看了要點、發現有漏，才從這裡回去讀。 */
+        var up = mk('p', 'ksq-uses', '用到：');
+        uses.forEach(function (ks, i) {
+          if (i) up.appendChild(document.createTextNode('、'));
+          var a = mk('a', null, title[ks]);
+          a.href = '#' + startOf[ks];
+          up.appendChild(a);
+        });
+        box.appendChild(up);
+      }
       var self = mk('div', 'ksq-self');
       self.appendChild(mk('span', null, '對照之後：'));
       var ok = mk('button', null, '都答到');
@@ -287,10 +289,9 @@
       groups[at].forEach(function (x) {
         x.ks.forEach(function (ks) { lo = Math.min(lo, chap[ks]); hi = Math.max(hi, chap[ks]); });
       });
-      var span = lo === hi ? '第 ' + lo + ' 章' : '第 ' + lo + '–' + hi + ' 章';
-      prose.appendChild(block(gi ? 'quiz-int-' + at : 'quiz-int', 'ksq-int', '整合題', span + '合起來用',
+      prose.appendChild(block(gi ? 'quiz-int-' + at : 'quiz-int', 'ksq-int', '整合題', '讀完第 ' + hi + ' 章之後',
         groups[at].map(function (x) { return item(x, x.ks); }),
-        '每一題要把幾節的觀念合起來答。各節的小測都會、這裡卻答不出來，通常是節和節之間怎麼接起來還沒讀通，可以從「用到」的連結回去讀。'));
+        '每一題是一個情境，要把幾節的觀念合起來判斷。先照自己的理解寫，再看答案要點；有漏的地方，要點下面的「用到」會連回該讀的那幾節。'));
     });
 
     /* 目錄打勾 (2026-11-10): in the left contents, a sub-section whose quiz is all

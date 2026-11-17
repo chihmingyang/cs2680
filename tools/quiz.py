@@ -156,6 +156,7 @@ def check(path):
                     errs.append(f'{u["id"]}：每個選項要有文字，錯的選項要寫 why（錯在哪）')
                     break
     chap_of = {s["id"]: s["from"].split("-")[0] for s in q["sections"]}
+    legacy = []
     for x in q.get("integration", []):
         qids.append(x["id"])
         at = x.get("after", scope[-1] if scope else None)
@@ -170,6 +171,16 @@ def check(path):
                 errs.append(f'{x["id"]}：節 {k} 不存在')
         if not x.get("q") or not x.get("key"):
             errs.append(f'{x["id"]}：缺題目或答案要點')
+        # 2026-11-17 James：整合題考觀念，題幹是情境加要下的判斷，不指章、不說「照文章」。
+        # 指了章，題目變成「回想文章哪裡寫過」，也先告訴讀者要用哪幾節。
+        # 舊題庫（L5、L6、L6b、L7）有 int_cites_legacy，改寫之前只 warn。
+        mcite = re.search(r"第\s*\d+(\s*[、和與到–\-]\s*\d+)*\s*章|照文章|照本文|依本文|本文的", x.get("q", ""))
+        if mcite:
+            msg = f'{x["id"]}：整合題的題幹指了章或文章（「{mcite.group(0)}」），改成情境加判斷（QUIZ.md〈整合題考觀念〉）'
+            if q.get("int_cites_legacy"):
+                legacy.append(x["id"])
+            else:
+                errs.append(msg)
     if len(set(qids)) != len(qids):
         errs.append("題目 id 重複")
     for s in q["sections"]:
@@ -228,6 +239,8 @@ def check(path):
                and all(NUM_ONLY.match(c.get("t", "")) for c in u["choices"])]
     if numonly:
         print(f"warn 選項只有數字 {len(numonly)} 題：{' '.join(numonly)}（改成問這個數字代表什麼；錯的數字各對應一種算錯的方式才留，加 num_choices_ok）")
+    if legacy:
+        print(f"warn 整合題的題幹指了章或文章 {len(legacy)} 題：{' '.join(legacy)}（舊題庫，改寫成情境加判斷之後拿掉 int_cites_legacy；QUIZ.md〈整合題考觀念〉）")
     for e in errs:
         print("FAIL", e)
     if pts and not errs:

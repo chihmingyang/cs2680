@@ -1522,8 +1522,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
 </main>
 </div>
 <script type="application/json" id="moved">{"to": "l08b.html", "ids": {"i9-1": "i1-1", "i9-2": "i1-2", "i9-3": "i1-3", "i9-4": "i2-1", "i9-5": "i3-1", "i9-6": "i4-1", "i10": "i4", "x3": "x2", "x4": "x1", "t5": "t5", "n-harness": "n-harness"}}</script>
-<script type="application/json" id="quiz">
-{
+<script type="application/json" id="quiz">{
  "version": 1,
  "note": "題庫：L08（規則見 guide/QUIZ.md）。",
  "scope": [
@@ -9193,7 +9192,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     "k16"
    ],
    "after": "i4",
-   "q": "團隊的互動式 coding agent 帳單偏高。Dashboard 顯示 hit rate 93%，cache write 的 token 量很大；使用者常常停下來 10 到 20 分鐘看 diff 再回來。有人提議 context 到 100K 就 compaction。依第 2、3 章，你會先查什麼、先動哪一項？為什麼不是先壓 context？",
+   "q": "團隊的互動式 coding agent 帳單偏高。Dashboard 顯示 hit rate 93%，cache write 的 token 量很大；使用者常常停下來 10 到 20 分鐘看 diff 再回來。有人提議 context 到 100K 就 compaction。你會先查什麼、先動哪一項？為什麼不是先壓 context？",
    "key": [
     "Cache write 裝了兩種內容：真正的新內容，和 cache 過期之後重算的舊內容；帳單上分不出來，要先懷疑大宗是停頓造成的重算",
     "Hit rate 93% 不算安全：cache miss 的單價是 cache hit 的 12.5 倍，幾個百分點的 cache miss 就佔掉一大塊錢",
@@ -9208,7 +9207,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     "k22"
    ],
    "after": "i4",
-   "q": "第 3 章說 compaction 會打斷 cache，第 4 章卻說要繼續的長任務「趁 cache 還熱時壓」。兩句話怎麼並存？如果等到 cache 已經過期才壓，帳差在哪一筆？",
+   "q": "Compaction 會打斷 cache，可是要繼續的長任務又該「趁 cache 還熱時」做 compaction。這兩件事怎麼並存？如果等到 cache 已經過期才壓，帳差在哪一筆？",
    "key": [
     "Compaction 改了 messages 中間的內容，那一點之後全部要重算，這一筆避不開",
     "但產生摘要的那一次 call，送的仍是原來那段 context，開頭沒變；cache 還沒過期時它是 cache hit，照 cache read 收（例子裡 200K × 0.1 = 20K）",
@@ -9237,7 +9236,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     "k19"
    ],
    "after": "i4",
-   "q": "價目表上 output 的單價是 input 的 5 倍，cache read 只有 input 的十分之一。用第 3 章 GPU 的帳說明這兩個價格為什麼差這麼多；再用第 2 章說明，為什麼省錢的順序不是從單價最高的 output 開始。",
+   "q": "價目表上 output 的單價是 input 的 5 倍，cache read 只有 input 的十分之一。從 GPU 處理這幾種 token 的方式，說明價格為什麼差這麼多。既然 output 單價最高，省錢為什麼不是從 output 開始？",
    "key": [
     "讀 input（prefill）卡在算力，整段 prompt 的 token 一起算；產生 output（decode）每一輪每個 request 只出一個 token，卻要把權重讀一遍，卡在記憶體頻寬，所以同一組 GPU 每秒產生的 output token 少得多",
     "Batching 能把權重攤給很多 request，但每個 request 自己的 KV cache 攤不掉，而且它先把記憶體用完，所以差距縮不到一樣",
@@ -9252,7 +9251,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     "k26"
    ],
    "after": "i8",
-   "q": "一個分類 CI 失敗原因的 agent 每天跑 500 次，每次的步驟幾乎一樣，帳單太高。照第 4 章的順序，你第一個問什麼？在這個例子裡答案是什麼？這一題為什麼排在「有 cache hit 嗎」前面？",
+   "q": "一個分類 CI 失敗原因的 agent 每天跑 500 次，每次的步驟幾乎一樣，帳單太高。團隊打算先調 cache 的設定。在那之前，有一個更該先問的問題：是什麼？在這個例子裡答案是什麼？為什麼它比「有沒有 cache hit」優先？",
    "key": [
     "第一個問：這一步需要 LLM 嗎",
     "每次的步驟都一樣、輸入格式固定，就請 LLM 把規則寫成程式一次，之後直接執行；只有規則分不出來的那幾筆才問 model",
@@ -9267,7 +9266,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     "k33"
    ],
    "after": "i8",
-   "q": "主對話用大 model，context 已經 200K。接下來有一批找檔案、整理格式的小工作，同事提議這幾步直接切到便宜的小 model，做完再切回來。用第 3 章和第 6 章說明這樣切的帳，並給一個更划算的做法。",
+   "q": "主對話用大 model，context 已經 200K。接下來有一批找檔案、整理格式的小工作，同事提議這幾步直接切到便宜的小 model，做完再切回來。這樣切，帳會怎麼變？有沒有更划算的做法？",
    "key": [
     "Cache 綁 model，每個 model 各有一份：切到小 model 時，整段 200K 的 context 要照小 model 的 cache write 單價重算",
     "大 model 的 cache read 可能比小 model 的 cache write 還便宜，所以在大 context 上切過去，這一步的 input 反而更貴",
@@ -9283,7 +9282,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
     "k38"
    ],
    "after": "i8",
-   "q": "一個排程 agent 的成功率是 80%，成功的 run 平均 $1，失敗的 run 平均 $8。團隊打算要求 model 把回覆寫短，讓成功的 run 再省一點。依第 6、7 章，這個方向對嗎？你會先做什麼？上限的數字怎麼訂，訂錯會怎樣？",
+   "q": "一個排程 agent 的成功率是 80%，成功的 run 平均 $1，失敗的 run 平均 $8。團隊打算要求 model 把回覆寫短，讓成功的 run 再省一點。這個方向對嗎？你會先做什麼？如果要替每次 run 訂花費上限，數字怎麼訂，訂錯會怎樣？",
    "key": [
     "寫短省得很少：output 只佔花費一成上下，就算少一半，總花費也只少 5% 左右",
     "錢主要花在失敗的 run：每個成功任務的成本是 c_s + c_f × (1 − p) ÷ p，這裡是 $3，其中 $2 是失敗付的",
@@ -9311,8 +9310,7 @@ Return only matching paths and line numbers. No explanation.</code></pre></figur
  "unit_kinds": [
   "choice"
  ]
-}
-</script>
+}</script>
 <script src="app.js?v=20261117a"></script>
 <script src="code.js"></script>
 </body>
