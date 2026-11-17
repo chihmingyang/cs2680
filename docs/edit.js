@@ -342,29 +342,130 @@
     markDirty(el);
   }
 
-  /* ---------- undo: our own stack, so toolbar edits and typing share it ---------- */
+  /* ---------- undo: one history for the whole page (2026-11-17 James：「編輯模式沒有回上一步功能？」)
+     Typing, formatting, Enter, delete, ＋段落 and ＋圖 all go on the same stack, so ⌘Z and the ↶ button
+     step back through them in order, whichever block they were in. Each entry is the step that undoes
+     an action; running it returns the step that redoes it:
+       html     put a block's inner HTML back          → html (the HTML it had)
+       undelete take a box out of 刪除               → delete
+       delete   mark a box 刪除 again                → undelete
+       remove   take a new block out of the page    → reinsert
+       reinsert put it back where it was            → remove
+       group    several of these, run last-first    → group of their inverses
+     The history starts empty each time edit mode opens and after each save. */
   var snapTimer = 0;
-  function snapshot(el) {
-    var rec = recs.get(el);
-    if (!rec) { rec = { key: '', nth: 0, html: '', undo: [], redo: [] }; recs.set(el, rec); }
-    var now = el.innerHTML;
-    if (rec.undo[rec.undo.length - 1] !== now) rec.undo.push(now);
-    if (rec.undo.length > 100) rec.undo.shift();
-    rec.redo = [];
+  var hist = { undo: [], redo: [] };
+  var typing = { el: null, at: 0 };
+  var undoBtn = null;
+  var redoBtn = null;
+  function refreshHist() {
+    if (undoBtn) undoBtn.disabled = !hist.undo.length;
+    if (redoBtn) redoBtn.disabled = !hist.redo.length;
   }
-  function restore(el, from, to) {
-    if (!from.length) return;
-    to.push(el.innerHTML);
-    var html = from.pop();
-    if (html === el.innerHTML && from.length) html = from.pop();
-    el.innerHTML = html;
-    var r = document.createRange();
-    r.selectNodeContents(el);
-    r.collapse(false);
-    var sel = getSelection();
-    sel.removeAllRanges();
-    sel.addRange(r);
-    markDirty(el);
+  function clearHist() {
+    hist = { undo: [], redo: [] };
+    typing = { el: null, at: 0 };
+    refreshHist();
+  }
+  function record(step) {
+    var top = hist.undo[hist.undo.length - 1];
+    if (step.kind === 'html' && top && top.kind === 'html' && top.el === step.el && top.html === step.html) return;
+    hist.undo.push(step);
+    if (hist.undo.length > 300) hist.undo.shift();
+    hist.redo = [];
+    refreshHist();
+  }
+  /* the block's HTML before a change; a toolbar action also ends the current run of typing */
+  function snapshot(el) {
+    record({ kind: 'html', el: el, html: el.innerHTML });
+    typing = { el: null, at: 0 };
+  }
+  function placeOf(el) {
+    return { parent: el.parentNode, prev: el.previousSibling, next: el.nextSibling };
+  }
+  function putBack(el, at) {
+    if (at.prev && at.prev.parentNode === at.parent) at.parent.insertBefore(el, at.prev.nextSibling);
+    else if (at.next && at.next.parentNode === at.parent) at.parent.insertBefore(el, at.next);
+    else at.parent.insertBefore(el, at.parent.firstChild);
+  }
+  function runStep(step) {
+    var el = step.el;
+    switch (step.kind) {
+      case 'html':
+        if (!main.contains(el)) return null;
+        var back = { kind: 'html', el: el, html: el.innerHTML };
+        el.innerHTML = step.html;
+        markDirty(el);
+        return back;
+      case 'undelete':
+        if (!main.contains(el)) return null;
+        unmarkDeleted(el);
+        return { kind: 'delete', el: el };
+      case 'delete':
+        if (!main.contains(el)) return null;
+        setDeleted(el);
+        return { kind: 'undelete', el: el };
+      case 'remove':
+        if (!main.contains(el)) return null;
+        if (el === active || el.contains(active)) { active = null; el.removeAttribute('contenteditable'); el.classList.remove('ed-active'); }
+        var at = placeOf(el);
+        el.parentNode.removeChild(el);
+        return { kind: 'reinsert', el: el, parent: at.parent, prev: at.prev, next: at.next };
+      case 'reinsert':
+        if (!main.contains(step.parent)) return null;
+        putBack(el, step);
+        return { kind: 'remove', el: el };
+      case 'group':
+        var inv = step.items.slice().reverse().map(runStep).filter(Boolean);
+        return inv.length ? { kind: 'group', items: inv } : null;
+    }
+    return null;
+  }
+  function blockOfStep(step) {
+    if (!step) return null;
+    if (step.kind === 'group') {
+      for (var i = 0; i < step.items.length; i++) {
+        var b = blockOfStep(step.items[i]);
+        if (b) return b;
+      }
+      return null;
+    }
+    return step.el && main.contains(step.el) ? step.el : null;
+  }
+  /* ⌘Z / ⌘⇧Z and the ↶ ↷ buttons. A step whose block is gone (an empty new block dropped on save) is skipped. */
+  function stepHistory(redo) {
+    var from = redo ? hist.redo : hist.undo;
+    var to = redo ? hist.undo : hist.redo;
+    window.clearTimeout(snapTimer);
+    if (active) markDirty(active);
+    typing = { el: null, at: 0 };
+    while (from.length) {
+      var step = from.pop();
+      var back = runStep(step);
+      if (!back) continue;
+      to.push(back);
+      var el = blockOfStep(back);
+      if (el && el === active) {
+        var r = document.createRange();
+        r.selectNodeContents(el);
+        r.collapse(false);
+        var sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      } else if (el && el.getBoundingClientRect) {
+        var box = el.getBoundingClientRect();
+        var barBottom = topbar.getBoundingClientRect().bottom;
+        if (box.bottom < barBottom || box.top > window.innerHeight) el.scrollIntoView({ block: 'center' });
+      }
+      moveHandle(null);
+      refreshCount();
+      scheduleMarks();
+      say(redo ? '重做了一步' : '復原了一步');
+      refreshHist();
+      return;
+    }
+    say(redo ? '沒有可以重做的' : '沒有可以復原的');
+    refreshHist();
   }
 
   /* ---------- formatting ---------- */
@@ -526,7 +627,7 @@
     var tail = sel.getRangeAt(0).cloneRange();
     tail.deleteContents();
     tail.setEndAfter(el.lastChild || el);
-    snapshot(el);
+    var headBefore = el.innerHTML;
     var frag = tail.extractContents();
     var fresh = el.cloneNode(false);
     fresh.removeAttribute('id');
@@ -538,6 +639,8 @@
     fresh.appendChild(frag);
     if (!fresh.textContent) fresh.appendChild(document.createElement('br'));
     el.parentNode.insertBefore(fresh, el.nextSibling);
+    record({ kind: 'group', items: [{ kind: 'html', el: el, html: headBefore }, { kind: 'remove', el: fresh }] });
+    typing = { el: null, at: 0 };
     var from = originOf(el) || el;
     origins.set(fresh, from);
     el.classList.add('ed-dirty');
@@ -748,11 +851,11 @@
       save(false, '網頁編輯：' + text);
     }
     send.addEventListener('click', go);
-    cancel.addEventListener('click', shut);
+    cancel.addEventListener('click', function () { exitAfterSave = false; shut(); });
     input.addEventListener('keydown', function (e) {
       if (e.isComposing || e.keyCode === 229) return;
       if (e.key === 'Enter') { e.preventDefault(); go(); }
-      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); shut(); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); exitAfterSave = false; shut(); }
     });
     input.focus();
     input.select();
@@ -821,6 +924,7 @@
       });
       origins = new WeakMap();
       indexBlocks();
+      clearHist();
       kept.forEach(function (k) {
         if (k.rec) recs.set(k.el, k.rec);
         if (k.box) boxRecs.set(k.el, k.box);
@@ -830,6 +934,9 @@
       refreshCount();
       refreshSidenav(savedSrc);
       var sha = res && res.commit && res.commit.sha ? res.commit.sha.slice(0, 7) : '';
+      var leave = exitAfterSave && !failed.length;
+      exitAfterSave = false;
+      if (leave) setEditing(false);
       if (failed.length) {
         say('存了，但有 ' + failed.length + ' 處在 GitHub 上已被改過，沒有存（紅框）。請重新整理後再改那幾處。', 'warn');
       } else if (snippet) {
@@ -840,6 +947,7 @@
       }
     }).catch(function (err) {
       saving = false;
+      exitAfterSave = false;
       refreshCount();
       if (err.message === 'nothing') {
         say('這幾處在 GitHub 上已被改過，存不進去。請重新整理頁面。', 'warn');
@@ -900,6 +1008,11 @@
   function buildBar() {
     bar = h('div', 'ed-bar ed-ui');
     var inner = h('div', 'ed-bar-inner gutter');
+    undoBtn = tool('↶', '復原上一步（⌘Z）', function () { stepHistory(false); }, 'ed-hist');
+    redoBtn = tool('↷', '重做（⌘⇧Z）', function () { stepHistory(true); }, 'ed-hist');
+    inner.appendChild(undoBtn);
+    inner.appendChild(redoBtn);
+    inner.appendChild(h('span', 'ed-sep'));
     inner.appendChild(tool('<b>B</b>', '粗體（黑色小標，⌘B）', function () { format('b'); }));
     inner.appendChild(tool('<strong>重</strong>', '紅字重點（⌘⇧B）', function () { format('strong'); }));
     inner.appendChild(tool('<em>I</em>', '斜體（⌘I）', function () { format('em'); }));
@@ -928,11 +1041,75 @@
     inner.appendChild(saveBtn);
     var done = h('button', 'ed-exit', '結束');
     done.type = 'button';
-    done.title = '結束編輯（Esc）';
-    done.addEventListener('click', function () { setEditing(false); });
+    done.title = '結束編輯（Esc）；有沒存的修改會問要存還是丟掉';
+    done.addEventListener('click', function () { requestExit(); });
     inner.appendChild(done);
     bar.appendChild(inner);
     topbar.appendChild(bar);
+    refreshHist();
+  }
+
+  /* ---------- leaving edit mode (2026-11-17 James：「結束要有能強制丟掉 draft」)
+     With unsaved changes, 結束 asks in a row under the toolbar: 存了再結束, 丟掉修改 (puts the page
+     back the way it was when edit mode opened or when it was last saved), or 繼續編輯. Leaving
+     the changes on the page is no longer offered: the next time edit mode opened, they became the
+     baseline and could not be found in the source. */
+  var leaveRow = null;
+  var exitAfterSave = false;
+  function closeLeave() {
+    if (leaveRow && leaveRow.parentNode) leaveRow.parentNode.removeChild(leaveRow);
+    leaveRow = null;
+    window.dispatchEvent(new Event('resize'));
+  }
+  function requestExit() {
+    if (saving) { say('還在存檔，等一下再結束', 'warn'); return; }
+    window.clearTimeout(snapTimer);
+    deactivate();
+    dropEmptyNew();
+    var n = main.querySelectorAll('.ed-dirty').length;
+    if (!n) { setEditing(false); return; }
+    if (leaveRow) { leaveRow.querySelector('.ed-stay').focus(); return; }
+    leaveRow = h('div', 'ed-commit ed-leave gutter');
+    leaveRow.appendChild(h('span', 'ed-commit-pre', '還有 ' + n + ' 處沒存。'));
+    var keep = h('button', 'ed-save', '存了再結束');
+    keep.type = 'button';
+    keep.addEventListener('click', function () { closeLeave(); exitAfterSave = true; askMessage(); if (!commitRow) exitAfterSave = false; });
+    var toss = h('button', 'ed-exit ed-discard', '丟掉修改');
+    toss.type = 'button';
+    toss.title = '回到這次編輯開始（或上次存檔）時的樣子，然後結束編輯';
+    toss.addEventListener('click', function () { closeLeave(); discardAll(); setEditing(false); say(''); });
+    var stay = h('button', 'ed-exit ed-stay', '繼續編輯');
+    stay.type = 'button';
+    stay.addEventListener('click', closeLeave);
+    leaveRow.appendChild(keep);
+    leaveRow.appendChild(toss);
+    leaveRow.appendChild(stay);
+    leaveRow.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeLeave(); }
+    });
+    bar.appendChild(leaveRow);
+    alignBar();
+    window.dispatchEvent(new Event('resize'));
+    stay.focus();
+  }
+  /* put back every block as it was indexed: new blocks out, 刪除 marks off, edited text back */
+  function discardAll() {
+    window.clearTimeout(snapTimer);
+    deactivate();
+    Array.prototype.slice.call(main.querySelectorAll('[data-ed-new]')).forEach(function (el) {
+      if (el.parentNode && !el.parentElement.closest('[data-ed-new]')) el.parentNode.removeChild(el);
+    });
+    Array.prototype.slice.call(main.querySelectorAll('.ed-deleted, .ed-dirty, .ed-conflict, .ed-target')).forEach(function (el) {
+      var rec = recs.get(el);
+      if (rec && el.classList.contains('ed-dirty') && !el.classList.contains('ed-deleted') && el.innerHTML !== rec.html) el.innerHTML = rec.html;
+      el.classList.remove('ed-deleted', 'ed-dirty', 'ed-conflict', 'ed-target');
+      if (!el.getAttribute('class')) el.removeAttribute('class');
+    });
+    origins = new WeakMap();
+    clearHist();
+    moveHandle(null);
+    refreshCount();
+    scheduleMarks();
   }
   /* Keep the bar in sight when a touch keyboard is open. iOS and iPadOS pan the visual
      viewport inside the layout viewport, and a sticky bar sits at the layout viewport's top,
@@ -965,7 +1142,8 @@
     vv.addEventListener('scroll', pinBar);
   }
   function setEditing(on) {
-    if (!on && main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，要結束編輯嗎？（修改會留在頁面上，重新整理就消失）')) return;
+    if (!on && main.querySelector('.ed-dirty')) { requestExit(); return; }
+    if (!on) { closeLeave(); exitAfterSave = false; }
     editing = on;
     /* keep the text in view where it is: Chrome's scroll anchoring does this by itself, Safari may not */
     var refEl = null;
@@ -980,6 +1158,7 @@
       bar.hidden = false;
       alignBar();
       indexBlocks();
+      clearHist();
       refreshCount();
     } else {
       deactivate();
@@ -1067,7 +1246,7 @@
     var dead = handleFor.closest('.ed-deleted');
     if (dead) {
       handleFor = dead;
-      handle.appendChild(handleButton('復原', '取消刪除', function () { undelete(dead); }));
+      handle.appendChild(handleButton('取消刪除', '這一塊不刪了（⌘Z 也可以）', function () { undelete(dead); }));
     } else {
       list.forEach(function (t) {
         handle.appendChild(handleButton('刪除' + boxLabel(t), '存檔時才真的刪；存檔前可以復原', function () { markDeleted(t); }, t, 'is-del'));
@@ -1083,7 +1262,9 @@
   function markDeleted(el) {
     if (el === active || el.contains(active)) deactivate();
     if (el.hasAttribute('data-ed-new')) {
+      var at = placeOf(el);
       el.parentNode.removeChild(el);
+      record({ kind: 'reinsert', el: el, parent: at.parent, prev: at.prev, next: at.next });
       moveHandle(null);
       refreshCount();
       return;
@@ -1098,18 +1279,27 @@
       Array.prototype.forEach.call(links, function (a) { if (!el.contains(a)) refs++; });
     });
     if (refs && !window.confirm('目錄或內文有 ' + refs + ' 個連結指到這裡，刪掉後那些連結會失效。還是要刪嗎？')) return;
-    el.classList.add('ed-deleted', 'ed-dirty');
+    setDeleted(el);
+    record({ kind: 'undelete', el: el });
     moveHandle(el);
+  }
+  function setDeleted(el) {
+    if (el === active || el.contains(active)) deactivate();
+    el.classList.add('ed-deleted', 'ed-dirty');
     refreshCount();
   }
   function undelete(el) {
+    unmarkDeleted(el);
+    record({ kind: 'delete', el: el });
+    moveHandle(el);
+  }
+  function unmarkDeleted(el) {
     el.classList.remove('ed-deleted', 'ed-dirty');
     if (!el.getAttribute('class')) el.removeAttribute('class');
     markDirty(el);
     /* markDirty adds ed-dirty to a box with no text record; a box has nothing else to save */
     if (!recs.get(el) || !isBlock(el)) el.classList.remove('ed-dirty');
     if (!el.getAttribute('class')) el.removeAttribute('class');
-    moveHandle(el);
     refreshCount();
   }
   function newAfter(target, fresh) {
@@ -1120,6 +1310,7 @@
     fresh.setAttribute('data-ed-new', '');
     fresh.classList.add('ed-dirty');
     origins.set(fresh, originOf(target) || target);
+    record({ kind: 'remove', el: fresh });
   }
   function addParagraph(target) {
     var fresh = document.createElement(target.tagName === 'LI' ? 'li' : 'p');
@@ -1221,11 +1412,10 @@
   });
   document.addEventListener('beforeinput', function (e) {
     if (!editing || !active || !active.contains(e.target) || e.isComposing) return;
-    var rec = recs.get(active);
-    var last = rec && rec.undo[rec.undo.length - 1];
-    /* group typing: a new undo step after a pause or when the text jumped */
-    if (!rec || last === undefined || Date.now() - (rec.at || 0) > 800) snapshot(active);
-    if (recs.get(active)) recs.get(active).at = Date.now();
+    /* group typing: a new undo step after a pause, or in another block */
+    var now = Date.now();
+    if (typing.el !== active || now - typing.at > 800) snapshot(active);
+    typing = { el: active, at: now };
   });
   document.addEventListener('compositionend', function () {
     if (active) markDirty(active);
@@ -1248,6 +1438,7 @@
     if (e.key === 'Escape') {
       /* one step back per press: panel, then the block being edited, then edit mode */
       if (panel && !panel.hidden) { e.preventDefault(); closePanel(); return; }
+      if (leaveRow) { e.preventDefault(); closeLeave(); return; }
       if (editing && !active && !typingIn(e.target)) { e.preventDefault(); setEditing(false); return; }
     }
   });
@@ -1257,15 +1448,15 @@
     var k = (e.key || '').toLowerCase();
     var code = e.code || '';
     if (mod && k === 's') { e.preventDefault(); askMessage(); return; }
-    if (!active || e.isComposing || e.keyCode === 229) return;
-    var rec = recs.get(active);
-    if (mod && k === 'z') {
+    if (e.isComposing || e.keyCode === 229) return;
+    /* ⌘Z: the page's history, also with no block open; a commit message or reply box keeps its own */
+    if (mod && !e.altKey && (code === 'KeyZ' || code === 'KeyY') && (!typingIn(e.target) || (active && active.contains(e.target)))) {
       e.preventDefault();
-      if (rec) {
-        if (e.shiftKey) restore(active, rec.redo, rec.undo);
-        else restore(active, rec.undo, rec.redo);
-      }
-    } else if (mod && !e.altKey && code === 'KeyB') { e.preventDefault(); format(e.shiftKey ? 'strong' : 'b'); }
+      stepHistory(code === 'KeyY' || e.shiftKey);
+      return;
+    }
+    if (!active) return;
+    if (mod && !e.altKey && code === 'KeyB') { e.preventDefault(); format(e.shiftKey ? 'strong' : 'b'); }
     else if (mod && !e.altKey && !e.shiftKey && code === 'KeyI') { e.preventDefault(); format('em'); }
     else if (mod && !e.altKey && !e.shiftKey && code === 'KeyU') { e.preventDefault(); format('u'); }
     else if (mod && !e.altKey && !e.shiftKey && code === 'KeyE') { e.preventDefault(); format('code'); }
@@ -1299,8 +1490,9 @@
     var text = e.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text.replace(/\s*\n\s*/g, ' '));
   });
+  var leaving = false;
   window.addEventListener('beforeunload', function (e) {
-    if (main.querySelector('.ed-dirty')) {
+    if (!leaving && main.querySelector('.ed-dirty')) {
       e.preventDefault();
       e.returnValue = '';
     }
@@ -1391,7 +1583,8 @@
     off.type = 'button';
     off.title = '這個瀏覽器不再顯示編輯和留言的按鈕，只留頂端的鉛筆';
     off.addEventListener('click', function () {
-      if (main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，要收起嗎？')) return;
+      if (main.querySelector('.ed-dirty') && !window.confirm('還有沒存的修改，收起會丟掉它們。要收起嗎？')) return;
+      leaving = true;
       store('cs2680.ed.on', null);
       location.reload();
     });
@@ -1856,7 +2049,7 @@
   topbarInner.insertBefore(editBtn, askBtn);
 
   /* test hook: the patch logic, for tools/test_editor.py */
-  window.__cs2680ed = { cleanHtml: cleanHtml, syncSidenav: syncSidenav, threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
+  window.__cs2680ed = { cleanHtml: cleanHtml, syncSidenav: syncSidenav, threads: function () { return threads; }, scanSource: scanSource, sourceIndex: sourceIndex, boxIndex: boxIndex, boxSel: BOX_SEL, indexBlocks: indexBlocks, hist: function () { return hist; }, isBlock: isBlock, recs: function () { return recs; }, boxRecs: function () { return boxRecs; }, main: main };
 
   /* the launcher pencil from app.js gives way to the real buttons */
   Array.prototype.forEach.call(document.querySelectorAll('.ed-launch'), function (b) { b.remove(); });

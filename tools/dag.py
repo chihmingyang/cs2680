@@ -836,7 +836,7 @@ def render(d, info, L, A):
   if (m && by[m[1]]) select(m[1], true);
 }})();
 </script>
-<script src="app.js?v=20261117a"></script>
+<script src="app.js?v=20261117b"></script>
 </body>
 </html>
 """

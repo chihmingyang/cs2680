@@ -14,6 +14,9 @@ Usage: python3 -I tools/test_editor.py [--shots DIR]
    8. The left contents follow a changed 小標 (2026-11-17): edit.js rebuilds the page's own sidenav block
       like assemble_v7.v7_secs on every page, and a save that changes a <p id><b>小標</b> puts the new
       label in the same commit and on the open page.
+9. One history for the page (2026-11-17): ⌘Z and ↶ step back through typing, Enter, 刪除, ＋段落 in order,
+   with no block open too, until nothing is left to save; ⌘⇧Z redoes them. 結束 with unsaved changes asks:
+   丟掉修改 puts the page back as it was, Esc keeps editing, 存了再結束 saves and closes.
 5. Comments: marks on the page, a new comment is an issue with the label comment, replies render escaped,
    replying drops answered, 解決 closes.
 """
@@ -278,7 +281,7 @@ def main():
         html_after = para.inner_html()
         check("color: var(--signal)" in html_after and "TYPEDTEXT" in html_after, "colour wraps the selection in a span with a theme token")
         # bold on the same selection
-        page.locator(".ed-tool").first.click()
+        page.locator(".ed-tool:not(.ed-hist)").first.click()
         check("<b>" in para.inner_html(), "bold wraps the selection")
         # undo twice goes back to the typed state
         page.keyboard.press("Control+z")
@@ -369,7 +372,7 @@ def main():
         code_cap = page.locator(f"{CH} figure.file figcaption").first.inner_text()[:14]
         handle_click(f"{CH} figure.diagram", "刪除這張圖")
         check(page.locator(".ed-deleted").count() == 1, "figure is marked, not gone yet")
-        handle_click(f"{CH} figure.diagram", "復原")
+        handle_click(f"{CH} figure.diagram", "取消刪除")
         check(page.locator(".ed-deleted").count() == 0 and page.locator(".ed-dirty").count() == 0, "undo a delete: nothing left to save")
         handle_click(f"{CH} figure.diagram", "刪除這張圖")
         handle_click(f"{CH} figure.file", "刪除這段 code")
@@ -545,6 +548,95 @@ def main():
         changed = changed_lines(src8, put8)
         check(len(changed) <= 4, f"the sidenav change rides in the same small diff ({len(changed)} changed lines)")
         p8.close()
+
+        # --- 9. undo history and leaving with unsaved changes
+        src9 = (SITE / "l03.html").read_text(encoding="utf-8")
+        gh9 = FakeGitHub(src9)
+        p9 = ctx.new_page()
+        p9.on("pageerror", lambda e: errors.append(str(e)))
+        p9.on("dialog", lambda d: d.accept())
+        p9.route("https://api.github.com/**", gh9.handle)
+        p9.goto(f"{base}/l03.html?edit=now", wait_until="load")
+        p9.wait_for_selector(".ed-bar")
+        state = lambda: p9.evaluate("() => ({ text: document.querySelector('main').textContent, n: document.querySelectorAll('main *').length })")
+        orig = state()
+        check(p9.locator(".ed-hist").first.is_disabled(), "↶ starts disabled")
+        p9.evaluate("""(ch) => [...document.querySelectorAll(ch + ' .prose > p:not([class])')].filter(p => p.getClientRects().length).forEach((p, i) => p.setAttribute('data-u', i))""", CH)
+        def type_at_end(sel, text):
+            el = p9.locator(sel)
+            el.scroll_into_view_if_needed()
+            el.click()
+            p9.keyboard.press("End")
+            p9.keyboard.type(text)
+            p9.wait_for_timeout(900)          # a pause starts a new undo step
+        type_at_end('[data-u="0"]', "UNDO1")
+        type_at_end('[data-u="0"]', "UNDO2")
+        type_at_end('[data-u="1"]', "OTHERBLOCK")
+        p9.keyboard.press("Enter")             # split
+        p9.keyboard.type("SPLITTAIL")
+        p9.keyboard.press("Escape")
+        p9.wait_for_timeout(350)
+        fig = p9.locator(f"{CH} figure.diagram").first
+        fig.scroll_into_view_if_needed(); fig.hover(); p9.wait_for_timeout(200)
+        p9.locator(".ed-handle .ed-hbtn", has_text="刪除這張圖").first.click()
+        tgt = p9.locator('[data-u="2"]')
+        tgt.scroll_into_view_if_needed(); tgt.hover(); p9.wait_for_timeout(200)
+        p9.locator(".ed-handle .ed-hbtn", has_text="＋段落").first.click()
+        p9.keyboard.type("ADDED9")
+        p9.keyboard.press("Escape")
+        p9.wait_for_timeout(350)
+        dirty_all = p9.locator(".ed-dirty").count()
+        check(dirty_all >= 5, f"five kinds of change are marked ({dirty_all})")
+        steps = p9.evaluate("() => window.__cs2680ed.hist().undo.length")
+        # no block open: ⌘Z still works
+        p9.keyboard.press("Control+z")
+        check("ADDED9" not in p9.locator("main").inner_text(), "⌘Z with no block open takes back the last thing: the added paragraph's text")
+        p9.keyboard.press("Control+z")
+        check(p9.evaluate("() => window.__cs2680ed.hist().undo.length") == steps - 2, "each ⌘Z is one step")
+        p9.keyboard.press("Control+z")
+        check(p9.locator(".ed-deleted").count() == 0, "the next ⌘Z takes back the 刪除")
+        # the rest with the button
+        for _ in range(steps):
+            if p9.locator(".ed-hist").first.is_disabled():
+                break
+            p9.locator(".ed-hist").first.click()
+        check(p9.locator(".ed-dirty").count() == 0, "undoing every step leaves nothing to save")
+        check(state() == orig, "undoing every step puts the page back exactly")
+        p9.keyboard.press("Control+Shift+z")
+        check("UNDO1" in p9.locator('[data-u="0"]').inner_text() and "UNDO2" not in p9.locator('[data-u="0"]').inner_text(),
+              "⌘⇧Z redoes one run of typing, not the whole block")
+        while not p9.locator(".ed-hist").nth(1).is_disabled():
+            p9.locator(".ed-hist").nth(1).click()
+        txt = p9.locator("main").inner_text()
+        check(all(t in txt for t in ("UNDO2", "OTHERBLOCK", "SPLITTAIL", "ADDED9")) and p9.locator(".ed-deleted").count() == 1,
+              "↷ redoes everything, in order")
+
+        # 結束 with changes: Esc keeps editing, 丟掉修改 restores the page and closes
+        p9.locator(".ed-bar-inner .ed-exit").click()
+        p9.wait_for_selector(".ed-leave")
+        check("沒存" in p9.locator(".ed-leave").inner_text(), "結束 with unsaved changes asks what to do")
+        p9.keyboard.press("Escape")
+        check(p9.locator(".ed-leave").count() == 0 and p9.locator(".ed-bar:not([hidden])").count() == 1, "Esc on that question keeps editing")
+        p9.keyboard.press("Escape")            # no block open: Esc asks the same question
+        p9.wait_for_selector(".ed-leave")
+        p9.locator(".ed-leave .ed-discard").click()
+        check(p9.locator(".ed-bar:not([hidden])").count() == 0, "丟掉修改 ends edit mode")
+        check(p9.locator(".ed-dirty, .ed-deleted, [data-ed-new]").count() == 0 and state() == orig, "丟掉修改 puts the page back exactly as it was")
+        check(not gh9.puts, "丟掉修改 sends nothing")
+
+        # 存了再結束
+        p9.keyboard.press("e")
+        p9.wait_for_selector(".ed-bar:not([hidden])")
+        type_at_end('[data-u="0"]', "KEEPME")
+        p9.keyboard.press("Escape")
+        p9.locator(".ed-bar-inner .ed-exit").click()
+        p9.wait_for_selector(".ed-leave")
+        p9.locator(".ed-leave .ed-save").click()
+        p9.locator(".ed-commit-input").press("Enter")
+        p9.wait_for_function("document.querySelector('.ed-status').textContent.includes('已存')")
+        check(len(gh9.puts) == 1 and "KEEPME" in gh9.puts[0]["text"] and "UNDO" not in gh9.puts[0]["text"], "存了再結束 saves only what is on the page")
+        check(p9.locator(".ed-bar:not([hidden])").count() == 0, "存了再結束 closes edit mode after the save")
+        p9.close()
 
         # --- narrow screen and dark mode
         if args.shots:

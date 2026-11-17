@@ -947,11 +947,11 @@
     window.__cs2680edStart = start;
     var edCss = document.createElement('link');
     edCss.rel = 'stylesheet';
-    edCss.href = 'edit.css?v=20261116b';
+    edCss.href = 'edit.css?v=20261117a';
     document.head.appendChild(edCss);
     function addJs() {
       var edJs = document.createElement('script');
-      edJs.src = 'edit.js?v=20261117a';
+      edJs.src = 'edit.js?v=20261117b';
       document.body.appendChild(edJs);
     }
     /* wait for code.js: it runs right after this file and rewrites code blocks */
