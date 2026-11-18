@@ -173,7 +173,7 @@ def check(path):
             errs.append(f'{x["id"]}：缺題目或答案要點')
         # 2026-11-17 James：整合題考觀念，題幹是情境加要下的判斷，不指章、不說「照文章」。
         # 指了章，題目變成「回想文章哪裡寫過」，也先告訴讀者要用哪幾節。
-        # 舊題庫（L5、L6、L6b、L7）有 int_cites_legacy，改寫之前只 warn。
+        # int_cites_legacy：改寫之前只 warn 的過渡欄位；L5、L6、L6b、L7 在 2026-11-19 改完，現在沒有題庫用它。
         mcite = re.search(r"第\s*\d+(\s*[、和與到–\-]\s*\d+)*\s*章|照文章|照本文|依本文|本文的", x.get("q", ""))
         if mcite:
             msg = f'{x["id"]}：整合題的題幹指了章或文章（「{mcite.group(0)}」），改成情境加判斷（QUIZ.md〈整合題考觀念〉）'
