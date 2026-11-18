@@ -334,6 +334,7 @@
               <figcaption>三種 token 各花多少錢？量最多的 cache read 單價最低，單價最高的 output 量最少；相乘之後，cache read 仍佔約八成。量的比例來自每一步重送整個 context：例如 context 有 200K token，這一步新進來 2K、model 回覆 0.4K，就是圖上的 100、1、0.2。單價以 cache read 為 1，長條照比例畫。</figcaption>
             </figure>
 <p>先看量和單價這兩欄，方向相反：量最多的 cache read 單價最低，單價最高的 output 量最少。Cache read 便宜，是因為 provider 只要讀留下來的結果，不用重算。Output 為什麼最貴，要從 GPU 的帳算起，在第 3 章〈<a href="#i3-7">單價從哪裡來</a>〉。兩欄相乘就是「花的錢」那一欄：<strong>cache read 的單價最低，仍佔約八成的花費</strong>。</p>
+<p>三種裡沒有不經過 cache 的 input。Input 就是這一步送給 model 的整個 context，每個 token 只收一次錢：cache hit 的部分照 cache read 收，cache miss 的部分照 cache write 收。Prefix cache 沒開的時候，整個 context 照原價收。原價是圖上 cache read 的 10 倍，比 cache write 低一點；cache write 為什麼比原價高，在第 3 章〈<a href="#i3-2">Hit rate</a>〉。</p>
 <p>圖上的單價是一組常見的比例。較新的 model 把 cache read 收得更低，只有圖上的一半到四分之一（見<a class="tm" href="#t2">單價註</a>）。這時 cache read 佔的比例會降到五到七成，仍是最大的一筆。</p>
 <p id="i2-3"><b>Cache 會過期，過期的舊內容要重算一次。</b>Cache 只留幾分鐘，使用者停下來的時間常常更久。<strong>過期之後，同一段舊內容讀不到 cache，變成 cache miss，要重算一次</strong>，照 cache write 收錢。所以 cache write 裝了兩種內容：真正的新內容，和過期之後重算的舊內容。在上圖的單價欄，這等於同一個 token 從 cache read 那一列掉到 cache write 那一列：<strong>cache miss 的 token，錢是 cache read 的 12.5 倍</strong>。Cache read 收得更低的 model，最多差到 50 倍。</p>
 <p>帳單上只看得到 cache write 的總量，分不出裡面哪些是新內容、哪些是過期之後重算的舊內容。華盛頓大學的 <a href="https://syfi.cs.washington.edu/blog/2026-06-25-tracelab/" target="_blank" rel="noopener">TraceLab</a>（2026-06）分析自己實驗室的 coding agent session，逐段比對內容之前有沒有送過，把 cache write 拆開看：81% 是過期之後重算的舊內容，真正的新內容不到兩成。換算成花費：</p>
@@ -1946,7 +1947,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "圖上的單價只是一組常見的比例：較新的 model 把 cache read 收得更低，只有圖上的一半到四分之一，這時 cache read 佔花費的比例會降到五到七成。",
      "at": [
-      "#i2 ¶6"
+      "#i2 ¶7"
      ]
     },
     {
@@ -1954,7 +1955,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "即使在 cache read 收得更低的新 model 上，cache read 仍是三種 token 裡最大的一筆花費。",
      "at": [
-      "#i2 ¶6"
+      "#i2 ¶7"
      ]
     }
    ]
@@ -1970,7 +1971,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "Cache 只留幾分鐘，使用者停下來的時間常常更久；過期之後，同一段舊內容讀不到 cache，變成 cache miss，要重算一次，照 cache write 收錢。",
      "at": [
-      "#i2 ¶7"
+      "#i2 ¶8"
      ]
     },
     {
@@ -1978,7 +1979,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "misconception",
      "t": "以為 cache write 都是新內容，其實 cache write 裝了兩種內容：真正的新內容，和過期之後重算的舊內容。",
      "at": [
-      "#i2 ¶7",
+      "#i2 ¶8",
       "#i2 圖3 說明"
      ]
     },
@@ -1987,7 +1988,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "同一個 token 從 cache read 掉到 cache write，cache miss 時的錢是 cache read 的 12.5 倍；cache read 收得更低的 model，最多差到 50 倍。",
      "at": [
-      "#i2 ¶7"
+      "#i2 ¶8"
      ]
     },
     {
@@ -1995,7 +1996,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "帳單上只看得到 cache write 的總量，分不出裡面哪些是新內容、哪些是過期之後重算的舊內容；要像 TraceLab 那樣逐段比對內容之前有沒有送過才拆得開。",
      "at": [
-      "#i2 ¶8"
+      "#i2 ¶9"
      ]
     },
     {
@@ -2003,7 +2004,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "evidence",
      "t": "華盛頓大學的 TraceLab（2026-06）分析自己實驗室的 coding agent session：cache write 的 81% 是過期之後重算的舊內容，真正的新內容不到兩成。換算成花費：cache read 58%，cache write 裡重算的舊內容 26%、新內容 6%，output 10%，cache read 和重算的舊內容合計 84%；花費是本文用上一張圖的單價換算的。",
      "at": [
-      "#i2 ¶8",
+      "#i2 ¶9",
       "#i2 圖3 說明",
       "#i2 圖3 內容"
      ]
@@ -2013,7 +2014,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "Cache read 和過期後重算的舊內容，付的都是重讀同一批舊內容的錢，兩項合計約佔花費的八成；真正的新內容和 output 只是小部分。",
      "at": [
-      "#i2 ¶9",
+      "#i2 ¶10",
       "#i2 圖3 說明"
      ]
     },
@@ -2022,7 +2023,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "省錢的先後順序是：先保住 cache hit，再縮小 context，最後才管 output。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶11"
      ]
     },
     {
@@ -2030,7 +2031,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "先保住 cache hit，是因為過期重算的那一部分可以不丟任何內容就變便宜：cache 留多久可以設定，讓 cache 撐過使用者的停頓，這些舊內容就還是 cache hit，從 cache write 的價錢降成 cache read 的價錢。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶11"
      ]
     },
     {
@@ -2038,7 +2039,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "縮小 context 也能省錢，但要決定丟什麼，丟錯了要重做，所以排在保住 cache hit 之後。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶11"
      ]
     },
     {
@@ -2046,7 +2047,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "Output 只佔花費的一成上下，省掉一半也動不了多少，所以最後才管。",
      "at": [
-      "#i2 ¶10"
+      "#i2 ¶11"
      ]
     }
    ]
@@ -2062,7 +2063,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "一個 session 重送的 token 總量隨 turn 數的平方成長。",
      "at": [
-      "#i2 ¶11"
+      "#i2 ¶12"
      ]
     },
     {
@@ -2070,7 +2071,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "第 k 個 turn 要把前面 k − 1 個 turn 的內容重送一次，送出 kL（L 是每個 turn 新增的 token 數），所以 k 個 turn 送出的總量 = L × (1 + 2 + … + k) = L × k(k + 1) ÷ 2。",
      "at": [
-      "#i2 ¶11",
+      "#i2 ¶12",
       "#i2 code1 內容",
       "#i2 圖5 內容"
      ]
@@ -2089,7 +2090,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "misconception",
      "t": "平方不是因為 API 的收費是平方：API 依 token 數線性收費，是每個 turn 都重送一次歷史，加總之後才變成平方。",
      "at": [
-      "#i2 ¶12"
+      "#i2 ¶13"
      ]
     },
     {
@@ -2097,7 +2098,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "Prefix cache 只讓重送的每個 token 變便宜，平方成長的形狀不變。",
      "at": [
-      "#i2 ¶12"
+      "#i2 ¶13"
      ]
     },
     {
@@ -2105,7 +2106,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "同一條算式對 step 也成立，而且 step 比 turn 多得多，所以長任務的成本由 model call 的總次數決定。",
      "at": [
-      "#i2 ¶12"
+      "#i2 ¶13"
      ]
     },
     {
@@ -2113,7 +2114,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "實務上換任務就開新 session：一個 20 turn 的 session 送 210L，拆成兩個 10 turn 的 session 只送 110L，少了將近一半。",
      "at": [
-      "#i2 ¶12"
+      "#i2 ¶13"
      ]
     },
     {
@@ -2121,7 +2122,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "拆成新 session 的代價是：第二個 session 不記得第一個做過什麼。",
      "at": [
-      "#i2 ¶12"
+      "#i2 ¶13"
      ]
     }
    ]
@@ -2137,7 +2138,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "一段內容進了 context，留多久就付多少次：留在 context 裡的 token，之後每一步都要再付一次它的錢。",
      "at": [
-      "#i2 ¶13"
+      "#i2 ¶14"
      ]
     },
     {
@@ -2145,7 +2146,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "把留在 context 裡的大段內容換成摘要，之後每一步都省：一份 20K token 的測試 log 換成 500 token 的錯誤摘要，之後每一步重送的量就少 40 倍，model 需要的資訊都還在。",
      "at": [
-      "#i2 ¶13"
+      "#i2 ¶14"
      ]
     },
     {
@@ -2153,7 +2154,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "Context 的處理要在源頭：內容一進來就決定留多少，不要等它在 context 裡陪著走了幾十步才補救。",
      "at": [
-      "#i2 ¶14"
+      "#i2 ¶15"
      ]
     },
     {
@@ -2161,7 +2162,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "處理 context 的順序是：先擋在外面（或存成檔案，context 裡只留檔案路徑），其次照固定規則截短，最後才請 model 把歷史摘要成一段（compaction）。",
      "at": [
-      "#i2 ¶14"
+      "#i2 ¶15"
      ]
     },
     {
@@ -2189,7 +2190,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "Compaction 要多一次 model call。",
      "at": [
-      "#i2 ¶14",
+      "#i2 ¶15",
       "#i2 註 n-compaction ¶6"
      ]
     },
@@ -2198,7 +2199,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "Compaction 不可逆：摘要漏掉、丟掉的內容拿不回來。",
      "at": [
-      "#i2 ¶14",
+      "#i2 ¶15",
       "#i2 註 n-compaction ¶6"
      ]
     }
