@@ -526,7 +526,7 @@
                 <tbody>
                   <tr><td>System prompt 放時間戳、request ID</td><td>開頭就不同，後面全部重算</td><td>會變的放最後</td></tr>
                   <tr><td>中途增減 tool 定義</td><td>Tools 排在最前面，全部失效</td><td>開始時就定好。Tool 很多時用 tool search：tools 區只放一個搜尋工具，其他 tool 標成延後載入，model 搜到某個 tool 時，它的完整定義接在 messages 尾端，前面的 tools 區不變</td></tr>
-                  <tr><td>JSON key 順序不固定</td><td>內容相同，位元組不同</td><td>序列化固定順序</td></tr>
+                  <tr><td><span style="color: var(--key)"><b>JSON key 順序不固定</b></span></td><td>如果把 prompt message 改成 json format , 但 json 不保證 object key 順序, 只保證 array 順序。<br><br>RFC 8259 把 object 定義為 “unordered collection”。<b>所以 {"a":1,"b":2} 和 {"b":2,"a":1} 在語意上相等，parser 和 serializer 可以用任何順序輸出。</b></td><td>序列化固定順序</td></tr>
                   <tr><td>換 model</td><td>每個 model 一份 cache</td><td>另開一個從乾淨 context 開始的 agent（subagent）用那個 model 做，主對話的 cache 不動（第 6 章）</td></tr>
                   <tr><td><b><span style="color: var(--key)">改 <a class="tm" href="#n-effort">effort 或 thinking</a> 設定（model 回答前想多久，第 6 章）</span></b></td><td><b><span style="color: var(--key)">一般來說，這個設定會寫進送給 model 的 context，位置在 messages 之前，所以 messages 要重算</span></b>；有的 model 把它寫在 tools 和 system 前面，就全部重算。Claude Code 文件列了例外：Opus 5.5、Sonnet 5.5、Haiku 5.5、Fable 5.1 改 effort 時保留 cache（文件沒說怎麼做到，例外也只列了 effort；用這四個 model 時，改 effort 可以不管）</td><td>Session 開始時定好</td></tr>
                   <tr><td>改 messages 中間的一筆</td><td>那一點之後全部重算，compaction 和清 tool 結果都算</td><td>新內容只加在尾端。Compaction 避不開重算，就挑 cache 還沒過期的時候做：摘要那次 call 送的仍是原來那段 context，開頭沒變，還是 cache hit（第 4 章算幾步回本）</td></tr>
