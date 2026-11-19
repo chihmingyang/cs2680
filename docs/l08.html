@@ -1163,7 +1163,13 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
   {"type": "tool_result", "tool_use_id": "call_02", "content": "... 48 lines"},
   {"type": "tool_result", "tool_use_id": "call_03", "content": "src/auth/retry.ts:12: ..."}
 ]}</code></pre></figure>
-<p>條件是這些 tool call 互相獨立，一個的結果不影響另一個的參數。同樣的道理，<strong>任務一定會用到的檔案，在第一步一起讀進來</strong>，不要做到一半才一個一個補。兩邊的帳（單位是 base input token，r = 0.1）：<strong>每補一個檔案就多一次 model call</strong>，要重讀整個 context，200K × 0.1 = 20K；一個 5K 的檔案提早 10 步讀進來，只多付 5K × 0.1 × 10 = 5K。前提是只讀確定會用到的，否則就是第 2 章說的，留在 context 裡每一步白付。</p>
+<p>條件是這些 tool call 互相獨立：一個的結果不影響另一個的參數。檔案也是同樣的道理：<strong>任務一定會用到的檔案，在第一步一起讀進來</strong>，不要做到一半才一個一個補。</p>
+<p>為什麼提早讀比較省？舉個例子：context 已經有 200K，有一個 5K 的檔案要到第 10 步才會用到。下面的費用都換算成 base input 的價格；cache read 每個 token 的價格是 base input 的 0.1 倍（第 2 章的 r）。</p>
+<ul>
+<li>第 10 步才補讀：讀檔要多一次 model call，這次 call 把 200K 的 context 整個 cache read 一遍，費用等於 200K × 0.1 = 20K 個 base input token。</li>
+<li>第 1 步就一起讀：不多 call，但這 5K 在 context 裡多待 10 步，每一步被 cache read 一次，費用等於 5K × 0.1 × 10 = 5K 個 base input token。</li>
+</ul>
+<p>提早讀多付 5K，晚讀多付 20K。差別在重讀的對象：晚讀多出的那次 call 重讀整個 context，早讀多付的只有這個檔案本身。context 越大，晚讀越貴。檔案第一次寫進 cache 的錢兩種讀法都要付，所以不算進來。前提是這個檔案確定會用到；用不到的檔案留在 context 裡，每一步都白付 cache read，就是第 2 章說的浪費。</p>
 <p id="i5-4"><b>重用計畫與 skill，任務重複才回本。</b>上次做過類似的任務，就把計畫或步驟拿回來，不要每次從頭推導，L2 的 <a href="l02.html#i8">skill</a> 和 L6b 的 <a href="l06b.html#i1">memory</a> 都是放這些東西的地方。結論是一句取捨：任務重複出現時才回本，維護的成本和過期的條目可能把省下的吃掉。讓 agent 少找資料也屬於這一類，重用的是別人整理好的知識。Uber 的 context graph 把內部資料的 metadata 與使用紀錄整理成一張可以查詢的圖，約 2,400 萬個節點、8,000 萬條邊；agent 直接查哪張表最多人用，不必自己翻服務的程式碼。接上它之後，同一個問題 38 秒答對，沒接時跑了 20 分 9 秒還答錯，這是<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">文章裡的單一案例</a>，不是對照實驗。</p>
             </div>
           </div>
