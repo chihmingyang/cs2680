@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const DEFAULTS = { ttl: [40, 26] };
+const DEFAULTS = { ttl: [40, 26], resend: [5], prefix: [1, 1], decode: [52], cpath: [60, 0] };
 
 global.window = {};
 global.document = { querySelectorAll: () => [] };
