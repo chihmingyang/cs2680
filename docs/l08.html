@@ -1314,10 +1314,10 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
 <div class="table-wrap"><table>
                 <thead><tr><th>層</th><th>手段</th><th>省在哪裡</th><th>陷阱</th></tr></thead>
                 <tbody>
-                  <tr><td>1 Prompt</td><td>講清楚長度、格式、略過什麼</td><td>多餘的解釋、重述</td><td><strong>只是請求，沒有保證</strong></td></tr>
-                  <tr><td>2 上限</td><td><code>max_tokens</code> 這類參數</td><td>失控的長回覆</td><td><strong>切在句子中間；thinking 也吃額度</strong></td></tr>
-                  <tr><td>3 Schema</td><td>規定 output 的 JSON schema，API 的 structured output 能強制 model 照它輸出：只留需要的欄位、用 enum、不准多加欄位</td><td>Tool call 周圍的散文</td><td><strong>格式太嚴可能傷推理</strong></td></tr>
-                  <tr><td>4 Effort</td><td>查找用 low，規劃與除錯用 high</td><td>不必要的 thinking</td><td><strong>太低會答錯，多走幾步補回來</strong></td></tr>
+                  <tr><td>1 Prompt</td><td>在 prompt 寫明長度、格式、略過什麼</td><td>多餘的解釋、重述</td><td><strong>只是請求，model 可以不照做</strong></td></tr>
+                  <tr><td>2 上限</td><td>設 <code>max_tokens</code></td><td>失控的長回覆</td><td><strong>回覆會斷在句子中間</strong>；thinking 也算在額度裡</td></tr>
+                  <tr><td>3 Schema</td><td>用 structured output 規定 JSON schema：只留需要的欄位、用 enum、禁止多加欄位</td><td>Tool call 周圍的散文</td><td><strong>格式太嚴可能傷推理</strong></td></tr>
+                  <tr><td>4 Effort</td><td>調 effort：查找用 low，規劃與除錯用 high</td><td>不必要的 thinking</td><td><strong>太低會答錯</strong>，多走的步數把省下的錢吃回去</td></tr>
                 </tbody>
               </table></div>
 <p>直接呼叫 API 時，回應裡的 <code>stop_reason</code> 欄位說明 model 為什麼停下來：正常寫完是 <code>end_turn</code>，撞到上限是 <code>max_tokens</code>，表示回覆在中途斷掉了，程式要檢查它，<strong>不能把半截的回覆當成答案</strong>。</p>
