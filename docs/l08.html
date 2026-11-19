@@ -592,6 +592,12 @@
                 </tbody>
               </table></div>
 <p>完全沒停過才是 5 分鐘划算；<strong>只要停過一次，1 小時 TTL 就便宜三倍以上</strong>。第 2 章 TraceLab 那些重算的舊內容就是這樣來的。<strong>所以有人會停下來想的互動 session 用 1 小時</strong>。中間不等人的短任務用 5 分鐘，例如 subagent（你直接對話的 agent 派出去做一件子任務的另一個 agent），它落在表上沒有停頓的那一列；Uber 也是這樣設的。</p>
+<p><b>Claude Code 的預設看你怎麼付錢。</b>依 2026-11 的 Claude Code 文件：</p>
+<ul>
+<li>用 Claude 訂閱，而且還在方案額度內：main conversation（你直接對話的那一串）用 1 小時，subagent 和 compaction 用 5 分鐘。</li>
+<li>按 token 付錢：用 API key、透過 Amazon Bedrock 這類雲端平台，或訂閱超過額度後扣 usage credits（額度外另外計費的用量）。這時每一筆 cache write 都照單價記在你的帳上，Claude Code 就全部預設用單價較低的 5 分鐘。照上面的帳，這個預設只在沒有停頓時划算。訂閱用戶一超過額度，main conversation 就從 1 小時降回 5 分鐘。</li>
+</ul>
+<p>照上面的帳，按 token 付錢、又常停下來想的人，自己把 main conversation 改成 1 小時比較划算。做法是在 <code>~/.claude/settings.json</code> 寫 <code>"promptCacheTtl": "1h"</code>。自己設的值優先於預設，超過額度也不會降回。Subagent、compaction 這些 main conversation 以外的 request，另外用 <code>"subagentPromptCacheTtl"</code> 設。</p>
 <p>還有一個陷阱：TTL 從 request 開始時算，所以 <strong>agent 等一個跑超過 5 分鐘的測試，cache 一樣會過期</strong>。另一種做法是 keep-alive，在過期前送一個 request 續命。<strong>它也要錢，所以要先算省下的夠不夠付</strong>：Pi（一個開源的 coding agent harness，見 L8b〈<a href="l08b.html#i4">八個 harness</a>〉）只在預期省下 $0.05 以上才送。</p>
 <p id="i3-5"><b>hit rate: </b><strong>不要只看設定開了沒有，要看實際的數字</strong>。每個 API 回應的 <code>usage</code> 都分開列出 cache read 和 cache write 的 token 數，cache read 佔 input 總量的比例就是 hit rate。自架時看 server 自己的<span style="color: var(--caution)">計數：以 vLLM（常見的開源 model 服務程式）為例，它的 <code>/metrics</code> 有 <code>vllm:prefix_cache_queries</code> 和 <code>vllm:prefix_cache_hits</code>，分別是查過 cache 的 token 數和其中 cache hit 的 token 數，兩者相除就是 hit rate（依 2026-11 的 vLLM 文件）。</span>這兩個數字是整台 server 從啟動到現在、所有 request 的累計，所以要看某一段時間的 hit rate，就取前後兩個時間點的差再相除。</p>
 <p id="i3-6"><b>batch job : </b>Batch 把 request 排隊處理，input 和 output 都打 5 折，多數在 1 小時內跑完，最長要等 24 小時。它適合批次跑評估題（eval）、回頭補算舊資料這類離線工作，正在和使用者互動的 agent 用不上。<b>Batch 的折扣可以和 cache 疊</b>，但同一批 request 什麼時候跑由 provider 決定，同時跑的讀不到彼此還沒寫好的 cache，所以 hit rate 不穩。<strong>一批常常跑超過 5 分鐘，所以共用同一段開頭的 batch 要搭配 1 小時 TTL</strong>。</p>
