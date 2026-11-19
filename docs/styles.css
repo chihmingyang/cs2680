@@ -657,6 +657,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
 .dg-n-d { fill: var(--dg-d); }
 .dg-n-n { fill: var(--dg-n); }
 .dg-gap { fill: var(--sheet); }   /* calc.js: the cut in a bar wider than the chart */
+.dg-ghost { fill: none; stroke: var(--dg-link); stroke-width: 1.2; stroke-dasharray: 4 3; }   /* calc.js 動畫圖：照現在的計時還能活到哪裡 */
+.dg-next { opacity: .45; stroke-dasharray: 2 3; }   /* 還沒發生的事件 */
+.dg-now { stroke: currentColor; stroke-width: 1.5; fill: none; }   /* 播放頭 */
+.dg-now-dot { fill: currentColor; }
 .dg-panel { fill: var(--dg-panel); }
 .dg-link { stroke: var(--dg-link); stroke-width: 1.5; fill: none; }
 .dg-soft-link { stroke: var(--dg-link); stroke-width: 1; fill: none; }
@@ -2130,6 +2134,27 @@ ol.rg > li { border: 1px solid var(--rule); background: var(--sheet); border-rad
 @media (max-width: 640px) {
   .calc-row { grid-template-columns: 1fr auto; }
   .calc-row input[type="range"] { grid-column: 1 / -1; grid-row: 2; }
+}
+/* 動畫圖（STYLE_ARTICLE 6〈動畫圖〉）：播放鍵、下一步，和跟著時間長出來的花費長條 */
+.calc-play { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.calc-btn { font: inherit; font-size: .875rem; min-height: 2rem; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: .2rem .85rem; cursor: pointer; }
+.calc-btn:hover { border-color: var(--ink-soft); }
+.calc-btn-main { color: var(--sheet); background: var(--ink); border-color: var(--ink); font-weight: 600; min-width: 6.5rem; }
+.calc-btn-main:hover { border-color: var(--ink); opacity: .88; }
+.calc-btn[hidden] { display: none; }
+.calc-bars { display: grid; gap: .4rem; border-top: 1px dashed var(--rule); padding-top: .5rem; }
+.calc-bar { display: grid; grid-template-columns: 7.5rem minmax(6rem, 1fr) 4.5rem; align-items: center; gap: .25rem .8rem; }
+.calc-bar label { color: var(--ink); }
+.calc-bar output { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.calc-track { display: flex; height: 1.15rem; background: var(--dg-panel); border-radius: 3px; overflow: hidden; }
+.calc-seg { display: block; flex: none; height: 100%; transition: width .3s ease-out; }
+.calc-seg-a { background: var(--dg-a); }
+.calc-seg-b { background: var(--dg-b); }
+.calc-seg-d { background: var(--dg-d); }
+.calc-key { display: flex; flex-wrap: wrap; gap: .15rem 1rem; font-size: .8125rem; color: var(--ink-soft); }
+.calc-key i { display: inline-block; width: .8em; height: .8em; border-radius: 2px; margin-right: .35em; vertical-align: -.05em; }
+@media (max-width: 640px) {
+  .calc-bar { grid-template-columns: 5.5rem minmax(3rem, 1fr) 4rem; gap: .25rem .5rem; }
 }
 
 /* 原文出處（2026-11-13）：延伸閱讀縮成只有標題與連結的清單，查閱用 */

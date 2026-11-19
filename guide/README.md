@@ -30,7 +30,7 @@
 | 題庫 | 頁面裡的 `<script type="application/json" id="quiz">` | 每一節的小測與整合題；app.js 產生，規則在 `guide/QUIZ.md`。目前有 L6 與 L6b（2026-11-08 建在舊 L6，2026-11-09 補齊觀念涵蓋；2026-11-10 隨頁面拆開：L6 106 題 unit、3 題整合，L6b 152 題 unit、4 題整合，同日補五個小節後 172 題）、L5（2026-11-09，119 題 unit、7 題整合）和 L7（2026-11-10，265 題 unit、7 題整合；2026-11-13 刪三題後 262 題）、L8（2026-11-17，152 題 unit、8 題整合，同日加 `#i1-5` 一節後 157 題，從動手試試搬來 x9 後 9 題整合；第一個 unit 只出選擇題的題庫，James：「每小節的題目請只給選擇題」，規則在 QUIZ.md〈每小節只出選擇題〉）。各堂的數字在 `guide/QUIZ.md`〈各堂題庫〉。 |
 | 觀念 DAG | `docs/dag.json`、`docs/dag.html` | 以心智模型為單位的觀念依賴圖（concept／practice、三級難度、要先懂的邊）；頁面由 `tools/dag.py` 從資料產生，規則在 `guide/DAG.md`（英文頁，首頁課程地圖有連結，2026-11-09）。 |
 | 互動導讀 | `docs/lXX-<主題>.html`（目前 `l08-exec.html`） | 單一觀念的獨立互動頁，由淺入深，從講次正文用一行連過去。只用 styles.css 的 token，JS 寫在頁內，不接 app.js。`audit.py` 認得 `lXX-<字母>.html` 的連結（2026-11-16，James 說 L8 第 9 章的 execution 服務最抽象）。 |
-| 互動圖 | `docs/calc.js`、`figure.diagram[data-calc]` | 拖滑桿換假設、圖照算式重畫；HTML 裡是預設值的靜態圖。目前只有 L6 3.1（2026-11-09）。規則在 `STYLE_ARTICLE.md` 第 6 節〈互動圖〉。 |
+| 互動圖 | `docs/calc.js`、`figure.diagram[data-calc]` | 拖滑桿換假設、圖照算式重畫；HTML 裡是預設值的靜態圖。目前只有 L6 3.1（2026-11-09）。規則在 `STYLE_ARTICLE.md` 第 6 節〈互動圖〉。 有時間軸的叫動畫圖：播放、下一步、拖時間，靜態 SVG 是最後一格，由 `tools/anim_static.js` 從 `calc.js` 產生；第一張是 L8 3.4〈TTL 的帳〉（2026-11-19）。 |
 | CI | `.github/workflows/verify.yml` | push 後對全站跑 `verify.sh all`，只亮燈不擋（WORKFLOW J，2026-11-07）。`ask.yml` 是舊的「問 Claude」，2026-11-16 起頁面改成留言（WORKFLOW G），不再觸發它。 |
 | Slide 筆記 | `slides/lXX-notes.md` | 從 PDF 整理的逐頁筆記。Part II 起每堂一份。 |
 
@@ -66,6 +66,7 @@
 | `check_numbers.py` | 頁面引用外部來源的數字對不對得上 `guide/sources/lXX.md`：寫出來源的那一句起到段尾，每個數字都要在來源檔那一筆裡；題庫裡 `evidence` 類觀念的數字要在來源檔、也要還在那一章的正文。本文自己的數字加 `data-num-own`。來源檔有 `check_numbers: strict` 的講次（L6、L6b）對不上就讓 `verify.sh` 失敗，其他只提示。規則見 `guide/QUIZ.md`〈數字對照〉（2026-11-11）。 |
 | `red_path.py` | 標紅字用（WORKFLOW I2）：`red_path.py lXX [章]` 先確認那幾章的可讀性審查是 ok，不是就擋下來；過了印掃讀路徑（章名、`<b>` 小標、紅字）和提示。只讀不寫（2026-11-11）。 |
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
+| `anim_static.js` | 動畫圖的靜態 SVG（node）：不帶參數檢查頁面裡的靜態 SVG 和 `calc.js` 的 `FRAMES` 畫的最後一格一樣，`--write` 寫回。`verify.sh` 會跑檢查模式。每張動畫圖的預設參數寫在檔案開頭的 `DEFAULTS`（2026-11-19）。 |
 | `dag.py` | 觀念 DAG：`--check` 檢查 `docs/dag.json`（無環、難度沿邊不降、src 錨點存在、每章都被蓋到或在 excluded），不帶參數就重寫 `docs/dag.html`。規則見 `guide/DAG.md`（2026-11-08）。 |
 
 以上腳本在 2026-10-19 對 L1–L8 全部通過。

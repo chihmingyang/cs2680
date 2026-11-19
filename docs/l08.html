@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261119b">
+<link rel="stylesheet" href="styles.css?v=20261119c">
 </head>
 <body>
 <header class="topbar">
@@ -536,69 +536,100 @@
               </table></div>
                 </div>
               </details>
-<p id="i3-4"><b>TTL 的帳。</b>Cache 的壽命叫 TTL（time to live）。Claude API 有兩種：5 分鐘，每次 cache hit 重新計時；1 小時，cache write 收 2×。人一停下來，5 分鐘很快就到了：</p>
-<figure class="diagram">
+<p id="i3-4"><b>TTL 的帳。</b>Cache 的壽命叫 TTL（time to live）。Claude API 有兩種：5 分鐘的，cache write 收 base input 的 1.25×，每次 cache hit 重新計時；1 小時的，cache write 收 base input 的 2×。人一停下來，5 分鐘很快就到了：</p>
+<figure class="diagram" data-calc="ttl">
               <div class="scroll">
-                <svg viewBox="0 0 720 190" role="img" aria-label="兩條時間軸，橫軸 0 到 40 分鐘。使用者在第 0、2、4 分鐘送 request，離開 26 分鐘，第 30、32 分鐘回來。5 分鐘 TTL：cache 活到第 9 分鐘就過期，第 30 分鐘的 request 是 cache miss，整個 context 以 1.25 倍重新 cache write。1 小時 TTL：cache 一直活著，第一次 cache write 付 2 倍，第 30 分鐘的 request 仍是 cache read。">
-                  <defs><marker id="l8v-ttl-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-ttl-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <text x="14" y="45" class="dg-cb">5 分鐘 TTL</text>
-                  <text x="14" y="117" class="dg-cb">1 小時 TTL</text>
+                <svg viewBox="0 0 720 208" role="img" aria-label="兩條時間軸，橫軸 0 到 40 分鐘。使用者在第 0、2、4 分鐘送 request，離開 26 分鐘，第 30、32 分鐘回來。5 分鐘 TTL，新內容的 cache write 收 base input 的 1.25 倍：cache 活到第 9 分鐘就過期，第 30 分鐘的 request 是 cache miss，整個 context 照 1.25 倍重新 cache write。1 小時 TTL，新內容的 cache write 收 base input 的 2 倍：cache 一直活著，第 30 分鐘的 request 仍是 cache read。">
+                  <text x="14.0" y="40" class="dg-cb">5 分鐘 TTL</text>
+                  <text x="14.0" y="57" class="dg-c">write 1.25×</text>
+                  <text x="14.0" y="130" class="dg-cb">1 小時 TTL</text>
+                  <text x="14.0" y="147" class="dg-c">write 2×</text>
                   <rect x="120.0" y="30" width="129.6" height="26" class="dg-n-a"/>
-                  <rect x="552.0" y="30" width="100.80000000000007" height="26" class="dg-n-a"/>
-                  <rect x="120.0" y="102" width="576.0" height="26" class="dg-n-a"/>
+                  <rect x="552.0" y="30" width="100.8" height="26" class="dg-n-a"/>
+                  <rect x="120.0" y="120" width="576.0" height="26" class="dg-n-a"/>
                   <path d="M120.0,26 L120.0,60" class="dg-link"/>
+                  <path d="M120.0,116 L120.0,150" class="dg-link"/>
                   <path d="M148.8,26 L148.8,60" class="dg-link"/>
+                  <path d="M148.8,116 L148.8,150" class="dg-link"/>
                   <path d="M177.6,26 L177.6,60" class="dg-link"/>
-                  <path d="M580.8,26 L580.8,60" class="dg-link"/>
+                  <path d="M177.6,116 L177.6,150" class="dg-link"/>
                   <path d="M552.0,24 L552.0,62" class="dg-link-key"/>
-                  <path d="M120.0,98 L120.0,132" class="dg-link"/>
-                  <path d="M148.8,98 L148.8,132" class="dg-link"/>
-                  <path d="M177.6,98 L177.6,132" class="dg-link"/>
-                  <path d="M552.0,98 L552.0,132" class="dg-link"/>
-                  <path d="M580.8,98 L580.8,132" class="dg-link"/>
-                  <text x="120.0" y="20" class="dg-c">write 1.25×</text>
+                  <path d="M552.0,116 L552.0,150" class="dg-link"/>
+                  <path d="M580.8,26 L580.8,60" class="dg-link"/>
+                  <path d="M580.8,116 L580.8,150" class="dg-link"/>
                   <text x="552.0" y="20" text-anchor="middle" class="dg-k">write 1.25×（整個 context）</text>
-                  <text x="364.8" y="48" text-anchor="middle" class="dg-c">cache 已過期</text>
-                  <text x="120.0" y="92" class="dg-c">write 2×</text>
-                  <text x="552.0" y="92" text-anchor="middle" class="dg-c">cache read</text>
-                  <path d="M120.0,146 L696.0,146" class="dg-link"/>
-                  <path d="M120.0,146 L120.0,151" class="dg-link"/>
-                  <text x="120.0" y="167" text-anchor="middle" class="dg-mn">0</text>
-                  <path d="M264.0,146 L264.0,151" class="dg-link"/>
-                  <text x="264.0" y="167" text-anchor="middle" class="dg-mn">10</text>
-                  <path d="M408.0,146 L408.0,151" class="dg-link"/>
-                  <text x="408.0" y="167" text-anchor="middle" class="dg-mn">20</text>
-                  <path d="M552.0,146 L552.0,151" class="dg-link"/>
-                  <text x="552.0" y="167" text-anchor="middle" class="dg-mn">30</text>
-                  <path d="M696.0,146 L696.0,151" class="dg-link"/>
-                  <text x="696.0" y="167" text-anchor="middle" class="dg-mn">40</text>
-                  <text x="694.0" y="184" text-anchor="end" class="dg-c">分鐘</text>
-                  <text x="118.0" y="184" class="dg-c">短直條是 request，青色是 cache 活著的時間</text>
+                  <text x="552.0" y="110" text-anchor="middle" class="dg-c">cache read</text>
+                  <text x="400.8" y="48" text-anchor="middle" class="dg-c">cache 已過期</text>
+                  <path d="M177.6,66 L177.6,70 L552.0,70 L552.0,66" class="dg-soft-link"/>
+                  <text x="364.8" y="87" text-anchor="middle" class="dg-c">使用者離開 26 分鐘</text>
+                  <path d="M120.0,164 L696.0,164" class="dg-link"/>
+                  <path d="M120.0,164 L120.0,169" class="dg-link"/>
+                  <text x="120.0" y="185" text-anchor="middle" class="dg-mn">0</text>
+                  <path d="M264.0,164 L264.0,169" class="dg-link"/>
+                  <text x="264.0" y="185" text-anchor="middle" class="dg-mn">10</text>
+                  <path d="M408.0,164 L408.0,169" class="dg-link"/>
+                  <text x="408.0" y="185" text-anchor="middle" class="dg-mn">20</text>
+                  <path d="M552.0,164 L552.0,169" class="dg-link"/>
+                  <text x="552.0" y="185" text-anchor="middle" class="dg-mn">30</text>
+                  <path d="M696.0,164 L696.0,169" class="dg-link"/>
+                  <text x="696.0" y="185" text-anchor="middle" class="dg-mn">40</text>
+                  <text x="694.0" y="202" text-anchor="end" class="dg-c">分鐘</text>
+                  <text x="118.0" y="202" class="dg-c">短直條是 request，青色是 cache 活著的時間</text>
                 </svg>
               </div>
-              <figcaption>使用者離開 26 分鐘會怎樣？5 分鐘的 cache 早就過期，回來第一個 request 要把整個 context 重算一次、再寫進 cache。1 小時的 cache 第一次 cache write 較貴，回來時仍然讀得到，照 cache read 收。</figcaption>
+              <div class="calc" hidden>
+                <div class="calc-h">按播放，看同一段對話在兩種 TTL 底下各發生什麼。虛線框是 cache 照現在的計時還能活到哪裡</div>
+                <div class="calc-play">
+                  <button type="button" class="calc-btn calc-btn-main" data-act="play">▶ 播放</button>
+                  <button type="button" class="calc-btn" data-act="step">下一步 ›</button>
+                </div>
+                <div class="calc-row">
+                  <label for="ttl-t">時間</label>
+                  <input type="range" id="ttl-t" min="0" max="40" step="0.25" value="40" data-k="t">
+                  <output for="ttl-t" data-v="t">第 40 分鐘</output>
+                </div>
+                <div class="calc-row">
+                  <label for="ttl-d">離開多久</label>
+                  <input type="range" id="ttl-d" min="1" max="34" step="1" value="26" data-k="d">
+                  <output for="ttl-d" data-v="d">26 分鐘（5 分鐘的 cache 會過期）</output>
+                </div>
+                <div class="calc-bars">
+                  <div class="calc-h">到這時候各花了多少錢（換算成幾個 base input token）</div>
+                  <div class="calc-bar">
+                    <label for="ttl-c5">5 分鐘 TTL</label>
+                    <span class="calc-track" data-bar="c5"><span class="calc-seg calc-seg-b" style="width: 13.04%;"></span><span class="calc-seg calc-seg-d" style="width: 86.96%;"></span><span class="calc-seg calc-seg-a" style="width: 0%;"></span></span>
+                    <output id="ttl-c5" data-v="c5">287.5K</output>
+                  </div>
+                  <div class="calc-bar">
+                    <label for="ttl-c1">1 小時 TTL</label>
+                    <span class="calc-track" data-bar="c1"><span class="calc-seg calc-seg-b" style="width: 20.87%;"></span><span class="calc-seg calc-seg-d" style="width: 0%;"></span><span class="calc-seg calc-seg-a" style="width: 6.96%;"></span></span>
+                    <output id="ttl-c1" data-v="c1">80K</output>
+                  </div>
+                  <div class="calc-key"><span><i class="calc-seg-b"></i>新內容寫進 cache</span><span><i class="calc-seg-d"></i>過期後重寫整個 context</span><span><i class="calc-seg-a"></i>回來時讀 cache</span></div>
+                </div>
+                <div class="calc-foot">
+                  <output class="calc-out" aria-live="polite">結算：5 分鐘 TTL 花 287.5K，1 小時 TTL 花 80K，1 小時 TTL 便宜約 3.6 倍。</output>
+                  <button type="button" class="calc-reset" disabled>回到本文的例子：離開 26 分鐘</button>
+                </div>
+              </div>
+              <figcaption>使用者離開 26 分鐘會怎樣？5 分鐘的 cache 過期，回來要重寫整個 context；1 小時的還在，回來只要讀。時間軸從對話進行到一半開始：200K 的 context 已經在 cache 裡，五個 request 共新增 30K。長條只算新內容的 cache write，和回來那一次讀或重寫整個 context 的錢。</figcaption>
             </figure>
-<p>哪一種划算，算得出來。定義 C 是停頓時的 context，G 是這一小時內新增的 token，k 是超過 5 分鐘、少於 1 小時的停頓次數，r 是 cache read 相對於 base input 的倍率（這裡用 0.1）。每次停頓後 5 分鐘 TTL 要重寫整個 context，1 小時 TTL 只要讀一次。平常每一步 cache read 的錢兩邊相同，下面略去，只比不同的部分：</p>
-<figure class="file"><figcaption>一小時內的 cache 花費（單位：base input token）</figcaption><pre><code class="lang-text">5 分鐘 TTL = 1.25 × G + k × 1.25 × C
-1 小時 TTL = 2 × G    + k × r × C</code></pre></figure>
-<p>代入 C = 200K、G = 30K、r = 0.1：</p>
-<div class="table-wrap"><table>
-                <thead><tr><th>停頓次數 k</th><th>5 分鐘 TTL</th><th>1 小時 TTL</th></tr></thead>
-                <tbody>
-                  <tr><td>0</td><td><b><span style="color: var(--key)"><mark>37.5K</mark></span></b></td><td>60K</td></tr>
-                  <tr><td>1</td><td>287.5K</td><td><b><span style="color: var(--key)"><mark>80K</mark></span></b></td></tr>
-                  <tr><td>2</td><td>537.5K</td><td><b><span style="color: var(--key)"><mark>100K</mark></span></b></td></tr>
-                  <tr><td>4</td><td>1,037.5K</td><td><b><mark>140K</mark></b></td></tr>
-                </tbody>
-              </table></div>
-<p>完全沒停過才是 5 分鐘划算；<strong>只要停過一次，1 小時 TTL 就便宜三倍以上</strong>。第 2 章 TraceLab 那些重算的舊內容就是這樣來的。<strong>所以有人會停下來想的互動 session 用 1 小時</strong>。中間不等人的短任務用 5 分鐘，例如 subagent（你直接對話的 agent 派出去做一件子任務的另一個 agent），它落在表上沒有停頓的那一列；Uber 也是這樣設的。</p>
+<p>哪一種划算，算得出來。平常每一步 cache read 的錢兩邊相同，下面只比不同的部分：</p>
+<figure class="file"><figcaption>這段時間的 cache 花費（換算成幾個 base input token 的錢）</figcaption><pre><code class="lang-text">5 分鐘 TTL = 1.25 × G + k × 1.25 × C
+1 小時 TTL = 2 × G    + k × r × C
+  G：這段時間新增的 token（上圖是 30K）
+  C：停頓時的 context（上圖約 200K）
+  k：超過 5 分鐘、少於 1 小時的停頓次數（上圖是 1 次）
+  r：cache read 相對於 base input 的倍率（上圖用 0.1）</code></pre></figure>
+<p>上圖就是這條算式停頓一次的情況，兩根長條是代進去的結果：粉色那一大段是 k × 1.25 × C，重寫整個 context 的那一筆，第 2 章 TraceLab 那些重算的舊內容就是這樣來的。把「離開多久」拖到 5 分鐘以內，cache 沒有過期，粉色就不見了，5 分鐘 TTL 反而便宜。</p>
+<p>完全沒停過才是 5 分鐘划算；上圖的例子<strong>只要停過一次，1 小時 TTL 就便宜三倍以上</strong>。Agent 的 context 通常比新增的內容大得多，換別的數字方向也一樣。<strong>所以有人會停下來想的互動 session 用 1 小時</strong>。中間不等人的短任務用 5 分鐘，例如 subagent（你直接對話的 agent 派出去做一件子任務的另一個 agent），它就是沒有停頓的情況。Uber 也是這樣設的：互動 session 改成 1 小時，subagent 維持 5 分鐘。</p>
 <p><b>Claude Code 的預設看你怎麼付錢。</b>依 2026-11 的 Claude Code 文件：</p>
 <ul>
 <li>用 Claude 訂閱，而且還在方案額度內：main conversation（你直接對話的那一串）用 1 小時，subagent 和 compaction 用 5 分鐘。</li>
 <li>按 token 付錢：用 API key、透過 Amazon Bedrock 這類雲端平台，或訂閱超過額度後扣 usage credits（額度外另外計費的用量）。這時每一筆 cache write 都照單價記在你的帳上，Claude Code 就全部預設用單價較低的 5 分鐘。照上面的帳，這個預設只在沒有停頓時划算。訂閱用戶一超過額度，main conversation 就從 1 小時降回 5 分鐘。</li>
 </ul>
 <p>照上面的帳，按 token 付錢、又常停下來想的人，自己把 main conversation 改成 1 小時比較划算。做法是在 <code>~/.claude/settings.json</code> 寫 <code>"promptCacheTtl": "1h"</code>。自己設的值優先於預設，超過額度也不會降回。Subagent、compaction 這些 main conversation 以外的 request，另外用 <code>"subagentPromptCacheTtl"</code> 設。</p>
-<p>還有一個陷阱：TTL 從 request 開始時算，所以 <strong>agent 等一個跑超過 5 分鐘的測試，cache 一樣會過期</strong>。另一種做法是 keep-alive，在過期前送一個 request 續命。<strong>它也要錢，所以要先算省下的夠不夠付</strong>：Pi（一個開源的 coding agent harness，見 L8b〈<a href="l08b.html#i4">八個 harness</a>〉）只在預期省下 $0.05 以上才送。</p>
+<p>還有一個陷阱：TTL 從 request 開始時算，agent 等 tool 的時候沒有新的 request 送出去，所以 <strong>agent 等一個跑超過 5 分鐘的測試，cache 一樣會過期</strong>。除了改用 1 小時 TTL，另一種做法是 keep-alive，在過期前送一個 request 續命。<strong>它也要錢，所以要先算省下的夠不夠付</strong>：Pi（一個開源的 coding agent harness，見 L8b〈<a href="l08b.html#i4">八個 harness</a>〉）只在預期省下 $0.05 以上才送。</p>
 <p id="i3-5"><b>hit rate: </b><strong>不要只看設定開了沒有，要看實際的數字</strong>。每個 API 回應的 <code>usage</code> 都分開列出 cache read 和 cache write 的 token 數，cache read 佔 input 總量的比例就是 hit rate。自架時看 server 自己的<span style="color: var(--caution)">計數：以 vLLM（常見的開源 model 服務程式）為例，它的 <code>/metrics</code> 有 <code>vllm:prefix_cache_queries</code> 和 <code>vllm:prefix_cache_hits</code>，分別是查過 cache 的 token 數和其中 cache hit 的 token 數，兩者相除就是 hit rate（依 2026-11 的 vLLM 文件）。</span>這兩個數字是整台 server 從啟動到現在、所有 request 的累計，所以要看某一段時間的 hit rate，就取前後兩個時間點的差再相除。</p>
 <p id="i3-6"><b>batch job : </b>Batch 把 request 排隊處理，input 和 output 都打 5 折，多數在 1 小時內跑完，最長要等 24 小時。它適合批次跑評估題（eval）、回頭補算舊資料這類離線工作，正在和使用者互動的 agent 用不上。<b>Batch 的折扣可以和 cache 疊</b>，但同一批 request 什麼時候跑由 provider 決定，同時跑的讀不到彼此還沒寫好的 cache，所以 hit rate 不穩。<strong>一批常常跑超過 5 分鐘，所以共用同一段開頭的 batch 要搭配 1 小時 TTL</strong>。</p>
 <figure class="diagram">
@@ -2483,7 +2514,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     {
      "id": "k16.1",
      "type": "mechanism",
-     "t": "TTL（time to live）是 cache 的壽命；Claude API 有兩種：5 分鐘，每次 cache hit 重新計時；1 小時，cache write 收 2×。",
+     "t": "TTL（time to live）是 cache 的壽命；Claude API 有兩種：5 分鐘的，cache write 收 base input 的 1.25×，每次 cache hit 重新計時；1 小時的，cache write 收 base input 的 2×。",
      "at": [
       "#i3 ¶11"
      ]
@@ -2501,7 +2532,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     {
      "id": "k16.3",
      "type": "mechanism",
-     "t": "一小時內的 cache 花費可以算：5 分鐘 TTL = 1.25 × G + k × 1.25 × C，1 小時 TTL = 2 × G + k × r × C；C 是停頓時的 context，G 是這一小時內新增的 token，k 是超過 5 分鐘、少於 1 小時的停頓次數，r 是 cache read 相對於 base input 的倍率；平常每一步 cache read 的錢兩邊相同，略去不比。",
+     "t": "一段時間的 cache 花費可以算：5 分鐘 TTL = 1.25 × G + k × 1.25 × C，1 小時 TTL = 2 × G + k × r × C；C 是停頓時的 context，G 是這段時間新增的 token，k 是超過 5 分鐘、少於 1 小時的停頓次數，r 是 cache read 相對於 base input 的倍率；平常每一步 cache read 的錢兩邊相同，略去不比。",
      "at": [
       "#i3 ¶12",
       "#i3 code1 內容"
@@ -2510,10 +2541,10 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     {
      "id": "k16.4",
      "type": "condition",
-     "t": "5 分鐘 TTL 只有在這一小時完全沒停頓超過 5 分鐘（k = 0）時才比較划算。",
+     "t": "5 分鐘 TTL 只有在這段時間完全沒停頓超過 5 分鐘（k = 0）時才比較划算。",
      "at": [
       "#i3 ¶14",
-      "#i3 表1 列1"
+      "#i3 ¶13"
      ]
     },
     {
@@ -2522,21 +2553,16 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "t": "只要停過一次，1 小時 TTL 就比 5 分鐘 TTL 便宜三倍以上，停越多次差越多。",
      "at": [
       "#i3 ¶14",
-      "#i3 表1 列2",
-      "#i3 表1 列3",
-      "#i3 表1 列4"
+      "#i3 code1 內容"
      ]
     },
     {
      "id": "k16.6",
      "type": "evidence",
-     "t": "代入 C = 200K、G = 30K、r = 0.1（單位：base input token）：停頓 0 次，5 分鐘 TTL 37.5K、1 小時 TTL 60K；1 次，287.5K、80K；2 次，537.5K、100K；4 次，1,037.5K、140K。",
+     "t": "圖的例子（context 200K、五個 request 共新增 30K、r = 0.1，單位 base input token）停頓一次：5 分鐘 TTL 花 287.5K，1 小時 TTL 花 80K，便宜約 3.6 倍。",
      "at": [
-      "#i3 ¶13",
-      "#i3 表1 列1",
-      "#i3 表1 列2",
-      "#i3 表1 列3",
-      "#i3 表1 列4"
+      "#i3 圖3 說明",
+      "#i3 圖3 滑桿"
      ]
     },
     {
@@ -2550,7 +2576,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     {
      "id": "k16.8",
      "type": "claim",
-     "t": "中間不等人的短任務用 5 分鐘 TTL，例如 subagent（直接對話的 agent 派出去做一件子任務的另一個 agent），它落在沒有停頓的那一列；Uber 也是這樣設的。",
+     "t": "中間不等人的短任務用 5 分鐘 TTL，例如 subagent（直接對話的 agent 派出去做一件子任務的另一個 agent），它就是沒有停頓的情況；Uber 也是這樣設的。",
      "at": [
       "#i3 ¶14"
      ]
@@ -6198,7 +6224,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
    "choices": [
     {
      "t": "甲和乙都用 1 小時",
-     "why": "乙中間沒有停頓，落在表上停頓 0 次的那一列：5 分鐘 TTL 不會過期，用 1 小時只是多付 2× 的 cache write。Uber 的 subagent 也是用 5 分鐘。"
+     "why": "乙中間沒有停頓，就是沒有停頓的情況：5 分鐘 TTL 不會過期，用 1 小時只是多付 2× 的 cache write。Uber 的 subagent 也是用 5 分鐘。"
     },
     {
      "t": "甲用 1 小時，乙用 5 分鐘",
@@ -6210,7 +6236,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     }
    ],
    "key": [
-    "有人會停下來想的互動 session 用 1 小時 TTL。中間不等人的短任務用 5 分鐘，例如 subagent，它落在沒有停頓的那一列；Uber 也是這樣設的。"
+    "有人會停下來想的互動 session 用 1 小時 TTL。中間不等人的短任務用 5 分鐘，例如 subagent，它就是沒有停頓的情況；Uber 也是這樣設的。"
    ],
    "covers": [
     "k16.7",
@@ -9221,5 +9247,6 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
 }</script>
 <script src="app.js?v=20261119a"></script>
 <script src="code.js"></script>
+<script src="calc.js"></script>
 </body>
 </html>

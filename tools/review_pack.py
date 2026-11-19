@@ -155,13 +155,13 @@ def units_of(container, loc):
                     # interactive figure (calc.js): the sliders with their ranges, then the readout at the default
                     parts = []
                     for x in calc.find_all(lambda x: x.tag in ("label", "input", "output", "button")
-                                           or (x.tag == "div" and "calc-h" in x.cls())):
+                                           or (x.tag == "div" and ("calc-h" in x.cls() or "calc-key" in x.cls()))):
                         if x.tag == "input":
                             parts.append(f"[滑桿 {x.attrs.get('min')}–{x.attrs.get('max')}]")
                         else:
                             parts.append(x.text())
                     out.append((f"{loc} 圖{k} 滑桿",
-                                "(互動元件：拖滑桿時長條照同一條算式重畫，下面是預設值時的文字) " + " ".join(parts)))
+                                "(互動元件：拖滑桿時圖照同一條算式重畫，有播放鍵的是動畫圖；下面是預設值時的文字，色塊圖例也在裡面) " + " ".join(parts)))
             elif c.tag == "table":
                 counts["table"] += 1
                 k = counts["table"]

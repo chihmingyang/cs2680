@@ -175,6 +175,289 @@
     return { reset: reset };
   };
 
+  /* ---------- animated figures (STYLE_ARTICLE 6〈動畫圖〉) ----------
+     Same contract as the slider figures, plus a time axis the reader plays or
+     drags. The static SVG in the HTML is the last frame at the default setting.
+     FRAMES.name(...) returns one frame as SVG markup (a string, no DOM), so
+     tools/anim_static.js writes the static SVG from this same code. */
+  var FRAMES = {};
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function fmtK(v) { return strip((Math.round(v * 10) / 10).toFixed(1)) + 'K'; }
+
+  /* L8 3.4：同一段對話在 5 分鐘與 1 小時 TTL 底下。
+     t = 現在第幾分鐘 (0–40)，d = 使用者離開幾分鐘 (1–34)。
+     對話進行到一半：context C 已經在 cache 裡，五個 request 各新增 G / 5。
+     單位是 K base input token，和正文的算式同一組數字 (C 200、G 30、r 0.1)。 */
+  var TTL = { END: 40, X0: 120, PX: 14.4, Y5: 30, Y1: 120, H: 26, AX: 164, C: 200, G: 30, R: 0.1 };
+  function ttlModel(d) {
+    var back = 4 + d, expired = d >= 5, last = Math.min(TTL.END, back + 7);
+    var ev = [{ t: 0, k: 'first' }, { t: 2, k: 'hit1' }, { t: 4, k: 'hit2' }];
+    if (expired) ev.push({ t: 9, k: 'expire' });
+    ev.push({ t: back, k: expired ? 'miss' : 'back' });
+    ev.push({ t: back + 2, k: 'hit3' });
+    if (back + 7 < TTL.END) ev.push({ t: back + 7, k: 'expire2' });
+    ev.push({ t: TTL.END, k: 'end' });
+    return {
+      d: d, back: back, expired: expired, reqs: [0, 2, 4, back, back + 2],
+      alive: expired ? [[0, 9], [back, last]] : [[0, last]], ev: ev
+    };
+  }
+  /* only what differs between the two TTLs, plus the one read or rewrite of C on return */
+  function ttlCost(m, t) {
+    var g = TTL.G / 5, n = 0;
+    m.reqs.forEach(function (r) { if (r <= t) n++; });
+    var came = t >= m.back;
+    var c = {
+      new5: 1.25 * g * n, new1: 2 * g * n,
+      miss5: came && m.expired ? 1.25 * TTL.C : 0,
+      read5: came && !m.expired ? TTL.R * TTL.C : 0,
+      read1: came ? TTL.R * TTL.C : 0
+    };
+    c.sum5 = c.new5 + c.miss5 + c.read5;
+    c.sum1 = c.new1 + c.read1;
+    return c;
+  }
+  function ttlEvent(m, t) {
+    var cur = m.ev[0];
+    m.ev.forEach(function (e) { if (e.t <= t) cur = e; });
+    return cur;
+  }
+  function ttlSay(m, t) {
+    var e = ttlEvent(m, t), at = '第 ' + e.t + ' 分鐘：';
+    var g = fmtK(TTL.G / 5), rewrite = fmtK(1.25 * TTL.C), read = fmtK(TTL.R * TTL.C);
+    switch (e.k) {
+      case 'first': return at + '對話進行到一半，' + fmtK(TTL.C) + ' 的 context 已經在 cache 裡。這個 request 新增 ' + g + '，要寫進 cache：5 分鐘 TTL 收 1.25×，1 小時 TTL 收 2×。';
+      case 'hit1': return at + 'cache hit。5 分鐘的 cache 重新計時，過期的時間從第 5 分鐘延到第 7 分鐘。';
+      case 'hit2': return at + '又一次 cache hit，延到第 9 分鐘。接著使用者離開 ' + m.d + ' 分鐘。';
+      case 'expire': return at + '5 分鐘的 cache 過期，留下的結果丟掉了。1 小時的 cache 還在。';
+      case 'miss': return at + '使用者回來。5 分鐘 TTL 是 cache miss，整個 context 要重算、再寫進 cache，付 ' + rewrite + '；1 小時 TTL 是 cache read，付 ' + read + '。';
+      case 'back': return at + '使用者回來。5 分鐘的 cache 要到第 9 分鐘才過期，還在。兩邊都是 cache read，各付 ' + read + '。';
+      case 'hit3': return at + '兩邊都是 cache hit，回到平常的價錢。';
+      case 'expire2': return at + '最後一個 request 之後 5 分鐘沒有新的 request，5 分鐘的 cache 又過期。';
+    }
+    var c = ttlCost(m, TTL.END);
+    var sums = '結算：5 分鐘 TTL 花 ' + fmtK(c.sum5) + '，1 小時 TTL 花 ' + fmtK(c.sum1);
+    return m.expired
+      ? sums + '，1 小時 TTL 便宜約 ' + (c.sum5 / c.sum1).toFixed(1) + ' 倍。'
+      : sums + '。Cache 沒有過期，5 分鐘 TTL 比較便宜。';
+  }
+  function ttlAria(m, t) {
+    var c = ttlCost(m, t);
+    return '兩條時間軸，橫軸 0 到 40 分鐘，現在是第 ' + Math.floor(t) + ' 分鐘。使用者在第 0、2、4 分鐘送 request，離開 ' + m.d +
+      ' 分鐘，第 ' + m.back + '、' + (m.back + 2) + ' 分鐘回來。' + ttlSay(m, t) +
+      '到這時候，5 分鐘 TTL 花了 ' + fmtK(c.sum5) + '，1 小時 TTL 花了 ' + fmtK(c.sum1) + '。';
+  }
+  FRAMES.ttl = function (t, d) {
+    var m = ttlModel(d), o = [], END = TTL.END, Y5 = TTL.Y5, Y1 = TTL.Y1, AX = TTL.AX;
+    function xn(min) { return TTL.X0 + TTL.PX * min; }
+    function x(min) { return xn(min).toFixed(1); }
+    function rect(a, b, y, cls, inset) {
+      if (b - a < 0.01) return;
+      var i = inset || 0;
+      o.push('<rect x="' + (xn(a) + i).toFixed(1) + '" y="' + (y + i) + '" width="' + Math.max(0, TTL.PX * (b - a) - 2 * i).toFixed(1) +
+        '" height="' + (TTL.H - 2 * i) + '" class="' + cls + '"/>');
+    }
+    function line(xx, y1, y2, cls) { o.push('<path d="M' + xx + ',' + y1 + ' L' + xx + ',' + y2 + '" class="' + cls + '"/>'); }
+    var boxes = [];   /* labels between the rows: the playhead steps over them */
+    function text(xx, y, cls, s, anchor) {
+      if (typeof xx === 'number' && y > Y5 + TTL.H && y < Y1) {
+        var w = textW(String(s)), left = anchor === 'middle' ? xx - w / 2 : xx;
+        boxes.push([left - 4, left + w + 4, y - 14, y + 6]);
+      }
+      o.push('<text x="' + (typeof xx === 'number' ? xx.toFixed(1) : xx) + '" y="' + y + '"' +
+        (anchor ? ' text-anchor="' + anchor + '"' : '') + ' class="' + cls + '">' + s + '</text>');
+    }
+
+    /* 倍率寫在列名底下：每一次寫入新內容都照這個倍率，不只第一次 */
+    text(14, Y5 + 10, 'dg-cb', '5 分鐘 TTL');
+    text(14, Y5 + 27, 'dg-c', 'write 1.25×');
+    text(14, Y1 + 10, 'dg-cb', '1 小時 TTL');
+    text(14, Y1 + 27, 'dg-c', 'write 2×');
+
+    /* 青色：cache 活到現在的時間；虛線框：照現在的計時還能活到什麼時候 */
+    var lastReq = 0, live5 = false;
+    m.reqs.forEach(function (r) { if (r <= t) lastReq = r; });
+    m.alive.forEach(function (iv) {
+      rect(iv[0], Math.min(iv[1], t), Y5, 'dg-n-a');
+      if (t >= iv[0] && t < iv[1]) live5 = true;
+    });
+    rect(0, t, Y1, 'dg-n-a');
+    if (t < END) {
+      if (live5) rect(t, Math.min(lastReq + 5, END), Y5, 'dg-ghost', 0.6);
+      rect(t, END, Y1, 'dg-ghost', 0.6);
+    }
+
+    /* request：到了的畫實線，還沒到的畫淡 */
+    m.reqs.forEach(function (r, i) {
+      var past = r <= t;
+      if (i === 3 && m.expired && past) line(x(r), Y5 - 6, Y5 + 32, 'dg-link-key');
+      else line(x(r), Y5 - 4, Y5 + 30, past ? 'dg-link' : 'dg-link dg-next');
+      line(x(r), Y1 - 4, Y1 + 30, past ? 'dg-link' : 'dg-link dg-next');
+    });
+
+    if (t >= m.back) {
+      var xb = xn(m.back);
+      if (m.expired) text(clamp(xb, 209, 623), Y5 - 10, 'dg-k', 'write 1.25×（整個 context）', 'middle');
+      else text(clamp(xb, 154, 662), Y5 - 10, 'dg-c', 'cache read', 'middle');
+      text(clamp(xb, 154, 662), Y1 - 10, 'dg-c', 'cache read', 'middle');
+    }
+    if (m.expired && t > 9) {
+      var ge = Math.min(t, m.back);
+      if (TTL.PX * (ge - 9) >= 104) text((xn(9) + xn(ge)) / 2, Y5 + 18, 'dg-c', 'cache 已過期', 'middle');
+    }
+
+    /* 使用者離開的那一段 */
+    if (t > 4) {
+      var be = Math.min(t, m.back);
+      var awayX = clamp((xn(4) + xn(m.back)) / 2, 184, 648);
+      o.push('<path d="M' + x(4) + ',66 L' + x(4) + ',70 L' + x(be) + ',70' + (t >= m.back ? ' L' + x(be) + ',66' : '') + '" class="dg-soft-link"/>');
+      text(awayX, 87, 'dg-c', '使用者離開 ' + d + ' 分鐘', 'middle');
+    }
+
+    o.push('<path d="M' + x(0) + ',' + AX + ' L' + x(END) + ',' + AX + '" class="dg-link"/>');
+    [0, 10, 20, 30, 40].forEach(function (v) {
+      line(x(v), AX, AX + 5, 'dg-link');
+      text(x(v), AX + 21, 'dg-mn', v, 'middle');
+    });
+    text(694, AX + 38, 'dg-c', '分鐘', 'end');
+    text(118, AX + 38, 'dg-c', '短直條是 request，青色是 cache 活著的時間');
+
+    if (t < END) {
+      var px = xn(t), y0 = 24;
+      boxes.filter(function (b) { return px > b[0] && px < b[1]; })
+        .sort(function (a, b) { return a[2] - b[2]; })
+        .forEach(function (b) { if (b[2] > y0) line(x(t), y0, b[2], 'dg-now'); y0 = Math.max(y0, b[3]); });
+      line(x(t), y0, AX, 'dg-now');
+      o.push('<circle cx="' + x(t) + '" cy="' + AX + '" r="4" class="dg-now-dot"/>');
+    }
+    return o.join('');
+  };
+
+  CALCS.ttl = function (fig, box) {
+    function q(sel) { return box.querySelector(sel); }
+    var svg = fig.querySelector('svg');
+    var inT = q('[data-k="t"]'), inD = q('[data-k="d"]');
+    var outT = q('[data-v="t"]'), outD = q('[data-v="d"]');
+    var out5 = q('[data-v="c5"]'), out1 = q('[data-v="c1"]');
+    var bar5 = q('[data-bar="c5"]'), bar1 = q('[data-bar="c1"]');
+    var res = q('.calc-out'), btn = q('.calc-reset');
+    var play = q('[data-act="play"]'), step = q('[data-act="step"]');
+    if (!svg || !inT || !inD || !outT || !outD || !out5 || !out1 || !bar5 || !bar1 || !res || !btn || !play || !step) return null;
+
+    var END = TTL.END, D0 = inD.defaultValue;
+    var FULL = 1.25 * (TTL.C + TTL.G);       /* the longest bar: one rewrite of C plus the new content */
+    var SPEED = 5, HOLD = 700;               /* minutes per second; pause at each event, ms */
+    var orig = {
+      svg: svg.innerHTML, label: svg.getAttribute('aria-label'),
+      t: outT.innerHTML, d: outD.innerHTML, c5: out5.innerHTML, c1: out1.innerHTML,
+      b5: bar5.innerHTML, b1: bar1.innerHTML, res: res.innerHTML, play: play.innerHTML
+    };
+    var cur = END, raf = 0, lastTs = 0, hold = 0, said = '';
+    /* no moving playhead for readers who asked for less motion: they step or drag */
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) play.hidden = true;
+
+    function widths(bar, vals) {
+      for (var i = 0; i < vals.length; i++) {
+        if (bar.children[i]) bar.children[i].style.width = (vals[i] / FULL * 100).toFixed(2) + '%';
+      }
+    }
+    /* on a narrow screen the figure scrolls sideways: keep the playhead in view */
+    var scroller = fig.querySelector('.scroll');
+    function follow() {
+      if (!scroller || scroller.scrollWidth <= scroller.clientWidth + 1) return;
+      var px = (TTL.X0 + TTL.PX * cur) / 720 * svg.getBoundingClientRect().width;
+      if (px < scroller.scrollLeft + 48 || px > scroller.scrollLeft + scroller.clientWidth - 48) {
+        scroller.scrollLeft = Math.max(0, px - scroller.clientWidth / 2);
+      }
+    }
+    function render() {
+      var d = +inD.value, m = ttlModel(d), c = ttlCost(m, cur);
+      svg.innerHTML = FRAMES.ttl(cur, d);
+      follow();
+      outT.textContent = '第 ' + Math.floor(cur) + ' 分鐘';
+      outD.textContent = d + ' 分鐘（5 分鐘的 cache ' + (m.expired ? '會過期' : '還在') + '）';
+      widths(bar5, [c.new5, c.miss5, c.read5]);
+      widths(bar1, [c.new1, 0, c.read1]);
+      out5.textContent = fmtK(c.sum5);
+      out1.textContent = fmtK(c.sum1);
+      var msg = ttlSay(m, cur);
+      if (msg !== said) {
+        said = msg;
+        res.textContent = msg;
+        svg.setAttribute('aria-label', ttlAria(m, cur));
+      }
+      btn.disabled = false;
+    }
+    function restore() {
+      svg.innerHTML = orig.svg;
+      svg.setAttribute('aria-label', orig.label);
+      outT.innerHTML = orig.t;
+      outD.innerHTML = orig.d;
+      out5.innerHTML = orig.c5;
+      out1.innerHTML = orig.c1;
+      bar5.innerHTML = orig.b5;
+      bar1.innerHTML = orig.b1;
+      res.innerHTML = orig.res;
+      said = '';
+      btn.disabled = true;
+    }
+    /* the default (last frame, the text's example) is the source SVG, byte for byte */
+    function show() {
+      if (!raf && cur >= END && inD.value === D0) restore();
+      else render();
+    }
+    function stop() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0; lastTs = 0; hold = 0;
+      play.innerHTML = orig.play;
+    }
+    function nextEvent() {
+      var ev = ttlModel(+inD.value).ev;
+      for (var i = 0; i < ev.length; i++) if (ev[i].t > cur + 1e-6) return ev[i].t;
+      return END;
+    }
+    function tick(ts) {
+      var dt = lastTs ? Math.min(100, ts - lastTs) : 0;
+      lastTs = ts;
+      if (hold > 0) hold -= dt;
+      else {
+        var next = nextEvent(), nt = cur + dt / 1000 * SPEED;
+        if (nt >= next) { nt = next; hold = HOLD; }
+        cur = nt;
+        inT.value = cur;
+        render();
+      }
+      if (cur >= END) { stop(); show(); return; }
+      raf = requestAnimationFrame(tick);
+    }
+    play.addEventListener('click', function () {
+      if (raf) { stop(); show(); return; }
+      if (cur >= END) cur = 0;
+      inT.value = cur;
+      play.textContent = '❚❚ 暫停';
+      hold = HOLD;
+      raf = requestAnimationFrame(tick);
+      render();
+    });
+    step.addEventListener('click', function () {
+      stop();
+      cur = cur >= END ? 0 : nextEvent();
+      inT.value = cur;
+      show();
+    });
+    inT.addEventListener('input', function () { stop(); cur = +inT.value; show(); });
+    inD.addEventListener('input', function () { stop(); cur = END; inT.value = END; show(); });
+    function reset() {
+      stop();
+      inD.value = D0;
+      inT.value = END;
+      cur = END;
+      restore();
+    }
+    btn.addEventListener('click', reset);
+    return { reset: reset };
+  };
+
   var figs = document.querySelectorAll('figure[data-calc]');
   for (var i = 0; i < figs.length; i++) {
     var fig = figs[i];
@@ -186,5 +469,5 @@
     live.push(c);
     box.hidden = false;
   }
-  window.cs2680Calc = { resetAll: function () { live.forEach(function (c) { c.reset(); }); } };
+  window.cs2680Calc = { resetAll: function () { live.forEach(function (c) { c.reset(); }); }, frames: FRAMES };
 })();

@@ -5,7 +5,7 @@
 #       bash tools/verify.sh all    # 每一堂的頁面檢查＋全站檢查各一次（CI 用，.github/workflows/verify.yml）
 #
 # 為什麼：分開跑是六個 tool call，每個 call 都要重讀整個 context；合成一個，每輪檢查只花一步。
-# 跑的是：check_article、check_diagrams、quiz check、check_numbers、audit、add_lecture --check、dag --check、punct --diff（只提示）、
+# 跑的是：check_article、check_diagrams、anim_static（有動畫圖的頁面）、quiz check、check_numbers、audit、add_lecture --check、dag --check、punct --diff（只提示）、
 # find_figure_spots（只提示：可能該畫成圖、或表和圖重複的地方）、review_status（只提示：哪些章審過之後文字改了、或審的是舊版 checklist）。
 # 不寫回任何檔案（check_article 不帶 --fix-time，punct 只用 --diff）。
 # 通過但有 warn 的檢查，會印出 warn 讓你看一次。
@@ -46,6 +46,8 @@ page() {   # 一堂的頁面檢查：check_article、check_diagrams、punct（�
     run check_article '^OK$' python3 -I tools/check_article.py "$P"
   fi
   run check_diagrams '^OK$'                 python3 -I tools/check_diagrams.py "$P"
+  # 動畫圖：HTML 裡的靜態 SVG 要和 calc.js 畫的最後一格一樣（STYLE_ARTICLE 6〈動畫圖〉）；沒有 node 就跳過
+  if grep -q 'data-calc=' "$P" && command -v node >/dev/null; then run anim_static '^OK' node tools/anim_static.js "$P"; fi
   # 有題庫（<script id="quiz">）的頁面：題庫的節和頁面的小節對得上（guide/QUIZ.md）
   if grep -q 'id="quiz"' "$P"; then run quiz '^ok ' python3 -I tools/quiz.py check "$P"; fi
   # 引用外部來源的數字對得上 guide/sources/lXX.md（來源檔標了 strict 的講次才算失敗，其他只提示；guide/QUIZ.md〈數字對照〉）
