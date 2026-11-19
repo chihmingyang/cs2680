@@ -914,66 +914,121 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
               </div>
               <figcaption>為什麼帳面上的節省不可靠？每個省法左邊的好處當下就看得到，右邊的代價後面才出現。只量一個時間點，會高估節省。</figcaption>
             </figure>
+<p>一個省法省下的那一筆叫 gross savings。把它帶來的 added cost 扣掉，剩下的 net savings 才是真的省到的：</p>
 <figure class="file"><figcaption>Net savings</figcaption><pre><code class="lang-text">net savings = gross savings − added cost</code></pre></figure>
-<p id="i4-2"><b>算一次：compaction 幾步回本。</b>假設 context 到了 200K，其中 20K 是 system prompt 和 tool 定義，留著。Compaction 把其餘的 180K 摘要成 3K，後面又重讀 17K 丟掉的檔案，所以 context 變成 20K + 3K + 17K = 40K。一次要付四筆（單位是 base input token，r = 0.1）：</p>
+<p id="i4-2"><b>算一次：compaction 幾步回本。</b>把 compaction 代進上面的算式。它的 added cost 只付一次：多呼叫一次 model 寫摘要，再加上重讀被摘要丟掉的檔案。它的 gross savings 每一步都有：壓完之後每一步讀的 context 變小。一邊只付一次，一邊每步省一點，所以<strong>壓完要走夠多步，net savings 才會從負的變成正的</strong>：</p>
+<figure class="file"><figcaption>回本步數</figcaption><pre><code class="lang-text">回本步數 = 一次付的（added cost）÷ 每步省的（gross savings）</code></pre></figure>
+<p>拿一個例子算，花費都換算成 base input token。Context 到了 200K，compaction 把它壓成 40K（system prompt 和 tool 定義留著，其餘換成摘要，加上後面重讀的檔案）。壓完之後每一步少讀 160K，照 cache read 的 0.1× 算，每步省 16K。一次付的有三筆：</p>
 <ol>
-                <li><b>產生摘要的那次 call 讀整段 context。</b>Cache 還熱，所以是 200K × 0.1 = 20K。</li>
-                <li><b>摘要本身是 output。</b>3K × 5 = 15K。</li>
-                <li><b>摘要寫進 cache。</b>3K × 1.25 = 3.75K。</li>
-                <li><b>丟掉的檔案要重讀。</b>17K × 1.25 = 21.25K。</li>
+                <li><b>產生摘要的那次 call 要讀整段 context。</b>Cache 還沒過期時，這 200K 照 cache read 收。</li>
+                <li><b>摘要本身是 output。</b>例子裡摘要長 3K，output 的單價是 base input 的 5 倍。</li>
+                <li><b>摘要和重讀的檔案要寫進 cache。</b>被摘要丟掉的檔案，後面用到時要重讀，例子裡是 17K；它和摘要都照 cache write 的 1.25× 收。</li>
               </ol>
-<p>合計 60K。之後每一步少讀 160K，每步省 160K × 0.1 = 16K，所以 60K ÷ 16K ≈ 3.75，<strong>第 4 步回本</strong>。兩個常見的變化會把回本點往後推：<br>1. 摘要漏了細節，多走 10 步重做：多走的每一步讀 40K 的 cache（4K），再寫入 5K 的新 tool 結果（6.25K），一步 10.25K（output 不計），10 步多付 102.5K，合計 162.5K。<br><br>2. 閒置太久、cache 過期了才壓：摘要那次 call 要把 200K 當一般 input 重算，第 1 筆從 20K 變成 200K，合計 240K。</p>
-<div class="table-wrap"><table>
-                <thead><tr><th>情境</th><th>一次付多少</th><th>幾步回本</th><th>還剩 5 步</th><th>還剩 40 步</th></tr></thead>
-                <tbody>
-                  <tr><td>Cache 還熱，摘要夠好</td><td>60K</td><td><b>4</b></td><td>+20K</td><td>+580K</td></tr>
-                  <tr><td>摘要漏了細節，多走 10 步</td><td>162.5K</td><td><b>11</b></td><td><strong>−82.5K</strong></td><td>+477.5K</td></tr>
-                  <tr><td>Cache 已過期才壓</td><td>240K</td><td><b>15</b></td><td><strong>−160K</strong></td><td>+400K</td></tr>
-                </tbody>
-              </table></div>
+<p>下圖把這三筆疊成一條，橫軸直接用「步」當單位，所以長條有多長，就是要走幾步才回本：</p>
 <figure class="diagram">
               <div class="scroll">
-                <svg viewBox="0 0 720 280" role="img" aria-label="折線圖，橫軸是 compaction 之後又走了幾步，0 到 40；縱軸是累積的 net savings，單位 K base input token。三條平行的線。Cache 還熱、摘要夠好：從負 60K 開始，第 4 步回本，第 40 步是正 580K。摘要漏細節、多走 10 步：從負 162.5K 開始，第 11 步回本，第 40 步是正 477.5K。Cache 已過期才壓：從負 240K 開始，第 15 步回本，第 40 步是正 400K。">
-                  <defs><marker id="l8v-net-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8v-net-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
-                  <path d="M74.0,31.75 L74.0,240.0" class="dg-link"/>
-                  <path d="M74.0,178.75 L538.0,178.75" class="dg-link"/>
-                  <text x="66" y="231.75" text-anchor="end" class="dg-mn">-200K</text>
-                  <path d="M69.0,227.75 L74.0,227.75" class="dg-link"/>
-                  <text x="66" y="182.75" text-anchor="end" class="dg-mn">0</text>
-                  <path d="M69.0,178.75 L74.0,178.75" class="dg-link"/>
-                  <text x="66" y="133.75" text-anchor="end" class="dg-mn">+200K</text>
-                  <path d="M69.0,129.75 L74.0,129.75" class="dg-link"/>
-                  <text x="66" y="84.75" text-anchor="end" class="dg-mn">+400K</text>
-                  <path d="M69.0,80.75 L74.0,80.75" class="dg-link"/>
-                  <text x="66" y="35.75" text-anchor="end" class="dg-mn">+600K</text>
-                  <path d="M69.0,31.75 L74.0,31.75" class="dg-link"/>
-                  <path d="M74.0,240.0 L74.0,245.0" class="dg-link"/>
-                  <text x="74.0" y="260.0" text-anchor="middle" class="dg-mn">0</text>
-                  <path d="M190.0,240.0 L190.0,245.0" class="dg-link"/>
-                  <text x="190.0" y="260.0" text-anchor="middle" class="dg-mn">10</text>
-                  <path d="M306.0,240.0 L306.0,245.0" class="dg-link"/>
-                  <text x="306.0" y="260.0" text-anchor="middle" class="dg-mn">20</text>
-                  <path d="M422.0,240.0 L422.0,245.0" class="dg-link"/>
-                  <text x="422.0" y="260.0" text-anchor="middle" class="dg-mn">30</text>
-                  <path d="M538.0,240.0 L538.0,245.0" class="dg-link"/>
-                  <text x="538.0" y="260.0" text-anchor="middle" class="dg-mn">40</text>
-                  <path d="M74.0,240.0 L538.0,240.0" class="dg-link"/>
-                  <text x="538.0" y="276.0" text-anchor="end" class="dg-c">compaction 之後又走了幾步</text>
-                  <text x="14" y="14" class="dg-c">累積的 net savings（base input token）</text>
-                  <path d="M74.0,193.45 L538.0,36.650000000000006" class="dg-link-key"/>
-                  <text x="546.0" y="40.650000000000006" class="dg-k">摘要夠好：4 步回本</text>
-                  <path d="M117.5,172.75 L117.5,184.75" class="dg-link-key"/>
-                  <path d="M74.0,218.5625 L538.0,61.76250000000002" class="dg-link"/>
-                  <text x="546.0" y="65.76250000000002" class="dg-c">多走 10 步：11 步回本</text>
-                  <path d="M191.856,172.75 L191.856,184.75" class="dg-link"/>
-                  <path d="M74.0,237.55 L538.0,80.75" class="dg-link dg-dash"/>
-                  <text x="546.0" y="84.75" class="dg-c">已過期：15 步回本</text>
-                  <path d="M248.0,172.75 L248.0,184.75" class="dg-link"/>
+                <svg viewBox="0 0 720 250" role="img" aria-label="兩條照比例的橫條，橫軸是壓完之後還要走幾步才回本，一格一步，一步等於每步省的 16K。第一條，cache 還沒過期、摘要夠好：讀整段 context 200K × 0.1 = 20K，摘要的 output 3K × 5 = 15K，cache write (3K + 17K) × 1.25 = 25K，合計 60K，長 3.75 格，走 4 步回本。第二條，摘要漏了細節、多走 10 步重做：前三段相同，再加重做的 10 步，每步讀 40K 的 cache（40K × 0.1）、寫入 5K 的新 tool 結果（5K × 1.25），10 步共 102.5K；合計 162.5K，長 10.2 格；重做的 10 步不算在橫軸上，做完之後再走 11 步回本。">
+                  <defs><marker id="l8c-cb-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8c-cb-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="24" y="22" class="dg-cb">Cache 還沒過期，摘要夠好</text>
+                  <rect x="24.0" y="30" width="51.8" height="28" class="dg-n-a"/>
+                  <text x="49.9" y="48.0" text-anchor="middle" class="dg-mn-ink">20K</text>
+                  <rect x="77.8" y="30" width="38.3" height="28" class="dg-n-c"/>
+                  <text x="96.9" y="48.0" text-anchor="middle" class="dg-mn-ink">15K</text>
+                  <rect x="118.1" y="30" width="65.2" height="28" class="dg-n-b"/>
+                  <text x="150.7" y="48.0" text-anchor="middle" class="dg-mn-ink">25K</text>
+                  <text x="193.2" y="48" class="dg-cb">共 60K，走 4 步回本</text>
+                  <text x="24" y="76" class="dg-mn">200K × 0.1　　3K × 5　　(3K + 17K) × 1.25</text>
+                  <text x="24" y="106" class="dg-cb">摘要漏了細節，多走 10 步重做</text>
+                  <rect x="24.0" y="114" width="51.8" height="28" class="dg-n-a"/>
+                  <rect x="77.8" y="114" width="38.3" height="28" class="dg-n-c"/>
+                  <rect x="118.1" y="114" width="65.2" height="28" class="dg-n-b"/>
+                  <rect x="185.2" y="114" width="273.5" height="28" class="dg-n-focus"/>
+                  <text x="322.0" y="132.0" text-anchor="middle" class="dg-c-on">重做 10 步：102.5K</text>
+                  <text x="468.7" y="132" class="dg-k">共 162.5K，再走 11 步回本</text>
+                  <text x="187.2" y="160" class="dg-mn">10 步 × (40K × 0.1 + 5K × 1.25)</text>
+                  <path d="M24,178 L540.0,178" class="dg-link"/>
+                  <path d="M24.0,178 L24.0,183" class="dg-link"/>
+                  <text x="24.0" y="198" text-anchor="middle" class="dg-mn">0</text>
+                  <path d="M110.0,178 L110.0,183" class="dg-link"/>
+                  <text x="110.0" y="198" text-anchor="middle" class="dg-mn">2</text>
+                  <path d="M196.0,178 L196.0,183" class="dg-link"/>
+                  <text x="196.0" y="198" text-anchor="middle" class="dg-mn">4</text>
+                  <path d="M282.0,178 L282.0,183" class="dg-link"/>
+                  <text x="282.0" y="198" text-anchor="middle" class="dg-mn">6</text>
+                  <path d="M368.0,178 L368.0,183" class="dg-link"/>
+                  <text x="368.0" y="198" text-anchor="middle" class="dg-mn">8</text>
+                  <path d="M454.0,178 L454.0,183" class="dg-link"/>
+                  <text x="454.0" y="198" text-anchor="middle" class="dg-mn">10</text>
+                  <path d="M540.0,178 L540.0,183" class="dg-link"/>
+                  <text x="540.0" y="198" text-anchor="middle" class="dg-mn">12</text>
+                  <text x="540.0" y="216" text-anchor="end" class="dg-c">壓完之後還要走幾步才回本（一步省 16K）</text>
+                  <rect x="24" y="229" width="12" height="12" rx="2" class="dg-n-a"/>
+                  <text x="42" y="240" class="dg-c">讀整段 context（cache read）</text>
+                  <rect x="236" y="229" width="12" height="12" rx="2" class="dg-n-c"/>
+                  <text x="254" y="240" class="dg-c">摘要的 output</text>
+                  <rect x="356" y="229" width="12" height="12" rx="2" class="dg-n-b"/>
+                  <text x="374" y="240" class="dg-c">cache write：摘要、重讀的檔案</text>
+                  <rect x="590" y="229" width="12" height="12" rx="2" class="dg-n-focus"/>
+                  <text x="608" y="240" class="dg-c">重做</text>
                 </svg>
               </div>
-              <figcaption>壓完要多久才回本？三條線的斜率相同，因為每步省的一樣；差別在一開始付了多少。線穿過 0 的地方就是回本點。</figcaption>
+              <figcaption>壓完幾步回本？橫軸一格是一步，也就是壓完之後每步省的 16K，所以長條的右端就是回本點。摘要漏了細節時，重做的那一段（深紅）比 compaction 本身的三筆加起來還長，要走的步數從 4 步變成 11 步，重做的那 10 步另計。長條下面那一行是各段的算法；數字是本文假設的。</figcaption>
             </figure>
-<p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。<strong>任務快結束時不要壓</strong>；換任務時用 <code>/clear</code>，它清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說它不花錢，代價是之前的內容全部不見；<strong>要繼續的長任務趁 cache 還熱時壓</strong>。還有一個趨勢值得注意：r 降到 0.05 時每步省的減半，三種情境的回本點變成 7、17、30 步。<b><span style="color: var(--key)">Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大</span></b>。</p>
+<p>第一條是 cache 還沒過期、摘要也夠好的情況。第二條是摘要漏了細節：agent 得多走 10 步，把壓掉的事重做一遍，重做的每一步都要讀 cache、再把新的 tool 結果寫進 cache。這 10 步是多出來的，不壓就不必走，所以不算在橫軸上；它們的錢加在「一次付的」那一邊，重做完之後要走更多步才回本。在這個例子裡，<strong>漏細節的代價比 compaction 本身還貴</strong>。</p>
+<p>另一個變化是閒置太久、cache 過期了才壓。這時產生摘要的那次 call 讀不到 cache，整段 context 要照 base input 的原價算，第一筆變成原來的 10 倍（本文假設這次 call 不再把整段寫進 cache，因為它馬上要被摘要換掉）。不過比較的對象也跟著變了：cache 過期之後就算不壓，下一步也要把整段 context 重新寫進 cache，照 cache write 收（第 3 章〈<a href="#i3-4">TTL 的帳</a>〉）。兩條路都要先付一筆大的：</p>
+<figure class="diagram">
+              <div class="scroll">
+                <svg viewBox="0 0 720 300" role="img" aria-label="三條照比例的橫條，橫軸是眼前要先付多少，單位 K base input token。第一條，cache 還沒過期時壓：讀整段 context 20K、摘要的 output 15K、cache write 25K，共 60K。第二條，cache 過期了才壓：讀整段 context 沒有 cache，照 base input 的原價算，200K × 1 = 200K，加上 output 15K、cache write 25K，共 240K，比過期前多 180K。第三條，cache 過期了、不壓：下一步把整段 context 重寫進 cache，200K × 1.25 = 250K，而且之後每步還是讀 200K。">
+                  <defs><marker id="l8c-ce-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l8c-ce-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
+                  <text x="24" y="22" class="dg-cb">Cache 還沒過期時壓</text>
+                  <rect x="24.0" y="30" width="38.0" height="28" class="dg-n-a"/>
+                  <text x="43.0" y="48.0" text-anchor="middle" class="dg-mn-ink">20K</text>
+                  <rect x="64.0" y="30" width="28.0" height="28" class="dg-n-c"/>
+                  <text x="78.0" y="48.0" text-anchor="middle" class="dg-mn-ink">15K</text>
+                  <rect x="94.0" y="30" width="48.0" height="28" class="dg-n-b"/>
+                  <text x="118.0" y="48.0" text-anchor="middle" class="dg-mn-ink">25K</text>
+                  <text x="152.0" y="48" class="dg-cb">共 60K</text>
+                  <text x="24" y="88" class="dg-cb">Cache 過期了才壓</text>
+                  <rect x="24.0" y="96" width="398.0" height="28" class="dg-n-d"/>
+                  <text x="223.0" y="114.0" text-anchor="middle" class="dg-ls">讀整段 context，沒有 cache：200K × 1 = 200K</text>
+                  <rect x="424.0" y="96" width="28.0" height="28" class="dg-n-c"/>
+                  <rect x="454.0" y="96" width="48.0" height="28" class="dg-n-b"/>
+                  <text x="512.0" y="108" class="dg-cb">共 240K</text>
+                  <text x="512.0" y="124" class="dg-k">比過期前多 180K</text>
+                  <text x="24" y="154" class="dg-cb">Cache 過期了，不壓</text>
+                  <rect x="24.0" y="162" width="498.0" height="28" class="dg-n-d"/>
+                  <text x="273.0" y="180.0" text-anchor="middle" class="dg-ls">下一步把整段 context 重寫進 cache：200K × 1.25 = 250K</text>
+                  <text x="532.0" y="174" class="dg-cb">共 250K</text>
+                  <text x="532.0" y="190" class="dg-c">之後每步仍讀 200K</text>
+                  <path d="M24,208 L524.0,208" class="dg-link"/>
+                  <path d="M24.0,208 L24.0,213" class="dg-link"/>
+                  <text x="24.0" y="228" text-anchor="middle" class="dg-mn">0</text>
+                  <path d="M124.0,208 L124.0,213" class="dg-link"/>
+                  <text x="124.0" y="228" text-anchor="middle" class="dg-mn">50K</text>
+                  <path d="M224.0,208 L224.0,213" class="dg-link"/>
+                  <text x="224.0" y="228" text-anchor="middle" class="dg-mn">100K</text>
+                  <path d="M324.0,208 L324.0,213" class="dg-link"/>
+                  <text x="324.0" y="228" text-anchor="middle" class="dg-mn">150K</text>
+                  <path d="M424.0,208 L424.0,213" class="dg-link"/>
+                  <text x="424.0" y="228" text-anchor="middle" class="dg-mn">200K</text>
+                  <path d="M524.0,208 L524.0,213" class="dg-link"/>
+                  <text x="524.0" y="228" text-anchor="middle" class="dg-mn">250K</text>
+                  <text x="524.0" y="246" text-anchor="end" class="dg-c">眼前要先付多少（base input token）</text>
+                  <rect x="24" y="259" width="12" height="12" rx="2" class="dg-n-a"/>
+                  <text x="42" y="270" class="dg-c">讀整段 context（cache read）</text>
+                  <rect x="250" y="259" width="12" height="12" rx="2" class="dg-n-d"/>
+                  <text x="268" y="270" class="dg-c">整段 context 沒有 cache，照價重算或重寫</text>
+                  <rect x="24" y="281" width="12" height="12" rx="2" class="dg-n-c"/>
+                  <text x="42" y="292" class="dg-c">摘要的 output</text>
+                  <rect x="250" y="281" width="12" height="12" rx="2" class="dg-n-b"/>
+                  <text x="268" y="292" class="dg-c">cache write：摘要、重讀的檔案</text>
+                </svg>
+              </div>
+              <figcaption>Cache 過期了，還要不要壓？粉色是整段 context 沒有 cache 可讀的錢，過期之後壓不壓都要付。過期的那兩條先付的差不多，壓的那一條之後每步只讀 40K，所以任務還要繼續就壓。和第一條比：同一次 compaction 拖到過期才做，多付的 180K 全是粉色那一段。數字是本文假設的。</figcaption>
+            </figure>
+<p>所以 <strong>cache 已經過期、任務還要繼續時，壓和不壓先付的差不多</strong>，壓了之後每一步還少讀 160K，該壓。要避免的是把同一次 compaction 拖到過期之後才做，多付的全是那一次重讀。本文的推論：<strong>知道任務還很長、自己又要離開一陣子，就在離開前壓</strong>。</p>
+<p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。剩下的步數比回本步數少，壓了就是虧，所以<strong>任務快結束時不要壓</strong>；換任務時用 Claude Code 的 <code>/clear</code>，它清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說它不花錢，代價是之前的內容全部不見；<strong>要繼續的長任務趁 cache 還沒過期時壓</strong>。</p>
+<p>還有一個趨勢值得注意。Cache read 的倍率從 0.1 降到 0.05 時，每步省的減半，一次付的卻只少一點（三筆裡只有讀 context 那一筆跟著變便宜），所以回本要走的步數變多。<b><span style="color: var(--key)">Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大</span></b>。</p>
 <p>真實系統的選擇也不同：Hermes Agent 在 context 用到 50% 就壓，Uber 等到 400K。OpenClaw 在壓之前，先讓 agent 跑一個使用者看不到的 turn，把重要的事寫進有日期的筆記檔（例如 <code>memory/2026-11-06.md</code>，存在 context 外面）。<strong>摘要漏掉的細節，之後還能從檔案搜回來，不必重做</strong>，等於替 added cost 買保險。</p>
 <p id="i4-3"><span class="anchor" id="x1"></span><b>Net savings 只能在同一組任務上量。</b>不同的任務本身步數就差很多，兩個設定若各跑一組任務，差別可能來自題目，而不是設定；同一個任務也有隨機性，跑兩次 step 數可能差一倍。所以<strong>比較兩個設定要用同一組任務、每題跑多次、看分布</strong>，方法見 L7〈<a href="l07.html#i4">雜訊</a>〉與〈<a href="l07.html#t5">標準誤</a>〉。題目還要分兩份：一份拿來調參，另一份沒用過的拿來報成績。Anthropic 的客服 benchmark 是例子：調參題上做到 98.9% 的新設定，在 14 張沒拿來調參的工單（held-out）上只有 90.5%，仍高於原設定的 78.6%，成本約是原設定的 1/5。<strong>拿來調參的題目不能拿來報成績</strong>，這是 L7 講的 leakage。</p>
 <p id="i4-4"><b>優化是一個迴圈。</b>上面的紀律可以收成四步：</p>
@@ -3044,7 +3099,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "t": "判斷一個省法有沒有真的省，要算 net savings：net savings = gross savings − added cost。",
      "at": [
       "#i4 code1 內容",
-      "#i4 ¶1"
+      "#i4 ¶1",
+      "#i4 ¶8"
      ]
     },
     {
@@ -3111,95 +3167,85 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     {
      "id": "k22.1",
      "type": "mechanism",
-     "t": "做一次 compaction 要付四筆：產生摘要的那次 call 讀整段 context（cache 還熱時是 cache read）、摘要本身是 output、摘要寫進 cache、丟掉的檔案重讀時再寫進 cache。",
+     "t": "做一次 compaction 要付三筆：產生摘要的那次 call 讀整段 context（cache 還沒過期時照 cache read 收）、摘要本身是 output、摘要和被丟掉後重讀的檔案寫進 cache（照 cache write 收）。",
      "at": [
-      "#i4 ¶8",
-      "#i4 ¶9",
       "#i4 ¶10",
       "#i4 ¶11",
-      "#i4 ¶12"
+      "#i4 ¶12",
+      "#i4 ¶13"
      ]
     },
     {
      "id": "k22.2",
      "type": "evidence",
-     "t": "本文的算例（單位 base input token，r = 0.1）：context 200K，其中 20K 留著，其餘 180K 摘要成 3K，再重讀 17K，context 變成 40K；四筆是 200K × 0.1 = 20K、3K × 5 = 15K、3K × 1.25 = 3.75K、17K × 1.25 = 21.25K，合計 60K；之後每步少讀 160K，每步省 16K，60K ÷ 16K ≈ 3.75，第 4 步回本。",
+     "t": "本文的算例（換算成 base input token）：context 200K 壓成 40K，每步少讀 160K、照 cache read 的 0.1× 每步省 16K；三筆是 200K × 0.1 = 20K、3K × 5 = 15K、(3K + 17K) × 1.25 = 25K，合計 60K，60K ÷ 16K = 3.75，走 4 步回本。",
      "at": [
-      "#i4 ¶8",
-      "#i4 ¶9",
       "#i4 ¶10",
       "#i4 ¶11",
       "#i4 ¶12",
       "#i4 ¶13",
-      "#i4 表1 列1"
+      "#i4 圖4 內容"
      ]
     },
     {
      "id": "k22.3",
      "type": "mechanism",
-     "t": "Compaction 的回本步數是「一次付的總額 ÷ 每步省的」，每步省的是壓完之後每一步少讀的 context 乘上 cache read 的倍率 r。",
+     "t": "Compaction 的 added cost 只付一次（寫摘要的那次 call，加上重讀被丟掉的檔案），gross savings 每一步都有，所以回本步數 = 一次付的 ÷ 每步省的；每步省的是壓完之後每一步少讀的 context 乘上 cache read 的倍率。",
      "at": [
-      "#i4 ¶13"
+      "#i4 ¶9",
+      "#i4 code2 內容",
+      "#i4 ¶10"
      ]
     },
     {
      "id": "k22.4",
      "type": "limit",
-     "t": "摘要漏了細節時，agent 要多走幾步重做，多走的每一步都要讀 cache 再寫入新的 tool 結果，這筆錢加進一次付的總額，把回本點往後推。",
+     "t": "摘要漏了細節時，agent 要多走幾步重做，多走的每一步都要讀 cache 再寫入新的 tool 結果；這些步是多出來的、不壓就不必走，它們的錢加在一次付的那一邊，所以重做完之後要走更多步才回本。",
      "at": [
-      "#i4 ¶13",
-      "#i4 表1 列2 ‹情境›",
-      "#i4 表1 列2 ‹一次付多少›",
-      "#i4 表1 列2 ‹幾步回本›"
+      "#i4 ¶15",
+      "#i4 圖4 說明",
+      "#i4 圖4 內容"
      ]
     },
     {
      "id": "k22.5",
      "type": "limit",
-     "t": "閒置太久、cache 過期了才壓，產生摘要的那次 call 要把整段 context 當一般 input 重算，回本點被推得更後面，所以要繼續的長任務要趁 cache 還熱時壓。",
+     "t": "閒置太久、cache 過期了才壓，產生摘要的那次 call 讀不到 cache，整段 context 要照 base input 的原價算；同一次 compaction 貴很多，所以要繼續的長任務趁 cache 還沒過期時壓，要離開一陣子就在離開前壓。",
      "at": [
-      "#i4 ¶13",
-      "#i4 ¶14",
-      "#i4 表1 列3 ‹情境›",
-      "#i4 表1 列3 ‹一次付多少›",
-      "#i4 表1 列3 ‹幾步回本›"
+      "#i4 ¶16",
+      "#i4 ¶17",
+      "#i4 ¶18",
+      "#i4 圖5 說明",
+      "#i4 圖5 內容"
      ]
     },
     {
      "id": "k22.6",
      "type": "evidence",
-     "t": "三種情境的算例：cache 還熱、摘要夠好一次付 60K、第 4 步回本，還剩 5 步 +20K、還剩 40 步 +580K；摘要漏了細節多走 10 步（每步 10.25K，10 步 102.5K）合計 162.5K、第 11 步回本，還剩 5 步 −82.5K、還剩 40 步 +477.5K；cache 已過期才壓第 1 筆從 20K 變成 200K，合計 240K、第 15 步回本，還剩 5 步 −160K、還剩 40 步 +400K。",
+     "t": "兩張圖的算例：cache 還沒過期、摘要夠好共 60K、走 4 步回本；摘要漏了細節多走 10 步（10 步 × (40K × 0.1 + 5K × 1.25) = 102.5K）共 162.5K，重做的 10 步另計、再走 11 步回本，漏細節的代價比 compaction 本身還貴；cache 過期了才壓，讀整段 context 是 200K × 1 = 200K，共 240K，比過期前多 180K；cache 過期了不壓，下一步重寫整段是 200K × 1.25 = 250K，之後每步仍讀 200K。",
      "at": [
-      "#i4 ¶13",
-      "#i4 表1 列1",
-      "#i4 表1 列2 ‹一次付多少›",
-      "#i4 表1 列2 ‹幾步回本›",
-      "#i4 表1 列2 ‹還剩 5 步›",
-      "#i4 表1 列2 ‹還剩 40 步›",
-      "#i4 表1 列3 ‹一次付多少›",
-      "#i4 表1 列3 ‹幾步回本›",
-      "#i4 表1 列3 ‹還剩 5 步›",
-      "#i4 表1 列3 ‹還剩 40 步›",
-      "#i4 圖3 內容"
+      "#i4 ¶15",
+      "#i4 圖4 內容",
+      "#i4 圖5 內容"
      ]
     },
     {
      "id": "k22.7",
      "type": "mechanism",
-     "t": "三種情境在「累積 net savings 對步數」的圖上是三條斜率相同的平行線，因為每步省的一樣；差別只在一開始付了多少，線穿過 0 的地方就是回本點。",
+     "t": "Cache 已經過期時，比較的對象要換：就算不壓，下一步也要把整段 context 重新寫進 cache，所以壓和不壓先付的差不多；壓了之後每一步讀得少，任務還要繼續就該壓。",
      "at": [
-      "#i4 圖3 說明",
-      "#i4 圖3 內容"
+      "#i4 ¶16",
+      "#i4 ¶17",
+      "#i4 圖5 說明",
+      "#i4 圖5 內容"
      ]
     },
     {
      "id": "k22.8",
      "type": "claim",
-     "t": "Compaction 是長任務才回本的投資，所以任務快結束時不要壓：剩下的步數不夠回本時，net savings 是負的。",
+     "t": "Compaction 是長任務才回本的投資：剩下的步數比回本步數少，壓了就是虧，所以任務快結束時不要壓。",
      "at": [
-      "#i4 ¶14",
-      "#i4 表1 列2 ‹還剩 5 步›",
-      "#i4 表1 列3 ‹還剩 5 步›"
+      "#i4 ¶18"
      ]
     },
     {
@@ -3207,7 +3253,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "換任務時用 /clear 而不是 compaction：/clear 清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以不花錢。",
      "at": [
-      "#i4 ¶14"
+      "#i4 ¶18"
      ]
     },
     {
@@ -3215,23 +3261,24 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "/clear 的代價是之前的內容全部不見。",
      "at": [
-      "#i4 ¶14"
+      "#i4 ¶18"
      ]
     },
     {
      "id": "k22.11",
      "type": "claim",
-     "t": "Cache read 越便宜（r 越小），每步省的越少、回本點越後面，所以縮小 context 的回報越小，保住 hit rate 的回報越大。",
+     "t": "Cache read 越便宜（倍率越小），每步省的越少、回本點越後面，所以縮小 context 的回報越小，保住 hit rate 的回報越大。",
      "at": [
-      "#i4 ¶14"
+      "#i4 ¶19"
      ]
     },
     {
      "id": "k22.12",
      "type": "evidence",
-     "t": "r 降到 0.05 時每步省的減半，三種情境的回本點變成 7、17、30 步；這些數字是假設的，算法才是重點，「compaction 是長任務才回本的投資」是本文的判斷。",
+     "t": "Cache read 的倍率從 0.1 降到 0.05 時每步省的減半，一次付的卻只少一點（三筆裡只有讀 context 那一筆跟著變便宜），所以回本要走的步數變多；這些數字是假設的，算法才是重點，「compaction 是長任務才回本的投資」是本文的判斷。",
      "at": [
-      "#i4 ¶14"
+      "#i4 ¶18",
+      "#i4 ¶19"
      ]
     },
     {
@@ -3239,7 +3286,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "OpenClaw 在壓之前先讓 agent 跑一個使用者看不到的 turn，把重要的事寫進 context 外面的有日期筆記檔；摘要漏掉的細節之後能從檔案搜回來、不必重做，等於替 added cost 買保險。",
      "at": [
-      "#i4 ¶15"
+      "#i4 ¶20"
      ]
     },
     {
@@ -3247,7 +3294,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "evidence",
      "t": "真實系統壓的時機不同：Hermes Agent 在 context 用到 50% 就壓，Uber 等到 400K。",
      "at": [
-      "#i4 ¶15"
+      "#i4 ¶20"
      ]
     }
    ]
@@ -3263,7 +3310,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "比較兩個設定的 net savings，要用同一組任務來量。",
      "at": [
-      "#i4 ¶16"
+      "#i4 ¶21"
      ]
     },
     {
@@ -3271,7 +3318,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "misconception",
      "t": "兩個設定各跑一組任務時量到的差別，可能來自題目而不是設定，因為不同的任務本身步數就差很多。",
      "at": [
-      "#i4 ¶16"
+      "#i4 ¶21"
      ]
     },
     {
@@ -3279,7 +3326,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "同一個任務也有隨機性，跑兩次 step 數可能差一倍，所以每題要跑多次、看分布，不能只跑一次。",
      "at": [
-      "#i4 ¶16"
+      "#i4 ¶21"
      ]
     },
     {
@@ -3287,7 +3334,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "condition",
      "t": "題目要分兩份：一份拿來調參，另一份沒用過的（held-out）拿來報成績；拿來調參的題目不能拿來報成績，否則就是 leakage。",
      "at": [
-      "#i4 ¶16"
+      "#i4 ¶21"
      ]
     },
     {
@@ -3295,7 +3342,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "evidence",
      "t": "Anthropic 的客服 benchmark：新設定在調參題上做到 98.9%，在 14 張沒拿來調參的工單（held-out）上只有 90.5%，仍高於原設定的 78.6%，成本約是原設定的 1/5。",
      "at": [
-      "#i4 ¶16"
+      "#i4 ¶21"
      ]
     }
    ]
@@ -3311,8 +3358,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "優化是一個四步的迴圈：跑並且記錄（每個 call、token、等待）→ 量錢和時間花在哪 → 只改一件事 → 在同一組任務上重測，然後回到第一步。",
      "at": [
-      "#i4 ¶17",
-      "#i4 圖4 內容"
+      "#i4 ¶22",
+      "#i4 圖6 內容"
      ]
     },
     {
@@ -3320,8 +3367,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "condition",
      "t": "迴圈的每一輪只能改一件事（例如 cache、routing 或平行），因為同時改兩件事就分不出效果是誰的功勞。",
      "at": [
-      "#i4 圖4 說明",
-      "#i4 圖4 內容"
+      "#i4 圖6 說明",
+      "#i4 圖6 內容"
      ]
     },
     {
@@ -3329,8 +3376,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "重測時在同一組任務上看三個指標：成功率、花費、p95 延遲。",
      "at": [
-      "#i4 圖4 說明",
-      "#i4 圖4 內容"
+      "#i4 圖6 說明",
+      "#i4 圖6 內容"
      ]
     }
    ]
@@ -3346,8 +3393,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "一個 agent 太貴時依序問六題：這一步需要 LLM 嗎、有 cache hit 嗎、能少走幾步嗎、context 能小一點嗎、這一步要這麼強的 model 和想這麼久嗎、output 能短一點嗎。",
      "at": [
-      "#i4 ¶18",
-      "#i4 圖5 內容"
+      "#i4 ¶23",
+      "#i4 圖7 內容"
      ]
     },
     {
@@ -3355,7 +3402,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "六題的排序原則是：先做無損的，再做有風險的；先做大的，再做小的。",
      "at": [
-      "#i4 圖5 說明"
+      "#i4 圖7 說明"
      ]
     },
     {
@@ -3363,7 +3410,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "「這一步需要 LLM 嗎」排在 cache 前面，因為不呼叫 model 的步驟連 cache read 的錢都不用付。",
      "at": [
-      "#i4 ¶18"
+      "#i4 ¶23"
      ]
     },
     {
@@ -3371,7 +3418,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "condition",
      "t": "只要那一步還要呼叫 model，就先保住 cache。",
      "at": [
-      "#i4 ¶18"
+      "#i4 ¶23"
      ]
     },
     {
@@ -3379,7 +3426,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "六題各動成本公式的不同項：不用 LLM 是整步歸零，cache hit 動 Price per Token，少走幾步動 Turns 與 Steps，縮小 context 動 Tokens per Step，model 與 effort 動 Price 與 output。",
      "at": [
-      "#i4 圖5 內容"
+      "#i4 圖7 內容"
      ]
     },
     {
@@ -3387,8 +3434,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "前三題（不用 LLM、cache hit、少走幾步）是無損或通常無損的；縮小 context 是部分有損的，要先做無損的做法，最後才用 compaction。",
      "at": [
-      "#i4 圖5 說明",
-      "#i4 圖5 內容"
+      "#i4 圖7 說明",
+      "#i4 圖7 內容"
      ]
     },
     {
@@ -3396,8 +3443,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "換弱一點的 model 或降低 effort 會傷成功率，縮短 output 則因為 output 的花費佔比小而省得少，所以這兩題排在最後。",
      "at": [
-      "#i4 圖5 說明",
-      "#i4 圖5 內容"
+      "#i4 圖7 說明",
+      "#i4 圖7 內容"
      ]
     },
     {
@@ -3405,8 +3452,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "condition",
      "t": "六題裡每動一項，都要回到優化的迴圈再量一次。",
      "at": [
-      "#i4 圖5 說明",
-      "#i4 圖5 內容"
+      "#i4 圖7 說明",
+      "#i4 圖7 內容"
      ]
     },
     {
@@ -3414,8 +3461,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "evidence",
      "t": "這個省錢的順序是本文的判斷與整理。",
      "at": [
-      "#i4 ¶18",
-      "#i4 圖5 說明"
+      "#i4 ¶23",
+      "#i4 圖7 說明"
      ]
     }
    ]
@@ -6186,7 +6233,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     "k15.9",
     "k15.6"
    ],
-   "closed_ok": "線索只在別節（k22a）：k22a 的題幹就在比「cache 還熱時做」和「過期才做」，選項 C 寫了差在「產生摘要的那次 call 要整段重算」；k22d、k22e 的選項也寫「cache 還熱是壓的成本最低的時候」"
+   "closed_ok": "線索只在別節（k22a）：k22a 的題幹就在比「cache 還沒過期時做」和「過期才做」，選項 C 寫了差在「產生摘要的那次 call 要整段重算」；k22d、k22e 的選項也寫「cache 還沒過期是壓的成本最低的時候」"
   },
   {
    "id": "k16a",
@@ -6810,23 +6857,23 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
    "id": "k22a",
    "ks": "k22",
    "kind": "choice",
-   "q": "同一次 compaction，趁 cache 還熱時做，和閒置到 cache 過期才做，一次要付的幾筆裡哪一筆不一樣？",
+   "q": "同一次 compaction，趁 cache 還沒過期時做，和閒置到 cache 過期才做，一次要付的幾筆裡哪一筆不一樣？",
    "choices": [
     {
      "t": "摘要寫進 cache 的那一筆：cache 過期之後，cache write 的倍率會變高",
-     "why": "Cache write 的倍率不變，算例裡這一筆兩種情況都是 3K × 1.25 = 3.75K。變的是產生摘要的那次 call：整段 context 要當一般 input 重算，第 1 筆從 20K 變成 200K，合計從 60K 變成 240K。"
+     "why": "Cache write 的倍率不變，算例裡摘要和重讀的檔案兩種情況都是 (3K + 17K) × 1.25 = 25K。變的是產生摘要的那次 call：整段 context 讀不到 cache，要照 base input 的原價算，這一筆從 20K 變成 200K，合計從 60K 變成 240K。"
     },
     {
-     "t": "產生摘要的那次 call：整段 context 要當成一般 input 重算",
+     "t": "產生摘要的那次 call：讀不到 cache，整段 context 要照原價算",
      "ok": true
     },
     {
      "t": "丟掉的檔案重讀的那一筆：cache 過期之後，需要重讀回來的檔案會變多",
-     "why": "重讀多少看摘要丟掉了什麼（算例是 17K × 1.25 = 21.25K），和 cache 冷熱無關。變的是產生摘要的那次 call：整段 context 當一般 input 重算，第 1 筆從 20K 變成 200K。"
+     "why": "重讀多少看摘要丟掉了什麼（算例是 17K），和 cache 有沒有過期無關。變的是產生摘要的那次 call：整段 context 讀不到 cache，要照 base input 的原價算，這一筆從 20K 變成 200K。"
     }
    ],
    "key": [
-    "一次要付四筆：產生摘要的 call 讀整段 context、摘要的 output、摘要寫進 cache、丟掉的檔案重讀。Cache 過期才壓，第 1 筆從 20K 變成 200K，合計 60K 變 240K，回本從第 4 步推到第 15 步；所以要繼續的長任務趁 cache 還熱時壓。"
+    "一次要付三筆：產生摘要的 call 讀整段 context、摘要的 output、摘要和重讀的檔案寫進 cache。Cache 過期才壓，第一筆從 20K 變成 200K，合計 60K 變 240K，多付的 180K 全是那一次重讀；所以要繼續的長任務趁 cache 還沒過期時壓。"
    ],
    "covers": [
     "k22.1",
@@ -6838,15 +6885,15 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
    "id": "k22b",
    "ks": "k22",
    "kind": "choice",
-   "q": "Provider 把 cache read 的倍率 r 降到原來的一半，其他單價不變。Compaction 的回本點怎麼移動，對設計代表什麼？",
+   "q": "Provider 把 cache read 的倍率降到原來的一半，其他單價不變。Compaction 的回本點怎麼移動，對設計代表什麼？",
    "choices": [
     {
      "t": "往前移：摘要那次 call 讀整段 context 變便宜；compaction 可以更常做",
-     "why": "那一筆確實變便宜（算例從 20K 降到 10K），但摘要的 output 和兩筆 cache write 不變，一次付的只從 60K 降到 50K；每步省的卻從 16K 減半成 8K。回本點從第 4 步推到第 7 步，是往後移。"
+     "why": "那一筆確實變便宜（算例從 20K 降到 10K），但摘要的 output 和 cache write 不變，一次付的只從 60K 降到 50K；每步省的卻從 16K 減半成 8K。要走的步數從 4 步變成 7 步，回本點是往後移。"
     },
     {
-     "t": "不移動：一次付的和每步省的都乘上 r，同比例變小；壓的時機不必改",
-     "why": "一次付的四筆裡只有第 1 筆乘 r，摘要的 output（× 5）和兩筆 cache write（× 1.25）都不變；每步省的整筆乘 r，所以減半。回本步數 = 一次付的 ÷ 每步省的，算例從第 4 步變成第 7 步。"
+     "t": "不移動：一次付的和每步省的都乘上這個倍率，同比例變小；壓的時機不必改",
+     "why": "一次付的三筆裡只有第一筆乘 cache read 的倍率，摘要的 output（× 5）和 cache write（× 1.25）都不變；每步省的整筆乘這個倍率，所以減半。回本步數 = 一次付的 ÷ 每步省的，算例從 4 步變成 7 步。"
     },
     {
      "t": "往後移：每步省的減半；縮小 context 的回報變小，保住 hit rate 更值得",
@@ -6854,61 +6901,62 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     }
    ],
    "key": [
-    "回本步數 = 一次付的總額 ÷ 每步省的；每步省的 = 少讀的 context × r。r 從 0.1 降到 0.05，每步省的減半，三種情境的回本點變成 7、17、30 步。Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大。"
+    "回本步數 = 一次付的 ÷ 每步省的；每步省的 = 少讀的 context × cache read 的倍率。倍率從 0.1 降到 0.05，每步省的減半，一次付的卻只少一點，回本要走的步數變多（算例第一條從 4 步變成 7 步）。Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大。"
    ],
    "covers": [
     "k22.3",
     "k22.11"
-   ]
+   ],
+   "closed_ok": "推理：每步省的是少讀的 token 乘 cache read 的單價，單價減半省的就減半；output 和 cache write 沒變，是單價的常識"
   },
   {
    "id": "k22c",
    "ks": "k22",
    "kind": "choice",
-   "q": "畫一張圖：橫軸是 compaction 之後又走了幾步，縱軸是累積的 net savings。摘要漏了細節、agent 得多走幾步重做的那條線，和摘要夠好的那條線差在哪？",
+   "q": "摘要漏了細節，agent 得多走 10 步，把壓掉的事重做一遍。照文章的帳，這 10 步怎麼算進回本？",
    "choices": [
     {
-     "t": "起點相同、斜率變小：重做讓之後每一步省的變少，回本點往後",
-     "why": "每步省的沒有變，還是少讀的 160K × 0.1 = 16K，所以斜率相同。多走 10 步的 102.5K 是加進一次付的（60K 變 162.5K），線的起點更低，回本從第 4 步推到第 11 步。"
+     "t": "算在回本的步數裡：重做的每一步也用小 context，照樣每步省一筆",
+     "why": "重做的 10 步是多出來的：不壓就不必走，所以它們沒有省到錢，是多花的（算例每步讀 40K 的 cache、再寫入 5K 的新 tool 結果，10 步共 102.5K）。文章把這筆錢加在一次付的那一邊，不算在橫軸上。"
     },
     {
-     "t": "起點更低、斜率相同：重做的錢加進一次付的總額，回本點往後",
+     "t": "加在一次付的那一邊：它們是多出來的花費，重做完要走更多步才回本",
      "ok": true
     },
     {
-     "t": "起點更低、斜率變大：重做的那幾步也用小 context，後面追得回來",
-     "why": "三條線斜率相同，因為每步省的一樣（16K）；起點低的那條不會追上來。算例到第 40 步，摘要漏細節的是 +477.5K，摘要夠好的是 +580K，差距一直是 102.5K。"
+     "t": "不必算：重做的那幾步沒有呼叫 model 寫摘要，不是 compaction 的花費",
+     "why": "Added cost 是這個省法帶來的所有多付的錢，不只寫摘要的那一次。重做是摘要漏了細節造成的；算例裡這 102.5K 比 compaction 本身的三筆（60K）還貴，一次付的變成 162.5K，重做完之後要走的步數從 4 步變成 11 步。"
     }
    ],
    "key": [
-    "三種情境是三條平行線：每步省的一樣，差別只在一開始付了多少，線穿過 0 的地方就是回本點。摘要漏細節、多走 10 步，一次付的從 60K 變成 162.5K，回本從第 4 步推到第 11 步。"
+    "摘要漏細節、多走 10 步重做，這些步是多出來的，它們的錢加在一次付的那一邊（算例 60K 變成 162.5K），重做完之後要走的步數從 4 步變成 11 步；在算例裡，漏細節的代價比 compaction 本身還貴。"
    ],
    "covers": [
-    "k22.4",
-    "k22.7"
-   ]
+    "k22.4"
+   ],
+   "closed_ok": "推理：題幹說這 10 步是多走的重做，多出來的花費只能算在成本那一邊"
   },
   {
    "id": "k22d",
    "ks": "k22",
    "kind": "choice",
-   "q": "Context 已經很大，cache 也還熱，但任務估計再 3 步就做完。照文章的帳，現在該不該做 compaction？",
+   "q": "Context 到了文章算例的 200K，cache 也還沒過期，但任務估計再 3 步就做完。照文章的帳，現在該不該做 compaction？",
    "choices": [
     {
      "t": "該：context 越大，壓完每一步省的越多，從壓完的下一步就開始淨省",
-     "why": "每步省的要先攤掉一次付的。算例最順的情況一次付 60K、每步省 16K，第 4 步才回本；3 步只省回 48K，還倒貼 12K。"
+     "why": "每步省的要先攤掉一次付的。算例最順的情況一次付 60K、每步省 16K，要走 4 步才回本；3 步只省回 48K，還倒貼 12K。"
     },
     {
      "t": "不該：一次付的要靠之後每一步省的攤回來，3 步還攤不完",
      "ok": true
     },
     {
-     "t": "該：cache 還熱是壓的成本最低的時候，錯過之後再壓只會付得更多",
-     "why": "成本最低不等於划算。Cache 還熱時算例也要一次付 60K、第 4 步才回本；剩下的步數不夠回本，net savings 就是負的，所以任務快結束時不要壓。"
+     "t": "該：cache 還沒過期是壓的成本最低的時候，錯過之後再壓只會付得更多",
+     "why": "成本最低不等於划算。Cache 還沒過期時算例也要一次付 60K、要走 4 步才回本；剩下的步數不夠回本，net savings 就是負的，所以任務快結束時不要壓。"
     }
    ],
    "key": [
-    "Compaction 是長任務才回本的投資：一次付的要靠之後每步省的攤回來。算例最順的情況也要第 4 步才回本，任務快結束時不要壓。"
+    "Compaction 是長任務才回本的投資：一次付的要靠之後每步省的攤回來。算例最順的情況也要走 4 步才回本，任務快結束時不要壓。"
    ],
    "covers": [
     "k22.8"
@@ -6926,8 +6974,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "why": "/clear 不留摘要：它清掉整段對話，下一則訊息從空的 context 開始。不花錢是因為不需要 model 寫摘要，代價是之前的內容全部不見。"
     },
     {
-     "t": "Compaction：留一段摘要比較保險，cache 還熱時壓，幾步之內就會回本",
-     "why": "文章說換任務時用 /clear。Compaction 一次要付四筆（算例 60K），是要繼續的長任務才回本的投資；/clear 不需要 model 寫摘要，不花錢。"
+     "t": "Compaction：留一段摘要比較保險，cache 還沒過期時壓，幾步之內就會回本",
+     "why": "文章說換任務時用 /clear。Compaction 一次要付三筆（算例 60K），是要繼續的長任務才回本的投資；/clear 不需要 model 寫摘要，不花錢。"
     },
     {
      "t": "/clear：不必讓 model 寫摘要，所以不花錢；代價是之前的內容全部不見",
@@ -6968,6 +7016,33 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
    "covers": [
     "k22.13"
    ]
+  },
+  {
+   "id": "k22g",
+   "ks": "k22",
+   "kind": "choice",
+   "q": "你離開了一個小時，回來時 cache 已經過期。Context 還很大，任務還要再做幾十步。照文章的帳，現在壓還是不壓？",
+   "choices": [
+    {
+     "t": "不壓：過期才壓，摘要那次 call 要照原價讀整段，比不壓貴得多",
+     "why": "那一筆確實變貴（算例 20K 變成 200K），但不壓也逃不掉：下一步要把整段 context 重新寫進 cache（算例 200K × 1.25 = 250K）。兩邊先付的差不多，壓了之後每一步讀得少，任務還要繼續就該壓。"
+    },
+    {
+     "t": "壓：不壓也要重寫整段 cache，先付的差不多，壓了之後每步讀得少",
+     "ok": true
+    },
+    {
+     "t": "先不壓：照常走一步把 cache 寫回來，之後再壓，摘要那次 call 才便宜",
+     "why": "把 cache 寫回來的那一步，就要先付整段 context 的 cache write（算例 250K），之後再壓還要另外付壓的三筆（算例 60K）。直接壓只付一次大的（算例 240K）。"
+    }
+   ],
+   "key": [
+    "Cache 已經過期時，就算不壓，下一步也要把整段 context 重新寫進 cache（算例 250K），和過期才壓的 240K 差不多；壓了之後每步只讀 40K，所以任務還要繼續就壓。要避免的是把壓拖到過期之後：同一次 compaction 多付 180K，要離開一陣子就在離開前壓。"
+   ],
+   "covers": [
+    "k22.7"
+   ],
+   "closed_ok": "推理：題幹給了 cache 已過期、還要做幾十步；不壓也要重寫整段 cache 是第 3 章 cache miss 的常識"
   },
   {
    "id": "k23a",
@@ -9154,12 +9229,12 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     "k22"
    ],
    "after": "i4",
-   "q": "Compaction 會打斷 cache，可是要繼續的長任務又該「趁 cache 還熱時」做 compaction。這兩件事怎麼並存？如果等到 cache 已經過期才壓，帳差在哪一筆？",
+   "q": "Compaction 會打斷 cache，可是要繼續的長任務又該「趁 cache 還沒過期時」做 compaction。這兩件事怎麼並存？如果等到 cache 已經過期才壓，帳差在哪一筆？",
    "key": [
     "Compaction 改了 messages 中間的內容，那一點之後全部要重算，這一筆避不開",
     "但產生摘要的那一次 call，送的仍是原來那段 context，開頭沒變；cache 還沒過期時它是 cache hit，照 cache read 收（例子裡 200K × 0.1 = 20K）",
-    "Cache 過期才壓，摘要那次 call 要把整段 context 重算，例子裡這一筆從 20K 變成 200K，回本點從第 4 步延到第 15 步",
-    "所以能選的是時機：避不開的重算照付，可以避開的那一筆趁 cache 還熱時省下來"
+    "Cache 過期才壓，摘要那次 call 讀不到 cache，整段 context 要照 base input 的原價算，例子裡這一筆從 20K 變成 200K，同一次 compaction 多付 180K",
+    "所以能選的是時機：避不開的重算照付，可以避開的那一筆趁 cache 還沒過期時省下來"
    ]
   },
   {
@@ -9273,7 +9348,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
  "unit_kinds": [
   "choice"
  ]
-}</script>
+}
+</script>
 <script src="app.js?v=20261119a"></script>
 <script src="code.js"></script>
 <script src="calc.js"></script>
