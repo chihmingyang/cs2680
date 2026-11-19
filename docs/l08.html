@@ -1275,17 +1275,24 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
               <figcaption>Routing 什麼時候選 model？三種時機，風險不同：第一列 router 選錯 model，整個 turn 都用錯；第二列失敗那次的錢白付；第三列每換一次 model（深紅箭頭），cache 都帶不走。</figcaption>
             </figure>
 <p>三種時機都把一部分工作交給便宜的 model，所以都有同一個風險，一句話就是：<strong>便宜的 model 規劃錯一次，後面很多步都白走</strong>。<strong>所以規劃留給大 model，routing 只省執行的步驟</strong>。Uber 的做法指向同一邊：主 model 負責拆解與評估，subagent 預設用便宜的 model，<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">作者說</a>這個預設是他們影響最大的槓桿，但沒有單獨列出它省了多少（一家公司的經驗，不是對照實驗）。該不該換，用第 1 章的 c ÷ p 在自己的任務上算：換成便宜的 model，c 少了多少、p 掉了多少。</p>
-<p id="i6-2"><b>換 model 時機, 選在 context 還小的時候。</b>Cache 綁 model，每個 model 各有一份；換 model 時，整段 context 要照新 model 的 cache write 單價重算。換回原 model 時，原來那份 cache 若還沒過期（5 分鐘內），只要寫入換走之後新增的部分；若已過期，又要全部重算。下表代入 2026-11-03 的<a class="tm" href="#t2">單價</a>，context 200K：</p>
-<div class="table-wrap"><table>
-                <thead><tr><th>做法</th><th>這一步的 input 花費</th></tr></thead>
+<p id="i6-2"><b>換 model 時機, 選在 context 還小的時候。</b>Cache 綁 model，每個 model 各有一份；換 model 時，整段 context 要照新 model 的 cache write 單價重算。換回原 model 時，原來那份 cache 若還沒過期（5 分鐘內），只要寫入換走之後新增的部分；若已過期，又要全部重算。下表代入 2026-11-03 的<a class="tm" href="#t2">單價</a>。表裡的「全部重算」都照 cache write 收：Opus 5.5 是 $5 / M，Haiku 5.5 在 prompt 超過 100K 時是 $0.625 / M、不超過時是 $0.125 / M。</p>
+<p>表的情境如下：</p>
+<ul>
+  <li>對話已經累積到 200K，一直用 Opus 5.5，所以這 200K 都在 Opus 的 cache 裡。</li>
+  <li>每一列只算「下一步」這一次 request 的 input 花費。</li>
+  <li>第 3、4 列是先換到 Haiku 做幾步、再換回 Opus。在 Haiku 做的那幾步，你的問題和 Haiku 的回答也接在對話後面，假設共 5K，所以換回來時對話是 205K。那幾步本身已經照 Haiku 的單價付過，不算在表裡。</li>
+</ul>
+<div class="table-wrap"><table data-no-figure>
+                <thead><tr><th>做法</th><th>這一步誰讀</th><th>讀多少</th><th>其中 cache read</th><th>這一步的 input 花費</th></tr></thead>
                 <tbody>
-                  <tr><td>留在 Opus 5.5，讀 cache</td><td>200K × $0.20 / M = <b>$0.04</b></td></tr>
-                  <tr><td>同一段對話換到 Haiku 5.5（prompt 超過 100K）</td><td>200K × $0.625 / M = <b>$0.125</b></td></tr>
-                  <tr><td>在 Haiku 做超過 5 分鐘後換回 Opus 5.5（<strong>Opus 的 cache 已過期</strong>）</td><td>200K × $5 / M = <b>$1.00</b></td></tr>
-                  <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>20K × $0.125 / M = <b>$0.0025</b>，<strong>主對話的 cache 不動</strong></td></tr>
+                  <tr><td>留在 Opus 5.5</td><td>Opus</td><td>200K</td><td>200K</td><td>200K × $0.20 / M = <b>$0.04</b></td></tr>
+                  <tr><td>同一段對話換到 Haiku 5.5（prompt 超過 100K）</td><td>Haiku</td><td>200K</td><td>0：Haiku 沒有這段對話的 cache</td><td>200K × $0.625 / M = <b>$0.125</b></td></tr>
+                  <tr><td>在 Haiku 做了幾步，超過 5 分鐘才換回 Opus 5.5</td><td>Opus</td><td>205K</td><td>0：這段時間沒有 request 送給 Opus，它的 cache 已過期</td><td>205K × $5 / M = <b>$1.025</b></td></tr>
+                  <tr><td>在 Haiku 做了幾步，5 分鐘內就換回 Opus 5.5</td><td>Opus</td><td>205K</td><td>200K；在 Haiku 新增的 5K 要寫入</td><td>200K × $0.20 / M + 5K × $5 / M = <b>$0.065</b></td></tr>
+                  <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>Haiku（另開的一段新對話）</td><td>20K</td><td>0</td><td>20K × $0.125 / M = <b>$0.0025</b>；主對話留在 Opus，它的 cache 不受影響</td></tr>
                 </tbody>
               </table></div>
-<p>單價會變，算法不變：<strong>大 model 的 cache read 可能比小 model 的 cache write 還便宜</strong>，換走太久再換回來更貴。<strong>所以「每一步重選」要算得過才用</strong>，便宜的工作交給一個乾淨 context 的 subagent 最划算，這也解釋了 Uber 那個槓桿為什麼有效。Claude Code 的 <code>opusplan</code>（規劃用 Opus、執行用 Sonnet）每切一次也是一次 model switch，官方文件有寫。</p>
+<p>第 3、4 列都是讀 205K，差別只在 Opus 的 cache 還在不在，花費差了約 16 倍。單價會變，算法不變：<strong>大 model 的 cache read 可能比小 model 的 cache write 還便宜</strong>，換走太久再換回來更貴。<strong>所以「每一步重選」要算得過才用</strong>，便宜的工作交給一個乾淨 context 的 subagent 最划算，這也解釋了 Uber 那個槓桿為什麼有效。Claude Code 的 <code>opusplan</code>（規劃用 Opus、執行用 Sonnet）每切一次也是一次 model switch，官方文件有寫。</p>
 <p id="i6-3"><b>Effort：thinking 也算 output，分數的最後幾個百分點最貴。</b>做法是依這一步的性質調 <a class="tm" href="#n-effort">effort</a>：查找、整理格式用 low，規劃、除錯用 high。Anthropic 的<a href="https://claude.com/resources/articles/reducing-cost-and-improving-performance-with-claude-platform" target="_blank" rel="noopener">文章</a>給了兩組數字，本文用第 1 章的算法算一次（分數當成功率的近似，文章沒有明說）：</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>Benchmark</th><th>Effort</th><th>分數</th><th>每題花費</th><th>每個成功</th><th>多成功一次</th></tr></thead>
@@ -3891,7 +3898,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "t": "換走太久、原 model 的 cache 已經過期才換回來，整段 context 又要全部重算，比換走那一步還貴。",
      "at": [
       "#i6 ¶4",
-      "#i6 ¶5",
+      "#i6 ¶9",
       "#i6 表1 列3 ‹做法›",
       "#i6 表1 列3 ‹這一步的 input 花費›"
      ]
@@ -3901,7 +3908,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "misconception",
      "t": "以為把同一段對話換到便宜的小 model，這一步就會變便宜；其實大 model 的 cache read 可能比小 model 的 cache write 還便宜，留在大 model 讀 cache 反而省。",
      "at": [
-      "#i6 ¶5",
+      "#i6 ¶9",
       "#i6 表1 列1 ‹做法›",
       "#i6 表1 列1 ‹這一步的 input 花費›",
       "#i6 表1 列2 ‹做法›",
@@ -3911,14 +3918,16 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     {
      "id": "k33.6",
      "type": "evidence",
-     "t": "代入 2026-11-03 的單價、context 200K：留在 Opus 5.5 讀 cache 是 200K × $0.20 / M = $0.04；同一段對話換到 Haiku 5.5（prompt 超過 100K）是 200K × $0.625 / M = $0.125；在 Haiku 做超過 5 分鐘後換回 Opus 5.5 是 200K × $5 / M = $1.00；開一個 context 20K 的 Haiku 5.5 subagent 是 20K × $0.125 / M = $0.0025。單價會變，算法不變；這是本文的判斷。",
+     "t": "代入 2026-11-03 的單價、context 200K：留在 Opus 5.5 讀 cache 是 200K × $0.20 / M = $0.04；同一段對話換到 Haiku 5.5（prompt 超過 100K）是 200K × $0.625 / M = $0.125；在 Haiku 做了幾步、對話多了 5K，超過 5 分鐘才換回 Opus 5.5 是 205K × $5 / M = $1.025，5 分鐘內換回是 200K × $0.20 / M + 5K × $5 / M = $0.065；開一個 context 20K 的 Haiku 5.5 subagent 是 20K × $0.125 / M = $0.0025。單價會變，算法不變；這是本文的判斷。",
      "at": [
       "#i6 ¶4",
-      "#i6 ¶5",
+      "#i6 ¶9",
       "#i6 表1 列1 ‹這一步的 input 花費›",
       "#i6 表1 列2 ‹這一步的 input 花費›",
+      "#i6 ¶8",
       "#i6 表1 列3 ‹這一步的 input 花費›",
-      "#i6 表1 列4 ‹這一步的 input 花費›"
+      "#i6 表1 列4 ‹這一步的 input 花費›",
+      "#i6 表1 列5 ‹這一步的 input 花費›"
      ]
     },
     {
@@ -3926,9 +3935,9 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "便宜的工作交給一個乾淨 context 的 subagent 最划算：subagent 的 context 小，要寫的 cache 少，主對話的 cache 也不動。",
      "at": [
-      "#i6 ¶5",
-      "#i6 表1 列4 ‹做法›",
-      "#i6 表1 列4 ‹這一步的 input 花費›"
+      "#i6 ¶9",
+      "#i6 表1 列5 ‹做法›",
+      "#i6 表1 列5 ‹這一步的 input 花費›"
      ]
     },
     {
@@ -3936,7 +3945,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "Subagent 用便宜 model 的帳，解釋了 Uber「subagent 預設用便宜的 model」這個槓桿為什麼有效。",
      "at": [
-      "#i6 ¶5"
+      "#i6 ¶9"
      ]
     },
     {
@@ -3944,7 +3953,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "condition",
      "t": "「每一步重選」這種 routing 要算得過才用，因為每換一次都要付換 model 的 cache 重算。",
      "at": [
-      "#i6 ¶5"
+      "#i6 ¶9"
      ]
     },
     {
@@ -3952,7 +3961,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "Claude Code 的 opusplan（規劃用 Opus、執行用 Sonnet）每切一次也是一次 model switch，同樣要付這筆錢，官方文件有寫。",
      "at": [
-      "#i6 ¶5"
+      "#i6 ¶9"
      ]
     }
    ]
@@ -3968,7 +3977,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "Effort 依這一步的性質調：查找、整理格式用 low，規劃、除錯用 high。",
      "at": [
-      "#i6 ¶6"
+      "#i6 ¶10"
      ]
     },
     {
@@ -3976,7 +3985,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "Reasoning model 回答前先產生一段 thinking token，在裡面推理再寫答案；thinking token 以 output 的價格計費，所以想得越久越貴。",
      "at": [
-      "#i6 ¶6",
+      "#i6 ¶10",
       "#i6 註 n-effort 標題",
       "#i6 註 n-effort ¶1"
      ]
@@ -4002,8 +4011,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "分數的最後幾個百分點最貴：兩個 benchmark 平均看都是 low 划算，low 的每個成功成本比 max 低。",
      "at": [
-      "#i6 ¶6",
-      "#i6 ¶7",
+      "#i6 ¶10",
+      "#i6 ¶11",
       "#i6 表2 列1",
       "#i6 表2 列2",
       "#i6 表2 列3 ‹每個成功›",
@@ -4015,7 +4024,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "max 比 low 多解出來的那些題，每多成功一次要多花的錢遠高於平均，值不值得要看那一題值多少。",
      "at": [
-      "#i6 ¶7",
+      "#i6 ¶11",
       "#i6 表2 列2",
       "#i6 表2 列4 ‹多成功一次›"
      ]
@@ -4025,7 +4034,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "limit",
      "t": "最高一級 effort 多拿到的分數可能落在雜訊範圍內，卻要多花不少錢。",
      "at": [
-      "#i6 ¶7"
+      "#i6 ¶11"
      ]
     },
     {
@@ -4033,8 +4042,8 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "evidence",
      "t": "Anthropic 文章的數字、本文用第 1 章的算法算（分數當成功率的近似，文章沒有明說）：FrontierCode Diamond / Fable 5，low 分數 11.5%、每題 $5.35、每個成功 $46.5，max 分數 30.9%、每題 $19.00、每個成功 $61.5、多成功一次 $70；Humanity's Last Exam / Fable 5.1 無 tool，low 約 53%、約 $0.30、每個成功 $0.57，max 約 61%、約 $2.23、每個成功 $3.66、多成功一次 $24；Humanity's Last Exam 最後一級只多半分、多花 46%，落在雜訊範圍內。這些是廠商自己的數字，當方向看。",
      "at": [
-      "#i6 ¶6",
-      "#i6 ¶7",
+      "#i6 ¶10",
+      "#i6 ¶11",
       "#i6 表2 列1",
       "#i6 表2 列2",
       "#i6 表2 列3 ‹Benchmark›",
@@ -4054,7 +4063,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "實務上的折衷是把預設 effort 訂在 medium（Uber 的做法）：理由是 thinking 算在最貴的 output 裡，而 medium 對大多數任務的成本和品質已經平衡。",
      "at": [
-      "#i6 ¶7"
+      "#i6 ¶11"
      ]
     }
    ]
@@ -4070,7 +4079,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "misconception",
      "t": "以為 output 單價最高就該先從它省；其實 output 的量最少、只佔花費的一小部分，就算少一半，總花費也只少一點，所以不要從這裡開始。",
      "at": [
-      "#i6 ¶8"
+      "#i6 ¶12"
      ]
     },
     {
@@ -4078,7 +4087,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "evidence",
      "t": "第 2 章的帳：output 只佔花費的一成上下，就算少一半，總花費也只少 5% 左右。",
      "at": [
-      "#i6 ¶8"
+      "#i6 ¶12"
      ]
     },
     {
@@ -4086,7 +4095,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "claim",
      "t": "縮短 output 有四層手段：prompt、上限、schema、effort；前三層裡 schema 這一層對 agent 最有用。",
      "at": [
-      "#i6 ¶8",
+      "#i6 ¶12",
       "#i6 表3 列1 ‹層›",
       "#i6 表3 列2 ‹層›",
       "#i6 表3 列3 ‹層›",
@@ -4098,7 +4107,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "Schema 由 API 的 structured output 強制 model 照著輸出（只留需要的欄位、用 enum、不准多加欄位）；在 prompt 裡講清楚長度、格式、略過什麼只是請求，沒有保證。",
      "at": [
-      "#i6 ¶8",
+      "#i6 ¶12",
       "#i6 表3 列1 ‹手段›",
       "#i6 表3 列1 ‹省在哪裡›",
       "#i6 表3 列1 ‹陷阱›",
@@ -4110,7 +4119,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "Schema 省掉的是 tool call 周圍的散文，那是純成本：model 寫的「我接下來要搜尋……」沒有人讀，下一步還要重讀。",
      "at": [
-      "#i6 ¶8",
+      "#i6 ¶12",
       "#i6 表3 列3 ‹省在哪裡›"
      ]
     },
@@ -4147,7 +4156,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "mechanism",
      "t": "直接呼叫 API 時，回應裡的 stop_reason 說明 model 為什麼停下來：正常寫完是 end_turn，撞到上限是 max_tokens，表示回覆在中途斷掉了。",
      "at": [
-      "#i6 ¶9"
+      "#i6 ¶13"
      ]
     },
     {
@@ -4155,7 +4164,7 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
      "type": "condition",
      "t": "設了 output 上限，程式就要檢查 stop_reason，不能把半截的回覆當成答案。",
      "at": [
-      "#i6 ¶9"
+      "#i6 ¶13"
      ]
     }
    ]
@@ -7912,15 +7921,15 @@ tool_call: search(q)                          ← 主 model 真的發出時，�
     },
     {
      "t": "第一步高：小 model 那邊是第一次把整段 context 寫進自己的 cache",
-     "why": "兩步都要重算整段 context（大 model 的 cache 已經過期），但第二步照的是大 model 的 cache write 單價，比小 model 的貴。本文的例子：200K 換到 Haiku 是 $0.125，過期後換回 Opus 是 $1.00。"
+     "why": "兩步都要重算整段 context（大 model 的 cache 已經過期），但第二步照的是大 model 的 cache write 單價，比小 model 的貴。本文的例子：200K 換到 Haiku 是 $0.125，過期後換回 Opus（加上在 Haiku 新增的 5K，共 205K）是 $1.025。"
     },
     {
      "t": "兩步一樣：都是把同一段 context 重新寫一次 cache，單價相同",
-     "why": "寫的量差不多，單價不同：第二步照大 model 的 cache write 單價算。本文的例子：200K 換到 Haiku 是 $0.125，過期後換回 Opus 是 $1.00。"
+     "why": "寫的量差不多，單價不同：第二步照大 model 的 cache write 單價算。本文的例子：200K 換到 Haiku 是 $0.125，過期後換回 Opus（加上在 Haiku 新增的 5K，共 205K）是 $1.025。"
     }
    ],
    "key": [
-    "換走超過 5 分鐘，原 model 的 cache 已過期，換回來又要全部重算，而且照大 model 的 cache write 單價：本文的例子裡，200K 換到 Haiku 5.5 是 $0.125，過期後換回 Opus 5.5 是 $1.00。換走太久再換回來更貴。"
+    "換走超過 5 分鐘，原 model 的 cache 已過期，換回來又要全部重算，而且照大 model 的 cache write 單價：本文的例子裡，200K 換到 Haiku 5.5 是 $0.125，過期後換回 Opus 5.5（加上在 Haiku 新增的 5K，共 205K）是 $1.025。換走太久再換回來更貴。"
    ],
    "covers": [
     "k33.4"
