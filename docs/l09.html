@@ -74,13 +74,13 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">先看一個例子。公司買了 2 張 H200（NVIDIA 的 GPU），要在上面架 Llama 3 70B 給內部用；它是 Meta 的語言模型（下面叫 model）。Model 的本體是一大堆訓練出來的數字，叫參數；這個 model 有 700 億個，要整份放進 GPU 的記憶體才能跑。老闆問你三個問題：能同時給幾個人用？每個人的對話能多長？送出問題之後，第一個字要等多久？</p>
-    <p class="thesis">這三個問題不必實際架起來才知道，用 model 的幾個數字就算得出來。這堂回答的問題是：<strong>用哪幾個數字，算出一個 model 在你的 GPU 上撐得住多少</strong>。下面三條是這堂的判斷。</p>
+    <p class="thesis">這三個問題不必實際架起來才知道，<strong>用 model 的幾個數字就算得出來</strong>。這堂回答的問題是：<strong>用哪幾個數字，算出一個 model 在你的 GPU 上撐得住多少</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>一個請求分成兩段，各決定一種等待。</b>第一段叫 prefill：model 把你送進去的整段文字一次讀完，它決定第一個字要等多久。第二段叫 decode：model 一步只產生一個 token（它讀寫文字的單位，大約一個中文字），它決定之後每個字出來的速度（第 1 章）。</span></li>
-      <li><span><b>三個數字，各卡住一件事。</b>每個 token 要做多少運算，卡住 prefill，也就是老闆的第三個問題。參數總共佔多少記憶體，卡住 decode 每一步的速度。第三個數字是每個 token 的 KV cache 有多大：model 讀過的每個 token，都會留一份中間結果在 GPU 記憶體裡，叫 KV cache，對話還在就不能丟。它卡住同時的人數和每人的對話長度，也就是老闆的前兩個問題。GPU 的記憶體先放參數，剩下的才放 KV cache；例子裡剩下的空間<strong>只放得下約 43 萬個 token 的 KV cache</strong>，由所有同時在跑的對話一起分（第 4 章）。</span></li>
-      <li><span><b>老闆的前兩個問題是同一個。</b>人數和對話長度分的是同一塊記憶體：43 萬個 token，可以是很多人各聊一小段，也可以是少數人各聊很長，<strong>要多一邊，就得少另一邊</strong>。長對話還有一個特性：前面讀過的部分留著 KV cache，下一輪不用重算，所以省得下運算，省不下記憶體（第 3、4 章）。</span></li>
+      <li><span><b>三個數字，各卡住一件事。</b><strong>每個 token 要做多少運算，卡住 prefill</strong>，也就是老闆的第三個問題。<strong>參數總共佔多少記憶體，卡住 decode 每一步的速度</strong>。第三個數字是每個 token 的 KV cache 有多大：model 讀過的每個 token，都會留一份中間結果在 GPU 記憶體裡，叫 KV cache，對話還在就不能丟。它卡住同時的人數和每人的對話長度，也就是老闆的前兩個問題。GPU 的記憶體先放參數，剩下的才放 KV cache；例子裡剩下的空間<strong>只放得下約 43 萬個 token 的 KV cache</strong>，由所有同時在跑的對話一起分（第 4 章）。</span></li>
+      <li><span><b>老闆的前兩個問題是同一個。</b>人數和對話長度分的是同一塊記憶體：43 萬個 token，可以是很多人各聊一小段，也可以是少數人各聊很長，<strong>要多一邊，就得少另一邊</strong>。長對話還有一個特性：前面讀過的部分留著 KV cache，下一輪不用重算，所以<strong>省得下運算，省不下記憶體</strong>（第 3、4 章）。</span></li>
     </ul>
-    <p class="readhow">選 model 時要看它每個 token 的 KV cache 多大，不同的 model 之間最多差到 13 倍（第 6、7 章）。估 token 數時，繁體中文一個字約 0.7 到 0.9 個 token（第 8 章）。</p>
+    <p class="readhow">選 model 時要看它每個 token 的 KV cache 多大，<strong>不同的 model 之間最多差到 13 倍</strong>（第 6、7 章）。估 token 數時，<strong>繁體中文一個字約 0.7 到 0.9 個 token</strong>（第 8 章）。</p>
   </section>
 
   <div class="layout">
@@ -527,7 +527,7 @@
 
     <p>RMSNorm 把 vector 除以它的均方根（root mean square），再乘上每一維一個學到的係數，讓數值的大小維持穩定。</p>
     <p>Pre-norm 是先 normalize 再進子層，這讓很深的 stack 訓練得穩。Residual 讓每個子層只學一筆修正，加回原本的 vector。</p>
-    <p>這三樣對 serving 的帳幾乎沒有影響：norm 每層只有 2 × 8,192 個參數，80 層合計不到總數的萬分之一。</p>
+    <p>這三樣<strong>對 serving 的帳幾乎沒有影響</strong>：norm 每層只有 2 × 8,192 個參數，80 層合計不到總數的萬分之一。</p>
   </div>
 </details>
               <p id="i2-4"><b>參數放在哪裡。</b>把每個矩陣的形狀乘起來，就是參數的數量。下表的數字用 python 驗算過；norm 的參數太少，表上略去。公式裡的 d、dff、V 上面都出現過；H = 64、Hkv = 8、dk = 128 是 attention 的 head 數、KV head 數和每個 head 的寬度，head 是什麼見下一章。全部符號的定義見〈查閱〉：</p>
@@ -535,10 +535,10 @@
                 <thead><tr><th>零件</th><th>公式</th><th>參數</th></tr></thead>
                 <tbody>
                   <tr><td>Attention，每層</td><td>2·d·H·dk + 2·d·Hkv·dk</td><td>151M</td></tr>
-                  <tr><td>FFN，每層</td><td>3·d·dff</td><td>705M</td></tr>
+                  <tr><td>FFN，每層</td><td>3·d·dff</td><td><strong>705M</strong></td></tr>
                   <tr><td>80 層合計</td><td>80 × 856M</td><td>68.5B</td></tr>
                   <tr><td>Embedding + LM head</td><td>2·V·d</td><td>2.1B</td></tr>
-                  <tr><td><b>總數</b></td><td></td><td><b>70.6B</b></td></tr>
+                  <tr><td><b>總數</b></td><td></td><td><strong>70.6B</strong></td></tr>
                 </tbody>
               </table></div>
               <figure class="diagram">
@@ -677,7 +677,7 @@
 
     <p>q 和 k 的內積是 128 個乘積的和，維度越大，數值通常越大。</p>
     <p>太大的分數進 softmax，權重會幾乎全部集中在一個 token，訓練時的梯度變得很小。</p>
-    <p>除以 √dk（√128 ≈ 11.3）把分數拉回穩定的範圍。這是 2017 年 Attention Is All You Need 的設計，見<a href="#wrap">原文出處</a>。</p>
+    <p>除以 √dk（√128 ≈ 11.3）<strong>把分數拉回穩定的範圍</strong>。這是 2017 年 Attention Is All You Need 的設計，見<a href="#wrap">原文出處</a>。</p>
   </div>
 </details>
               <p id="i3-3"><b>成本：n 個 token，n² 個分數。</b>每一層、每個 head 都要替每一對 token 算一個分數，n 個 token 就是 n × n 個，所以 <strong>context 加倍，分數變 4 倍</strong>。每一層約 4n²d 次運算，QKᵀ 和 AV 各佔一半：一個 head 的一個分數是 128 個乘積的和，約 2 × 128 次運算，64 個 head 合起來是 2 × 8,192 = 2d，n² 對 token 就是 2n²d；AV 依權重加總 v，也是 2n²d。Causal mask 讓實際要算的約少一半。如果把 S 整個存下來，n = 8,192 時是 8,192² × 64 個 head × 80 層 × 2 byte，約 690 GB，比 model 本身還大。所以實作上用 FlashAttention 一塊一塊算 softmax，<strong>從不存下完整的 S</strong>；它怎麼做到，見 L10〈<a href="l10.html#i7-3">FlashAttention</a>〉。</p>
@@ -884,7 +884,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
 
     <p>算力是每秒做幾次浮點運算。2 張 H200 合計 1,978 TFLOP/s（BF16），也就是每秒 1.978 × 10¹⁵ 次。</p>
     <p>頻寬是每秒能從 GPU 記憶體（HBM）讀幾 byte，合計 9.6 TB/s。容量是 GPU 記憶體多大，合計 282 GB。</p>
-    <p>三個規格各對應一種除法：運算次數除以算力、要讀的 byte 除以頻寬、要放的 byte 和容量比大小。規格出自 NVIDIA H200 datasheet；GPU 本身怎麼運作，見 L10〈<a href="l10.html#i2-2">三個規格</a>〉。</p>
+    <p><strong>三個規格各對應一種除法</strong>：運算次數除以算力、要讀的 byte 除以頻寬、要放的 byte 和容量比大小。規格出自 NVIDIA H200 datasheet；GPU 本身怎麼運作，見 L10〈<a href="l10.html#i2-2">三個規格</a>〉。</p>
   </div>
 </details>
               <p id="i4-1"><b>FLOPs → prefill 要多久。</b>Prefill 要替 prompt 的每個 token 做一次完整的運算，再加上 attention 的分數。前一項是每個 token 約 2N 次運算乘上 n 個 token；後一項是第 3 章的 4n²d，causal mask 去掉一半，再乘上 80 層；兩項加起來除以算力：</p>
@@ -898,8 +898,8 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                   <tr><td>1K</td><td>0.14 PFLOP</td><td>0.001</td><td>0.14</td><td>0.07 秒</td><td>1%</td></tr>
                   <tr><td>8K</td><td>1.16</td><td>0.09</td><td>1.24</td><td>0.63 秒</td><td>7%</td></tr>
                   <tr><td>32K</td><td>4.62</td><td>1.41</td><td>6.03</td><td>3.05 秒</td><td>23%</td></tr>
-                  <tr><td><b>80K</b></td><td>11.29</td><td>8.39</td><td>19.68</td><td><b>9.95 秒</b></td><td>43%</td></tr>
-                  <tr><td>128K</td><td>18.50</td><td>22.52</td><td>41.01</td><td>20.7 秒</td><td>55%</td></tr>
+                  <tr><td><b>80K</b></td><td>11.29</td><td>8.39</td><td>19.68</td><td><strong>9.95 秒</strong></td><td>43%</td></tr>
+                  <tr><td>128K</td><td>18.50</td><td>22.52</td><td>41.01</td><td>20.7 秒</td><td><strong>55%</strong></td></tr>
                 </tbody>
               </table></div>
               <p>80K token 的 prompt 至少要 <strong>9.95 秒</strong>才看得到第一個字；64 個這樣的 request 排在一起是 637 秒。這是算力用到 100% 的下限，實際會更慢。表也顯示 attention 的份量：prompt 短時可以忽略，128K 時超過一半，因為它隨 n² 成長。</p>
@@ -914,8 +914,8 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <thead><tr><th>情境</th><th>KV cache</th><th>合計</th><th>2 張 H200（282 GB）</th></tr></thead>
                 <tbody>
                   <tr><td>1 個 request，80K</td><td>26.2 GB</td><td>167 GB</td><td>放得下</td></tr>
-                  <tr><td>5 個 request，80K</td><td>131 GB</td><td>272 GB</td><td>剛好放得下</td></tr>
-                  <tr><td>64 個 request，80K</td><td>1,678 GB</td><td>1,819 GB</td><td>差 6 倍</td></tr>
+                  <tr><td>5 個 request，80K</td><td>131 GB</td><td>272 GB</td><td><strong>剛好放得下</strong></td></tr>
+                  <tr><td>64 個 request，80K</td><td>1,678 GB</td><td>1,819 GB</td><td><strong>差 6 倍</strong></td></tr>
                 </tbody>
               </table></div>
               <p>把每個 token 算成 320,000 byte 的話是 1,779 GB；差 2%，結論一樣。</p>
@@ -1055,9 +1055,9 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <thead><tr><th>Model</th><th>Expert</th><th>Total</th><th>Active／token</th><th>權重（BF16）</th><th>GFLOP／token</th></tr></thead>
                 <tbody>
                   <tr><td>Llama 2 70B</td><td>dense</td><td>69B</td><td>69B</td><td>138 GB</td><td>138</td></tr>
-                  <tr><td>Mixtral 8x7B</td><td>2 of 8</td><td>46.7B</td><td>12.9B</td><td>93 GB</td><td>26</td></tr>
+                  <tr><td>Mixtral 8x7B</td><td>2 of 8</td><td>46.7B</td><td><strong>12.9B</strong></td><td>93 GB</td><td>26</td></tr>
                   <tr><td>Llama 3.1 405B</td><td>dense</td><td>405B</td><td>405B</td><td>810 GB</td><td>810</td></tr>
-                  <tr><td>DeepSeek-V3</td><td>9 of 257</td><td>671B</td><td>37B</td><td>1,342 GB</td><td>74</td></tr>
+                  <tr><td>DeepSeek-V3</td><td>9 of 257</td><td>671B</td><td><strong>37B</strong></td><td>1,342 GB</td><td>74</td></tr>
                 </tbody>
               </table></div>
               <figure class="diagram">
@@ -1100,9 +1100,9 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <thead><tr><th>batch 裡的 token 數</th><th>Mixtral（8 選 2）</th><th>DeepSeek-V3（256 選 8）</th></tr></thead>
                 <tbody>
                   <tr><td>1</td><td>25%</td><td>3%</td></tr>
-                  <tr><td>8</td><td>90%</td><td>22%</td></tr>
+                  <tr><td>8</td><td><strong>90%</strong></td><td>22%</td></tr>
                   <tr><td>32</td><td>100%</td><td>64%</td></tr>
-                  <tr><td>128</td><td>100%</td><td>98%</td></tr>
+                  <tr><td>128</td><td>100%</td><td><strong>98%</strong></td></tr>
                 </tbody>
               </table></div>
               <p><strong>所以 MoE 在 decode 省下的讀取量，batch 一大就縮小</strong>，最後和 dense model 一樣要讀全部權重；運算的節省不受影響，因為每個 token 還是只算 2 個 expert。實際的 router 不會完全平均，Mixtral 的論文就發現連續的 token 常挑到同一組 expert，這張表只看量級。<strong>MoE 的好處要看你的 batch 多大</strong>，自架、同時只有幾個人用時，它在 decode 也快。另一面在 L10〈<a href="l10.html#i3-5">MoE 會把 batch 分給各個 expert</a>〉：batch 再大，每個 expert 也只分到其中一小部分的 token，<strong>要很大的總 batch 才用得滿 GPU</strong>。</p>
@@ -1387,11 +1387,11 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               <div class="table-wrap"><table>
                 <thead><tr><th>做法</th><th>每個 request 存什麼</th><th>存的量隨長度</th><th>放棄什麼</th><th>例子</th></tr></thead>
                 <tbody>
-                  <tr><td>Full（GQA）</td><td>每層每 token 的 K、V</td><td>線性成長</td><td>什麼都不放棄，但 KV cache 最大</td><td>Llama 3、Qwen3</td></tr>
-                  <tr><td>Sliding window</td><td>local 層只存最近 w 個</td><td>local 層封頂</td><td>local 層讀不到最近 w 個以外的 token，遠處只靠少數 global 層</td><td>Gemma 3、gpt-oss</td></tr>
-                  <tr><td>MLA</td><td>每層每 token 一個 latent</td><td>線性，斜率小</td><td>每一步 decode 都多算一些：分數要從壓縮過的 latent 算出來</td><td>DeepSeek-V3</td></tr>
-                  <tr><td>Linear、SSM</td><td>每層一個固定的 state</td><td>不變</td><td>記不住全部細節：舊的內容會淡掉，新的寫入也會蓋過舊的</td><td>Qwen3-Next、Mamba</td></tr>
-                  <tr><td>Sparse</td><td>全部的 K、V，加 indexer key</td><td>線性</td><td>每一步只讀 indexer 挑中的 2,048 個 token，挑漏的這一步讀不到；另外多一個 indexer 要算</td><td>DeepSeek-V3.2</td></tr>
+                  <tr><td>Full（GQA）</td><td>每層每 token 的 K、V</td><td>線性成長</td><td>什麼都不放棄，但 <strong>KV cache 最大</strong></td><td>Llama 3、Qwen3</td></tr>
+                  <tr><td>Sliding window</td><td>local 層只存最近 w 個</td><td>local 層封頂</td><td><strong>local 層讀不到最近 w 個以外的 token</strong>，遠處只靠少數 global 層</td><td>Gemma 3、gpt-oss</td></tr>
+                  <tr><td>MLA</td><td>每層每 token 一個 latent</td><td>線性，斜率小</td><td><strong>每一步 decode 都多算一些</strong>：分數要從壓縮過的 latent 算出來</td><td>DeepSeek-V3</td></tr>
+                  <tr><td>Linear、SSM</td><td>每層一個固定的 state</td><td>不變</td><td><strong>記不住全部細節</strong>：舊的內容會淡掉，新的寫入也會蓋過舊的</td><td>Qwen3-Next、Mamba</td></tr>
+                  <tr><td>Sparse</td><td>全部的 K、V，加 indexer key</td><td>線性</td><td>每一步只讀 indexer 挑中的 2,048 個 token，<strong>挑漏的這一步讀不到</strong>；另外多一個 indexer 要算</td><td>DeepSeek-V3.2</td></tr>
                 </tbody>
               </table></div>
               <p id="i6-6"><b>本文的判斷：方向是混合，不是二選一。</b>表上的取捨分兩種。Sliding window、linear 與 SSM、sparse attention 放棄的是「每一步都完整讀到前面每一個 token」：local 層讀不到遠處，固定的 state 只留壓縮過的摘要，sparse 每一步只讀挑中的。MLA 每一步仍讀全部，付的是多一點運算。<strong>只有完整的 attention 什麼都不放棄，但 KV cache 最大</strong>。所以走第一種的 model，幾乎都留一部分完整 attention 的層負責遠處，其餘的層換成便宜的做法，如下圖；MLA 走的是第二種，每一層都還讀得到全部，不需要這樣混合，DeepSeek-V3 每一層都用 MLA。</p>
@@ -1530,12 +1530,12 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <thead><tr><th>Model<br><small>架構</small></th><th>代入公式</th><th>每個 token</th><th>一個 128K<br>的 request</th></tr></thead>
                 <tbody>
                   <tr><td>Llama 3.1 8B<br><small>GQA</small></td><td>2 × 32 × 8 × 128 × 2</td><td>128 KiB</td><td>17.2 GB</td></tr>
-                  <tr><td>Llama 3 70B<br><small>GQA</small></td><td>2 × 80 × 8 × 128 × 2</td><td>320 KiB</td><td>42.9 GB</td></tr>
+                  <tr><td>Llama 3 70B<br><small>GQA</small></td><td>2 × 80 × 8 × 128 × 2</td><td><strong>320 KiB</strong></td><td>42.9 GB</td></tr>
                   <tr><td>Qwen3-32B<br><small>GQA</small></td><td>2 × 64 × 8 × 128 × 2</td><td>256 KiB</td><td>34.4 GB</td></tr>
                   <tr><td>DeepSeek-V3.2<br><small>MLA ＋ sparse</small></td><td>(512 + 64) × 61 × 2</td><td>68.6 KiB</td><td>9.2 GB</td></tr>
                   <tr><td>gpt-oss-120b<br><small>一半 sliding（w = 128）</small></td><td>2 × 18 × 8 × 64 × 2</td><td>36 KiB</td><td>4.8 GB</td></tr>
-                  <tr><td>Qwen3-Next-80B-A3B<br><small>3:1 linear</small></td><td>2 × 12 × 2 × 256 × 2</td><td>24 KiB</td><td>3.2 GB</td></tr>
-                  <tr><td>（對照）Llama 3 70B<br><small>假設用 MHA</small></td><td>2 × 80 × 64 × 128 × 2</td><td>2.5 MiB</td><td>344 GB</td></tr>
+                  <tr><td>Qwen3-Next-80B-A3B<br><small>3:1 linear</small></td><td>2 × 12 × 2 × 256 × 2</td><td><strong>24 KiB</strong></td><td>3.2 GB</td></tr>
+                  <tr><td>（對照）Llama 3 70B<br><small>假設用 MHA</small></td><td>2 × 80 × 64 × 128 × 2</td><td><strong>2.5 MiB</strong></td><td>344 GB</td></tr>
                 </tbody>
               </table></div>
               <figure class="diagram">
@@ -1768,10 +1768,10 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <tbody>
                   <tr><td>cl100k_base<br><small>GPT-4（2023）</small></td><td>1.36</td><td>1.10</td><td>23%</td></tr>
                   <tr><td>o200k_base<br><small>GPT-4o（2024）</small></td><td>0.91</td><td>0.79</td><td>16%</td></tr>
-                  <tr><td>Llama 3<br><small>Llama 3 系列</small></td><td>0.89</td><td>0.81</td><td>9%</td></tr>
+                  <tr><td>Llama 3<br><small>Llama 3 系列</small></td><td><strong>0.89</strong></td><td>0.81</td><td>9%</td></tr>
                   <tr><td>Qwen3<br><small>Qwen3 系列</small></td><td>0.77</td><td>0.69</td><td>12%</td></tr>
                   <tr><td>Gemma 3<br><small>Gemma 3 系列</small></td><td>0.76</td><td>0.72</td><td>6%</td></tr>
-                  <tr><td>DeepSeek-V3<br><small>DeepSeek-V3 系列</small></td><td>0.71</td><td>0.64</td><td>11%</td></tr>
+                  <tr><td>DeepSeek-V3<br><small>DeepSeek-V3 系列</small></td><td><strong>0.71</strong></td><td>0.64</td><td>11%</td></tr>
                 </tbody>
               </table></div>
               <p>這和查得到的經驗值一致。<a href="https://api-docs.deepseek.com/quick_start/token_usage" target="_blank" rel="noopener">DeepSeek 的文件</a>說 1 個中文字約 0.6 個 token，本文的簡體是 0.64；<a href="https://docs.platform.qianwenai.com/developer-guides/run-and-scale/token-counting" target="_blank" rel="noopener">Qwen 的文件</a>說 1 個 token 約 1.5 個中文字，也就是 0.67 個 token／字，本文是 0.69。2024 年的 <a href="https://arxiv.org/abs/2404.00862" target="_blank" rel="noopener">Bailong 論文</a>用另一份繁體語料量 GPT-4 的 tokenizer，依它的表換算約 1.43，本文是 1.36。本文的語料是技術文章，拿掉英文術語後句子不完整，數字當量級看。</p>
@@ -1996,9 +1996,9 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
               </div>
               <figcaption>Looped transformer 把什麼重複？中間的 block R（深紅）重複 K 次，所以 model 實際跑幾層，變成推論時才決定的一個設定。</figcaption>
             </figure>
-    <p>結構是 prelude P、block R 重複 K 次、coda C。多跑幾圈不增加參數，K 圈的運算是 R 的 K 倍。</p>
-    <p>Geiping 等人（2025）訓練了 3.5B 參數、800B token 的 recurrent-depth model。他們把 K 一路加大，直到每個 token 的運算量和一個 50B 參數的 model 一樣多；在這段範圍裡，推理題的表現隨 K 變大而提升，有時提升很多（摘要比的是運算量，沒有說表現追上 50B 的 model）。</p>
-    <p>用三個數字看：weights 不變；每個 token 的 FLOPs 乘上 K；KV cache 看實作，每一圈的 attention 如果各存一份，也跟著乘上 K。每一圈要等上一圈算完，所以延遲也跟著 K 增加。</p>
+    <p>結構是 prelude P、block R 重複 K 次、coda C。<strong>多跑幾圈不增加參數，K 圈的運算是 R 的 K 倍</strong>。</p>
+    <p>Geiping 等人（2025）訓練了 3.5B 參數、800B token 的 recurrent-depth model。他們把 K 一路加大，直到每個 token 的運算量和一個 50B 參數的 model 一樣多；在這段範圍裡，<strong>推理題的表現隨 K 變大而提升</strong>，有時提升很多（摘要比的是運算量，沒有說表現追上 50B 的 model）。</p>
+    <p>用三個數字看：weights 不變；每個 token 的 FLOPs 乘上 K；KV cache 看實作，每一圈的 attention 如果各存一份，也跟著乘上 K。每一圈要等上一圈算完，所以<strong>延遲也跟著 K 增加</strong>。</p>
   </div>
 </details>
               <details class="gloss" id="n-diffusion">
@@ -2072,7 +2072,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
             </figure>
     <p>LLaDA（2025）是從頭訓練的 8B masked diffusion model，用了 2.3T token，表現和 Llama 3 8B 接近。</p>
     <p>Dream 7B（2025）從 Qwen2.5 7B 的權重開始，網路本身還是 Transformer。</p>
-    <p>依課程網站 readings 頁的說明，LLaDA 和 KV caching 不相容。生成 n 個 token 不再需要 n 步，步數變成延遲與品質的取捨。</p>
+    <p>依課程網站 readings 頁的說明，<strong>LLaDA 和 KV caching 不相容</strong>。生成 n 個 token 不再需要 n 步，<strong>步數變成延遲與品質的取捨</strong>。</p>
   </div>
 </details>
               <details class="gloss" id="n-mtp">
@@ -2080,7 +2080,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
   <div class="gloss-body prose">
 
     <p>另一個方向是 multi-token prediction：訓練時讓 model 除了下一個 token，也預測再後面的 token。</p>
-    <p>DeepSeek-V3 用它當訓練目標：在主 model 後面多接預測用的小模組，每個模組多預測後面一個 token。技術報告說，推論時可以直接丟掉這些模組，也可以拿它們來做 speculative decoding（先猜幾個 token，再讓 model 一次驗證），加速生成；speculative decoding 是後面講次的主題。</p>
+    <p>DeepSeek-V3 用它當訓練目標：在主 model 後面多接預測用的小模組，每個模組多預測後面一個 token。技術報告說，<strong>推論時可以直接丟掉這些模組</strong>，也可以拿它們來做 speculative decoding（先猜幾個 token，再讓 model 一次驗證），加速生成；speculative decoding 是後面講次的主題。</p>
   </div>
 </details>
             </div>

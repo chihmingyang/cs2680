@@ -72,12 +72,12 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你請 Claude Code 把一份作業通過的題數拉高；它是會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。它改完回報「好了，都通過了」，你就交了。事後才發現，它看的測試輸出只有最後幾行，前面的錯誤沒有人看到。</p>
-    <p class="thesis">這門課收了 58 位學生三份作業的 Claude Code 紀錄。從第一份到第三份作業，學生打的 prompt 數、agent 動手的次數這幾項用量漲了 4.5 到 7.2 倍，學生自己抓到的 agent 錯誤卻從六成掉到三成（第 1 章）。這堂回答的問題是：<strong>agent 做得越多，人要守住哪幾件事</strong>。下面三條是這堂的判斷。</p>
+    <p class="thesis">先看一個例子。你請 Claude Code 把一份作業通過的題數拉高；它是會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。它改完回報「好了，都通過了」，你就交了。事後才發現，它看的<strong>測試輸出只有最後幾行，前面的錯誤沒有人看到</strong>。</p>
+    <p class="thesis">這門課收了 58 位學生三份作業的 Claude Code 紀錄。從第一份到第三份作業，學生打的 prompt 數、agent 動手的次數這幾項用量漲了 4.5 到 7.2 倍，<strong>學生自己抓到的 agent 錯誤卻從六成掉到三成</strong>（第 1 章）。這堂回答的問題是：<strong>agent 做得越多，人要守住哪幾件事</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>開工前先寫清楚「什麼叫做完」，收工時自己看證據。</b>開工時把三樣東西寫進給 agent 的要求：做到什麼算完成、哪些東西不准改（例如測試檔本身）、完成時要拿出什麼證據。Agent 說「好了」只是它的說法；例子裡該看的是<strong>完整的測試輸出、指令的結束代碼（exit code）和它實際改了哪些地方（diff）</strong>（第 2、3 章）。</span></li>
-      <li><span><b>比較兩個版本時，一次只改一件事，每一版跑不只一次。</b>例如作業是寫一支會呼叫 model（語言模型）的程式去解一組題目，分數是解出的題數。你改了程式的一個地方，想知道有沒有變好。同一版程式重跑一次，解出的題數就會在 16 到 18 題之間跳，所以只跑一次看到「多了一題」，不代表變好。隔幾天再跑也可能不同：你的程式呼叫的 model、你用的 Claude Code，都可能在你不知道的時候改變行為。所以舊版和新版要在同一段時間交錯著跑，不要今天跑舊的、明天跑新的（第 4、5 章）。</span></li>
-      <li><span><b>拿不回來的事，事先擋。</b>有兩種：被刪掉或蓋掉的檔案，和外流的密碼、金鑰。第一種：危險的一步之前先 commit，再用 Claude Code 的權限規則擋住常見的破壞性指令。第二種：金鑰不貼進對話，也不放在 agent 讀得到的地方，因為<strong>agent 讀到的東西都會寫進對話的紀錄檔</strong>，紀錄檔一直留在硬碟上，之後可能跟著備份或分享出去（第 6、7 章）。</span></li>
+      <li><span><b>比較兩個版本時，一次只改一件事，每一版跑不只一次。</b>例如作業是寫一支會呼叫 model（語言模型）的程式去解一組題目，分數是解出的題數。你改了程式的一個地方，想知道有沒有變好。同一版程式重跑一次，解出的題數就會在 16 到 18 題之間跳，所以<strong>只跑一次看到「多了一題」，不代表變好</strong>。隔幾天再跑也可能不同：你的程式呼叫的 model、你用的 Claude Code，都可能在你不知道的時候改變行為。所以<strong>舊版和新版要在同一段時間交錯著跑</strong>，不要今天跑舊的、明天跑新的（第 4、5 章）。</span></li>
+      <li><span><b>拿不回來的事，事先擋。</b>有兩種：被刪掉或蓋掉的檔案，和外流的密碼、金鑰。第一種：<strong>危險的一步之前先 commit，再用 Claude Code 的權限規則擋住常見的破壞性指令</strong>。第二種：金鑰不貼進對話，也不放在 agent 讀得到的地方，因為<strong>agent 讀到的東西都會寫進對話的紀錄檔</strong>，紀錄檔一直留在硬碟上，之後可能跟著備份或分享出去（第 6、7 章）。</span></li>
     </ul>
     <p class="readhow">第 8、9 章是每天使用的習慣（一次對話只做一件事、同時跑幾個 agent 要互相隔離）。課程整理的十個陷阱，完整清單在〈查閱〉。</p>
   </section>
@@ -332,8 +332,8 @@ await expect(page.locator('#col-panel')).toBeHidden();</code></pre></figure>
               <div class="table-wrap"><table>
                 <thead><tr><th>問題</th><th>結果</th></tr></thead>
                 <tbody>
-                  <tr><td>不完全相信 AI 產生的程式功能正確</td><td><b>96%</b></td></tr>
-                  <tr><td>每次 commit 前都會檢查 AI 協助寫的程式</td><td><b>48%</b></td></tr>
+                  <tr><td>不完全相信 AI 產生的程式功能正確</td><td><strong>96%</strong></td></tr>
+                  <tr><td>每次 commit 前都會檢查 AI 協助寫的程式</td><td><strong>48%</strong></td></tr>
                   <tr><td>已經 commit 的程式裡，AI 寫的比例</td><td>42%，預期 2027 年到 65%</td></tr>
                   <tr><td>覺得 review AI 的程式比 review 同事的更費力</td><td>38%</td></tr>
                 </tbody>
@@ -468,10 +468,10 @@ $ git tag submit-a3 v8                            # 看不出差別：交出去�
                   <p>這是課程 slides 對作業期間（2026 年 9 月）Claude Code 的分析，之後可能已經改了。Claude Code 依序做三個判斷：</p>
                   <ol>
                     <li><b>這個 session 在不在 Bash 優先的組。</b>每個 session 判斷一次，subagent 跟著主 session。Opus 5.5 和 Fable 5.1 一律在組內；Opus 5 要看 flag；Sonnet 5 和 Haiku 不在。</li>
-                    <li><b>這次 request 要不要加提醒。</b>每次 request 前判斷，四個條件都成立才加：auto 或 bypass 模式、有 Bash 也有 Edit 或 Write、在組內、還沒加過。</li>
+                    <li><b>這次 request 要不要加提醒。</b>每次 request 前判斷，<strong>四個條件都成立才加</strong>：auto 或 bypass 模式、有 Bash 也有 Edit 或 Write、在組內、還沒加過。</li>
                     <li><b>用哪一段文字。</b>第一個符合的勝出：帳號層級的設定；Opus 5.5 用放寬的版本；另一個 flag 用嚴格的版本。</li>
                   </ol>
-                  <p>Flag 的名字是 tengu_thrifty_sonic 與 cozy_teapot，快取在 ~/.claude.json。放寬的版本說：Bash 比較簡單時可以用；shell 的改法容易壞時，例如精確或多行的取代、GNU 和 BSD／macOS 參數不同的 sed、awk，用 Edit 或 Write。課程的圖也顯示，提醒在 session 中途才加入一樣有效果；兩張圖都沒有標數字。</p>
+                  <p>Flag 的名字是 tengu_thrifty_sonic 與 cozy_teapot，快取在 ~/.claude.json。放寬的版本說：Bash 比較簡單時可以用；shell 的改法容易壞時，例如精確或多行的取代、GNU 和 BSD／macOS 參數不同的 sed、awk，用 Edit 或 Write。課程的圖也顯示，<strong>提醒在 session 中途才加入一樣有效果</strong>；兩張圖都沒有標數字。</p>
                 </div>
               </details>
               <p id="i5-1"><b>公開的紀錄。</b>上面是課程的分析。公開的資料裡，Claude Code 的 GitHub issue <a href="https://github.com/anthropics/claude-code/issues/87575" target="_blank" rel="noopener">#87575</a> 和 <a href="https://github.com/anthropics/claude-code/issues/87971" target="_blank" rel="noopener">#87971</a> 有使用者貼出同一段提醒的原文，也提到同一個 flag 名稱；到 2026-11-06 為止，兩串都沒有 Anthropic 的回覆，官方的 permission modes 文件也沒有提到 auto mode 會改變用哪個 tool。本文不推測原因，只看它對使用者的兩個後果。</p>
@@ -581,10 +581,10 @@ $ for i in 1 2 3 4 5; do                 # 兩版交錯跑：同一段時間、�
               <div class="table-wrap"><table>
                 <thead><tr><th>修法</th><th>擋得住</th><th>擋不住</th></tr></thead>
                 <tbody>
-                  <tr><td><b>危險的一步之前先 commit</b></td><td>repo 裡的檔案，git 退得回來</td><td>資料庫、遠端、已經送出去的東西</td></tr>
-                  <tr><td><b>deny 規則</b><br><small>rm -rf、git reset --hard、force push</small></td><td>agent 平常的那種寫法</td><td>換個寫法：<code>/bin/rm</code>、<code>bash -c</code>、<code>git -C . push</code></td></tr>
-                  <tr><td><b>ask 規則</b><br><small>刪除、reset、kill 不是 agent 建的東西</small></td><td>動手前停下來問你</td><td>你習慣性地按同意</td></tr>
-                  <tr><td><b>bypass 只在隔離的環境</b><br><small>container 或 VM</small></td><td>出事時整台丟掉</td><td>你掛進去的 credential 和網路</td></tr>
+                  <tr><td><b>危險的一步之前先 commit</b></td><td>repo 裡的檔案，git 退得回來</td><td><strong>資料庫、遠端、已經送出去的東西</strong></td></tr>
+                  <tr><td><b>deny 規則</b><br><small>rm -rf、git reset --hard、force push</small></td><td>agent 平常的那種寫法</td><td><strong>換個寫法</strong>：<code>/bin/rm</code>、<code>bash -c</code>、<code>git -C . push</code></td></tr>
+                  <tr><td><b>ask 規則</b><br><small>刪除、reset、kill 不是 agent 建的東西</small></td><td>動手前停下來問你</td><td><strong>你習慣性地按同意</strong></td></tr>
+                  <tr><td><b>bypass 只在隔離的環境</b><br><small>container 或 VM</small></td><td>出事時整台丟掉</td><td><strong>你掛進去的 credential 和網路</strong></td></tr>
                 </tbody>
               </table></div>
               <p>照這張表寫，一份可以放進 repo 的設定是：</p>
@@ -810,10 +810,10 @@ Cut cost per task by 20% without solving fewer tasks (baseline v8: 16-18 solved)
               <div class="table-wrap"><table>
                 <thead><tr><th>撞到什麼</th><th>課程的例子</th><th>隔離的方法</th></tr></thead>
                 <tbody>
-                  <tr><td><b>工作目錄與 git 狀態</b></td><td>第三份作業：一個 git reset 弄壞了另一個 run 的程式碼</td><td>一個 session 一個 worktree、一個 branch</td></tr>
-                  <tr><td><b>網路 port</b></td><td>第一份作業：兩個 session 搶 port 4000</td><td>每個 session 自己的 PORT</td></tr>
-                  <tr><td><b>輸出的檔案</b></td><td>第二份作業：一批舊的結果覆寫了新的</td><td>每個 run 有名字，也有自己的輸出目錄</td></tr>
-                  <tr><td><b>CPU 與計時</b></td><td>沒有舉例；課程的修法寫了「量時間時不要有干擾」</td><td>量延遲時，不要同時跑別的 session</td></tr>
+                  <tr><td><b>工作目錄與 git 狀態</b></td><td>第三份作業：一個 git reset 弄壞了另一個 run 的程式碼</td><td><strong>一個 session 一個 worktree、一個 branch</strong></td></tr>
+                  <tr><td><b>網路 port</b></td><td>第一份作業：兩個 session 搶 port 4000</td><td><strong>每個 session 自己的 PORT</strong></td></tr>
+                  <tr><td><b>輸出的檔案</b></td><td>第二份作業：一批舊的結果覆寫了新的</td><td><strong>每個 run 有名字，也有自己的輸出目錄</strong></td></tr>
+                  <tr><td><b>CPU 與計時</b></td><td>沒有舉例；課程的修法寫了「量時間時不要有干擾」</td><td><strong>量延遲時，不要同時跑別的 session</strong></td></tr>
                 </tbody>
               </table></div>
               <p>Worktree 只隔離檔案，port、資料庫、CPU 都還是共用的，這是 L3〈<a href="l03.html#i5-1">worktree 只隔離檔案</a>〉的結論。Worktree 隔離的只是 repo 裡的檔案：寫到 repo 外面的結果與 cache，以及同一個 worktree 裡先後跑的 run，還是會互相覆寫。<strong>所以 port 和每個 run 的輸出目錄要在開工時分開</strong>，做法是下面的指令；資料庫和 CPU 分不開，只能排時間。</p>
@@ -842,16 +842,16 @@ $ nohup ./eval.sh --all &gt; eval.log 2&gt;&amp;1 &amp;   # 不用 tmux：登出
               <div class="table-wrap"><table>
                 <thead><tr><th>陷阱<br>（slides 的編號）</th><th>數字<br>A1／A2／A3</th><th>slides 的一句話修法</th><th>本文</th></tr></thead>
                 <tbody>
-                  <tr><td><b>P1 盲信 agent 的說法</b></td><td>信了錯的說法：20%／20%／33%</td><td>要證據；親手驗一個</td><td><a href="#i2">第 2</a>、<a href="#i3">3 章</a></td></tr>
-                  <tr><td><b>P2 看不懂 agent 做了什麼</b></td><td>18%／37%／21%</td><td>小步走；讀 diff；commit</td><td><a href="#i8">第 8 章</a></td></tr>
-                  <tr><td><b>P3 Session 太長，丟了 context</b></td><td>做過 compaction：16%／40%／69%</td><td>一個任務一個 session；筆記寫在檔案</td><td><a href="#i8">第 8 章</a></td></tr>
-                  <tr><td><b>P4 疊改動</b></td><td>0%／47%／78%（總表）</td><td>一次改一件，和 baseline 比</td><td><a href="#i4">第 4 章</a></td></tr>
-                  <tr><td><b>P5 平行 session 互踩</b></td><td>重疊 15 分鐘以上：9%／22%／54%</td><td>一個 session 一個 worktree 和 branch</td><td><a href="#i9">第 9 章</a></td></tr>
-                  <tr><td><b>P6 破壞性指令</b></td><td>bypass 佔 prompt：8.6%／11%／16%</td><td>先 commit；deny rm -rf 和 reset</td><td><a href="#i6">第 6 章</a></td></tr>
-                  <tr><td><b>P7 Secrets 外洩</b></td><td>3%／23%／19%</td><td>Key 放環境變數，不放 prompt</td><td><a href="#i7">第 7 章</a></td></tr>
-                  <tr><td><b>P8 只看一次有雜訊的 run</b></td><td>0%／48%／66%（總表）</td><td>跑好幾次，比分布</td><td><a href="#i4">第 4 章</a></td></tr>
-                  <tr><td><b>P9 發洩，不修正方向</b></td><td>7%／5%／21%</td><td>貼錯誤；要診斷</td><td><a href="#i8">第 8 章</a></td></tr>
-                  <tr><td><b>P10 平台問題與筆電睡著</b></td><td>12%／50%／65%</td><td>先查需求；用 tmux</td><td><a href="#i9">第 9 章</a></td></tr>
+                  <tr><td><b>P1 盲信 agent 的說法</b></td><td>信了錯的說法：20%／20%／33%</td><td><strong>要證據；親手驗一個</strong></td><td><a href="#i2">第 2</a>、<a href="#i3">3 章</a></td></tr>
+                  <tr><td><b>P2 看不懂 agent 做了什麼</b></td><td>18%／37%／21%</td><td><strong>小步走；讀 diff；commit</strong></td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td><b>P3 Session 太長，丟了 context</b></td><td>做過 compaction：16%／40%／69%</td><td><strong>一個任務一個 session；筆記寫在檔案</strong></td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td><b>P4 疊改動</b></td><td>0%／47%／78%（總表）</td><td><strong>一次改一件，和 baseline 比</strong></td><td><a href="#i4">第 4 章</a></td></tr>
+                  <tr><td><b>P5 平行 session 互踩</b></td><td>重疊 15 分鐘以上：9%／22%／54%</td><td><strong>一個 session 一個 worktree 和 branch</strong></td><td><a href="#i9">第 9 章</a></td></tr>
+                  <tr><td><b>P6 破壞性指令</b></td><td>bypass 佔 prompt：8.6%／11%／16%</td><td><strong>先 commit；deny rm -rf 和 reset</strong></td><td><a href="#i6">第 6 章</a></td></tr>
+                  <tr><td><b>P7 Secrets 外洩</b></td><td>3%／23%／19%</td><td><strong>Key 放環境變數，不放 prompt</strong></td><td><a href="#i7">第 7 章</a></td></tr>
+                  <tr><td><b>P8 只看一次有雜訊的 run</b></td><td>0%／48%／66%（總表）</td><td><strong>跑好幾次，比分布</strong></td><td><a href="#i4">第 4 章</a></td></tr>
+                  <tr><td><b>P9 發洩，不修正方向</b></td><td>7%／5%／21%</td><td><strong>貼錯誤；要診斷</strong></td><td><a href="#i8">第 8 章</a></td></tr>
+                  <tr><td><b>P10 平台問題與筆電睡著</b></td><td>12%／50%／65%</td><td><strong>先查需求；用 tmux</strong></td><td><a href="#i9">第 9 章</a></td></tr>
                 </tbody>
               </table></div>
               <details class="gloss" id="n-data">
@@ -859,9 +859,9 @@ $ nohup ./eval.sh --all &gt; eval.log 2&gt;&amp;1 &amp;   # 不用 tmux：登出
                 <div class="gloss-body prose">
                   <ul>
                     <li><b>樣本。</b>同一批 58 位學生的三份作業：A1 做看 agent 工作的網頁，A2 寫 agent loop，A3 在成功率不變下壓低成本與延遲。</li>
-                    <li><b>單位。</b>用量是每位學生的中位數；陷阱多半是「有幾 % 的學生」；長 turn、compaction、擋下的 tool call 是全班的次數；secret 的來源是件數。</li>
-                    <li><b>本文沒有用的。</b>三組數字 slides 上對不清楚是哪一份作業或哪一類，本文不用。一是 permission mode 的分布（auto 約七到八成、bypass 8.6% 到 18%）；二是失敗類型（改壞原本能用的程式、很有把握地診斷錯）的六個比例；三是 Claude 與學生時數的兩個中位數。正文用的是另外兩頁、寫明了作業的數字：第 6 章 bypass 的 8.6%／11%／16% 來自介紹破壞性指令的那一頁，第 1 章圖 1 的使用時數來自用量的那一頁。</li>
-                    <li><b>兩組不同的數字。</b>介紹陷阱的頁面寫疊改動 0%／5%／37%、只看一次 run 0%／30%／73%（後者的順序是推的）；總表寫 0%／47%／78%、0%／48%／66%。兩處的標籤不同，slides 沒有說明差別，本文用總表。</li>
+                    <li><b>單位。</b><strong>用量是每位學生的中位數</strong>；陷阱多半是「有幾 % 的學生」；長 turn、compaction、擋下的 tool call 是全班的次數；secret 的來源是件數。</li>
+                    <li><b>本文沒有用的。</b><strong>三組數字 slides 上對不清楚是哪一份作業或哪一類，本文不用</strong>。一是 permission mode 的分布（auto 約七到八成、bypass 8.6% 到 18%）；二是失敗類型（改壞原本能用的程式、很有把握地診斷錯）的六個比例；三是 Claude 與學生時數的兩個中位數。正文用的是另外兩頁、寫明了作業的數字：第 6 章 bypass 的 8.6%／11%／16% 來自介紹破壞性指令的那一頁，第 1 章圖 1 的使用時數來自用量的那一頁。</li>
+                    <li><b>兩組不同的數字。</b>介紹陷阱的頁面寫疊改動 0%／5%／37%、只看一次 run 0%／30%／73%（後者的順序是推的）；總表寫 0%／47%／78%、0%／48%／66%。兩處的標籤不同，<strong>slides 沒有說明差別，本文用總表</strong>。</li>
                     <li><b>誰抓到錯。</b>slides 沒有直接標每個數字屬於哪一份作業，本文讀成每份作業一組；這樣讀，三組加起來是 100%、96%、93%，差的部分 slides 沒有說明。學生那一列和總表的 61%、33% 一致。</li>
                     <li><b>排行榜重跑 10 次。</b>那兩頁標的是第四份作業（自己 serve model，再讓第三份作業的 agent 去用它；排行榜依解題數與端到端時間排名），講課時還沒截止，第 4 章有說明。</li>
                   </ul>

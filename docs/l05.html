@@ -72,14 +72,14 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你想省時間，讓一個 agent（會自己讀檔、跑指令、改 code 的 AI 助手）寫前端，另一個同時寫後端。兩邊各自做完，各自的測試都通過，接起來卻不能跑：前端送的欄位叫 <code>userId</code>，後端等的是 <code>user_id</code>。兩個 agent 都沒有做錯，只是沒有人把這個決定告訴對方。</p>
-    <p class="thesis">每個 agent 只看得到自己讀過的東西：你給它的任務說明，和它自己讀的檔案、跑的指令的結果。它看不到另一個 agent 讀過什麼；要讓對方知道一件事，只能寫成文字傳過去。拆開的好處和代價都從這裡來。好處是每個 agent 一次能讀的文字有上限，分開做，各自只需要裝自己那一半的資料。代價是該讓對方知道的事，沒寫出來，對方就不知道。這堂回答的問題是：<strong>什麼時候值得拆成幾個 agent</strong>，拆了之後風險在哪裡。下面三條是這堂的判斷。</p>
+    <p class="thesis">先看一個例子。你想省時間，讓一個 agent（會自己讀檔、跑指令、改 code 的 AI 助手）寫前端，另一個同時寫後端。兩邊各自做完，<strong>各自的測試都通過，接起來卻不能跑</strong>：前端送的欄位叫 <code>userId</code>，後端等的是 <code>user_id</code>。兩個 agent 都沒有做錯，只是沒有人把這個決定告訴對方。</p>
+    <p class="thesis">每個 agent 只看得到自己讀過的東西：你給它的任務說明，和它自己讀的檔案、跑的指令的結果。它看不到另一個 agent 讀過什麼；<strong>要讓對方知道一件事，只能寫成文字傳過去</strong>。拆開的好處和代價都從這裡來。好處是每個 agent 一次能讀的文字有上限，分開做，各自只需要裝自己那一半的資料。代價是該讓對方知道的事，沒寫出來，對方就不知道。這堂回答的問題是：<strong>什麼時候值得拆成幾個 agent</strong>，拆了之後風險在哪裡。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>多數任務不該拆。</b>拆開只在幾件子任務互不相干的時候有好處。有一篇實驗拿同樣的題目，比較單一 agent 和幾個 agent 分工的得分：子任務互不相干的題目，分工的得分高約八成；每一步都要用上一步結果的題目，分工的得分反而低四到七成。例子裡前端和後端要用同一套欄位名，並不是互不相干；硬拆，就得把這類決定一條一條寫給對方（第 2 章）。</span></li>
+      <li><span><b>多數任務不該拆。</b><strong>拆開只在幾件子任務互不相干的時候有好處</strong>。有一篇實驗拿同樣的題目，比較單一 agent 和幾個 agent 分工的得分：子任務互不相干的題目，分工的得分高約八成；<strong>每一步都要用上一步結果的題目，分工的得分反而低四到七成</strong>。例子裡前端和後端要用同一套欄位名，並不是互不相干；硬拆，就得把這類決定一條一條寫給對方（第 2 章）。</span></li>
       <li><span><b>要拆的話：讀可以同時做，寫盡量留給一個 agent。</b>只查資料、讀 code 的 agent 可以同時跑，各自的發現只會累積。改檔案不一樣：<strong>每次改動都帶著命名、風格這類沒說出口的決定</strong>，例子裡的 <code>userId</code> 和 <code>user_id</code> 就是。兩個 agent 各寫一半，就會各選一套（第 3 章）。</span></li>
-      <li><span><b>真的拆了，風險都在交接。</b>有三個地方會出事。派出去的時候：寫任務說明的人沒寫到的事，接手的 agent 就不知道。交回來的時候：它做完只交回一段摘要，細節會掉。等的時候：等不到它回報，<strong>分不出它是沒做，還是做了沒回</strong>（第 4 到 6 章）。</span></li>
+      <li><span><b>真的拆了，風險都在交接。</b>有三個地方會出事。派出去的時候：<strong>寫任務說明的人沒寫到的事，接手的 agent 就不知道</strong>。交回來的時候：它做完<strong>只交回一段摘要，細節會掉</strong>。等的時候：等不到它回報，<strong>分不出它是沒做，還是做了沒回</strong>（第 4 到 6 章）。</span></li>
     </ul>
-    <p class="readhow">還有兩個風險各有一章。幾個 agent 讀了同一份資料，其中一個把它改掉之後，其他 agent 手上的就是舊的（第 7 章）。Agent 交回來的文字裡，可能夾著它從網頁上讀來、別人故意寫給 agent 照做的話（第 8 章）。常見架構的名字收在〈查閱〉，需要時查。</p>
+    <p class="readhow">還有兩個風險各有一章。幾個 agent 讀了同一份資料，其中一個把它改掉之後，<strong>其他 agent 手上的就是舊的</strong>（第 7 章）。Agent 交回來的文字裡，可能夾著它從網頁上讀來、<strong>別人故意寫給 agent 照做的話</strong>（第 8 章）。常見架構的名字收在〈查閱〉，需要時查。</p>
   </section>
 
   <div class="layout">
@@ -141,10 +141,10 @@
               <div class="table-wrap"><table>
                 <thead><tr><th>換到什麼</th><th>例子</th><th>一個 agent 做得到嗎</th></tr></thead>
                 <tbody>
-                  <tr><td><b>平行</b></td><td>四個方向同時查</td><td>做不到</td></tr>
-                  <tr><td><b>權限隔離</b></td><td>讀網頁的 agent 沒有 shell</td><td>做不到</td></tr>
-                  <tr><td><b>乾淨的 context</b></td><td>查資料的過程不進主對話</td><td>部分可以：context 快滿時把舊內容壓成摘要（compaction）；但查資料的過程已經先進過 context 一次</td></tr>
-                  <tr><td><b>專一的 prompt 與 model</b></td><td>搜尋交給便宜的 model</td><td>部分可以：skill（需要時才載入的一份指令檔）讓同一個 agent 換上專門的指令，也能指定 model；但指令是加進同一份 context</td></tr>
+                  <tr><td><b>平行</b></td><td>四個方向同時查</td><td><strong>做不到</strong></td></tr>
+                  <tr><td><b>權限隔離</b></td><td>讀網頁的 agent 沒有 shell</td><td><strong>做不到</strong></td></tr>
+                  <tr><td><b>乾淨的 context</b></td><td>查資料的過程不進主對話</td><td>部分可以：context 快滿時把舊內容壓成摘要（compaction）；但<strong>查資料的過程已經先進過 context 一次</strong></td></tr>
+                  <tr><td><b>專一的 prompt 與 model</b></td><td>搜尋交給便宜的 model</td><td>部分可以：skill（需要時才載入的一份指令檔）讓同一個 agent 換上專門的指令，也能指定 model；但<strong>指令是加進同一份 context</strong></td></tr>
                 </tbody>
               </table></div>
               <p>代價也從隔離來。每交接一次，就多三件事：資訊遺失、多一份 context、多一個會失敗的點。其中 context 的帳最容易低估。Model 不記得上一圈，所以 harness 每一圈都把整份 context 當 input 重新送給 model；訊息一旦進了 context，之後每一圈都要再付一次它的 token（token 是 model 計量和計價文字的單位，一個英文詞約 1 個 token，一個中文字約 1 到 2 個）。一則 2k token 的 broadcast（同一則訊息送給所有 agent）發給 10 個 agent，每個 agent 再跑 20 圈，就是 2k × 10 × 20 ＝ <strong>400k token 的 input</strong>。</p>
@@ -160,10 +160,10 @@
                 <thead><tr><th>任務</th><th>和單一 agent 比</th><th>來源與量法</th></tr></thead>
                 <tbody>
                   <tr><td>財務分析（Finance-Agent），子任務可以分開做</td>
-                    <td>中央協調（一個 orchestrator 分派子任務、彙整結果）的分數高 <b>約 81%</b></td>
+                    <td>中央協調（一個 orchestrator 分派子任務、彙整結果）的分數高 <strong>約 81%</strong></td>
                     <td rowspan="2"><a href="https://arxiv.org/abs/2512.08296" target="_blank" rel="noopener">Towards a Science of Scaling Agent Systems</a>（Google 等，2025-12）：5 種架構（單一 agent 加 4 種 multi-agent）、6 個 benchmark、3 家公司各幾個不同能力的 model，組合起來共 260 種設定，tool 與 token 預算相同</td></tr>
-                  <tr><td>Minecraft 的合成規劃（PlanCraft），每一步要用上一步的結果</td><td>試過的 4 種 multi-agent 架構全部退步，依架構低 <b>39% 到 70%</b></td></tr>
-                  <tr><td>研究類，平行查很多方向</td><td>一個 Opus 4 當主 agent，規劃後把搜尋分給幾個 Sonnet 4 subagent 平行做（Opus 4、Sonnet 4 都是 Anthropic 的 model；subagent 是主 agent 派出去做一部分工作的 agent）。這個系統的分數比單一 Opus 4 高 <b>90.2%</b>；代價是 token：這個系統的用量約是一般聊天的 15 倍，單一 agent 的用量約是聊天的 4 倍，所以這個系統的 token 約是單一 agent 的 15 ÷ 4 ≈ 4 倍</td><td><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">Anthropic 的 multi-agent research system</a>（2025-06）：自家的 research 評估（Anthropic 一家的內部數字，不是對照實驗）</td></tr>
+                  <tr><td>Minecraft 的合成規劃（PlanCraft），每一步要用上一步的結果</td><td>試過的 4 種 multi-agent 架構全部退步，依架構低 <strong>39% 到 70%</strong></td></tr>
+                  <tr><td>研究類，平行查很多方向</td><td>一個 Opus 4 當主 agent，規劃後把搜尋分給幾個 Sonnet 4 subagent 平行做（Opus 4、Sonnet 4 都是 Anthropic 的 model；subagent 是主 agent 派出去做一部分工作的 agent）。這個系統的分數比單一 Opus 4 高 <strong>90.2%</strong>；代價是 token：這個系統的用量約是一般聊天的 15 倍，單一 agent 的用量約是聊天的 4 倍，所以這個系統的 token 約是單一 agent 的 15 ÷ 4 ≈ 4 倍</td><td><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">Anthropic 的 multi-agent research system</a>（2025-06）：自家的 research 評估（Anthropic 一家的內部數字，不是對照實驗）</td></tr>
                 </tbody>
               </table></div>
               <p><strong>差別不在架構，在任務的形狀</strong>，也就是子任務能不能各自進行。證據在前兩列，它們出自同一篇實驗：在財務分析上進步最多的中央協調，換到 PlanCraft 也一樣退步，4 種架構無一例外。<strong>循序任務一拆就退步</strong>，因為每一步都要知道上一步的細節，而細節正是交接時會掉的東西。架構仍有影響，只是要先看任務才選得對：同一篇用任務的特徵預測該選哪種架構，在沒看過的設定上有 87% 選對。</p>
@@ -327,12 +327,12 @@ depends_on: none                                          # 要等誰</code></pr
               <div class="table-wrap"><table>
                 <thead><tr><th>拆錯</th><th>長什麼樣</th><th>擋它的欄位</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Overlap</b><br><small>重疊</small></td><td>兩個 worker 摘要了同一篇論文，白做一份</td><td><code>boundaries</code>：寫清楚哪些不歸你</td></tr>
-                  <tr><td><b>Gap</b><br><small>缺口</small></td><td>一份查 2020–2023、一份查 2025–2026，沒有人查 2024</td><td><code>objective</code>：範圍寫成明確的區間，拆完檢查有沒有接起來</td></tr>
-                  <tr><td><b>Hidden dependency</b><br><small>隱藏的相依</small></td><td>算價格（pricing）要先知道規模（sizing），做到一半才發現</td><td><code>depends_on</code>：先寫誰要等誰；沒寫的相依，worker 只能自己猜輸入</td></tr>
-                  <tr><td><b>Unmergeable outputs</b><br><small>無法合併</small></td><td>一份回一段文字，一份回 JSON，合併的程式讀不了</td><td><code>output</code>：所有 worker 共用同一份格式</td></tr>
-                  <tr><td><b>Lost global context</b><br><small>失去全局</small></td><td>每一節單獨看都對，合起來的報告前後矛盾</td><td><code>inputs</code>：放進大家共用的前提；合併時再讓一個 agent 從頭讀一遍</td></tr>
-                  <tr><td><b>Straggler</b><br><small>拖後腿的那一份</small></td><td>六份 20 秒做完，一份跑了 4 分鐘，大家都在等它</td><td><code>budget</code>：設上限，時間到就先用其他份的結果</td></tr>
+                  <tr><td><b>Overlap</b><br><small>重疊</small></td><td>兩個 worker 摘要了同一篇論文，白做一份</td><td><code>boundaries</code>：<strong>寫清楚哪些不歸你</strong></td></tr>
+                  <tr><td><b>Gap</b><br><small>缺口</small></td><td>一份查 2020–2023、一份查 2025–2026，沒有人查 2024</td><td><code>objective</code>：<strong>範圍寫成明確的區間，拆完檢查有沒有接起來</strong></td></tr>
+                  <tr><td><b>Hidden dependency</b><br><small>隱藏的相依</small></td><td>算價格（pricing）要先知道規模（sizing），做到一半才發現</td><td><code>depends_on</code>：<strong>先寫誰要等誰</strong>；沒寫的相依，worker 只能自己猜輸入</td></tr>
+                  <tr><td><b>Unmergeable outputs</b><br><small>無法合併</small></td><td>一份回一段文字，一份回 JSON，合併的程式讀不了</td><td><code>output</code>：<strong>所有 worker 共用同一份格式</strong></td></tr>
+                  <tr><td><b>Lost global context</b><br><small>失去全局</small></td><td>每一節單獨看都對，合起來的報告前後矛盾</td><td><code>inputs</code>：<strong>放進大家共用的前提</strong>；合併時再讓一個 agent 從頭讀一遍</td></tr>
+                  <tr><td><b>Straggler</b><br><small>拖後腿的那一份</small></td><td>六份 20 秒做完，一份跑了 4 分鐘，大家都在等它</td><td><code>budget</code>：<strong>設上限，時間到就先用其他份的結果</strong></td></tr>
                 </tbody>
               </table></div>
               <p>前四種在派工時就能擋住；後兩種要到執行時才看得到，所以除了欄位，還要靠合併時的通讀和 timeout。六種的樣子畫在下圖：</p>
@@ -670,10 +670,10 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
               <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>長什麼樣</th><th>對策</th></tr></thead>
                 <tbody>
-                  <tr><td><b>繞圈</b></td><td>A 問 B，B 問 C，C 問 A</td><td>訊息帶一個跳數上限，每轉給下一個 agent 就減 1；減到 0 時，runtime 不再轉送，改回報錯誤</td></tr>
-                  <tr><td><b>沒人負責</b></td><td>每個 agent 都以為是別人的事</td><td>每個 task 一個 owner</td></tr>
-                  <tr><td><b>過期的事實</b></td><td>X 已經改成 5，B 還依 X＝3 行動</td><td>事實帶版本，用之前重讀</td></tr>
-                  <tr><td><b>互相矛盾</b></td><td>A 說安全，B 說有漏洞</td><td>指定裁決者，兩邊都附證據</td></tr>
+                  <tr><td><b>繞圈</b></td><td>A 問 B，B 問 C，C 問 A</td><td><strong>訊息帶一個跳數上限</strong>，每轉給下一個 agent 就減 1；減到 0 時，runtime 不再轉送，改回報錯誤</td></tr>
+                  <tr><td><b>沒人負責</b></td><td>每個 agent 都以為是別人的事</td><td><strong>每個 task 一個 owner</strong></td></tr>
+                  <tr><td><b>過期的事實</b></td><td>X 已經改成 5，B 還依 X＝3 行動</td><td><strong>事實帶版本，用之前重讀</strong></td></tr>
+                  <tr><td><b>互相矛盾</b></td><td>A 說安全，B 說有漏洞</td><td><strong>指定裁決者，兩邊都附證據</strong></td></tr>
                 </tbody>
               </table></div>
               <p>LLM 不會自己發現它在繞圈，也不會發現手上的事實過期了，要靠訊息的欄位和 runtime 的規則替它擋。</p>
@@ -907,14 +907,14 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
               <div class="table-wrap"><table>
                 <thead><tr><th>架構</th><th>適合</th><th>弱點</th><th>什麼時候想到它</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Supervisor–worker</b></td><td>可分開的子任務</td><td>中心的 context 長得最快</td><td>預設的第一選擇</td></tr>
-                  <tr><td><b>Hierarchical</b></td><td>有層次的任務</td><td>錯誤層層放大</td><td>一層 supervisor 真的管不完</td></tr>
-                  <tr><td><b>Pipeline / DAG</b></td><td>順序清楚的階段</td><td>錯誤往下傳</td><td>流程固定、要好除錯時；記得加一條 retry edge，讓後面的站能把工作退回前面的站重做，因為 pipeline 本身沒有回頭路</td></tr>
-                  <tr><td><b>Blackboard</b></td><td>共同的產出</td><td>狀態過期（第 7 章）</td><td>Agent 會來來去去，要留下可檢查的紀錄</td></tr>
-                  <tr><td><b>Committee</b></td><td>需要判斷的題目</td><td>盲點相同</td><td>值得付多次成本，而且能讓意見獨立</td></tr>
-                  <tr><td><b>Market</b></td><td>能力、成本不一的 agent</td><td>自報的出價不實</td><td>任務分配本身是問題</td></tr>
-                  <tr><td><b>Swarm</b></td><td>沒有協調者、由 agent 彼此直接談好誰做哪件事的工作，例如倉庫機器人互相商量哪一台去揀哪一張訂單</td><td>每兩個 agent 一條線，n 個 agent 就有 n(n−1)/2 條（4 個 6 條、10 個 45 條），每條都是訊息會過、也會被感染的路徑</td><td>很少；產品中罕見</td></tr>
-                  <tr><td><b>Dynamic topology</b></td><td>結構事先未知</td><td>難重現、難除錯</td><td>簡單案件要便宜，難的才升級</td></tr>
+                  <tr><td><b>Supervisor–worker</b></td><td>可分開的子任務</td><td>中心的 context 長得最快</td><td><strong>預設的第一選擇</strong></td></tr>
+                  <tr><td><b>Hierarchical</b></td><td>有層次的任務</td><td>錯誤層層放大</td><td><strong>一層 supervisor 真的管不完</strong></td></tr>
+                  <tr><td><b>Pipeline / DAG</b></td><td>順序清楚的階段</td><td>錯誤往下傳</td><td><strong>流程固定、要好除錯時</strong>；記得加一條 retry edge，讓後面的站能把工作退回前面的站重做，因為 pipeline 本身沒有回頭路</td></tr>
+                  <tr><td><b>Blackboard</b></td><td>共同的產出</td><td>狀態過期（第 7 章）</td><td><strong>Agent 會來來去去，要留下可檢查的紀錄</strong></td></tr>
+                  <tr><td><b>Committee</b></td><td>需要判斷的題目</td><td>盲點相同</td><td><strong>值得付多次成本，而且能讓意見獨立</strong></td></tr>
+                  <tr><td><b>Market</b></td><td>能力、成本不一的 agent</td><td>自報的出價不實</td><td><strong>任務分配本身是問題</strong></td></tr>
+                  <tr><td><b>Swarm</b></td><td>沒有協調者、由 agent 彼此直接談好誰做哪件事的工作，例如倉庫機器人互相商量哪一台去揀哪一張訂單</td><td>每兩個 agent 一條線，n 個 agent 就有 n(n−1)/2 條（4 個 6 條、10 個 45 條），每條都是訊息會過、也會被感染的路徑</td><td><strong>很少；產品中罕見</strong></td></tr>
+                  <tr><td><b>Dynamic topology</b></td><td>結構事先未知</td><td>難重現、難除錯</td><td><strong>簡單案件要便宜，難的才升級</strong></td></tr>
                 </tbody>
               </table></div>
               <details class="gloss" id="n-arch">
@@ -1233,8 +1233,8 @@ $ git pull --rebase &amp;&amp; git push origin main          # 重讀最新版�
               <details class="gloss" id="n-comm">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">通訊的選項：資料放在哪裡（三種 medium）、怎麼流（六種 channel）</span></summary>
                 <div class="gloss-body prose">
-                  <p>通訊分成兩層，兩層分的是不同的事。Medium 分的是資料放在什麼載體上：一則訊息、一個共用的物件，或一個檔案。Channel 分的是資料怎麼流：給一個還是給全部、要不要訂閱、發問的一方要不要停下來等。</p>
-                  <p>一種 channel 可以放在不同的 medium 上：共享 blackboard 這種 channel 可以放在 shared memory，也可以放在檔案或 git；artifact passing 這種 channel（一個 agent 把結果寫成檔案，另一個 agent 讀那個檔案，下圖第六格）用的是 files 這種 medium。另外兩個名字在這一頁有兩種用法，要分開：blackboard 在這裡是一種 channel（大家讀寫同一塊），在上面的架構表裡也是一種架構的名字，兩處說的是同一個做法，一個從資料怎麼流看、一個從誰協調看；shared memory 在這裡嚴格只指同一個 process 裡的物件（git repo 和一般檔案都算 files），上面混合系統圖說裡的 shared memory 則是泛稱，共享的 git 也這樣叫。</p>
+                  <p>通訊分成兩層，兩層分的是不同的事。<strong>Medium 分的是資料放在什麼載體上</strong>：一則訊息、一個共用的物件，或一個檔案。<strong>Channel 分的是資料怎麼流</strong>：給一個還是給全部、要不要訂閱、發問的一方要不要停下來等。</p>
+                  <p><strong>一種 channel 可以放在不同的 medium 上</strong>：共享 blackboard 這種 channel 可以放在 shared memory，也可以放在檔案或 git；artifact passing 這種 channel（一個 agent 把結果寫成檔案，另一個 agent 讀那個檔案，下圖第六格）用的是 files 這種 medium。另外兩個名字在這一頁有兩種用法，要分開：blackboard 在這裡是一種 channel（大家讀寫同一塊），在上面的架構表裡也是一種架構的名字，兩處說的是同一個做法，一個從資料怎麼流看、一個從誰協調看；shared memory 在這裡嚴格只指同一個 process 裡的物件（git repo 和一般檔案都算 files），上面混合系統圖說裡的 shared memory 則是泛稱，共享的 git 也這樣叫。</p>
                   <figure class="diagram">
 <div class="scroll">
 <svg viewBox="0 0 720 172" role="img" aria-label="三種 medium。Message passing：coder 把結果投進 queue，orchestrator 從收件匣取出。Shared memory：同一個 process 裡，兩個 agent 讀寫同一個 task list 物件。Files：researcher 寫 notes.md，writer 打開來讀。">

@@ -292,6 +292,8 @@ James 說看不懂而審查沒抓到：先在 `guide/review_cases/` 加一個測
 1. `python3 -I tools/red_path.py lXX [章]`：那幾章不是 ok（沒審過、改過、舊規則）就擋下來，先回 I。過了就印掃讀路徑：章名、`<b>` 小標、紅字，加上提示（小標後面沒有紅字、靠上下文才懂、只有數字、重複小標）。
 2. 只讀這條路徑，照 6c 的三個檢查決定紅字放哪裡。
 3. 只加、刪、移 `<strong>`，不改字。要改字才標得好的地方記下來，留給那一章下一次審查。
+   - 查閱區塊、表的格子、導讀也要標（2026-11-20，6c〈位置〉）。掃讀路徑不印前兩種，要回頁面逐個看。
+   - 加紅字用 `tools/red_add.py`：寫一份清單（在哪一段之後、標哪幾個字），先試跑、全部 ok 再 `--write`。它只插入 `<strong>`，寫檔前會比對字沒有動。一次補很多頁時一頁一份清單，可以一頁一個 subagent，subagent 只准透過這支工具改 `docs/`。
 4. `review_status.py status lXX` 仍然全 ok、`verify.sh lXX` 沒有紅字的 warn，照 D push。
 
 寫作的 skill（`idea-first-lecture`、`rewrite-with-example`、`fact-check-extension`）寫新段落時不放 `<strong>`；原本有的留著，審完再由這一步整章看一次。

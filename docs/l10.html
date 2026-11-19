@@ -74,12 +74,12 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你在一張 H200（NVIDIA 的 GPU）上跑語言模型（下面叫 model），一次只服務一個請求。監控工具 nvidia-smi 顯示使用率 100%，字卻出得很慢。你的第一個念頭是 GPU 不夠快，要再買一張。其實這張 GPU 的運算能力只用到大約 0.5%（第 3 章用規格算出這個數字）。它的時間幾乎都花在搬資料：把 model 的參數（訓練出來的一大堆數字，就是 model 的本體）從 GPU 自己的記憶體讀到做運算的電路上。那個 100% 只代表「有程式在跑」。</p>
+    <p class="thesis">先看一個例子。你在一張 H200（NVIDIA 的 GPU）上跑語言模型（下面叫 model），一次只服務一個請求。監控工具 nvidia-smi 顯示使用率 100%，字卻出得很慢。你的第一個念頭是 GPU 不夠快，要再買一張。其實<strong>這張 GPU 的運算能力只用到大約 0.5%</strong>（第 3 章用規格算出這個數字）。它的時間幾乎都花在搬資料：把 model 的參數（訓練出來的一大堆數字，就是 model 的本體）從 GPU 自己的記憶體讀到做運算的電路上。那個 100% 只代表「有程式在跑」。</p>
     <p class="thesis">Model 的每一步運算，在 GPU 上是一段一段的小程式在跑，每一段叫一個 kernel。一個 kernel 要花多久，看兩件事裡比較慢的那一件：要從記憶體搬多少資料，和要做多少次運算。搬資料和運算可以同時進行，所以快的那一件會被慢的那一件蓋過去，時間不是兩者相加。這堂回答的問題是：<strong>怎麼先算出瓶頸在哪一邊</strong>，再選改法，最後用對的數字確認。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>先算每搬 1 byte 做了幾次運算。</b>這個比值叫 arithmetic intensity。每張 GPU 有一個門檻：它每秒能做的運算次數，除以它每秒能從記憶體搬的 byte 數，也就是搬來的每 1 byte 要配幾次運算，運算電路才不會停下來等資料。H200 大約是每 byte 206 次運算。比值低於門檻，慢的是搬資料，這時加運算能力沒有用，要想辦法少搬；高於門檻，才是運算能力不夠（第 2 章）。</span></li>
-      <li><span><b>Model 逐字輸出時，慢的是搬資料。</b>Model 一次輸出一個 token（文字的一小段，中文大約一個字），每產生一個 token，都要把全部的參數讀一遍：晶片上的儲存加起來約一百多 MB，放不下十幾到上百 GB 的參數，上一步讀過的留不住，下一步只能再從 GPU 的記憶體讀一次，而每個參數只拿來算一次：搬得多、算得少，比值遠低於門檻，所以例子裡運算能力幾乎閒著。改法是把很多請求併成一批一起算，一批叫一個 batch：參數讀一遍，整批請求一起用，<strong>batch 越大，每個請求分攤到的搬運越少</strong>。但每個請求還有自己的一份資料要讀，就是它到目前為止的對話算出來的中間結果：新的 token 要參考前面的每一個字，所以每產生一個 token，這份中間結果也要整份從記憶體讀一遍。這一份別的請求用不到，分攤不了；對話越長，這個請求每一步要讀的就越多，每個字也就出得越慢（第 3 章）。</span></li>
-      <li><span><b>量對了再改，也別相信沒驗證過的加速。</b>Model 逐字輸出的階段，<strong>要看的是記憶體每秒能搬的量（叫記憶體頻寬）用了幾成</strong>；nvidia-smi 的 100% 沒有告訴你這個（第 5 章）。請 AI 改寫 kernel 之後，它如果回報快了很多，先算一下：照這張 GPU 的頻寬，搬完這些資料最少要多久？它報的時間比這個還短，就是量錯了。再用多組輸入確認，改寫後的 kernel 算出的答案和改寫前一樣（第 9 章）。</span></li>
+      <li><span><b>先算每搬 1 byte 做了幾次運算。</b>這個比值叫 arithmetic intensity。每張 GPU 有一個門檻：它每秒能做的運算次數，除以它每秒能從記憶體搬的 byte 數，也就是搬來的每 1 byte 要配幾次運算，運算電路才不會停下來等資料。H200 大約是每 byte 206 次運算。<strong>比值低於門檻，慢的是搬資料，這時加運算能力沒有用</strong>，要想辦法少搬；高於門檻，才是運算能力不夠（第 2 章）。</span></li>
+      <li><span><b>Model 逐字輸出時，慢的是搬資料。</b>Model 一次輸出一個 token（文字的一小段，中文大約一個字），每產生一個 token，都要把全部的參數讀一遍：晶片上的儲存加起來約一百多 MB，放不下十幾到上百 GB 的參數，上一步讀過的留不住，下一步只能再從 GPU 的記憶體讀一次，而每個參數只拿來算一次：搬得多、算得少，比值遠低於門檻，所以例子裡運算能力幾乎閒著。改法是把很多請求併成一批一起算，一批叫一個 batch：參數讀一遍，整批請求一起用，<strong>batch 越大，每個請求分攤到的搬運越少</strong>。但每個請求還有自己的一份資料要讀，就是它到目前為止的對話算出來的中間結果：新的 token 要參考前面的每一個字，所以每產生一個 token，這份中間結果也要整份從記憶體讀一遍。這一份別的請求用不到，分攤不了；<strong>對話越長，這個請求每一步要讀的就越多，每個字也就出得越慢</strong>（第 3 章）。</span></li>
+      <li><span><b>量對了再改，也別相信沒驗證過的加速。</b>Model 逐字輸出的階段，<strong>要看的是記憶體每秒能搬的量（叫記憶體頻寬）用了幾成</strong>；nvidia-smi 的 100% 沒有告訴你這個（第 5 章）。請 AI 改寫 kernel 之後，它如果回報快了很多，先算一下：照這張 GPU 的頻寬，搬完這些資料最少要多久？它報的時間比這個還短，就是量錯了。再<strong>用多組輸入確認，改寫後的 kernel 算出的答案和改寫前一樣</strong>（第 9 章）。</span></li>
     </ul>
     <p class="readhow">第 4 章打開晶片內部，第 6 到 8 章是幾種改法的細節，第 10 章是一張 GPU 以外的事（網路、故障、電力），需要時查。</p>
   </section>
@@ -196,9 +196,9 @@
                 <tbody>
                   <tr><td><b>平行的單位</b></td><td>64 個 core</td><td>132 個 SM，16,896 個 FP32 core</td></tr>
                   <tr><td><b>同時待命的 thread</b></td><td>128</td><td>270,336（每個 SM 2,048）</td></tr>
-                  <tr><td><b>記憶體頻寬</b></td><td>約 0.46 TB/s（DDR5）</td><td>4.8 TB/s（HBM3e）</td></tr>
-                  <tr><td><b>峰值算力</b></td><td>約 5 TFLOP/s（FP32，32 位元浮點）</td><td>989 TFLOP/s（BF16，16 位元浮點）；同樣用 FP32 是 67 TFLOP/s</td></tr>
-                  <tr><td><b>怎麼藏住記憶體延遲</b></td><td>cache 和 out-of-order execution</td><td>換一組資料已經到的 thread 來跑（一組 32 個，叫 warp，下一段細講）</td></tr>
+                  <tr><td><b>記憶體頻寬</b></td><td>約 0.46 TB/s（DDR5）</td><td><strong>4.8 TB/s</strong>（HBM3e）</td></tr>
+                  <tr><td><b>峰值算力</b></td><td>約 5 TFLOP/s（FP32，32 位元浮點）</td><td><strong>989 TFLOP/s</strong>（BF16，16 位元浮點）；同樣用 FP32 是 67 TFLOP/s</td></tr>
+                  <tr><td><b>怎麼藏住記憶體延遲</b></td><td>cache 和 out-of-order execution</td><td><strong>換一組資料已經到的 thread 來跑</strong>（一組 32 個，叫 warp，下一段細講）</td></tr>
                 </tbody>
               </table></div>
               <p id="i1-2"><b>GPU 怎麼藏住等待：切換 warp。</b>從 HBM（high bandwidth memory，GPU 的主記憶體）讀一筆資料約要 500 個 cycle（時脈的一拍；H200 每秒約 20 億拍，所以約 250 ns）。<strong>CPU 靠 cache 和 out-of-order 撐過這段等待，GPU 則是換一批工作來做</strong>。GPU 的 thread 以 32 個為一組，叫 warp。每個 SM 有 4 個 warp scheduler，每個最多管 16 個 warp，所以一個 SM 上同時有 64 個 warp。一個 warp 在等記憶體時，scheduler 下一個 cycle 就改發另一個 warp 的指令：</p>
@@ -487,8 +487,8 @@
               <div class="table-wrap"><table>
                 <thead><tr><th>情境</th><th>搬的 bytes</th><th>算的 FLOPs</th><th>bytes ÷ 頻寬</th><th>FLOPs ÷ peak</th><th>時間</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Decode，batch 1</b><br><small>產生 1 個 token</small></td><td>16 GB</td><td>16 GFLOP</td><td><b>3.3 ms</b></td><td>0.016 ms</td><td>3.3 ms，memory-bound</td></tr>
-                  <tr><td><b>Prefill，2,048 tokens</b></td><td>16 GB</td><td>33 TFLOP</td><td>3.3 ms</td><td><b>33 ms</b></td><td>33 ms，compute-bound</td></tr>
+                  <tr><td><b>Decode，batch 1</b><br><small>產生 1 個 token</small></td><td>16 GB</td><td>16 GFLOP</td><td><strong>3.3 ms</strong></td><td>0.016 ms</td><td>3.3 ms，memory-bound</td></tr>
+                  <tr><td><b>Prefill，2,048 tokens</b></td><td>16 GB</td><td>33 TFLOP</td><td>3.3 ms</td><td><strong>33 ms</strong></td><td>33 ms，compute-bound</td></tr>
                 </tbody>
               </table></div>
               <figure class="diagram">
@@ -589,17 +589,17 @@
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Attention、head 與 KV cache（L9）</span></summary>
                 <div class="gloss-body prose">
                   <p>LLM 的每一層都有一步 attention：讓每個 token 參考前面的 token。每個 token 先算出三個向量：query（Q，代表要找什麼）、key（K，代表自己有什麼）和 value（V，要交出去的內容）。新 token 的 query 和前文每個 token 的 key 做內積得到分數，分數經過 softmax（取指數再除以總和，權重加起來是 1）變成權重，再用權重把各個 value 加權平均。</p>
-                  <p>一層裡有好幾組這樣的計算同時做，每一組叫一個 head；d 是每個 head 的向量長度，Llama 3 是 128。前文每個 token 的 K、V 之後每一步都還要用，所以存起來不重算，這份存檔就是 KV cache，長度 n 是存了幾個 token。傳統的 MHA（multi-head attention）每個 query head 有自己的一份 K、V；GQA（grouped-query attention）讓 g 個 query head 共用一份，KV cache 小 g 倍。Llama 3 8B 是 32 個 query head 共用 8 份 K、V（g = 4），70B 是 64 個共用 8 份（g = 8）。見 L9〈<a href="l09.html#i6">改 KV cache 的架構</a>〉。</p>
+                  <p>一層裡有好幾組這樣的計算同時做，每一組叫一個 head；d 是每個 head 的向量長度，Llama 3 是 128。<strong>前文每個 token 的 K、V 之後每一步都還要用，所以存起來不重算</strong>，這份存檔就是 KV cache，長度 n 是存了幾個 token。傳統的 MHA（multi-head attention）每個 query head 有自己的一份 K、V；GQA（grouped-query attention）讓 <strong>g 個 query head 共用一份，KV cache 小 g 倍</strong>。Llama 3 8B 是 32 個 query head 共用 8 份 K、V（g = 4），70B 是 64 個共用 8 份（g = 8）。見 L9〈<a href="l09.html#i6">改 KV cache 的架構</a>〉。</p>
                 </div>
               </details>
               <p id="i2-5"><b>四種常見的 op。</b><strong>Intensity 不必跑就能從形狀算出來</strong>。表裡 b 是每個數字的 bytes，n 是 KV cache 存了幾個 token，d 是每個 head 的向量長度（attention、head 和 KV cache 見上面的前情）：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Op</th><th>FLOPs</th><th>搬的 bytes</th><th>Intensity</th><th>BF16 時</th><th>H200 上</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Vector add</b><br><small>長度 N</small></td><td>N</td><td>3N·b<br><small>讀兩個、寫一個</small></td><td>1 ÷ 3b</td><td>0.17</td><td>memory-bound</td></tr>
-                  <tr><td><b>GEMV</b><br><small>N×N 矩陣乘一個向量</small></td><td>2N²</td><td>≈ N²·b<br><small>weights 為主</small></td><td>2 ÷ b</td><td>1</td><td>memory-bound</td></tr>
-                  <tr><td><b>Decode attention</b><br><small>新 token 的 1 個 query 對前文 n 組 K、V</small></td><td>4nd</td><td>≈ 2nd·b<br><small>K 和 V</small></td><td>2 ÷ b</td><td>1</td><td>memory-bound</td></tr>
-                  <tr><td><b>Square GEMM</b><br><small>N×N 乘 N×N</small></td><td>2N³</td><td>3N²·b</td><td>2N ÷ 3b</td><td>1,365<br><small>N = 4096</small></td><td>compute-bound</td></tr>
+                  <tr><td><b>Vector add</b><br><small>長度 N</small></td><td>N</td><td>3N·b<br><small>讀兩個、寫一個</small></td><td>1 ÷ 3b</td><td>0.17</td><td><strong>memory-bound</strong></td></tr>
+                  <tr><td><b>GEMV</b><br><small>N×N 矩陣乘一個向量</small></td><td>2N²</td><td>≈ N²·b<br><small>weights 為主</small></td><td>2 ÷ b</td><td>1</td><td><strong>memory-bound</strong></td></tr>
+                  <tr><td><b>Decode attention</b><br><small>新 token 的 1 個 query 對前文 n 組 K、V</small></td><td>4nd</td><td>≈ 2nd·b<br><small>K 和 V</small></td><td>2 ÷ b</td><td>1</td><td><strong>memory-bound</strong></td></tr>
+                  <tr><td><b>Square GEMM</b><br><small>N×N 乘 N×N</small></td><td>2N³</td><td>3N²·b</td><td>2N ÷ 3b</td><td>1,365<br><small>N = 4096</small></td><td><strong>compute-bound</strong></td></tr>
                 </tbody>
               </table></div>
               <p>四列的差別在 reuse：GEMM 讀進來的每個數字會用上 N 次，GEMV 的每個 weight 只用 1 次。Decode attention 也一樣：每個請求的 KV cache 只有自己的那一個 query 會讀，而且只讀一次。GQA 讓一份 K、V 給 g 個 query head 用，intensity 變成 2g ÷ b，Llama 3 70B 的 g 是 8，所以約 8（8B 是 4）。<strong>但 batch 1 時，一步要讀的 bytes 幾乎全是 weights</strong>：Llama 3 8B 的 weights 是 16 GB，1K 個 token 的 KV cache 只有約 0.13 GB。batch 1 時，乘 weights 的每一步都是一個 token 的向量乘一個 weights 矩陣，也就是 GEMV。整步的 intensity 是全部的 FLOP 除以全部的 bytes，由占了 99% bytes 的這些 GEMV 決定，所以 <strong>decode 的 intensity 約 1，離 206 很遠</strong>。</p>
@@ -607,7 +607,7 @@
               <details class="gloss" id="n-ridge">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">各 GPU 在各精度的 ridge（peak 算力 ÷ HBM 頻寬）</span></summary>
                 <div class="gloss-body prose">
-                  <p>單位是 FLOP/B。Peak 用 dense 的值：規格表常另列一個「with sparsity」的算力，是假設矩陣裡有一半是零、跳過不算的兩倍值，這裡不用。「不支援」是那一代 GPU 的矩陣乘法電路沒有這種精度；「未列」是沒有查到數字。Rubin 是初步規格，它的 FP8 是 BF16 的 4.4 倍，不是其他列的 2 倍：NVIDIA 公布的 Rubin 是 BF16 約 4 PFLOP/s、FP8 約 17.5 PFLOP/s（1 PFLOP/s = 1,000 TFLOP/s；依 <a href="https://www.tomshardware.com/pc-components/gpus/nvidia-details-rubin-architectural-optimizations-for-inference-improvements-target-better-performance-and-efficiency-from-the-gpu-to-the-rack" target="_blank" rel="noopener">Tom's Hardware 的整理</a>），這一代的低精度加得比 BF16 多。</p>
+                  <p>單位是 FLOP/B。<strong>Peak 用 dense 的值</strong>：規格表常另列一個「with sparsity」的算力，是假設矩陣裡有一半是零、跳過不算的兩倍值，這裡不用。「不支援」是那一代 GPU 的矩陣乘法電路沒有這種精度；「未列」是沒有查到數字。Rubin 是初步規格，它的 <strong>FP8 是 BF16 的 4.4 倍，不是其他列的 2 倍</strong>：NVIDIA 公布的 Rubin 是 BF16 約 4 PFLOP/s、FP8 約 17.5 PFLOP/s（1 PFLOP/s = 1,000 TFLOP/s；依 <a href="https://www.tomshardware.com/pc-components/gpus/nvidia-details-rubin-architectural-optimizations-for-inference-improvements-target-better-performance-and-efficiency-from-the-gpu-to-the-rack" target="_blank" rel="noopener">Tom's Hardware 的整理</a>），這一代的低精度加得比 BF16 多。</p>
                   <div class="table-wrap"><table>
                 <thead><tr><th>GPU</th><th>HBM<br><small>TB/s</small></th><th>FP32</th><th>BF16</th><th>FP8</th><th>FP4</th></tr></thead>
                 <tbody>
@@ -624,7 +624,7 @@
               <details class="gloss" id="n-gpugen">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">二十年的 NVIDIA GPU：每一代加了什麼</span></summary>
                 <div class="gloss-body prose">
-                  <p>進階內容。2006–2017 年從繪圖晶片變成通用的運算晶片，2018–2026 年再變成低精度的 AI 引擎。從 G80 到 B300，峰值算力約成長 43,000 倍、頻寬約 90 倍。43,000 ÷ 90 ≈ 480，看起來 ridge 右移了約 480 倍，和上面「只看 BF16，ridge 沒有一直右移」好像衝突。本文核算，43,000 倍是拿 G80 的 FP32（約 0.35 TFLOP/s）比 B300 的 FP4（15 PFLOP/s，即 15,000 TFLOP/s）。同樣用 FP32 比，B300 約 75 TFLOP/s，只有 G80 的約 200 倍；剩下的約 200 倍來自 Tensor Core 加上 FP4，同一顆 B300 上，FP4 比 FP32 快約 200 倍。Ridge 也一樣：同樣用 FP32，G80 約 4（0.35 TFLOP/s ÷ 86 GB/s），B300 約 9，只右移約 2 倍。所以這和上面並不衝突：480 倍裡，絕大部分來自改用 Tensor Core 和越來越低的精度。</p>
+                  <p>進階內容。2006–2017 年從繪圖晶片變成通用的運算晶片，2018–2026 年再變成低精度的 AI 引擎。從 G80 到 B300，峰值算力約成長 43,000 倍、頻寬約 90 倍。43,000 ÷ 90 ≈ 480，看起來 ridge 右移了約 480 倍，和上面「只看 BF16，ridge 沒有一直右移」好像衝突。本文核算，43,000 倍是拿 G80 的 FP32（約 0.35 TFLOP/s）比 B300 的 FP4（15 PFLOP/s，即 15,000 TFLOP/s）。<strong>同樣用 FP32 比，B300 約 75 TFLOP/s，只有 G80 的約 200 倍</strong>；剩下的約 200 倍來自 Tensor Core 加上 FP4，同一顆 B300 上，FP4 比 FP32 快約 200 倍。Ridge 也一樣：同樣用 FP32，G80 約 4（0.35 TFLOP/s ÷ 86 GB/s），B300 約 9，只右移約 2 倍。所以這和上面並不衝突：<strong>480 倍裡，絕大部分來自改用 Tensor Core 和越來越低的精度</strong>。</p>
                   <div class="table-wrap"><table>
                 <thead><tr><th>年</th><th>GPU</th><th>這一代加了什麼</th></tr></thead>
                 <tbody>
@@ -654,8 +654,8 @@
               <details class="gloss" id="n-model">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Prefill、decode 與 model 的三個數字（L1、L9）</span></summary>
                 <div class="gloss-body prose">
-                  <p>L1 講過，一個請求在 GPU 上分兩段。Prefill 一次讀完整段 prompt，決定第一個 token 多快出來（TTFT）。Decode 一次產生一個 token，重複到輸出結束，決定之後每個 token 的間隔（TPOT）。見 L1〈<a href="l01.html#t1">Prefill 與 decode</a>〉。</p>
-                  <p>L9 從 model 的形狀算出三個數字。Weights：參數量 × 2 bytes（BF16）。計算：每個 token 約 2 × 參數量個 FLOP。KV cache：每個 token 在每一層存 K 和 V，大小是 2 × 層數 × KV head 數（幾份 K、V，上一章前情說的 8 份）× head 維度（就是 d）× 2 bytes。Llama 3 8B 的 weights 16 GB、每個 token 16 GFLOP、KV cache 每個 token 128 KiB；Llama 3 70B 的 weights 141 GB、每個 token 141 GFLOP、KV cache 每個 token 320 KiB。推導見 L9〈<a href="l09.html#i5">三個數字</a>〉。</p>
+                  <p>L1 講過，一個請求在 GPU 上分兩段。<strong>Prefill 一次讀完整段 prompt，決定第一個 token 多快出來</strong>（TTFT）。<strong>Decode 一次產生一個 token，重複到輸出結束</strong>，決定之後每個 token 的間隔（TPOT）。見 L1〈<a href="l01.html#t1">Prefill 與 decode</a>〉。</p>
+                  <p>L9 從 model 的形狀算出三個數字。Weights：參數量 × 2 bytes（BF16）。計算：<strong>每個 token 約 2 × 參數量個 FLOP</strong>。KV cache：每個 token 在每一層存 K 和 V，大小是 2 × 層數 × KV head 數（幾份 K、V，上一章前情說的 8 份）× head 維度（就是 d）× 2 bytes。Llama 3 8B 的 weights 16 GB、每個 token 16 GFLOP、KV cache 每個 token 128 KiB；Llama 3 70B 的 weights 141 GB、每個 token 141 GFLOP、KV cache 每個 token 320 KiB。推導見 L9〈<a href="l09.html#i5">三個數字</a>〉。</p>
                 </div>
               </details>
               <p id="i3-1"><b>Batch 1：每個 weight 只用一次。</b>Decode 一步要把全部 weights 從 HBM 讀一遍，每個 weight（2 bytes）只做一次 multiply-add（2 FLOPs），intensity 約 1 FLOP/B。H200 的 ridge 是 206，所以它只能跑到 4.8 TB/s × 1 ≈ 5 TFLOP/s。先猜一下它用到幾成算力：約 50%、約 10%、約 2%、不到 1%？答案是最後一個，<strong>batch 1 的 decode 只用到約 0.5% 的算力</strong>。Prefill 剛好相反：2,048 個 token 共用同一次讀取，intensity 約 2,048，貼在屋頂上，只有更快的算力或更少的 FLOP 才有用。</p>
@@ -1167,7 +1167,7 @@
                   <tr><td><b>BF16 Tensor Core</b></td><td>989</td><td>1</td></tr>
                   <tr><td><b>TF32 Tensor Core</b></td><td>495</td><td>1/2</td></tr>
                   <tr><td><b>FP16 純量</b><br><small>也在 FP32 core 上，一次算兩個 FP16</small></td><td>134</td><td>約 1/7</td></tr>
-                  <tr><td><b>FP32 純量</b><br><small>softmax、normalization 在這裡跑</small></td><td>67</td><td>約 1/15</td></tr>
+                  <tr><td><b>FP32 純量</b><br><small>softmax、normalization 在這裡跑</small></td><td>67</td><td><strong>約 1/15</strong></td></tr>
                 </tbody>
               </table></div>
               <p>所以 <strong>roofline 的屋頂只屬於矩陣乘法</strong>，softmax、normalization 這類運算跑在 FP32 core 上，屋頂只有 Tensor Core 的 1/15。實際差得還更多，因為這些運算每讀一個數字只做幾次運算，比值遠低於門檻，被頻寬卡住（memory-bound，第 2 章）。Horace He 的〈Making Deep Learning Go Brrrr〉用 BERT 舉例：非矩陣乘法的運算只占 0.2% 的 FLOP，但 normalization 達到的 FLOP/s 比矩陣乘法低 250 倍，pointwise 運算（每個數字各自算一次，例如每個數都加上同一個常數）低 700 倍，所以它們占的時間遠多於 FLOP 的比例。FlashAttention 是把 attention 整段算在晶片上的 kernel（第 7 章），它的第四版 FlashAttention-4 就卡在這裡：softmax 要算 exp，exp 由 FP32 core 旁邊一個專算 exp、log 這類函數的小單元（SFU）負責；B200 的 Tensor Core 變快了，SFU 沒有，attention 就改成卡在 exp 上。</p>
@@ -1238,15 +1238,15 @@ H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每
                   <tr><td><b>新的資料搬運功能</b></td><td>TMA、cluster</td><td>TMEM、2-SM MMA（兩個 SM 合算一塊，見下面）</td><td>inline TMA descriptor：TMA 搬一塊 tile 前要讀的那張說明（descriptor，記著 tensor 的位址、形狀、每一列的間距），直接放進指令裡</td></tr>
                 </tbody>
               </table></div>
-                  <p>下面每一項都在回答同一個問題：一條指令能讓多少 bytes 上路，又少占多少 register 或 shared memory。這兩件事是同一個目標：正文說過，在路上的 load 要在 register 留位置，晶片上的空間少占一點，就能多發幾個 load、放更大的 tile。</p>
+                  <p>下面每一項都在回答同一個問題：<strong>一條指令能讓多少 bytes 上路，又少占多少 register 或 shared memory</strong>。這兩件事是同一個目標：正文說過，在路上的 load 要在 register 留位置，晶片上的空間少占一點，就能多發幾個 load、放更大的 tile。</p>
                   <ul>
-                    <li><b>Coalescing。</b>一個 warp 的 32 個 thread 讀連續的 32 個 4-byte 字，硬體合併成一個 128 B 的請求。thread i 讀 x[i] 會合併，讀 x[32·i] 不會：32 個 thread 各發一個請求，每個請求從 HBM 搬一小段卻只用到其中 4 bytes，同樣的頻寬送到的有用資料少很多。</li>
+                    <li><b>Coalescing。</b>一個 warp 的 32 個 thread <strong>讀連續的 32 個 4-byte 字，硬體合併成一個 128 B 的請求</strong>。thread i 讀 x[i] 會合併，讀 x[32·i] 不會：32 個 thread 各發一個請求，每個請求從 HBM 搬一小段卻只用到其中 4 bytes，同樣的頻寬送到的有用資料少很多。</li>
                     <li><b>16-byte vector load。</b>每個 thread 一次讀 16 bytes，一條 warp 指令搬 512 B，是 4-byte load 的 4 倍。</li>
-                    <li><b>cp.async。</b>Ampere 起，資料從 HBM 直接進 shared memory，不經過 register，register 留給計算。</li>
-                    <li><b>TMA。</b>Hopper 的 Tensor Memory Accelerator。一個 thread 發一條指令，硬體自己產生位址，把一整塊 tile 從 HBM 搬進 shared memory。128 × 64 個 BF16（每個 2 bytes）就是 16 KB，一條指令就有 16 KB 在路上。</li>
+                    <li><b>cp.async。</b>Ampere 起，<strong>資料從 HBM 直接進 shared memory，不經過 register</strong>，register 留給計算。</li>
+                    <li><b>TMA。</b>Hopper 的 Tensor Memory Accelerator。一個 thread 發一條指令，硬體自己產生位址，把一整塊 tile 從 HBM 搬進 shared memory。128 × 64 個 BF16（每個 2 bytes）就是 16 KB，<strong>一條指令就有 16 KB 在路上</strong>。</li>
                     <li><b>TMA multicast。</b>Cluster 是最多 8 個 thread block 綁成一組，分在不同的 SM 上跑。一次 L2 讀取送到 cluster 裡的每個 SM：一條指令讓這 8 個 SM 同時拿到同一塊 tile，L2 的流量也變少。</li>
-                    <li><b>TMEM。</b>Blackwell 的 tensor memory，每個 SM 256 KB。矩陣乘法的結果寫進 TMEM，不占 register，register 又能多發幾個 load。</li>
-                    <li><b>2-SM MMA。</b>Blackwell 讓兩個 SM 合算一個兩倍大的 tile。算 C = A × B 時，兩個 SM 各算 C 的一半，各自需要自己那一塊 A，卻都要用同一塊 B；合算時 B 由兩個 SM 各載入一半、互相共用，B 只搬一次，每個 SM 存 B 的空間也只要一半，省下的 shared memory 可以放更大的 tile，一次讓更多 bytes 上路。</li>
+                    <li><b>TMEM。</b>Blackwell 的 tensor memory，每個 SM 256 KB。<strong>矩陣乘法的結果寫進 TMEM，不占 register</strong>，register 又能多發幾個 load。</li>
+                    <li><b>2-SM MMA。</b>Blackwell 讓兩個 SM 合算一個兩倍大的 tile。算 C = A × B 時，兩個 SM 各算 C 的一半，各自需要自己那一塊 A，卻都要用同一塊 B；合算時 B 由兩個 SM 各載入一半、互相共用，<strong>B 只搬一次，每個 SM 存 B 的空間也只要一半</strong>，省下的 shared memory 可以放更大的 tile，一次讓更多 bytes 上路。</li>
                     <li><b>Inline TMA descriptor。</b>Rubin（初步）。TMA 搬一塊 tile 之前，要先讀一份 descriptor，記下這個 tensor 的位址、形狀和每一列的間距。Blackwell 的 descriptor 放在記憶體裡，MoE 的每個 expert 位置不同，就要各存一份；Rubin 把 descriptor 直接放進 TMA 指令，執行時更新，省下讀 descriptor 和算位址的工作（依 <a href="https://www.tomshardware.com/pc-components/gpus/nvidia-details-rubin-architectural-optimizations-for-inference-improvements-target-better-performance-and-efficiency-from-the-gpu-to-the-rack" target="_blank" rel="noopener">Tom's Hardware</a> 對 NVIDIA 說明的整理）。</li>
                   </ul>
                 </div>
@@ -1254,14 +1254,14 @@ H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每
               <details class="gloss" id="n-chips">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">其他晶片：AMD、TPU、Trainium 與 SRAM 加速器</span></summary>
                 <div class="gloss-body prose">
-                  <p>選讀。三個規格與 roofline 對它們一樣適用，差別在運算單元的形狀、記憶體怎麼管理，以及 scale-up 一組能放幾顆：scale-up 是一組晶片之間用專用的高速連線直接相連，NVIDIA 的 GB200 NVL72 一組 72 張 Blackwell GPU（GB200 是一顆 Grace CPU 配兩顆 Blackwell GPU 的板子，第 10 章）。規格依各家 2024–2026 的資料，最後一欄括號裡是 B200 的數字；PF 是每秒 10¹⁵ 個 FLOP，1 PF = 1,000 TFLOP/s。</p>
+                  <p>選讀。<strong>三個規格與 roofline 對它們一樣適用</strong>，差別在運算單元的形狀、記憶體怎麼管理，以及 scale-up 一組能放幾顆：scale-up 是一組晶片之間用專用的高速連線直接相連，NVIDIA 的 GB200 NVL72 一組 72 張 Blackwell GPU（GB200 是一顆 Grace CPU 配兩顆 Blackwell GPU 的板子，第 10 章）。規格依各家 2024–2026 的資料，最後一欄括號裡是 B200 的數字；PF 是每秒 10¹⁵ 個 FLOP，1 PF = 1,000 TFLOP/s。</p>
                   <div class="table-wrap"><table>
                 <thead><tr><th>晶片</th><th>和 GPU 最大的不同</th><th>程式怎麼寫</th><th>規格<br><small>括號裡是 B200</small></th></tr></thead>
                 <tbody>
                   <tr><td><b>AMD MI355X</b></td><td>8 顆運算 die 看成一顆 GPU；HBM 前面有 256 MB 的 Infinity Cache；一組 64 個 thread（wavefront），不是 32</td><td>ROCm（AMD 的整套 GPU 軟體，對應 NVIDIA 的 CUDA）、HIP（CUDA 風格的 C++，CUDA 程式可用 hipify 工具轉過來）；PyTorch 和 vLLM、SGLang（兩個常用的 LLM serving 框架）都能跑；自訂 kernel 用 Triton（用 Python 寫 kernel 的語言，第 6 章）或 AMD 的 Composable Kernel 函式庫</td><td>FP8 5.0 PF（4.5）；HBM 288 GB（180）；頻寬 8 TB/s（8）；scale-up 一組 8 張（NVL72 是 72 張）</td></tr>
                   <tr><td><b>Google TPU Ironwood</b></td><td>Systolic array：weight 留在格子裡，activation（這一層的輸入資料）從左邊流進來，部分和往下流；晶片接成 3D torus（每顆晶片在三個方向各連到相鄰的晶片，每個方向頭尾相接）</td><td>JAX（Google 的數值運算框架，地位像 PyTorch）或 PyTorch/XLA，由 XLA 編譯器把矩陣乘法切到 array 上；自訂 kernel 用 Pallas</td><td>FP8 4.6 PF（4.5）；HBM 192 GB（180）；頻寬 7.4 TB/s（8）；scale-up 一組 9,216 顆，以 3D torus 相連（NVL72 是 72 張）</td></tr>
-                  <tr><td><b>AWS Trainium3</b></td><td>8 個 NeuronCore，各有 Tensor（systolic）、Vector、Scalar 三種 engine；每個 core 32 MB SRAM，由 DMA（不經過運算單元、專門搬資料的硬體）填，沒有硬體 cache：要用的資料得由程式自己排好時間搬進來</td><td>Neuron SDK 編譯 PyTorch／JAX；NKI 用 Python 寫 kernel，明確搬 tile；沒有 CUDA，kernel 對 engine 寫，不是對 thread</td><td>MXFP8 2.5 PF（FP8 4.5）；HBM 144 GB（180）；頻寬 4.9 TB/s（8）；scale-up 一組 144 顆（NVL72 是 72 張）。MXFP8 是每 32 個數共用一個縮放倍數的 FP8，每秒的運算次數可以和 FP8 直接比</td></tr>
-                  <tr><td><b>SRAM 加速器</b><br><small>Cerebras、Groq、Maia</small></td><td>把大量 SRAM 放在晶片上：Cerebras WSE-3（44 GB，整片晶圓是一顆）和 Groq LPU（230 MB）完全不用 HBM；Microsoft Maia 200 在 216 GB 的 HBM3e 前面放 272 MB 的 SRAM，存常用的資料</td><td>各家自己的 SDK；Maia 只在 Azure 裡</td><td>這一類各家差很多，不並排規格，只比容量：Groq 跑 8-bit 的 70B model，weights 約 70 GB，每顆只有 230 MB，約要 300 顆晶片；同樣的 weights，一張 180 GB 的 B200 就放得下。所以這類晶片換得到速度，代價是要很多顆接在一起</td></tr>
+                  <tr><td><b>AWS Trainium3</b></td><td>8 個 NeuronCore，各有 Tensor（systolic）、Vector、Scalar 三種 engine；每個 core 32 MB SRAM，由 DMA（不經過運算單元、專門搬資料的硬體）填，沒有硬體 cache：<strong>要用的資料得由程式自己排好時間搬進來</strong></td><td>Neuron SDK 編譯 PyTorch／JAX；NKI 用 Python 寫 kernel，明確搬 tile；沒有 CUDA，kernel 對 engine 寫，不是對 thread</td><td>MXFP8 2.5 PF（FP8 4.5）；HBM 144 GB（180）；頻寬 4.9 TB/s（8）；scale-up 一組 144 顆（NVL72 是 72 張）。MXFP8 是每 32 個數共用一個縮放倍數的 FP8，每秒的運算次數可以和 FP8 直接比</td></tr>
+                  <tr><td><b>SRAM 加速器</b><br><small>Cerebras、Groq、Maia</small></td><td>把大量 SRAM 放在晶片上：Cerebras WSE-3（44 GB，整片晶圓是一顆）和 Groq LPU（230 MB）完全不用 HBM；Microsoft Maia 200 在 216 GB 的 HBM3e 前面放 272 MB 的 SRAM，存常用的資料</td><td>各家自己的 SDK；Maia 只在 Azure 裡</td><td>這一類各家差很多，不並排規格，只比容量：Groq 跑 8-bit 的 70B model，weights 約 70 GB，每顆只有 230 MB，約要 300 顆晶片；同樣的 weights，一張 180 GB 的 B200 就放得下。所以<strong>這類晶片換得到速度，代價是要很多顆接在一起</strong></td></tr>
                 </tbody>
               </table></div>
                 </div>
@@ -1327,8 +1327,8 @@ H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每
                 <tbody>
                   <tr><td>每個 token 的 FLOP</td><td>2 × 70B</td><td>約 140 GFLOP</td></tr>
                   <tr><td>實際的 model FLOP/s</td><td>每張 3,040 tok/s × 140 GFLOP</td><td>約 426 TFLOP/s</td></tr>
-                  <tr><td>MFU，分母用 FP8 dense peak</td><td>426 ÷ 1,979</td><td><b>約 22%</b></td></tr>
-                  <tr><td>MFU，分母換成 BF16 dense peak<br><small>H100 和 H200 的 BF16 都是 989</small></td><td>426 ÷ 989</td><td>約 43%</td></tr>
+                  <tr><td>MFU，分母用 FP8 dense peak</td><td>426 ÷ 1,979</td><td><strong>約 22%</strong></td></tr>
+                  <tr><td>MFU，分母換成 BF16 dense peak<br><small>H100 和 H200 的 BF16 都是 989</small></td><td>426 ÷ 989</td><td><strong>約 43%</strong></td></tr>
                 </tbody>
               </table></div>
               <p>提醒：1,979 是 H100 的 FP8 dense peak，前面的 ridge 表也用這個值。同一個速度，分母換成 BF16 的 989，MFU 就變成 43%，所以 <strong>報 MFU 要寫明分母是哪一個精度</strong>。經驗值是：訓練 35–45%，推論的 prefill 40–60%，decode 10–40%（這組數字沒有交代分母是哪一個精度的 peak，只能當粗略的範圍）。MFU 偏低通常有四個原因：</p>
@@ -1345,11 +1345,11 @@ H200 跑滿需要：4.8 TB/s × 250 ns = 1.2 MB 在路上，132 個 SM 平均每
               <div class="table-wrap"><table>
                 <thead><tr><th>Counter</th><th>量什麼</th><th>DCGM field</th></tr></thead>
                 <tbody>
-                  <tr><td><b>GPU utilization</b><br><small>nvidia-smi 的那個數字</small></td><td>有一個以上 kernel 在跑的時間比例</td><td>203</td></tr>
-                  <tr><td><b>SM activity</b></td><td>每個 SM 上至少有一個 warp 的時間比例，對全部 SM 平均。Warp 在等記憶體也算</td><td>1002</td></tr>
+                  <tr><td><b>GPU utilization</b><br><small>nvidia-smi 的那個數字</small></td><td><strong>有一個以上 kernel 在跑的時間比例</strong></td><td>203</td></tr>
+                  <tr><td><b>SM activity</b></td><td>每個 SM 上至少有一個 warp 的時間比例，對全部 SM 平均。<strong>Warp 在等記憶體也算</strong></td><td>1002</td></tr>
                   <tr><td><b>SM occupancy</b></td><td>SM 上常駐的 warp ÷ 最多能放的 warp（H200 是 64）</td><td>1003</td></tr>
                   <tr><td><b>Tensor activity</b></td><td>Tensor Core 在算的 cycle 比例</td><td>1004</td></tr>
-                  <tr><td><b>DRAM activity</b></td><td>HBM 在送或收資料的 cycle 比例</td><td>1005</td></tr>
+                  <tr><td><b>DRAM activity</b></td><td><strong>HBM 在送或收資料的 cycle 比例</strong></td><td>1005</td></tr>
                 </tbody>
               </table></div>
               <p>DCGM 文件對 SM activity 的說法是：<strong>0.8 以上是有效使用 GPU 的必要條件，但不充分</strong>；低於 0.5 多半是沒用好。原因在表的第二列：warp 在等記憶體也算 active，所以 <strong>SM activity 高，不代表有在算</strong>。</p>
@@ -1552,11 +1552,11 @@ def add(x, y):
               <div class="table-wrap"><table>
                 <thead><tr><th>層</th><th>例子</th><th>什麼時候用</th><th>成本</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Graph compiler</b></td><td>torch.compile、XLA</td><td>整個 model 的預設</td><td>對慢的那個 op 幾乎沒有控制</td></tr>
-                  <tr><td><b>Tile language</b></td><td>Helion、Triton、Pallas</td><td>某個 op 沒有 fuse 起來，或缺一個 op</td><td>寫一個 op 要幾小時</td></tr>
-                  <tr><td><b>明確的 tile</b></td><td>TileLang</td><td>要控制資料怎麼分段搬進 shared memory</td><td>幾天</td></tr>
-                  <tr><td><b>Layout 與 warp 分工</b></td><td>CuTe、CUTLASS、ThunderKittens</td><td>GEMM 或 attention 要逼近 peak</td><td>幾週；每一代 GPU 要重做</td></tr>
-                  <tr><td><b>Thread</b></td><td>CUDA C++</td><td>不規則的工作：排序、稀疏矩陣、圖演算法</td><td>全部自己來</td></tr>
+                  <tr><td><b>Graph compiler</b></td><td>torch.compile、XLA</td><td><strong>整個 model 的預設</strong></td><td>對慢的那個 op 幾乎沒有控制</td></tr>
+                  <tr><td><b>Tile language</b></td><td>Helion、Triton、Pallas</td><td><strong>某個 op 沒有 fuse 起來，或缺一個 op</strong></td><td>寫一個 op 要幾小時</td></tr>
+                  <tr><td><b>明確的 tile</b></td><td>TileLang</td><td><strong>要控制資料怎麼分段搬進 shared memory</strong></td><td>幾天</td></tr>
+                  <tr><td><b>Layout 與 warp 分工</b></td><td>CuTe、CUTLASS、ThunderKittens</td><td><strong>GEMM 或 attention 要逼近 peak</strong></td><td>幾週；每一代 GPU 要重做</td></tr>
+                  <tr><td><b>Thread</b></td><td>CUDA C++</td><td><strong>不規則的工作</strong>：排序、稀疏矩陣、圖演算法</td><td>全部自己來</td></tr>
                 </tbody>
               </table></div>
               <p>本文的判斷：<strong>從最上層開始，量到某個 op 確實是瓶頸才往下</strong>；往下之前，先找現成的 kernel。cuBLAS、FlashAttention、FlashInfer 這類函式庫已經替每一代 GPU 調好；CUTLASS 也附了很多調好的 GEMM 可以直接用，它同時是上表第四層的工具，拿它從頭寫才是幾週的成本。<strong>自己寫的版本很難比它們快，卻要自己維護到下一代 GPU</strong>。整理成一個流程：</p>
@@ -1609,13 +1609,13 @@ def add(x, y):
               <details class="gloss" id="n-sass">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">從 Triton、CUDA 到 SASS：程式怎麼變成 GPU 上的指令</span></summary>
                 <div class="gloss-body prose">
-                  <p>進階內容。不管從哪一層寫，最後都編成 SASS，也就是 GPU 實際執行的機器碼。PTX 是中間的虛擬指令集，可以在載入時再編譯：</p>
+                  <p>進階內容。<strong>不管從哪一層寫，最後都編成 SASS</strong>，也就是 GPU 實際執行的機器碼。PTX 是中間的虛擬指令集，可以在載入時再編譯：</p>
 <figure class="file"><figcaption>三條編譯路徑</figcaption><pre><code class="lang-text">Triton  → Triton IR → TritonGPU IR → LLVM IR → PTX → ptxas → SASS（cubin）
 CUDA C++ → NVCC → NVVM → PTX → ptxas → SASS
 cuTile   → CUDA Tile IR → tileiras → SASS
 host 端：GCC、Clang 或 MSVC 編出 host object，linker 把 SASS 和 PTX 包成 fatbin 放進執行檔
 載入時：driver 找符合這顆 GPU 的 SASS；沒有就把 PTX 即時編譯（JIT）並快取</code></pre></figure>
-                  <p>所以舊的執行檔在新 GPU 上通常還能跑，靠的是 PTX 的 JIT；但新一代的指令（TMA、TMEM）要重新編譯才用得到。</p>
+                  <p>所以舊的執行檔在新 GPU 上通常還能跑，靠的是 PTX 的 JIT；但<strong>新一代的指令（TMA、TMEM）要重新編譯才用得到</strong>。</p>
                 </div>
               </details>
             </div>
@@ -1801,10 +1801,10 @@ max abs difference: 8.881784197001252e-16</code></pre></figure>
               <div class="table-wrap"><table>
                 <thead><tr><th>版本</th><th>年份、GPU</th><th>瓶頸</th><th>修法</th><th>結果</th></tr></thead>
                 <tbody>
-                  <tr><td><b>FA1</b></td><td>2022、A100</td><td>n × n 矩陣的 HBM 流量</td><td>Shared memory 的 tiling 加 online softmax</td><td>attention 這一步比標準寫法快 2–4 倍（上面的 7.6 倍是論文在 GPT-2 的一組設定上量到的）；記憶體隨長度線性成長</td></tr>
-                  <tr><td><b>FA2</b></td><td>2023、A100</td><td>平行度不夠（一個 head 一個 block）、非 matmul 的 FLOP 太多</td><td>沿 sequence 切工作，減少非 matmul 的運算</td><td>約 FA1 的 2 倍；最高約 A100 FP16／BF16 peak 的 70%</td></tr>
-                  <tr><td><b>FA3</b></td><td>2024、H100</td><td>Tensor Core 在等 load 和 softmax</td><td>TMA、warp specialization、softmax 和 GEMM 重疊、FP8</td><td>FP16 約 H100 peak 的 75%</td></tr>
-                  <tr><td><b>FA4</b></td><td>2026 論文、B200</td><td>Tensor Core 加倍、exp 沒有：softmax 變成上限</td><td>TMEM 放結果、部分 exp 改在做 multiply-add 的 FMA 單元上近似、少做 rescale（下面細講）</td><td>最高 1,613 TFLOP/s，B200 BF16 peak 的 71%；比 cuDNN 9.13（NVIDIA 官方的深度學習 kernel 函式庫）快 1.1–1.3 倍</td></tr>
+                  <tr><td><b>FA1</b></td><td>2022、A100</td><td><strong>n × n 矩陣的 HBM 流量</strong></td><td>Shared memory 的 tiling 加 online softmax</td><td>attention 這一步比標準寫法快 2–4 倍（上面的 7.6 倍是論文在 GPT-2 的一組設定上量到的）；記憶體隨長度線性成長</td></tr>
+                  <tr><td><b>FA2</b></td><td>2023、A100</td><td><strong>平行度不夠（一個 head 一個 block）、非 matmul 的 FLOP 太多</strong></td><td>沿 sequence 切工作，減少非 matmul 的運算</td><td>約 FA1 的 2 倍；最高約 A100 FP16／BF16 peak 的 70%</td></tr>
+                  <tr><td><b>FA3</b></td><td>2024、H100</td><td><strong>Tensor Core 在等 load 和 softmax</strong></td><td>TMA、warp specialization、softmax 和 GEMM 重疊、FP8</td><td>FP16 約 H100 peak 的 75%</td></tr>
+                  <tr><td><b>FA4</b></td><td>2026 論文、B200</td><td>Tensor Core 加倍、exp 沒有：<strong>softmax 變成上限</strong></td><td>TMEM 放結果、部分 exp 改在做 multiply-add 的 FMA 單元上近似、少做 rescale（下面細講）</td><td>最高 1,613 TFLOP/s，B200 BF16 peak 的 71%；比 cuDNN 9.13（NVIDIA 官方的深度學習 kernel 函式庫）快 1.1–1.3 倍</td></tr>
                 </tbody>
               </table></div>
               <p>FA4 最能說明這個模式。<a href="https://arxiv.org/abs/2603.05451" target="_blank" rel="noopener">FlashAttention-4 的論文</a>（2026-03）指出，B200 的 Tensor Core 吞吐是 Hopper 的兩倍，算 exp 的單元和 shared memory 的頻寬卻沒變：</p>
@@ -2089,11 +2089,11 @@ for (int t = 0; t &lt; max_tokens; t++)
               <div class="table-wrap"><table>
                 <thead><tr><th>時間、誰</th><th>看起來</th><th>實際上</th><th>之後改了什麼</th></tr></thead>
                 <tbody>
-                  <tr><td><b>2025-02</b><br>METR 重新評估 KernelBench</td><td>一個解快得不合理</td><td><code>torch.empty</code>（配置記憶體但不清空，裡面留著上一次的內容）拿到參考實作剛用過的記憶體，答案已經在裡面，kernel 不算也能交卷；另有 17 個解用多個 CUDA stream（GPU 上的工作佇列，第 8 章），計時只等其中一條，別條上的工作還沒做完就停表</td><td>刪掉 45 題（輸出太小，或幾乎不隨輸入變、可以快取），刪掉那些解；改用 <code>triton.testing.do_bench</code> 計時</td></tr>
-                  <tr><td><b>2025-02</b><br>Sakana AI CUDA Engineer</td><td>宣稱最多快 100 倍</td><td>Sakana 說系統利用 harness 的記憶體漏洞，讓沒算對的 kernel 也通過正確性檢查；少做了工作，時間自然短，100 倍是這種 kernel 量出來的。別人照正常方式重量，它反而比參考實作慢</td><td>加固 harness、改寫 AI CUDA Engineer 的論文；9 月的 robust-kbench（Sakana 新做的 benchmark）用多組輸入大小、初始化與 seed，也測 backward</td></tr>
-                  <tr><td><b>2025-07</b><br>CUDA-L1（用 RL 訓練的 model；RL 是強化學習，照分數獎懲來訓練）</td><td>整體快 18 倍</td><td>250 個實作裡 82 個（32.8%）把工作丟到另開的 CUDA stream，計時只看主 stream；也有縮小 batch 等參數、依輸入位址快取結果</td><td>結束計時前，先等被測的 kernel 開出的每個 stream，再同步整個 device</td></tr>
-                  <tr><td><b>2025-07</b><br>KernelBench v0.1（benchmark 作者）</td><td>沒有單一個數字：benchmark 作者回頭檢查 model 寫的 kernel，發現有一部分是靠漏洞過關的</td><td>直接呼叫 torch 或 cuBLAS；寫了 CUDA 卻沒呼叫；輸出記憶體重複使用時，什麼都不做的 kernel 也通過；同步點錯</td><td>題目放大到 H100 上 1–15 ms；輸入可改用多種分布；加 speed-of-light 檢查（下面一節：報出的時間不能比第 2 章公式的下限還短）</td></tr>
-                  <tr><td><b>2026-06</b><br>Hacker-fixer loop（CMU 等）</td><td>一題報出 93,862 倍</td><td>知道 harness（這篇論文叫 verifier）怎麼寫的 agent，用 <code>gc.get_objects()</code> 找到參考實作的物件，在它的 forward（從輸入算到輸出的那一趟）裡多塞矩陣乘法，把參考實作變慢</td><td>三個 agent 輪流攻擊、修補、解題：拿已知、公開過的漏洞手法去攻擊，成功率從 62% 降到 0%</td></tr>
+                  <tr><td><b>2025-02</b><br>METR 重新評估 KernelBench</td><td>一個解快得不合理</td><td><code>torch.empty</code>（配置記憶體但不清空，裡面留著上一次的內容）拿到參考實作剛用過的記憶體，<strong>答案已經在裡面，kernel 不算也能交卷</strong>；另有 17 個解用多個 CUDA stream（GPU 上的工作佇列，第 8 章），計時只等其中一條，別條上的工作還沒做完就停表</td><td>刪掉 45 題（輸出太小，或幾乎不隨輸入變、可以快取），刪掉那些解；改用 <code>triton.testing.do_bench</code> 計時</td></tr>
+                  <tr><td><b>2025-02</b><br>Sakana AI CUDA Engineer</td><td>宣稱最多快 100 倍</td><td>Sakana 說系統利用 harness 的記憶體漏洞，<strong>讓沒算對的 kernel 也通過正確性檢查</strong>；少做了工作，時間自然短，100 倍是這種 kernel 量出來的。別人照正常方式重量，它反而比參考實作慢</td><td>加固 harness、改寫 AI CUDA Engineer 的論文；9 月的 robust-kbench（Sakana 新做的 benchmark）用多組輸入大小、初始化與 seed，也測 backward</td></tr>
+                  <tr><td><b>2025-07</b><br>CUDA-L1（用 RL 訓練的 model；RL 是強化學習，照分數獎懲來訓練）</td><td>整體快 18 倍</td><td>250 個實作裡 82 個（32.8%）<strong>把工作丟到另開的 CUDA stream，計時只看主 stream</strong>；也有縮小 batch 等參數、依輸入位址快取結果</td><td>結束計時前，先等被測的 kernel 開出的每個 stream，再同步整個 device</td></tr>
+                  <tr><td><b>2025-07</b><br>KernelBench v0.1（benchmark 作者）</td><td>沒有單一個數字：benchmark 作者回頭檢查 model 寫的 kernel，發現有一部分是靠漏洞過關的</td><td>直接呼叫 torch 或 cuBLAS；寫了 CUDA 卻沒呼叫；輸出記憶體重複使用時，<strong>什麼都不做的 kernel 也通過</strong>；同步點錯</td><td>題目放大到 H100 上 1–15 ms；輸入可改用多種分布；加 speed-of-light 檢查（下面一節：報出的時間不能比第 2 章公式的下限還短）</td></tr>
+                  <tr><td><b>2026-06</b><br>Hacker-fixer loop（CMU 等）</td><td>一題報出 93,862 倍</td><td>知道 harness（這篇論文叫 verifier）怎麼寫的 agent，用 <code>gc.get_objects()</code> 找到參考實作的物件，在它的 forward（從輸入算到輸出的那一趟）裡多塞矩陣乘法，<strong>把參考實作變慢</strong></td><td>三個 agent 輪流攻擊、修補、解題：拿已知、公開過的漏洞手法去攻擊，成功率從 62% 降到 0%</td></tr>
                 </tbody>
               </table></div>
               <p>來源依序是 <a href="https://metr.org/blog/2025-02-14-measuring-automated-kernel-engineering" target="_blank" rel="noopener">METR</a>、<a href="https://techcrunch.com/?p=2969225" target="_blank" rel="noopener">TechCrunch</a> 對 Sakana 說明的報導與 Sakana 的 <a href="https://arxiv.org/abs/2509.14279" target="_blank" rel="noopener">robust-kbench</a>、<a href="https://arxiv.org/abs/2507.14111" target="_blank" rel="noopener">CUDA-L1</a>、<a href="https://scalingintelligence.stanford.edu/blogs/kernelbenchv01" target="_blank" rel="noopener">KernelBench v0.1</a>、<a href="https://arxiv.org/abs/2606.08960" target="_blank" rel="noopener">Hardening Agent Benchmarks</a>。報出來的加速和真的加速差多少，robust-kbench（Sakana 2025-09 的論文）給了兩組數字。個別的題目上，LLM 能靠 KernelBench 的漏洞做出 50–120 倍的假加速。整體平均上，Sakana 用自己的 agent 框架跑 KernelBench 第 1、2 級共 200 題，排除受污染的題目（指題目本身有漏洞、靠漏洞就能做出假加速的題目，例如輸出其實是常數）後，它產生的 kernel <strong>平均加速從 3.13 倍降到 1.49 倍</strong>，少了一半多：一半以上的加速來自漏洞。KernelBench 的作者也寫道，修掉已知的漏洞之後，新的漏洞還會出現，而且更難發現。</p>

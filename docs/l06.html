@@ -73,11 +73,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你下班前交給 agent 一個大約要 50 步的任務。Agent 是會自己讀檔、跑指令、改 code 的 AI 助手，裡面做決定的是語言模型（下面叫 model）；它每做一個動作，例如讀一個檔、改一個檔、跑一次指令，算一步。隔天早上它回報「完成，測試都通過」。你自己一跑，測試是紅的。翻紀錄才發現兩件事：它很早就改錯了一個檔案，之後的每一步都建立在這個錯上；最後它也沒有真的看到測試通過，就回報了通過。</p>
-    <p class="thesis">一個任務有幾十步，只要其中一步錯了沒被發現，整個任務就錯，所以步數越多，全對的機會越低。這門課替這類失敗列了 26 種；這堂不背它們，回答的問題是：<strong>怎麼把錯攔下來</strong>。下面三條是這堂的判斷：在哪裡檢查、失敗時從哪裡重做、出錯之後去哪裡修。</p>
+    <p class="thesis">先看一個例子。你下班前交給 agent 一個大約要 50 步的任務。Agent 是會自己讀檔、跑指令、改 code 的 AI 助手，裡面做決定的是語言模型（下面叫 model）；它每做一個動作，例如讀一個檔、改一個檔、跑一次指令，算一步。隔天早上它回報「完成，測試都通過」。<strong>你自己一跑，測試是紅的</strong>。翻紀錄才發現兩件事：它很早就改錯了一個檔案，之後的每一步都建立在這個錯上；最後它也<strong>沒有真的看到測試通過，就回報了通過</strong>。</p>
+    <p class="thesis">一個任務有幾十步，<strong>只要其中一步錯了沒被發現，整個任務就錯</strong>，所以步數越多，全對的機會越低。這門課替這類失敗列了 26 種；這堂不背它們，回答的問題是：<strong>怎麼把錯攔下來</strong>。下面三條是這堂的判斷：在哪裡檢查、失敗時從哪裡重做、出錯之後去哪裡修。</p>
     <ul class="core">
-      <li><span><b>長任務靠攔錯，不靠每一步第一次就做對。</b>假設每一步第一次做對的機率是 95%：完全不檢查，50 步全對的機率只剩 8%；改成每步做完就檢查、錯了重試一次，而且檢查都抓得到錯，就升到 88%。Model 沒有變強，<strong>差別只在錯有沒有當場被攔下</strong>（第 1、2 章）。</span></li>
-      <li><span><b>失敗時從哪裡重做、最多花多少，要事先定。</b>檢查分兩種。很快就跑完的（例如語法檢查）每一步都跑。要跑很久的（例如整套測試）隔一段跑一次：通過了，就把當時的檔案存成一個存檔點（checkpoint）；沒通過，就退回上一個存檔點重做。隔得太密，時間和費用都花在驗證上；隔得太疏，一錯就要重做一大段。例子裡如果每 10 步驗一次，那個改錯的檔案最晚在 10 步之內就會被抓到，不會錯到最後。再替每個任務定步數、費用、時間的上限，一直沒有進展就停（第 3 章）。</span></li>
+      <li><span><b>長任務靠攔錯，不靠每一步第一次就做對。</b>假設每一步第一次做對的機率是 95%：<strong>完全不檢查，50 步全對的機率只剩 8%</strong>；改成每步做完就檢查、錯了重試一次，而且檢查都抓得到錯，就升到 88%。Model 沒有變強，<strong>差別只在錯有沒有當場被攔下</strong>（第 1、2 章）。</span></li>
+      <li><span><b>失敗時從哪裡重做、最多花多少，要事先定。</b>檢查分兩種。很快就跑完的（例如語法檢查）每一步都跑。要跑很久的（例如整套測試）隔一段跑一次：通過了，就把當時的檔案存成一個存檔點（checkpoint）；<strong>沒通過，就退回上一個存檔點重做</strong>。<strong>隔得太密，時間和費用都花在驗證上；隔得太疏，一錯就要重做一大段</strong>。例子裡如果每 10 步驗一次，那個改錯的檔案最晚在 10 步之內就會被抓到，不會錯到最後。再<strong>替每個任務定步數、費用、時間的上限，一直沒有進展就停</strong>（第 3 章）。</span></li>
       <li><span><b>修的時候，先分清楚錯是從哪裡來的。</b>例子的最後一個錯是「說測試通過，其實沒過」。這一個症狀就有五種可能的來源：你的任務說明沒要求跑測試；harness（包在 model 外面、替它執行動作的程式）截掉了測試的錯誤輸出；model 沒跑就宣布完成；跑測試的工具失敗了卻回報成功；跑的是還沒重新編譯的舊程式。<strong>五種的修法都不同</strong>，修錯地方，下次還會再犯（第 4 章）。</span></li>
     </ul>
     <p class="readhow">另一種錯是 agent 把錯的資訊存成筆記，下一次對話又讀回來照做，那是 L6b〈<a href="l06b.html">Agent Memory</a>〉的主題。26 種失敗的清單在〈查閱〉，需要時查。</p>
@@ -130,7 +130,7 @@ p = 0.95, n = 50  →  0.95 ^ 50 = 7.7%</code></pre></figure>
                 <thead><tr><th>每步成功率 p</th><th>5 步</th><th>10 步</th><th>20 步</th><th>50 步</th><th>100 步</th></tr></thead>
                 <tbody>
                   <tr><td>90%</td><td>59%</td><td>35%</td><td>12%</td><td>0.5%</td><td>0.003%</td></tr>
-                  <tr><td><b>95%</b></td><td>77%</td><td>60%</td><td>36%</td><td><b>8%</b></td><td>0.6%</td></tr>
+                  <tr><td><b>95%</b></td><td>77%</td><td>60%</td><td>36%</td><td><strong>8%</strong></td><td>0.6%</td></tr>
                   <tr><td>98%</td><td>90%</td><td>82%</td><td>67%</td><td>36%</td><td>13%</td></tr>
                   <tr><td>99%</td><td>95%</td><td>90%</td><td>82%</td><td>61%</td><td>37%</td></tr>
                   <tr><td>99.9%</td><td>99.5%</td><td>99.0%</td><td>98.0%</td><td>95%</td><td>90%</td></tr>
@@ -238,10 +238,10 @@ run 全對       = s ^ 50</code></pre></figure>
               <div class="table-wrap"><table>
                 <thead><tr><th>情況</th><th>detect</th><th>retry_ok</th><th>一步的成功率 s</th><th>50 步全對</th></tr></thead>
                 <tbody>
-                  <tr><td>不檢查、不重試</td><td>—</td><td>—</td><td>95%</td><td>8%</td></tr>
-                  <tr><td><b>檢查很準，重試和第一次一樣</b></td><td>100%</td><td>95%</td><td>99.75%</td><td><b>88%</b></td></tr>
-                  <tr><td>檢查漏兩成</td><td>80%</td><td>95%</td><td>98.8%</td><td>55%</td></tr>
-                  <tr><td>檢查很準，但重試常常還是錯</td><td>100%</td><td>50%</td><td>97.5%</td><td>28%</td></tr>
+                  <tr><td>不檢查、不重試</td><td>—</td><td>—</td><td>95%</td><td><strong>8%</strong></td></tr>
+                  <tr><td><b>檢查很準，重試和第一次一樣</b></td><td>100%</td><td>95%</td><td>99.75%</td><td><strong>88%</strong></td></tr>
+                  <tr><td>檢查漏兩成</td><td>80%</td><td>95%</td><td>98.8%</td><td><strong>55%</strong></td></tr>
+                  <tr><td>檢查很準，但重試常常還是錯</td><td>100%</td><td>50%</td><td>97.5%</td><td><strong>28%</strong></td></tr>
                 </tbody>
               </table></div>
               <p>Model 一點都沒變強，<strong>50 步的全對率從 8% 升到 88%</strong>。但檢查要準：漏兩成，就掉到 55%。檢查也會往另一個方向錯：把做對的步驟判成錯，打回去重做。上面的算式沒算這一種。把檢查調嚴，漏抓會變少；但多加的測試和規則本身也可能判錯，所以這一種錯通常會變多。冤枉到的步驟要重做，重做時可能把本來對的改壞，所以<strong>檢查不是越嚴越好</strong>，數字見本章最後的本文延伸〈<a href="#x5">檢查會往兩個方向錯</a>〉。另外，<strong>重試之前要確認這一步做兩次不會出事</strong>，這是 L5〈<a href="l05.html#i6">送出去之後</a>〉講的冪等。</p>
@@ -249,10 +249,10 @@ run 全對       = s ^ 50</code></pre></figure>
               <div class="table-wrap"><table>
                 <thead><tr><th>看起來像檢查</th><th>為什麼抓不到</th><th>換成</th></tr></thead>
                 <tbody>
-                  <tr><td>Model 說「應該會過了」</td><td>Model 只說了一句話，沒有發出 <a class="tm" href="#n-harness">tool call</a>（model 要 harness 替它執行的動作，例如跑 pytest），所以沒有任何輸出能證明測試過了。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 量到 26% 的失敗 run 宣稱自己成功</td><td>要 tool 的輸出當證據</td></tr>
-                  <tr><td>讓 agent 評自己的成果</td><td>評分的就是寫的那個 agent，它的 context（這一次送進 model 的全部文字，包括對話歷史）裡有自己做每一步的理由，這些理由也說服得了打分的它。<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Anthropic 2026-03</a> 的 harness 實驗量到：agent 替自己的成果打分時穩定給高分，壞結果也被放過（一家公司的經驗，不是對照實驗）</td><td>另開一個 agent 當 reviewer，不給它寫的人的 context，只給 diff。Model 可以是同一個：它讀不到作者的理由，理由就說服不了它（L5〈<a href="l05.html#i3-1">writer 加 reviewer</a>〉）</td></tr>
-                  <tr><td>測試可以改</td><td>它會去最佳化「測試變綠」（下一段）</td><td>測試設成 read-only，再 review diff</td></tr>
-                  <tr><td>只看單元測試</td><td>單元測試只測一個函式，curl 只打一個 API；元件之間沒接好、畫面上按了沒反應，這兩種都看不到。<a href="https://anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Anthropic 2025-11 的長時間 harness</a> 就碰到：單元測試和 curl 都過了，功能從頭到尾用一次還是壞的</td><td>照使用者的方式，從頭到尾操作一次</td></tr>
+                  <tr><td>Model 說「應該會過了」</td><td>Model 只說了一句話，沒有發出 <a class="tm" href="#n-harness">tool call</a>（model 要 harness 替它執行的動作，例如跑 pytest），所以沒有任何輸出能證明測試過了。<a href="https://arxiv.org/pdf/2607.09510" target="_blank" rel="noopener">Failure as a Process</a> 量到 26% 的失敗 run 宣稱自己成功</td><td><strong>要 tool 的輸出當證據</strong></td></tr>
+                  <tr><td>讓 agent 評自己的成果</td><td>評分的就是寫的那個 agent，它的 context（這一次送進 model 的全部文字，包括對話歷史）裡有自己做每一步的理由，這些理由也說服得了打分的它。<a href="https://anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Anthropic 2026-03</a> 的 harness 實驗量到：agent 替自己的成果打分時穩定給高分，壞結果也被放過（一家公司的經驗，不是對照實驗）</td><td><strong>另開一個 agent 當 reviewer，不給它寫的人的 context，只給 diff</strong>。Model 可以是同一個：它讀不到作者的理由，理由就說服不了它（L5〈<a href="l05.html#i3-1">writer 加 reviewer</a>〉）</td></tr>
+                  <tr><td>測試可以改</td><td>它會去最佳化「測試變綠」（下一段）</td><td><strong>測試設成 read-only，再 review diff</strong></td></tr>
+                  <tr><td>只看單元測試</td><td>單元測試只測一個函式，curl 只打一個 API；元件之間沒接好、畫面上按了沒反應，這兩種都看不到。<a href="https://anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Anthropic 2025-11 的長時間 harness</a> 就碰到：單元測試和 curl 都過了，功能從頭到尾用一次還是壞的</td><td><strong>照使用者的方式，從頭到尾操作一次</strong></td></tr>
                 </tbody>
               </table></div>
               <p>第三列有量測。<a href="https://arxiv.org/abs/2510.20270" target="_blank" rel="noopener">ImpossibleBench</a>（CMU 與 Anthropic，2025-10）把測試改成和規格矛盾，任何通過都只能靠作弊。改法有兩種：Oneoff 改掉一個測試的期望值，讓它和規格矛盾。Conflicting 複製一個測試、給它不同的期望值，同一個輸入有兩個互相矛盾的答案，連測試之間都衝突。GPT-5 在 Oneoff 作弊 76%、在 Conflicting 54%；Claude Opus 4.1 在 Conflicting 50%。手法有改測試、讓 <code>==</code> 永遠成立、針對測試寫特例。Read-only 擋得住改測試，擋不住寫特例；給 agent 一個「回報給人」的出口，GPT-5 在 Conflicting 從 54% 降到 9%，Opus 4.1 降得少得多。這些是當時的 model，數字會變。寫給 agent 的任務可以這樣防：</p>
@@ -324,8 +324,8 @@ exit 0</code></pre></figure>
               <div class="table-wrap"><table>
                 <thead><tr><th>這一步</th><th>檢查說「過」</th><th>檢查說「錯」</th></tr></thead>
                 <tbody>
-                  <tr><td><b>真的做對了</b><br><small>機率 p</small></td><td>放行，判對了</td><td><b>誤判</b>：檢查把做對的步驟打回去重做。算式沒有這一格，等於假設它不會發生</td></tr>
-                  <tr><td><b>真的做錯了</b><br><small>機率 1 − p</small></td><td><b>漏抓</b>：錯誤留在 run 裡。機率是 1 − detect，本章表裡「檢查漏兩成」那一列就是漏抓 20%</td><td>抓到了，重試。機率是 detect</td></tr>
+                  <tr><td><b>真的做對了</b><br><small>機率 p</small></td><td>放行，判對了</td><td><b>誤判</b>：<strong>檢查把做對的步驟打回去重做</strong>。算式沒有這一格，等於假設它不會發生</td></tr>
+                  <tr><td><b>真的做錯了</b><br><small>機率 1 − p</small></td><td><b>漏抓</b>：<strong>錯誤留在 run 裡</strong>。機率是 1 − detect，本章表裡「檢查漏兩成」那一列就是漏抓 20%</td><td>抓到了，重試。機率是 detect</td></tr>
                 </tbody>
               </table></div>
               <p>英文常把這兩種錯叫 false positive 和 false negative，但哪一種叫哪個名字，要看把哪一種判定當成 positive（陽性），而兩種當法都有人用。把「檢查說錯」當 positive，就像驗出病叫陽性：漏抓是 false negative（偽陰性），誤判是 false positive（偽陽性）。評估 agent 的 grader（判斷 agent 有沒有做完任務的程式）通常反過來，把「判過」當 positive，名字就對調：沒做對卻判過，叫 false positive。L7〈<a href="l07.html#i6">Grader</a>〉用的是後一種。為了不混淆，本文不用這兩個英文名字，直接說漏抓和誤判。</p>
@@ -566,9 +566,9 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
                 <thead><tr><th>上限</th><th>擋什麼</th><th>在 Claude Code 裡（<a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">2026-11 的官方文件</a>）</th></tr></thead>
                 <tbody>
                   <tr><td><b>步數</b></td><td>繞圈</td><td><code>--max-turns</code>，只在 <code>-p</code>（非互動模式：一次給完 prompt 就跑）有效，到上限就回報錯誤；subagent 用 <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener"><code>maxTurns</code></a>，到上限時輸出標成 partial</td></tr>
-                  <tr><td><b>花費</b></td><td>帳單</td><td><code>--max-budget-usd</code>，一樣只在 <code>-p</code> 有效，subagent 的花費也算；是估計值，可能超過，要留餘裕</td></tr>
+                  <tr><td><b>花費</b></td><td>帳單</td><td><code>--max-budget-usd</code>，一樣只在 <code>-p</code> 有效，subagent 的花費也算；<strong>是估計值，可能超過，要留餘裕</strong></td></tr>
                   <tr><td><b>時間</b></td><td>卡住</td><td>CLI 沒有對應的 flag，用系統的 <code>timeout</code> 指令</td></tr>
-                  <tr><td><b>沒有進展</b></td><td>一直修同一件事</td><td>CLI 沒有對應的 flag，自己寫一支 PostToolUse hook（每次 tool 跑完都會執行的 script，L2〈<a href="l02.html#i7">hook</a>〉）。它每次執行時，在一個檔案裡記一行：這一步有沒有改檔、有沒有新通過的測試（從 hook 收到的 tool 輸出判斷）。最後 8 行都是「沒有」，script 就在 stdout 印出 <code>{"continue": false}</code>，Claude Code 讀到就停下 agent。8 步是本文取的值，比修好一個錯的中位數 5 步多留一點。一直在改檔卻修不好的情況，這條擋不到，要靠步數上限</td></tr>
+                  <tr><td><b>沒有進展</b></td><td>一直修同一件事</td><td>CLI 沒有對應的 flag，自己寫一支 PostToolUse hook（每次 tool 跑完都會執行的 script，L2〈<a href="l02.html#i7">hook</a>〉）。它每次執行時，在一個檔案裡記一行：這一步有沒有改檔、有沒有新通過的測試（從 hook 收到的 tool 輸出判斷）。最後 8 行都是「沒有」，script 就在 stdout 印出 <code>{"continue": false}</code>，Claude Code 讀到就停下 agent。8 步是本文取的值，比修好一個錯的中位數 5 步多留一點。<strong>一直在改檔卻修不好的情況，這條擋不到</strong>，要靠步數上限</td></tr>
                 </tbody>
               </table></div>
               <p>這四種上限，加上第 2 章的重試，都是 SRE（site reliability engineering，Google 提出的服務維運方法）處理「下游會失敗」的老習慣（<a class="tm" href="#n-sre">查閱</a>）。差別是服務的失敗大多能偵測，<strong>agent 的失敗常常安靜</strong>，上限只在它錯很久之後才停下它，所以第 2 章的檢查排在前面。Subagent 的深度與寬度在 L5〈<a href="l05.html#i4-3">派工</a>〉，上限設多少在 L8〈<a href="l08.html#i7-2">上限</a>〉。</p>
@@ -578,9 +578,9 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
                   <span class="anchor" id="x3"></span><p>SRE（site reliability engineering）是 Google 提出的服務維運方法。四個習慣：</p>
                   <ul>
                     <li><b>Timeout。</b>一個呼叫等多久就放棄，不讓卡住的下游拖住整個系統。對應 agent 的步數與時間上限。</li>
-                    <li><b>Retry with backoff。</b>失敗後重試，每次等更久（1 秒、2 秒、4 秒），避免許多呼叫端同時重試，壓垮同一個下游。對應第 2 章的重試：檢查抓到錯就重做這一步。Backoff 在 agent 這邊少用：agent 的錯多半不是下游太忙，等久一點也不會變對（本文的判斷）。</li>
+                    <li><b>Retry with backoff。</b>失敗後重試，每次等更久（1 秒、2 秒、4 秒），避免許多呼叫端同時重試，壓垮同一個下游。對應第 2 章的重試：檢查抓到錯就重做這一步。Backoff 在 agent 這邊少用：<strong>agent 的錯多半不是下游太忙，等久一點也不會變對</strong>（本文的判斷）。</li>
                     <li><b>Circuit breaker。</b>連續失敗到門檻就斷路，一段時間內直接回錯，讓下游有機會恢復。對應「沒有進展就停」。</li>
-                    <li><b>Error budget。</b>先定可接受的失敗率（例如一個月 0.1%），沒用完就可以冒險發版，用完就只修不加。對應花費上限：先定一個 run 可以花多少，用完就停。</li>
+                    <li><b>Error budget。</b>先定可接受的失敗率（例如一個月 0.1%），沒用完就可以冒險發版，用完就只修不加。對應花費上限：<strong>先定一個 run 可以花多少，用完就停</strong>。</li>
                   </ul>
                 </div>
               </details>
@@ -632,8 +632,8 @@ $ git reset --hard a1b2c3d                           # 退回驗證過的版本�
               <details class="gloss" id="n-harness">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Harness 與 tool：五層裡 model 以外的兩層是什麼</span></summary>
                 <div class="gloss-body prose">
-                  <p>Harness 是包在 model 外面的那層程式，例如 Claude Code 這個 CLI：它組 context 送進 model、讀 model 的回覆、執行 model 要的 tool call、把結果放回 context。Tool 是 harness 給 model 的動作：讀檔、grep、edit、跑 shell。Model 只輸出一段 JSON 說要呼叫哪個，執行的是 harness。</p>
-                  <p>所以「harness 的 context 截斷」是 harness 為了騰出 context，砍掉最舊的幾輪對話，或把太長的 tool 輸出砍短，錯誤訊息跟著不見；「tool 的靜默失敗」是 tool 失敗了卻回一個看起來正常的結果。看到輸出不完整，先問是誰砍的：harness 組 context 時砍的算 harness，tool 自己只回前 100 行算 tool（〈查閱〉的表）。L4〈<a href="l04.html#i6">Tool 設計</a>〉講怎麼修這兩層。</p>
+                  <p>Harness 是包在 model 外面的那層程式，例如 Claude Code 這個 CLI：它組 context 送進 model、讀 model 的回覆、執行 model 要的 tool call、把結果放回 context。Tool 是 harness 給 model 的動作：讀檔、grep、edit、跑 shell。<strong>Model 只輸出一段 JSON 說要呼叫哪個，執行的是 harness</strong>。</p>
+                  <p>所以「harness 的 context 截斷」是 harness 為了騰出 context，砍掉最舊的幾輪對話，或把太長的 tool 輸出砍短，錯誤訊息跟著不見；「tool 的靜默失敗」是 tool 失敗了卻回一個看起來正常的結果。<strong>看到輸出不完整，先問是誰砍的</strong>：harness 組 context 時砍的算 harness，tool 自己只回前 100 行算 tool（〈查閱〉的表）。L4〈<a href="l04.html#i6">Tool 設計</a>〉講怎麼修這兩層。</p>
                 </div>
               </details>
               <p>五種情況有一個共同點：<strong>agent 都沒有報錯，它只是照著錯的輸入做下去</strong>。這是它和程式 crash 最大的差別，<strong>所以不能等錯誤訊息，要自己去找</strong>。</p>
@@ -742,7 +742,7 @@ step 14  model: git commit -m "fix login"         ← 症狀在這裡才看得�
               <details class="gloss" id="n-fail">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">26 種 run 的失敗：五層各一張表</span></summary>
                 <div class="gloss-body prose">
-                  <p>每一列的 agent 都沒有報錯：它把錯的東西當成對的，照著做下去。錯的可能是它拿到的輸入（規格、harness、tool、環境四張表），也可能是它自己的推理（model 那張表）。修法依第 4 章的五條原則。</p>
+                  <p><strong>每一列的 agent 都沒有報錯</strong>：它把錯的東西當成對的，照著做下去。錯的可能是它拿到的輸入（規格、harness、tool、環境四張表），也可能是它自己的推理（model 那張表）。修法依第 4 章的五條原則。</p>
                   <p><b>任務規格（5 種）</b></p>
 <div class="table-wrap"><table>
                 <thead><tr><th>失敗</th><th>規格說了什麼</th><th>Agent 做了什麼</th><th>修法</th></tr></thead>

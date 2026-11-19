@@ -73,11 +73,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。Anthropic 有一個替使用者在雲端跑 agent 的服務，叫 Managed Agents。Agent 是會自己讀檔、跑指令、連做很多步的 AI 程式；包在語言模型（下面叫 model）外面、替它執行動作的那一層程式叫 harness。這個服務一開始把三樣東西放在同一個 container（把程式和它要用的檔案包在一起、和別的程式隔開的執行環境）裡：這段對話的紀錄（session）、harness、跑 model 寫的程式碼的隔離環境（sandbox）。他們碰到三個問題。Container 一掛，整段對話就沒了。出了問題，從外面分不出是 harness 有 bug 還是 container 死了，要登進一個放著使用者資料的環境除錯。Model 寫的程式碼和登入用的憑證（credential）放在同一個地方，agent 讀到的網頁裡只要藏一段騙 model 的文字（這叫 prompt injection），model 就可能照著寫出讀取憑證的程式碼。這三個問題，只跑一個 agent 也會碰到。</p>
+    <p class="thesis">先看一個例子。Anthropic 有一個替使用者在雲端跑 agent 的服務，叫 Managed Agents。Agent 是會自己讀檔、跑指令、連做很多步的 AI 程式；包在語言模型（下面叫 model）外面、替它執行動作的那一層程式叫 harness。這個服務一開始把三樣東西放在同一個 container（把程式和它要用的檔案包在一起、和別的程式隔開的執行環境）裡：這段對話的紀錄（session）、harness、跑 model 寫的程式碼的隔離環境（sandbox）。他們碰到三個問題。Container 一掛，整段對話就沒了。出了問題，從外面分不出是 harness 有 bug 還是 container 死了，要登進一個放著使用者資料的環境除錯。Model 寫的程式碼和登入用的憑證（credential）放在同一個地方，agent 讀到的網頁裡只要藏一段騙 model 的文字（這叫 prompt injection），model 就可能照著寫出讀取憑證的程式碼。這三個問題，<strong>只跑一個 agent 也會碰到</strong>。</p>
     <p class="thesis">這堂回答的問題是：<strong>跑 agent 的系統要拆成哪幾塊，塊和塊之間的邊界放在哪裡</strong>。例子裡的 session、harness、sandbox 就是三塊可以拆開的元件。L8 算的是錢和時間；邊界決定的是能換掉哪個元件、能隔離什麼、什麼掛了還能續跑。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>邊界有三種：函式呼叫、介面、協定。</b>例子裡三樣東西在同一個 container 的同一個程式裡，彼此是函式呼叫，最簡單也最快，但一個壞了全部一起壞，也分不出是哪一個壞了。抽成介面，元件可以換，但還在同一個程式裡，沒有隔離。用協定拆成獨立的服務，才能各自掛掉、各自換機器，<strong>代價是服務之間多了呼叫和故障，一個 request 出錯要到好幾個服務找 log</strong>（第 1 章）。</span></li>
-      <li><span><b>拆邊界先看失敗與安全，agent 有幾個只是其中一題。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，第一個回應反而來得更快：快的不是每一次呼叫，而是用不到 sandbox 的對話，不必再等它準備好（第 2 章）。</span></li>
+      <li><span><b>拆邊界先看失敗與安全，agent 有幾個只是其中一題。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，<strong>第一個回應反而來得更快</strong>：快的不是每一次呼叫，而是用不到 sandbox 的對話，不必再等它準備好（第 2 章）。</span></li>
       <li><span><b>每一條邊界各問三個問題。</b>不可信的東西要和秘密隔開嗎？狀態要活得比程式本身久嗎？多個 agent 要共用同一份基礎設施嗎？三題都答「否」，例如自己筆電上跑的小工具：不讀外部網頁也不碰秘密、對話斷了重開就好、只有這一個 agent 在用，<strong>函式呼叫就夠了</strong>（第 3 章）。</span></li>
     </ul>
     <p class="readhow">八個開源 harness 的設計重心在〈查閱〉，需要時查。這堂假設讀過 L2〈<a href="l02.html">How Claude Code Works</a>〉：harness 每一步做什麼，tool、hook、subagent、MCP 是什麼。</p>
@@ -211,11 +211,11 @@
 <div class="table-wrap"><table>
                 <thead><tr><th>比較項目</th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
                 <tbody>
-                  <tr><td>換元件</td><td>困難</td><td>容易</td><td>容易，協定相符時</td></tr>
-                  <tr><td>執行隔離</td><td>難強制</td><td>選用</td><td>架構上的重點</td></tr>
-                  <tr><td>獨立擴展</td><td>有限</td><td>可能</td><td>強</td></tr>
-                  <tr><td>通訊成本</td><td>低</td><td>低到中</td><td>可能較高</td></tr>
-                  <tr><td>主要的新代價</td><td>元件耦合</td><td>Controller 越長越複雜</td><td>故障模式變多、端到端除錯更難</td></tr>
+                  <tr><td>換元件</td><td>困難</td><td><strong>容易</strong></td><td>容易，協定相符時</td></tr>
+                  <tr><td>執行隔離</td><td>難強制</td><td>選用</td><td><strong>架構上的重點</strong></td></tr>
+                  <tr><td>獨立擴展</td><td>有限</td><td>可能</td><td><strong>強</strong></td></tr>
+                  <tr><td>通訊成本</td><td><strong>低</strong></td><td>低到中</td><td>可能較高</td></tr>
+                  <tr><td>主要的新代價</td><td>元件耦合</td><td>Controller 越長越複雜</td><td><strong>故障模式變多、端到端除錯更難</strong></td></tr>
                 </tbody>
               </table></div>
             </div>
@@ -275,9 +275,9 @@
 <div class="table-wrap"><table>
                 <thead><tr><th>問題</th><th>答「是」就推出去</th><th>代價</th></tr></thead>
                 <tbody>
-                  <tr><td>不可信的東西要和秘密隔開嗎？</td><td>Sandbox 和 credential 分開，秘密放在 sandbox 外面</td><td>多一段 proxy，多一種故障</td></tr>
-                  <tr><td>狀態要活得比 process 久嗎？</td><td>Session log 放在 harness 外面，掛了能續跑</td><td>每一步多一次寫入，要設計 log 的介面</td></tr>
-                  <tr><td>多個 agent 要共用同一份基礎設施嗎？</td><td>Tool、memory、sandbox 池做成服務</td><td>要有協定與版本，一掛全部受影響</td></tr>
+                  <tr><td>不可信的東西要和秘密隔開嗎？</td><td>Sandbox 和 credential 分開，<strong>秘密放在 sandbox 外面</strong></td><td>多一段 proxy，多一種故障</td></tr>
+                  <tr><td>狀態要活得比 process 久嗎？</td><td><strong>Session log 放在 harness 外面</strong>，掛了能續跑</td><td>每一步多一次寫入，要設計 log 的介面</td></tr>
+                  <tr><td>多個 agent 要共用同一份基礎設施嗎？</td><td><strong>Tool、memory、sandbox 池做成服務</strong></td><td>要有協定與版本，一掛全部受影響</td></tr>
                 </tbody>
               </table></div>
 <p>三題都答「否」，例如自己筆電上跑的小工具：不讀外部網頁也不碰秘密、對話斷了重開就好、只有這一個 agent 在用，<strong>函式呼叫就夠了</strong>，microkernel 的優點用不到，只付代價。至於大家最擔心的通訊開銷，數字上通常不是問題：華盛頓大學分析 coding agent session 的 TraceLab（<a href="l08.html#i2-3">L8 第 2 章</a>）量到一次 model 生成約 13 秒，資料中心內的一次 RPC 通常是毫秒級，差上千倍。<strong>真正的代價是故障模式和除錯</strong>：一個 request 經過好幾個服務，出錯時 log 散在各處。所以每個 request 要帶 trace id，也就是在第一站產生、往下每個服務都原樣傳下去並寫進 log 的一個 ID；出事時用它把各服務的 log 串回同一個 request，見 L5〈<a href="l05.html#i7-4">Observability</a>〉。</p>
@@ -308,13 +308,13 @@
                   <div class="table-wrap"><table>
                     <thead><tr><th>Harness</th><th>獨特的設計</th><th>解什麼問題</th></tr></thead>
                     <tbody>
-                      <tr><td><b>Codex CLI</b></td><td>先 sandbox 再核准：指令跑在無網路的 sandbox 裡，只有要出 sandbox 才問人。Patch 要符合一套 Lark grammar，hunk 用四輪比對找位置。</td><td>安全；patch 套錯位置</td></tr>
-                      <tr><td><b>DeepSeek Harness</b></td><td>Loop 也是 plugin：loop、adapter、tool、log、核准都是 plugin，用 YAML 層層覆蓋。每個 model request 是 session log 的一個凍結視圖，harness 只追加。Compare-and-swap 編輯：model 讀過之後檔案變了，就拒絕寫入。</td><td>想換掉任何一塊（連 loop）都不改核心；每個 request 都能從 log 重建，方便重播與除錯；多個 agent 改同一個檔時互相蓋掉</td></tr>
-                      <tr><td><b>OpenCode</b></td><td>Harness 是一個 server：TUI、SDK、web app 都用同一個 OpenAPI HTTP server。模糊比對的 edit 有大小上限：九種 replacer 從精確到 anchor 逐一嘗試，太大的模糊匹配拒絕。每一步存一個 snapshot：影子 git repo 讓 /undo 連檔案一起還原。</td><td>很多種 client 要接同一個 session（架構介於第 1 章的 modular 與 microkernel 之間）；模糊比對可能改錯地方；改壞了要連檔案一起還原</td></tr>
-                      <tr><td><b>Pi</b></td><td>最小核心：四個 tool，沒有 MCP、subagent、核准，其他都靠 extension。Cache 預熱有價格檢查：每送一次 keep-alive 都要付錢，所以只在預期省下 $0.05 以上時才送 keep-alive（在 prompt cache 過期前送一個 request 續命，見 L8〈<a href="l08.html#i3-4">TTL 的帳</a>〉）。函式庫給別的專案用：pi-ai 支援 42 家 model 供應商、10 種 wire API。</td><td>功能一多，核心就難維護，所以功能交給使用者用 extension 自己換（第 1 章的 modular）；keep-alive 本身要錢，送了可能不划算；同一套程式要能接很多家 model 供應商，也讓別的專案重用</td></tr>
-                      <tr><td><b>oh-my-pi</b></td><td>Hashline 編輯：每個 edit 帶一個 4 位 hex 的內容雜湊和行號，model 不必重打舊文字。IDE 在 process 裡：一個 shell 跨所有呼叫保持開著，原生 tool 提供搜尋、AST、LSP、debugger。特殊的 context 方法：snapcompact 把舊的 turn 畫成密集的文字圖片，能讀圖的 model 讀它約只要原文 1/3 的 input token；TTSR（Time Traveling Stream Rules）的規則平常不放進 context，model 的 output 一出現符合某個 regex 的內容，就停下生成、把那條規則加進對話、重新生成。</td><td>舊的 edit 要 model 把整段舊文字重打一次，output token 多；每次呼叫都重開 shell 要等；context 成本：舊歷史變便宜，規則只在用到時才佔 context</td></tr>
-                      <tr><td><b>OpenClaw</b></td><td>聊天 gateway 加 queue lane：27 種聊天頻道的訊息都可以進來；每個 session 只有一條 lane（佇列），不管訊息來自哪個頻道，都排進同一條，一次只跑一個 turn；queue mode 決定 agent 執行中收到的新訊息是插進目前這一輪、排到下一輪，還是中斷目前這一輪。Compaction 之前先寫記憶：先跑一個使用者看不到的 turn（silent turn），寫下有日期的筆記；之後的 recall 結合全文搜尋和向量搜尋。Fence、taint、sentinel：fence 隔離不可信的文字；讀過網路的 turn 標成 taint；agent 監看 secret 的 sentinel。</td><td>同一個 session 同時收到很多訊息時，兩個 turn 同時跑、互相搶 session 狀態；compaction 丟掉的細節之後找不回來；prompt injection 與洩密</td></tr>
-                      <tr><td><b>Hermes Agent</b></td><td>會學習的 fork：harness 每隔一段時間發一次提醒（nudge），這時背景另開一個 agent 的分身（執行時複製出來的 agent，不是程式碼的 fork），回顧剛才的 turn，再修改 memory 和 skill，不碰正在進行的對話。最早的 compaction：context 用到 50% 就 compaction，八個裡最早。執行前先存：tool call 先寫進 session 資料庫，才允許副作用發生。</td><td>同一類任務每次都要重新摸索做法；context 塞滿之前就壓，控制成本；tool call 中途斷掉時，從資料庫知道做到哪裡</td></tr>
+                      <tr><td><b>Codex CLI</b></td><td><strong>先 sandbox 再核准</strong>：指令跑在無網路的 sandbox 裡，只有要出 sandbox 才問人。Patch 要符合一套 Lark grammar，hunk 用四輪比對找位置。</td><td>安全；patch 套錯位置</td></tr>
+                      <tr><td><b>DeepSeek Harness</b></td><td><strong>Loop 也是 plugin</strong>：loop、adapter、tool、log、核准都是 plugin，用 YAML 層層覆蓋。每個 model request 是 session log 的一個凍結視圖，harness 只追加。Compare-and-swap 編輯：model 讀過之後檔案變了，就拒絕寫入。</td><td>想換掉任何一塊（連 loop）都不改核心；每個 request 都能從 log 重建，方便重播與除錯；多個 agent 改同一個檔時互相蓋掉</td></tr>
+                      <tr><td><b>OpenCode</b></td><td><strong>Harness 是一個 server</strong>：TUI、SDK、web app 都用同一個 OpenAPI HTTP server。模糊比對的 edit 有大小上限：九種 replacer 從精確到 anchor 逐一嘗試，太大的模糊匹配拒絕。每一步存一個 snapshot：影子 git repo 讓 /undo 連檔案一起還原。</td><td>很多種 client 要接同一個 session（架構介於第 1 章的 modular 與 microkernel 之間）；模糊比對可能改錯地方；改壞了要連檔案一起還原</td></tr>
+                      <tr><td><b>Pi</b></td><td><strong>最小核心：四個 tool</strong>，沒有 MCP、subagent、核准，其他都靠 extension。Cache 預熱有價格檢查：每送一次 keep-alive 都要付錢，所以只在預期省下 $0.05 以上時才送 keep-alive（在 prompt cache 過期前送一個 request 續命，見 L8〈<a href="l08.html#i3-4">TTL 的帳</a>〉）。函式庫給別的專案用：pi-ai 支援 42 家 model 供應商、10 種 wire API。</td><td>功能一多，核心就難維護，所以功能交給使用者用 extension 自己換（第 1 章的 modular）；keep-alive 本身要錢，送了可能不划算；同一套程式要能接很多家 model 供應商，也讓別的專案重用</td></tr>
+                      <tr><td><b>oh-my-pi</b></td><td>Hashline 編輯：每個 edit 帶一個 4 位 hex 的內容雜湊和行號，<strong>model 不必重打舊文字</strong>。IDE 在 process 裡：一個 shell 跨所有呼叫保持開著，原生 tool 提供搜尋、AST、LSP、debugger。特殊的 context 方法：snapcompact 把舊的 turn 畫成密集的文字圖片，能讀圖的 model 讀它約只要原文 1/3 的 input token；TTSR（Time Traveling Stream Rules）的規則平常不放進 context，model 的 output 一出現符合某個 regex 的內容，就停下生成、把那條規則加進對話、重新生成。</td><td>舊的 edit 要 model 把整段舊文字重打一次，output token 多；每次呼叫都重開 shell 要等；context 成本：舊歷史變便宜，規則只在用到時才佔 context</td></tr>
+                      <tr><td><b>OpenClaw</b></td><td>聊天 gateway 加 queue lane：27 種聊天頻道的訊息都可以進來；每個 session 只有一條 lane（佇列），不管訊息來自哪個頻道，都排進同一條，一次只跑一個 turn；queue mode 決定 agent 執行中收到的新訊息是插進目前這一輪、排到下一輪，還是中斷目前這一輪。<strong>Compaction 之前先寫記憶</strong>：先跑一個使用者看不到的 turn（silent turn），寫下有日期的筆記；之後的 recall 結合全文搜尋和向量搜尋。Fence、taint、sentinel：fence 隔離不可信的文字；讀過網路的 turn 標成 taint；agent 監看 secret 的 sentinel。</td><td>同一個 session 同時收到很多訊息時，兩個 turn 同時跑、互相搶 session 狀態；compaction 丟掉的細節之後找不回來；prompt injection 與洩密</td></tr>
+                      <tr><td><b>Hermes Agent</b></td><td>會學習的 fork：harness 每隔一段時間發一次提醒（nudge），這時背景另開一個 agent 的分身（執行時複製出來的 agent，不是程式碼的 fork），回顧剛才的 turn，再修改 memory 和 skill，不碰正在進行的對話。最早的 compaction：context 用到 50% 就 compaction，八個裡最早。執行前先存：<strong>tool call 先寫進 session 資料庫，才允許副作用發生</strong>。</td><td>同一類任務每次都要重新摸索做法；context 塞滿之前就壓，控制成本；tool call 中途斷掉時，從資料庫知道做到哪裡</td></tr>
                     </tbody>
                   </table></div>
                   <p>「解什麼問題」是本文的對照。Claude Code 的機制在 L2。</p>
@@ -323,8 +323,8 @@
 <details class="gloss" id="t5">
                 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Compare-and-swap 編輯：檔案改過就拒絕寫入</span></summary>
                 <div class="gloss-body prose">
-                  <p>名稱來自 CPU 的 compare-and-swap 指令：先比對目前的值是否仍是預期值，相同才寫入。DeepSeek Harness 記下 model 讀檔時的版本，寫入前再比對一次。</p>
-                  <p>Model 讀過之後，你或另一個 subagent 可能改了檔案。沒有檢查時，這次編輯會蓋掉別人的改動。oh-my-pi 的 hashline 編輯用行號指定位置，而檔案一改，行號就可能指到別的行，所以同樣需要這種檢查。它的 edit 除了行號，還帶一個從檔案內容算出的 4 位 hex 雜湊；雜湊和檔案目前的內容對不上，harness 就拒絕這次 edit。L5〈<a href="l05.html#i7-1">Consistency</a>〉用同一個機制處理這種互相蓋掉的寫入（lost update）。</p>
+                  <p>名稱來自 CPU 的 compare-and-swap 指令：<strong>先比對目前的值是否仍是預期值，相同才寫入</strong>。DeepSeek Harness 記下 model 讀檔時的版本，寫入前再比對一次。</p>
+                  <p>Model 讀過之後，你或另一個 subagent 可能改了檔案。<strong>沒有檢查時，這次編輯會蓋掉別人的改動</strong>。oh-my-pi 的 hashline 編輯用行號指定位置，而檔案一改，行號就可能指到別的行，所以同樣需要這種檢查。它的 edit 除了行號，還帶一個從檔案內容算出的 4 位 hex 雜湊；雜湊和檔案目前的內容對不上，harness 就拒絕這次 edit。L5〈<a href="l05.html#i7-1">Consistency</a>〉用同一個機制處理這種互相蓋掉的寫入（lost update）。</p>
                 </div>
               </details>
             </div>

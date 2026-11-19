@@ -40,8 +40,9 @@ PROSE_CLASSES = {"prose", "hint", "qtext", "qctx", "qh", "lede", "qset-lede", "t
                  "note-own", "rg-s", "rg-g"}
 FILLERS = ["其實", "基本上", "非常", "相當", "可以說", "事實上", "總而言之", "簡單來說", "換句話說", "顯然"]
 # 2026-10-28: where a red key point (<strong>) may not go
+# 2026-11-20 (James：查閱區塊和表裡也標紅字): table cells and details.gloss are allowed now; th is not
 STRONG_NOT_IN = {"b", "a", "code", "pre", "h1", "h2", "h3", "h4", "summary", "figcaption", "figure", "svg",
-                 "table", "nav", "aside", "strong"}
+                 "th", "nav", "aside", "strong"}
 CJK = re.compile(r"[㐀-鿿豈-﫿]")
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.'/+-]*")
 # s-beyond optional since 2026-10-26 (L4); s-background optional since 2026-10-27 (L4 merged it into #s-ideas)
@@ -81,14 +82,16 @@ class P(HTMLParser):
             return
         if tag == "strong":
             for t, c, _ in self.anc:
-                if t in STRONG_NOT_IN or (t == "details" and "gloss" in c):
+                if t in STRONG_NOT_IN:
                     self.errors.append(f"red mark <strong> inside <{t}> at line {self.getpos()[0]}")
                     break
             where = next((i for t, c, i in reversed(self.anc) if t == "div" and "idea" in c), "")
             where = where or next((i or ("tldr" if "tldr" in c else "") for t, c, i in reversed(self.anc)
                                    if t == "section"), "")
             deep = any(t == "details" and "deep" in c for t, c, _ in self.anc)
-            self.strong = {"where": where, "text": "", "deep": deep}
+            # marks in a 查閱 block or a table cell do not count toward the chapter's main-prose quota
+            side = any(t == "table" or (t == "details" and "gloss" in c) for t, c, _ in self.anc)
+            self.strong = {"where": where, "text": "", "deep": deep, "side": side}
         elif tag == "b" and self.strong is not None:
             self.errors.append(f"<b> inside a red mark at line {self.getpos()[0]}")
         is_prose = bool(cls & PROSE_CLASSES) or tag == "dd"
@@ -357,24 +360,34 @@ def main():
         print(f"  filler words: {fillers}")
     print(f"  passive 被: {passive}; reading time: " + ", ".join(f"{k} {v} min" for k, v in t.items() if v))
     # red key points (STYLE_ARTICLE 6c): counts are advice, so they print as warn
-    per, deep = {}, {}
+    per, deep, side = {}, {}, {}
     for m in p.strongs:
         per[m["where"]] = per.get(m["where"], 0) + 1
-        deep[m["where"]] = deep.get(m["where"], 0) + m["deep"]
+        deep[m["where"]] = deep.get(m["where"], 0) + (m["deep"] and not m["side"])
+        side[m["where"]] = side.get(m["where"], 0) + m["side"]
     cu = ChapterUnits()
     cu.feed(html)
     print(f"  red marks: {len(p.strongs)} (" + ", ".join(f"{k or '?'} {v}" for k, v in per.items()) + ")")
     for i, n in cu.u.items():
-        want, got = mark_target(n), per.get(i, 0) - deep.get(i, 0)
+        want, got = mark_target(n), per.get(i, 0) - deep.get(i, 0) - side.get(i, 0)
         if not max(1, want - 1) <= got <= mark_max(n):
             print(f"  warn: chapter {i} has {got} red marks in its main prose; {n} units want {want}–{mark_max(n)}")
         if deep.get(i, 0) > 1:
             print(f"  warn: chapter {i} has {deep[i]} red marks inside 深入/本文延伸 (max 1)")
-    for k, want in (("tldr", 3), ("s-arch", 1)):
-        if k == "s-arch" and 'id="s-arch"' not in html:
-            continue  # v7 idea-first pages have no 架構 section
-        if per.get(k, 0) != want:
-            print(f"  warn: {k} has {per.get(k, 0)} red marks (want {want})")
+    # 2026-11-20 (James：導讀不限三處): tldr wants at least 3
+    if per.get("tldr", 0) < 3:
+        print(f"  warn: tldr has {per.get('tldr', 0)} red marks (want at least 3)")
+    if 'id="s-arch"' in html and per.get("s-arch", 0) != 1:   # v7 idea-first pages have no 架構 section
+        print(f"  warn: s-arch has {per.get('s-arch', 0)} red marks (want 1)")
+    # 2026-11-20: every 查閱 block of some length carries at least one mark (James's own colour spans count)
+    # only p / li / td count (a block that is one figure has nowhere to put a mark); data-no-red opts a block out
+    # (a plain name list with no conclusion, e.g. L3 #d1)
+    for g in re.finditer(r'<details class="gloss" id="([^"]+)"([^>]*)>(.*?)</details>', html.split('id="quiz"')[0], re.S):
+        if "data-no-red" in g.group(2):
+            continue
+        body = " ".join(re.findall(r"<(?:p|li|td)\b[^>]*>(.*?)</(?:p|li|td)>", g.group(3), flags=re.S))
+        if units(re.sub(r"<[^>]+>", "", body)) >= 120 and "<strong" not in body and "var(--key)" not in body:
+            print(f"  warn: 查閱區塊 #{g.group(1)} 沒有紅字（6c：每個區塊至少一處）")
     for m in p.strongs:
         if units(m["text"]) > 30:
             print(f"  warn: long red mark ({units(m['text'])}): {m['text'][:40]}")

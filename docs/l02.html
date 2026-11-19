@@ -72,11 +72,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你用 Claude Code 整理專案；它是一個會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。你在它每次都會讀的規則檔 CLAUDE.md 裡寫了「不要動 production 的資料庫」。做到一半，它為了讓一個測試通過，對 production 的資料庫跑了一行清空資料表的指令。規則明明寫了，它也讀了。</p>
-    <p class="thesis">原因是規則檔只是文字。Agent 裡做決定的是語言模型（下面叫 model）：規則檔每次都和你的要求一起送給它讀，它多半會照做，但沒有任何機制保證它照做。Model 只會提議下一步要做什麼；真正去執行指令的，是包在 model 外面的那層程式，叫 harness。所以要擋，得在 harness 這一層擋。這堂把 Claude Code 拆開來看，回答的問題是：<strong>一條規則該寫在哪裡才算數</strong>。下面三條是這堂的判斷。</p>
+    <p class="thesis">先看一個例子。你用 Claude Code 整理專案；它是一個會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。你在它每次都會讀的規則檔 CLAUDE.md 裡寫了「不要動 production 的資料庫」。做到一半，它為了讓一個測試通過，<strong>對 production 的資料庫跑了一行清空資料表的指令</strong>。規則明明寫了，它也讀了。</p>
+    <p class="thesis">原因是<strong>規則檔只是文字</strong>。Agent 裡做決定的是語言模型（下面叫 model）：規則檔每次都和你的要求一起送給它讀，它多半會照做，但沒有任何機制保證它照做。Model 只會提議下一步要做什麼；真正去執行指令的，是包在 model 外面的那層程式，叫 harness。所以<strong>要擋，得在 harness 這一層擋</strong>。這堂把 Claude Code 拆開來看，回答的問題是：<strong>一條規則該寫在哪裡才算數</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
-      <li><span><b>一定不能發生的事，寫成程式去擋，不要寫成給 model 讀的文字。</b>Harness 在執行每一行指令之前，會先拿它去比對你設定的權限規則，例如「指令裡出現 production 資料庫的位址就拒絕」。比對是 harness 的程式在做，model 想不想照做，它都會擋；例子裡那行指令就該這樣擋下來。但比對看的是指令的字面，換一種寫法就可能漏掉。所以最嚴重的事再加一層：作業系統的 sandbox，直接限制 agent 跑的指令碰得到哪些檔案和網址（第 2、4 章）。</span></li>
-      <li><span><b>寫給 model 的文字越長越貴，所以規則檔要短。</b>Agent 做一個任務要呼叫 model 很多次，每一次都把規則檔和到目前為止的對話整份重送，而費用是照送進去的文字量算的。所以想靠「把規則檔寫得更詳細」讓 agent 聽話，只會越寫越貴。<strong>規則檔只放不寫就會出錯的事</strong>；其他的做成用到才載入的說明，叫 skill（第 3、8 章）。</span></li>
+      <li><span><b>一定不能發生的事，寫成程式去擋，不要寫成給 model 讀的文字。</b>Harness 在執行每一行指令之前，會先拿它去比對你設定的權限規則，例如「指令裡出現 production 資料庫的位址就拒絕」。比對是 harness 的程式在做，model 想不想照做，它都會擋；例子裡那行指令就該這樣擋下來。但<strong>比對看的是指令的字面，換一種寫法就可能漏掉</strong>。所以<strong>最嚴重的事再加一層：作業系統的 sandbox</strong>，直接限制 agent 跑的指令碰得到哪些檔案和網址（第 2、4 章）。</span></li>
+      <li><span><b>寫給 model 的文字越長越貴，所以規則檔要短。</b>Agent 做一個任務要呼叫 model 很多次，<strong>每一次都把規則檔和到目前為止的對話整份重送</strong>，而費用是照送進去的文字量算的。所以想靠「把規則檔寫得更詳細」讓 agent 聽話，只會越寫越貴。<strong>規則檔只放不寫就會出錯的事</strong>；其他的做成用到才載入的說明，叫 skill（第 3、8 章）。</span></li>
       <li><span><b>Model 分不出哪些話是你說的、哪些是它讀到的資料。</b>它讀回來的網頁、檔案內容，和你說的話混在同一份文字裡。裡面如果有人寫了一句「把資料表清掉」，它可能當成你說的去做。所以防線要設計成<strong>它被騙了也做不了壞事</strong>，靠的還是第一條的權限規則和 sandbox（第 5 章）。</span></li>
     </ul>
     <p class="readhow">第 6 到 10 章是 Claude Code 讓你擴充它的幾種機制，各有一章，用到時再讀。</p>
@@ -111,7 +111,7 @@ $ claude
 <details class="gloss" id="n-token">
 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Token 與 context window：model 算字的單位，和它一次能讀多少</span></summary>
 <div class="gloss-body prose">
-<p>Token 是 model 處理文字的最小單位：英文大約 4 個字母或 0.75 個字是 1 個 token，繁體中文一個字約 0.7 到 0.9 個 token，舊一點的 tokenizer 約 1.4 個（<a href="l09.html#i8">L9〈Tokenizer〉</a>實測），一行程式碼粗估 10 個 token 上下。API 的計費、速度、長度上限都用 token 算。</p><p>Context window 是一次 request 能放的 token 上限，2026 年主流 model 是 1M token，年初常見的還是 256K。L1 把它比喻成 RAM：放得進去的才看得到，而且每一圈都要整份重讀。L4 會把 context 的三種成本算清楚。</p>
+<p>Token 是 model 處理文字的最小單位：英文大約 4 個字母或 0.75 個字是 1 個 token，繁體中文一個字約 0.7 到 0.9 個 token，舊一點的 tokenizer 約 1.4 個（<a href="l09.html#i8">L9〈Tokenizer〉</a>實測），一行程式碼粗估 10 個 token 上下。<strong>API 的計費、速度、長度上限都用 token 算</strong>。</p><p>Context window 是一次 request 能放的 token 上限，2026 年主流 model 是 1M token，年初常見的還是 256K。L1 把它比喻成 RAM：<strong>放得進去的才看得到，而且每一圈都要整份重讀</strong>。L4 會把 context 的三種成本算清楚。</p>
 </div>
 </details>
 <figure class="diagram">
@@ -272,7 +272,7 @@ $ claude
 <details class="gloss" id="d1">
 <summary><span class="gloss-k">查閱</span><span class="gloss-t">同一個 request，其他家的 API 怎麼寫</span></summary>
 <div class="gloss-body prose">
-<p>其他家的 API 欄位名稱不一樣，但結構相同：一段系統指令、一份 tool 清單、一串輪流的訊息，model 的 tool call 和 harness 的結果各有固定格式。自己寫 harness 時，只要換這幾個欄位名稱。</p><div class="table-wrap"><table>
+<p>其他家的 API <strong>欄位名稱不一樣，但結構相同</strong>：一段系統指令、一份 tool 清單、一串輪流的訊息，model 的 tool call 和 harness 的結果各有固定格式。自己寫 harness 時，只要換這幾個欄位名稱。</p><div class="table-wrap"><table>
 <thead><tr><th></th><th>Claude<br><small>Messages API</small></th><th>OpenAI<br><small>Responses API</small></th><th>OpenAI<br><small>Chat Completions</small></th><th>Gemini<br><small>generateContent</small></th></tr></thead>
 <tbody>
 <tr><td>系統指令</td><td><code>system</code> 欄位</td><td><code>instructions</code> 欄位</td><td><code>messages</code> 裡 <code>role: "system"</code>（新 model 叫 <code>developer</code>）</td><td><code>systemInstruction</code> 欄位</td></tr>
@@ -282,7 +282,7 @@ $ claude
 <tr><td>Tool 結果</td><td>user 的 <code>tool_result</code> block：<code>tool_use_id, content</code></td><td>input item <code>function_call_output</code>：<code>call_id, output</code></td><td><code>role: "tool"</code> 的訊息：<code>tool_call_id, content</code></td><td>user 的 part <code>functionResponse</code>：<code>id, name, response</code></td></tr>
 <tr><td>Loop 結束的訊號</td><td><code>stop_reason: "end_turn"</code></td><td>output 裡沒有 <code>function_call</code></td><td><code>finish_reason: "stop"</code></td><td>回覆裡沒有 <code>functionCall</code></td></tr>
 </tbody>
-</table></div><p data-inline>兩個差別值得記住。第一，Claude 和 Gemini 把 tool 結果放在 user 這一方，OpenAI 給它獨立的 role 或 item；對 model 來說都是環境回來的觀察。第二，OpenAI 的 <code>arguments</code> 是 JSON 字串，要自己 parse；Claude 的 <code>input</code> 已經是物件。欄位名稱依 2026 年 10 月的各家官方文件；Gemini 另有較新的 Interactions API，這裡列的是 generateContent。</p>
+</table></div><p data-inline>兩個差別值得記住。第一，<strong>Claude 和 Gemini 把 tool 結果放在 user 這一方</strong>，OpenAI 給它獨立的 role 或 item；對 model 來說都是環境回來的觀察。第二，<strong>OpenAI 的 <code>arguments</code> 是 JSON 字串，要自己 parse</strong>；Claude 的 <code>input</code> 已經是物件。欄位名稱依 2026 年 10 月的各家官方文件；Gemini 另有較新的 Interactions API，這裡列的是 generateContent。</p>
 </div>
 </details>
 </div>
@@ -383,13 +383,13 @@ $ claude
 <div class="table-wrap"><table>
 <thead><tr><th>機制<br><small>什麼時候生效</small></th><th>誰觸發</th><th>擋得住嗎</th></tr></thead>
 <tbody>
-<tr><td><b>CLAUDE.md、沒有 paths 的 rule</b><br><small>Session 開始，整份載入</small></td><td>Harness</td><td>一定載入；照不照做由 model</td></tr>
+<tr><td><b>CLAUDE.md、沒有 paths 的 rule</b><br><small>Session 開始，整份載入</small></td><td>Harness</td><td>一定載入；<strong>照不照做由 model</strong></td></tr>
 <tr><td><b>有 paths 的 rule、子目錄的 CLAUDE.md</b><br><small>碰到符合的檔案才載入</small></td><td>Harness</td><td>一定載入；照不照做由 model</td></tr>
-<tr><td><b>Skill</b><br><small>description 常駐，body 用到才載入</small></td><td>Model，或你輸入 <code>/name</code></td><td>否：可能沒載入，載入了也可能沒照做</td></tr>
+<tr><td><b>Skill</b><br><small>description 常駐，body 用到才載入</small></td><td>Model，或你輸入 <code>/name</code></td><td>否：<strong>可能沒載入，載入了也可能沒照做</strong></td></tr>
 <tr><td><b>Auto memory 的筆記內容</b><br><small>Claude 自己記的筆記（第 6 章）：一份索引常駐，每條筆記的內容檔用到才讀</small></td><td>Model</td><td>否：讀不讀由 model 決定</td></tr>
 <tr><td><b>MCP tool</b><br><small>名稱常駐，schema 用 ToolSearch 載入</small></td><td>Model</td><td>否：要不要呼叫由 model 決定</td></tr>
-<tr><td><b>權限規則</b><br><small>每個 tool call 執行前比對</small></td><td>Harness</td><td>是，但只比 tool 名稱和參數文字</td></tr>
-<tr><td><b>Hook（跑程式的那幾種）</b><br><small>事件發生就執行；hook 也能設成交給 model 判斷，那種不算（第 7 章）</small></td><td>Harness</td><td>是，看得到完整參數，能跑任何邏輯</td></tr>
+<tr><td><b>權限規則</b><br><small>每個 tool call 執行前比對</small></td><td>Harness</td><td><strong>是，但只比 tool 名稱和參數文字</strong></td></tr>
+<tr><td><b>Hook（跑程式的那幾種）</b><br><small>事件發生就執行；hook 也能設成交給 model 判斷，那種不算（第 7 章）</small></td><td>Harness</td><td><strong>是，看得到完整參數，能跑任何邏輯</strong></td></tr>
 </tbody>
 </table></div>
 <p id="i2-3"><b>選哪一種。</b><strong>四種機制不能互換，因為它們各答一個問題</strong>：skill 答怎麼做，MCP 答碰得到什麼，hook 答什麼事一定發生，plugin 答怎麼帶走。實際要決定時，照這個順序問：</p>
@@ -453,13 +453,13 @@ $ claude
 <div class="table-wrap"><table>
 <thead><tr><th>需求</th><th>用</th><th>為什麼不是別的</th></tr></thead>
 <tbody>
-<tr><td>套用公司的 API 慣例</td><td>Skill</td><td>只有寫 API 的任務用得到，常駐在 CLAUDE.md 太貴；用不用得到要看任務在做什麼，不是看碰到哪些檔，所以不是有 paths 的 rule；它是知識，不必強制</td></tr>
-<tr><td>從 Jira 讀一個 issue</td><td>MCP</td><td>Jira 在外部；skill 只是文字，碰不到它</td></tr>
-<tr><td>每次編輯後跑 formatter</td><td>Hook</td><td>「每次」必須成立；寫在 skill 或 CLAUDE.md，model 會漏</td></tr>
-<tr><td>帶著做一次多步驟的部署</td><td>Skill</td><td>每一步要看上一步的結果再判斷，hook 只能在事件點跑固定的程式；部署指令用 Bash 就跑得了，agent 缺的是步驟的知識，所以也不必接 MCP</td></tr>
-<tr><td>完成時發通知</td><td>Hook ＋ MCP</td><td>「每次」都要發，所以由 hook 掛在 Stop 事件（Claude 每次回完話、準備停下時觸發）；訊息要送進 Slack，碰得到 Slack 的是 MCP。Hook 有一種處理方式叫 <code>mcp_tool</code>，可以直接呼叫 MCP tool，兩者接得起來（第 7 章）</td></tr>
-<tr><td>擋下對正式環境的寫入</td><td>Hook 或權限規則</td><td>一定不能發生，所以要確定性：權限規則的 deny 直接擋下指令，hook 能檢查完整參數；skill 和 CLAUDE.md 都只是建議</td></tr>
-<tr><td>把整套設定分享到每個 repo</td><td>Plugin</td><td>要跨 repo 散布；同一個 repo 用 git 就夠</td></tr>
+<tr><td>套用公司的 API 慣例</td><td><strong>Skill</strong></td><td>只有寫 API 的任務用得到，常駐在 CLAUDE.md 太貴；用不用得到要看任務在做什麼，不是看碰到哪些檔，所以不是有 paths 的 rule；它是知識，不必強制</td></tr>
+<tr><td>從 Jira 讀一個 issue</td><td><strong>MCP</strong></td><td>Jira 在外部；skill 只是文字，碰不到它</td></tr>
+<tr><td>每次編輯後跑 formatter</td><td><strong>Hook</strong></td><td>「每次」必須成立；寫在 skill 或 CLAUDE.md，model 會漏</td></tr>
+<tr><td>帶著做一次多步驟的部署</td><td><strong>Skill</strong></td><td>每一步要看上一步的結果再判斷，hook 只能在事件點跑固定的程式；部署指令用 Bash 就跑得了，agent 缺的是步驟的知識，所以也不必接 MCP</td></tr>
+<tr><td>完成時發通知</td><td><strong>Hook ＋ MCP</strong></td><td>「每次」都要發，所以由 hook 掛在 Stop 事件（Claude 每次回完話、準備停下時觸發）；訊息要送進 Slack，碰得到 Slack 的是 MCP。Hook 有一種處理方式叫 <code>mcp_tool</code>，可以直接呼叫 MCP tool，兩者接得起來（第 7 章）</td></tr>
+<tr><td>擋下對正式環境的寫入</td><td><strong>Hook 或權限規則</strong></td><td>一定不能發生，所以要確定性：權限規則的 deny 直接擋下指令，hook 能檢查完整參數；skill 和 CLAUDE.md 都只是建議</td></tr>
+<tr><td>把整套設定分享到每個 repo</td><td><strong>Plugin</strong></td><td>要跨 repo 散布；同一個 repo 用 git 就夠</td></tr>
 </tbody>
 </table></div>
 <p id="i2-5"><b>本文的判斷：確定性不等於完整。</b>程式一定會執行，但<strong>它只擋得住它比對得到的東西</strong>。權限規則比的是指令的文字：<code>Bash(rm *)</code> 的意思是「以 <code>rm</code> 加一個空格開頭的指令」，所以擋得住 <code>rm -rf build/</code>；<code>bash -c 'rm -rf build/'</code> 做的是同一件事，開頭卻是 <code>bash</code>，比對不到。所以<strong>真正不能發生的事，還要再往下一層</strong>，交給作業系統的 sandbox（第 4 章）：它不看指令怎麼寫，直接限制這個行程能寫哪些目錄、能連哪些網址，換哪一種寫法都出不去。改壞的程式碼還有最後一道 CI：合併前在另一台機器重跑測試，擋的是改錯的程式進到 main，本機已經做完的動作它擋不了。</p>
@@ -669,9 +669,9 @@ $ claude
 <tr><td>根目錄 CLAUDE.md、沒有 paths 的 rule、auto memory</td><td>從磁碟重讀，再放回去</td></tr>
 <tr><td>Skill 的 description</td><td>依目前的 skill 重建，再放回去（v2.1.304 起）</td></tr>
 <tr><td>用過的 skill 全文</td><td>放回去，每個最多 5,000 token、合計 25,000 token，最舊的先丟</td></tr>
-<tr><td>讀過或改過的檔案</td><td>只重讀最近修改的 5 個；超過 5,000 token 的只留路徑</td></tr>
-<tr><td>有 paths 的 rule、子目錄 CLAUDE.md</td><td>摘要掉，下次碰到符合的檔案才重新載入</td></tr>
-<tr><td>Hook 先前加進 context 的文字（hook 除了擋，也能印一段文字給 model 看，第 7 章）、只在對話裡交代的事</td><td>和其他對話一起被摘要，可能不見</td></tr>
+<tr><td>讀過或改過的檔案</td><td><strong>只重讀最近修改的 5 個</strong>；超過 5,000 token 的只留路徑</td></tr>
+<tr><td>有 paths 的 rule、子目錄 CLAUDE.md</td><td><strong>摘要掉，下次碰到符合的檔案才重新載入</strong></td></tr>
+<tr><td>Hook 先前加進 context 的文字（hook 除了擋，也能印一段文字給 model 看，第 7 章）、只在對話裡交代的事</td><td><strong>和其他對話一起被摘要，可能不見</strong></td></tr>
 </tbody>
 </table></div>
 <p>這張表的結論只有一句：<strong>對話裡說過的事可能不見，寫進檔案的事會回來</strong>。這裡的「檔案」指根目錄的 CLAUDE.md、沒有 paths 的 rule、auto memory 這類 session 一開始就載入的檔案（表的第 2 列）；讀過的程式檔和有 paths 的 rule 不一定回來。所以這一章比的是 CLAUDE.md 和對話：<strong>要整段 session 都記得的規則，至少寫進 CLAUDE.md，不要只在對話裡交代</strong>；違反一次就會出事的，照第 2 章再寫成程式。反過來，也<strong>不要在 session 中途改 CLAUDE.md 就期待它生效</strong>：它在 session 開始時讀一次，改了要等 <code>/compact</code>、<code>/clear</code> 或重開才會進 context。Context 越滿，model 越容易漏掉前面的指示，所以這三個指令要常用：</p>
@@ -721,9 +721,9 @@ Do not change any code.</code></pre></figure>
 <tbody>
 <tr><td>Read</td><td>開檔案、看狀態</td><td>最常用，沒有副作用</td></tr>
 <tr><td>Search<br><small>Grep、Glob</small></td><td>grep 和 glob，不讀完整個 repo 就找到東西</td><td>沒有副作用</td></tr>
-<tr><td>Fetch<br><small>WebFetch</small></td><td>抓一個網頁或文件</td><td>把不可信的文字帶進 context（第 5 章）</td></tr>
-<tr><td>Edit / Write<br><small>Edit、Write</small></td><td>改檔案</td><td>會改掉你的檔案；前三類都不改東西，這是第一類會改的（改錯可以退回，見下文）</td></tr>
-<tr><td>Shell<br><small>Bash</small></td><td>build、測試、git</td><td>沒有 sandbox 時，等於整台機器</td></tr>
+<tr><td>Fetch<br><small>WebFetch</small></td><td>抓一個網頁或文件</td><td><strong>把不可信的文字帶進 context</strong>（第 5 章）</td></tr>
+<tr><td>Edit / Write<br><small>Edit、Write</small></td><td>改檔案</td><td><strong>會改掉你的檔案</strong>；前三類都不改東西，這是第一類會改的（改錯可以退回，見下文）</td></tr>
+<tr><td>Shell<br><small>Bash</small></td><td>build、測試、git</td><td><strong>沒有 sandbox 時，等於整台機器</strong></td></tr>
 <tr><td>Delegate<br><small>Agent</small></td><td>開一個 subagent，拿回一段摘要</td><td>細節留在外面（第 3 章）</td></tr>
 </tbody>
 </table></div>
@@ -878,14 +878,14 @@ Do not change any code.</code></pre></figure>
 <div class="table-wrap"><table>
 <thead><tr><th><code>--permission-mode</code></th><th>不問你就會跑的</th><th>適合</th></tr></thead>
 <tbody>
-<tr><td><code>default</code><br><small>介面叫 Manual，CLI 也接受 <code>manual</code></small></td><td>只有讀</td><td>想親自看每個動作、敏感的工作</td></tr>
-<tr><td><code>acceptEdits</code></td><td>讀、檔案編輯，以及工作目錄內的 <code>mkdir</code>、<code>touch</code>、<code>rm</code>、<code>rmdir</code>、<code>mv</code>、<code>cp</code>、<code>sed</code></td><td>邊看邊改的時候</td></tr>
-<tr><td><code>plan</code></td><td>讀檔和探索用的唯讀指令，不改原始碼；你的帳號能用 auto mode 時（model 夠新、組織沒有關掉），classifier 核准的指令也會跑</td><td>動手前先探索、先交計畫</td></tr>
-<tr><td><code>auto</code></td><td>全部，但另一個 classifier model 在背景審查</td><td>長任務、不想一直按確認</td></tr>
-<tr><td><code>dontAsk</code></td><td>工作目錄內的讀、allow 清單；原本要問的一律拒絕</td><td>CI 和腳本</td></tr>
-<tr><td><code>bypassPermissions</code></td><td>全部，連內建的安全檢查也跳過（例如寫入 <code>.git</code>、<code>.claude</code>）；deny 規則和 ask 規則仍然有效</td><td>只在隔離的 container 或 VM</td></tr>
+<tr><td><code>default</code><br><small>介面叫 Manual，CLI 也接受 <code>manual</code></small></td><td><strong>只有讀</strong></td><td>想親自看每個動作、敏感的工作</td></tr>
+<tr><td><code>acceptEdits</code></td><td><strong>讀、檔案編輯</strong>，以及工作目錄內的 <code>mkdir</code>、<code>touch</code>、<code>rm</code>、<code>rmdir</code>、<code>mv</code>、<code>cp</code>、<code>sed</code></td><td>邊看邊改的時候</td></tr>
+<tr><td><code>plan</code></td><td>讀檔和探索用的唯讀指令，<strong>不改原始碼</strong>；你的帳號能用 auto mode 時（model 夠新、組織沒有關掉），classifier 核准的指令也會跑</td><td>動手前先探索、先交計畫</td></tr>
+<tr><td><code>auto</code></td><td>全部，但<strong>另一個 classifier model 在背景審查</strong></td><td>長任務、不想一直按確認</td></tr>
+<tr><td><code>dontAsk</code></td><td>工作目錄內的讀、allow 清單；<strong>原本要問的一律拒絕</strong></td><td>CI 和腳本</td></tr>
+<tr><td><code>bypassPermissions</code></td><td>全部，連內建的安全檢查也跳過（例如寫入 <code>.git</code>、<code>.claude</code>）；deny 規則和 ask 規則仍然有效</td><td><strong>只在隔離的 container 或 VM</strong></td></tr>
 </tbody>
-</table></div><p>v2.1.283 起，終端機和 VS Code 的互動 session 預設從 <code>auto</code> 開始，<code>claude -p</code> 預設是 <code>default</code>。在 session 裡按 Shift+Tab 切換。Auto 有三個細節值得記：</p><ul><li><b>範圍太大的 allow 規則會暫時失效。</b>例如 <code>Bash(*)</code>、<code>Bash(python*)</code>、<code>npm run</code> 這類，離開 auto 才恢復。</li><li><b>ask 規則仍然會問你。</b></li><li><b>會退回問你。</b>Classifier 連續擋 3 次或累計擋 20 次，就暫停 auto。</li></ul>
+</table></div><p>v2.1.283 起，終端機和 VS Code 的<strong>互動 session 預設從 <code>auto</code> 開始</strong>，<code>claude -p</code> 預設是 <code>default</code>。在 session 裡按 Shift+Tab 切換。Auto 有三個細節值得記：</p><ul><li><b>範圍太大的 allow 規則會暫時失效。</b>例如 <code>Bash(*)</code>、<code>Bash(python*)</code>、<code>npm run</code> 這類，離開 auto 才恢復。</li><li><b>ask 規則仍然會問你。</b></li><li><b>會退回問你。</b><strong>Classifier 連續擋 3 次或累計擋 20 次，就暫停 auto</strong>。</li></ul>
 </div>
 </details>
 </div>
@@ -1101,8 +1101,8 @@ paths:
 <div class="table-wrap"><table>
 <thead><tr><th>Context file 的來源</th><th>解題率的變化</th><th>成本</th></tr></thead>
 <tbody>
-<tr><td><b>LLM 生成</b>（<code>/init</code> 這類指令）</td><td>SWE-bench Lite −0.5%、CTXbench −2%<br><small>都不顯著（p＝87%、37%）</small></td><td>+20%、+23%</td></tr>
-<tr><td><b>開發者自己寫的</b></td><td>CTXbench +2.4%<br><small>不顯著（p＝21%）；但顯著勝過 LLM 生成的</small></td><td>最多 +19%</td></tr>
+<tr><td><b>LLM 生成</b>（<code>/init</code> 這類指令）</td><td>SWE-bench Lite −0.5%、CTXbench −2%<br><small><strong>都不顯著</strong>（p＝87%、37%）</small></td><td>+20%、+23%</td></tr>
+<tr><td><b>開發者自己寫的</b></td><td>CTXbench +2.4%<br><small><strong>不顯著</strong>（p＝21%）；但顯著勝過 LLM 生成的</small></td><td>最多 +19%</td></tr>
 </tbody>
 </table></div>
 <p>指令本身有被遵守：提到 <code>uv</code>，agent 就用 <code>uv</code>。問題是它們讓 agent 多跑測試、多讀檔案，成本上升，解題率卻沒有明顯提升。另外，<strong>目錄總覽幫不上忙</strong>：agent 第一次碰到該改的檔案之前走的步數沒有減少。這和本章開頭說的「每次重新摸索目錄」不衝突：問題是真的，只是寫一份目錄總覽解決不了它，agent 還是會自己去找。官方的 <code>/doctor</code> 現在也會提議刪掉這類內容，方向和這篇一致。</p>
@@ -1187,7 +1187,7 @@ User wants targeted runs (pytest -x &lt;dir&gt;), not the full suite. Reason: fu
     ├── rules/*.md             分主題規則；可用 paths: 限定範圍
     ├── skills/&lt;name&gt;/SKILL.md 團隊 skill（第 8 章）
     ├── agents/*.md            subagent 定義（第 3 章）
-    └── hooks/*.sh             hook 腳本，由 settings.json 指向（第 7 章）</code></pre></figure><p><code>~/.claude/</code> 和專案的 <code>.claude/</code> 結構相同，專案的設定蓋過使用者的設定。如果 repo 只有 <code>AGENTS.md</code>，沒有 CLAUDE.md，Claude Code 也會讀它（v2.1.277 起）。</p>
+    └── hooks/*.sh             hook 腳本，由 settings.json 指向（第 7 章）</code></pre></figure><p><code>~/.claude/</code> 和專案的 <code>.claude/</code> 結構相同，<strong>專案的設定蓋過使用者的設定</strong>。如果 repo 只有 <code>AGENTS.md</code>，沒有 CLAUDE.md，Claude Code 也會讀它（v2.1.277 起）。</p>
 </div>
 </details>
 </div>
@@ -1319,18 +1319,18 @@ exit 0                                    # 0 = 不干預，照常走權限檢�
 <details class="gloss" id="n-exit">
 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Exit code、stdin、stderr：hook 和 harness 之間怎麼講話</span></summary>
 <div class="gloss-body prose">
-<p>每個程式結束時都回一個整數給呼叫它的人，叫 exit code。0 表示成功，其他值的意思由程式自己定。在 shell 裡輸入 <code>echo $?</code>，就看得到上一個指令的 exit code。</p><p>stdin 是程式的標準輸入。stdout 和 stderr 是兩條輸出：stdout 放正常的結果，stderr 放錯誤訊息。Hook 和 harness 就靠這三條線講話：harness 從 stdin 餵 JSON，hook 用 exit code 回答，用 stderr 說明原因。</p>
+<p>每個程式結束時都回一個整數給呼叫它的人，叫 exit code。0 表示成功，其他值的意思由程式自己定。在 shell 裡輸入 <code>echo $?</code>，就看得到上一個指令的 exit code。</p><p>stdin 是程式的標準輸入。stdout 和 stderr 是兩條輸出：stdout 放正常的結果，stderr 放錯誤訊息。Hook 和 harness 就靠這三條線講話：<strong>harness 從 stdin 餵 JSON，hook 用 exit code 回答，用 stderr 說明原因</strong>。</p>
 </div>
 </details>
 <p id="i7-3"><b>同一個 exit code，在不同事件的意思不一樣。</b></p>
 <div class="table-wrap"><table>
 <thead><tr><th>事件</th><th>回 exit 2 的意思</th></tr></thead>
 <tbody>
-<tr><td><code>PreToolUse</code></td><td>擋下這次 tool call，stderr 當成 tool 的錯誤回給 Claude</td></tr>
-<tr><td><code>UserPromptSubmit</code></td><td>擋下你的 prompt，它不會送到 Claude</td></tr>
-<tr><td><code>Stop</code></td><td>不讓 Claude 結束，繼續工作，適合「測試沒過就不准收工」</td></tr>
-<tr><td><code>PostToolUse</code></td><td>Tool 已經跑完，擋不了任何事，只把 stderr 拿給 Claude 看</td></tr>
-<tr><td><code>SessionStart</code></td><td>擋不了，stderr 只給你看</td></tr>
+<tr><td><code>PreToolUse</code></td><td><strong>擋下這次 tool call</strong>，stderr 當成 tool 的錯誤回給 Claude</td></tr>
+<tr><td><code>UserPromptSubmit</code></td><td><strong>擋下你的 prompt</strong>，它不會送到 Claude</td></tr>
+<tr><td><code>Stop</code></td><td><strong>不讓 Claude 結束，繼續工作</strong>，適合「測試沒過就不准收工」</td></tr>
+<tr><td><code>PostToolUse</code></td><td><strong>Tool 已經跑完，擋不了任何事</strong>，只把 stderr 拿給 Claude 看</td></tr>
+<tr><td><code>SessionStart</code></td><td><strong>擋不了</strong>，stderr 只給你看</td></tr>
 </tbody>
 </table></div>
 <p id="i7-4"><b>腳本出錯時，該擋的事會放行。</b>回 0 是不干預，動作照常走權限檢查。其他非零值只算 hook 自己出錯，動作照常執行，連 Unix 慣用的 <code>exit 1</code> 也一樣。所以<strong>要擋就一定要明確回 2</strong>；不想讓腳本壞掉時放行，官方文件提供 <code>onFailure: "block"</code> 這個設定。除了 exit code，hook 也可以 exit 0 並在 stdout 印一段 JSON，用 <code>permissionDecision</code> 指定 allow、deny 或 ask，正好對上第 4 章的三種結果。但它的 allow 蓋不過 deny 和 ask 規則。</p>
@@ -1394,8 +1394,8 @@ disable-model-invocation: true    ← 有副作用，只准你手動觸發
 <thead><tr><th>Frontmatter</th><th>你能觸發</th><th>Model 能觸發</th><th>什麼進 context</th></tr></thead>
 <tbody>
 <tr><td>（預設）</td><td>能</td><td>能</td><td>description 常駐，body 觸發時載入</td></tr>
-<tr><td><code>disable-model-invocation: true</code></td><td>能</td><td>不能</td><td>description 不常駐，body 觸發時載入</td></tr>
-<tr><td><code>user-invocable: false</code></td><td>不能</td><td>能</td><td>description 常駐，body 觸發時載入</td></tr>
+<tr><td><code>disable-model-invocation: true</code></td><td>能</td><td>不能</td><td><strong>description 不常駐</strong>，body 觸發時載入</td></tr>
+<tr><td><code>user-invocable: false</code></td><td><strong>不能</strong></td><td>能</td><td>description 常駐，body 觸發時載入</td></tr>
 </tbody>
 </table></div>
 <p><strong>有副作用的流程（發布、刪除、寄信）只准你手動觸發</strong>。Model 自己載入 release 流程時，你可能還沒打算發布。設了 <code>disable-model-invocation</code> 之後連 description 都不常駐，也省 context。</p>
@@ -1596,14 +1596,14 @@ $ claude mcp add --transport http --scope project notion https://mcp.notion.com/
 <details class="gloss" id="n-mcp-detail">
 <summary><span class="gloss-k">查閱</span><span class="gloss-t">MCP 的細節：四個角色、三種元件、gateway、2026-07-28 新規格</span></summary>
 <div class="gloss-body prose">
-<p>誰和誰連線，有四個角色：</p><ul><li><b>Host。</b>你用的 app，這裡是 Claude Code。</li><li><b>MCP client。</b>Host 替每個 server 開一條連線，一條連線一個 client。</li><li><b>MCP server。</b>把一個系統的能力包成 MCP 的元件，例如 GitHub 的 MCP server。</li><li><b>External system。</b>真正做事的服務：GitHub、Slack、PostgreSQL，或你本機的一個服務。</li></ul><p>Server 提供的不只 tool，一共三種元件，差別在誰決定使用：</p><div class="table-wrap"><table>
+<p>誰和誰連線，有四個角色：</p><ul><li><b>Host。</b>你用的 app，這裡是 Claude Code。</li><li><b>MCP client。</b>Host 替每個 server 開一條連線，一條連線一個 client。</li><li><b>MCP server。</b>把一個系統的能力包成 MCP 的元件，例如 GitHub 的 MCP server。</li><li><b>External system。</b>真正做事的服務：GitHub、Slack、PostgreSQL，或你本機的一個服務。</li></ul><p>Server 提供的不只 tool，<strong>一共三種元件，差別在誰決定使用</strong>：</p><div class="table-wrap"><table>
 <thead><tr><th>元件</th><th>誰決定用</th><th>例子</th></tr></thead>
 <tbody>
-<tr><td><b>Tools</b><br><small>可以呼叫的動作</small></td><td>Model</td><td><code>create_issue(…)</code></td></tr>
-<tr><td><b>Resources</b><br><small>可以讀的資料，例如一個 issue 或一份 schema</small></td><td>App（MCP 規格叫 application-controlled）</td><td><code>github://issues/123</code></td></tr>
-<tr><td><b>Prompts</b><br><small>Server 提供的流程範本</small></td><td>使用者；在 Claude Code 裡是 slash command</td><td><code>/mcp__github__triage_issue 123 high</code></td></tr>
+<tr><td><b>Tools</b><br><small>可以呼叫的動作</small></td><td><strong>Model</strong></td><td><code>create_issue(…)</code></td></tr>
+<tr><td><b>Resources</b><br><small>可以讀的資料，例如一個 issue 或一份 schema</small></td><td><strong>App</strong>（MCP 規格叫 application-controlled）</td><td><code>github://issues/123</code></td></tr>
+<tr><td><b>Prompts</b><br><small>Server 提供的流程範本</small></td><td><strong>使用者</strong>；在 Claude Code 裡是 slash command</td><td><code>/mcp__github__triage_issue 123 high</code></td></tr>
 </tbody>
-</table></div><p>一個請求可以同時用三種：「triage issue #123，如果是嚴重的認證 bug 就指派出去」。Prompt <code>triage_issue</code> 提供組織的 triage 流程，resource 提供 issue 的內容，tool <code>get_related_errors</code> 拿最新的錯誤紀錄。Prompt 的角色和手動觸發的 skill 很像，差別在它由 server 提供，跟著 MCP 連線走。</p><p>用的人一多，每個人各自設定 server 和憑證就會失控，這時可以放一層 MCP gateway。它的角色像 API gateway，只是處理的是 MCP 的請求：</p><figure class="diagram">
+</table></div><p>一個請求可以同時用三種：「triage issue #123，如果是嚴重的認證 bug 就指派出去」。Prompt <code>triage_issue</code> 提供組織的 triage 流程，resource 提供 issue 的內容，tool <code>get_related_errors</code> 拿最新的錯誤紀錄。<strong>Prompt 的角色和手動觸發的 skill 很像</strong>，差別在它由 server 提供，跟著 MCP 連線走。</p><p>用的人一多，每個人各自設定 server 和憑證就會失控，這時可以放一層 MCP gateway。它的角色像 API gateway，只是處理的是 MCP 的請求：</p><figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 190" role="img" aria-label="Claude Code 連到 MCP gateway，gateway 裡有認證、權限政策、稽核 log、路由、限流，後面接 GitHub、Jira、資料庫的 MCP server。對 client 來說 gateway 就是一個 server。">
                   <defs><marker id="l2v-gateway-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-link"/></marker><marker id="l2v-gateway-ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-key"/></marker></defs>
@@ -1628,7 +1628,7 @@ $ claude mcp add --transport http --scope project notion https://mcp.notion.com/
                 </svg>
               </div>
               <figcaption>對 client 來說它就是一個 server，後面再接很多 server，所以認證、政策和稽核都能集中在這一層。代價有兩個。它是新的信任邊界：每個人的請求和連到每個系統的憑證都經過它，有人攻破它或它設錯了，後面的系統一起曝露；後面的系統只看到 gateway，分不出是哪個使用者；log 裡也可能留下 secret。它也是單點故障：它停了，所有 MCP tool 一起停。</figcaption>
-            </figure><p>值得用的時機是很多人、很多 agent、很多憑證要用同一套規則管。</p><p>2026-07-28 的新規格是 MCP 推出以來最大的一次修訂，改了這些：</p><ul><li><b>Stateless。</b>拿掉 session 和 initialize 握手，每個請求自己帶版本與能力，所以任何一台 instance 都能處理，可以放在一般的 load balancer 後面。</li><li><b>路由。</b>Gateway 看 <code>Mcp-Method</code> header 就能路由，不必讀 body。</li><li><b>快取。</b><code>tools/list</code> 的結果可以依 TTL 快取。</li><li><b>Extension。</b>Tasks 和 MCP Apps 改成 extension，也就是選用的功能，client 和 server 都支援才會用。Tasks 給跑很久的工作：server 先回一個 task handle，client 之後用 <code>tasks/get</code> 查進度、拿結果。MCP Apps 讓 server 回一個互動的 HTML 介面。</li></ul>
+            </figure><p>值得用的時機是<strong>很多人、很多 agent、很多憑證要用同一套規則管</strong>。</p><p>2026-07-28 的新規格是 MCP 推出以來最大的一次修訂，改了這些：</p><ul><li><b>Stateless。</b><strong>拿掉 session 和 initialize 握手，每個請求自己帶版本與能力</strong>，所以任何一台 instance 都能處理，可以放在一般的 load balancer 後面。</li><li><b>路由。</b>Gateway 看 <code>Mcp-Method</code> header 就能路由，不必讀 body。</li><li><b>快取。</b><code>tools/list</code> 的結果可以依 TTL 快取。</li><li><b>Extension。</b>Tasks 和 MCP Apps 改成 extension，也就是選用的功能，<strong>client 和 server 都支援才會用</strong>。Tasks 給跑很久的工作：server 先回一個 task handle，client 之後用 <code>tasks/get</code> 查進度、拿結果。MCP Apps 讓 server 回一個互動的 HTML 介面。</li></ul>
 </div>
 </details>
 </div>

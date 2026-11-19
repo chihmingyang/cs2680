@@ -72,11 +72,11 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你有一個大重構，一個 agent 要做兩天；這裡的 agent 指 Claude Code 這類會自己讀檔、跑指令、改 code 的 AI 助手，裡面做決定的是語言模型（下面叫 model）。你想：開 16 個 agent 同時做，應該快 16 倍。實際只快了大約 4 倍。任務要先切好才分得下去，16 份成果要一份一份合併，每一份你都要 review；這些事只能一件一件做，agent 再多也縮不短。到後來，16 個 agent 都在等你。</p>
+    <p class="thesis">先看一個例子。你有一個大重構，一個 agent 要做兩天；這裡的 agent 指 Claude Code 這類會自己讀檔、跑指令、改 code 的 AI 助手，裡面做決定的是語言模型（下面叫 model）。你想：開 16 個 agent 同時做，應該快 16 倍。<strong>實際只快了大約 4 倍</strong>。任務要先切好才分得下去，16 份成果要一份一份合併，每一份你都要 review；這些事只能一件一件做，agent 再多也縮不短。到後來，<strong>16 個 agent 都在等你</strong>。</p>
     <p class="thesis">一個 agent 做不完時，有三個方向可以放大產能：同時開更多 agent；讓一個 agent 自己跑更久，不用你每一步看著；把其中一件事交給另一個 agent 從頭做完，只把結果拿回來。這堂回答的問題是：<strong>每個方向能放大多少、上限卡在哪裡</strong>。下面三條是這堂的判斷，一個方向一條。</p>
     <ul class="core">
       <li><span><b>同時開更多 agent：上限由不能平行的那一段決定。</b>例子裡，切任務、合併、review 佔全部工作的兩成，這兩成只能照順序做。剩下的八成分給 16 個 agent 同時做，只要原本全部時間的二十分之一（八成除以 16）。兩成加二十分之一是四分之一，所以只快 4 倍。<strong>先縮短不能平行的那一段</strong>，比加 agent 有效；你同時管得了幾個 agent，最後由你 review 的速度決定（第 2、3 章）。</span></li>
-      <li><span><b>讓 agent 自己跑更久：能放手多久，由驗證決定。</b>你不看著，就要有別的東西替你檢查。所以「做完」的條件要寫成測試或指令查得出來的。測試查不了的部分，交給另一個 model 來判，不讓做事的那個判自己，因為它容易替自己說好話。做錯了越難復原的工作，越要你親自確認才往下走（第 4 章）。</span></li>
+      <li><span><b>讓 agent 自己跑更久：能放手多久，由驗證決定。</b>你不看著，就要有別的東西替你檢查。所以<strong>「做完」的條件要寫成測試或指令查得出來的</strong>。測試查不了的部分，交給另一個 model 來判，<strong>不讓做事的那個判自己</strong>，因為它容易替自己說好話。做錯了越難復原的工作，越要你親自確認才往下走（第 4 章）。</span></li>
       <li><span><b>把事情交出去：只要結果就派一個，要討論才組隊。</b>只要結果，就派另一個 agent 去做完、只交回一段摘要，這叫 subagent。幾個 agent 得互相討論才做得出來，才把它們組成一隊。要派的 agent 多到你在一段對話裡指揮不過來，才把分派的流程寫成一支 script 去跑。不管哪一種，一定要發生的步驟寫進程式，<strong>需要判斷的才留給 model</strong>（第 5 到 7 章）。</span></li>
     </ul>
     <p class="readhow">第 8 到 10 章是三個實際的例子。建議先讀 L2 和 L4：第 8、9 章接 L2 講的擴充機制（skill、hook、plugin 這些不改 model、只改 agent 做事方式的設定），全篇一直用到 L4 講的 context 代價（每次送給 model 的文字都要付錢）；沒時間讀，第 6 章的「前情」註有 L4 的摘要。</p>
@@ -146,7 +146,7 @@
 <details class="gloss" id="n-throughput">
 <summary><span class="gloss-k">名詞</span><span class="gloss-t">Throughput、latency、critical path：量「快」的三個字</span></summary>
 <div class="gloss-body prose">
-<p>Throughput 是單位時間做完多少事，例如一天 merge 幾個 PR。Latency 是一件事從開始到做完要等多久。平行提高 throughput，不會降低單一任務的 latency：10 個 session 一天做完 10 件事，每一件還是要花原本的時間。</p><p>Critical path 是一串必須依序做、不能平行的步驟裡最長的那一條。規劃要先做完才能派工，所有子任務做完才能整合。整件事的最短時間由它決定，再多 agent 也壓不下去；第 2 章用 Amdahl's law 算這件事。</p>
+<p>Throughput 是單位時間做完多少事，例如一天 merge 幾個 PR。Latency 是一件事從開始到做完要等多久。<strong>平行提高 throughput，不會降低單一任務的 latency</strong>：10 個 session 一天做完 10 件事，每一件還是要花原本的時間。</p><p>Critical path 是一串必須依序做、不能平行的步驟裡最長的那一條。規劃要先做完才能派工，所有子任務做完才能整合。<strong>整件事的最短時間由它決定，再多 agent 也壓不下去</strong>；第 2 章用 Amdahl's law 算這件事。</p>
 </div>
 </details>
 <p>同時用更多 agent 的做法看起來很多，分法只有一條：<strong>計畫在誰手上</strong>。<strong>它決定誰負責派工、誰負責整合，也決定這個做法撐得到幾個 agent</strong>。<a href="https://code.claude.com/docs/en/workflows" target="_blank" rel="noopener">官方文件</a>比較這幾種做法時，用的也是這一條軸：</p>
@@ -249,11 +249,11 @@
 <div class="table-wrap"><table>
 <thead><tr><th>做法</th><th>中間結果在哪</th><th>一次幾個</th><th>主要代價</th></tr></thead>
 <tbody>
-<tr><td><b>手動平行</b></td><td>各 session 裡，要你搬</td><td>約 3 個，再多你記不住計畫</td><td>Merge 是你的</td></tr>
-<tr><td><b>Subagent</b></td><td>Subagent 的 context，主對話只收摘要</td><td>同時最多 20 個（預設）</td><td>摘要有損，要從零收集 context</td></tr>
-<tr><td><b>Agent team</b></td><td>共用 task list 與每人一個 mailbox</td><td>官方建議從 3–5 個開始</td><td>Token 隨人數線性成長；實驗功能，預設關閉</td></tr>
-<tr><td><b>Workflow</b></td><td>Script 變數，不進主 context</td><td>同時跑 16 個（預設）；一支 workflow 總共最多開 1,000 個</td><td>Token 用得多：每個 subagent 各自從零讀 context，一個需求還可能拆成好幾支 workflow</td></tr>
-<tr><td><b>/goal、/loop</b><br><small>讓一個 agent 跑更久的指令</small></td><td>同一個 context</td><td>1 個</td><td>做完的條件要寫成檢查得了的形式（第 4 章）</td></tr>
+<tr><td><b>手動平行</b></td><td>各 session 裡，要你搬</td><td>約 3 個，再多你記不住計畫</td><td><strong>Merge 是你的</strong></td></tr>
+<tr><td><b>Subagent</b></td><td>Subagent 的 context，主對話只收摘要</td><td>同時最多 20 個（預設）</td><td><strong>摘要有損，要從零收集 context</strong></td></tr>
+<tr><td><b>Agent team</b></td><td>共用 task list 與每人一個 mailbox</td><td>官方建議從 3–5 個開始</td><td><strong>Token 隨人數線性成長</strong>；實驗功能，預設關閉</td></tr>
+<tr><td><b>Workflow</b></td><td>Script 變數，不進主 context</td><td>同時跑 16 個（預設）；一支 workflow 總共最多開 1,000 個</td><td>Token 用得多：<strong>每個 subagent 各自從零讀 context</strong>，一個需求還可能拆成好幾支 workflow</td></tr>
+<tr><td><b>/goal、/loop</b><br><small>讓一個 agent 跑更久的指令</small></td><td>同一個 context</td><td>1 個</td><td><strong>做完的條件要寫成檢查得了的形式</strong>（第 4 章）</td></tr>
 </tbody>
 </table></div>
 <p>官方文件現在還多列幾個名字，都是這幾格的變形。Agent view（<code>claude agents</code>）是一個畫面派工和監看背景 session，第 5 章會用到；<code>/batch</code> 把一個大改動拆給 5 到 30 個 subagent，每個在自己的 worktree（同一個 repo 的另一個工作目錄，第 5 章講）裡改；Projects 讓 Claude 在雲端長期替你開平行的 session。選法不變，先照下面這條路問：</p>
@@ -329,9 +329,9 @@ n = agent 數              例：16
 <tbody>
 <tr><td>1</td><td>20</td><td>80</td><td>100</td><td>1 倍</td><td>100%</td></tr>
 <tr><td>4</td><td>20</td><td>20</td><td>40</td><td>2.5 倍</td><td>62.5%</td></tr>
-<tr><td>16</td><td>20</td><td>5</td><td><b>25</b></td><td><b>4 倍</b></td><td><b>25%</b></td></tr>
+<tr><td>16</td><td>20</td><td>5</td><td><b>25</b></td><td><strong>4 倍</strong></td><td><b>25%</b></td></tr>
 <tr><td>64</td><td>20</td><td>1.25</td><td>21.25</td><td>4.7 倍</td><td>7%</td></tr>
-<tr><td>無限多</td><td>20</td><td>0</td><td>20</td><td>5 倍</td><td>趨近 0</td></tr>
+<tr><td>無限多</td><td>20</td><td>0</td><td>20</td><td><strong>5 倍</strong></td><td>趨近 0</td></tr>
 </tbody>
 </table></div>
 <figure class="diagram">
@@ -516,10 +516,10 @@ a = 同時跑幾個 agent
 <div class="table-wrap"><table>
 <thead><tr><th>同時幾個 agent<br><small>a</small></th><th>每小時進來<br><small>a × r</small></th><th>每小時看完<br><small>m</small></th><th>每小時多積<br><small>a × r − m，負的記 0</small></th><th>一天（8 小時）後<br>還在等的 PR</th></tr></thead>
 <tbody>
-<tr><td>1</td><td>1</td><td>3</td><td>0（算出 −2，隊伍空著）</td><td><b>0</b></td></tr>
-<tr><td>3</td><td>3</td><td>3</td><td>0</td><td><b>0</b></td></tr>
-<tr><td>5</td><td>5</td><td>3</td><td>+2</td><td><b>16</b></td></tr>
-<tr><td>8</td><td>8</td><td>3</td><td>+5</td><td><b>40</b></td></tr>
+<tr><td>1</td><td>1</td><td>3</td><td><strong>0</strong>（算出 −2，隊伍空著）</td><td><b>0</b></td></tr>
+<tr><td>3</td><td>3</td><td>3</td><td><strong>0</strong></td><td><b>0</b></td></tr>
+<tr><td>5</td><td>5</td><td>3</td><td>+2</td><td><strong>16</strong></td></tr>
+<tr><td>8</td><td>8</td><td>3</td><td>+5</td><td><strong>40</strong></td></tr>
 </tbody>
 </table></div>
 <figure class="diagram">
@@ -618,10 +618,10 @@ a = 同時跑幾個 agent
 <div class="table-wrap"><table>
 <thead><tr><th>來源<br><small>樣本是誰</small></th><th>量什麼</th><th>和什麼比</th><th>結果</th></tr></thead>
 <tbody>
-<tr><td><b>OpenAI，2026-06、09</b><br><small>Codex 使用者、OpenAI 員工</small></td><td>任務大小、同時幾個 agent、agent-hours</td><td>和幾個月前比，沒有對照組</td><td>2026-06 那份：一週內同時跑過 5 個以上 agent 的使用者佔 28.6%。2026-09 那份：研究員的 agent 累計執行時數，是他們自己工作時數的 3.14 倍</td></tr>
-<tr><td><b><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR，2025-07</a></b><br><small>16 位資深 open source 開發者、246 個 issue</small></td><td>完成時間</td><td>隨機分配，每個 issue 可用或不可用 AI</td><td>可用 AI 時多花 19%；事前估快 24%，做完仍以為快 20%</td></tr>
-<tr><td><b><a href="https://metr.org/blog/2026-02-24-uplift-update/" target="_blank" rel="noopener">METR，2026-02</a></b><br><small>57 人、800 多個任務</small></td><td>完成時間</td><td>同上，但有選擇偏誤</td><td>快 4%–18%，信賴區間都跨過 0；METR 自己說這是 unreliable signal</td></tr>
-<tr><td><b>Faros，2026-04、09</b><br><small>22,000 位工程師</small></td><td>產出與 review 流程的 telemetry</td><td>同組織 AI 採用最高與最低的時期，相關分析</td><td>Review 時間中位數多 441.5%；沒有 review 就 merge 的 PR 多 76.3%</td></tr>
+<tr><td><b>OpenAI，2026-06、09</b><br><small>Codex 使用者、OpenAI 員工</small></td><td>任務大小、同時幾個 agent、agent-hours</td><td>和幾個月前比，<strong>沒有對照組</strong></td><td>2026-06 那份：一週內同時跑過 5 個以上 agent 的使用者佔 28.6%。2026-09 那份：研究員的 agent 累計執行時數，是他們自己工作時數的 3.14 倍</td></tr>
+<tr><td><b><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR，2025-07</a></b><br><small>16 位資深 open source 開發者、246 個 issue</small></td><td>完成時間</td><td>隨機分配，每個 issue 可用或不可用 AI</td><td><strong>可用 AI 時多花 19%</strong>；事前估快 24%，做完仍以為快 20%</td></tr>
+<tr><td><b><a href="https://metr.org/blog/2026-02-24-uplift-update/" target="_blank" rel="noopener">METR，2026-02</a></b><br><small>57 人、800 多個任務</small></td><td>完成時間</td><td>同上，但有選擇偏誤</td><td>快 4%–18%，<strong>信賴區間都跨過 0</strong>；METR 自己說這是 unreliable signal</td></tr>
+<tr><td><b>Faros，2026-04、09</b><br><small>22,000 位工程師</small></td><td>產出與 review 流程的 telemetry</td><td>同組織 AI 採用最高與最低的時期，相關分析</td><td><strong>Review 時間中位數多 441.5%</strong>；沒有 review 就 merge 的 PR 多 76.3%</td></tr>
 </tbody>
 </table></div>
 <p>只有 METR 做了隨機對照，而它 2026 年的結論是量不準：很多人不願意沒有 AI 工作，所以沒有參加；同時跑好幾個 agent 時，連「這個任務花多久」都算不清。可以帶走的是：<strong>感覺變快不算數</strong>，要量就量自己交付了什麼，不量 agent 跑了幾小時。量的方法是 L7 的主題。</p>
@@ -729,8 +729,8 @@ a = 同時跑幾個 agent
 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Karpathy 的 Software 3.0，和不確定性早就存在的那張表</span></summary>
 <div class="gloss-body prose">
 
-<p>Karpathy 用「程式是什麼」分三代：1.0 程式是原始碼，人用 Python 或 C++ 寫；2.0 程式是神經網路的權重，人收集資料再訓練；3.0 程式是 prompt，人用自然語言寫，LLM 執行。Programming 3.0 用「人寫什麼」分，名字像，分法不同。兩種分法導向同一個工程問題：哪一塊用確定的程式，哪一塊交給 model。</p>
-<p>同一份原始碼產生不同結果，很久以前就發生了，2.0 的對策可以沿用：</p>
+<p>Karpathy 用「程式是什麼」分三代：1.0 程式是原始碼，人用 Python 或 C++ 寫；2.0 程式是神經網路的權重，人收集資料再訓練；3.0 程式是 prompt，人用自然語言寫，LLM 執行。Programming 3.0 用「人寫什麼」分，名字像，分法不同。兩種分法導向同一個工程問題：<strong>哪一塊用確定的程式，哪一塊交給 model</strong>。</p>
+<p>同一份原始碼產生不同結果，很久以前就發生了，<strong>2.0 的對策可以沿用</strong>：</p>
 <div class="table-wrap"><table>
 <thead><tr><th></th><th>硬體</th><th>環境</th><th>軟體</th></tr></thead>
 <tbody>
@@ -808,9 +808,9 @@ a = 同時跑幾個 agent
 <div class="table-wrap"><table>
 <thead><tr><th>工作</th><th>風險</th><th>自主程度</th></tr></thead>
 <tbody>
-<tr><td>修 lint 錯誤</td><td>低，可驗證，改壞了測得出來</td><td>Auto mode 加 <code>/goal</code>，不用人看</td></tr>
-<tr><td>Security review</td><td>中。它只讀不改，改不壞 code；但漏掉一個漏洞的代價高，結論要人判斷</td><td>唯讀 subagent（第 6 章），結果給人看</td></tr>
-<tr><td>Merge 到 main、對外發布</td><td>高，難回退</td><td>留給人</td></tr>
+<tr><td>修 lint 錯誤</td><td>低，可驗證，改壞了測得出來</td><td><strong>Auto mode 加 <code>/goal</code>，不用人看</strong></td></tr>
+<tr><td>Security review</td><td>中。它只讀不改，改不壞 code；但漏掉一個漏洞的代價高，結論要人判斷</td><td><strong>唯讀 subagent（第 6 章），結果給人看</strong></td></tr>
+<tr><td>Merge 到 main、對外發布</td><td>高，難回退</td><td><strong>留給人</strong></td></tr>
 </tbody>
 </table></div>
 <p>本文的判斷：<strong>能不能放手，先問出錯時誰會發現、多久發現、能不能回退</strong>。三個都答得出來，才加自主程度。</p>
@@ -886,10 +886,10 @@ $ claude agents                      # research preview；列出 Working、Needs
 <div class="table-wrap"><table>
 <thead><tr><th>變動<br><small>agent 怎麼得知</small></th><th>Worktree<br>擋得住？</th><th>PSR<br>Astra／Fable</th></tr></thead>
 <tbody>
-<tr><td><b>F01</b> 使用者改了實作<br><small>收到訊息</small></td><td>擋得住</td><td>38.4／60.8</td></tr>
-<tr><td><b>F02</b> 使用者改了介面或結構<br><small>收到訊息</small></td><td>擋得住</td><td>8.9／6.3</td></tr>
-<tr><td><b>F03</b> 另一個 agent 改到相關 code<br><small>收到訊息</small></td><td>擋得住</td><td>22.2／30.5</td></tr>
-<tr><td><b>F04</b> 另一個 agent 改到間接相關的 code<br><small>多數有訊息</small></td><td>擋得住</td><td>57.3／23.6</td></tr>
+<tr><td><b>F01</b> 使用者改了實作<br><small>收到訊息</small></td><td><strong>擋得住</strong></td><td>38.4／60.8</td></tr>
+<tr><td><b>F02</b> 使用者改了介面或結構<br><small>收到訊息</small></td><td><strong>擋得住</strong></td><td>8.9／6.3</td></tr>
+<tr><td><b>F03</b> 另一個 agent 改到相關 code<br><small>收到訊息</small></td><td><strong>擋得住</strong></td><td>22.2／30.5</td></tr>
+<tr><td><b>F04</b> 另一個 agent 改到間接相關的 code<br><small>多數有訊息</small></td><td><strong>擋得住</strong></td><td>57.3／23.6</td></tr>
 <tr><td><b>F05</b> Runtime 資源或 process 變了<br><small>要自己查</small></td><td>擋不住</td><td>0／0</td></tr>
 <tr><td><b>F06</b> Tool 或 session 協定變了<br><small>要自己查</small></td><td>擋不住</td><td>0／0</td></tr>
 <tr><td><b>F07</b> 外部副作用：agent 對 repo 以外的系統送出的動作已經生效，回應卻沒送到<br><small>看不出來</small></td><td>擋不住</td><td>22.1／18.9</td></tr>
@@ -1004,15 +1004,15 @@ $ claude -w feat-auth
 <summary><span class="gloss-k">前情</span><span class="gloss-t">Context 的代價與四種管理策略（L4）：這堂一直用到的四個名詞</span></summary>
 <div class="gloss-body prose">
 
-<p>Context 是每一圈送進 model 的全部文字：system prompt、tool 定義、對話歷史、每一筆 tool 結果；上限叫 context window。L4 說它有三種代價。錢：model 沒有記憶，每一圈都要把整個 window 重送一次，一份 786 行的 log 進了 context，之後每圈都再付一次。延遲：prompt 越長，model 讀得越久。注意力：window 越滿，model 越難找回中間的資訊。</p>
+<p>Context 是每一圈送進 model 的全部文字：system prompt、tool 定義、對話歷史、每一筆 tool 結果；上限叫 context window。L4 說它有三種代價。錢：model 沒有記憶，<strong>每一圈都要把整個 window 重送一次</strong>，一份 786 行的 log 進了 context，之後每圈都再付一次。延遲：prompt 越長，model 讀得越久。注意力：<strong>window 越滿，model 越難找回中間的資訊</strong>。</p>
 <p>L4 給了四種管理策略，由無損排到有損：</p>
 <ol>
 <li><b>Admission。</b>在內容進 window 之前把關，只放需要的部分（截斷、整形、交給 subagent）。</li>
 <li><b>Offloading。</b>把內容放在 window 外面，只留一個 handle，要用再讀回。</li>
 <li><b>Transformation。</b>把舊的或重複的 tool 結果換成一行占位文字。</li>
-<li><b>Compaction。</b>用 LLM 把舊歷史寫成一段摘要換掉原文，有損又不可逆，所以排在最後。Claude Code 的 <code>/compact</code> 就是這一種。</li>
+<li><b>Compaction。</b>用 LLM 把舊歷史寫成一段摘要換掉原文，<strong>有損又不可逆，所以排在最後</strong>。Claude Code 的 <code>/compact</code> 就是這一種。</li>
 </ol>
-<p>這堂用到的地方：subagent 和第 9 章的 proxy 是 admission，<code>caveman_compress</code>（第 9 章 Caveman 的一個 tool，把一段長文字換成一個取回用的代號）回 handle 是 offloading，第 8 章的 hook 在 compaction 之後重新注入規則，是在補 compaction 丟掉的東西。細節見 L4〈<a href="l04.html#i1">Context 的成本</a>〉與〈<a href="l04.html#i4">Context 管理</a>〉。</p>
+<p>這堂用到的地方：<strong>subagent 和第 9 章的 proxy 是 admission</strong>，<code>caveman_compress</code>（第 9 章 Caveman 的一個 tool，把一段長文字換成一個取回用的代號）回 handle 是 offloading，第 8 章的 hook 在 compaction 之後重新注入規則，是在補 compaction 丟掉的東西。細節見 L4〈<a href="l04.html#i1">Context 的成本</a>〉與〈<a href="l04.html#i4">Context 管理</a>〉。</p>
 
 </div>
 </details>
@@ -1021,7 +1021,7 @@ $ claude -w feat-auth
 <summary><span class="gloss-k">前情</span><span class="gloss-t">CLAUDE.md 與 plan mode（L2）：Claude Code 的兩個基本設定</span></summary>
 <div class="gloss-body prose">
 
-<p>CLAUDE.md 是放在 repo 根目錄（或 <code>~/.claude/</code>）的一份 Markdown，寫給 model 看：專案的指令、硬規則、推不出來的事實。每個 session 開始時 Claude Code 把它讀進 context。Subagent 和 teammate 也會載入它，但不會繼承主對話的其他內容。</p>
+<p>CLAUDE.md 是放在 repo 根目錄（或 <code>~/.claude/</code>）的一份 Markdown，寫給 model 看：專案的指令、硬規則、推不出來的事實。每個 session 開始時 Claude Code 把它讀進 context。<strong>Subagent 和 teammate 也會載入它，但不會繼承主對話的其他內容</strong>。</p>
 <p>Plan mode 是 Claude Code 的一種模式（按 Shift+Tab 切換）：model 只能讀檔和搜尋，先提出一份計畫，你核准後才動手。L2 講權限模式時完整講過。</p>
 
 </div>
@@ -1030,15 +1030,15 @@ $ claude -w feat-auth
 <div class="table-wrap"><table>
 <thead><tr><th>情況<br><small>為什麼</small></th><th>交給誰</th></tr></thead>
 <tbody>
-<tr><td>要一輪一輪來回討論<br><small>subagent 做完就結束；每討論一輪，就要再派一個、再從零收集 context</small></td><td>留在主對話</td></tr>
-<tr><td>前後幾個階段共用同一批 context<br><small>subagent 看不到前一階段讀過的檔案和結論，要重讀一次</small></td><td>留在主對話</td></tr>
-<tr><td>小而明確的修改，或在意延遲<br><small>派出去的延遲比改動本身還久</small></td><td>留在主對話</td></tr>
-<tr><td>輸出很長，之後不會再用<br><small>log、搜尋結果留在 subagent 的 context，主對話只多一段摘要</small></td><td>交給 subagent</td></tr>
-<tr><td>要限制 tool 或權限<br><small>定義檔的 tools 只給它讀的 tool，它就改不了檔案</small></td><td>交給 subagent</td></tr>
-<tr><td>能自己做完，交一段摘要就夠<br><small>不需要來回，摘要丟掉的細節不影響結果</small></td><td>交給 subagent</td></tr>
-<tr><td>彼此獨立，可以平行<br><small>幾個同時跑，總時間等於最慢的那一個</small></td><td>交給 subagent</td></tr>
-<tr><td>簡單到小 model 做得了<br><small>定義檔寫 <code>model: haiku</code>，省錢</small></td><td>交給 subagent</td></tr>
-<tr><td>可重用的流程，而且要在主對話裡跑<br><small>skill 載入後在主對話的 context 裡執行，看得到全部歷史；subagent 看不到</small></td><td>用 skill</td></tr>
+<tr><td>要一輪一輪來回討論<br><small>subagent 做完就結束；每討論一輪，就要再派一個、再從零收集 context</small></td><td><strong>留在主對話</strong></td></tr>
+<tr><td>前後幾個階段共用同一批 context<br><small>subagent 看不到前一階段讀過的檔案和結論，要重讀一次</small></td><td><strong>留在主對話</strong></td></tr>
+<tr><td>小而明確的修改，或在意延遲<br><small>派出去的延遲比改動本身還久</small></td><td><strong>留在主對話</strong></td></tr>
+<tr><td>輸出很長，之後不會再用<br><small>log、搜尋結果留在 subagent 的 context，主對話只多一段摘要</small></td><td><strong>交給 subagent</strong></td></tr>
+<tr><td>要限制 tool 或權限<br><small>定義檔的 tools 只給它讀的 tool，它就改不了檔案</small></td><td><strong>交給 subagent</strong></td></tr>
+<tr><td>能自己做完，交一段摘要就夠<br><small>不需要來回，摘要丟掉的細節不影響結果</small></td><td><strong>交給 subagent</strong></td></tr>
+<tr><td>彼此獨立，可以平行<br><small>幾個同時跑，總時間等於最慢的那一個</small></td><td><strong>交給 subagent</strong></td></tr>
+<tr><td>簡單到小 model 做得了<br><small>定義檔寫 <code>model: haiku</code>，省錢</small></td><td><strong>交給 subagent</strong></td></tr>
+<tr><td>可重用的流程，而且要在主對話裡跑<br><small>skill 載入後在主對話的 context 裡執行，看得到全部歷史；subagent 看不到</small></td><td><strong>用 skill</strong></td></tr>
 </tbody>
 </table></div>
 <p>一句話記：<strong>要討論、要共用 context 的留下，只要結果的派出去</strong>。L5〈<a href="l05.html#i4">派工</a>〉講這段任務訊息該怎麼寫。</p>
@@ -1307,7 +1307,7 @@ CONFLICT: current_tasks/task-42.lock  # 鎖已經在了：B 放棄，改挑 task
 <thead><tr><th>機制<br><small>檔案放哪</small></th><th>誰觸發</th><th>三個案例</th></tr></thead>
 <tbody>
 <tr><td><b>Skill</b><br><small><code>skills/*/SKILL.md</code></small></td><td>Model 看 description 決定，或你打 <code>/name</code></td><td>三個都用</td></tr>
-<tr><td><b>Hook</b><br><small><code>hooks/hooks.json</code></small></td><td>Harness，事件發生就一定跑</td><td>Superpowers 1 個、Caveman 4 個、mattpocock 0 個</td></tr>
+<tr><td><b>Hook</b><br><small><code>hooks/hooks.json</code></small></td><td><strong>Harness，事件發生就一定跑</strong></td><td>Superpowers 1 個、Caveman 4 個、mattpocock 0 個</td></tr>
 <tr><td><b>Command</b><br><small><code>commands/*.md</code></small></td><td>你，打了才執行</td><td>Caveman</td></tr>
 <tr><td><b>MCP</b><br><small><code>.mcp.json</code></small></td><td>Model。MCP server 是另外跑的一支程式，替 agent 加上新的 tool；model 呼叫它提供的 tool 時才執行</td><td>Caveman（5 個 tool）</td></tr>
 <tr><td><b>Plugin</b><br><small>整個 repo</small></td><td>你，install 時</td><td>三個都是</td></tr>
@@ -1425,7 +1425,7 @@ Before you start implementing, you must, in order:
 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Plugin 的結構、manifest、三個 scope 與指令</span></summary>
 <div class="gloss-body prose">
 
-<p>Plugin 是整個 repo 資料夾，不是最上面那個 <code>.claude-plugin/</code>。<code>.claude-plugin/</code> 放的是 manifest（<code>plugin.json</code>），有時還有一個 <code>marketplace.json</code>。Marketplace 是一份 plugin 目錄，列出可以裝哪些 plugin、各從哪裡下載；下面指令裡 <code>superpowers@claude-plugins-official</code> 的 @ 後面就是 marketplace 的名字。Repo 裡放了 <code>marketplace.json</code>，它自己就是一份這樣的目錄（見下方）。Manifest 是「說明檔」的通稱：一份給工具讀的 JSON 或 XML，告訴工具這個資料夾是什麼、叫什麼、哪一版，npm 的 <code>package.json</code>、Chrome extension 的 <code>manifest.json</code> 都是。Skill、hook、command 放在 repo 根目錄的 <code>skills/</code>、<code>hooks/hooks.json</code>、<code>commands/</code>，Claude Code 認得這些固定的位置，所以 manifest 不必列出檔案清單；放在別的位置才要在 <code>plugin.json</code> 指過去。Caveman 就把 hook 直接寫在 <code>plugin.json</code> 裡，mattpocock 則在裡面列 27 個 skill 的路徑。</p>
+<p><strong>Plugin 是整個 repo 資料夾</strong>，不是最上面那個 <code>.claude-plugin/</code>。<code>.claude-plugin/</code> 放的是 manifest（<code>plugin.json</code>），有時還有一個 <code>marketplace.json</code>。Marketplace 是一份 plugin 目錄，列出可以裝哪些 plugin、各從哪裡下載；下面指令裡 <code>superpowers@claude-plugins-official</code> 的 @ 後面就是 marketplace 的名字。Repo 裡放了 <code>marketplace.json</code>，它自己就是一份這樣的目錄（見下方）。Manifest 是「說明檔」的通稱：一份給工具讀的 JSON 或 XML，告訴工具這個資料夾是什麼、叫什麼、哪一版，npm 的 <code>package.json</code>、Chrome extension 的 <code>manifest.json</code> 都是。Skill、hook、command 放在 repo 根目錄的 <code>skills/</code>、<code>hooks/hooks.json</code>、<code>commands/</code>，Claude Code 認得這些固定的位置，所以 <strong>manifest 不必列出檔案清單</strong>；放在別的位置才要在 <code>plugin.json</code> 指過去。Caveman 就把 hook 直接寫在 <code>plugin.json</code> 裡，mattpocock 則在裡面列 27 個 skill 的路徑。</p>
 <figure class="file"><figcaption>.claude-plugin/plugin.json（Superpowers v7.0.1，2026-11-03 的 repo；// 註解是本文加的）</figcaption><pre><code class="lang-json">{
   // 唯一必填；裝好後 skill 名字前面會加 superpowers:
   "name": "superpowers",
@@ -1442,11 +1442,11 @@ Before you start implementing, you must, in order:
 <div class="table-wrap"><table>
 <thead><tr><th>要做的事</th><th>沒有 plugin，自己搬</th><th>有 plugin</th></tr></thead>
 <tbody>
-<tr><td>裝 15 個 skill</td><td>把 <code>skills/</code> 底下的資料夾一個個複製到 <code>~/.claude/skills/</code></td><td>一行 install</td></tr>
-<tr><td>加 SessionStart hook</td><td>把 <code>hooks.json</code> 貼進 <code>~/.claude/settings.json</code>，路徑改成你機器上的絕對路徑</td><td>跟著 plugin 生效；<code>${CLAUDE_PLUGIN_ROOT}</code> 自動指到安裝位置</td></tr>
+<tr><td>裝 15 個 skill</td><td>把 <code>skills/</code> 底下的資料夾一個個複製到 <code>~/.claude/skills/</code></td><td><strong>一行 install</strong></td></tr>
+<tr><td>加 SessionStart hook</td><td>把 <code>hooks.json</code> 貼進 <code>~/.claude/settings.json</code>，路徑改成你機器上的絕對路徑</td><td><strong>跟著 plugin 生效</strong>；<code>${CLAUDE_PLUGIN_ROOT}</code> 自動指到安裝位置</td></tr>
 <tr><td>升版</td><td>重新複製、重新貼</td><td><code>update</code></td></tr>
 <tr><td>不想用了</td><td>從 settings.json 挑出別人寫的那幾行刪掉</td><td><code>disable</code> 或 <code>uninstall</code></td></tr>
-<tr><td>名字撞到</td><td>你自己的 <code>brainstorming</code> 和它的同名</td><td>自動加前綴：<code>superpowers:brainstorming</code></td></tr>
+<tr><td>名字撞到</td><td>你自己的 <code>brainstorming</code> 和它的同名</td><td><strong>自動加前綴</strong>：<code>superpowers:brainstorming</code></td></tr>
 </tbody>
 </table></div>
 <figure class="file"><figcaption>terminal：裝一個 plugin，和把它當成一個單位管理</figcaption><pre><code># Superpowers、mattpocock/skills 在官方 marketplace 裡，一行就能裝
@@ -1460,14 +1460,14 @@ $ claude plugin list                      # 列出裝了哪些、版本、scope�
 $ claude plugin update superpowers        # 拿作者發的新版
 $ claude plugin disable superpowers       # 先關掉，檔案留著
 $ claude plugin uninstall superpowers     # 整包移除</code></pre></figure>
-<p><code>.claude-plugin/</code> 裡的 <code>marketplace.json</code> 列出這個 repo 提供哪些 plugin，有了它，這個 repo 本身就是一個 marketplace，別人可以用 <code>claude plugin marketplace add</code> 加進來。每個 harness 只讀自己名字的資料夾：Claude Code 讀 <code>.claude-plugin/</code>，Codex 讀 <code>.codex-plugin/</code>。Superpowers 要支援好幾個 harness，所以它的根目錄有好幾個 <code>.xxx-plugin/</code>，<code>skills/</code> 只有一份。綁 harness 的只有 manifest 這一層。</p>
-<p>裝的時候要選 scope。它決定 enabled 的紀錄寫進哪個 settings.json，所以誰讀得到那個檔，誰就有這個 plugin：</p>
+<p><code>.claude-plugin/</code> 裡的 <code>marketplace.json</code> 列出這個 repo 提供哪些 plugin，有了它，這個 repo 本身就是一個 marketplace，別人可以用 <code>claude plugin marketplace add</code> 加進來。每個 harness 只讀自己名字的資料夾：Claude Code 讀 <code>.claude-plugin/</code>，Codex 讀 <code>.codex-plugin/</code>。Superpowers 要支援好幾個 harness，所以它的根目錄有好幾個 <code>.xxx-plugin/</code>，<code>skills/</code> 只有一份。<strong>綁 harness 的只有 manifest 這一層</strong>。</p>
+<p>裝的時候要選 scope。它決定 enabled 的紀錄寫進哪個 settings.json，所以<strong>誰讀得到那個檔，誰就有這個 plugin</strong>：</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Scope<br><small>指令</small></th><th>誰有</th><th>紀錄寫進<br><small>會 commit 嗎</small></th><th>什麼時候用</th></tr></thead>
 <tbody>
-<tr><td><b>user</b><br><small><code>--scope user</code>（預設）</small></td><td>你，這台機器上的每個專案</td><td><code>~/.claude/settings.json</code><br><small>不在 repo 裡</small></td><td>改你自己工作方式的工具</td></tr>
-<tr><td><b>project</b><br><small><code>--scope project</code></small></td><td>這個 repo 的每個協作者</td><td><code>.claude/settings.json</code><br><small>會，隨 repo 發給全隊</small></td><td>團隊約定的流程</td></tr>
-<tr><td><b>local</b><br><small><code>--scope local</code></small></td><td>你，只在這個 repo</td><td><code>.claude/settings.local.json</code><br><small>不會</small></td><td>試用，或關掉團隊開的 plugin</td></tr>
+<tr><td><b>user</b><br><small><code>--scope user</code>（預設）</small></td><td>你，這台機器上的每個專案</td><td><code>~/.claude/settings.json</code><br><small>不在 repo 裡</small></td><td><strong>改你自己工作方式的工具</strong></td></tr>
+<tr><td><b>project</b><br><small><code>--scope project</code></small></td><td>這個 repo 的每個協作者</td><td><code>.claude/settings.json</code><br><small>會，隨 repo 發給全隊</small></td><td><strong>團隊約定的流程</strong></td></tr>
+<tr><td><b>local</b><br><small><code>--scope local</code></small></td><td>你，只在這個 repo</td><td><code>.claude/settings.local.json</code><br><small>不會</small></td><td><strong>試用，或關掉團隊開的 plugin</strong></td></tr>
 </tbody>
 </table></div>
 <figure class="file"><figcaption>.claude/settings.json（project scope 裝了 Superpowers 之後；← 是本文加的註解）</figcaption><pre><code class="lang-text">{
@@ -1479,12 +1479,12 @@ $ claude plugin uninstall superpowers     # 整包移除</code></pre></figure>
   }
 }</code></pre></figure>
 <ul>
-<li><b>覆蓋順序。</b>local 蓋過 project，project 蓋過 user。團隊開了、你不想要，在 <code>.claude/settings.local.json</code> 寫 false。</li>
-<li><b>Project scope 不會帶檔案。</b>隊友 clone 下來只有紀錄，要自己跑一次 install，plugin 才下載到他的機器。</li>
+<li><b>覆蓋順序。</b><strong>local 蓋過 project，project 蓋過 user</strong>。團隊開了、你不想要，在 <code>.claude/settings.local.json</code> 寫 false。</li>
+<li><b>Project scope 不會帶檔案。</b><strong>隊友 clone 下來只有紀錄，要自己跑一次 install</strong>，plugin 才下載到他的機器。</li>
 <li><b>檔案只有一份。</b>不管哪個 scope，都在 <code>~/.claude/plugins/cache/&lt;marketplace&gt;/&lt;plugin&gt;/&lt;version&gt;/</code>，<code>${CLAUDE_PLUGIN_ROOT}</code> 指的就是這裡。</li>
 <li><b>Plugin 改不了你的 settings.json。</b>它能附一份，但 Claude Code 只認裡面的 <code>agent</code> 和 <code>subagentStatusLine</code>。第 9 章的 Caveman 要改 API 位址時會碰到這個限制。</li>
 </ul>
-<p>你自己的 hook 寫在 settings.json，格式和 <code>hooks.json</code> 相同，只差腳本路徑用 <code>${CLAUDE_PROJECT_DIR}</code>。兩邊的 hook 合併，事件發生時一起平行跑。例如要保證規則一定在 context 裡：在 <code>.claude/settings.json</code> 的 <code>SessionStart</code> 底下掛一支 <code>.claude/hooks/bootstrap.sh</code>，matcher 寫 <code>startup|clear|compact</code>，腳本把 <code>.claude/WORKFLOW.md</code> 的規則加進 context。</p>
+<p>你自己的 hook 寫在 settings.json，格式和 <code>hooks.json</code> 相同，只差腳本路徑用 <code>${CLAUDE_PROJECT_DIR}</code>。<strong>兩邊的 hook 合併，事件發生時一起平行跑</strong>。例如要保證規則一定在 context 裡：在 <code>.claude/settings.json</code> 的 <code>SessionStart</code> 底下掛一支 <code>.claude/hooks/bootstrap.sh</code>，matcher 寫 <code>startup|clear|compact</code>，腳本把 <code>.claude/WORKFLOW.md</code> 的規則加進 context。</p>
 <p>依 2026-11 的官方文件（plugins/install、plugins/loading）。</p>
 
 </div>
@@ -1516,13 +1516,13 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
                   <p>這套 skill 借了四個名詞：</p>
                   <ul>
                     <li><b>ADR。</b>ADR 是 Architecture Decision Record：一頁的決策紀錄，寫背景、決定、後果，放在 <code>docs/adr/</code>，一個決定一個檔案。</li>
-                    <li><b>Ubiquitous language。</b>它來自 Eric Evans 的 Domain-Driven Design：開發者和領域專家共用同一套詞，程式碼裡的名字也用它。這套 skill 把它寫成 <code>GLOSSARY.md</code>。</li>
+                    <li><b>Ubiquitous language。</b>它來自 Eric Evans 的 Domain-Driven Design：<strong>開發者和領域專家共用同一套詞</strong>，程式碼裡的名字也用它。這套 skill 把它寫成 <code>GLOSSARY.md</code>。</li>
                     <li><b>Tracer bullet。</b>它來自 The Pragmatic Programmer：先打一條穿過每一層（schema、API、UI、測試）的細路徑，能動了再加寬。<code>to-tickets</code> 要求每張 ticket 都是這種垂直切片。</li>
-                    <li><b>Seam。</b>Seam 是測試落點：模組對外的邊界，從外面觀察行為、不碰內部。<code>tdd</code> 規定只在事先講好的 seam 寫測試。</li>
+                    <li><b>Seam。</b>Seam 是測試落點：模組對外的邊界，從外面觀察行為、不碰內部。<code>tdd</code> 規定<strong>只在事先講好的 seam 寫測試</strong>。</li>
                   </ul>
                 </div>
               </details>
-<details class="gloss" id="d1">
+<details class="gloss" id="d1" data-no-red>
 <summary><span class="gloss-k">查閱</span><span class="gloss-t">27 個 skill 一覽，和本文對到這堂的位置</span></summary>
 <div class="gloss-body prose">
 <div class="table-wrap"><table>
@@ -1778,8 +1778,8 @@ FAIL src/api/client.test.ts
 <thead><tr><th>做法</th><th>動到哪一段</th><th>那段佔花費</th><th>那段省多少</th><th>總花費少多少</th></tr></thead>
 <tbody>
 <tr><td>Skill，README 的數字</td><td>Output</td><td>8.3%</td><td>65%</td><td>5.4%</td></tr>
-<tr><td><a href="https://blog.jetbrains.com/ai/2026/07/speak-to-ai-agents-like-cavemen-tosave-tokens/" target="_blank" rel="noopener">Skill，JetBrains 的 agent 實測</a></td><td>Output</td><td>8.3%</td><td>8.5%</td><td><b>0.7%</b></td></tr>
-<tr><td><a href="https://github.com/JuliusBrussee/caveman/blob/main/docs/WRAP-BENCHMARK.md" target="_blank" rel="noopener">Proxy，Caveman 自己的 benchmark</a></td><td>Cache read 與 cache write</td><td>91.7%</td><td>33.2%</td><td><b>30.4%</b></td></tr>
+<tr><td><a href="https://blog.jetbrains.com/ai/2026/07/speak-to-ai-agents-like-cavemen-tosave-tokens/" target="_blank" rel="noopener">Skill，JetBrains 的 agent 實測</a></td><td>Output</td><td>8.3%</td><td>8.5%</td><td><strong>0.7%</strong></td></tr>
+<tr><td><a href="https://github.com/JuliusBrussee/caveman/blob/main/docs/WRAP-BENCHMARK.md" target="_blank" rel="noopener">Proxy，Caveman 自己的 benchmark</a></td><td>Cache read 與 cache write</td><td>91.7%</td><td>33.2%</td><td><strong>30.4%</strong></td></tr>
 </tbody>
 </table></div>
 <p>總花費少多少 ＝ 那段佔花費 × 那段省多少。所以<strong>回答寫短對帳單幾乎沒影響，要省錢先壓輸入</strong>。這個結論換了單價、打了折都還成立，三個檢查：</p>
@@ -1796,7 +1796,7 @@ FAIL src/api/client.test.ts
 <thead><tr><th>部分</th><th>誰壓</th><th>怎麼壓</th></tr></thead>
 <tbody>
 <tr><td><b>輸出方向</b><br><small>skill <code>caveman</code></small></td><td>Model 自己</td><td>規則寫在 skill 裡，model 載入後照著寫短</td></tr>
-<tr><td><b>輸入方向</b><br><small>proxy 與 engine</small></td><td>Go 程式</td><td>先判斷內容類型，再交給 16 種 compressor 之一，不呼叫 model</td></tr>
+<tr><td><b>輸入方向</b><br><small>proxy 與 engine</small></td><td>Go 程式</td><td>先判斷內容類型，再交給 16 種 compressor 之一，<strong>不呼叫 model</strong></td></tr>
 <tr><td><b>記憶檔</b><br><small><code>/caveman-compress</code></small></td><td>Model</td><td>把 CLAUDE.md 這類檔案送給 model 改寫，再用程式檢查結果</td></tr>
 </tbody>
 </table></div>
@@ -1806,7 +1806,7 @@ FAIL src/api/client.test.ts
 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Caveman 的指令、hook、MCP tool、怎麼接上 proxy</span></summary>
 <div class="gloss-body prose">
 
-<p>安裝有兩條路。只要 skill 和 hook，走 plugin：<code>claude plugin marketplace add JuliusBrussee/caveman</code>、<code>claude plugin install caveman@caveman</code>。要連 proxy 一起，用它的 CLI：跑一次 <code>npx @caveman-ai/cli@latest</code>，它找出你裝了哪些 agent、列出要改的設定，按 Enter 就寫進去，之後平常打 <code>claude</code> 就會經過 proxy；也可以用 <code>caveman claude</code> 直接透過它啟動。寫進去的是下面的 env，和之後單獨跑 <code>caveman enable claude</code> 寫的一樣。Plugin 改不了你的 settings.json（第 8 章），所以 proxy 要靠 CLI 把位址寫進去。</p>
+<p>安裝有兩條路。<strong>只要 skill 和 hook，走 plugin</strong>：<code>claude plugin marketplace add JuliusBrussee/caveman</code>、<code>claude plugin install caveman@caveman</code>。<strong>要連 proxy 一起，用它的 CLI</strong>：跑一次 <code>npx @caveman-ai/cli@latest</code>，它找出你裝了哪些 agent、列出要改的設定，按 Enter 就寫進去，之後平常打 <code>claude</code> 就會經過 proxy；也可以用 <code>caveman claude</code> 直接透過它啟動。寫進去的是下面的 env，和之後單獨跑 <code>caveman enable claude</code> 寫的一樣。Plugin 改不了你的 settings.json（第 8 章），所以 proxy 要靠 CLI 把位址寫進去。</p>
 <figure class="file"><figcaption>Caveman 的零件（2026-11-03 的 repo）</figcaption><pre><code class="lang-text"># 指令（在 session 裡打）
 /caveman               ← 預設 full 模式；/caveman ultra、/caveman off
 /caveman-commit        ← 簡短的 commit 訊息
@@ -1848,7 +1848,7 @@ caveman_toon_decode    ← TOON 轉 JSON</code></pre></figure>
     "ENABLE_TOOL_SEARCH": "true"
   }
 }</code></pre></figure>
-<p>Claude Code 本身已經內建保守的截斷：Bash 輸出超過約 3 萬字元就存成檔案，context 只放路徑和前 2,000 字元；Bash 指令執行失敗時，輸出只留頭尾共約 1 萬字元；Read 一次最多回 25,000 token。這些規則不看內容是什麼，錯誤剛好在 log 中間就看不到。Caveman 依類型挑，這是它多做的事。依 2026-11 的 tools 文件。</p>
+<p><strong>Claude Code 本身已經內建保守的截斷</strong>：Bash 輸出超過約 3 萬字元就存成檔案，context 只放路徑和前 2,000 字元；Bash 指令執行失敗時，輸出只留頭尾共約 1 萬字元；Read 一次最多回 25,000 token。這些規則不看內容是什麼，<strong>錯誤剛好在 log 中間就看不到</strong>。Caveman 依類型挑，這是它多做的事。依 2026-11 的 tools 文件。</p>
 
 </div>
 </details>
@@ -1892,10 +1892,10 @@ caveman_toon_decode    ← TOON 轉 JSON</code></pre></figure>
                     <div class="table-wrap"><table>
                       <thead><tr><th>提醒</th><th>根據</th><th>本文對照<br>（2026-10）</th></tr></thead>
                       <tbody>
-                        <tr><td><b>Model 要夠強</b><br>弱 model 寫短，品質會掉</td><td>Renze 與 Guven（2024）：1,000 題選擇題，在要求逐步推理的提示後面多加一句 <code>Be concise.</code>，GPT-3.5 與 GPT-4 的回答都短約 49%，整體正確率沒有顯著差異，只有數學題例外（下一列）。</td><td>JetBrains（2026-07）用 Claude Code 與 Sonnet 5 跑 86 個任務，每次回答都強制開 Caveman：分數和不開時分不出差別（p = 0.82）。</td></tr>
-                        <tr><td><b>推導題別壓</b><br>數學題壓了會錯</td><td>同一篇：GPT-3.5 的數學題正確率掉 27.69%，GPT-4 沒有顯著下降。</td><td>當年的 model 把推理寫在回答裡，壓回答就壓到推理。開了 thinking 的 model 先在 thinking 裡推理再回答，Caveman 的文件也說 skill 不壓 thinking token。</td></tr>
-                        <tr><td><b>扮演是第二個任務</b><br>演穴居人會分心</td><td>Hacker News 等討論串的推論，沒有量測。</td><td>v4.0.1 的 skill 只要穴居人的簡短語氣：不准為了像穴居人加字，寫法沒有比較短就用一般寫法。</td></tr>
-                        <tr><td><b>6 行就夠</b><br>不必裝整套 skill</td><td>Guzik（2026-04-08）：85 token 的 <a href="https://github.com/kuba-guzik/caveman-micro" target="_blank" rel="noopener">6 行版</a>和 552 token 的完整 skill。兩版的回答在 Sonnet 上一樣短；在 Opus 上，6 行版比完整 skill 更短；兩個 model 的答案都對。</td><td>兩版都只比對照組的 <code>Be concise</code> 再少 9–21%；Caveman 自己的測試也一樣（下表）。</td></tr>
+                        <tr><td><b>Model 要夠強</b><br>弱 model 寫短，品質會掉</td><td>Renze 與 Guven（2024）：1,000 題選擇題，在要求逐步推理的提示後面多加一句 <code>Be concise.</code>，GPT-3.5 與 GPT-4 的回答都短約 49%，整體正確率沒有顯著差異，只有數學題例外（下一列）。</td><td>JetBrains（2026-07）用 Claude Code 與 Sonnet 5 跑 86 個任務，每次回答都強制開 Caveman：<strong>分數和不開時分不出差別</strong>（p = 0.82）。</td></tr>
+                        <tr><td><b>推導題別壓</b><br>數學題壓了會錯</td><td>同一篇：GPT-3.5 的數學題正確率掉 27.69%，GPT-4 沒有顯著下降。</td><td>當年的 model 把推理寫在回答裡，壓回答就壓到推理。開了 thinking 的 model 先在 thinking 裡推理再回答，Caveman 的文件也說 <strong>skill 不壓 thinking token</strong>。</td></tr>
+                        <tr><td><b>扮演是第二個任務</b><br>演穴居人會分心</td><td>Hacker News 等討論串的推論，<strong>沒有量測</strong>。</td><td>v4.0.1 的 skill 只要穴居人的簡短語氣：不准為了像穴居人加字，寫法沒有比較短就用一般寫法。</td></tr>
+                        <tr><td><b>6 行就夠</b><br>不必裝整套 skill</td><td>Guzik（2026-04-08）：85 token 的 <a href="https://github.com/kuba-guzik/caveman-micro" target="_blank" rel="noopener">6 行版</a>和 552 token 的完整 skill。兩版的回答在 Sonnet 上一樣短；在 Opus 上，6 行版比完整 skill 更短；兩個 model 的答案都對。</td><td><strong>兩版都只比對照組的 <code>Be concise</code> 再少 9–21%</strong>；Caveman 自己的測試也一樣（下表）。</td></tr>
                       </tbody>
                     </table></div>
                     <p>第 4 列點出一件事：省多少，要看跟誰比。65% 出自 Caveman 2026-04-05 的 README：10 個問題逐題算省了多少，再取平均，範圍 22%–87%。對照組的 system prompt 是 <code>You are a helpful assistant.</code>，沒有叫 model 寫短。Caveman 後來加了一組只寫 <code>Answer concisely.</code> 的對照，結果如下：</p>
@@ -1903,8 +1903,8 @@ caveman_toon_decode    ← TOON 轉 JSON</code></pre></figure>
                       <thead><tr><th>System prompt</th><th>10 題的<br>output token</th><th>比不加<br>少多少</th></tr></thead>
                       <tbody>
                         <tr><td>不加</td><td>6,983</td><td>（基準）</td></tr>
-                        <tr><td><code>Answer concisely.</code></td><td>4,334</td><td>37.9%</td></tr>
-                        <tr><td>同上 ＋ caveman 的 skill</td><td>4,119</td><td>41.0%</td></tr>
+                        <tr><td><code>Answer concisely.</code></td><td>4,334</td><td><strong>37.9%</strong></td></tr>
+                        <tr><td>同上 ＋ caveman 的 skill</td><td>4,119</td><td><strong>41.0%</strong></td></tr>
                         <tr><td>同上 ＋ ultracave 的 skill</td><td>2,693</td><td>61.4%</td></tr>
                       </tbody>
                     </table></div>
@@ -2045,10 +2045,10 @@ Please give the bot read access.</code></pre></figure>
 <div class="table-wrap"><table>
 <thead><tr><th>誰／什麼</th><th>能起頭工作嗎</th><th>之後怎麼走</th></tr></thead>
 <tbody>
-<tr><td>名單上的人 @ 它</td><td>能</td><td>直接接單</td></tr>
-<tr><td>不在名單上的人 @ 它</td><td>預設不能</td><td>預設不理。每個接收範圍（一個 GitHub 範圍或一個聊天群）在准入表（admission table）裡有一列，團隊可以把某一列設成「算正式請求」，例如一個專門的支援群，那裡任何人 @ 它都會接</td></tr>
-<tr><td>名單上的 bot<br><small>例如 dependabot</small></td><td>只能當候選</td><td>先過團隊規則的評估，而且「沒人要求的工作」的開關（下一段）要在 <code>auto</code> 才接</td></tr>
-<tr><td>其他 bot、CI 結果</td><td>不能</td><td>送給既有的 Ticket 當 context</td></tr>
+<tr><td>名單上的人 @ 它</td><td><strong>能</strong></td><td>直接接單</td></tr>
+<tr><td>不在名單上的人 @ 它</td><td><strong>預設不能</strong></td><td>預設不理。每個接收範圍（一個 GitHub 範圍或一個聊天群）在准入表（admission table）裡有一列，團隊可以把某一列設成「算正式請求」，例如一個專門的支援群，那裡任何人 @ 它都會接</td></tr>
+<tr><td>名單上的 bot<br><small>例如 dependabot</small></td><td><strong>只能當候選</strong></td><td>先過團隊規則的評估，而且「沒人要求的工作」的開關（下一段）要在 <code>auto</code> 才接</td></tr>
+<tr><td>其他 bot、CI 結果</td><td><strong>不能</strong></td><td>送給既有的 Ticket 當 context</td></tr>
 </tbody>
 </table></div>
 <p>沒人要求的工作有三段開關：<code>off</code> 完全不理，<code>observe</code>（預設）記下「本來會接」但不動手，<code>auto</code> 評估通過就接。<strong>文件要求從 observe 開始，看過它記下的判斷都對了再切</strong>。這就是第 4 章的<strong>自主程度配合風險</strong>，做成一個開關加一份紀錄。Merge 也一樣預設關著。GitHub 把 merge 記在開 auto-merge 的那個帳號名下。PR 是 agent 用自己的帳號開的，要是 auto-merge 也由這個帳號開，紀錄上就是 agent 自己把自己的改動放進 main，找不到一個為這次 merge 負責的人或帳號。所以 agent 預設不用自己的帳號開（「要有人負責」是本文依文件責任一節的解讀，文件只寫了規則；責任一節見下一段）。要它 merge，團隊得在交付要求的 prompt 裡指定另一個帳號的 CLI。文件只要求不是 agent 的帳號，沒規定是誰的，可以是負責 merge 的同事，也可以是團隊另開的帳號；merge 就記在那個帳號名下，由它的主人負責。沒指定就由人 merge。而且只對 200 行以下、approval 都齊的 PR 開。</p>
