@@ -68,6 +68,7 @@
 | `find_figure_spots.py` | 列出核心觀念裡可能該畫成圖的地方：結論是趨勢、轉折或最佳點的數字表和段落（文字有「越來越」「最划算」「再往下」這類詞），以及表和圖畫同一組數字的地方。只提示，`verify.sh` 會跑；決定留著的元素加 `data-no-figure`。規則見 `STYLE_ARTICLE.md` 第 6 節。 |
 | `anim_static.js` | 動畫圖的靜態 SVG（node）：不帶參數檢查頁面裡的靜態 SVG 和 `calc.js` 的 `FRAMES` 畫的最後一格一樣，`--write` 寫回。`verify.sh` 會跑檢查模式。每張動畫圖的預設參數寫在檔案開頭的 `DEFAULTS`（2026-11-19）。 |
 | `red_add.py` | 加紅字而不改字：給一份清單（在哪一段之後、標哪幾個字），只插入 `<strong>`；表的格子裡整格的 `<b>` 換成 `<strong>`。先試跑，全部 ok 才能 `--write`；寫檔前比對除了標籤以外沒有動到字。不寫進 `<b>`、`<a>`、`<code>`、表頭、`summary`、`figcaption`、題庫，一處不超過 30 個單位（2026-11-20）。 |
+| `outline.py` | 大綱（章名與小標，不含內文）：不帶指令印出一堂的大綱；`lint` 抓機械看得出來的標題問題（指代、只有數量、重名、「本文的判斷：」前綴、只有主題），只 warn，`verify.sh` 會跑；`pack`／`score` 是只看標題的測試（WORKFLOW I3）；`quiz-titles --write` 把題庫每一節的 `title` 對回頁面的標題。規則在 `STYLE_ARTICLE.md` 第 2 節〈標題是節點〉（2026-11-20）。 |
 | `dag.py` | 觀念 DAG：`--check` 檢查 `docs/dag.json`（無環、難度沿邊不降、src 錨點存在、每章都被蓋到或在 excluded），不帶參數就重寫 `docs/dag.html`。規則見 `guide/DAG.md`（2026-11-08）。 |
 
 以上腳本在 2026-10-19 對 L1–L8 全部通過。

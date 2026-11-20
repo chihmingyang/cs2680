@@ -6,7 +6,7 @@
 #
 # 為什麼：分開跑是六個 tool call，每個 call 都要重讀整個 context；合成一個，每輪檢查只花一步。
 # 跑的是：check_article、check_diagrams、anim_static（有動畫圖的頁面）、quiz check、check_numbers、audit、add_lecture --check、dag --check、punct --diff（只提示）、
-# find_figure_spots（只提示：可能該畫成圖、或表和圖重複的地方）、review_status（只提示：哪些章審過之後文字改了、或審的是舊版 checklist）。
+# find_figure_spots（只提示：可能該畫成圖、或表和圖重複的地方）、outline lint 與 quiz-titles（只提示：標題單看懂不懂、題庫的節名有沒有跟上）、review_status（只提示：哪些章審過之後文字改了、或審的是舊版 checklist）。
 # 不寫回任何檔案（check_article 不帶 --fix-time，punct 只用 --diff）。
 # 通過但有 warn 的檢查，會印出 warn 讓你看一次。
 set -u
@@ -65,6 +65,17 @@ page() {   # 一堂的頁面檢查：check_article、check_diagrams、punct（�
   if [ "$fs" != "no candidates" ]; then
     echo "note figure-spots（看一次：結論是趨勢、轉折或最佳點才改成圖，圖要取代表或段落；決定留著的加 data-no-figure）"
     printf '%s\n' "$fs" | tail -n +2 | head -20
+  fi
+  # 標題是節點（STYLE_ARTICLE 第 2 節）：機械抓得到的標題問題，只提示；題庫的節名（小測區塊的標題）要和頁面的標題一樣
+  ol=$(python3 -I tools/outline.py lint "$L" 2>&1)
+  if [ "$(printf '%s\n' "$ol" | tail -1)" != "OK" ]; then
+    echo "note outline（標題單看要懂；James 手改的標題不改回來）"
+    printf '%s\n' "$ol" | head -30
+  fi
+  qt=$(python3 -I tools/outline.py quiz-titles "$L" 2>&1)
+  if ! printf '%s\n' "$qt" | tail -1 | grep -q '^ok'; then
+    echo "note quiz-titles（頁面的標題改過，題庫的節名還是舊的：python3 -I tools/outline.py quiz-titles $L --write）"
+    printf '%s\n' "$qt" | head -12
   fi
   # review_status 只提示：可讀性審查之後文字改過、或審的是舊版 checklist 的章（guide/REVIEW_READABILITY.md〈哪些章審過〉）
   python3 -I tools/review_status.py status "$L" --note 2>&1

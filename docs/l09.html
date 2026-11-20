@@ -280,7 +280,7 @@
             </figure>
               <p><strong>能不能再收一個 request，看的是記憶體</strong>：每個 request 的 KV cache 各佔一份，<strong>KV cache 放不下時，新的 request 只能排隊</strong>，或由 scheduler 先暫停一個正在跑的（preempt）。Batching 與記憶體分頁的做法，後面的講次會講。</p>
               <p id="i1-4"><b>什麼時候停。</b>Decode 停在三種情況：model 產生 stop token（代表「說完了」的特殊 token）、長度到了上限（API 的 <code>max_tokens</code>）、使用者斷線。早一點停，KV cache 的記憶體就早一點釋放，可以收下一個 request。</p>
-              <p id="i1-5"><b>Agent 的每一圈，都是一次完整的 request。</b>L4〈<a href="l04.html#i1">根本的限制</a>〉說過，model 沒有記憶，agent 每一圈都把整段 context 重送。對 serving 系統來說，重送的每個 token 都是一份 prefill 的工作，也佔一份 KV cache。L8〈<a href="l08.html#i3">Prompt cache</a>〉講的 prefix cache 讓開頭相同的部分不用重算，但那一段的 KV 仍然要放在 GPU 記憶體裡，decode 的每一步也照樣要讀：</p>
+              <p id="i1-5"><b>Agent 的每一圈，都是一次完整的 request。</b>L4〈<a href="l04.html#i1">根本的限制</a>〉說過，model 沒有記憶，agent 每一圈都把整段 context 重送。對 serving 系統來說，重送的每個 token 都是一份 prefill 的工作，也佔一份 KV cache。L8〈<a href="l08.html#i3">Prefix cache</a>〉講的 prefix cache 讓開頭相同的部分不用重算，但那一段的 KV 仍然要放在 GPU 記憶體裡，decode 的每一步也照樣要讀：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 238" role="img" aria-label="四列長條，是 agent 的四圈 request。第 1 圈 10K token 全是新的，黃色。第 2 圈前 10K 命中 prefix cache，青色，新增 8K 黃色，共 18K。第 3 圈 18K 命中，新增 3K，共 21K。第 4 圈 21K 命中，新增 3K，共 24K。底部一條紅線橫跨整條第 4 圈，標示 decode 時整條 24K token 的 KV cache 都在 GPU 記憶體上。">

@@ -138,7 +138,7 @@ python3 -I tools/add_lecture.py --check            # 要印出 nothing (in sync)
 1. 做 A。
 2. 修改 `docs/` 裡的檔案。規則以 `guide/STYLE_*.md` 為準；要改規則，先問 James。
 3. `punct.py` 只對新寫的片段跑，先 `--diff` 看它會改什麼。不要對整頁盲跑：頁面的數學式與英文片語要維持 ASCII（2026-10-19 這樣做過一次，改壞了 L4–L8 的算式，後來還原）。
-4. 改了章名（`h3`）或粗體小標，跑 `python3 -I tools/add_lecture.py --sync-own` 重建側欄（2026-11-16 起側欄直接列章與小標，`verify.sh` 會抓沒同步的頁）。
+4. 改了章名（`h3`）或粗體小標，跑 `python3 -I tools/add_lecture.py --sync-own` 重建側欄（2026-11-16 起側欄直接列章與小標，`verify.sh` 會抓沒同步的頁）。標題照 STYLE_ARTICLE 第 2 節〈標題是節點〉寫；有題庫的頁再跑 `python3 -I tools/outline.py quiz-titles lXX --write`（小測區塊的標題用題庫每一節的 `title`，要和頁面一樣），用〈舊標題〉指過來的地方 `grep` 出來改。一次改好幾個標題就做 I3。
 5. 對改過的講次頁跑 `bash tools/verify.sh lXX`（B4 的檢查加 `audit.py`，一次跑完）。
 6. 發布（D）。
 
@@ -303,6 +303,26 @@ James 說看不懂而審查沒抓到：先在 `guide/review_cases/` 加一個測
 4. `review_status.py status lXX` 仍然全 ok、`verify.sh lXX` 沒有紅字的 warn，照 D push。
 
 寫作的 skill（`idea-first-lecture`、`rewrite-with-example`、`fact-check-extension`）寫新段落時不放 `<strong>`；原本有的留著，審完再由這一步整章看一次。
+
+## I3. 只看標題的測試（2026-11-20 起）
+
+章名和小標是一張大綱，讀者只看它就要長得出 mind map（STYLE_ARTICLE 第 2 節〈標題是節點〉）。可讀性審查（I）是連內文一起讀的，標題有內文撐著，審查者不會卡住；所以標題另外測，測的時候不給內文。
+
+什麼時候做：新寫一堂、重排一堂、一次改好幾個標題之後，push 之前。只改一兩個標題跑 lint 就好。
+
+1. `python3 -I tools/outline.py lXX` 自己先只看大綱讀一次；`python3 -I tools/outline.py lint lXX` 清掉機械抓得到的（指代、只有數量、重名、前綴、只有主題）。
+2. `python3 -I tools/outline.py pack lXX > notes/outline/lXX-pack.md`：大綱加上題庫每一節抽三題的題幹（沒有題庫的堂只能做第 1 步和第 3 步的後半）。
+3. 開一個**全新的** subagent（general-purpose，不是 fork），只准它讀這個 pack。它做兩件事：每一題只憑標題指到一節；列出單看看不懂的標題。結果寫成 `notes/outline/lXX-answers.json`。
+4. `python3 -I tools/outline.py score lXX notes/outline/lXX-answers.json`：節命中率、章命中率、沒有一題指得到的節、它說看不懂的標題。
+5. 先改「看不懂」的和「沒有一題指得到」的標題，再測一次。最多兩輪。
+
+怎麼讀結果：先看「看不懂的標題」，再看「沒有一題指得到的節」，命中率只當參考。L8 第一次做（2026-11-20，改之前和改之後各一個審查者、同樣 105 題）：看不懂的標題 11 個 → 6 個，沒有一題指得到的節 1 個 → 0 個，章命中 96% → 98%，節命中 92% → 89%。節命中率分不出好壞：題幹自己帶了很多線索，舊標題也能指對九成；指錯的多半是情境題本來就同時像兩節。所以不要追命中率，追清單。清單裡是題幹的問題（題目用的詞和那一節的概念名不一樣）就回頭看題目；是章的結構問題（一節放在蓋不住它的章裡，例如 L8 3.7 的單價放在〈Prefix cache〉）就記進 `V7_DECISIONS.md`，不要硬用標題解。要比改之前和改之後，`pack` 可以吃 `git show HEAD:docs/lXX.html` 存出來的舊檔。
+
+James 手改過的標題照他的字：測出來有問題就回報，不改回來（G）。
+
+`notes/outline/` 不 commit。
+
+---
 
 ## J. CI：push 後自動檢查（2026-11-07 起）
 
