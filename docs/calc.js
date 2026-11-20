@@ -825,6 +825,94 @@
     });
   };
 
+  /* L8 7.2：成功任務的花費分布（log-normal），上限訂在 p95 的 2 倍會切掉多少成功任務。
+     橫軸是對數刻度，一格 = 花費翻倍，以 p95 為 0：上限永遠在 p95 右邊一格。
+     sig = log-normal 的 σ（離散程度）；p95 ÷ 中位數 = e^(1.645σ)。 */
+  var TAIL = { L0: -6, L1: 3, X0: 50, PX: 70, BASE: 240, H: 160, Z95: 1.6449 };
+  function phi(z) {
+    var t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+    var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z / 2);
+    return z < 0 ? (1 - y) / 2 : (1 + y) / 2;
+  }
+  function tailModel(sig) {
+    var inside = phi(TAIL.Z95 + Math.LN2 / sig) * 100, out = 100 - inside;
+    return {
+      inside: inside >= 99.95 ? '>99.9%' : inside.toFixed(1) + '%',
+      pct: inside >= 99.95 ? '>p99.9' : 'p' + inside.toFixed(1),
+      out: out < 0.05 ? '<0.1%' : out.toFixed(1) + '%',
+      ratio: Math.exp(TAIL.Z95 * sig).toFixed(1)
+    };
+  }
+  function tailAria(sig) {
+    var m = tailModel(sig);
+    return '成功任務花費的分布，離散程度 σ = ' + sig.toFixed(1) + '，p95 是中位數的 ' + m.ratio + ' 倍。橫軸是對數刻度，每一格花費翻倍。' +
+      '大部分任務擠在左邊，右邊拖一條長尾。p95 是虛線，上限 2 × p95 是紅線，就在 p95 右邊一格。上限內有 ' + m.inside +
+      ' 的成功任務；超過上限的紅色尾巴是 ' + m.out + '，這些會被誤殺。';
+  }
+  FRAMES.tail = function (sig) {
+    var T = TAIL, d = Draw('tl'), m = tailModel(sig);
+    var s = sig / Math.LN2, mu = -T.Z95 * s;
+    function X(l) { return T.X0 + T.PX * (l - T.L0); }
+    function Y(l) { return T.BASE - T.H * Math.exp(-(l - mu) * (l - mu) / (2 * s * s)); }
+    function n(v) { return v.toFixed(1).replace(/\.0$/, ''); }
+    function area(a, b) {
+      var p = 'M' + n(X(a)) + ',' + T.BASE;
+      for (var l = a; l <= b + 1e-9; l += 0.05) p += ' L' + n(X(l)) + ',' + n(Y(l));
+      return p + ' L' + n(X(b)) + ',' + T.BASE + ' Z';
+    }
+    var line = '';
+    for (var l = T.L0; l <= T.L1 + 1e-9; l += 0.05) line += (line ? ' L' : 'M') + n(X(l)) + ',' + n(Y(l));
+    d.text(T.X0, 28, 'dg-c', '離散程度 σ = ' + sig.toFixed(1) + '：p95 是中位數的 ' + m.ratio + ' 倍' + (Math.abs(sig - 1) < 1e-9 ? '（本文的假設）' : ''));
+    d.path(area(T.L0, 1), 'dg-n-c');
+    d.path(area(1, T.L1), 'dg-n-focus');
+    d.path(line, 'dg-link');
+    d.vline(X(0), 64, T.BASE, 'dg-ghost');
+    d.vline(X(1), 64, T.BASE, 'dg-link-key');
+    d.text(X(0) - 6, 58, 'dg-cb', 'p95', 'end');
+    d.text(X(1) + 6, 58, 'dg-k', '上限 = 2 × p95');
+    d.text(X(0.5), 82, 'dg-c', '× 2', 'middle');
+    d.text(X(-4.6), 120, 'dg-cb', '上限內：' + m.inside + ' 的成功任務');
+    d.text(X(1) + 10, 176, 'dg-k', '超過上限：' + m.out);
+    d.text(X(1) + 10, 194, 'dg-c', '會被誤殺的成功任務');
+    d.path('M' + n(X(1) + 30) + ',200 L' + n(X(1.25)) + ',' + (T.BASE - 4), 'dg-link-key');
+    d.path('M' + T.X0 + ',' + T.BASE + ' L' + X(T.L1) + ',' + T.BASE, 'dg-soft-link');
+    var ticks = { '-4': '÷ 16', '-3': '÷ 8', '-2': '÷ 4', '-1': '÷ 2', '0': 'p95', '1': '× 2', '2': '× 4', '3': '× 8' };
+    for (var k = -4; k <= 3; k++) {
+      d.vline(X(k), T.BASE, T.BASE + 5, 'dg-soft-link');
+      d.text(X(k), T.BASE + 20, 'dg-mn', ticks[k], 'middle');
+    }
+    d.text(X(T.L1), T.BASE + 44, 'dg-c', '每個任務的花費（對數刻度：每一格翻倍）', 'end');
+    d.text(T.X0, T.BASE + 44, 'dg-c', '← 便宜');
+    return d.html();
+  };
+  CALCS.tail = function (fig, box) {
+    var svg = fig.querySelector('svg');
+    var inS = box.querySelector('[data-k="s"]');
+    var outS = box.querySelector('[data-v="s"]');
+    var res = box.querySelector('.calc-out');
+    var btn = box.querySelector('.calc-reset');
+    if (!svg || !inS || !outS || !res || !btn) return null;
+    var S0 = inS.defaultValue;
+    var orig = { svg: svg.innerHTML, label: svg.getAttribute('aria-label'), s: outS.innerHTML, res: res.innerHTML };
+    function restore() {
+      svg.innerHTML = orig.svg; svg.setAttribute('aria-label', orig.label);
+      outS.innerHTML = orig.s; res.innerHTML = orig.res; btn.disabled = true;
+    }
+    function update() {
+      if (inS.value === S0) { restore(); return; }
+      var sig = +inS.value, m = tailModel(sig);
+      svg.innerHTML = FRAMES.tail(sig);
+      svg.setAttribute('aria-label', tailAria(sig));
+      outS.textContent = sig.toFixed(1) + '（p95 是中位數的 ' + m.ratio + ' 倍）';
+      res.textContent = '上限落在成功任務的 ' + m.pct + '，誤殺 ' + m.out + ' 的成功任務。';
+      btn.disabled = false;
+    }
+    function reset() { inS.value = S0; restore(); }
+    inS.addEventListener('input', update);
+    btn.addEventListener('click', reset);
+    return { reset: reset };
+  };
+
   var figs = document.querySelectorAll('figure[data-calc]');
   for (var i = 0; i < figs.length; i++) {
     var fig = figs[i];
@@ -836,5 +924,5 @@
     live.push(c);
     box.hidden = false;
   }
-  window.cs2680Calc = { resetAll: function () { live.forEach(function (c) { c.reset(); }); }, frames: FRAMES };
+  window.cs2680Calc = { resetAll: function () { live.forEach(function (c) { c.reset(); }); }, frames: FRAMES, tailAria: tailAria, tailModel: tailModel };
 })();

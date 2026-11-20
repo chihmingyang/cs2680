@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const DEFAULTS = { ttl: [40, 26], resend: [5], prefix: [1, 1], decode: [52], cpath: [60, 0] };
+const DEFAULTS = { ttl: [40, 26], resend: [5], prefix: [1, 1], decode: [52], cpath: [60, 0], tail: [1] };   // tail（L8 7.2）是滑桿圖，靜態圖一樣由 FRAMES 產生
 
 global.window = {};
 global.document = { querySelectorAll: () => [] };
