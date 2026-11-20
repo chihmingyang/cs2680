@@ -1292,7 +1292,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
                   <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>Haiku（另開的一段新對話）</td><td>20K</td><td>0</td><td>20K × $0.125 / M = <b>$0.0025</b>；主對話留在 Opus，它的 cache 不受影響</td></tr>
                 </tbody>
               </table></div>
-<p>第 3、4 列都是讀 205K，差別只在 Opus 的 cache 還在不在，花費差了約 16 倍。單價會變，算法不變：<strong>大 model 的 cache read 可能比小 model 的 cache write 還便宜</strong>，換走太久再換回來更貴。<strong>所以「每一步重選」要算得過才用</strong>，便宜的工作交給一個乾淨 context 的 subagent 最划算，這也解釋了 Uber 那個槓桿為什麼有效。Claude Code 的 <code>opusplan</code>（規劃用 Opus、執行用 Sonnet）每切一次也是一次 model switch，官方文件有寫。</p>
+<p>第 3、4 列都是讀 205K，差別只在 Opus 的 cache 還在不在，花費差了約 16 倍。單價會變，算法不變：<strong>大 model 的 cache read 可能比小 model 的 cache write 還便宜</strong>，換走太久再換回來更貴。<strong>所以「每一步重選」要算得過才用</strong>，便宜的工作交給一個乾淨 context 的 subagent 最划算。</p>
 <p id="i6-3"><b>Effort：thinking 也算 output，分數的最後幾個百分點最貴。</b>做法是依這一步的性質調 <a class="tm" href="#n-effort">effort</a>：查找、整理格式用 low，規劃、除錯用 high。Anthropic 的<a href="https://claude.com/resources/articles/reducing-cost-and-improving-performance-with-claude-platform" target="_blank" rel="noopener">文章</a>給了兩組數字，本文用第 1 章的算法算一次（分數當成功率的近似，文章沒有明說）：</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>Benchmark</th><th>Effort</th><th>分數</th><th>每題花費</th><th>每個成功</th><th>多成功一次</th></tr></thead>
