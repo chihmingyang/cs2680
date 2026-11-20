@@ -1288,7 +1288,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
                   <tr><td>同一段對話換到 Haiku 5.5（prompt 超過 100K）</td><td>Haiku</td><td>200K</td><td>0：Haiku 沒有這段對話的 cache</td><td>200K × $0.625 / M = <b>$0.125</b></td></tr>
                   <tr><td>在 Haiku 做了幾步，超過 5 分鐘才換回 Opus 5.5</td><td>Opus</td><td>205K</td><td>0：這段時間沒有 request 送給 Opus，它的 cache 已過期</td><td>205K × $5 / M = <b>$1.025</b></td></tr>
                   <tr><td>在 Haiku 做了幾步，5 分鐘內就換回 Opus 5.5</td><td>Opus</td><td>205K</td><td>200K；在 Haiku 新增的 5K 要寫入</td><td>200K × $0.20 / M + 5K × $5 / M = <b>$0.065</b></td></tr>
-                  <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>Haiku（另開的一段新對話）</td><td>20K</td><td>0</td><td>200K × $0.625 / M = <b>$</b><b>0.125</b>；主對話留在 Opus，它的 cache 不受影響</td></tr>
+                  <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>Haiku（另開的一段新對話）</td><td>20K</td><td>0</td><td>20K × $0.625 / M =<b> ??</b>；主對話留在 Opus，它的 cache 不受影響</td></tr>
                 </tbody>
               </table></div>
 <p>第 3、4 列都是讀 205K，差別只在 Opus 的 cache 還在不在，花費差了約 16 倍。單價會變，算法不變：<strong>大 model 的 cache read 可能比小 model 的 cache write 還便宜</strong>，換走太久再換回來更貴。<strong>所以「每一步重選」要算得過才用</strong>，便宜的工作交給一個乾淨 context 的 subagent 最划算。</p>
