@@ -26,6 +26,12 @@
 
 1. 把 repo 加進 session，再 clone：
    - 呼叫 `add_repo`（owner `chihmingyang`、repo `cs2680`、access `push`）。
+   - **要有 James 的一句授權，`add_repo` 才會過**（2026-11-20 查明）。session 開工時沒有 repo，auto mode 的 classifier 把 cs2680 當成外面的 repo；要拿 push 權限，必須是 James 的訊息直接講到這個動作。Project instructions「改完 push」、這個 repo 的 `CLAUDE.md` 都不算。沒有授權時，`add_repo` 會被擋，理由是 `[Unauthorized Access]`。這不是 GitHub 權限的問題，不要重試，也不要繞路。James 的開場白是這一句：
+     ```
+     這個 session 授權你：add_repo chihmingyang/cs2680（access push），改完直接 push 到 main。
+     ```
+     他的訊息裡有這句或同義的話，就直接呼叫 `add_repo`。沒有的話，**第一則回覆就用一行請他貼這句**，工作照做，push 前拿到授權即可。不要等改完才說「沒有 push 權限」。
+   - 為什麼問題以前總在最後才出現：repo 是 public，沒有 `add_repo` 也 clone 得下來。session 會照常改完、commit，到 `git push` 才收到 proxy 的 403：`not in this session's authorized repository set`。
    - `git clone --depth 1 https://github.com/chihmingyang/cs2680 /home/claude/cs2680`（timeout 給 10 分鐘）。
    - clone 完呼叫 `register_repo_root`（owner `chihmingyang`、repo `cs2680`、directory `/home/claude/cs2680`）。2026-11-06 起 claude.ai 的 session 也有這個工具（10-30 時還沒有），實測下一步就生效：`CLAUDE.md` 以 system-reminder 自動載入，`.claude/skills/` 的 skill 進到 skill 清單，用 Skill 工具載入，不必自己 Read。呼叫失敗才改成自己 Read `CLAUDE.md` 和 `.claude/skills/<name>/SKILL.md`。
 2. 確認 `gh` 可以用：
