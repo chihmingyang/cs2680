@@ -1275,7 +1275,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
               <figcaption>Routing 什麼時候選 model？三種時機，風險不同：第一列 router 選錯 model，整個 turn 都用錯；第二列失敗那次的錢白付；第三列每換一次 model（深紅箭頭），cache 都帶不走。</figcaption>
             </figure>
 <p>三種時機都把一部分工作交給便宜的 model，所以都有同一個風險，一句話就是：<strong>便宜的 model 規劃錯一次，後面很多步都白走</strong>。<strong>所以規劃留給大 model，routing 只省執行的步驟</strong>。Uber 的做法指向同一邊：主 model 負責拆解與評估，subagent 預設用便宜的 model，<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">作者說</a>這個預設是他們影響最大的槓桿，但沒有單獨列出它省了多少（一家公司的經驗，不是對照實驗）。該不該換，用第 1 章的 c ÷ p 在自己的任務上算：換成便宜的 model，c 少了多少、p 掉了多少。</p>
-<p id="i6-2"><b>換 model 時機, 選在 context 還小的時候。</b>Cache 綁 model，每個 model 各有一份；換 model 時，整段 context 要照新 model 的 cache write 單價重算。換回原 model 時，原來那份 cache 若還沒過期（5 分鐘內），只要寫入換走之後新增的部分；若已過期，又要全部重算。下表代入 2026-11-03 的<a class="tm" href="#t2">單價</a>。表裡的「全部重算」都照 cache write 收：Opus 5.5 是 $5 / M，Haiku 5.5 在 prompt 超過 100K 時是 $0.625 / M、不超過時是 $0.125 / M。</p>
+<p id="i6-2"><b>換 model 時機, 選在 context 還小的時候。</b>Cache 綁 model，每個 model 各有一份；換 model 時，整段 context 要照新 model 的 cache write 單價重算。換回原 model 時，原來那份 cache 若還沒過期（5 分鐘內），只要寫入換走之後新增的部分；若已過期，又要全部重算。下表代入 2026-11-03 的<a class="tm" href="#t2">單價</a>。表裡的「全部重算」都照 cache write 收：Opus 5.5 是 $5 / M，Haiku 5.5 是 $0.625 / M。</p>
 <p>表的情境如下：</p>
 <ul>
   <li>對話已經累積到 200K，一直用 Opus 5.5，所以這 200K 都在 Opus 的 cache 裡。</li>
@@ -1289,7 +1289,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
                   <tr><td>同一段對話換到 Haiku 5.5（prompt 超過 100K）</td><td>Haiku</td><td>200K</td><td>0：Haiku 沒有這段對話的 cache</td><td>200K × $0.625 / M = <b>$0.125</b></td></tr>
                   <tr><td>在 Haiku 做了幾步，超過 5 分鐘才換回 Opus 5.5</td><td>Opus</td><td>205K</td><td>0：這段時間沒有 request 送給 Opus，它的 cache 已過期</td><td>205K × $5 / M = <b>$1.025</b></td></tr>
                   <tr><td>在 Haiku 做了幾步，5 分鐘內就換回 Opus 5.5</td><td>Opus</td><td>205K</td><td>200K；在 Haiku 新增的 5K 要寫入</td><td>200K × $0.20 / M + 5K × $5 / M = <b>$0.065</b></td></tr>
-                  <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>Haiku（另開的一段新對話）</td><td>20K</td><td>0</td><td>20K × $0.125 / M = <b>$0.0025</b>；主對話留在 Opus，它的 cache 不受影響</td></tr>
+                  <tr><td>開一個 Haiku 5.5 的 subagent，context 20K</td><td>Haiku（另開的一段新對話）</td><td>20K</td><td>0</td><td>200K × $0.625 / M = <b>$</b><b>0.125</b>；主對話留在 Opus，它的 cache 不受影響</td></tr>
                 </tbody>
               </table></div>
 <p>第 3、4 列都是讀 205K，差別只在 Opus 的 cache 還在不在，花費差了約 16 倍。單價會變，算法不變：<strong>大 model 的 cache read 可能比小 model 的 cache write 還便宜</strong>，換走太久再換回來更貴。<strong>所以「每一步重選」要算得過才用</strong>，便宜的工作交給一個乾淨 context 的 subagent 最划算。</p>
