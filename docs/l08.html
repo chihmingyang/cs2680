@@ -65,9 +65,9 @@
       <li><span class="k">Slides</span><a href="https://cs2680.com/slides/8_agent_design_5.pdf" target="_blank" rel="noopener">8_agent_design_5.pdf ↗</a></li>
       <li><span class="k">頁數</span>54</li>
       <li><span class="k">同一份 slides</span>另一半是 <a href="l08b.html">L8b Harness Architecture</a></li>
-      <li><span class="k">閱讀</span><span class="read-time">約 35 分鐘</span></li>
+      <li><span class="k">閱讀</span><span class="read-time">約 45 分鐘</span></li>
       <li><span class="k">註與查閱</span><span class="deep-time">約 6 分鐘</span>，收合</li>
-      <li><span class="k">全部展開</span><span class="full-time">約 45 分鐘</span></li>
+      <li><span class="k">全部展開</span><span class="full-time">約 50 分鐘</span></li>
     </ul>
   </header>
 
@@ -583,7 +583,7 @@
                   <tr><td>中途增減 tool 定義</td><td>Tools 排在最前面，全部失效</td><td><strong>開始時就定好</strong>。Tool 很多時用 tool search：tools 區只放一個搜尋工具，其他 tool 標成延後載入，model 搜到某個 tool 時，它的完整定義接在 messages 尾端，前面的 tools 區不變</td></tr>
                   <tr><td><span style="color: var(--key)"><b>JSON key 順序不固定</b></span></td><td>如果把 prompt message 改成 json format , 但 json 不保證 object key 順序, 只保證 array 順序。<br><br>RFC 8259 把 object 定義為 “unordered collection”。<b><span style="color: var(--key)">所以 {"a":1,"b":2} 和 {"b":2,"a":1} 在語意上相等，parser 和 serializer 可以用任何順序輸出。</span></b></td><td>序列化固定順序</td></tr>
                   <tr><td>換 model</td><td>每個 model 一份 cache</td><td><strong>另開一個從乾淨 context 開始的 agent（subagent）用那個 model 做</strong>，主對話的 cache 不動（第 6 章）</td></tr>
-                  <tr><td><b><span style="color: var(--key)">改 <a class="tm" href="#n-effort">effort 或 thinking</a> 設定（model 回答前想多久，第 6 章）</span></b></td><td><b><span style="color: var(--key)">一般來說，這個設定會寫進送給 model 的 context，位置在 messages 之前，所以 messages 要重算</span></b>；有的 model 把它寫在 tools 和 system 前面，就全部重算。Claude Code 文件列了例外：Opus 5.5、Sonnet 5.5、Haiku 5.5、Fable 5.1 改 effort 時保留 cache（文件沒說怎麼做到，例外也只列了 effort；用這四個 model 時，改 effort 可以不管）</td><td>Session 開始時定好</td></tr>
+                  <tr><td><b><span style="color: var(--key)">改 <a class="tm" href="#n-effort">effort 或 thinking</a> 設定（model 回答前想多久，第 6 章）</span></b></td><td><b><span style="color: var(--key)">一般來說，這個設定會寫進送給 model 的 context，位置在 messages 之前，所以 messages 要重算</span></b>；有的 model 把它寫在 tools 和 system 前面，就全部重算。直接呼叫 API 時，新 model 改 effort 也會斷：官方範例用 Opus 5.5，effort 從 medium 改成 low，cache read 變成 0。Claude Code 文件說 Opus 5.5、Sonnet 5.5、Haiku 5.5、Fable 5.1 改 effort 保留 cache，這只在 Claude Code 裡成立（文件沒說怎麼做到）</td><td>Session 開始時定好。中途要換，request 最上層的 effort 設定不動，改在 messages 尾端加一則只帶 effort 的訊息，前面的 cache 保留（第 6 章〈Per-turn effort〉）</td></tr>
                   <tr><td>改 messages 中間的一筆</td><td>那一點之後全部重算，compaction 和清 tool 結果都算</td><td><strong>新內容只加在尾端</strong>。Compaction 避不開重算，就挑 cache 還沒過期的時候做：摘要那次 call 送的仍是原來那段 context，開頭沒變，還是 cache hit（第 4 章算幾步回本）</td></tr>
                   <tr><td>停頓或一次 tool call 超過 cache 的壽命（TTL）</td><td>Cache 過期</td><td><strong>改用 1 小時的 TTL，或在過期前送一個續命的 request（keep-alive）</strong>；怎麼選見下面的〈<a href="#i3-4">TTL</a>〉</td></tr>
                 </tbody>
@@ -1303,6 +1303,23 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
                 </tbody>
               </table></div>
 <p>兩個 benchmark 都是平均看 low 划算，但 <strong>max 多解的那些題每題要多花 $24 到 $70</strong>，值不值得看那一題值多少。文章也說 Humanity's Last Exam 最後一級只多半分、多花 46%，落在雜訊範圍內。這些是廠商自己的數字，當方向看。實務上的折衷可以看 Uber：預設 effort 是 medium，理由是 thinking 算在最貴的 output 裡，而 medium 對大多數任務的成本和品質已經平衡。</p>
+<p><b>Per-turn effort：換 effort 不要改 request 最上層的值。</b>Request 最上層的 effort 設定寫在 messages 前面，一改，cache 就斷（第 3 章〈七種會打斷 cache 的動作〉）。Claude API 有兩種換法，都只在 messages 尾端加東西，前面不動，所以 cache 保留。兩種都以 turn 為單位（第 1 章：你送一則訊息，到 agent 回覆為止），同一個 turn 裡的 tool 步驟不能各用一種 effort。原因是 API 的規則：turn 中間每一步的最後一則訊息只裝 tool 結果，API 不把它算成新的輸入，effort 訊息接在它後面，要等到你送下一則訊息才生效。要讓某一類步驟固定用 low，就交給一個 subagent，它自己的 request 設 low（本章開頭的 routing）。</p>
+<ul>
+                <li><b>Per-message effort（beta）。</b>你送出的訊息後面，緊接一則只帶 effort 設定、沒有文字的訊息。它在 API 上的 role 寫 <code>system</code>，但它在 messages 尾端，不是排在最前面的 system prompt，所以前面的 cache 不動。這個 turn 的回覆就用新的等級，之後的 turn 沿用，直到下一則這種訊息。</li>
+                <li><b>Prompt 引導。</b>在你這則訊息的文字最後加一句：要多想就加「Please think hard before responding.」，要少想就加「Answer directly without deliberating.」。這只是請求：Haiku 5.5 和 Fable 5.2 對「少想」那句不太照做，要少想就用前一種。</li>
+              </ul>
+<figure class="file"><figcaption>Per-message effort：turn 1 規劃用 high，turn 2 摘要換成 low</figcaption><pre><code class="lang-py">client.beta.messages.create(
+    model="claude-opus-5-5",
+    output_config={"effort": "high"},        # 最上層：整段對話都不改
+    messages=[
+        {"role": "user", "content": "規劃 SQLite 搬到 PostgreSQL 的三個步驟"},   # turn 1：用 high
+        {"role": "assistant", "content": "1. 匯出 2. 建 schema 3. 匯入並核對筆數"},
+        {"role": "user", "content": "用一句話摘要"},                         # turn 2
+        {"role": "system", "content": [], "output_config": {"effort": "low"}},  # 緊接在後：turn 2 用 low
+    ],
+    betas=["mid-conversation-output-config-2026-07-01"],
+    max_tokens=4096,
+)</code></pre></figure>
 <details class="gloss" id="n-effort">
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Reasoning model 與 effort：thinking token 也是 output</span></summary>
                 <div class="gloss-body prose">
