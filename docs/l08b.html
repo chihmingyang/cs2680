@@ -277,7 +277,7 @@
                   <text x="359" y="278" text-anchor="middle" class="dg-c">Prompt injection 能叫 code 讀環境變數，但環境變數裡已經沒有 credential</text>
                 </svg>
               </div>
-              <figcaption>一個 agent 也需要拆成獨立的服務嗎？這是 Anthropic 2026 年 4 月描述的 Managed Agents。它拆開的理由是失敗與安全，和 agent 數量無關。Vault 是保管 credential 的地方。Proxy 是 sandbox 外面的一層轉送：sandbox 裡的 code 呼叫外部服務時經過它，由它從 vault 取出 credential 填上。呼叫的名稱依原文。</figcaption>
+              <figcaption>一個 agent 也需要拆成獨立的服務嗎？這是 Anthropic 2026 年 4 月描述的 Managed Agents。它拆開的理由是失敗與安全，和 agent 數量無關。Vault 是保管 credential 的地方。Proxy 是 sandbox 外面的一層轉送：model 要用外部服務的 tool（MCP tool）時，這次 tool 呼叫送到 proxy，由 proxy 從 vault 取出 credential、代為呼叫外部服務。圖上 emitEvent、execute 這些呼叫的名稱依原文。</figcaption>
             </figure>
 <p id="i2-3"><b>拆開後的 time to first token（TTFT）：反而變快，因為 sandbox 要用時才配。</b>第 1 章的表說協定的通訊成本可能較高。這個案例的結果相反，拆開之後反而變快：<strong>第一個 token 的等待時間（time to first token，TTFT）p50 降約 60%、p95 降超過 90%</strong>。原因不在協定本身：以前每個 session 都要先等 container 準備好，連用不到 sandbox 的 session 也一樣，<strong>拆開之後要用時才配</strong>。這是一家公司的經驗，不是對照實驗，Anthropic 這篇文章也沒有談多出來的服務邊界要多少維運成本。</p>
             </div>
@@ -303,7 +303,7 @@
           <div class="idea" id="i4">
             <h3>查閱：八個 harness 的設計重心</h3>
             <div class="prose">
-<p id="i4-1"><span class="anchor" id="x2"></span><b>每個 harness 都把一個假設寫進結構。</b>第 3 章的同一個問題，各家 harness 的答案不同，因為它們的假設不同。以第一題（不可信的東西要和秘密隔開嗎）為例：Codex CLI 先把指令關進 sandbox，要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不靠隔離，有風險的動作先問人，或交給一個自動判斷風險的分類器，假設環境不一定能隔離。兩種假設都可能成立。<strong>讀下面八個 harness 時，可以問每個設計背後假設了什麼</strong>。</p>
+<p id="i4-1"><span class="anchor" id="x2"></span><b>每個 harness 都把一個假設寫進結構。</b>第 3 章的同一個問題，各家 harness 的答案不同，因為它們的假設不同。以第一題（不可信的東西要和秘密隔開嗎）為例：Codex CLI 先把指令關進 sandbox，要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不開 sandbox，有風險的動作預設交給一個自動判斷風險的分類器（這個模式叫 auto mode），也可以改成每次先問人；它假設環境不一定能隔離。兩種假設都可能成立。<strong>讀下面八個 harness 時，可以問每個設計背後假設了什麼</strong>。</p>
 <p>下面的表<strong>不必讀完</strong>，需要時再查。表裡的 context、compaction 是 <a href="l04.html">L4</a> 的詞，prompt cache、TTL 是 L8〈<a href="l08.html#i3">Prefix cache</a>〉的詞。這裡列八個 coding agent harness，每個用一句話說它的設計重心，右欄是最值得看的一個設計對應到哪一章。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>Harness</th><th>一句話</th><th>對應</th></tr></thead>
@@ -327,8 +327,8 @@
                       <tr><td><b>Codex CLI</b></td><td><strong>先 sandbox 再核准</strong>：指令跑在無網路的 sandbox 裡，只有要出 sandbox 才問人。Patch 要符合一套 Lark grammar，hunk 用四輪比對找位置。</td><td>安全；patch 套錯位置</td></tr>
                       <tr><td><b>DeepSeek Harness</b></td><td><strong>Loop 也是 plugin</strong>：loop、adapter、tool、log、核准都是 plugin，用 YAML 層層覆蓋。每個 model request 是 session log 的一個凍結視圖，harness 只追加。Compare-and-swap 編輯：model 讀過之後檔案變了，就拒絕寫入。</td><td>想換掉任何一塊（連 loop）都不改核心；每個 request 都能從 log 重建，方便重播與除錯；多個 agent 改同一個檔時互相蓋掉</td></tr>
                       <tr><td><b>OpenCode</b></td><td><strong>Harness 是一個 server</strong>：TUI、SDK、web app 都用同一個 OpenAPI HTTP server。模糊比對的 edit 有大小上限：九種 replacer 從精確到 anchor 逐一嘗試，太大的模糊匹配拒絕。每一步存一個 snapshot：影子 git repo 讓 /undo 連檔案一起還原。</td><td>很多種 client 要接同一個 session（架構介於第 1 章的 modular 與 microkernel 之間）；模糊比對可能改錯地方；改壞了要連檔案一起還原</td></tr>
-                      <tr><td><b>Pi</b></td><td><strong>最小核心：四個 tool</strong>，沒有 MCP、subagent、核准，其他都靠 extension。Keep-alive 有價格檢查：每送一次 keep-alive 都要付錢，所以只在預期省得夠多時才送 keep-alive（在 prompt cache 過期前送一個 request 續命，見 L8〈<a href="l08.html#i3-4">TTL</a>〉）。函式庫給別的專案用：pi-ai 支援 42 家 model 供應商、10 種 wire API。</td><td>功能一多，核心就難維護，所以功能交給使用者用 extension 自己換（第 1 章的 modular）；keep-alive 本身要錢，送了可能不划算；同一套程式要能接很多家 model 供應商，也讓別的專案重用</td></tr>
-                      <tr><td><b>oh-my-pi</b></td><td>Hashline 編輯：每個 edit 帶一個 4 位 hex 的內容雜湊和行號，<strong>model 不必重打舊文字</strong>。IDE 在 process 裡：一個 shell 跨所有呼叫保持開著，原生 tool 提供搜尋、AST、LSP、debugger。特殊的 context 方法：snapcompact 把舊的 turn 畫成密集的文字圖片，能讀圖的 model 讀它約只要原文 1/3 的 input token；TTSR（Time Traveling Stream Rules）的規則平常不放進 context，model 的 output 一出現符合某個 regex 的內容，就停下生成、把那條規則加進對話、重新生成。</td><td>舊的 edit 要 model 把整段舊文字重打一次，output token 多；每次呼叫都重開 shell 要等；context 成本：舊歷史變便宜，規則只在用到時才佔 context</td></tr>
+                      <tr><td><b>Pi</b></td><td><strong>最小核心：預設四個 tool</strong>，沒有內建的 subagent 與核准，其他都靠 extension（MCP 原本也不做，2026-10 的 1.0 才加）。Keep-alive 有價格檢查：每送一次 keep-alive 都要付錢，所以只在預期省得夠多時才送 keep-alive（在 prompt cache 過期前送一個 request 續命，見 L8〈<a href="l08.html#i3-4">TTL</a>〉）。函式庫給別的專案用：pi-ai 支援 42 家 model 供應商、10 種 wire API。</td><td>功能一多，核心就難維護，所以功能交給使用者用 extension 自己換（第 1 章的 modular）；keep-alive 本身要錢，送了可能不划算；同一套程式要能接很多家 model 供應商，也讓別的專案重用</td></tr>
+                      <tr><td><b>oh-my-pi</b></td><td>Hashline 編輯：每個 edit 帶一個 4 位 hex 的內容雜湊和行號，<strong>model 不必重打舊文字</strong>。IDE 在 process 裡：一個 shell 跨所有呼叫保持開著，原生 tool 提供搜尋、AST、LSP、debugger。特殊的 context 方法：snapcompact 把舊的 turn 畫成密集的文字圖片，給能讀圖的 model 讀，用來壓縮 context；TTSR（Time Traveling Stream Rules）的規則平常不放進 context，model 的 output 一出現符合某個 regex 的內容，就停下生成、把那條規則加進對話、重新生成。</td><td>舊的 edit 要 model 把整段舊文字重打一次，output token 多；每次呼叫都重開 shell 要等；context 成本：舊歷史變便宜，規則只在用到時才佔 context</td></tr>
                       <tr><td><b>OpenClaw</b></td><td>聊天 gateway 加 queue lane：27 種聊天頻道的訊息都可以進來；每個 session 只有一條 lane（佇列），不管訊息來自哪個頻道，都排進同一條，一次只跑一個 turn；queue mode 決定 agent 執行中收到的新訊息是插進目前的 turn、排到下一個 turn，還是中斷目前的 turn。<strong>Compaction 之前先寫記憶</strong>：先跑一個使用者看不到的 turn（silent turn），寫下有日期的筆記；之後的 recall 結合全文搜尋和向量搜尋。Fence、taint、sentinel：fence 隔離不可信的文字；讀過網路的 turn 標成 taint；agent 監看 secret 的 sentinel。</td><td>同一個 session 同時收到很多訊息時，兩個 turn 同時跑、互相搶 session 狀態；compaction 丟掉的細節之後找不回來；prompt injection 與洩密</td></tr>
                       <tr><td><b>Hermes Agent</b></td><td>會學習的 fork：harness 每隔一段時間發一次提醒（nudge），這時背景另開一個 agent 的分身（執行時複製出來的 agent，不是程式碼的 fork），回顧剛才的 turn，再修改 memory 和 skill，不碰正在進行的對話。最早的 compaction：context 用到 50% 就 compaction，八個裡最早。執行前先存（write-ahead log 的做法）：<strong>tool call 先寫進 session 資料庫，才允許副作用發生</strong>。</td><td>同一類任務每次都要重新摸索做法；context 越大每一步越貴，等塞滿才 compaction 太晚；tool call 中途斷掉時，從資料庫知道做到哪裡</td></tr>
                     </tbody>
@@ -859,7 +859,7 @@
     {
      "id": "k7.8",
      "type": "mechanism",
-     "t": "Proxy 是 sandbox 外面的一層轉送：sandbox 裡的 code 呼叫外部服務時經過它，由它從 vault 取出 credential 填上。",
+     "t": "Proxy 是 sandbox 外面的一層轉送：model 要用外部服務的 tool（MCP tool）時，這次 tool 呼叫送到 proxy，由 proxy 從 vault 取出 credential、代為呼叫外部服務。",
      "at": [
       "#i2 圖1 說明",
       "#i2 圖1 內容"
@@ -1910,15 +1910,15 @@
    "id": "k7c",
    "ks": "k7",
    "kind": "choice",
-   "q": "照 Managed Agents 的拆法，sandbox 裡的 code 要呼叫 GitHub API，需要 token。Token 是怎麼填上的？",
+   "q": "照 Managed Agents 的拆法，model 要呼叫一個外部服務的 tool（MCP tool），這個服務需要 OAuth token。Token 是怎麼填上的？",
    "choices": [
     {
-     "t": "Sandbox 外的 proxy 轉送這次呼叫，從 vault 取出 token 填上",
+     "t": "Sandbox 外的 proxy 轉送這次 tool 呼叫，從 vault 取出 token、代為呼叫",
      "ok": true
     },
     {
-     "t": "Harness 從 vault 取出 token，代為呼叫 GitHub，再把結果交回",
-     "why": "Harness 也不知道 credential。填上 token 的是 sandbox 外面的 proxy：code 的呼叫經過它，由它從 vault 取出 token。"
+     "t": "Harness 從 vault 取出 token，代為呼叫外部服務，再把結果交回",
+     "why": "Harness 也不知道 credential。填上 token 的是 sandbox 外面的 proxy：這次 tool 呼叫經過它，由它從 vault 取出 token。"
     },
     {
      "t": "Sandbox 開機時從 vault 領一份短效 token，放進環境變數給 code",
@@ -1926,7 +1926,7 @@
     }
    ],
    "key": [
-    "Credential 放在 sandbox 外面的 vault；code 呼叫外部服務時經過 sandbox 外的 proxy，由 proxy 從 vault 取出 credential 填上。Sandbox 裡的 code 碰不到 credential，harness 也不知道。"
+    "Credential 放在 sandbox 外面的 vault；model 呼叫外部服務的 tool 時，呼叫經過 sandbox 外的 proxy，由 proxy 從 vault 取出 credential、代為呼叫。Sandbox 裡的 code 碰不到 credential，harness 也不知道。"
    ],
    "covers": [
     "k7.1",
