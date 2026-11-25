@@ -109,6 +109,7 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 - **刪。** RMSNorm、pre-norm、√dk 收成名詞註。690 GB 的 S、FlashAttention、roofline 一句帶過連 L10。Continuous batching 只寫 slides 講的（11/04 的主場）。Temperature 0 不保證相同連 L1，不重講。
 - **更正 slides。** 320 KB 實際是 327,680 byte，所以 64 個 request 是 1,819 GB，不是 1,779 GB（頁面註明）；「Serving is hard」的 token ID 是示意，改用 Llama 3 tokenizer 的實際輸出。
 - **可讀性審查（push 前，WORKFLOW I）。** 第一輪 33 BLOCK：tldr 的名詞（KV cache、context、GQA 這類先用後講）、head 在第 3 章先用後講、linear attention 的 S 和第 3 章的分數矩陣同名、表格格子沒回答欄名；也抓到一個錯：Qwen3-Next 那格 3.3 GB 應是 3.2 GB。第二輪剩 2 BLOCK、1 NIT，主線修，沒有審第三輪。
+- **2026-11-25 review（James：「review l9 課程」）。** 精簡照第 0 節〈精簡〉砍支線：佐證只留結論（8.4 三組逐項對照的數字、8.5 Mythbuster 的樣本與百分點、6.2 DeepSeek-V2 的 93%、6.4 Mamba 的 5 倍）；產品參數只留做決定用得到的（9.3 只留 thinking mode 的建議值、7.2 三項清單併成一段、DeepSeek-V3.2 FP8 的 byte 拆法留在來源檔）；換條件重算刪掉（64 個 request 的 637 秒、320,000 byte 的 1,779 GB、S 整個存下來的 690 GB）；章首只安排閱讀的句子刪掉。審查補回來的字只補少一步的推理，所以淨少不多（3.9%）：這一堂的主線是算式，能砍的支線本來就少。還可以再砍、但留給 James 決定的：5.3 的 expert 涵蓋率表（本文的推算）、6.3–6.4 Gated DeltaNet 與 Mamba 的機制、查閱的三個收合區塊。標題的取捨：第 6 章章名用「改」不用「縮小」，因為 sparse attention 不縮小 cache；1.5 與 4.4 都講 agent，1.5 只留「每一圈重送」，結論放 4.4；「Weights」在標題裡一律寫「Weights 的大小」；6.x 拿掉「做法 N：」前綴。題庫還沒做。
 
 ## L10 GPU 入門與 kernel 最佳化（10 章，55 分）
 

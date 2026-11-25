@@ -483,7 +483,7 @@
               </table></div>
               <p id="i2-3"><b>一條公式。</b>Kernel 是在 GPU 上跑的一個函式，CPU 發一次 launch，它就跑一次。<strong>搬資料和算數字可以同時進行，所以 kernel 的時間取兩者較慢的那一個</strong>：</p>
               <figure class="file"><figcaption>kernel 的時間（下限）</figcaption><pre><code class="lang-text">kernel 時間 ≈ max( 搬的 bytes ÷ 頻寬 , 算的 FLOPs ÷ peak 算力 )</code></pre></figure>
-              <p>用 L9 算過的 Llama 3 8B 代進去：BF16 的 weights 約 16 GB，每個 token 約 16 GFLOP（2 × 參數量，見 L9〈<a href="l09.html#i5">三個數字</a>〉）。H200 的頻寬是 4.8 TB/s，BF16 peak 是 989 TFLOP/s。表裡兩種情境：decode 是一次產生一個 token，batch 1 表示一次只服務一個請求；prefill 是一次讀完整段 prompt，這裡是 2,048 個 token 一起算。時間欄的 memory-bound 是卡在搬資料，compute-bound 是卡在運算，下面再精確定義：</p>
+              <p>用 L9 算過的 Llama 3 8B 代進去：BF16 的 weights 約 16 GB，每個 token 約 16 GFLOP（2 × 參數量，見 L9〈<a href="l09.html#i4">Serving 的三個數字</a>〉）。H200 的頻寬是 4.8 TB/s，BF16 peak 是 989 TFLOP/s。表裡兩種情境：decode 是一次產生一個 token，batch 1 表示一次只服務一個請求；prefill 是一次讀完整段 prompt，這裡是 2,048 個 token 一起算。時間欄的 memory-bound 是卡在搬資料，compute-bound 是卡在運算，下面再精確定義：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>情境</th><th>搬的 bytes</th><th>算的 FLOPs</th><th>bytes ÷ 頻寬</th><th>FLOPs ÷ peak</th><th>時間</th></tr></thead>
                 <tbody>
@@ -655,7 +655,7 @@
                 <summary><span class="gloss-k">前情</span><span class="gloss-t">Prefill、decode 與 model 的三個數字（L1、L9）</span></summary>
                 <div class="gloss-body prose">
                   <p>L1 講過，一個請求在 GPU 上分兩段。<strong>Prefill 一次讀完整段 prompt，決定第一個 token 多快出來</strong>（TTFT）。<strong>Decode 一次產生一個 token，重複到輸出結束</strong>，決定之後每個 token 的間隔（TPOT）。見 L1〈<a href="l01.html#t1">Prefill 與 decode</a>〉。</p>
-                  <p>L9 從 model 的形狀算出三個數字。Weights：參數量 × 2 bytes（BF16）。計算：<strong>每個 token 約 2 × 參數量個 FLOP</strong>。KV cache：每個 token 在每一層存 K 和 V，大小是 2 × 層數 × KV head 數（幾份 K、V，上一章前情說的 8 份）× head 維度（就是 d）× 2 bytes。Llama 3 8B 的 weights 16 GB、每個 token 16 GFLOP、KV cache 每個 token 128 KiB；Llama 3 70B 的 weights 141 GB、每個 token 141 GFLOP、KV cache 每個 token 320 KiB。推導見 L9〈<a href="l09.html#i5">三個數字</a>〉。</p>
+                  <p>L9 從 model 的形狀算出三個數字。Weights：參數量 × 2 bytes（BF16）。計算：<strong>每個 token 約 2 × 參數量個 FLOP</strong>。KV cache：每個 token 在每一層存 K 和 V，大小是 2 × 層數 × KV head 數（幾份 K、V，上一章前情說的 8 份）× head 維度（就是 d）× 2 bytes。Llama 3 8B 的 weights 16 GB、每個 token 16 GFLOP、KV cache 每個 token 128 KiB；Llama 3 70B 的 weights 141 GB、每個 token 141 GFLOP、KV cache 每個 token 320 KiB。推導見 L9〈<a href="l09.html#i4">Serving 的三個數字</a>〉。</p>
                 </div>
               </details>
               <p id="i3-1"><b>Batch 1：每個 weight 只用一次。</b>Decode 一步要把全部 weights 從 HBM 讀一遍，每個 weight（2 bytes）只做一次 multiply-add（2 FLOPs），intensity 約 1 FLOP/B。H200 的 ridge 是 206，所以它只能跑到 4.8 TB/s × 1 ≈ 5 TFLOP/s。先猜一下它用到幾成算力：約 50%、約 10%、約 2%、不到 1%？答案是最後一個，<strong>batch 1 的 decode 只用到約 0.5% 的算力</strong>。Prefill 剛好相反：2,048 個 token 共用同一次讀取，intensity 約 2,048，貼在屋頂上，只有更快的算力或更少的 FLOP 才有用。</p>
@@ -747,7 +747,7 @@
               <figcaption>Context 變長，一步 decode 慢在哪裡？藍色的 weights 每一步讀一次，和長度無關；粉色的 KV cache 隨 batch × 長度成長。32K 時 KV cache（深紅）已經是 weights 的 4 倍多，一步的時間是 1K 的 4.7 倍。時間 = 總 bytes ÷ 4.8 TB/s。</figcaption>
             </figure>
               <p>換成每個請求的速度上限（本文用同一組數字算的，實際會更慢）：1K 時每秒 263 個 token，32K 時只剩 57 個。32K 時一步要讀 84.8 GB，其中 68.7 GB 是 KV cache。所以 <strong>長 context 的 decode 由 KV cache 的頻寬決定</strong>，成本主要在記憶體，不在算力。同一張 GPU 上，batch 和 context 搶的是同一個東西：每一步能讀的 bytes。</p>
-              <p id="i3-5"><b>MoE 會把 batch 分給各個 expert。</b>上面的分析假設每個 token 都用同一組 weights，dense model 是這樣。MoE（mixture of experts，L9〈<a href="l09.html#i4">MoE</a>〉）把每一層的 FFN 換成很多組，每一組叫一個 expert，每個 token 只送到其中幾組。FFN（feed-forward network）是每一層在 attention 之後的那幾個大矩陣乘法，每個 token 各自算，占了 model 大部分的 weights。DeepSeek-V3 每層有 256 個 routed expert，每個 token 用 8 個（L9 的表寫成 257 個裡用 9 個，多的那 1 個是所有 token 都用的 shared expert）。所以一步 batch B 個 token，每個 routed expert 平均只分到 B × 8 ÷ 256 = B ÷ 32 個：</p>
+              <p id="i3-5"><b>MoE 會把 batch 分給各個 expert。</b>上面的分析假設每個 token 都用同一組 weights，dense model 是這樣。MoE（mixture of experts，L9〈<a href="l09.html#i5">MoE</a>〉）把每一層的 FFN 換成很多組，每一組叫一個 expert，每個 token 只送到其中幾組。FFN（feed-forward network）是每一層在 attention 之後的那幾個大矩陣乘法，每個 token 各自算，占了 model 大部分的 weights。DeepSeek-V3 每層有 256 個 routed expert，每個 token 用 8 個（L9 的表寫成 257 個裡用 9 個，多的那 1 個是所有 token 都用的 shared expert）。所以一步 batch B 個 token，每個 routed expert 平均只分到 B × 8 ÷ 256 = B ÷ 32 個：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 248" role="img" aria-label="左右兩個面板。左邊是 dense model：256 個 token 都送進同一組 FFN weights，所以每個 weight 讀一次用 256 次。右邊是 MoE，DeepSeek-V3 的設定：256 個 token 經過 router，每個 token 只送到 256 個 routed expert 裡的 8 個；畫出 E0 到 E7 和省略號，每個 expert 平均只分到約 8 個 token，每個 weight 讀一次只用約 8 次，深紅色。">

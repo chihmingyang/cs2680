@@ -137,7 +137,7 @@
     | 本文的判斷：硬上限給沒人看的任務… | 硬上限給沒人看的任務… | 7 |
   - 檢查有兩層。機械的：`python3 -I tools/outline.py lint lXX`（指代、只有數量、重名、前綴、只有主題；只 warn，`verify.sh` 會跑）。機械看不出來的（詞是不是業界的、單看懂不懂）：WORKFLOW I3〈只看標題的測試〉，一個沒讀過內文的 agent 只看大綱，把題庫的題目指到節、列出看不懂的標題。
   - 改了標題要跟著改的：側欄（`add_lecture.py --sync-own`）、題庫每一節的 `title`（小測區塊的標題，`outline.py quiz-titles lXX --write`）、本頁與別頁用〈舊標題〉指過來的地方（`grep -n '舊標題' docs/*.html`）、`dag.html`（`dag.py`）。
-  - 現況（2026-11-20）：L8 照這一節改完，是範例；L8b 同一天改完（第 2、3 章各多切出小標）。其他堂還沒改，`outline.py lint all` 列出 132 個；動到那一堂時一起改，或 James 說要推到全站時做。
+  - 現況（2026-11-20）：L8 照這一節改完，是範例；L8b 同一天改完（第 2、3 章各多切出小標）；L9 2026-11-25 改完。其他堂還沒改，`outline.py lint all` 列出 132 個；動到那一堂時一起改，或 James 說要推到全站時做。
 - **分組與地圖（v5.0）**：章依內容分成 2–3 組，組名寫在 `div.ideas` 裡的 `p.idea-group#g-a`（「A · Loop：agent 的最小單位」），放在該組第一章前面。側欄目錄（`ol.sn-subs`）不放分組，只列章（v5.7）。`header.part-head` 加一句 `p.lede` 說三組各講什麼；header 後面放 `nav.map`：每組一個 `p.map-g`，每章一列 `a.map-row[href="#iN"]`（`span.map-no` 章號、`span.map-t` 主題 + `<small>` 結論、`span.map-m` 頁碼與分鐘）。分鐘用 `check_article.py` 的公式（400 單位／分鐘）算該章收合時的字數，寫法見 WORKFLOW B4。
 - **章內小標加 id（v5.0）**：結構性的粗體小標（找法 1–4、改法 1–4、四種策略、五種失敗…）寫成 `<p id="i2-3"><b>找法 1：…。</b>…`，sidenav 的第三層 `ol.sn-sub2s > li > a.sn-sub2` 連到它們，只在該章在畫面上時顯示。每章 4–9 個。
 - **名詞註 `details.gloss`（v5.0，取代觀念補充）**：少見的名詞、別堂講過的東西、超出 slide 的背景，放在它第一次出現的那段正文後面，收合：
