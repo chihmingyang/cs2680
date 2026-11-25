@@ -395,6 +395,10 @@ def main():
         print(f"  warn: line {line}: {txt.count('；') + 1} items joined by ；, use ul/ol: {txt[:40]}")
     for w in cell_warnings(html):
         print(f"  warn: {w}")
+    # 只安排閱讀、不帶資訊的句子（STYLE_ARTICLE 第 0 節〈精簡〉第 9 類，2026-11-25）：刪掉後讀者知道的一樣多。
+    # 只抓已知的說法；清單外的靠改稿時做刪除測試。
+    for m in re.finditer(r"先看一個例子|值得注意的是|值得一提的是|接下來我們|讓我們|如下所示|簡單來說|換句話說", re.sub(r"<script\b.*?</script>", "", html, flags=re.S)):
+        print(f"  warn: 不帶資訊的句子「{m.group(0)}」：做刪除測試，拿掉後讀者沒有少知道一件事就刪（精簡第 9 類）")
     if not path.name.startswith("l11"):
         body = re.sub(r"<[^>]+>", "", html.split('id="s-src"')[0])
         for m in COURSE_DATA.finditer(body):

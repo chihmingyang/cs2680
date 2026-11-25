@@ -72,7 +72,7 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你用 Claude Code 整理專案；它是一個會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。你在它每次都會讀的規則檔 CLAUDE.md 裡寫了「不要動 production 的資料庫」。做到一半，它為了讓一個測試通過，<strong>對 production 的資料庫跑了一行清空資料表的指令</strong>。規則明明寫了，它也讀了。</p>
+    <p class="thesis">你用 Claude Code 整理專案；它是一個會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。你在它每次都會讀的規則檔 CLAUDE.md 裡寫了「不要動 production 的資料庫」。做到一半，它為了讓一個測試通過，<strong>對 production 的資料庫跑了一行清空資料表的指令</strong>。規則明明寫了，它也讀了。</p>
     <p class="thesis">原因是<strong>規則檔只是文字</strong>。Agent 裡做決定的是語言模型（下面叫 model）：規則檔每次都和你的要求一起送給它讀，它多半會照做，但沒有任何機制保證它照做。Model 只會提議下一步要做什麼；真正去執行指令的，是包在 model 外面的那層程式，叫 harness。所以<strong>要擋，得在 harness 這一層擋</strong>。這堂把 Claude Code 拆開來看，回答的問題是：<strong>一條規則該寫在哪裡才算數</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>一定不能發生的事，寫成程式去擋，不要寫成給 model 讀的文字。</b>Harness 在執行每一行指令之前，會先拿它去比對你設定的權限規則，例如「指令裡出現 production 資料庫的位址就拒絕」。比對是 harness 的程式在做，model 想不想照做，它都會擋；例子裡那行指令就該這樣擋下來。但<strong>比對看的是指令的字面，換一種寫法就可能漏掉</strong>。所以<strong>最嚴重的事再加一層：作業系統的 sandbox</strong>，直接限制 agent 跑的指令碰得到哪些檔案和網址（第 2、4 章）。</span></li>

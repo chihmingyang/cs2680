@@ -71,7 +71,7 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你的團隊負責把語言模型（下面叫 model）架成服務，給公司裡的 coding agent 用；agent 是會自己讀檔、跑指令、改 code 的 AI 助手。你們花了一季調校，GPU 每秒生成的 token（model 處理文字的單位）明顯變多，dashboard 很漂亮。但使用者說，<strong>請 agent 修一個 bug 還是要等很久，月底的帳單也沒有降</strong>。原因是 agent 做一件事（下面叫一個任務）不是呼叫 model 一次：它要連續呼叫很多次，中間還要執行讀檔、跑測試這類動作，做錯了還要重來，連成一條鏈。「每秒幾個 token」只量到鏈上 model 生成文字的那一段。<strong>使用者等的是整條鏈的時間，帳單付的是鏈上每一次呼叫的錢</strong>，失敗重來的也算。</p>
+    <p class="thesis">你的團隊負責把語言模型（下面叫 model）架成服務，給公司裡的 coding agent 用；agent 是會自己讀檔、跑指令、改 code 的 AI 助手。你們花了一季調校，GPU 每秒生成的 token（model 處理文字的單位）明顯變多，dashboard 很漂亮。但使用者說，<strong>請 agent 修一個 bug 還是要等很久，月底的帳單也沒有降</strong>。原因是 agent 做一件事（下面叫一個任務）不是呼叫 model 一次：它要連續呼叫很多次，中間還要執行讀檔、跑測試這類動作，做錯了還要重來，連成一條鏈。「每秒幾個 token」只量到鏈上 model 生成文字的那一段。<strong>使用者等的是整條鏈的時間，帳單付的是鏈上每一次呼叫的錢</strong>，失敗重來的也算。</p>
     <p class="thesis">這一堂是整門課的總覽：前半（L2–L8）講 agent 怎麼設計，後半從 L9 開始，講 model 怎麼在 GPU 上服務很多人。這一堂回答的問題是：<strong>agent 的系統該看哪個數字</strong>，以及變慢、變貴的時候該去哪裡找原因。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>一個任務是一條鏈，不是一次問答。</b>Microsoft 分析 GitHub Copilot 線上流量的論文裡，agent 的一段對話（大致就是一個任務）中位數要呼叫 model 15 次，而且<strong>每一次都把前面的對話和動作的結果整段再送一次</strong>，所以越後面的呼叫越長。例子裡使用者等的時間，就是這十幾次呼叫，加上中間執行動作和重來的時間疊起來的（第 1 章）。</span></li>

@@ -72,7 +72,7 @@
 
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
-    <p class="thesis">先看一個例子。你請 agent（會自己讀檔、跑指令、改 code 的 AI 助手）修一個 bug。前二十步很順；之後它<strong>開始重讀已經讀過的檔案，漏掉你一開始交代的限制</strong>，每一步也越來越慢、越來越貴。你沒有改過任何設定。</p>
+    <p class="thesis">你請 agent（會自己讀檔、跑指令、改 code 的 AI 助手）修一個 bug。前二十步很順；之後它<strong>開始重讀已經讀過的檔案，漏掉你一開始交代的限制</strong>，每一步也越來越慢、越來越貴。你沒有改過任何設定。</p>
     <p class="thesis">原因在它每一步讀到的東西。Agent 裡做決定的是語言模型（下面叫 model），model 自己沒有記憶：包在它外面的程式（叫 harness）每一步都要把到目前為止的全部文字重送一次，這份文字叫 context。讀過的檔案、指令的輸出、舊的對話都留在裡面，所以越做越長。Context 越長，model 讀得越久，費用也照長度算，所以越來越慢、越來越貴。你一開始交代的限制還在裡面，但夾在一大堆輸出中間，model 越來越容易漏看。Context 還有長度上限，滿了就得丟東西。這堂回答的問題是：<strong>什麼值得進 context，進來之後怎麼處理</strong>。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>Agent 做不好，先查 harness 怎麼處理 context，再考慮換 model。</b>有實驗拿同一個 model 解同一組題目，<strong>只改 harness 處理 context 的方式，解出的題數就差了 2 倍</strong>（在 context 小到放不下全部內容的情況下）。例子裡該先看的，是那二十步往 context 裡放了什麼（第 2 章）。</span></li>
