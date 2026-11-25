@@ -232,6 +232,7 @@
 
 ## REVIEW_READABILITY.md
 - 2026-11-16（加 **R19 帶得走嗎**，Checklist 版本 18 → 19：只描述課程自己教室的數字（全班 log、作業、同學），結論靠它撐又沒寫機制，BLOCK。審查者人設加「沒上過 CS2680 的正課」。`check_article.py` 對「全班」「兩份作業」「Assignment N」「同學」印 warn（L11 除外）；idea-first-lecture 第 3 步加「slides 裡課程自己量的數據不要照搬」。測試題 `review_cases/l08-i2-class-logs.md`。）
+- 2026-11-25（審查報告加「可以刪的句子」（刪除測試）；同一句被標過兩次以上不能判 strict；「規則規定的寫法」不是 strict 的理由。寫作與改稿的 skill 加交稿前的刪除測試。James：「你還沒告訴我下次怎麼避免」。）
 - 2026-11-16（〈每次「看不懂」都回到這裡〉補「也要問修法有沒有錯」；readability-review skill 的〈修 BLOCK〉加修法順序「刪、搬、合併，最後才補字」和修完比負荷；`check_article.py` 加 R18 的機械版：一段超過 5 個數字就 warn。）
 - 2026-11-16（加 **R18 一段的負荷**，Checklist 版本 17 → 18：一段裡並列兩組以上的數字、或第一次出現的名詞四個以上，BLOCK；修法是數字進圖或表，不是補標籤。起因是 L8 第 2 章〈三種 token〉，測試題 `review_cases/l08-i2-three-tokens.md`。R12 的固定寫法補一句「不要把標籤一個一個補進句子」。）
 

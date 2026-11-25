@@ -109,3 +109,7 @@ bash tools/verify.sh lXX     # 之後每一輪都用這個：check_article、che
 - `guide/CHANGELOG.md` 的「README.md」一節最上面加一行。規則變了就寫進 STYLE_ARTICLE 第 0 節，並在 CHANGELOG 的「STYLE_ARTICLE.md」一節加一行。
 - commit、push（WORKFLOW D）。
 - 回覆 James：先講決策的邏輯（份量怎麼排、補了什麼和為什麼、刪了什麼和為什麼），再貼可讀性審查的 BLOCK 清單與修法，再列要他確認的地方。不重貼全文。
+
+## 交稿前：刪除測試（2026-11-25）
+
+寫完或改完的每一段，逐句問：拿掉這一句，下一句還接得上、讀者沒有少知道一件事嗎？是就刪（STYLE_ARTICLE 第 0 節〈精簡〉第 9 類）。規則規定的句型也要過這一關；過不了就改規則，不要照寫。
