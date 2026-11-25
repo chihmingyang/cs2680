@@ -74,7 +74,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">公司買了 2 張 H200（NVIDIA 的 GPU），要在上面架 Llama 3 70B 給內部用；它是 Meta 的語言模型（下面叫 model）。Model 的本體是一大堆訓練出來的數字，叫參數；這個 model 有 700 億個，要整份放進 GPU 的記憶體才能跑。老闆問你三個問題：能同時給幾個人用？每個人的對話能多長？送出問題之後，第一個字要等多久？</p>
-    <p class="thesis">這三個問題不必實際架起來才知道，<strong>用 model 的幾個數字就算得出來</strong>。這堂回答的問題是：<strong>用哪幾個數字，算出一個 model 在你的 GPU 上撐得住多少</strong>。下面三條是這堂的判斷。</p>
+    <p class="thesis">這三個問題不必實際架起來才知道，<strong>用 model 的幾個數字就算得出來</strong>。這堂回答的問題是：<strong>用哪幾個數字，算出一個 model 在你的 GPU 上撐得住多少</strong>。</p>
     <ul class="core">
       <li><span><b>一個請求分成兩段，各決定一種等待。</b>第一段叫 prefill：model 把你送進去的整段文字一次讀完，它決定第一個字要等多久。第二段叫 decode：model 一步只產生一個 token（它讀寫文字的單位，大約一個中文字），它決定之後每個字出來的速度（第 1 章）。</span></li>
       <li><span><b>三個數字，各卡住一件事。</b><strong>每個 token 要做多少運算，卡住 prefill</strong>，也就是老闆的第三個問題。<strong>參數總共佔多少記憶體，卡住 decode 每一步的速度</strong>。第三個數字是每個 token 的 KV cache 有多大：model 讀過的每個 token，都會留一份中間結果在 GPU 記憶體裡，叫 KV cache，對話還在就不能丟。它卡住同時的人數和每人的對話長度，也就是老闆的前兩個問題。GPU 的記憶體先放參數，剩下的才放 KV cache；例子裡剩下的空間<strong>只放得下約 43 萬個 token 的 KV cache</strong>，由所有同時在跑的對話一起分（第 4 章）。</span></li>
@@ -322,7 +322,7 @@
             <div class="prose">
 
               <p>上一章把 model 當成黑盒子：輸入一串 token ID，輸出下一個 token 的機率。這一章打開它，看裡面有哪些零件、參數放在哪裡。後面的帳都從這裡算起，例子一律用 Llama 3 70B。</p>
-              <p id="i2-1"><b>Vector：一個 token 變成一串數字。</b>Model 不能直接拿整數 ID 做運算，所以第一步是查表。Embedding table 是一張 128,256 列、8,192 欄的表，每個 token ID 對應一列；查到的那一列有 8,192 個數字，叫這個 token 的 vector，可以想成一個長度 8,192 的 <code>list[float]</code>。這些數字是訓練出來的，意思相近的 token，vector 也相近。查表的過程如下：</p>
+              <p id="i2-1"><b>Vector：一個 token 變成一串數字。</b>Model 不能直接拿整數 ID 做運算，所以第一步是查表。Embedding table 是一張 128,256 列、8,192 欄的表，每個 token ID 對應一列；查到的那一列有 8,192 個數字，叫這個 token 的 vector，可以想成一個長度 8,192 的 <code>list[float]</code>。這些數字是訓練出來的，意思相近的 token，vector 也相近。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="左邊是一個 token ID，374，代表「 is」。箭頭指到中間的 embedding table，一個 128,256 列、8,192 欄的表，第 374 列是紅色。箭頭再指到右邊：查到的那一列就是這個 token 的 vector，一串 8,192 個數字，畫成一排小格，標示為示意的數值。">
@@ -454,7 +454,7 @@
 &gt;&gt;&gt; 2 * 8192 * 128                 # 一個 token 乘過 W：剛好是參數數的 2 倍
 2097152</code></pre></figure>
               <p>W 裡的每一個數字就是一個參數（parameter）：訓練時調整，推論時固定不變。Model 的大小說的就是參數的總數，Llama 3 70B 有 70.6B（706 億）個。上面最後一行是後面會用到的關鍵：<strong>一個 token 乘過一個矩陣，運算次數是那個矩陣參數數量的 2 倍</strong>。</p>
-              <p id="i2-3"><b>一疊相同的 block。</b>整個 model 長這樣：</p>
+              <p id="i2-3"><b>一疊相同的 block。</b></p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 410" role="img" aria-label="左邊是整個 model 由下往上：token IDs，n 個整數；Embedding 查表，得到 n 乘 8,192；Transformer block 重複 80 次，紅色；RMSNorm，把數值的大小拉齊；LM head，乘上 8,192 乘 128,256 的矩陣，給詞彙表裡每個候選 token 一個分數；softmax 把分數變成機率。右邊放大一個 block：輸入 x 先經過 RMSNorm 和 Attention（token 之間交換資訊），結果加回 x；再經過 RMSNorm 和 FFN（每個 token 各自運算），結果再加回去，交給下一個 block。放大圖左側直立的那條線代表 residual stream，它繞過兩個子層，只在加號處接收修正。">
@@ -615,7 +615,7 @@
                 <li><b>Causal mask。</b>生成時看不到未來，所以 token i 只能讀 j ≤ i 的 token，對角線右上方的分數設成 −∞。</li>
                 <li><b>Softmax。</b>把每一列的分數變成加總為 1 的權重，得到 A。</li>
               </ol>
-              <p>最後 O = A × V：每個 token 的輸出，是前面各個 token 的 v 依權重加起來。下圖是一個例子：</p>
+              <p>最後 O = A × V：每個 token 的輸出，是前面各個 token 的 v 依權重加起來。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 290" role="img" aria-label="一個 5 乘 5 的格子。列是誰在讀（query），欄是讀誰（key），token 依序是 The、cat、sat、on、the。對角線右上方的格子是灰色，代表 causal mask，看不到未來的 token。第 4 列，on 這個 token，讀前 4 個 token 的權重是 0.1、0.2、0.5、0.2，加總為 1，畫成黃色；其中 sat 的 0.5 是紅色。">
@@ -953,7 +953,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
                 <li><b>把用不到的 KV 搬出 GPU。</b>見 L1〈<a href="l01.html#i8">KV cache 放哪裡</a>〉。</li>
               </ul>
               <p>記憶體怎麼分頁管理、多張 GPU 怎麼分工，後面的講次會講。</p>
-              <p id="i4-4"><b>Agent 的帳：算力省得下，記憶體省不下。</b>回到第 1 章的 agent。假設 context 已經有 100K token 命中 prefix cache，這一圈再加進 3K 個新 token：agent 上一圈呼叫工具（tool，例如讀檔、跑測試）得到的輸出，加上新的指令。這一圈的帳：</p>
+              <p id="i4-4"><b>Agent 的帳：算力省得下，記憶體省不下。</b>回到第 1 章的 agent。假設 context 已經有 100K token 命中 prefix cache，這一圈再加進 3K 個新 token：agent 上一圈呼叫工具（tool，例如讀檔、跑測試）得到的輸出，加上新的指令。</p>
               <ul>
                 <li><b>Prefill。</b>只算新的 3K：每個新 token 走過所有參數，還要讀前面 100K 個 token 的 K、V，合計約 1.22 PFLOP，0.62 秒。沒有 cache 時整段 103K 重算，是 28.4 PFLOP、14.4 秒，差 23 倍。</li>
                 <li><b>記憶體。</b>Decode 時 103K 個 token 的 KV cache 都要在 GPU 上，33.8 GB，有沒有命中都一樣，約是權重的四分之一。</li>
@@ -1050,7 +1050,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               <figcaption>MoE 換掉了什麼？只換掉 FFN：一個大 FFN 變成 8 個小 expert，router 替每個 token 挑 2 個（深紅）。下一個 token 可能挑另外兩個，所以 8 個都要常駐在記憶體。圖是 Mixtral 的 2 of 8。</figcaption>
             </figure>
               <p>Router 是一個小矩陣，替每個 token 給每個 expert 一個分數，挑分數最高的 2 個（top-2），兩個 expert 的輸出再依分數加權相加。同一個 token 在不同層、不同 token 在同一層，都可能挑到不同的 expert。</p>
-              <p id="i5-1"><b>兩個參數數，各管一本帳。</b>第 4 章的三個數字，在 MoE 上分開看：權重的記憶體看總參數（total）；每個 token 的運算看 active 參數，也就是這個 token 實際用到的幾個 expert，加上每個 token 都要走的 attention 等部分；KV cache 不受影響，因為 MoE 只換掉 FFN，attention 照舊，第 3 章的公式照用。見下表：</p>
+              <p id="i5-1"><b>兩個參數數，各管一本帳。</b>第 4 章的三個數字，在 MoE 上分開看：權重的記憶體看總參數（total）；每個 token 的運算看 active 參數，也就是這個 token 實際用到的幾個 expert，加上每個 token 都要走的 attention 等部分；KV cache 不受影響，因為 MoE 只換掉 FFN，attention 照舊，第 3 章的公式照用。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Model</th><th>Expert</th><th>Total</th><th>Active／token</th><th>權重（BF16）</th><th>GFLOP／token</th></tr></thead>
                 <tbody>

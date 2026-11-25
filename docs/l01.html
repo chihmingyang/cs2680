@@ -72,7 +72,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">你的團隊負責把語言模型（下面叫 model）架成服務，給公司裡的 coding agent 用；agent 是會自己讀檔、跑指令、改 code 的 AI 助手。你們花了一季調校，GPU 每秒生成的 token（model 處理文字的單位）明顯變多，dashboard 很漂亮。但使用者說，<strong>請 agent 修一個 bug 還是要等很久，月底的帳單也沒有降</strong>。原因是 agent 做一件事（下面叫一個任務）不是呼叫 model 一次：它要連續呼叫很多次，中間還要執行讀檔、跑測試這類動作，做錯了還要重來，連成一條鏈。「每秒幾個 token」只量到鏈上 model 生成文字的那一段。<strong>使用者等的是整條鏈的時間，帳單付的是鏈上每一次呼叫的錢</strong>，失敗重來的也算。</p>
-    <p class="thesis">這一堂是整門課的總覽：前半（L2–L8）講 agent 怎麼設計，後半從 L9 開始，講 model 怎麼在 GPU 上服務很多人。這一堂回答的問題是：<strong>agent 的系統該看哪個數字</strong>，以及變慢、變貴的時候該去哪裡找原因。下面三條是這堂的判斷。</p>
+    <p class="thesis">這一堂是整門課的總覽：前半（L2–L8）講 agent 怎麼設計，後半從 L9 開始，講 model 怎麼在 GPU 上服務很多人。這一堂回答的問題是：<strong>agent 的系統該看哪個數字</strong>，以及變慢、變貴的時候該去哪裡找原因。</p>
     <ul class="core">
       <li><span><b>一個任務是一條鏈，不是一次問答。</b>Microsoft 分析 GitHub Copilot 線上流量的論文裡，agent 的一段對話（大致就是一個任務）中位數要呼叫 model 15 次，而且<strong>每一次都把前面的對話和動作的結果整段再送一次</strong>，所以越後面的呼叫越長。例子裡使用者等的時間，就是這十幾次呼叫，加上中間執行動作和重來的時間疊起來的（第 1 章）。</span></li>
       <li><span><b>該看的數字，從「每秒幾個 token」換成「每個成功任務的成本」。</b><strong>把失敗的嘗試花的錢、人等結果的時間都算進去</strong>，攤到每個做成的任務上。要讓 GPU 每秒生成更多 token，常見的做法是把很多次呼叫併成一批一起算（batching）：<strong>每秒的總數高了，每一次呼叫卻等得更久</strong>。失敗重來多生成的 token，也照樣算進每秒的總數（第 2、3 章）。</span></li>
@@ -95,7 +95,7 @@
           <div class="idea" id="i1">
             <h3><span class="idea-no">1</span>根本的差別：一次 inference 變成一條鏈</h3>
             <div class="prose">
-              <p>先看一次聊天。你送出一句話，model 先一次讀完這段文字（這一步叫 prefill），接著一個 token 一個 token 地生成回答（這一步叫 decode，第 7 章細講）。Token 是 model 處理文字的最小單位，英文約 4 個字母 1 個，中文一個字常是 1 到 2 個。Model 讀進一段文字、生成下一段文字的這一次計算叫 inference。傳統的 LLM serving 處理的就是很多個這樣的請求：一個 request，一次 inference，一段 response，請求之間互不相關。</p>
+              <p>你送出一句話，model 先一次讀完這段文字（這一步叫 prefill），接著一個 token 一個 token 地生成回答（這一步叫 decode，第 7 章細講）。Token 是 model 處理文字的最小單位，英文約 4 個字母 1 個，中文一個字常是 1 到 2 個。Model 讀進一段文字、生成下一段文字的這一次計算叫 inference。傳統的 LLM serving 處理的就是很多個這樣的請求：一個 request，一次 inference，一段 response，請求之間互不相關。</p>
               <p>再看 coding agent 修一個 bug。Model 還是只會生成文字，但這次它生成的是一個 tool call，也就是「請執行 <code>pytest</code>」這樣一段請求。Model 自己碰不到檔案和 shell，真正去執行的是 model 外面那層程式，叫 harness。Harness 把執行結果接在對話後面，再整段送回 model；送進去的這一整段文字叫 context，所以 context 每一圈都變長。Model 看完結果再決定下一步，一直跑到它認為做完為止（這個 loop 的細節在 <a href="l02.html#i1">L2</a>）。於是一次 inference 變成一條鏈：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -249,7 +249,7 @@
               <figcaption>每個指標量到鏈上多長的一段？灰色是元件指標，各量一小段，tokens/sec 甚至把別人的請求也算進去。深紅色是任務層級的指標，量整條鏈。</figcaption>
             </figure>
               <p>所以 <strong>throughput 對 agent 來說是錯的目標</strong>。正確的寫法是一個帶限制的最佳化：在 latency、cost、resources、reliability、security 的限制下，讓任務成功率最高。限制的意思是不能超過上限；<strong>成功率再高，等太久的設計還是不合格</strong>。</p>
-              <p id="i2-1"><b>每個成功任務的成本。</b>目標要算得出來。一個任務可能試好幾次才成功：成功率 50% 時，平均要試 2 次才成功 1 次，也就是 1 ÷ 成功率 次。<strong>失敗的那幾次也要付錢，所以成本要除以成功率</strong>。式子裡有三項：</p>
+              <p id="i2-1"><b>每個成功任務的成本。</b>目標要算得出來。一個任務可能試好幾次才成功：成功率 50% 時，平均要試 2 次才成功 1 次，也就是 1 ÷ 成功率 次。<strong>失敗的那幾次也要付錢，所以成本要除以成功率</strong>。</p>
               <ul>
                 <li><b>每次嘗試的 token 數。</b>由 agent 繞不繞路決定。</li>
                 <li><b>每個 token 的單價。</b>由 model 和 serving 決定。</li>
@@ -309,7 +309,7 @@
             <h3><span class="idea-no">3</span>目標少算的一項：人的時間</h3>
             <div class="prose">
               <p>第 2 章的算式只算機器的錢。可是 coding agent 跑完之後，還有人要讀 diff、跑起來看、決定要不要合併。課程自己的 AI 規則就這樣寫：可以用 AI，但要揭露它幫了什麼、什麼沒成功，每份作業附 session log（agent 的完整對話紀錄），而且<strong>你要對交出去的每一行負責</strong>。責任既然還在人身上，<strong>人的時間就是成本的一部分</strong>，而算式的限制條件（latency、cost、resources、reliability、security）裡沒有這一項。</p>
-              <p>先看人的時間佔多少。第 1 章提過的 TraceLab 把每個 session 的時間切成三段：</p>
+              <p>第 1 章提過的 TraceLab 把每個 session 的時間切成三段：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 168" role="img" aria-label="照比例的兩條堆疊長條：一個 session 的時間花在哪裡。第一條，每段空檔上限 1 小時：人 64.3%、tool 執行 21.2%、LLM 生成 14.5%。第二條，不設上限：人 92.3%、tool 4.8%、LLM 3.3%。資料是 TraceLab 的 Claude Code 與 Codex session。">
@@ -669,7 +669,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <details class="gloss" id="n-agent-def">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">Agent 的定義、五步 loop，以及 agent、assistant、bot 的分別</span></summary>
                 <div class="gloss-body prose">
-                  <p>Agent 的定義是一個自主的軟體系統，用一個 AI model 推理一個目標、使用外部 tool、執行多步動作，直到任務完成。最關鍵的一點是它<strong>自己決定什麼時候算完成</strong>。一圈拆成五步：</p>
+                  <p>Agent 的定義是一個自主的軟體系統，用一個 AI model 推理一個目標、使用外部 tool、執行多步動作，直到任務完成。最關鍵的一點是它<strong>自己決定什麼時候算完成</strong>。</p>
                   <ol>
                     <li><b>Plan。</b>把任務拆成子步驟。</li>
                     <li><b>Act。</b>呼叫外部 tool，例如打一個 API、查資料庫、跑一個指令。</li>
@@ -774,7 +774,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                   <p><strong>瓶頸也不只在 GPU 裡，因為運算是異質的</strong>。CPU 負責 tokenization（把文字切成 token）、發起 kernel（GPU 上跑的小程式）、搬資料和跑 tool，GPU 只負責矩陣乘法；叢集裡還常混著不同世代的 GPU，所以 routing 也要知道每張卡的差別。</p>
                 </div>
               </details>
-              <p id="i7-1"><b>Batching：整張 GPU 變快，每個請求變慢。</b>既然 decode 卡在讀記憶體，把多個請求併成一步算，<strong>同一份權重讀一次就能分給所有請求</strong>，這是 serving 系統一定要做 batching 的原因。但每個請求的 KV cache（前面所有 token 的中間結果，下一章細講）各是一份，不能分攤。算一次，只算讀記憶體的時間，所以是速度的上限。式子裡有四項：</p>
+              <p id="i7-1"><b>Batching：整張 GPU 變快，每個請求變慢。</b>既然 decode 卡在讀記憶體，把多個請求併成一步算，<strong>同一份權重讀一次就能分給所有請求</strong>，這是 serving 系統一定要做 batching 的原因。但每個請求的 KV cache（前面所有 token 的中間結果，下一章細講）各是一份，不能分攤。算一次，只算讀記憶體的時間，所以是速度的上限。</p>
               <ul>
                 <li><b>W：權重。</b>8B（80 億參數）的 model，每個參數 2 byte，共 16 GB。</li>
                 <li><b>K：一個請求的 KV cache。</b>Context 4,096 token 時約 0.54 GB。</li>
@@ -818,7 +818,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <figcaption>為什麼整張 GPU 只快 16 倍，不是 32 倍？藍色的 weights 只讀一次，全部請求共用；KV cache 每個請求各一份，不能分攤（粉色；batch 32 那一段標深紅，是這張圖要看的地方）。Batch 32 時，KV 已經比 weights 還大。</figcaption>
             </figure>
               <p>Batch 加到 32，<strong>整張 GPU 約 16 倍，每個請求只剩一半</strong>，這就是第 2 章那張圖的來源。</p>
-              <p id="i7-2"><b>哪一段吃緊，看 workload。</b>Workload 有四種，它們對系統的要求不同：</p>
+              <p id="i7-2"><b>哪一段吃緊，看 workload。</b></p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Workload</th><th>長什麼樣</th><th>最吃緊的地方</th></tr></thead>
                 <tbody>
@@ -863,7 +863,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
             <h3><span class="idea-no">8</span>狀態：KV cache 放哪裡，變成首要決定</h3>
             <div class="prose">
               <p>傳統的 web 服務每個 session 只有幾 KB 的狀態。LLM 有兩塊大得多的狀態。第一塊是權重，從幾 GB 到幾 TB。第二塊是 KV cache：attention 要用到前面每個 token 在每一層算出的 key 與 value，model 把它們存起來，下一步直接用，不重算。第 4 章的 prefix cache，就是把這塊存起來跨請求重用。</p>
-              <p id="i8-1"><span class="anchor" id="t3"></span><b>KV cache 有多大。</b>大小可以算。每個 token 在每一層存 key 和 value 兩份，每份有幾個 KV head，每個 head 有固定的維度，每個數字佔幾個 byte。以 32 層、8 個 KV head、head 維度 128、BF16（每個數字 2 byte）的 8B model 為例：</p>
+              <p id="i8-1"><span class="anchor" id="t3"></span><b>KV cache 有多大。</b>每個 token 在每一層存 key 和 value 兩份，每份有幾個 KV head，每個 head 有固定的維度，每個數字佔幾個 byte。以 32 層、8 個 KV head、head 維度 128、BF16（每個數字 2 byte）的 8B model 為例：</p>
               <figure class="file"><figcaption>每個 token 的 KV cache</figcaption><pre><code class="lang-text">每個 token = 2 × 層數 × KV head 數 × head 維度 × byte 數
            = 2 × 32 × 8 × 128 × 2 = 131,072 byte = 128 KiB</code></pre></figure>
               <div class="table-wrap"><table>
@@ -916,8 +916,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
               <details class="gloss" id="t5">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">一張 GPU 放不下時：平行化的切法與通訊零件</span></summary>
                 <div class="gloss-body prose">
-                  <p>平行化有五種切法：</p>
-                  <ul>
+                                    <ul>
                     <li><b>Data parallelism。</b>複製整個 model，各處理不同請求。</li>
                     <li><b>Tensor parallelism。</b>把每一層的矩陣切給多張 GPU。</li>
                     <li><b>Pipeline parallelism。</b>把 model 按層切給多張 GPU。</li>
@@ -1061,8 +1060,7 @@ $ claude -p "fix the failing test"               # -p：跑完一次就結束</c
                 <summary><span class="gloss-k">背景</span><span class="gloss-t">浮點數沒有結合律：同一個 prompt 為什麼有不同輸出</span></summary>
                 <div class="gloss-body prose">
                   <p><strong>浮點數每做一次運算就捨入一次</strong>，所以 <code>(a + b) + c</code> 和 <code>a + (b + c)</code> 可能不相等。GPU 把 matmul 切成小塊平行加總，切法由 kernel 決定。<strong>Batch size 一變，kernel 可能換，加總順序跟著改變</strong>。</p>
-                  <p>不確定性的來源分三層：</p>
-                  <ul>
+                                    <ul>
                     <li><b>Runtime。</b>GPU 把執行緒 32 個編成一組（warp），好幾組再編成一個 block 來排程；<strong>哪一組先算完、先把部分和加回去，每次可能不同</strong>。多個執行緒加到同一個記憶體位置時，誰先加也不固定（記憶體順序）。Stream 是 GPU 上可以同時執行的工作佇列，非同步的 stream 也會改變運算的先後。最後是 batch size。</li>
                     <li><b>軟體。</b>Fused multiply-add 一次算完 a × b + c，只捨入一次，和分兩步算的結果不同。Autotuning 依輸入形狀換 kernel。Subnormal 是比最小的一般浮點數還接近 0、精度較低的數；有的設定直接把它當成 0，有的照算，結果就不同。</li>
                     <li><b>硬體。</b>NVIDIA GPU 有兩種運算單元：一般的 CUDA core 和專做矩陣乘法的 tensor core，兩者累加的方式不同。Hopper 是 H100 那一代，Blackwell 是下一代（B200）。Blackwell 的 micro-scaling 格式讓每一小塊數字（tile）共用一個縮放係數，Hopper 的 FP8 沒有這種硬體的區塊縮放，所以捨入的位置也不同。</li>

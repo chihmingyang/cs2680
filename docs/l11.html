@@ -73,7 +73,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">你請 Claude Code 把一份作業通過的題數拉高；它是會自己讀檔、跑指令、改 code 的 AI 助手，這類程式叫 agent。它改完回報「好了，都通過了」，你就交了。事後才發現，它看的<strong>測試輸出只有最後幾行，前面的錯誤沒有人看到</strong>。</p>
-    <p class="thesis">這門課收了 58 位學生三份作業的 Claude Code 紀錄。從第一份到第三份作業，學生打的 prompt 數、agent 動手的次數這幾項用量漲了 4.5 到 7.2 倍，<strong>學生自己抓到的 agent 錯誤卻從六成掉到三成</strong>（第 1 章）。這堂回答的問題是：<strong>agent 做得越多，人要守住哪幾件事</strong>。下面三條是這堂的判斷。</p>
+    <p class="thesis">這門課收了 58 位學生三份作業的 Claude Code 紀錄。從第一份到第三份作業，學生打的 prompt 數、agent 動手的次數這幾項用量漲了 4.5 到 7.2 倍，<strong>學生自己抓到的 agent 錯誤卻從六成掉到三成</strong>（第 1 章）。這堂回答的問題是：<strong>agent 做得越多，人要守住哪幾件事</strong>。</p>
     <ul class="core">
       <li><span><b>開工前先寫清楚「什麼叫做完」，收工時自己看證據。</b>開工時把三樣東西寫進給 agent 的要求：做到什麼算完成、哪些東西不准改（例如測試檔本身）、完成時要拿出什麼證據。Agent 說「好了」只是它的說法；例子裡該看的是<strong>完整的測試輸出、指令的結束代碼（exit code）和它實際改了哪些地方（diff）</strong>（第 2、3 章）。</span></li>
       <li><span><b>比較兩個版本時，一次只改一件事，每一版跑不只一次。</b>例如作業是寫一支會呼叫 model（語言模型）的程式去解一組題目，分數是解出的題數。你改了程式的一個地方，想知道有沒有變好。同一版程式重跑一次，解出的題數就會在 16 到 18 題之間跳，所以<strong>只跑一次看到「多了一題」，不代表變好</strong>。隔幾天再跑也可能不同：你的程式呼叫的 model、你用的 Claude Code，都可能在你不知道的時候改變行為。所以<strong>舊版和新版要在同一段時間交錯著跑</strong>，不要今天跑舊的、明天跑新的（第 4、5 章）。</span></li>
@@ -95,7 +95,7 @@
 <div class="idea" id="i1">
             <h3><span class="idea-no">1</span>根本的事實：agent 做得越多，人抓到的錯越少</h3>
             <div class="prose">
-              <p>這門課要每份作業都附上 Claude Code 的 session 封存，也就是 transcript：agent 每一則訊息、每一次 tool call 和它的結果，全部存成檔案。Tool call 是 agent 每一次動手：讀一個檔、改一段程式、跑一個指令，都是呼叫一個 tool。所以課程手上有同一批 58 位學生、三份作業的真實紀錄。三份作業一份比一份難。第一份用 Claude Code 做一個網頁，即時顯示 agent 在做什麼。第二份自己寫一個 agent loop：model 提議下一步，程式去執行，再把結果送回 model，一圈一圈轉到做完。第三份在成功率不變的前提下，壓低這個 agent 的成本和延遲。先看用量怎麼變：</p>
+              <p>這門課要每份作業都附上 Claude Code 的 session 封存，也就是 transcript：agent 每一則訊息、每一次 tool call 和它的結果，全部存成檔案。Tool call 是 agent 每一次動手：讀一個檔、改一段程式、跑一個指令，都是呼叫一個 tool。所以課程手上有同一批 58 位學生、三份作業的真實紀錄。三份作業一份比一份難。第一份用 Claude Code 做一個網頁，即時顯示 agent 在做什麼。第二份自己寫一個 agent loop：model 提議下一步，程式去執行，再把結果送回 model，一圈一圈轉到做完。第三份在成功率不變的前提下，壓低這個 agent 的成本和延遲。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="四個小長條圖，三份作業 A1、A2、A3 每位學生的中位數。打的 prompt：29、52、130，第三份是第一份的 4.5 倍。使用時數：3.4、9.2、23.4 小時，6.9 倍。花費：66、112、328 美元，5.0 倍。Tool call：609、917、4,414 次，7.2 倍。">
@@ -189,7 +189,7 @@
             </figure>
               <p>學生自己抓到的比例從 61% 掉到 33%，評分的 run 抓到的從 4.5% 升到 22%（後者依本文的讀法，見圖說）。到了第三份作業，<strong>越來越多錯要等分數回來才知道</strong>。課程的總表也指向同一個方向：平均每位學生踩到的陷阱，從 1.3 個變成 3.4 個，再變成 5.0 個（同一班、三份作業的觀察，不是對照實驗；作業變難本身也會讓錯變多）。方向和業界的調查一致（第 3 章）。</p>
               <p id="i1-1"><b>花的時間不等於成績。</b>課程把排行榜的名次分別對 Claude Code 的工作時數、學生自己花的時數畫成散佈圖。時數多，名次不一定高；第 1 名落在最省時間的那條邊界上，<strong>學生自己花的時間不到 1 小時</strong>。課程從這些資料得出兩句話：<strong>學生需要一個讓 agent 驗證自己工作的方法</strong>；人要掌握方向，決定 agent 做什麼。這也是 L1〈<a href="l01.html#i3">人的時間</a>〉的結論：<strong>稀缺的是人的時間和注意力，不是 agent 的工作時數</strong>。</p>
-              <p id="i1-2"><b>本文的判斷：照代價排，不照編號排。</b>Slides 把十個陷阱編成 P1 到 P10。本文要先回答哪一種錯最貴，所以第 2 到 9 章依兩個問題排。先看忽略它要付多少，也就是多常碰到、碰到一次損失多大；這一項差不多時，再看付了能不能拿回來，<strong>拿不回來的排前面</strong>。排出來是這樣：</p>
+              <p id="i1-2"><b>本文的判斷：照代價排，不照編號排。</b>Slides 把十個陷阱編成 P1 到 P10。本文要先回答哪一種錯最貴，所以第 2 到 9 章依兩個問題排。先看忽略它要付多少，也就是多常碰到、碰到一次損失多大；這一項差不多時，再看付了能不能拿回來，<strong>拿不回來的排前面</strong>。</p>
               <ul>
                 <li>每個任務都會碰到的驗證排最前面（第 2、3 章）。</li>
                 <li>比較版本時才會碰到、一錯就白做好幾天的實驗紀律其次（第 4、5 章）。</li>
@@ -235,7 +235,7 @@
               <figcaption>Agent 照字面完成要求時會發生什麼？兩個例子都是課程在作業裡看到的。指標過了，事情沒做；中間一欄粉色的，是 agent 鑽到的漏洞。擋法是寫明做完時哪些東西不准動，要求本身不必寫得更長。</figcaption>
             </figure>
               <p>兩個例子裡，agent 都照字面完成了要求。這叫 Goodhart's law：指標一旦變成目標，就不再是好指標。L3〈<a href="l03.html#i4-2">終點</a>〉講 /goal 時碰過同一個陷阱：/goal 讓 Claude 一直做到你給的條件成立，條件若只寫「所有測試通過」，刪掉失敗的測試也算成立。第一份作業的回顧是同一個問題的另一面：<strong>沒寫清楚做完長什麼樣子，agent 不是做少，就是做多</strong>。需求寫得寬，agent 就多做了不需要的功能、過度的架構、錯的版面；給了截圖、明確的尺寸和量得出來的條件，結果就好得多。模糊的要求還讓 agent 跑得更久：第三份作業裡，<strong>30 分鐘以上的長 turn 有 69% 來自模糊的要求</strong>，第 8 章講怎麼把它切小。</p>
-              <p id="i2-1"><b>一個檢查得了的「做完」有三部分。</b>課程的建議是把需求寫成可以驗證的條件，配上畫面的例子。拆開來是：</p>
+              <p id="i2-1"><b>一個檢查得了的「做完」有三部分。</b>課程的建議是把需求寫成可以驗證的條件，配上畫面的例子。</p>
               <ul>
                 <li><b>終點。</b>一個能由輸出證明的條件：哪些測試要跑、exit code 是多少、截圖和設計稿對得上、數字要到多少。做不到時什麼時候停，也寫在這裡，例如同一個方法試了三次還不行，就停下來回報卡在哪裡。</li>
                 <li><b>不變量。</b>做完時不准動的東西：不准修改或刪除 tests/ 的測試；成本降了，解出的題數也不能比 baseline 少。上圖兩個例子缺的就是這一行。</li>
@@ -475,7 +475,7 @@ $ git tag submit-a3 v8                            # 看不出差別：交出去�
                 </div>
               </details>
               <p id="i5-1"><b>公開的紀錄。</b>上面是課程的分析。公開的資料裡，Claude Code 的 GitHub issue <a href="https://github.com/anthropics/claude-code/issues/87575" target="_blank" rel="noopener">#87575</a> 和 <a href="https://github.com/anthropics/claude-code/issues/87971" target="_blank" rel="noopener">#87971</a> 有使用者貼出同一段提醒的原文，也提到同一個 flag 名稱；到 2026-11-06 為止，兩串都沒有 Anthropic 的回覆，官方的 permission modes 文件也沒有提到 auto mode 會改變用哪個 tool。本文不推測原因，只看它對使用者的兩個後果。</p>
-              <p id="i5-2"><b>後果一：經過 Claude Code 量的數字，會混進它自己的變化。</b>先分清楚 Claude Code 的變化影響哪些數字。排行榜評分跑的是學生自己寫的 agent，它自己呼叫 model 的 API，不經過 Claude Code，所以<strong>這個 flag 不會直接改動 v8、v9 的分數</strong>。它改的是 Claude Code 替你寫程式的做法，寫出來的程式都在 commit 裡。</p>
+              <p id="i5-2"><b>後果一：經過 Claude Code 量的數字，會混進它自己的變化。</b>排行榜評分跑的是學生自己寫的 agent，它自己呼叫 model 的 API，不經過 Claude Code，所以<strong>這個 flag 不會直接改動 v8、v9 的分數</strong>。它改的是 Claude Code 替你寫程式的做法，寫出來的程式都在 commit 裡。</p>
               <p>直接受影響的，是經過 Claude Code 量出來的數字。例如你想知道兩版 CLAUDE.md（專案根目錄的規則檔，Claude Code 每次開工都會讀）哪一版讓它少出錯，就要讓它照兩版各跑同一組任務。這種比較通常用 claude -p 跑：-p 是非互動模式，給它一個 prompt，它做完就印出結果、結束。這時包在 model 外面的那層程式就是 Claude Code。L7〈<a href="l07.html#i1-2">分數是整個 stack 的函數</a>〉看過，同一個 model 換一個 harness，分數可以差幾十分；<strong>Claude Code 改了 system prompt 或 tool 的說明，就等於換了一部分 harness</strong>。</p>
               <p>所以這類比較要在結果表記下 Claude Code 的版本，<strong>實驗期間關掉自動更新</strong>；官方文件寫明 native 安裝會在背景更新、下次啟動生效。但 flag 不發版也會變，所以<strong>baseline 和新版要在同一段時間交錯跑</strong>，不要拿上週的分數來比：</p>
               <figure class="file"><figcaption>terminal：用 Claude Code 比兩版 CLAUDE.md 之前（run_tasks.sh 是你自己的腳本：換上指定的那一版 CLAUDE.md，用 claude -p 跑完同一組任務，結果存進指定的目錄；版本號是本文環境 2026-11-06 的輸出）</figcaption><pre><code>$ claude --version                      # 記進結果表

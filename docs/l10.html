@@ -75,7 +75,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">你在一張 H200（NVIDIA 的 GPU）上跑語言模型（下面叫 model），一次只服務一個請求。監控工具 nvidia-smi 顯示使用率 100%，字卻出得很慢。你的第一個念頭是 GPU 不夠快，要再買一張。其實<strong>這張 GPU 的運算能力只用到大約 0.5%</strong>（第 3 章用規格算出這個數字）。它的時間幾乎都花在搬資料：把 model 的參數（訓練出來的一大堆數字，就是 model 的本體）從 GPU 自己的記憶體讀到做運算的電路上。那個 100% 只代表「有程式在跑」。</p>
-    <p class="thesis">Model 的每一步運算，在 GPU 上是一段一段的小程式在跑，每一段叫一個 kernel。一個 kernel 要花多久，看兩件事裡比較慢的那一件：要從記憶體搬多少資料，和要做多少次運算。搬資料和運算可以同時進行，所以快的那一件會被慢的那一件蓋過去，時間不是兩者相加。這堂回答的問題是：<strong>怎麼先算出瓶頸在哪一邊</strong>，再選改法，最後用對的數字確認。下面三條是這堂的判斷。</p>
+    <p class="thesis">Model 的每一步運算，在 GPU 上是一段一段的小程式在跑，每一段叫一個 kernel。一個 kernel 要花多久，看兩件事裡比較慢的那一件：要從記憶體搬多少資料，和要做多少次運算。搬資料和運算可以同時進行，所以快的那一件會被慢的那一件蓋過去，時間不是兩者相加。這堂回答的問題是：<strong>怎麼先算出瓶頸在哪一邊</strong>，再選改法，最後用對的數字確認。</p>
     <ul class="core">
       <li><span><b>先算每搬 1 byte 做了幾次運算。</b>這個比值叫 arithmetic intensity。每張 GPU 有一個門檻：它每秒能做的運算次數，除以它每秒能從記憶體搬的 byte 數，也就是搬來的每 1 byte 要配幾次運算，運算電路才不會停下來等資料。H200 大約是每 byte 206 次運算。<strong>比值低於門檻，慢的是搬資料，這時加運算能力沒有用</strong>，要想辦法少搬；高於門檻，才是運算能力不夠（第 2 章）。</span></li>
       <li><span><b>Model 逐字輸出時，慢的是搬資料。</b>Model 一次輸出一個 token（文字的一小段，中文大約一個字），每產生一個 token，都要把全部的參數讀一遍：晶片上的儲存加起來約一百多 MB，放不下十幾到上百 GB 的參數，上一步讀過的留不住，下一步只能再從 GPU 的記憶體讀一次，而每個參數只拿來算一次：搬得多、算得少，比值遠低於門檻，所以例子裡運算能力幾乎閒著。改法是把很多請求併成一批一起算，一批叫一個 batch：參數讀一遍，整批請求一起用，<strong>batch 越大，每個請求分攤到的搬運越少</strong>。但每個請求還有自己的一份資料要讀，就是它到目前為止的對話算出來的中間結果：新的 token 要參考前面的每一個字，所以每產生一個 token，這份中間結果也要整份從記憶體讀一遍。這一份別的請求用不到，分攤不了；<strong>對話越長，這個請求每一步要讀的就越多，每個字也就出得越慢</strong>（第 3 章）。</span></li>
@@ -99,7 +99,7 @@
             <div class="prose">
               <p>L1 說過，LLM 的 decode（一次產生一個 token、逐字輸出的那一段）卡在記憶體頻寬，GPU 的運算單元大多在等資料（L1〈<a href="l01.html#i7">時間</a>〉）。這一堂解釋為什麼，以及能怎麼辦。後面講 batching（把多個請求併成一批一起算）、paging（把 KV cache 切成固定大小的頁來管理記憶體）、quantization（把 weights 改用更少的位元存）的幾堂，都在回答同一個硬體事實，所以先從 GPU 怎麼運作講起。讀者不需要寫過 GPU 程式，這一章從 CPU 的幾個名詞出發。</p>
               <p id="i1-1"><b>Latency 和 throughput 是兩個目標。</b>Latency（延遲）是一件工作從開始到結束要多久，throughput（吞吐量）是單位時間做完多少件。打個比方：跑車一次載 2 個人，到得最快；一隊巴士每台都比較慢，一次卻能載幾千人。CPU 是跑車，為 latency 設計；GPU 是巴士車隊，<strong>為整顆晶片的 throughput 設計</strong>。</p>
-              <p>先定義三個名詞。Core（核心）是執行指令的電路。Thread 是一串依序執行的指令，帶著自己的 register（暫存器，core 裡最快、最小的儲存位置）。Cache 是 core 旁邊的小記憶體，放最近用過的資料，下次就不必回到慢的主記憶體去拿。CPU 的每個 core 把大部分面積給了控制邏輯：out-of-order execution（不照順序執行，先做資料已經到的指令）和 branch prediction（先猜 if 會走哪一邊，照著做下去），再加上大的 cache，目標是讓一個 thread 跑最快。GPU 反過來，把面積給了運算單元：</p>
+              <p>Core（核心）是執行指令的電路。Thread 是一串依序執行的指令，帶著自己的 register（暫存器，core 裡最快、最小的儲存位置）。Cache 是 core 旁邊的小記憶體，放最近用過的資料，下次就不必回到慢的主記憶體去拿。CPU 的每個 core 把大部分面積給了控制邏輯：out-of-order execution（不照順序執行，先做資料已經到的指令）和 branch prediction（先猜 if 會走哪一邊，照著做下去），再加上大的 cache，目標是讓一個 thread 跑最快。GPU 反過來，把面積給了運算單元：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 300" role="img" aria-label="左右兩個面板。左邊是 CPU：四個灰色的大方框各是一個 core，每個 core 大部分面積是黃色的控制邏輯（out-of-order、branch prediction），運算單元只有兩個青色的小 ALU，旁邊是藍色的 L1/L2 cache；四個 core 共用藍色的 L3，下面接灰色的主記憶體 DDR5，約 0.46 TB/s。64 核、同時 128 個 thread。右邊是 GPU：32 個青色的小方塊代表 132 個 SM 的一部分，每個 SM 是一個以運算單元為主的小處理器；所有 SM 共用藍色的 L2，下面接灰色的主記憶體 HBM3e，4.8 TB/s。16,896 個 FP32 core（做 32 位元浮點運算的核心）、同時 270,336 個 thread。">
@@ -465,7 +465,7 @@
             <h3><span class="idea-no">2</span>Roofline：kernel 的時間由較慢的那一邊決定</h3>
             <div class="prose">
               <p>上一章說 GPU 要大量平行才填得滿。<strong>但填滿了也不一定快</strong>：資料供不上時，運算單元一樣在等。這一章給一個判斷工具，叫 roofline（屋頂線，畫成圖時形狀像屋頂）：先算一個 kernel（在 GPU 上跑的一個函式，下面細講）要搬多少 byte、要算多少 FLOP，就能估出它最快能多快，以及卡在哪一邊。之後每一種最佳化，都在移動這兩個數字的其中一個。</p>
-              <p id="i2-1"><b>三個單位。</b>估算之前，先把單位定下來：</p>
+              <p id="i2-1"><b>三個單位。</b></p>
               <ul>
                 <li><b>FLOP。</b>Floating-point operation，一次浮點加法或乘法。矩陣乘法裡最常見的是 multiply-add（先乘再加），算 2 個 FLOP。FLOP/s 是每秒做幾個，1 TFLOP/s 是每秒一兆個。</li>
                 <li><b>Byte。</b>資料量。BF16（一種 16 位元的浮點格式，LLM 推論最常用）每個數字 2 bytes，FP32 每個 4 bytes。下面用 b 代表每個數字幾個 bytes。</li>
@@ -801,7 +801,7 @@
               </div>
               <figcaption>同樣 batch 256，MoE 的 expert 分到幾個 token？Dense model 的一組 weights 給全部 256 個 token 用；MoE 的每個 expert 平均只分到 256 × 8 ÷ 256 = 8 個，又回到 memory-bound 的那一側。假設 routing 平均分配，畫出 256 個 expert 裡的 8 個。</figcaption>
             </figure>
-              <p>反過來看讀取：假設 routing 平均分配，batch 64 時每層約 87% 的 expert 至少分到一個 token，weights 幾乎都要讀進來，每個卻只算 2 個 token。要讓每個 expert 也分到約 206 個 token，一步要約 6,600 個 token。DeepSeek 2025-02 公開的<a href="https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md" target="_blank" rel="noopener">推論系統說明</a>寫了同一個理由：model 很稀疏（每個 token 只用到 256 個 expert 裡的 8 個），需要很大的總 batch，每個 expert 才分得到足夠的 batch。他們 decode 時把 expert 分到 144 張 GPU 上（EP144），每張 GPU 各自跑自己的一批請求，每張 GPU 放 2 個 routed expert：256 個各一份，再加 32 份負載高的 expert 的備份，共 288 個。每個 token 送到放著它所選 expert 的 GPU，所以一個 expert 收到的是 144 張 GPU 合起來的 token。<a href="https://arxiv.org/abs/2512.01644" target="_blank" rel="noopener">Wang 等 2025-12 在 A100 上的量測</a>也看得到同一個方向：decode 時把 batch 加大，dense 的 Qwen2.5-32B，FFN 的 intensity 隨 batch 一路往上，量到的最高是 15.74 FLOP/B（論文沒寫是在多大的 batch）；MoE 的 Qwen3-30B-A3B 在他們試的幾個 batch 裡都停在約 8，看不出隨 batch 上升。論文的解釋是每個 expert 只分到 batch 的一小部分；照上面的算法，它應該隨 batch 慢慢上升，只是慢很多，論文沒有說明為什麼在他們的範圍裡幾乎是平的。要看的不是 15.74 和 8 差多少，而是一條往上走、一條是平的。論文的解釋也是 routing 把 batch 分散到各個 expert。</p>
+              <p>反過來看讀取：假設 routing 平均分配，batch 64 時每層約 87% 的 expert 至少分到一個 token，weights 幾乎都要讀進來，每個卻只算 2 個 token。要讓每個 expert 也分到約 206 個 token，一步要約 6,600 個 token。DeepSeek 2025-02 公開的<a href="https://github.com/deepseek-ai/open-infra-index/blob/main/202502OpenSourceWeek/day_6_one_more_thing_deepseekV3R1_inference_system_overview.md" target="_blank" rel="noopener">推論系統說明</a>寫了同一個理由：model 很稀疏（每個 token 只用到 256 個 expert 裡的 8 個），需要很大的總 batch，每個 expert 才分得到足夠的 batch。他們 decode 時把 expert 分到 144 張 GPU 上（EP144），每張 GPU 各自跑自己的一批請求，每張 GPU 放 2 個 routed expert：256 個各一份，再加 32 份負載高的 expert 的備份，共 288 個。每個 token 送到放著它所選 expert 的 GPU，所以一個 expert 收到的是 144 張 GPU 合起來的 token。<a href="https://arxiv.org/abs/2512.01644" target="_blank" rel="noopener">Wang 等 2025-12 在 A100 上的量測</a>也看得到同一個方向：decode 時把 batch 加大，dense 的 Qwen2.5-32B，FFN 的 intensity 隨 batch 一路往上，量到的最高是 15.74 FLOP/B（論文沒寫是在多大的 batch）；MoE 的 Qwen3-30B-A3B 在他們試的幾個 batch 裡都停在約 8，看不出隨 batch 上升。論文的解釋是每個 expert 只分到 batch 的一小部分；照上面的算法，它應該隨 batch 慢慢上升，只是慢很多，論文沒有說明為什麼在他們的範圍裡幾乎是平的。要看的不是 15.74 和 8 差多少，而是一條往上走、一條是平的。</p>
               <p>本文的判斷：MoE 省下的是 FLOP，decode 的瓶頸卻在 bytes，所以 <strong>MoE 要很大的總 batch 才吃得到 batching 的好處</strong>。<strong>同時請求不多時，總 batch 小，每個 expert 分到的 token 更少</strong>，停在斜坡的最底端。GPU 少也一樣：每張 GPU 的 batch 有上限（KV cache 要放得下，每個請求的延遲也不能太長），一個 expert 收到的是所有送 token 給它的 GPU 合起來的量，GPU 越少，湊得到的總 batch 越小。這也是 expert parallelism（把 expert 分到很多張 GPU 上，上面 DeepSeek 的 EP144 就是一例）的動機，parallelism 是後面的講次。</p>
             </div>
           </div>
@@ -1153,8 +1153,7 @@
               </div>
               <figcaption>Tensor Core 一條指令做多少事？一小塊矩陣乘加：D = A × B + C。省下的是取指令、解碼和排程的次數，A 的每個值也重複用在 B 的 8 欄上。依 PTX ISA（mma 指令），格子照比例畫。</figcaption>
             </figure>
-              <p>它快的原因有四個：</p>
-              <ul>
+                            <ul>
                 <li><b>專用的電路。</b>乘法器和加法器直接排成整塊 tile（矩陣切出來的一小塊，例如上圖 16 × 16 的 A）的形狀。一塊的資料流過整片電路就算完，中間的部分和不必寫回 register 再讀出來。</li>
                 <li><b>每個 FLOP 的指令少。</b>一條 mma 分攤了取指令、解碼和排程。</li>
                 <li><b>Operand 重用。</b>A、B 的每個值在單元裡重複用了好幾次。</li>
@@ -1455,7 +1454,7 @@ $ ncu --set full -k vec_add ./app    # Nsight Compute：只分析名字符合 ve
               </div>
               <figcaption>CPU 發出 kernel 之後在做什麼？它不等，直接往下走（深紅的那一格是 launch）。只有需要結果的呼叫，例如把資料搬回 host 的 cudaMemcpy，才會等 kernel 做完；kernel 執行時的錯誤也在這時候才回報。中間那列的 copy engine 是 GPU 上專門在 host 和 device 之間搬資料的單元，搬的時候不占 SM。</figcaption>
             </figure>
-              <p>這帶來兩個後果。第一，kernel 的錯誤（例如讀到超出範圍的記憶體）不會出現在 launch 那一行，<strong>要到下一個同步的呼叫才回報</strong>，除錯時常常指錯地方。第二，<strong>計時要在同步之後才停，否則量到的只是發指令的時間</strong>；第 9 章會看到這一點讓人量出假的加速。</p>
+              <p>第一，kernel 的錯誤（例如讀到超出範圍的記憶體）不會出現在 launch 那一行，<strong>要到下一個同步的呼叫才回報</strong>，除錯時常常指錯地方。第二，<strong>計時要在同步之後才停，否則量到的只是發指令的時間</strong>；第 9 章會看到這一點讓人量出假的加速。</p>
               <p id="i6-2"><b>Kernel 為一個 thread 寫。</b>第 1 章的 SIMT 落到程式上，就是你只寫一個 thread 要做的事，再告訴 GPU 要開幾個 thread：</p>
               <figure class="file"><figcaption>vec_add.cu（依 NVIDIA cuda-samples 的 vectorAdd 簡化；本文沒有實際跑過，要 NVIDIA GPU 與 nvcc，也就是 CUDA 的 compiler）</figcaption><pre><code>__global__ void vec_add(const float *a, const float *b, float *c, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;   // 這個 thread 負責第 i 個元素
@@ -1476,7 +1475,7 @@ int main() {
     cudaMemcpy(h_c, d_c, bytes, cudaMemcpyDeviceToHost);   // 這裡才等 kernel 做完
 }</code></pre></figure><figure class="file"><figcaption>terminal：編譯並執行（本文沒有實際跑過）</figcaption><pre><code class="lang-sh">$ nvcc -o vec_add vec_add.cu    # nvcc 是 CUDA 的 compiler，同時編 host 和 device 的程式碼
 $ ./vec_add</code></pre></figure>
-              <p>每個 thread 用自己的編號算出位置：<code>i = blockIdx.x × blockDim.x + threadIdx.x</code>。threadIdx.x 是 thread 在 block 裡的編號，blockIdx.x 是 block 的編號，blockDim.x 是每個 block 有幾個 thread（這裡是 256）；.x 表示第一個維度，處理二維、三維的資料時還有 .y、.z。1M 個元素、每個 block 256 個 thread，就是 4,096 個 block，分到 132 個 SM 上，平均每個 SM 約 31 個。<strong>Block 大小取 32 的倍數</strong>，才不會有半個 warp，常用 128 或 256。這幾層名字對到硬體的方式如下：</p>
+              <p>每個 thread 用自己的編號算出位置：<code>i = blockIdx.x × blockDim.x + threadIdx.x</code>。threadIdx.x 是 thread 在 block 裡的編號，blockIdx.x 是 block 的編號，blockDim.x 是每個 block 有幾個 thread（這裡是 256）；.x 表示第一個維度，處理二維、三維的資料時還有 .y、.z。1M 個元素、每個 block 256 個 thread，就是 4,096 個 block，分到 132 個 SM 上，平均每個 SM 約 31 個。<strong>Block 大小取 32 的倍數</strong>，才不會有半個 warp，常用 128 或 256。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 290" role="img" aria-label="左欄是軟體的四層，右欄是它們落在硬體的哪裡，四條箭頭連接。Grid，一次 launch 的全部 block，對應整顆 GPU 的 132 個 SM。Block，最多 1,024 個 thread、共用 shared memory，對應一個 SM，跑完才離開。Warp，32 個 thread 一起前進，對應一個 partition 的 scheduler，每個 cycle 發一條指令。Thread，有自己的 registers 和編號，對應 warp 的 32 個 lane 之一。底部是 index 的算式：i 等於 blockIdx.x 乘 blockDim.x 加 threadIdx.x，例如 block 2、thread 1 得到 513。">
@@ -1548,7 +1547,7 @@ def add(x, y):
     add_kernel[grid](x, y, out, x.numel(), BLOCK=1024)             # 和 CUDA 一樣是非同步的
     return out</code></pre></figure>
               <p>Pallas（JAX，TPU 和 GPU）、NVIDIA 的 cuTile、TileLang 和 ThunderKittens 也是 tile language：都以一整塊 tile 為單位描述工作，但要你自己決定的細節不一樣多。下面的五層表把 TileLang 和 ThunderKittens 放在更下層：TileLang 要你自己決定 tile 放在 shared memory 的哪裡，ThunderKittens 要你自己排 layout（資料在 shared memory 和 register 裡怎麼排，決定讀的時候會不會互相卡住）和 warp 的分工（哪些 warp 搬資料、哪些算，第 7 章）。PyTorch 2025-10 釋出 beta 的 <a href="https://pytorch.org/blog/helion/" target="_blank" rel="noopener">Helion</a> 比 Triton 再高一點：寫法像 PyTorch 加上 tile，編譯成 Triton，再自動搜尋 tile 大小、迴圈順序這些設定。官方部落格的例子搜了 1,520 組設定，約 10 分鐘：<strong>代價是編譯時間，換到的是不必自己手調</strong>。下面的表把它和 Triton 放在同一層，因為兩者寫一個 op 都只要幾小時。</p>
-              <p id="i6-5"><b>五層抽象：越往下，控制越多，成本越高。</b>這些工具可以排成五層。上層的程式也比較好搬：tile language 寫的 kernel 能在不同廠牌、不同代的 GPU 上跑，第四層則每一代 GPU 都要重做：</p>
+              <p id="i6-5"><b>五層抽象：越往下，控制越多，成本越高。</b>上層的程式也比較好搬：tile language 寫的 kernel 能在不同廠牌、不同代的 GPU 上跑，第四層則每一代 GPU 都要重做：</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>層</th><th>例子</th><th>什麼時候用</th><th>成本</th></tr></thead>
                 <tbody>
@@ -1559,7 +1558,7 @@ def add(x, y):
                   <tr><td><b>Thread</b></td><td>CUDA C++</td><td><strong>不規則的工作</strong>：排序、稀疏矩陣、圖演算法</td><td>全部自己來</td></tr>
                 </tbody>
               </table></div>
-              <p>本文的判斷：<strong>從最上層開始，量到某個 op 確實是瓶頸才往下</strong>；往下之前，先找現成的 kernel。cuBLAS、FlashAttention、FlashInfer 這類函式庫已經替每一代 GPU 調好；CUTLASS 也附了很多調好的 GEMM 可以直接用，它同時是上表第四層的工具，拿它從頭寫才是幾週的成本。<strong>自己寫的版本很難比它們快，卻要自己維護到下一代 GPU</strong>。整理成一個流程：</p>
+              <p>本文的判斷：<strong>從最上層開始，量到某個 op 確實是瓶頸才往下</strong>；往下之前，先找現成的 kernel。cuBLAS、FlashAttention、FlashInfer 這類函式庫已經替每一代 GPU 調好；CUTLASS 也附了很多調好的 GEMM 可以直接用，它同時是上表第四層的工具，拿它從頭寫才是幾週的成本。<strong>自己寫的版本很難比它們快，卻要自己維護到下一代 GPU</strong>。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 392" role="img" aria-label="選抽象層的流程，由上往下。先 profile。第一問：時間花在 kernel 之間的空檔嗎？是：用 CUDA Graphs，或 torch.compile 的 reduce-overhead。否：第二問：慢的 op 有現成的 kernel 嗎？是：直接用，例如 cuBLAS、FlashAttention、FlashInfer。否：第三問：只是沒有 fuse，或少一個 op？是：用 Triton 或 Helion，幾小時。否：第四問：GEMM 或 attention 要逼近 peak？是：CUTLASS、CuTe、ThunderKittens，幾週，每一代 GPU 要重做。否：不規則的工作，用 CUDA C++，深紅色。">
@@ -1807,7 +1806,7 @@ max abs difference: 8.881784197001252e-16</code></pre></figure>
                   <tr><td><b>FA4</b></td><td>2026 論文、B200</td><td>Tensor Core 加倍、exp 沒有：<strong>softmax 變成上限</strong></td><td>TMEM 放結果、部分 exp 改在做 multiply-add 的 FMA 單元上近似、少做 rescale（下面細講）</td><td>最高 1,613 TFLOP/s，B200 BF16 peak 的 71%；比 cuDNN 9.13（NVIDIA 官方的深度學習 kernel 函式庫）快 1.1–1.3 倍</td></tr>
                 </tbody>
               </table></div>
-              <p>FA4 最能說明這個模式。<a href="https://arxiv.org/abs/2603.05451" target="_blank" rel="noopener">FlashAttention-4 的論文</a>（2026-03）指出，B200 的 Tensor Core 吞吐是 Hopper 的兩倍，算 exp 的單元和 shared memory 的頻寬卻沒變：</p>
+              <p><a href="https://arxiv.org/abs/2603.05451" target="_blank" rel="noopener">FlashAttention-4 的論文</a>（2026-03）指出，B200 的 Tensor Core 吞吐是 Hopper 的兩倍，算 exp 的單元和 shared memory 的頻寬卻沒變：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 236" role="img" aria-label="橫條圖，一塊 128 乘 128 的 tile、head 維度 128，forward 每種資源要幾個 cycle。Hopper：MMA 2,048、exp 1,024、shared memory 768，MMA 最長。Blackwell：MMA 1,024、exp 1,024、shared memory 768，MMA 和 exp 一樣長，exp 那條是深紅色。Hopper 的數字是本文由每個 clock 的吞吐換算的。">
@@ -1946,7 +1945,7 @@ max abs difference: 8.881784197001252e-16</code></pre></figure>
               </div>
               <figcaption>Decode 的 attention 只有一個 query，怎麼讓很多 SM 一起做？沿 KV cache 切：每個 SM 讀幾頁，算出部分的 (m, ℓ, o)，再用第 7 章 online softmax 的算法合併。不切的話，長請求只有一個 SM 在讀（深紅是閒置）。</figcaption>
             </figure>
-              <p>這是 Flash-Decoding（2023）的做法。FlashInfer（MLSys 2025）再加上兩件事。第一，KV cache 一頁一頁散在 HBM 裡，它把「每個請求用到哪幾頁」寫成一個 block-sparse 矩陣：一列是一個請求，一欄是一頁，用到的頁才有值。不管頁怎麼散、每頁多大，kernel 都只是照這張表去讀，所以同一個 kernel 就能處理各種 KV cache 的存法。第二，它的排程把工作平均切給固定數量的 block，不管請求多長，每次 launch 的 grid 大小都一樣。下一節的 CUDA Graph 只能重播形狀固定的 launch，所以是第二件事讓它能放進 CUDA Graph。vLLM 和 SGLang 都用 FlashInfer。Paging 本身是下一堂的主題。</p>
+              <p>這是 Flash-Decoding（2023）的做法。FlashInfer（MLSys 2025）再加上兩件事。第一，KV cache 一頁一頁散在 HBM 裡，它把「每個請求用到哪幾頁」寫成一個 block-sparse 矩陣：一列是一個請求，一欄是一頁，用到的頁才有值。不管頁怎麼散、每頁多大，kernel 都只是照這張表去讀，所以同一個 kernel 就能處理各種 KV cache 的存法。第二，它的排程把工作平均切給固定數量的 block，不管請求多長，每次 launch 的 grid 大小都一樣。下一節的 CUDA Graph 只能重播形狀固定的 launch，所以是第二件事讓它能放進 CUDA Graph。vLLM 和 SGLang 都用 FlashInfer。</p>
               <p id="i8-3"><b>Launch 之間：CUDA Graphs、PDL 與 megakernel。</b>Decode 一個 token 要跑幾十個小 kernel。Launch 雖然是非同步的，每次 launch 還是要幾微秒的 CPU 與 driver 時間；小 kernel 在 GPU 上也只跑幾微秒，跑得比 CPU 送下一個還快，GPU 就跑完在等下一個送到。<strong>Kernel 越小，這段空檔占的比例越大</strong>。三種做法一步比一步徹底：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -2304,7 +2303,7 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
               <figcaption>資料離開這台機器會慢多少？離開這張 GPU 走 NVLink，頻寬約少 10 倍；再離開這台機器走網卡，又少約 9 倍。PCIe 是 CPU 和 GPU 之間的路，和網卡差不多慢。右欄用 Llama 3 70B 每個 token 320 KiB 的 KV cache 算：32K token 的 KV cache 約 10.7 GB，走 NVLink 要 24 ms，走 400 Gb/s 的網卡要 215 ms，差 9 倍（深紅）。時間是本文算的。</figcaption>
             </figure>
               <p>Llama 3 70B 的 KV cache 每個 token 320 KiB（第 3 章的前情；1 KiB 是 1,024 bytes），32K 個 token 是 320 KiB × 32,768 ≈ 10.7 GB。搬的時候只用一個方向，所以 NVLink 要用每個方向的 450 GB/s 算：10.7 GB ÷ 450 GB/s ≈ 24 ms。400 Gb/s 的網卡是每秒 50 GB，10.7 ÷ 50 ≈ 215 ms，<strong>差 9 倍</strong>。<strong>所以需要頻繁交換資料的工作，例如 tensor parallelism，通常放在同一個 NVLink 網域裡</strong>；要跨機器的搬運，就要像第 8 章那樣藏在計算後面。怎麼切是後面 parallelism 的講次。</p>
-              <p id="i10-3"><b>故障：16K 張 GPU，約每 3 小時中斷一次。</b>L1〈<a href="l01.html#t4">故障是常態</a>〉用 MTBF（mean time between failures，平均多久壞一次）算過：GPU 越多，壞得越頻繁。<a href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">Llama 3 的論文</a>給了實測：最多 16K 張 H100 預訓練 405B 的 model，54 天裡有 466 次中斷，47 次是計畫內的，其餘 419 次非預期，<strong>平均約 3.1 小時一次</strong>，約 78% 確認或疑似是硬體問題。原因的分布：</p>
+              <p id="i10-3"><b>故障：16K 張 GPU，約每 3 小時中斷一次。</b>L1〈<a href="l01.html#t4">故障是常態</a>〉用 MTBF（mean time between failures，平均多久壞一次）算過：GPU 越多，壞得越頻繁。<a href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">Llama 3 的論文</a>給了實測：最多 16K 張 H100 預訓練 405B 的 model，54 天裡有 466 次中斷，47 次是計畫內的，其餘 419 次非預期，<strong>平均約 3.1 小時一次</strong>，約 78% 確認或疑似是硬體問題。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 260" role="img" aria-label="橫條圖，Llama 3 405B 預訓練 54 天裡 419 次非預期中斷的前七大原因，比例尺 0 到 35%。損壞的 GPU 30.1%、GPU 的 HBM3 記憶體 17.2%、軟體 bug 12.9%、網路交換器與線材 8.4%、主機的非預期維護 7.6%、GPU 的 SRAM 4.5%、GPU 的 system processor 4.1%。和 GPU 有關的是青色，這四條合計 55.9%；加上圖上沒畫的 silent data corruption 1.4% 和散熱介面與感測器 1.4%，共 58.7%。">

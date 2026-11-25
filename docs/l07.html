@@ -224,8 +224,7 @@
               </div>
               <figcaption>這張圖回答「model 不換，只改它外面的東西，分數會差多少」。灰點是改之前，紅點是改之後。四組各差 12 到 53 分；第 4 章那張 Terminal-Bench 4.0 榜上，第 1 名到第 5 名只差 7 分。</figcaption>
             </figure>
-              <p>四列各改了什麼：</p>
-              <ul>
+                            <ul>
                 <li><b>ARC-AGI-3。</b>一組要邊玩邊摸索規則的抽象小遊戲，數字來自 <a href="https://arcprize.org/blog/astra" target="_blank" rel="noopener">ARC Prize 2026 年 9 月的報告</a>。兩種 harness 差在步與步之間留下什麼：Standard harness 只留 model 自己決定寫下的筆記；Provider Adapter harness 把 model 上一輪的 reasoning 狀態（回答前的思考，內容不公開）帶到下一輪，對話太長時再做 compaction（把舊的對話壓成摘要，騰出 context）。兩邊都開到最高的 effort（reasoning 的強度設定），Standard harness 是 62.7%，Provider Adapter harness 是 98.6%，差 36 分。</li>
                 <li><b>SWE-bench Verified。</b>OpenAI 請人篩過、確定可解的 500 題 SWE-bench 子集（第 7 章）。這一列是 <a href="l04.html#i2">L4 講過的 Lewis 實驗</a>：本機跑 4-bit 量化的 Qwen3.6，在其中 169 題上，harness 從整段對話照送，換成縮短舊的 tool 輸出、偵測原地打轉，解出的題從 43 升到 72，多 29 題、17.2 分（43/169 = 25.4%、72/169 = 42.6%，就是圖上這一列的兩個點）。4-bit 量化是把 model 的每個權重從 16 bit 壓成 4 bit 存，記憶體少很多，才能在本機跑，代價是能力通常比原本差一點。這個差距有前提：model 的 context window（一次能讀進的 token 上限）只有 20,480 token。對照組整段照送，對話紀錄塞滿 window 時，那一題的 trial 就直接結束，所以<strong>多解出來的題，有一部分只是沒有中途停掉</strong>。L4 也說 window 放大到 262,144 token 時，兩邊幾乎打平：169 題裡，整段照送的對照組解 102 題，改良的 harness 解 101 題。</li>
                 <li><b>Terminal-Bench。</b>考在 container 裡用 shell 做完一件事（細節在〈查閱〉的 <a class="tm" href="#n-tb">Terminal-Bench 註</a>）。<a href="https://www.tbench.ai/news/terminal-bench-2-1" target="_blank" rel="noopener">2.1 版</a>只修了 89 題裡 28 題的問題，題組沒換，同一個 agent（harness 是 Claude Code，model 是 Opus 4.6）就多了 12.1 分。公告把問題分成三類：9 題的環境依賴網路上的資源，benchmark 做好之後那些資源變了；8 題給的資源（硬體、container、網路或安全設定）太少，至少有一種正確的做法跑不完；還有一類（公告沒給題數）是題目的說明和測試對不上，例如說明要 PostgreSQL 的輸出，測試卻期待 Spark SQL 的。<strong>這三類都是 agent 做對也過不了的題</strong>，公告說進步最多的就是它們；原本沒有任何 agent 解得出來的幾題，修完之後也都有 agent 解出來了。</li>
@@ -488,7 +487,7 @@
               <p>本文的判斷：上線前的問題多半是第二種，<strong>客戶只給你一次機會</strong>。真實的差距也不小：τ-bench 上 gpt-4o 在 retail（τ-bench 的零售客服題，另一組是 airline）的單次成功率是 61.2%，同一題連續 8 次都成功的比例低於 25%。不穩定也不會隨著換新 model 自動消失。<a href="https://arxiv.org/abs/2602.16666" target="_blank" rel="noopener">Towards a Science of AI Agent Reliability</a> 讓 14 個 model 在 τ-bench 和 GAIA 每題跑 5 次，把可靠性拆成 12 個 0 到 1 的指標，例如同一題每次結果一不一致、tool 出錯時撐不撐得住、出事時傷害多大。這 14 個 model 的發布日期前後跨了 18 個月。依發布日期看，正確率（就是單次成功率，0 到 1）每年升約 0.21，<strong>可靠性的分數每年最多只升 0.10，不到正確率的一半</strong>；其中結果的一致性（同一題每次是否都成功，pass^k 量的就是它）幾乎沒動。</p>
               <p id="i3-3"><b>成本：算每個成功任務，不算每次執行。</b>一次 200 步、花 40 美元的 run，和一次 12 步、花 0.30 美元的 run，兩次都「成功」，只看成功率分不出來。<a href="l01.html#i2">L1 講過的算法</a>是<strong>總花費除以成功次數</strong>，所以每次較貴但常成功的設定，算下來可能反而便宜。花費要算全部：除了 model 讀寫的 token，還有 tool call 本身的費用（搜尋 API、sandbox 的機器時間），以及 cache miss 多付的錢（prompt 開頭和上一次相同的部分沒命中 provider 的快取，就要用全價重算一次）。<a href="l08.html#i1">L8 會把這幾項一起算進每個成功任務的成本</a>。Latency 同理，等網頁載入和跑測試都在使用者的等待裡，<strong>上線時看 p95（最慢的那 5% 要等多久），不看平均</strong>。</p>
               <p>有成本這一軸，也才看得出簡單的做法多有用。<a href="https://arxiv.org/abs/2407.01502" target="_blank" rel="noopener">AI Agents That Matter</a> 在 HumanEval（164 題 Python 函式，用測試判對錯）上比了好幾種 agent，下面兩種都用 GPT-4。最簡單的一種叫 Warming：寫出的程式沒通過題目附的範例測試，就再寫一次，最多 5 次，每次把 temperature（取樣的隨機程度，越高，每次寫出的程式越不一樣）調高一點。複雜的 LATS（Language Agent Tree Search）會展開好幾條生成程式的路徑，再從中挑。結果 Warming 解對 93.2%、跑完全部題目總共 2.45 美元；LATS 解對 88.0%、總共 134.50 美元。<strong>簡單的那個正確率高 5.2 分，花費只有約 1/55</strong>。所以<strong>評估裡要放一個簡單的 baseline</strong>，否則你不知道複雜的東西換到了什麼。</p>
-              <p id="i3-4"><span class="anchor" id="t4"></span><b>多個維度怎麼比：Pareto。</b>能力、成本、速度要合成一個排名，直覺是加權平均，但權重由誰定？客服在乎速度，研究用的 agent 在乎能力，沒有一組權重對每個人都對。Pareto dominance 不需要權重：A 在每個維度都不比 B 差，而且至少一個維度更好，就說 A 支配（dominate）B。沒有人支配得了的那一群叫 Pareto frontier，也就是 Rank 1；拿掉 Rank 1 之後剩下不受支配的是 Rank 2，依此類推。先用一張示意圖看這兩個詞：</p>
+              <p id="i3-4"><span class="anchor" id="t4"></span><b>多個維度怎麼比：Pareto。</b>能力、成本、速度要合成一個排名，直覺是加權平均，但權重由誰定？客服在乎速度，研究用的 agent 在乎能力，沒有一組權重對每個人都對。Pareto dominance 不需要權重：A 在每個維度都不比 B 差，而且至少一個維度更好，就說 A 支配（dominate）B。沒有人支配得了的那一群叫 Pareto frontier，也就是 Rank 1；拿掉 Rank 1 之後剩下不受支配的是 Rank 2，依此類推。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 324" role="img" aria-label="示意圖。橫軸是 cost，越左越好；縱軸是 capability，越高越好；左上角是 Better。十一個點分成三層。Rank 1 是四個深紅點連成的實線，在最左上。Rank 2 是四個深灰點連成的虛線，在它右下。Rank 3 是三個淺灰點連成的虛線，在最右下。Rank 1 上的一個點標 A，A 的右下方畫了灰底，表示比 A 貴、分數又不比 A 高的區域；Rank 2 上的 B 落在灰底裡，所以 A 支配 B。同一條線上的點互相不支配：往右走分數變高，花費也變多。">
@@ -1361,7 +1360,7 @@ def test_tampering_fails():
                   <tr><td>複合請求只做一半</td><td>約 19%</td><td><strong>一題多個目標，用 checkpoint 給部分分數</strong></td></tr>
                 </tbody>
               </table></div>
-              <p id="i8-2"><b>第二步：把失敗變成題目。</b>Anthropic 的建議是<strong>從 20 到 50 個來自真實失敗的簡單任務開始</strong>（簡單是指題目好寫、好判分，不是對 agent 容易），不要等題組完整。他們的理由是評估越晚建越難：早期的產品需求可以直接寫成題目；等太久，就得從一個已經在跑的系統反推「怎樣算成功」。好題目有四個條件：</p>
+              <p id="i8-2"><b>第二步：把失敗變成題目。</b>Anthropic 的建議是<strong>從 20 到 50 個來自真實失敗的簡單任務開始</strong>（簡單是指題目好寫、好判分，不是對 agent 容易），不要等題組完整。他們的理由是評估越晚建越難：早期的產品需求可以直接寫成題目；等太久，就得從一個已經在跑的系統反推「怎樣算成功」。</p>
               <ul>
                 <li><b>兩位專家會給同樣的判決。</b>做不到，grader 也寫不出來。</li>
                 <li><b>有參考解。</b>參考解是一份已知能通過所有 grader 的答案。一題跑 100 次都是 0% 時，Anthropic 說多半是題目或 grader 壞了；參考解過得了，就證明題目可解、grader 也設定對了，這兩種可能就排除了。</li>
@@ -1442,7 +1441,7 @@ def test_tampering_fails():
                 </tbody>
               </table></div>
               <p>看第二列，只差最後一步，分數還不到一半：<strong>進度有價值，但做完才算數</strong>。<strong>報告要同時列完成率和平均部分分數</strong>：OSWorld 2.0 榜首的完成率是 44.33%，部分分數是 77.67%，只看後者會以為它快做完了（OSWorld 2.0 的部分分數有自己的算法，不是上面 TheAgentCompany 的算式）。</p>
-              <p id="i8-6"><b>一題長什麼樣。</b>上面的零件落到檔案上是這樣。例子用 Claude Code 的 plugin：一個目錄，裝著幾個 skill（寫給 agent 的做事說明，一個 <code>SKILL.md</code> 檔，用到時才載入 context）和設定，裝進 Claude Code 後改變它的做法（L2〈<a href="l02.html#i8">Skill</a>〉〈<a href="l02.html#i10">Plugin</a>〉）。<a href="https://code.claude.com/docs/en/plugin-evals" target="_blank" rel="noopener"><code>claude plugin eval</code></a> 量的就是這個改變：受測的 agent 系統是「Claude Code 加上這個 plugin」，對照組是沒裝 plugin 的 Claude Code。下面是一題「應該拒絕」的題，第 9 章接著跑它。這一題只用到第二、三層 grader：應該拒絕的題，正確的結果是什麼都沒改，用規則查「沒有呼叫退款」就夠了，不另外寫第一層。Mock 假扮的是 MCP server，也就是 agent 透過 MCP 這個協定接上的外部 tool，這裡是訂單系統。用別的 agent，零件也相同：prompt 是任務，mock 是環境，graders 是 grader，runs 是 k：</p>
+              <p id="i8-6"><b>一題長什麼樣。</b>例子用 Claude Code 的 plugin：一個目錄，裝著幾個 skill（寫給 agent 的做事說明，一個 <code>SKILL.md</code> 檔，用到時才載入 context）和設定，裝進 Claude Code 後改變它的做法（L2〈<a href="l02.html#i8">Skill</a>〉〈<a href="l02.html#i10">Plugin</a>〉）。<a href="https://code.claude.com/docs/en/plugin-evals" target="_blank" rel="noopener"><code>claude plugin eval</code></a> 量的就是這個改變：受測的 agent 系統是「Claude Code 加上這個 plugin」，對照組是沒裝 plugin 的 Claude Code。下面是一題「應該拒絕」的題，第 9 章接著跑它。這一題只用到第二、三層 grader：應該拒絕的題，正確的結果是什麼都沒改，用規則查「沒有呼叫退款」就夠了，不另外寫第一層。Mock 假扮的是 MCP server，也就是 agent 透過 MCP 這個協定接上的外部 tool，這裡是訂單系統。用別的 agent，零件也相同：prompt 是任務，mock 是環境，graders 是 grader，runs 是 k：</p>
               <figure class="file"><figcaption>一題 eval 的檔案（結構與欄位依 Claude Code 官方文件，2026-11 查詢；例子是本文編的）</figcaption><pre><code>my-plugin/
 ├── .claude-plugin/plugin.json
 ├── skills/refund/SKILL.md          ← 受測的 skill，裡面寫「超過 200 元要人工核准」
@@ -1633,7 +1632,7 @@ Report: evals/results/2026-11-03T09-12-44-120Z/report.html
 <div class="idea" id="i10">
             <h3>查閱：八個 benchmark、五層目標、早期指標</h3>
             <div class="prose">
-              <p>這一章不必讀完，需要時再查。它收三樣東西：八個常見的 benchmark，各一個註；評估目標的五層分類，從「預測文字」一路到「完成互動任務」；以及 agent 出現以前常用的早期指標，例如 perplexity 和 accuracy。遇到沒聽過的 benchmark，用第 2 章的兩個問題就能讀懂：agent 在哪裡做事，grader 檢查什麼。八個 benchmark 是：</p>
+              <p>這一章不必讀完，需要時再查。它收三樣東西：八個常見的 benchmark，各一個註；評估目標的五層分類，從「預測文字」一路到「完成互動任務」；以及 agent 出現以前常用的早期指標，例如 perplexity 和 accuracy。遇到沒聽過的 benchmark，用第 2 章的兩個問題就能讀懂：agent 在哪裡做事，grader 檢查什麼。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Benchmark</th><th>Agent 在哪裡做事</th><th>Grader 檢查什麼</th></tr></thead>
                 <tbody>

@@ -74,7 +74,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">團隊的 agent（會自己讀檔、跑指令、連做很多步的 AI 程式）這個月的帳單比預期高出一大截。你把它用的語言模型（下面叫 model）換成便宜一級的，每個 token（model 計費的單位）的單價降了。<span style="color: var(--key)">下個月的帳單沒有降，</span>做成的任務還變少了：便宜的 model 比較常失敗，失敗的任務要重跑，重跑的錢照付。</p>
-    <p class="thesis">省錢的直覺常常是錯的，因為帳沒有算對。這堂不給一串省錢技巧，回答的問題是：<strong>帳要怎麼算，才知道該動哪一項</strong>。下面三條是這堂的判斷。</p>
+    <p class="thesis">省錢的直覺常常是錯的，因為帳沒有算對。這堂不給一串省錢技巧，回答的問題是：<strong>帳要怎麼算，才知道該動哪一項</strong>。</p>
     <ul class="core">
       <li><b>帳要算到成功的任務。</b>把全部的花費（失敗的那幾次也算）除以做成的任務數，得到每個成功任務的成本。例子裡總花費沒降、做成的任務變少，所以<strong>每個成功的任務反而更貴，換 model 是虧的</strong>（第 1 章）。</li>
       <li><b><span style="color: var(--key)">最大的一筆是重送，先讓它便宜</span>。</b>Agent 每走一步，都要把到目前為止的全部內容重送給 model 一次，錢多半花在這裡。提供 model 的廠商會把你上一次送過、它已經處理過的開頭存起來，叫 cache。下一步送出的內容，開頭和上一次一字不差，這一段就是 cache hit，照折扣價收；讀不到 cache 的部分是 cache miss，<strong>cache miss 的 token 比 cache hit 的貴 12 到 50 倍</strong>。保住 cache hit 要讓開頭不變、cache 也還沒過期，不必丟掉任何內容，所以先做這件事（第 2、3 章）。</li>
@@ -196,7 +196,7 @@
               <figcaption>花費由什麼決定？上排是乘法，前兩項隨採用度成長，設計不去壓它，只動右邊四項。下排換成每個成功任務的成本，多一個分母：成功率。灰色代表有人用，青色和黃色是這堂的槓桿，深紅是上排沒有的那一項。</figcaption>
             </figure>
 <p>乘法的好處是每一項可以單獨優化，<strong>任何一項減半，總成本就減半</strong>。但一項省下的錢，可能從另一項補回來，第 4 章專門算這件事。</p>
-<p id="i1-3"><b>成功率：每個成功任務的成本 = 每次花費 ÷ 成功率（c ÷ p）。</b>上圖的上排算的是花了多少錢，沒算換到幾次成功。Agent 做一次任務，從開始到結束叫一次 run；這裡把一個 session 當成一個任務，所以一次 run 就是一個 session。Run 可能成功也可能失敗，<strong>失敗的 run 一樣要付錢</strong>。所以 L1 說 agent 要看的是<a href="l01.html#i2">每個成功任務的成本</a>，也就是上圖的下排：拿掉 Users 和 Sessions，從一個 session 的花費算起，再除以成功率。先看一個例子：</p>
+<p id="i1-3"><b>成功率：每個成功任務的成本 = 每次花費 ÷ 成功率（c ÷ p）。</b>上圖的上排算的是花了多少錢，沒算換到幾次成功。Agent 做一次任務，從開始到結束叫一次 run；這裡把一個 session 當成一個任務，所以一次 run 就是一個 session。Run 可能成功也可能失敗，<strong>失敗的 run 一樣要付錢</strong>。所以 L1 說 agent 要看的是<a href="l01.html#i2">每個成功任務的成本</a>，也就是上圖的下排：拿掉 Users 和 Sessions，從一個 session 的花費算起，再除以成功率。</p>
 <figure class="file"><figcaption>每個成功任務的成本</figcaption><pre><code class="lang-text">每次 run 花 $1，成功率 25%
 → 平均試 4 次才成功 1 次
 → 每個成功任務花 $4
@@ -238,7 +238,7 @@
           <div class="idea" id="i2">
             <h3><span class="idea-no">2</span>Context 重送：每一步重送的舊內容最貴</h3>
             <div class="prose">
-<p>第 1 章的六個乘數裡，哪一項最值得動？先看錢實際花在哪裡。</p>
+<p>第 1 章的六個乘數裡，哪一項最值得動？</p>
 <p id="i2-1"><b>重送的原因：model 沒有記憶，每一步都送整個 context。</b>一次 request 送給 model 的全部內容叫 context。Model 沒有記憶，它只知道這次 request 裡寫了什麼，<strong>所以每一步 harness 都把 system prompt</strong>（給 model 的固定指示）、tool 定義（它能呼叫哪些工具的說明）和整段歷史再送一次。從 harness 這邊看是重送，從 model 那邊看是重讀，下面這兩個詞指同一件事。</p>
 <figure class="diagram" data-calc="resend">
               <div class="scroll">
@@ -751,7 +751,7 @@ vllm:prefix_cache_hits     1185000
                   <p>出處：<a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">Claude pricing</a>、<a href="https://developers.openai.com/api/docs/models/gpt-5.6-sol" target="_blank" rel="noopener">GPT-5.6 Sol</a>、<a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener">Gemini pricing</a>。其他 provider 的 cache 規則不同，例如 Gemini 4 Argon 的 prefix cache 不必設定，遇到共同的開頭自動打折；官方只列 cache read 的價格，沒有 cache write 的價格，所以表上寫「—」。</p>
                 </div>
               </details>
-<p id="i3-7"><span class="anchor" id="n-prefill"></span><b>Input 與 output 單價的來源：prefill 與 decode。</b>上圖的倍率不是隨便訂的。<b>Provider 的成本主要是 GPU 的時間，所以一個 token 的成本，約等於 GPU 每秒的花費除以它每秒處理幾個 token。</b>Model 處理一個 request 分兩個階段：讀 input 的階段叫 prefill，產生回覆的階段叫 decode。比 <b>input 和 output 的單價，就是比同一組 GPU 每秒能 prefill 幾個 token、能 decode 幾個 token。</b>下面借 <a href="l09.html#i4">L9 算帳的那一組設定</a>：Llama 3 70B，一個 700 億參數的 model，跑在 2 張 NVIDIA H200 GPU 上。Provider 不公開自己的成本，所以下面的數字是本文的推算，是理論上限，只看量級。</p>
+<p id="i3-7"><span class="anchor" id="n-prefill"></span><b>Input 與 output 單價的來源：prefill 與 decode。</b><b>Provider 的成本主要是 GPU 的時間，所以一個 token 的成本，約等於 GPU 每秒的花費除以它每秒處理幾個 token。</b>Model 處理一個 request 分兩個階段：讀 input 的階段叫 prefill，產生回覆的階段叫 decode。比 <b>input 和 output 的單價，就是比同一組 GPU 每秒能 prefill 幾個 token、能 decode 幾個 token。</b>下面借 <a href="l09.html#i4">L9 算帳的那一組設定</a>：Llama 3 70B，一個 700 億參數的 model，跑在 2 張 NVIDIA H200 GPU 上。Provider 不公開自己的成本，所以下面的數字是本文的推算，是理論上限，只看量級。</p>
 <p><b>Prefill 卡在算力，叫 compute-bound。</b>每個 input token 都要和全部權重各做一次乘法、一次加法。Prompt 裡的幾千個 token 一起算，權重從記憶體讀一次就給它們全部用，所以讀的時間不是問題，GPU 的運算單元一直是忙的。每秒能算幾個 token，看 GPU 每秒能做幾次運算。</p>
 <p><b>Decode 卡在記憶體頻寬，叫 memory-bound。</b>Decode 每一輪只替一個 request 產生一個 token，卻要把全部權重從 GPU 記憶體讀一遍。這裡的「一輪」是 GPU 算出一個 token 的一次計算，不是 agent 的一步；agent 的一步要跑幾百輪才產生一段回覆。運算單元多半在等資料，每秒能產生幾個 token，看 GPU 每秒能從記憶體讀幾 byte。batch 只有一個 request 時，兩個上限算出來差約兩百倍：</p>
 <figure class="file"><figcaption>上限怎麼算（Llama 3 70B、2 張 H200）</figcaption><pre><code class="lang-text">權重      705 億個參數 × 2 byte（BF16 格式）= 141 GB
@@ -763,7 +763,7 @@ decode    batch 1：每一輪讀 141 GB，9.6 TB ÷ 141 GB ≈ 68 輪，每秒 �
 
 KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約 43 萬個 token
 放滿時    每一輪讀 ≈ 整塊記憶體 282 GB，282 GB ÷ 9.6 TB ≈ 29 毫秒</code></pre></figure>
-<p><b>Batching 攤掉權重，攤不掉 KV cache。</b>這裡的 batching 是 serving 系統把同時在跑的很多 request 排成一批、一起 decode，和上一節打折的 Batch API 是兩件事。權重讀一次，batch 裡每個 request 都拿它算出自己的下一個 token，權重的成本就攤給整個 batch。但每個 request 還要讀自己的 KV cache。KV cache 就是 3.1 說的「每個 token 算出的一組中間結果」，兩組向量，叫 K 和 V；新的 token 要回頭讀前文全部的 K、V，才算得出下一個 token，這一步叫 attention。Prefix cache 存的也是它。KV cache 只服務自己的 request，batch 再大也攤不掉。看下圖：</p>
+<p><b>Batching 攤掉權重，攤不掉 KV cache。</b>這裡的 batching 是 serving 系統把同時在跑的很多 request 排成一批、一起 decode，和上一節打折的 Batch API 是兩件事。權重讀一次，batch 裡每個 request 都拿它算出自己的下一個 token，權重的成本就攤給整個 batch。但每個 request 還要讀自己的 KV cache。KV cache 就是 3.1 說的「每個 token 算出的一組中間結果」，兩組向量，叫 K 和 V；新的 token 要回頭讀前文全部的 K、V，才算得出下一個 token，這一步叫 attention。Prefix cache 存的也是它。KV cache 只服務自己的 request，batch 再大也攤不掉。</p>
 <figure class="diagram" data-calc="decode">
               <div class="scroll">
                 <svg viewBox="0 0 720 176" role="img" aria-label="三根照比例的水平長條，每個 request 的 context 都是 8K token 時，每產生 1 個 output token 要從記憶體讀多少 byte。Batch 1 是 144 GB，幾乎全是青色的權重。Batch 8 是 20 GB，權重縮成八分之一。Batch 52，記憶體放滿，是 5.4 GB，青色的權重和深紅的 KV cache 各約一半。深紅的 KV cache 在三根長條上一樣長，2.7 GB，不隨 batch 變小。">
@@ -1028,10 +1028,10 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
             </figure>
 <p>所以 <strong>cache 已經過期、任務還要繼續時，壓和不壓先付的差不多</strong>，壓了之後每一步還少讀 160K，該壓。要避免的是把同一次 compaction 拖到過期之後才做，多付的全是那一次重讀。本文的推論：<strong>知道任務還很長、自己又要離開一陣子，就在離開前壓</strong>。</p>
 <p>數字是假設的，算法才是重點。本文的判斷：<strong>compaction 是長任務才回本的投資</strong>。剩下的步數比回本步數少，壓了就是虧，所以<strong>任務快結束時不要壓</strong>；換任務時用 Claude Code 的 <code>/clear</code>，它清掉整段對話，下一則訊息從空的 context 開始，不需要 model 寫摘要，所以<a href="https://code.claude.com/docs/en/costs" target="_blank" rel="noopener">官方文件</a>說它不花錢，代價是之前的內容全部不見；<strong>要繼續的長任務趁 cache 還沒過期時壓</strong>。</p>
-<p>還有一個趨勢值得注意。Cache read 的倍率從 0.1 降到 0.05 時，每步省的減半，一次付的卻只少一點（三筆裡只有讀 context 那一筆跟著變便宜），所以回本要走的步數變多。<b><span style="color: var(--key)">Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大</span></b>。</p>
+<p>Cache read 的倍率從 0.1 降到 0.05 時，每步省的減半，一次付的卻只少一點（三筆裡只有讀 context 那一筆跟著變便宜），所以回本要走的步數變多。<b><span style="color: var(--key)">Cache read 越便宜，縮小 context 的回報越小，保住 hit rate 的回報越大</span></b>。</p>
 <p>真實系統的選擇也不同：Hermes Agent 在 context 用到 50% 就壓，Uber 等到 400K。OpenClaw 在壓之前，先讓 agent 跑一個使用者看不到的 turn，把重要的事寫進有日期的筆記檔（例如 <code>memory/2026-11-06.md</code>，存在 context 外面）。<strong>摘要漏掉的細節，之後還能從檔案搜回來，不必重做</strong>，等於替 added cost 買保險。</p>
 <p id="i4-3"><span class="anchor" id="x1"></span><b>Net savings 怎麼量：同一組任務、每題跑多次、看分布。</b>不同的任務本身步數就差很多，兩個設定若各跑一組任務，差別可能來自題目，而不是設定；同一個任務也有隨機性，跑兩次 step 數可能差一倍。所以<strong>比較兩個設定要用同一組任務、每題跑多次、看分布</strong>，方法見 L7〈<a href="l07.html#i4">雜訊</a>〉與〈<a href="l07.html#t5">標準誤</a>〉。題目還要分兩份：一份拿來調參，另一份沒用過的拿來報成績。Anthropic 的客服 benchmark 是例子：調參題上做到 98.9% 的新設定，在 14 張沒拿來調參的工單（held-out）上只有 90.5%，仍高於原設定的 78.6%，成本約是原設定的 1/5。<strong>拿來調參的題目不能拿來報成績</strong>，這是 L7 講的 leakage。</p>
-<p id="i4-4"><b>優化迴圈：記錄、量、只改一件事、同一組任務重測。</b>上面的紀律可以收成四步：</p>
+<p id="i4-4"><b>優化迴圈：記錄、量、只改一件事、同一組任務重測。</b></p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 126" role="img" aria-label="四步的迴圈：跑並且記錄，記每個 call、token、等待；量，看錢和時間花在哪；只改一件事，例如 cache、routing、平行；同一組任務重測，看成功率、花費、p95 延遲。然後回到第一步。">
@@ -1275,7 +1275,6 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
             </figure>
 <p>三種時機都把一部分工作交給便宜的 model，所以都有同一個風險，一句話就是：<strong>便宜的 model 規劃錯一次，後面很多步都白走</strong>。<strong>所以規劃留給大 model，routing 只省執行的步驟</strong>。Uber 的做法指向同一邊：主 model 負責拆解與評估，subagent 預設用便宜的 model，<a href="https://www.uber.com/blog/efficient-software-factory/" target="_blank" rel="noopener">作者說</a>這個預設是他們影響最大的槓桿，但沒有單獨列出它省了多少（一家公司的經驗，不是對照實驗）。該不該換，用第 1 章的 c ÷ p 在自己的任務上算：換成便宜的 model，c 少了多少、p 掉了多少。</p>
 <p id="i6-2"><b>換 model 時機, 選在 context 還小的時候。</b>Cache 綁 model，每個 model 各有一份；換 model 時，整段 context 要照新 model 的 cache write 單價重算。換回原 model 時，原來那份 cache 若還沒過期（5 分鐘內），只要寫入換走之後新增的部分；若已過期，又要全部重算。下表代入 2026-11-03 的<a class="tm" href="#t2">單價</a>。表裡的「全部重算」都照 cache write 收：Opus 5.5 是 $5 / M；Haiku 5.5 的單價依 prompt 長度分兩級，超過 100K 是 $0.625 / M，100K 以內是 $0.125 / M。</p>
-<p>表的情境如下：</p>
 <ul>
   <li>對話已經累積到 200K，一直用 Opus 5.5，所以這 200K 都在 Opus 的 cache 裡。</li>
   <li>每一列只算「下一步」這一次 request 的 input 花費。</li>
@@ -1357,7 +1356,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
               </table></div>
 <p>現況裡失敗就佔了三分之二的花費，所以<strong>把失敗早點停，比把成功的任務再省 20% 有效得多</strong>。第三列假設上限只切掉本來就會失敗的 run；訂太低會切到會成功的任務，反而把成功率壓下去，<strong>所以數字要從 trace 訂</strong>。</p>
 <p id="i7-2"><b>Price, model calls, time, retry: </b>先把成功任務依花費排序，取第 95 百分位的值，也就是 p95：95% 的成功任務花得比它少。上限訂在成功任務 p95 的 2 倍，留一點餘裕給難一點的任務，再多就是失控。換 model 或每個 sprint 重算一次。</p>
-<p data-num-own>為什麼是 2 倍：這是經驗值，背後的假設是成功任務的花費呈右偏分布（long tail）：大部分很便宜，少數很貴。這種分布常用 log-normal 來描述：花費取對數之後是常態分布，所以「翻倍」在對數刻度上是固定的一格。它的離散程度叫 σ（sigma），就是取對數之後的標準差。σ 不好直接想像，換成「p95 是中位數的幾倍」就好懂：σ = 0.5 時約 2.3 倍，σ = 1 時約 5.2 倍，σ = 2 時約 27 倍。看下圖：橫軸每一格花費翻倍，上限 2 × p95 就在 p95 右邊一格。σ = 1 時，這一格就從 p95 推到 p99，只有 1% 的成功任務會被誤殺。上面那些會失敗的 run 不一樣：它們走不到終點，會一直花到上限才停，所以超過 2 × p95 還在跑的 run，多半已經卡住了。</p>
+<p data-num-own>為什麼是 2 倍：這是經驗值，背後的假設是成功任務的花費呈右偏分布（long tail）：大部分很便宜，少數很貴。這種分布常用 log-normal 來描述：花費取對數之後是常態分布，所以「翻倍」在對數刻度上是固定的一格。它的離散程度叫 σ（sigma），就是取對數之後的標準差。σ 不好直接想像，換成「p95 是中位數的幾倍」就好懂：σ = 0.5 時約 2.3 倍，σ = 1 時約 5.2 倍，σ = 2 時約 27 倍。橫軸每一格花費翻倍，上限 2 × p95 就在 p95 右邊一格。σ = 1 時，這一格就從 p95 推到 p99，只有 1% 的成功任務會被誤殺。上面那些會失敗的 run 不一樣：它們走不到終點，會一直花到上限才停，所以超過 2 × p95 還在跑的 run，多半已經卡住了。</p>
 <figure class="diagram" data-calc="tail">
               <div class="scroll">
                 <svg viewBox="0 0 720 296" role="img" aria-label="成功任務花費的分布，離散程度 σ = 1.0，p95 是中位數的 5.2 倍。橫軸是對數刻度，每一格花費翻倍。大部分任務擠在左邊，右邊拖一條長尾。p95 是虛線，上限 2 × p95 是紅線，就在 p95 右邊一格。上限內有 99.0% 的成功任務；超過上限的紅色尾巴是 1.0%，這些會被誤殺。">
@@ -1629,7 +1628,7 @@ $ claude -p "跑測試並修好失敗的那一個"
 <details class="gloss" id="n-papers">
                 <summary><span class="gloss-k">查閱</span><span class="gloss-t">這堂列的論文：依省什麼分組</span></summary>
                 <div class="gloss-body prose">
-                  <p>進階內容，自行略讀。右欄每篇寫它的做法；本文沒有逐篇重讀，只有一部分附數字。課程另有一份按「省什麼成本、引入什麼成本」分類的筆記，連結在第 3 段〈<a href="#wrap">原文出處</a>〉開頭。</p>
+                  <p>右欄每篇寫它的做法；本文沒有逐篇重讀，只有一部分附數字。課程另有一份按「省什麼成本、引入什麼成本」分類的筆記，連結在第 3 段〈<a href="#wrap">原文出處</a>〉開頭。</p>
                   <div class="table-wrap"><table>
                     <thead><tr><th>省什麼</th><th>論文與做法</th></tr></thead>
                     <tbody>

@@ -224,7 +224,7 @@ CREATE TABLE messages (
             <h3><span class="idea-no">2</span>Memory notes：查得到的不記，要記就帶上時間和來源</h3>
             <div class="prose">
               <p>第 1 章的四層裡，transcripts 往上一層是 memory notes：agent 在 session 裡自己寫下的筆記，一條講一件事。Transcripts 什麼都留，不必判斷；到了這一層，才第一次要做決定：這件事要不要寫成筆記，寫的時候要多帶哪些欄位。上面兩層的整理和檢索平常都從筆記出發，不會每次回頭讀 transcripts。所以<strong>筆記寫錯了、少了欄位，錯會一路帶到上面</strong>；要等有人回頭拿 transcripts 來對（第 5 章），才修得了。本章前四節講要不要寫，後兩節講寫的時候要帶上時間和來源。</p>
-              <p id="i2-1"><span class="anchor" id="x1"></span><b>兩種錯的代價不對稱：</b>一種是該記的沒記，另一種是第 1 章說的記錯（記下時就錯，或後來過期）。下圖比這兩種各要付什麼。</p>
+              <p id="i2-1"><span class="anchor" id="x1"></span><b>兩種錯的代價不對稱：</b>一種是該記的沒記，另一種是第 1 章說的記錯（記下時就錯，或後來過期）。</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 232" role="img" aria-label="兩條路。該記沒記：需要 X，記憶裡沒有，再讀一次或問一次，多花幾步繼續做，看得到。記錯或過期：需要 X，記憶說 X 是 3，照做而且沒有人報錯，改錯地方，下個 session 又讀到同一條，再錯一次。">
@@ -352,7 +352,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </div>
               </details>
               <p>本文的判斷：因為上面的不對稱，<strong>預設往右邊靠，也就是少記一點、寫入的當下就先挑</strong>（不是只照規則寫，下一段說明），再量漏記了多少該記的事（recall），決定要不要往左移。靠右的起點可以是這樣兩條：<strong>使用者要求的一定寫，再加一條規則抓「使用者糾正 agent」</strong>。這兩條規定的是「至少要記什麼」：遇到這兩種情況一定寫，其他的事值不值得記，仍然交給 model 判斷。它們沒有規定「只准記什麼」，也就是沒有禁止 model 記別的；「至少要記什麼」和「只准記什麼」這兩種規定的差別，下一段有量測。</p>
-              <p id="i2-4"><b>往右靠，用「說明用途」來做，不要把條件寫死。</b>「預設往右邊靠」是少記一點，在寫入的當下就先挑，不像光譜左邊先全部留著再挑。挑有兩種做法，管的都是「記什麼」，差在誰來挑。一種是作者事先在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶做什麼用，值不值得記讓 model 看著當下的事情判斷，下面叫它「說明用途」。上一段「至少要記什麼」的規則可以和它並用：「抓使用者糾正」只保證這種情況一定記，其他事仍由 model 判斷，所以不算寫死；寫死是把「值不值得記」整個換成一條規則，規則以外的一律不記。對到上面的光譜圖，寫死條件接近右邊的「確定性規則」，「說明用途」則是讓正在寫入的 model 當場判斷，光譜圖沒有單獨列這一點。「說明用途」的 prompt 可以只有一句，例如「這個資料夾留給下一次的你：記下會讓你下次做得更好的事」（本文的例子）。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉建議的也是這樣：<strong>告訴 model 記憶做什麼用，哪些事值得記讓它自己判斷</strong>。文章用一個叫 CL-Bench 的 benchmark 量了寫死條件的代價：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。一組不加任何條件，prompt 只說有一個記憶資料夾可以用，連用途都沒寫，比「說明用途」還少一句。另一組再加上「只記失敗」。量測裡沒有「說明用途」這一組，但<strong>連用途都沒寫的那一組已經贏過寫死條件</strong>，寫上用途，只是多給 model 一個判斷的依據（本文的推論）。下面是文章的原圖。圖上的數字都繞著記憶的效益（圖上叫 gain from memory），也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
+              <p id="i2-4"><b>往右靠，用「說明用途」來做，不要把條件寫死。</b>挑有兩種做法，管的都是「記什麼」，差在誰來挑。一種是作者事先在 prompt 裡把條件寫死，例如「只記失敗」，這就是上一段的「只准記什麼」。另一種是只告訴 model 這份記憶做什麼用，值不值得記讓 model 看著當下的事情判斷，下面叫它「說明用途」。上一段「至少要記什麼」的規則可以和它並用：「抓使用者糾正」只保證這種情況一定記，其他事仍由 model 判斷，所以不算寫死；寫死是把「值不值得記」整個換成一條規則，規則以外的一律不記。對到上面的光譜圖，寫死條件接近右邊的「確定性規則」，「說明用途」則是讓正在寫入的 model 當場判斷，光譜圖沒有單獨列這一點。「說明用途」的 prompt 可以只有一句，例如「這個資料夾留給下一次的你：記下會讓你下次做得更好的事」（本文的例子）。Anthropic 在 2026-11 的研究文〈<a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">The components of agent memory</a>〉建議的也是這樣：<strong>告訴 model 記憶做什麼用，哪些事值得記讓它自己判斷</strong>。文章用一個叫 CL-Bench 的 benchmark 量了寫死條件的代價：agent 查資料庫回答一連串問題，每答完一題會看到正確答案，這時它可以把學到的事寫進記憶，下一題只帶著這份記憶。一組不加任何條件，prompt 只說有一個記憶資料夾可以用，連用途都沒寫，比「說明用途」還少一句。另一組再加上「只記失敗」。量測裡沒有「說明用途」這一組，但<strong>連用途都沒寫的那一組已經贏過寫死條件</strong>，寫上用途，只是多給 model 一個判斷的依據（本文的推論）。下面是文章的原圖。圖上的數字都繞著記憶的效益（圖上叫 gain from memory），也就是有記憶比沒有記憶多拿幾分（分數 0 到 1）。</p>
               <figure class="diagram shot">
               <div class="scroll">
                 <img src="img/l06b-clbench-rule.webp" width="1600" height="922" loading="lazy" alt="文章的原圖，兩張長條圖。右半：加了「只記失敗」之後記憶的效益變了多少，長條從 0 往下畫。Opus 5 少 0.234（3 次），Opus 4.7 少 0.150（3 次），Sonnet 4.6 少 0.020（1 次）。左半：Sonnet 4.6 在 CL-Bench 的分數。沒有記憶（baseline）0.330，有記憶 0.364，有記憶再加上改過的 prompt（refined instruction）0.641，各跑 3 次，0.641 那一條的誤差線最長。兩條橫線是對照：Opus 5 有記憶 0.828，Opus 4.7 有記憶 0.700。">
@@ -376,7 +376,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
               </details>
               <p>為什麼寫死一條條件，傷害會這麼大？寫死的條件是作者事先猜「哪些事以後有用」，猜的時候還沒看到題目，model 寫筆記時卻正看著題目和答案，通常比作者猜得準。條件一寫死，model 能記的就只剩作者猜中的那一部分，所以<strong>條件變成上限，擋掉的是 model 本來會記、而且有用的事</strong>。文章只報了結果，沒有說機制，這是本文的解讀。文章只說，對 Opus 5、Opus 4.7 這類比 Sonnet 4.6 強的 model，讓它自己判斷值不值得記，比事先寫死條件有效。被擋掉的是什麼，可以對照文章對 Opus 5 筆記的描述：多數條目是一條它自己試出來的規則，附上它怎麼知道這條成立；另外有之前題目的答案，和它一路發現的陷阱。「只記失敗」把記憶限縮成答錯那幾題的教訓；model 在答對的題裡試出來、而且確認成立的查詢規則，就沒有地方放了（本文的解讀）。</p>
               <p>比較舊、比較弱的 model 是另一種問題：它不太用記憶。Sonnet 4.6 不到一半的題目會先讀記憶，寫下的猜測也不去測試，所以有記憶只比沒有記憶多 0.034 分。Prompt 加上「回答前先讀記憶」和「把猜測拿去測試」兩句之後，記憶的效益從 0.034 升到 0.311，和 Opus 5、Opus 4.7 不加這兩句時的效益（0.264、0.317）差不多。0.311 這個數字要打折看：加了這兩句的那一組跑了 3 次，三次的分數差很多，0.311 是用它們的平均算的。而且這一組有記憶的平均分數是 0.641，仍然低於 Opus 4.7 有記憶時的 0.700。這兩句教的是讀記憶、驗證猜測的步驟，沒有限制它記什麼，所以和上面「不要把條件寫死」不衝突，和「只記失敗」也不是同一種規則：限制記什麼，會擋掉有用的筆記；教它讀和驗證，是補上它自己不會做的步驟。所以記憶相關的 prompt 要跟著 model 調：<strong>model 弱，就把讀記憶、驗證猜測的步驟寫出來；model 強，寫用途就夠</strong>，也不要限制它記什麼。這兩句文章只在 Sonnet 4.6 上試過，沒有說對 Opus 5 有沒有幫助，只說這類引導對比較舊的 model 幫助最大，所以<strong>換 model 的時候要重新量一次</strong>（第 5 章的測試集）。</p>
-              <p>最後是規則怎麼寫。規則分兩類，分法是錯了能不能補（這個分法是本文的判斷）。交給 model 判斷「值不值得記」，結果會有偏差：該記的漏了，或不必記的記多了。這兩種都還補得回來：漏記的，下次遇到同樣的情況還能再記；記多的，第 5 章的〈Session 之間的整理〉會在背景另開一個 session，把 store 對回原始紀錄，順便合併、刪掉用不到的筆記。所以<strong>「值不值得記」不要寫死，交給 model</strong>。<strong>後果收不回來的邊界則要寫死</strong>：別人的資料洩漏了、網頁裡的指令被照做了、使用者要求刪掉的資料又被讀出來用了，事後都補不回來。這類邊界有三條：外部內容不自動寫入（第 6 章）、別人的記憶查不到（第 4 章）、使用者要求刪除就刪（第 5 章）。它們由程式擋，不交給 model 判斷，例如寫入記憶的那段程式碼直接拒絕來源是網頁的內容，model 怎麼判斷都寫不進去。</p>
+              <p>規則分兩類，分法是錯了能不能補（這個分法是本文的判斷）。交給 model 判斷「值不值得記」，結果會有偏差：該記的漏了，或不必記的記多了。這兩種都還補得回來：漏記的，下次遇到同樣的情況還能再記；記多的，第 5 章的〈Session 之間的整理〉會在背景另開一個 session，把 store 對回原始紀錄，順便合併、刪掉用不到的筆記。所以<strong>「值不值得記」不要寫死，交給 model</strong>。<strong>後果收不回來的邊界則要寫死</strong>：別人的資料洩漏了、網頁裡的指令被照做了、使用者要求刪掉的資料又被讀出來用了，事後都補不回來。這類邊界有三條：外部內容不自動寫入（第 6 章）、別人的記憶查不到（第 4 章）、使用者要求刪除就刪（第 5 章）。它們由程式擋，不交給 model 判斷，例如寫入記憶的那段程式碼直接拒絕來源是網頁的內容，model 怎麼判斷都寫不進去。</p>
               <p>決定要記之後，接著是這一條要帶哪些欄位。第 1 章說過，寫入時沒存的，原始紀錄刪了之後就補不回來。不管存成四種格式的哪一種，下面兩個欄位都要留。</p>
               <p id="i2-5"><b>Valid time：新事實不刪舊的。</b>Valid time 是一件事實成立的那段時間。系統如果只會新增，6 月之後問「用什麼」會拿到兩個答案；如果只會覆蓋，問「以前用什麼」就答不出來。做法是<strong>每條記憶帶兩個時間欄位</strong>，<code>valid_from</code>（從什麼時候開始成立）和 <code>valid_to</code>（到什麼時候為止）：</p>
               <figure class="diagram">
@@ -622,8 +622,8 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                   <p>對頁面的那一輪，文章的例子是找到 6 頁裡有 9 個連結指向一個不存在的頁面，把它們改指到講同一份文件、已經存在的另一頁。</p>
                 </div>
               </details>
-              <p>上面四節講的是筆記放在哪裡、怎麼找，筆記的內容沒有變。這一層的另一種東西，是從好幾條筆記另外寫出來的新內容。它的風險不一樣。</p>
-              <p id="i3-5"><b>Reflection 是風險最高的寫入，因為寫的人是 model 自己。</b>前兩章的例子，存的都是使用者說過的一句話。Reflection 不一樣。它指 model 把好幾筆紀錄歸納成一條新的記憶：model 讀好幾筆原始事件，自己寫出一條新的記憶，講的是這幾筆合起來看得出什麼。它在第 2 章的來源圖裡屬於 inferred 那一級。<strong>這句話沒有任何人說過，所以寫錯了也沒有原話可以對</strong>。來源圖裡信任最低的是 external（網頁、README），但第 2 章的規則不讓 external 的內容自動寫進 store；reflection 寫出來的每一條卻都會進去。例如使用者在四段對話裡先後問了 vLLM、SGLang、TRT-LLM（三個都是 LLM serving engine）和 LLM scheduling（serving 時請求怎麼排），四個都屬於 LLM inference，也就是讓 model 產生回答的這一段系統。Reflection 這一步寫出：</p>
+              <p>上面四節講的是筆記放在哪裡、怎麼找，筆記的內容沒有變。這一層的另一種東西，是從好幾條筆記另外寫出來的新內容。</p>
+              <p id="i3-5"><b>Reflection 是風險最高的寫入，因為寫的人是 model 自己。</b>前兩章的例子，存的都是使用者說過的一句話。它指 model 把好幾筆紀錄歸納成一條新的記憶：model 讀好幾筆原始事件，自己寫出一條新的記憶，講的是這幾筆合起來看得出什麼。它在第 2 章的來源圖裡屬於 inferred 那一級。<strong>這句話沒有任何人說過，所以寫錯了也沒有原話可以對</strong>。來源圖裡信任最低的是 external（網頁、README），但第 2 章的規則不讓 external 的內容自動寫進 store；reflection 寫出來的每一條卻都會進去。例如使用者在四段對話裡先後問了 vLLM、SGLang、TRT-LLM（三個都是 LLM serving engine）和 LLM scheduling（serving 時請求怎麼排），四個都屬於 LLM inference，也就是讓 model 產生回答的這一段系統。Reflection 這一步寫出：</p>
               <figure class="file"><figcaption>Reflection 寫出來的一條記憶（欄位是本文的整理）</figcaption><pre><code class="lang-json">{
   "kind":       "hypothesis",                               // 這一條是推測，不是事實：讀的人要知道
   "text":       "Frequent interest in LLM inference systems",
@@ -751,7 +751,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
                 </div>
               </details>
               <p>相似度量的是「意思像不像」。<strong>哪一條是現在的、是誰的、誰說的，都不在文字的意思裡</strong>，所以要在寫入時存成欄位（第 2 章）。</p>
-              <p id="i4-1"><b>在 RAG 上多加四個訊號。</b>RAG 的 semantic search 只用一個訊號排序：semantic match，就是上面的相似度。訊號（ranking signal）是搜尋系統的用詞，指決定一筆結果要不要取回、排第幾的一項依據。記憶要多加四個：<strong>scope（這條記憶是誰的）、validity（現在還成立嗎）、importance（漏掉它的代價多大）、provenance（誰說的）</strong>，一共五個。為什麼記憶不能省這四個：一般 RAG 的文件是人寫的，改版時通常覆蓋舊版，同一件事在索引裡只有一份。記憶是 agent 自己寫的，而且只往後加，所以<strong>同一件事會有新舊兩條，裡面還混著 agent 自己的推測</strong>（本文的判斷）。流程也是 RAG 常見的那一條：<strong>先用 metadata 過濾，再 vector search，再 rerank</strong>（重新排序）。下圖是五個訊號各用在哪一步。Importance 很高的規則另走一條路：不經過檢索，直接常駐：</p>
+              <p id="i4-1"><b>在 RAG 上多加四個訊號。</b>RAG 的 semantic search 只用一個訊號排序：semantic match，就是上面的相似度。訊號（ranking signal）是搜尋系統的用詞，指決定一筆結果要不要取回、排第幾的一項依據。記憶要多加四個：<strong>scope（這條記憶是誰的）、validity（現在還成立嗎）、importance（漏掉它的代價多大）、provenance（誰說的）</strong>，一共五個。為什麼記憶不能省這四個：一般 RAG 的文件是人寫的，改版時通常覆蓋舊版，同一件事在索引裡只有一份。記憶是 agent 自己寫的，而且只往後加，所以<strong>同一件事會有新舊兩條，裡面還混著 agent 自己的推測</strong>（本文的判斷）。流程也是 RAG 常見的那一條：<strong>先用 metadata 過濾，再 vector search，再 rerank</strong>（重新排序）。Importance 很高的規則另走一條路：不經過檢索，直接常駐：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 226" role="img" aria-label="檢索 pipeline，由左到右：query；scope 過濾；validity 過濾；vector search 依語意排序；importance 與 provenance 調整分數；top-k；prompt。前兩格是硬過濾，不合的記憶直接丟掉，相似度再高也不會進 top-k。上方一條線繞過整條 pipeline，直接進 prompt，標著常駐規則：漏掉代價很高的規則不走檢索。">
@@ -933,7 +933,7 @@ store:     markdown files under memory/, one topic per file                # 第
 retrieve:  load the index every session; read a topic file only on demand  # 第 3、4 章
 reflect:   merge records about the same key every 20 writes; keep evidence # 第 3 章
 forget:    mark superseded facts invalid; delete only on user request      # 第 5 章</code></pre></figure>
-              <p>前四站在第 2 到 4 章講過。下面講後兩站，最後講怎麼量整套記憶。先分清楚兩件容易混的事。<strong>Reflect 和 Forget 是操作</strong>：對 store 裡已有的內容做什麼。下一節的 <strong>dreaming 是時機</strong>：這些操作在什麼時候做。這是兩個軸，所以下面兩節的內容會重疊：dreaming 做的三件事，每一件都是 Reflect 或 Forget 裡的一個操作，只是搬到 session 之間、在背景做。資料庫的 compaction 和 GC 也是這樣：合併和回收是操作，在背景跑是時機（本文的類比）。對照如下：</p>
+              <p>前四站在第 2 到 4 章講過。下面講後兩站，最後講怎麼量整套記憶。先分清楚兩件容易混的事。<strong>Reflect 和 Forget 是操作</strong>：對 store 裡已有的內容做什麼。下一節的 <strong>dreaming 是時機</strong>：這些操作在什麼時候做。這是兩個軸，所以下面兩節的內容會重疊：dreaming 做的三件事，每一件都是 Reflect 或 Forget 裡的一個操作，只是搬到 session 之間、在背景做。資料庫的 compaction 和 GC 也是這樣：合併和回收是操作，在背景跑是時機（本文的類比）。</p>
               <div class="table-wrap"><table>
                 <thead><tr><th>Dreaming 做的事（定義在下一節）</th><th>它是哪一站的操作</th><th>在 session 裡也做得到嗎</th></tr></thead>
                 <tbody>

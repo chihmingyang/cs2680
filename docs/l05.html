@@ -73,7 +73,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">你想省時間，讓一個 agent（會自己讀檔、跑指令、改 code 的 AI 助手）寫前端，另一個同時寫後端。兩邊各自做完，<strong>各自的測試都通過，接起來卻不能跑</strong>：前端送的欄位叫 <code>userId</code>，後端等的是 <code>user_id</code>。兩個 agent 都沒有做錯，只是沒有人把這個決定告訴對方。</p>
-    <p class="thesis">每個 agent 只看得到自己讀過的東西：你給它的任務說明，和它自己讀的檔案、跑的指令的結果。它看不到另一個 agent 讀過什麼；<strong>要讓對方知道一件事，只能寫成文字傳過去</strong>。拆開的好處和代價都從這裡來。好處是每個 agent 一次能讀的文字有上限，分開做，各自只需要裝自己那一半的資料。代價是該讓對方知道的事，沒寫出來，對方就不知道。這堂回答的問題是：<strong>什麼時候值得拆成幾個 agent</strong>，拆了之後風險在哪裡。下面三條是這堂的判斷。</p>
+    <p class="thesis">每個 agent 只看得到自己讀過的東西：你給它的任務說明，和它自己讀的檔案、跑的指令的結果。它看不到另一個 agent 讀過什麼；<strong>要讓對方知道一件事，只能寫成文字傳過去</strong>。拆開的好處和代價都從這裡來。好處是每個 agent 一次能讀的文字有上限，分開做，各自只需要裝自己那一半的資料。代價是該讓對方知道的事，沒寫出來，對方就不知道。這堂回答的問題是：<strong>什麼時候值得拆成幾個 agent</strong>，拆了之後風險在哪裡。</p>
     <ul class="core">
       <li><span><b>多數任務不該拆。</b><strong>拆開只在幾件子任務互不相干的時候有好處</strong>。有一篇實驗拿同樣的題目，比較單一 agent 和幾個 agent 分工的得分：子任務互不相干的題目，分工的得分高約八成；<strong>每一步都要用上一步結果的題目，分工的得分反而低四到七成</strong>。例子裡前端和後端要用同一套欄位名，並不是互不相干；硬拆，就得把這類決定一條一條寫給對方（第 2 章）。</span></li>
       <li><span><b>要拆的話：讀可以同時做，寫盡量留給一個 agent。</b>只查資料、讀 code 的 agent 可以同時跑，各自的發現只會累積。改檔案不一樣：<strong>每次改動都帶著命名、風格這類沒說出口的決定</strong>，例子裡的 <code>userId</code> 和 <code>user_id</code> 就是。兩個 agent 各寫一半，就會各選一套（第 3 章）。</span></li>
@@ -209,7 +209,7 @@
               </div>
               <figcaption>本文的整理，把這一章和第 3、5 章的判斷畫成一條路（第 4 章的派工是決定拆之後的事，不在圖裡）。「回報走檔案」是第 5 章的做法：worker（接工作的 agent，上表叫它 subagent；第 4 章起都用 worker）把完整結果寫進檔案，訊息只帶路徑，主 agent 的 context 才不會被塞滿。圖裡沒畫的是權限隔離，它是另一個獨立的理由：網頁、別人的 issue 這類不可信內容裡可能夾著指令，交給一個沒有 shell、改不了檔案的 agent 去讀，指令就算被照做也做不了壞事，所以就算一個 agent 放得下，也值得拆出去（第 8 章）。</figcaption>
             </figure>
-              <p>這條路的第一格最重要。第一條設計原則就是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。如果任務不需要平行，也不需要把權限隔開（第 1 章表 1 那兩件一個 agent 做不到的事），一個 agent 又做得完，拆開只會付第 1 章的三種代價，換不到東西；Anthropic 也提醒，多數 coding 任務能真正平行的部分比研究少。實務上可以問一句：<strong>少了這個 agent，品質掉多少？</strong>第一次決定要不要拆時，就是拿 multi-agent 和單一 agent 比；掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以<strong>評估要先於架構</strong>，這是 L7 的主題。</p>
+              <p>第一條設計原則就是先問「真的需要 multi-agent 嗎」：多數情況單一 agent 就夠，多加的 agent 常常只帶來 overhead 和複雜度。如果任務不需要平行，也不需要把權限隔開（第 1 章表 1 那兩件一個 agent 做不到的事），一個 agent 又做得完，拆開只會付第 1 章的三種代價，換不到東西；Anthropic 也提醒，多數 coding 任務能真正平行的部分比研究少。實務上可以問一句：<strong>少了這個 agent，品質掉多少？</strong>第一次決定要不要拆時，就是拿 multi-agent 和單一 agent 比；掉得不多，就先不要加。要回答這句話，就得先有單一 agent 的基準線，所以<strong>評估要先於架構</strong>，這是 L7 的主題。</p>
             </div>
           </div>
 
@@ -313,7 +313,7 @@
           <div class="idea" id="i4">
             <h3><span class="idea-no">4</span>派工：worker 的全部世界就是那段 prompt</h3>
             <div class="prose">
-              <p>派工的那個 agent，這一章叫 supervisor（就是第 2 章的主 agent、orchestrator）；接工作的叫 worker。Worker 的 context 是新的，看不到 supervisor 的對話、讀過的檔案和做過的決定。所以<strong>規格沒寫的事就不存在</strong>。一句「Research storage systems」會讓 worker 自己猜年份、格式和範圍。好的規格長這樣：</p>
+              <p>派工的那個 agent，這一章叫 supervisor（就是第 2 章的主 agent、orchestrator）；接工作的叫 worker。Worker 的 context 是新的，看不到 supervisor 的對話、讀過的檔案和做過的決定。所以<strong>規格沒寫的事就不存在</strong>。一句「Research storage systems」會讓 worker 自己猜年份、格式和範圍。</p>
               <figure class="file"><figcaption>subtask.yaml（簡化版）</figcaption><pre><code>objective: Find storage-systems papers published in 2026  # 目標，含範圍
 inputs: topic list from the planner (attached)            # 需要知道的事實
 boundaries: skip database query optimization papers       # 不要做什麼
@@ -335,7 +335,7 @@ depends_on: none                                          # 要等誰</code></pr
                   <tr><td><b>Straggler</b><br><small>拖後腿的那一份</small></td><td>六份 20 秒做完，一份跑了 4 分鐘，大家都在等它</td><td><code>budget</code>：<strong>設上限，時間到就先用其他份的結果</strong></td></tr>
                 </tbody>
               </table></div>
-              <p>前四種在派工時就能擋住；後兩種要到執行時才看得到，所以除了欄位，還要靠合併時的通讀和 timeout。六種的樣子畫在下圖：</p>
+              <p>前四種在派工時就能擋住；後兩種要到執行時才看得到，所以除了欄位，還要靠合併時的通讀和 timeout。</p>
               <figure class="diagram">
 <div class="scroll">
 <svg viewBox="0 0 720 372" role="img" aria-label="六種拆錯。01 重疊：Agent A 和 Agent B 的範圍有一段重疊，兩個都摘要同一篇論文。02 缺口：2020–23 和 2025–26 之間沒有人做 2024。03 隱藏的相依：Pricing 要先有 Sizing，執行時才發現。04 無法合併：一個回散文，一個回 JSON，合併失敗。05 失去全局 context：三節各自都對，整份報告自相矛盾。06 Straggler：兩條短橫條是 20 秒和 25 秒，一條長橫條是 4 分鐘。">
@@ -404,11 +404,11 @@ depends_on: none                                          # 要等誰</code></pr
               <p id="i4-1"><b>拆多細。</b><strong>拆成越多份，不一定越快</strong>。把工作拆成 n 份交給 n 個 worker，總時間由四段組成，其中只有一段會隨 n 變短：</p>
               <ul>
                 <li><b>規劃（planning）。</b>Supervisor 讀任務、寫規格。這段和 n 關係不大，這裡算固定 10 秒。</li>
-                <li><b>最慢那一份要跑多久（critical path）。</b>n 份同時開工，要等最後一份做完才能往下走。工作平均分成 n 份，這段就縮成原來的 1/n。四段裡只有它會變短。</li>
+                <li><b>最慢那一份要跑多久（critical path）。</b>n 份同時開工，要等最後一份做完才能往下走。工作平均分成 n 份，這段就縮成原來的 1/n。</li>
                 <li><b>派工和回報（communication）。</b>每多一份，supervisor 就要多送一次規格、多讀一份回報。假設它一份一份處理，這段時間會隨 n 一直累加。</li>
                 <li><b>合併（merge）。</b>把結果合起來、去重、通讀，這裡算固定 10 秒。</li>
               </ul>
-              <p>用一個例子算：20 個 lookup，每個 5 秒，一個 agent 依序做完是 100 秒。拆成 n 份後，最慢那份是 100 ÷ n 秒；每份的派工加回報算 8 秒，n 份就是 8 × n 秒。四段加起來：</p>
+              <p>用一個例子算：20 個 lookup，每個 5 秒，一個 agent 依序做完是 100 秒。拆成 n 份後，最慢那份是 100 ÷ n 秒；每份的派工加回報算 8 秒，n 份就是 8 × n 秒。</p>
               <figure class="file"><figcaption>總時間（秒）</figcaption><pre><code class="lang-text">總時間 = 規劃 10 + 最慢那份 (100 ÷ n) + 派工與回報 (8 × n) + 合併 10</code></pre></figure>
                             <figure class="diagram">
               <div class="scroll">
@@ -683,7 +683,7 @@ $ export CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=5   # 寬度：同時最多 5 個<
           <div class="idea" id="i7">
             <h3><span class="idea-no">7</span>狀態與時間：每個 agent 的 context 都是一份會過期的副本</h3>
             <div class="prose">
-              <p>第 6 章談的是一則訊息送出去之後的事。這一章談多個 agent 共用狀態時的事。先換一個角度看 context：agent 讀進 context 的每一個事實，都是外面那份狀態的一份副本（replica）。<strong>讀完的那一刻，它就開始過期</strong>。分散式系統花了幾十年處理副本，那些結論在這裡都用得上。</p>
+              <p>第 6 章談的是一則訊息送出去之後的事。這一章談多個 agent 共用狀態時的事。先換一個角度看 context：agent 讀進 context 的每一個事實，都是外面那份狀態的一份副本（replica）。<strong>讀完的那一刻，它就開始過期</strong>。</p>
               <p id="i7-1"><b>Consistency：兩個 agent 同時改同一份東西。</b>共享的 task list 上，Agent A 和 Agent B 同時讀到 T4 沒人認領，各自寫上自己的名字，兩個人都去做 T4。這叫 lost update：後寫的蓋掉先寫的，雙方都不知道。解法是 conditional write，也叫 compare-and-swap：<strong>寫入時附上「我讀到的版本」，版本已經變了就拒絕，要求重讀</strong>。你天天在用的 git 就是這樣：</p>
               <figure class="file"><figcaption>terminal：git 拒絕 push，就是一次 conditional write 失敗</figcaption><pre><code>$ git push origin main
  ! [rejected]        main -> main (fetch first)      # 遠端版本已經變了，git 拒絕這次寫入

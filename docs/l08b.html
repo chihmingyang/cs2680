@@ -74,7 +74,7 @@
   <section class="tldr" aria-labelledby="tldr-h">
     <h2 class="label" id="tldr-h">導讀</h2>
     <p class="thesis">Anthropic 有一個替使用者在雲端跑 agent 的服務，叫 Managed Agents。它一開始把三樣東西放在同一個 container 裡：這段對話的紀錄（session）、包在 model 外面替它執行動作的程式（harness）、執行 model 寫的程式碼的地方（sandbox）。他們碰到三個問題。Container 一掛，session 就跟著沒了。出了問題，從外面只看得到它沒回應，<strong>分不出是 harness 有 bug 還是 container 死了</strong>，工程師要登進這個放著使用者資料的 container 才能除錯。使用者交給 agent 的登入憑證（credential）也在這個 container 裡：agent 讀到的網頁只要藏一段騙 model 的文字（這叫 prompt injection），<strong>model 在 sandbox 裡寫出來的程式碼就可能把憑證讀走</strong>。這三個問題，<strong>只跑一個 agent 也會碰到</strong>。</p>
-    <p class="thesis">這堂回答的問題是：<strong>跑 agent 的系統要拆成哪幾塊，塊和塊之間用哪一種邊界</strong>。例子裡的 session、harness、sandbox 就是三塊可以拆開的元件。<strong>邊界指的是兩塊之間怎麼互相呼叫</strong>；它決定能換掉哪個元件、能隔離什麼、什麼掛了還能續跑。下面三條是這堂的判斷。</p>
+    <p class="thesis">這堂回答的問題是：<strong>跑 agent 的系統要拆成哪幾塊，塊和塊之間用哪一種邊界</strong>。例子裡的 session、harness、sandbox 就是三塊可以拆開的元件。<strong>邊界指的是兩塊之間怎麼互相呼叫</strong>；它決定能換掉哪個元件、能隔離什麼、什麼掛了還能續跑。</p>
     <ul class="core">
       <li><span><b>邊界有三種：函式呼叫、介面、協定。</b>例子裡三樣東西在同一個 container 裡直接互相呼叫，這是函式呼叫：最簡單也最快，但一個壞了全部一起壞，也分不出是哪一個壞了。抽成介面，元件可以換，但還在同一個程式裡，沒有隔離。用協定拆成獨立的服務，才能各自掛掉、各自換機器、給好幾個 agent 共用，<strong>代價是服務之間多了呼叫和故障，一個 request 出錯要到好幾個服務找 log</strong>（第 1 章）。</span></li>
       <li><span><b>拆不拆先看失敗與安全，不先數 agent 有幾個。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，<strong>第一個回應反而來得更快</strong>（第 2 章）。</span></li>
@@ -217,7 +217,7 @@
               <figcaption>誰負責 sandbox？只有 microkernel 規定它交給獨立的服務。</figcaption>
             </figure>
 <p>Execution 服務如果還是很抽象，可以先玩<a href="l08-exec.html">互動導讀〈Execution 服務：誰替 agent 真正動手〉</a>：同一段 Python 在三種架構裡一步一步跑、故意讓它當掉或刪檔、看 sandbox 被回收，大約 15 分鐘。</p>
-<p id="i1-3"><b>架構的取捨：microkernel 放棄簡單與低開銷，換到隔離、共用、擴展。</b>能共用，是因為<strong>函式呼叫只在同一個 process 裡有效</strong>：好幾個 agent 要用同一套 tool 或 sandbox，它就得是獨立的服務。擴展指某個元件不夠用時，只加那個服務的機器。三種架構逐項比較：</p>
+<p id="i1-3"><b>架構的取捨：microkernel 放棄簡單與低開銷，換到隔離、共用、擴展。</b>能共用，是因為<strong>函式呼叫只在同一個 process 裡有效</strong>：好幾個 agent 要用同一套 tool 或 sandbox，它就得是獨立的服務。擴展指某個元件不夠用時，只加那個服務的機器。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>比較項目</th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
                 <tbody>
