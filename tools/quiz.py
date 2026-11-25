@@ -145,6 +145,12 @@ def check(path):
             errs.append(f'{u["id"]}：kind 要是 {"／".join(KINDS)}')
         if not u.get("q") or not u.get("key"):
             errs.append(f'{u["id"]}：缺題目或答案要點')
+        # 2026-11-25：小測的題幹也不指文章（「本文說」「照本文的取捨表」）。指了文章，題目問的是「文章哪裡寫過」，
+        # 不是判斷；有經驗的讀者不讀文章也要看得懂題目在問什麼。新題庫加 "unit_no_cite": true 才擋（QUIZ.md）。
+        if q.get("unit_no_cite"):
+            ucite = re.search(r"本文|照文章|這篇文章|取捨表", u.get("q", ""))
+            if ucite:
+                errs.append(f'{u["id"]}：題幹指了文章（「{ucite.group(0)}」），改成直接問判斷（QUIZ.md〈小測的題幹不指文章〉）')
         if u.get("kind") == "choice":
             cs = u.get("choices") or []
             if not 3 <= len(cs) <= 4:

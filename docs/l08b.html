@@ -41,7 +41,7 @@
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">Cost &amp; Latency</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec is-here"><a class="sn-row" href="l08b.html" aria-current="page"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">Harness 架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">邊界的種類：函式呼叫（monolithic）、介面（modular）、協定（microkernel）</a></li><li><a class="sn-sub2" href="#i1-2">執行一段 Python 的路徑：只有 microkernel 把 sandbox 交給獨立的服務</a></li><li><a class="sn-sub2" href="#i1-3">架構的取捨：microkernel 用簡單與低開銷，換隔離、共用、擴展</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">拆成獨立服務的理由</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Managed Agents 拆之前：container 掛了 session 就沒了、故障分不出來源、code 讀得到 credential</a></li><li><a class="sn-sub2" href="#i2-2">Managed Agents 拆之後：session 只追加、harness 不存狀態、sandbox 碰不到 credential</a></li><li><a class="sn-sub2" href="#i2-3">拆開後的 time to first token（TTFT）：反而變快，因為 sandbox 要用時才配</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">邊界的選法</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">三個問題：秘密要隔離嗎、狀態要活得比 process 久嗎、多個 agent 要共用嗎</a></li><li><a class="sn-sub2" href="#i3-2">跨服務的代價：故障模式與除錯，不是通訊開銷</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i4" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l08b.html" aria-current="page"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">Harness 架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">邊界的種類：函式呼叫（monolithic）、介面（modular）、協定（microkernel）</a></li><li><a class="sn-sub2" href="#i1-2">執行一段 Python 的路徑：只有 microkernel 規定 sandbox 交給獨立的服務</a></li><li><a class="sn-sub2" href="#i1-3">架構的取捨：microkernel 放棄簡單與低開銷，換到隔離、共用、擴展</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">拆成獨立服務的理由</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Managed Agents 拆之前：container 掛了 session 就沒了、故障分不出來源、code 讀得到 credential</a></li><li><a class="sn-sub2" href="#i2-2">Managed Agents 拆之後：session 只追加、harness 不存狀態、sandbox 碰不到 credential</a></li><li><a class="sn-sub2" href="#i2-3">拆開後的 time to first token（TTFT）：反而變快，因為 sandbox 要用時才配</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">邊界的選法</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">三個問題：秘密要隔離嗎、狀態要活得比 process 久嗎、多個 agent 要共用嗎</a></li><li><a class="sn-sub2" href="#i3-2">跨服務的代價：故障模式與除錯，不是通訊開銷</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i4" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
@@ -77,8 +77,8 @@
     <p class="thesis">這堂回答的問題是：<strong>跑 agent 的系統要拆成哪幾塊，塊和塊之間用哪一種邊界</strong>。例子裡的 session、harness、sandbox 就是三塊可以拆開的元件。<strong>邊界指的是兩塊之間怎麼互相呼叫</strong>；它決定能換掉哪個元件、能隔離什麼、什麼掛了還能續跑。下面三條是這堂的判斷。</p>
     <ul class="core">
       <li><span><b>邊界有三種：函式呼叫、介面、協定。</b>例子裡三樣東西在同一個 container 裡直接互相呼叫，這是函式呼叫：最簡單也最快，但一個壞了全部一起壞，也分不出是哪一個壞了。抽成介面，元件可以換，但還在同一個程式裡，沒有隔離。用協定拆成獨立的服務，才能各自掛掉、各自換機器、給好幾個 agent 共用，<strong>代價是服務之間多了呼叫和故障，一個 request 出錯要到好幾個服務找 log</strong>（第 1 章）。</span></li>
-      <li><span><b>拆不拆先看失敗與安全，不先數 agent 有幾個。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，<strong>第一個回應反而來得更快</strong>：以前每段對話都要先等 container 準備好，現在用不到 sandbox 的對話不必等（第 2 章）。</span></li>
-      <li><span><b>每一條邊界各問三個問題。</b>不可信的東西要和憑證這類秘密隔開嗎？狀態要活得比程式本身久嗎？多個 agent 要共用同一套 tool 和 sandbox 嗎？三題都答「否」，例如自己筆電上跑的小工具：不讀外部網頁也不碰秘密、對話斷了重開就好、只有這一個 agent 在用，<strong>函式呼叫就夠了</strong>（第 3 章）。</span></li>
+      <li><span><b>拆不拆先看失敗與安全，不先數 agent 有幾個。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，<strong>第一個回應反而來得更快</strong>（第 2 章）。</span></li>
+      <li><span><b>每一條邊界各問三個問題。</b>不可信的東西要和憑證這類秘密隔開嗎？狀態要活得比程式本身久嗎？多個 agent 要共用同一套 tool 和 sandbox 嗎？三題都答「否」，例如只在自己筆電上跑的小工具，<strong>函式呼叫就夠了</strong>（第 3 章）。</span></li>
     </ul>
     <p class="readhow">八個開源 harness 各自的設計重心，整理在最後的〈查閱〉一章，需要時再翻。這堂假設讀過 L2〈<a href="l02.html">How Claude Code Works</a>〉：harness 每一步做什麼，tool、hook、subagent、MCP 是什麼。</p>
   </section>
@@ -90,22 +90,23 @@
         <header class="part-head">
           <p class="kicker">核心觀念</p>
           <h2>Harness 的邊界放在哪裡</h2>
-          <p class="lede">三章：第 1 章是三種邊界，第 2 章是一個真實的拆法和它的理由，第 3 章是本文的判斷。八個 harness 的設計重心收在最後的〈查閱〉，需要時再查。</p>
+          <p class="lede">三章：第 1 章是三種邊界，第 2 章是一個真實的拆法和它的理由，第 3 章是本文的判斷。</p>
         </header>
 
         <div class="ideas">
           <div class="idea" id="i1">
             <h3><span class="idea-no">1</span>Harness 架構：Monolithic、Modular、Microkernel</h3>
             <div class="prose">
-<p>跑 agent 的系統（廣義的 harness）有幾個元件：agent loop（狹義的 harness：反覆呼叫 model、執行它要的動作）、tool、memory、執行程式碼的 sandbox。它們之間，邊界放在哪裡？邊界可以是同一個程式裡的函式呼叫、可以抽換的介面，或跨 process、跨機器的協定。它決定你能換掉哪個元件，也決定三件事：不可信的程式碼能不能和秘密（credential 這類不能外流的資料）隔開、狀態能不能活得比 process 久（harness 掛了還能續跑）、多個 agent 能不能共用同一份基礎設施；而且<strong>邊界寫進了程式的結構，事後要改就得重寫元件之間的呼叫</strong>。把一個元件搬到另一個 process 或服務、中間改用協定溝通，下面叫「拆出去」。第 3 章用這三個問題決定每一條邊界。</p>
+<p>跑 agent 的系統（廣義的 harness）有幾個元件：agent loop（狹義的 harness：反覆呼叫 model、執行它要的動作）、tool、memory、執行程式碼的 sandbox。這一章的問題是：它們之間的邊界放在哪裡。邊界有三種：同一個程式裡的函式呼叫、可以抽換的介面、跨 process 或跨機器的協定。把一個元件搬到另一個 process 或服務、中間改用協定溝通，下面叫「拆出去」。</p>
+<p>邊界決定你能換掉哪個元件，也決定三件事：不可信的程式碼能不能和秘密（例如 credential，也就是 API key、OAuth token 這類登入憑證）隔開；狀態能不能活得比 process 久（harness 掛了還能續跑）；多個 agent 能不能共用同一份基礎設施。第 3 章就用這三件事決定每一條邊界。<strong>邊界寫進了程式的結構，事後要改就得重寫元件之間的呼叫</strong>。</p>
 <p id="i1-1"><b>邊界的種類：函式呼叫（monolithic）、介面（modular）、協定（microkernel）。</b>三種架構的差別，是元件之間的呼叫跨過哪一種邊界。同一個角色在三種架構裡名字不同，對照如下；表後是同一件事的圖。</p>
 <div class="table-wrap"><table data-no-figure>
                 <thead><tr><th>比較項目</th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
                 <tbody>
                   <tr><td>邊界</td><td>函式呼叫</td><td>介面</td><td>協定</td></tr>
+                  <tr><td>元件放在哪裡</td><td>全部在同一個 process</td><td>同一個 process；agent loop 透過介面呼叫可抽換的元件（叫 provider）</td><td>核心的 process（core）只留 agent loop；<strong>tool、memory、執行程式碼的服務獨立部署</strong></td></tr>
                   <tr><td>Agent loop 的名字</td><td>Planner（決定下一步）加 executor（照著執行）</td><td>Controller</td><td>Core 的 runtime</td></tr>
                   <tr><td>誰執行程式碼</td><td>Executor</td><td>Sandbox provider</td><td>Execution 服務</td></tr>
-                  <tr><td>元件放在哪裡</td><td>全部在同一個 process</td><td>同一個 process；controller 透過介面呼叫可抽換的元件（叫 provider）</td><td>Core 只留 runtime；<strong>tool、memory、execution 服務獨立部署</strong></td></tr>
                 </tbody>
               </table></div>
 <figure class="diagram">
@@ -174,8 +175,8 @@
     sandbox_provider = DockerSandbox(),         # 介面 SandboxProvider，實作是 Docker
 )
 # 要把 Docker 換成 Firecracker（AWS 的輕量 microVM）：改這一行，agent 的程式碼不動</code></pre></figure>
-<p>Microkernel 的名字借自作業系統：核心只做最少的事，檔案系統和驅動程式都是核心外的服務。後端工程師熟悉的對應是 monolith 與 microservices：<strong>microkernel 的 harness 就是把 tool、memory、execution 拆成 microservices，留下一個小核心</strong>。L2 講的 <a href="l02.html#t5">MCP</a> 是圖裡那種標準協定的一例，它讓 tool 跑在 agent 程式外面。Modular 的程式裡也可以用 MCP 接 tool：那一條邊界是協定，其他元件仍在同一個 process。</p>
-<p id="i1-2"><b>執行一段 Python 的路徑：只有 microkernel 把 sandbox 交給獨立的服務。</b>用「執行一段 Python」比較三者。Monolithic 在 agent 自己的 process 裡直接執行，<strong>這段 code 讀得到 agent 讀得到的一切</strong>，包括檔案和環境變數裡的 credential，所以隔離很難強制：</p>
+<p>Microkernel 的名字借自作業系統：核心只做最少的事，檔案系統和驅動程式都是核心外的服務。後端工程師熟悉的對應是 monolith 與 microservices：<strong>microkernel 的 harness 就是把 tool、memory、execution 拆成 microservices，留下一個小核心</strong>。L2 講的 <a href="l02.html#t5">MCP</a> 是圖裡那種標準協定的一例，它讓 tool 跑在 agent 程式外面。Modular 的 provider 背後也可以是程式外面的服務，例如上面的 <code>RedisMemory</code>，或用 MCP 接的 tool：那一條邊界是協定，其他元件仍在同一個 process。</p>
+<p id="i1-2"><b>執行一段 Python 的路徑：只有 microkernel 規定 sandbox 交給獨立的服務。</b>用「執行一段 Python」比較三者，看 sandbox 歸誰管。Monolithic 在 agent 自己的 process 裡直接執行，<strong>這段 code 讀得到 agent 讀得到的一切</strong>，包括檔案和環境變數裡的 credential，所以隔離很難強制。Modular 多了一層介面，但介面只是程式碼的邊界，不是安全邊界：有沒有隔離，看接上的是哪一個 provider，換成直接在本機執行的 provider 就沒有。Microkernel 不留這個選擇：執行請求一律用協定送給 execution 服務，sandbox 的配置、隔離、生命週期都歸這個服務：</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 216" role="img" aria-label="同一段 Python 的三條路徑。Monolithic：agent 直接在本機執行 Python，跳數最少，隔離難強制。Modular：agent 呼叫 SandboxProvider.run(code)，由 provider 執行 Python，換 provider 不用改 agent。Microkernel：runtime 透過協定送執行請求給 execution 服務，服務配置 sandbox，sandbox 執行 Python 再回傳結果。配置、隔離、生命週期都歸 execution 服務。">
@@ -213,27 +214,28 @@
                   <text x="254" y="204" class="dg-c">配置、隔離、生命週期都歸這個服務；多個 agent 可以共用同一池 sandbox</text>
                 </svg>
               </div>
-              <figcaption>誰負責 sandbox？只有 microkernel 把它交給獨立的服務。Modular 抽出了介面，但介面只是程式碼的邊界，不是安全邊界：有沒有隔離，看接上的是哪一個 provider，換成直接在本機執行的 provider 就沒有。</figcaption>
+              <figcaption>誰負責 sandbox？只有 microkernel 規定它交給獨立的服務。</figcaption>
             </figure>
 <p>Execution 服務如果還是很抽象，可以先玩<a href="l08-exec.html">互動導讀〈Execution 服務：誰替 agent 真正動手〉</a>：同一段 Python 在三種架構裡一步一步跑、故意讓它當掉或刪檔、看 sandbox 被回收，大約 15 分鐘。</p>
-<p id="i1-3"><b>架構的取捨：microkernel 用簡單與低開銷，換隔離、共用、擴展。</b>結論是 <strong>microkernel 用簡單和低開銷，換隔離、共用與擴展</strong>。能共用，是因為<strong>函式呼叫只在同一個 process 裡有效</strong>：好幾個 agent 要用同一套 tool 或 sandbox，它就得是獨立的服務。擴展指某個元件不夠用時，只加那個服務的機器。常見的選法是看 agent 的數量，理由是 agent 多了才需要共用和獨立擴展：單一 agent 用 monolithic，multi-agent 的基礎設施用 microkernel，modular 介於兩者之間，是最常見的起點。第 2 章是這條選法的反例。</p>
+<p id="i1-3"><b>架構的取捨：microkernel 放棄簡單與低開銷，換到隔離、共用、擴展。</b>能共用，是因為<strong>函式呼叫只在同一個 process 裡有效</strong>：好幾個 agent 要用同一套 tool 或 sandbox，它就得是獨立的服務。擴展指某個元件不夠用時，只加那個服務的機器。三種架構逐項比較：</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>比較項目</th><th>Monolithic</th><th>Modular</th><th>Microkernel</th></tr></thead>
                 <tbody>
                   <tr><td>換元件</td><td>困難</td><td><strong>容易</strong></td><td>容易，協定相符時</td></tr>
                   <tr><td>執行隔離</td><td>難強制</td><td>選用</td><td><strong>架構上的重點</strong></td></tr>
-                  <tr><td>獨立擴展</td><td>有限</td><td>可能</td><td><strong>強</strong></td></tr>
+                  <tr><td>獨立擴展</td><td>有限</td><td>可能，provider 背後是外部服務時</td><td><strong>強</strong></td></tr>
                   <tr><td>通訊成本</td><td><strong>低</strong></td><td>低到中</td><td>可能較高</td></tr>
                   <tr><td>主要的新代價</td><td>元件耦合</td><td>所有 provider 都由 controller 協調，controller 越寫越複雜</td><td><strong>故障模式變多、端到端除錯更難</strong></td></tr>
                 </tbody>
               </table></div>
+<p>常見的選法是看 agent 的數量，理由是 agent 多了才需要共用和獨立擴展：單一 agent 用 monolithic，multi-agent 的基礎設施用 microkernel，modular 介於兩者之間，是最常見的起點。第 2 章是這條選法的反例。</p>
             </div>
           </div>
 
           <div class="idea" id="i2">
             <h3><span class="idea-no">2</span>拆成獨立服務的理由：失敗與安全，不是 agent 的數量</h3>
             <div class="prose">
-<p id="i2-1"><b>Managed Agents 拆之前：container 掛了 session 就沒了、故障分不出來源、code 讀得到 credential。</b>第 1 章用 agent 的數量當選擇依據。「導讀」的例子，Anthropic 的 <a href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Managed Agents</a>（2026-04），是一個反例。他們一開始把 session、harness、sandbox 放在同一個 container，碰到三個和 agent 數量無關的問題：container 掛了，session 就沒了；harness 的 bug、斷線、死掉的 container 從外面看都一樣，除錯要 shell 進一個可能放著使用者資料的環境；model 寫的 code 和 credential（API key、OAuth token 這類登入憑證）在同一個地方，一次 prompt injection（藏在網頁或檔案裡的指令，騙 model 照著做）就能叫 code 讀出 credential。</p>
+<p id="i2-1"><b>Managed Agents 拆之前：container 掛了 session 就沒了、故障分不出來源、code 讀得到 credential。</b>「導讀」的例子，Anthropic 的 <a href="https://anthropic.com/engineering/managed-agents" target="_blank" rel="noopener">Managed Agents</a>（2026-04），是第 1 章「看 agent 的數量選架構」的反例。他們一開始把 session、harness、sandbox 放在同一個 container，碰到的三個問題都和 agent 數量無關：container 掛了，session 就沒了；harness 的 bug、斷線、死掉的 container 從外面看都一樣，除錯要 shell 進一個可能放著使用者資料的環境；model 寫的 code 和 credential 在同一個地方，一次 prompt injection（藏在網頁或檔案裡的指令，騙 model 照著做）就能叫 code 讀出 credential。</p>
 <p id="i2-2"><b>Managed Agents 拆之後：session 只追加、harness 不存狀態、sandbox 碰不到 credential。</b>Anthropic 把這三樣拆成三塊（下圖的 harness，就是第 1 章的 agent loop）：</p>
 <ul>
 <li><b>Session。</b>只追加、不修改的 event log，放在 harness 和 sandbox 外面。<strong>它們死了，log 還在</strong>。</li>
@@ -277,9 +279,9 @@
                   <text x="359" y="278" text-anchor="middle" class="dg-c">Prompt injection 能叫 code 讀環境變數，但環境變數裡已經沒有 credential</text>
                 </svg>
               </div>
-              <figcaption>一個 agent 也需要拆成獨立的服務嗎？這是 Anthropic 2026 年 4 月描述的 Managed Agents。它拆開的理由是失敗與安全，和 agent 數量無關。Vault 是保管 credential 的地方。Proxy 是 sandbox 外面的一層轉送：model 要用外部服務的 tool（MCP tool）時，這次 tool 呼叫送到 proxy，由 proxy 從 vault 取出 credential、代為呼叫外部服務。圖上 emitEvent、execute 這些呼叫的名稱依原文。</figcaption>
+              <figcaption>一個 agent 也需要拆成獨立的服務嗎？Managed Agents 拆開的理由是失敗與安全，和 agent 數量無關。Vault 是保管 credential 的地方。Proxy 是 sandbox 外面的一層轉送：model 要用外部服務的 tool（MCP tool）時，這次 tool 呼叫送到 proxy，由 proxy 從 vault 取出 credential、代為呼叫外部服務。圖上 emitEvent、execute 這些呼叫的名稱依 Anthropic 的原文。</figcaption>
             </figure>
-<p id="i2-3"><b>拆開後的 time to first token（TTFT）：反而變快，因為 sandbox 要用時才配。</b>第 1 章的表說協定的通訊成本可能較高。這個案例的結果相反，拆開之後反而變快：<strong>第一個 token 的等待時間（time to first token，TTFT）p50 降約 60%、p95 降超過 90%</strong>。原因不在協定本身：以前每個 session 都要先等 container 準備好，連用不到 sandbox 的 session 也一樣，<strong>拆開之後要用時才配</strong>。這是一家公司的經驗，不是對照實驗，Anthropic 這篇文章也沒有談多出來的服務邊界要多少維運成本。</p>
+<p id="i2-3"><b>拆開後的 time to first token（TTFT）：反而變快，因為 sandbox 要用時才配。</b>第 1 章的表說協定的通訊成本可能較高，照這樣推，拆開之後應該變慢。這個案例卻變快了：<strong>第一個 token 的等待時間（time to first token，TTFT）p50 降約 60%、p95 降超過 90%</strong>。原因不在協定本身：以前每個 session 都要先等 container 準備好，連用不到 sandbox 的 session 也一樣，<strong>拆開之後要用時才配</strong>。這是一家公司的經驗，不是對照實驗，Anthropic 這篇文章也沒有談多出來的服務邊界要多少維運成本。</p>
             </div>
           </div>
 
@@ -296,7 +298,7 @@
                 </tbody>
               </table></div>
 <p>三題都答「否」，例如自己筆電上跑的小工具：不讀外部網頁也不碰秘密、對話斷了重開就好、只有這一個 agent 在用，<strong>函式呼叫就夠了</strong>，microkernel 的優點用不到，只付代價。</p>
-<p id="i3-2"><b>跨服務的代價：故障模式與除錯，不是通訊開銷。</b>大家最擔心的通訊開銷，數字上通常不是問題：華盛頓大學分析 coding agent session 的 TraceLab（<a href="l08.html#i2-3">L8 第 2 章</a>）量到一次 model 生成約 13 秒，資料中心內的一次 RPC 通常是毫秒級，差上千倍。<strong>真正的代價是故障模式和除錯</strong>：一個 request 經過好幾個服務，出錯時 log 散在各處。所以<strong>每個 request 要帶 trace id</strong>，也就是在第一站產生、往下每個服務都原樣傳下去並寫進 log 的一個 ID；出事時用它把各服務的 log 串回同一個 request，見 L5〈<a href="l05.html#i7-4">Observability</a>〉。</p>
+<p id="i3-2"><b>跨服務的代價：故障模式與除錯，不是通訊開銷。</b>大家最擔心的通訊開銷，數字上通常不是問題：華盛頓大學分析 coding agent session 的 TraceLab（<a href="l08.html#i2-3">L8 第 2 章</a>）量到一次 model 生成約 13 秒，資料中心內的一次 RPC 通常是毫秒級，差上千倍。<strong>真正的代價是故障模式和除錯</strong>：一個 request 經過好幾個服務，出錯時 log 散在各處。所以<strong>每個 request 要帶 trace id</strong>：第一站產生一個 ID，往下每個服務原樣傳下去，並寫進自己的 log。出事時用它把各服務的 log 串回同一個 request（L5〈<a href="l05.html#i7-4">Observability</a>〉）。</p>
             </div>
           </div>
 
@@ -449,7 +451,7 @@
     },
     {
      "id": "k2.2",
-     "type": "mechanism",
+     "type": "evidence",
      "t": "Agent loop 這個角色在三種架構裡名字不同：monolithic 叫 planner（決定下一步）加 executor（照著執行），modular 叫 controller，microkernel 叫 core 的 runtime。",
      "at": [
       "#i1 ¶2",
@@ -460,7 +462,7 @@
     },
     {
      "id": "k2.3",
-     "type": "mechanism",
+     "type": "evidence",
      "t": "執行程式碼的角色在三種架構裡也不同：monolithic 是 executor，modular 是 sandbox provider，microkernel 是 execution 服務。",
      "at": [
       "#i1 表1 列3 ‹Monolithic›",
@@ -531,7 +533,7 @@
     {
      "id": "k2.11",
      "type": "limit",
-     "t": "Modular 的程式裡也可以用 MCP 接 tool：這時只有接 tool 的那一條邊界是協定，其他元件仍在同一個 process。",
+     "t": "Modular 的 provider 背後也可以是程式外面的服務（例如 RedisMemory，或用 MCP 接的 tool）：這時只有那一條邊界是協定，其他元件仍在同一個 process。",
      "at": [
       "#i1 ¶3"
      ]
@@ -541,13 +543,13 @@
   {
    "id": "k3",
    "from": "i1-2",
-   "title": "執行一段 Python 的路徑：只有 microkernel 把 sandbox 交給獨立的服務",
+   "title": "執行一段 Python 的路徑：只有 microkernel 規定 sandbox 交給獨立的服務",
    "core": false,
    "points": [
     {
      "id": "k3.1",
      "type": "claim",
-     "t": "比較「執行一段 Python」的路徑，三種架構裡只有 microkernel 把 sandbox 交給獨立的服務。",
+     "t": "比較「執行一段 Python」的路徑，三種架構裡只有 microkernel 規定 sandbox 交給獨立的服務。",
      "at": [
       "#i1 ¶4",
       "#i1 圖3 說明"
@@ -616,7 +618,7 @@
   {
    "id": "k4",
    "from": "i1-3",
-   "title": "架構的取捨：microkernel 用簡單與低開銷，換隔離、共用、擴展",
+   "title": "架構的取捨：microkernel 放棄簡單與低開銷，換到隔離、共用、擴展",
    "core": false,
    "points": [
     {
@@ -679,16 +681,6 @@
      "t": "Microkernel 換元件容易有一個前提：新元件的協定要相符。",
      "at": [
       "#i1 表2 列1 ‹Microkernel›"
-     ]
-    },
-    {
-     "id": "k4.8",
-     "type": "mechanism",
-     "t": "執行隔離在三種架構的地位不同：monolithic 難強制，modular 是選用，microkernel 把它當成架構上的重點。",
-     "at": [
-      "#i1 表2 列2 ‹Monolithic›",
-      "#i1 表2 列2 ‹Modular›",
-      "#i1 表2 列2 ‹Microkernel›"
      ]
     },
     {
@@ -821,7 +813,7 @@
     },
     {
      "id": "k7.4",
-     "type": "mechanism",
+     "type": "evidence",
      "t": "三塊的分工：harness 是 brain（就是第 1 章的 agent loop），呼叫 model、路由 tool；sandbox 是 hands，跑 code、改檔案。",
      "at": [
       "#i2 ¶2",
@@ -932,7 +924,7 @@
     },
     {
      "id": "k8.6",
-     "type": "limit",
+     "type": "evidence",
      "t": "Anthropic 這篇文章沒有談多出來的服務邊界要多少維運成本。",
      "at": [
       "#i2 ¶6"
@@ -1097,7 +1089,7 @@
     {
      "id": "k12.1",
      "type": "claim",
-     "t": "每個 harness 都把一個假設寫進結構；同一個問題各家 harness 的答案不同，是因為它們的假設不同。",
+     "t": "每個 harness 都把一個假設寫進結構；同一個問題各家 harness 的答案不同，是因為它們的假設不同。所以讀各家 harness 時，可以問每個設計背後假設了什麼。",
      "at": [
       "#i4 ¶1"
      ]
@@ -1105,19 +1097,11 @@
     {
      "id": "k12.2",
      "type": "mechanism",
-     "t": "以「不可信的東西要和秘密隔開嗎」為例：Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不靠隔離，有風險的動作先問人或交給自動判斷風險的分類器，假設環境不一定能隔離。",
+     "t": "以「不可信的東西要和秘密隔開嗎」為例：Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不開 sandbox，有風險的動作預設交給自動判斷風險的分類器（auto mode），也可以改成每次先問人，假設環境不一定能隔離。兩種假設都可能成立。",
      "at": [
       "#i4 ¶1",
       "#i4 表1 列2 ‹一句話›",
       "#i4 註 n-harness 表1 列1 ‹獨特的設計›"
-     ]
-    },
-    {
-     "id": "k12.3",
-     "type": "claim",
-     "t": "Codex CLI 和 Claude Code 的兩種假設都可能成立；讀八個 harness 的表時，可以問每個設計背後假設了什麼。",
-     "at": [
-      "#i4 ¶1"
      ]
     },
     {
@@ -1136,7 +1120,7 @@
    "id": "k1a",
    "ks": "k1",
    "kind": "choice",
-   "q": "本文把跑 agent 的整個系統叫廣義的 harness。狹義的 harness 指的是其中哪一塊？",
+   "q": "「Harness」有時指跑 agent 的整個系統，有時只指其中一塊。只指一塊時，指的是哪一塊？",
    "choices": [
     {
      "t": "Agent loop：反覆呼叫 model，執行 model 要它做的動作",
@@ -1163,7 +1147,7 @@
    "id": "k1b",
    "ks": "k1",
    "kind": "choice",
-   "q": "團隊在決定 agent loop 和 tool、memory、sandbox 之間的邊界要放在哪裡。本文說，這個決定除了決定能換掉哪個元件，還決定哪三件事？",
+   "q": "團隊在決定 agent loop 和 tool、memory、sandbox 之間的邊界要放在哪裡。這個決定除了影響能換掉哪個元件，還決定哪三件事？",
    "choices": [
     {
      "t": "不可信的 code 能否隔開秘密、狀態能否活過 process、多個 agent 能否共用",
@@ -1190,7 +1174,7 @@
    "id": "k1c",
    "ks": "k1",
    "kind": "choice",
-   "q": "本文說的「拆出去」，指的是哪一種改法？",
+   "q": "把一個元件「拆出去」，指的是哪一種改法？",
    "choices": [
     {
      "t": "搬到另一個 process 或服務，中間改用協定溝通",
@@ -1218,7 +1202,7 @@
    "id": "k1d",
    "ks": "k1",
    "kind": "choice",
-   "q": "一個專案初期把所有元件寫成同一個程式裡的函式呼叫。半年後要把 sandbox 拆成獨立的服務。本文說這時要付什麼？",
+   "q": "一個專案初期把所有元件寫成同一個程式裡的函式呼叫。半年後要把 sandbox 拆成獨立的服務。這時要付什麼代價？",
    "choices": [
     {
      "t": "重寫元件之間的呼叫：邊界已經寫進了程式的結構",
@@ -1230,7 +1214,7 @@
     },
     {
      "t": "包一層轉接：在原本的函式外面套一層遠端呼叫就好",
-     "why": "本文的說法是事後改邊界要重寫元件之間的呼叫：邊界寫進了程式的結構，不是外面包一層就換得掉。"
+     "why": "事後改邊界要重寫元件之間的呼叫：邊界寫進了程式的結構，不是外面包一層就換得掉。"
     }
    ],
    "key": [
@@ -1272,7 +1256,7 @@
    "id": "k2b",
    "ks": "k2",
    "kind": "choice",
-   "q": "Memory 元件的一個 bug 讓它所在的 process 當掉。在 modular 和 microkernel 的 harness 裡，其他元件各會怎樣？",
+   "q": "兩個 harness，一個是 modular、memory provider 是跑在 process 內的實作，一個是 microkernel。兩邊的 memory 元件都因為 bug，讓自己所在的 process 當掉。其他元件各會怎樣？",
    "choices": [
     {
      "t": "Modular 其他元件跟著停；microkernel 只少了 memory",
@@ -1407,34 +1391,6 @@
    "closed_ok": "常識：OS 的 microkernel 和 microservices 都是小核心加外部服務"
   },
   {
-   "id": "k2g",
-   "ks": "k2",
-   "kind": "choice",
-   "q": "你讀到一份 harness 的架構文件：「controller 決定下一步，要執行 code 時交給 sandbox provider。」對照本文的名詞，這是哪一種架構？",
-   "choices": [
-    {
-     "t": "Modular：controller 是它的 agent loop，sandbox provider 負責執行程式碼",
-     "ok": true
-    },
-    {
-     "t": "Microkernel：controller 是 core 的 runtime，sandbox provider 是 execution 服務",
-     "why": "Microkernel 的 agent loop 叫 core 的 runtime，執行程式碼的是 execution 服務。Controller 和 sandbox provider 是 modular 的名字。"
-    },
-    {
-     "t": "Monolithic：controller 是 planner 加 executor，sandbox provider 是 executor",
-     "why": "Monolithic 的 agent loop 叫 planner（決定下一步）加 executor（照著執行），執行程式碼的也是 executor。Controller 和 sandbox provider 是 modular 的名字。"
-    }
-   ],
-   "key": [
-    "同一個角色在三種架構裡名字不同。Agent loop：monolithic 是 planner 加 executor，modular 是 controller，microkernel 是 core 的 runtime。執行程式碼的：executor、sandbox provider、execution 服務。"
-   ],
-   "covers": [
-    "k2.2",
-    "k2.3"
-   ],
-   "closed_ok": "洩漏只在別節（k3b 的 SandboxProvider）"
-  },
-  {
    "id": "k3a",
    "ks": "k3",
    "kind": "choice",
@@ -1502,7 +1458,7 @@
     },
     {
      "t": "把 sandbox 放到別台機器，它掛了也不會拖累 agent",
-     "why": "三種架構裡只有 microkernel 把 sandbox 交給獨立的服務。Modular 的 provider 還是 agent 程式裡的元件：換得掉，但不是獨立的服務。"
+     "why": "三種架構裡只有 microkernel 規定 sandbox 交給獨立的服務。Modular 的 provider 還是 agent 程式裡的元件：換得掉，但不是獨立的服務。"
     },
     {
      "t": "讓好幾個 agent 共用同一個 sandbox 池，不用各配一份",
@@ -1510,7 +1466,7 @@
     }
    ],
    "key": [
-    "Modular 的 agent 呼叫 SandboxProvider.run(code)，換 provider 不用改 agent。三種架構裡只有 microkernel 把 sandbox 交給獨立的服務。"
+    "Modular 的 agent 呼叫 SandboxProvider.run(code)，換 provider 不用改 agent。三種架構裡只有 microkernel 規定 sandbox 交給獨立的服務。"
    ],
    "covers": [
     "k3.4",
@@ -1550,7 +1506,7 @@
    "id": "k4a",
    "ks": "k4",
    "kind": "choice",
-   "q": "一個團隊考慮把 harness 從 monolithic 改成 microkernel。照本文的取捨，他們放棄的是什麼？",
+   "q": "一個團隊考慮把 harness 從 monolithic 改成 microkernel。這個改法放棄的是什麼？",
    "choices": [
     {
      "t": "簡單和低開銷：多了服務和協定，系統變複雜，通訊也可能變貴",
@@ -1566,7 +1522,7 @@
     }
    ],
    "key": [
-    "Microkernel 用簡單和低開銷，換隔離、共用與擴展；它的通訊成本可能較高，主要的新代價是故障模式變多、端到端除錯更難。"
+    "Microkernel 放棄簡單和低開銷，換到隔離、共用與擴展；它的通訊成本可能較高，主要的新代價是故障模式變多、端到端除錯更難。"
    ],
    "covers": [
     "k4.1",
@@ -1605,7 +1561,7 @@
    "id": "k4c",
    "ks": "k4",
    "kind": "choice",
-   "q": "一個 agent 平台上，執行 code 的負載漲到三倍，其他元件都還夠用。照本文的取捨表，架構不同，應對有什麼不同？",
+   "q": "一個 agent 平台上，執行 code 的負載漲到三倍，其他元件都還夠用。架構不同，應對有什麼不同？",
    "choices": [
     {
      "t": "Microkernel 只加 execution 服務的機器；monolithic 這種能力有限",
@@ -1632,7 +1588,7 @@
    "id": "k4d",
    "ks": "k4",
    "kind": "choice",
-   "q": "本文在給出自己的選法之前，先介紹了常見的選法。常見的選法用什麼決定架構？",
+   "q": "選 harness 架構時，常見的選法用什麼當依據？",
    "choices": [
     {
      "t": "Agent 的數量：多了才要共用和獨立擴展，單一 agent 用 monolithic",
@@ -1660,10 +1616,10 @@
    "id": "k4e",
    "ks": "k4",
    "kind": "choice",
-   "q": "要把某個元件換成另一套實作。照本文的取捨表，三種架構換起來的難易怎麼比？",
+   "q": "要把某個元件換成另一套實作，三種架構換起來的難易怎麼比？",
    "choices": [
     {
-     "t": "Monolithic 困難，元件耦合；microkernel 容易，但新元件的協定要相符",
+     "t": "Monolithic 困難；microkernel 容易，但新元件的協定要相符",
      "ok": true
     },
     {
@@ -1688,7 +1644,7 @@
    "id": "k4f",
    "ks": "k4",
    "kind": "choice",
-   "q": "一個團隊從 modular 改成 microkernel。照本文的取捨表，他們的主要新代價會從什麼換成什麼？",
+   "q": "一個團隊從 modular 改成 microkernel。他們最主要的新代價，會從什麼換成什麼？",
    "choices": [
     {
      "t": "從 controller 越寫越複雜，換成故障模式變多、端到端除錯更難",
@@ -1713,92 +1669,39 @@
    "closed_ok": "洩漏只在別節（k11a）"
   },
   {
-   "id": "k4g",
-   "ks": "k4",
-   "kind": "choice",
-   "q": "「model 寫的 code 要和 agent 的其他部分隔離」這件事，在三種架構裡各是什麼地位？",
-   "choices": [
-    {
-     "t": "Monolithic 難強制，modular 是選用，microkernel 是架構重點",
-     "ok": true
-    },
-    {
-     "t": "Monolithic 難強制，modular 和 microkernel 都由架構本身保證",
-     "why": "Modular 的隔離是選用的，看接上哪一個 provider。只有 microkernel 把隔離當成架構上的重點。"
-    },
-    {
-     "t": "三種都做得到，差別只在要多寫幾行設定 sandbox 的程式碼而已",
-     "why": "Monolithic 在 agent 自己的 process 裡執行，隔離難強制，不是多寫幾行就有。表上 modular 是選用，microkernel 是架構上的重點。"
-    }
-   ],
-   "key": [
-    "執行隔離：monolithic 難強制，modular 是選用（看接哪一個 provider），microkernel 把它當成架構上的重點。"
-   ],
-   "covers": [
-    "k4.8"
-   ],
-   "closed_ok": "洩漏只在別節（k3b）"
-  },
-  {
    "id": "k6a",
    "ks": "k6",
    "kind": "choice",
-   "q": "Managed Agents 把元件拆成獨立服務的理由，對「單一 agent 用 monolithic、multi-agent 才用 microkernel」這條常見選法代表什麼？",
+   "q": "有人主張：「拆成獨立服務是 multi-agent 平台的事，只跑一個 agent 用不到。」Managed Agents 拆之前的經驗，對這個主張代表什麼？",
    "choices": [
     {
-     "t": "是反例：它碰到的失敗與安全問題，只跑一個 agent 也會發生",
+     "t": "是反例：只跑一個 agent，container 一掛 session 也跟著沒了",
      "ok": true
     },
     {
-     "t": "是佐證：它的失敗與安全問題，來自同時託管很多個 session",
-     "why": "三個問題（container 掛了 session 就沒了、分不出故障來源、code 讀得到 credential）在單一 session 裡就會發生，和同時有幾個無關。"
+     "t": "是佐證：它的問題來自同一個 container 裡擠了很多個 agent",
+     "why": "那個 container 裡放的是 session、harness、sandbox 三樣東西，不是很多個 agent。Container 掛了 session 就沒了、分不出故障來源、code 讀得到 credential，只跑一個 agent 就會發生。"
     },
     {
-     "t": "是例外：失敗與安全只有賣給客戶的雲端服務才需要在意",
+     "t": "不適用：那是賣給客戶的雲端服務，自己用的 agent 不會碰到",
      "why": "自己用的 agent 一樣會掛、一樣會讀到藏了 prompt injection 的網頁。拆的理由和是不是賣給客戶無關，也和 agent 數量無關。"
     }
    ],
    "key": [
-    "Managed Agents 碰到的問題都和 agent 數量無關，所以它是「看 agent 數量選架構」的反例：拆的理由是失敗與安全。"
+    "Managed Agents 拆之前把 session、harness、sandbox 放在同一個 container，所以 container 掛了，session 就沒了。這類問題和 agent 數量無關，所以它是「看 agent 數量選架構」的反例：拆的理由是失敗與安全。"
    ],
    "covers": [
-    "k6.1"
-   ],
-   "closed_ok": "推理：三個問題都在單一 agent 裡發生"
-  },
-  {
-   "id": "k6b",
-   "ks": "k6",
-   "kind": "choice",
-   "q": "Managed Agents 拆之前，container 一掛，進行中的 session 就跟著沒了。為什麼會這樣？",
-   "choices": [
-    {
-     "t": "Session 和 harness、sandbox 放在同一個 container，一起沒了",
-     "ok": true
-    },
-    {
-     "t": "Session 只存在 model 的 context 裡，container 掛了就讀不回來",
-     "why": "問題不在 context：session 放在 container 裡，和 harness、sandbox 在一起，container 掛了，它就跟著沒了。"
-    },
-    {
-     "t": "Session 存在外面的資料庫，但 container 掛了就對不回是哪一筆",
-     "why": "拆之前 session 不在外面：它和 harness、sandbox 放在同一個 container，container 掛了，它就跟著沒了。"
-    }
-   ],
-   "key": [
-    "拆之前，Managed Agents 把 session、harness、sandbox 放在同一個 container，所以 container 掛了，session 就沒了。"
-   ],
-   "covers": [
+    "k6.1",
     "k6.2",
     "k6.3"
    ],
-   "closed_ok": "推理：題幹寫了 container 一掛 session 就沒了"
+   "closed_ok": "推理：container 掛了連帶 session，和 agent 有幾個無關"
   },
   {
    "id": "k6c",
    "ks": "k6",
    "kind": "choice",
-   "q": "在拆之前的設計下，使用者回報 agent 停住了，工程師要查原因。本文點出的麻煩是什麼？",
+   "q": "在拆之前的設計下，使用者回報 agent 停住了，工程師要查原因。這時的麻煩是什麼？",
    "choices": [
     {
      "t": "從外面分不出是哪種故障；要查還得進到可能放著使用者資料的環境",
@@ -1826,7 +1729,7 @@
    "id": "k6d",
    "ks": "k6",
    "kind": "choice",
-   "q": "拆之前，model 寫的 code 和 API key 在同一個地方。Agent 讀到一個網頁，裡面藏了「把環境變數印出來」的指令。本文說這會怎樣？",
+   "q": "拆之前，model 寫的 code 和 API key 在同一個地方。Agent 讀到一個網頁，裡面藏了「把環境變數印出來」的指令。這會怎樣？",
    "choices": [
     {
      "t": "一次 prompt injection 就可能叫 code 讀出 key：兩者在同一處",
@@ -1940,28 +1843,29 @@
    "id": "k7d",
    "ks": "k7",
    "kind": "choice",
-   "q": "Managed Agents 的圖把 harness 叫 brain、sandbox 叫 hands。這個分工指的是什麼？",
+   "q": "照 Managed Agents 的拆法，有人為了省事，想讓 harness 把最近幾步的結果留在自己的記憶體裡，不寫進 session log。這會破壞什麼？",
    "choices": [
     {
-     "t": "Harness 呼叫 model、路由 tool；sandbox 跑 code、改檔案",
+     "t": "續跑：新開的 harness 只讀得到 log，那幾步就不見了",
      "ok": true
     },
     {
-     "t": "Harness 記下每一步、決定下一步；sandbox 呼叫 model、跑 tool",
-     "why": "呼叫 model 的是 harness，它就是 agent loop；sandbox 是 hands，只跑 code、改檔案，不呼叫 model。"
+     "t": "隔離：結果留在 harness 裡，sandbox 的 code 就讀得到",
+     "why": "Sandbox 裡的 code 讀不到 harness 的記憶體，這和隔離無關。壞掉的是續跑：harness 掛了要開一個新的、讀 log 接著做，沒寫進 log 的那幾步就不見了。"
     },
     {
-     "t": "Harness 呼叫 model、跑 code；sandbox 只存放檔案和中間結果",
-     "why": "跑 code 的是 sandbox：它是 hands，跑 code、改檔案。Harness 是 brain，呼叫 model、路由 tool。"
+     "t": "共用：別的 session 用到這個 harness 時，會讀到這幾步",
+     "why": "這個拆法要保住的不是共用。Harness 不存狀態，是為了掛了能開一個新的、讀 log 接著做；狀態留在 harness 裡，它一掛就跟著沒了。"
     }
    ],
    "key": [
-    "Harness 是 brain，就是 agent loop：呼叫 model、路由 tool。Sandbox 是 hands：跑 code、改檔案。"
+    "Harness 不存狀態，狀態都在 harness 外面那份只追加的 session log 裡：harness 掛了就開一個新的，讀 log 接著做。留在 harness 記憶體、沒寫進 log 的東西，會跟著 harness 一起沒了。"
    ],
    "covers": [
-    "k7.4"
+    "k7.2",
+    "k7.3"
    ],
-   "closed_ok": "推理：brain／hands 的比喻推得出分工"
+   "closed_ok": "推理：stateless 的元件掛了，沒寫出去的狀態就沒了"
   },
   {
    "id": "k8b",
@@ -1993,36 +1897,10 @@
    "closed_ok": "推理：題幹寫明對方早就要用時才配"
   },
   {
-   "id": "k8c",
-   "ks": "k8",
-   "kind": "choice",
-   "q": "團隊想拿 Managed Agents 的 TTFT 結果說服主管：「拆成服務沒什麼代價。」本文提醒，這份資料沒有談到哪一塊？",
-   "choices": [
-    {
-     "t": "維運成本：多出來的服務邊界，要多花多少力氣去維護",
-     "ok": true
-    },
-    {
-     "t": "安全：拆開之後，sandbox 裡的 code 還碰不碰得到 credential",
-     "why": "文章有談：credential 放在 sandbox 外的 vault，由 proxy 代填。沒談的是多出來的服務邊界要多少維運成本。"
-    },
-    {
-     "t": "原因：只給了變快的幅度，沒說是什麼讓第一個 token 變快",
-     "why": "文章有說原因：配置 sandbox 的時機改了。沒談的是多出來的服務邊界要多少維運成本；而且這是一家公司的經驗，不是對照實驗。"
-    }
-   ],
-   "key": [
-    "Anthropic 這篇文章沒有談多出來的服務邊界要多少維運成本；TTFT 變快也是一家公司的經驗，不是對照實驗。"
-   ],
-   "covers": [
-    "k8.6"
-   ]
-  },
-  {
    "id": "k10a",
    "ks": "k10",
    "kind": "choice",
-   "q": "團隊在選 harness 架構：「我們是 multi-agent 嗎？是就整套換成 microkernel，不是就維持 monolithic。」本文會怎麼改這個問法？",
+   "q": "團隊在選 harness 架構：「我們是 multi-agent 嗎？是就整套換成 microkernel，不是就維持 monolithic。」這個問法該怎麼改？",
    "choices": [
     {
      "t": "一條邊界一條邊界問：秘密要隔離嗎、狀態要活過 process 嗎、要共用嗎",
@@ -2162,7 +2040,7 @@
    "id": "k11a",
    "ks": "k11",
    "kind": "choice",
-   "q": "把元件拆成服務之後，大家最擔心的代價，和本文說真正的代價，各是什麼？",
+   "q": "把元件拆成服務之後，大家最擔心的代價，和實際上最該準備的代價，各是什麼？",
    "choices": [
     {
      "t": "擔心通訊開銷，但它數字上通常不是問題；真正的是故障模式和除錯",
@@ -2245,7 +2123,7 @@
    "id": "k12a",
    "ks": "k12",
    "kind": "choice",
-   "q": "面對「不可信的指令要不要和秘密隔開」，Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人；Claude Code 預設不靠隔離，有風險的動作先問人或交給分類器。兩者各假設了什麼？",
+   "q": "面對「不可信的東西要不要和秘密隔開」，Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人；Claude Code 預設不開 sandbox，有風險的動作交給分類器判斷，也可以改成每次先問人。兩者各假設了什麼？",
    "choices": [
     {
      "t": "Codex：隔離比問人可靠，人會不看就同意；Claude Code：環境不一定能隔離",
@@ -2253,7 +2131,7 @@
     },
     {
      "t": "Codex：最後一關交給人最可靠；Claude Code：隔離做好了就不必再問人",
-     "why": "反了：Codex CLI 先 sandbox，假設隔離比問人可靠，因為人被問多了會不看就同意；Claude Code 先問人，假設環境不一定能隔離。"
+     "why": "反了：Codex CLI 先 sandbox，假設隔離比問人可靠，因為人被問多了會不看就同意；Claude Code 預設不開 sandbox，假設環境不一定能隔離。"
     },
     {
      "t": "兩者假設相同：都認為 model 不可信，差別只是各家工程上的偏好",
@@ -2261,40 +2139,13 @@
     }
    ],
    "key": [
-    "每個 harness 都把一個假設寫進結構：Codex CLI 假設隔離比問人可靠，因為人被問多了會不看就同意；Claude Code 假設環境不一定能隔離，所以有風險的動作先問人，或交給自動判斷風險的分類器。"
+    "每個 harness 都把一個假設寫進結構：Codex CLI 假設隔離比問人可靠，因為人被問多了會不看就同意；Claude Code 假設環境不一定能隔離，所以有風險的動作交給自動判斷風險的分類器，或每次先問人。兩種假設都可能成立；讀別的 harness 時，同樣先問它的設計背後假設了什麼。"
    ],
    "covers": [
     "k12.1",
     "k12.2"
    ],
-   "closed_ok": "常識：兩家的設計公開，Codex 先 sandbox、Claude Code 先問人的理由推得出"
-  },
-  {
-   "id": "k12b",
-   "ks": "k12",
-   "kind": "choice",
-   "q": "你讀到一個不在表裡的 harness：它每一個 tool call 都先存一份 snapshot 才執行。照本文讀這張 harness 表的方法，該問的是什麼？",
-   "choices": [
-    {
-     "t": "它背後假設了什麼：這個設計是為了哪一種情況寫進結構",
-     "ok": true
-    },
-    {
-     "t": "它屬於哪一種架構：先分出 monolithic、modular 還是 microkernel",
-     "why": "架構的分類說的是邊界的種類，說不出這個設計為什麼要先存。本文建議讀各家 harness 時，先問每個設計背後假設了什麼。"
-    },
-    {
-     "t": "它和 Codex CLI、Claude Code 比起來好還是差：先排出高下",
-     "why": "本文不分高下：Codex CLI 和 Claude Code 的兩種假設都可能成立。讀各家 harness 時，要問的是每個設計背後假設了什麼。"
-    }
-   ],
-   "key": [
-    "每個 harness 都把一個假設寫進結構；兩種假設都可能成立，讀各家 harness 時先問每個設計背後假設了什麼。"
-   ],
-   "covers": [
-    "k12.3",
-    "k12.1"
-   ]
+   "closed_ok": "常識：兩家的設計公開，Codex 先 sandbox、Claude Code 不靠 sandbox 的理由推得出"
   }
  ],
  "integration": [
@@ -2302,6 +2153,7 @@
    "id": "x1",
    "ks": [
     "k6",
+    "k7",
     "k10"
    ],
    "after": "i3",
@@ -2309,7 +2161,7 @@
    "key": [
     "照 agent 的數量選架構只是常見的選法；要不要拆的理由是失敗與安全，一個 agent 也會碰到（全部放同一個 container 時，container 掛了 session 就沒了，code 也讀得到 credential）",
     "它讀外部網頁、又拿著 token：不可信的東西要和秘密隔開，所以 credential 要放到 sandbox 外面",
-    "任務跑一小時以上：狀態要活得比 process 久，所以 session log 要放到 harness 外面，掛了能續跑",
+    "任務跑一小時以上：狀態要活得比 process 久，所以 session log 放到 harness 外面，harness 自己不存狀態，掛了就開一個新的、讀 log 接著做",
     "只有一個 agent，沒有共用的需要：tool、memory 不必為了共用做成服務。邊界是一條一條決定的，不必整套換成 microkernel"
    ]
   },
@@ -2343,26 +2195,12 @@
     "跨服務真正的代價是故障模式和除錯：一個 request 經過好幾個服務，出錯時 log 散在各處",
     "所以每個 request 要帶 trace id：在第一站產生，每個服務原樣往下傳並寫進 log，出事時用它把 log 串回同一個 request"
    ]
-  },
-  {
-   "id": "x4",
-   "ks": [
-    "k7",
-    "k10"
-   ],
-   "after": "i3",
-   "q": "你的 agent 跑一個長任務，跑到第 40 分鐘時，執行 harness 的那台機器重開，使用者只能整個任務從頭來。要做到「harness 掛了還能接著做」，系統裡哪兩樣設計要改？改了要付什麼代價？如果這只是你自己筆電上用的小工具，還值得做嗎？",
-   "key": [
-    "Session 要改成放在 harness 外面、只追加的 log：harness 死了，log 還在",
-    "Harness 自己不存狀態：掛了就開一個新的，讀 log 接著做",
-    "代價是每一步多一次寫入，還要設計 log 的介面",
-    "自己筆電上的小工具，對話斷了重開就好：狀態不必活得比 process 久，函式呼叫就夠，拆了只付代價"
-   ]
   }
  ],
  "unit_kinds": [
   "choice"
- ]
+ ],
+ "unit_no_cite": true
 }
 </script>
 <script src="app.js?v=20261119a"></script>
