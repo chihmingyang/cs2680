@@ -46,7 +46,7 @@
 </ol>
 <p class="sn-label">Part II · 講次</p>
 <ol class="sn-list">
-<li class="sn-lec is-here"><a class="sn-row" href="l09.html" aria-current="page"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">Request lifecycle</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Next-token generation：分成 Prefill 與 Decode 兩段</a></li><li><a class="sn-sub2" href="#i1-2">KV cache：Prefill 留下、Decode 每一步都要讀的中間結果</a></li><li><a class="sn-sub2" href="#i1-3">Continuous batching：scheduler 每一步重組 batch，KV cache 記憶體不夠時新 request 要排隊</a></li><li><a class="sn-sub2" href="#i1-4">Decode 的停止條件：stop token、max_tokens、使用者斷線</a></li><li><a class="sn-sub2" href="#i1-5">Agent 的 request：每一圈重送整段 context</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Transformer 的結構、參數與運算量</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Embedding：token ID 查表變成 vector</a></li><li><a class="sn-sub2" href="#i2-2">矩陣乘法的 FLOPs：一個 token 乘過一個矩陣，運算次數是參數數的 2 倍</a></li><li><a class="sn-sub2" href="#i2-3">Transformer block：Attention 與 FFN 兩個子層，重複 80 次</a></li><li><a class="sn-sub2" href="#i2-4">參數的分布：FFN 佔八成，Attention 不到兩成</a></li><li><a class="sn-sub2" href="#i2-5">Weights 的大小與每個 token 的 FLOPs：由參數總數 N 直接算出</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Attention 與 KV cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Query、Key、Value：每個 token 在每一層產生的三個 vector</a></li><li><a class="sn-sub2" href="#i3-2">Attention 的算法：內積分數、Causal mask、Softmax</a></li><li><a class="sn-sub2" href="#i3-3">Attention 的成本：n 個 token 要算 n² 個分數</a></li><li><a class="sn-sub2" href="#i3-4">KV cache 的由來：前面 token 的 K、V 不會變，存起來不重算</a></li><li><a class="sn-sub2" href="#i3-5">Multi-head attention（MHA）：切成 64 個 head，運算量不變</a></li><li><a class="sn-sub2" href="#i3-6">GQA：query head 共用 K、V，每個 token 的 KV cache 縮成 320 KiB</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">Serving 的三個數字</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">FLOPs 決定 Prefill 的時間</a></li><li><a class="sn-sub2" href="#i4-2">Weights 的大小決定 Decode 一步的時間：所以 Decode 要 batch</a></li><li><a class="sn-sub2" href="#i4-3">KV cache 決定 token 預算：人數 × 每人的 context 長度</a></li><li><a class="sn-sub2" href="#i4-4">Agent workload 的帳：prefix cache 命中省 23 倍運算，KV cache 記憶體一樣多</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">MoE（Mixture of Experts）</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">Total 與 Active 參數：各管記憶體與運算</a></li><li><a class="sn-sub2" href="#i5-2">MoE 的適用條件：記憶體夠、要每個 token 算得快</a></li><li><a class="sn-sub2" href="#i5-3">MoE 的 Decode：batch 越大，要讀的 expert 越多</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">改 KV cache 的架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Sliding window attention：大多數層只存最近 w 個 token</a></li><li><a class="sn-sub2" href="#i6-2">MLA：每個 token 每層只存一個壓縮過的 latent</a></li><li><a class="sn-sub2" href="#i6-3">Linear attention：用固定大小的 state 取代 KV cache</a></li><li><a class="sn-sub2" href="#i6-4">State-space model（Mamba）：每個 channel 一個小 state</a></li><li><a class="sn-sub2" href="#i6-5">Sparse attention：KV 全部照存，每一步只讀 top-k 個 token</a></li><li><a class="sn-sub2" href="#i6-6">Hybrid 架構：少數層留完整 attention，其餘層換成便宜的做法</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Open-weight model 的每 token KV cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">每 token KV cache 的算法：代入 config.json 的層數、KV head 數、head_dim</a></li><li><a class="sn-sub2" href="#i7-2">公式沒算到的部分：固定大小的 cache 與 state、FP8 的存法</a></li><li><a class="sn-sub2" href="#i7-3">選 model：每個 token 的 KV cache 和參數量一樣重要</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Tokenizer 與中文的 token 數</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">BPE：從 byte 開始，合併最常相鄰的兩塊</a></li><li><a class="sn-sub2" href="#i8-2">Vocabulary size：詞彙越大 token 越少，embedding 越大</a></li><li><a class="sn-sub2" href="#i8-3">中文的切法：一個字是 3 個 byte，切成幾個 token 看詞彙表</a></li><li><a class="sn-sub2" href="#i8-4">繁體中文的 token 數：實測一個字約 0.7 到 0.9 個 token</a></li><li><a class="sn-sub2" href="#i8-5">Token 數的影響：估 context 用量、選 model、prompt 用哪種語言</a></li><li><a class="sn-sub2" href="#i8-6">Streaming 的 detokenize：不完整的 UTF-8 byte 先暫存</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Sampling</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">Temperature：把 logits 除以 T，控制機率集中或攤平</a></li><li><a class="sn-sub2" href="#i9-2">Top-k 與 Top-p：只從機率最高的幾個 token 裡抽</a></li><li><a class="sn-sub2" href="#i9-3">Sampling 對輸出長度的影響：greedy 可能重複不停，要設 max_tokens</a></li><li><a class="sn-sub2" href="#i9-4">Temperature 0 的 nondeterminism：batch 一變，輸出可能不同</a></li><li><a class="sn-sub2" href="#i9-5">託管 model 的 sampling 參數：Claude Opus 5.5 不接受，設定主要用在自架</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i10" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
+<li class="sn-lec is-here"><a class="sn-row" href="l09.html" aria-current="page"><span class="sn-no">L9</span><span class="sn-t">LLM Inference Basics</span><span class="sn-ck" data-read-key="l09" title="已讀" hidden>✓</span></a><ol class="sn-secs"><li><a class="sn-sec" href="#tldr-h" data-spy data-short="導讀"><span class="sn-n">0</span><span class="sn-t">導讀</span></a></li><li class="sn-ideas"><a class="sn-sec" href="#s-ideas" data-spy data-short="核心觀念"><span class="sn-t">核心觀念</span></a><ol class="sn-subs"><li><a class="sn-sub" href="#i1"><span class="sn-n">1</span><span class="sn-t">Request lifecycle</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i1-1">Next-token generation：分成 Prefill 與 Decode 兩段</a></li><li><a class="sn-sub2" href="#i1-2">KV cache 在 request 裡的角色：Prefill 留下、Decode 每一步都要讀，跟著 context 變大</a></li><li><a class="sn-sub2" href="#i1-3">Continuous batching：scheduler 每一步重組 batch，KV cache 記憶體不夠時新 request 要排隊</a></li><li><a class="sn-sub2" href="#i1-4">Decode 的停止條件：stop token、max_tokens、使用者斷線</a></li><li><a class="sn-sub2" href="#i1-5">Agent 的 request：每一圈重送整段 context</a></li></ol></li><li><a class="sn-sub" href="#i2"><span class="sn-n">2</span><span class="sn-t">Transformer 的結構、參數與運算量</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i2-1">Embedding：token ID 查表變成 vector</a></li><li><a class="sn-sub2" href="#i2-2">矩陣乘法的 FLOPs：一個 token 乘過一個矩陣，運算次數是參數數的 2 倍</a></li><li><a class="sn-sub2" href="#i2-3">Transformer block：Attention 與 FFN 兩個子層，重複 80 次</a></li><li><a class="sn-sub2" href="#i2-4">參數的分布：FFN 佔八成，Attention 不到兩成</a></li><li><a class="sn-sub2" href="#i2-5">Weights 的大小與每個 token 的 FLOPs：由參數總數 N 直接算出</a></li></ol></li><li><a class="sn-sub" href="#i3"><span class="sn-n">3</span><span class="sn-t">Attention 與 KV cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i3-1">Query、Key、Value：每個 token 在每一層產生的三個 vector</a></li><li><a class="sn-sub2" href="#i3-2">Attention 的算法：內積分數、Causal mask、Softmax</a></li><li><a class="sn-sub2" href="#i3-3">Attention 的成本：n 個 token 要算 n² 個分數</a></li><li><a class="sn-sub2" href="#i3-4">KV cache 的原理：前面 token 的 K、V 不會變，存起來不重算</a></li><li><a class="sn-sub2" href="#i3-5">Multi-head attention（MHA）：切成 64 個 head，運算量不變</a></li><li><a class="sn-sub2" href="#i3-6">GQA：query head 共用 K、V，每個 token 的 KV cache 縮成 320 KiB</a></li></ol></li><li><a class="sn-sub" href="#i4"><span class="sn-n">4</span><span class="sn-t">Serving 的三個數字</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i4-1">FLOPs 決定 Prefill 的時間</a></li><li><a class="sn-sub2" href="#i4-2">Weights 的大小決定 Decode 一步的時間：所以 Decode 要 batch</a></li><li><a class="sn-sub2" href="#i4-3">KV cache 決定 token 預算：人數 × 每人的 context 長度</a></li><li><a class="sn-sub2" href="#i4-4">Agent workload 的帳：prefix cache 命中省 23 倍運算，KV cache 記憶體一樣多</a></li></ol></li><li><a class="sn-sub" href="#i5"><span class="sn-n">5</span><span class="sn-t">MoE（Mixture of Experts）</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i5-1">Total 與 Active 參數：各管記憶體與運算</a></li><li><a class="sn-sub2" href="#i5-2">MoE 的適用條件：記憶體夠、要每個 token 算得快</a></li><li><a class="sn-sub2" href="#i5-3">MoE 的 Decode：batch 越大，要讀的 expert 越多</a></li></ol></li><li><a class="sn-sub" href="#i6"><span class="sn-n">6</span><span class="sn-t">改 KV cache 的架構</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i6-1">Sliding window attention：大多數層只存最近 w 個 token</a></li><li><a class="sn-sub2" href="#i6-2">MLA：每個 token 每層只存一個壓縮過的 latent</a></li><li><a class="sn-sub2" href="#i6-3">Linear attention：用固定大小的 state 取代 KV cache</a></li><li><a class="sn-sub2" href="#i6-4">State-space model（Mamba）：也是固定大小的 state，vector 的每一維各留一個</a></li><li><a class="sn-sub2" href="#i6-5">Sparse attention：KV 全部照存，每一步只讀 top-k 個 token</a></li><li><a class="sn-sub2" href="#i6-6">Hybrid 架構：少數層留完整 attention，其餘層換成便宜的做法</a></li></ol></li><li><a class="sn-sub" href="#i7"><span class="sn-n">7</span><span class="sn-t">Open-weight model 的每 token KV cache</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i7-1">每 token KV cache 的算法：代入 config.json 的層數、KV head 數、head_dim</a></li><li><a class="sn-sub2" href="#i7-2">每 token KV cache 的公式沒算到的：sliding window 與 linear attention 的固定開銷、FP8 的存法</a></li><li><a class="sn-sub2" href="#i7-3">選 model：每個 token 的 KV cache 和參數量一樣重要</a></li></ol></li><li><a class="sn-sub" href="#i8"><span class="sn-n">8</span><span class="sn-t">Tokenizer 與中文的 token 數</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i8-1">BPE：從 byte 開始，合併最常相鄰的兩塊</a></li><li><a class="sn-sub2" href="#i8-2">Vocabulary size：詞彙越大 token 越少，embedding 越大</a></li><li><a class="sn-sub2" href="#i8-3">中文的切法：一個字是 3 個 byte，切成幾個 token 看詞彙表</a></li><li><a class="sn-sub2" href="#i8-4">繁體中文的 token 數：實測一個字約 0.7 到 0.9 個 token</a></li><li><a class="sn-sub2" href="#i8-5">Token 數的影響：估 context 用量、選 model、prompt 用哪種語言</a></li><li><a class="sn-sub2" href="#i8-6">Streaming 的 detokenize：不完整的 UTF-8 byte 先暫存</a></li></ol></li><li><a class="sn-sub" href="#i9"><span class="sn-n">9</span><span class="sn-t">Sampling</span></a><ol class="sn-sub2s"><li><a class="sn-sub2" href="#i9-1">Temperature：把 logits 除以 T，控制機率集中或攤平</a></li><li><a class="sn-sub2" href="#i9-2">Top-k 與 Top-p：只從機率最高的幾個 token 裡抽</a></li><li><a class="sn-sub2" href="#i9-3">Sampling 對輸出長度的影響：greedy 可能重複不停，要設 max_tokens</a></li><li><a class="sn-sub2" href="#i9-4">Temperature 0 的 nondeterminism：batch 一變，輸出可能不同</a></li><li><a class="sn-sub2" href="#i9-5">託管 model 的 sampling 參數：Claude Opus 5.5 不接受，設定主要用在自架</a></li></ol></li></ol></li><li class="sn-refs"><ol class="sn-refrow"><li><a class="sn-sec" href="#i10" data-spy data-short="查閱"><span class="sn-t">查閱</span></a></li><li><a class="sn-sec" href="#wrap" data-spy data-short="原文出處"><span class="sn-t">原文出處</span></a></li></ol></li></ol></li>
 <li class="sn-lec"><a class="sn-row" href="l10.html"><span class="sn-no">L10</span><span class="sn-t">GPU Basics &amp; Kernel Optimization</span><span class="sn-ck" data-read-key="l10" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l11.html"><span class="sn-no">L11</span><span class="sn-t">Assignment Feedback &amp; 10 Agent Pitfalls</span><span class="sn-ck" data-read-key="l11" title="已讀" hidden>✓</span></a></li>
 </ol>
@@ -230,7 +230,7 @@
                 <li><b>每個字的間隔。</b><strong>之後每個字都要等一步 decode</strong>，常用每秒幾個 token（tokens/s）表示。回答越長，總時間越長。</li>
               </ul>
               <p>兩段的瓶頸也不同。Prefill 吃算力，decode 吃記憶體頻寬（每秒能從記憶體讀出多少資料）：prefill 一次算幾千個 token，讀一遍參數的時間由這幾千個 token 分攤，GPU 的運算單元是忙的；decode 每一步只替每個 request 算 1 個 token，卻要把整個 model 的參數（也叫權重，weights）從記憶體讀一遍，運算單元多半在等資料。第 4 章用數字算這件事，GPU 為什麼算得快、讀得慢，見 L10〈<a href="l10.html#i2">Roofline</a>〉。優化前要先知道使用者在等哪一段。</p>
-              <p id="i1-2"><b>KV cache：Prefill 留下、Decode 每一步都要讀的中間結果。</b>Prefill 除了產生第一個 token，還會把 prompt 每個 token 在 model 的每一層（第 2 章）算出的兩組中間結果存起來，這兩組叫 key 和 value，合稱 KV cache。之後每一步 decode 都要讀它，也在後面加一格。它為什麼存在、有多大，是第 3、4 章的主題；這裡先記住兩件事：它跟著 context 的長度變大，而且 request 還在跑的時候，一直佔著 GPU 記憶體。Context 指到目前為止的整段輸入：prompt，加上已經產生的 token。</p>
+              <p id="i1-2"><b>KV cache 在 request 裡的角色：Prefill 留下、Decode 每一步都要讀，跟著 context 變大。</b>Prefill 除了產生第一個 token，還會把 prompt 每個 token 在 model 的每一層（第 2 章）算出的兩組中間結果存起來，這兩組叫 key 和 value，合稱 KV cache。之後每一步 decode 都要讀它，也在後面加一格。它為什麼存在、有多大，是第 3、4 章的主題；這裡先記住兩件事：它跟著 context 的長度變大，而且 request 還在跑的時候，一直佔著 GPU 記憶體。Context 指到目前為止的整段輸入：prompt，加上已經產生的 token。</p>
               <p id="i1-3"><b>Continuous batching：scheduler 每一步重組 batch，KV cache 記憶體不夠時新 request 要排隊。</b>Request 一個一個獨立地來，GPU 卻要一次算一批才有效率，理由在第 4 章。<strong>所以 scheduler 每算完一步，就重新組一次 batch</strong>：做完的 request 立刻離開，新的 request 不用等整批結束就能加入（先做它自己的 prefill，再和其他 request 一起一步一步 decode），這叫 continuous batching：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -681,7 +681,7 @@
   </div>
 </details>
               <p id="i3-3"><b>Attention 的成本：n 個 token 要算 n² 個分數。</b>每一層、每個 head 都要替每一對 token 算一個分數，n 個 token 就是 n × n 個，所以 <strong>context 加倍，分數變 4 倍</strong>。每一層約 4n²d 次運算：照第 2 章矩陣乘法的算法，64 個 head 合起來，算分數的 QKᵀ 是 2n²d 次，依權重加總 v 的 AV 也是 2n²d 次。Causal mask 讓實際要算的約少一半。S 本身有 n² 格，context 一長就存不下，所以實作上用 FlashAttention 一塊一塊算 softmax，<strong>從不存下完整的 S</strong>（L10〈<a href="l10.html#i7-3">FlashAttention</a>〉）。</p>
-              <p id="i3-4"><b>KV cache 的由來：前面 token 的 K、V 不會變，存起來不重算。</b>回到第 1 章的 decode。新的 token 要讀前面全部的 token，需要它自己的 q，加上前面每個 token 的 k 和 v。<strong>前面 token 的 k、v 不會變</strong>，因為 causal mask 讓 token j 只受 j 之前的 token 影響，後來的 token 改變不了它。所以算過一次就存起來：</p>
+              <p id="i3-4"><b>KV cache 的原理：前面 token 的 K、V 不會變，存起來不重算。</b>回到第 1 章的 decode。新的 token 要讀前面全部的 token，需要它自己的 q，加上前面每個 token 的 k 和 v。<strong>前面 token 的 k、v 不會變</strong>，因為 causal mask 讓 token j 只受 j 之前的 token 影響，後來的 token 改變不了它。所以算過一次就存起來：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 260" role="img" aria-label="一步 decode 在一層 attention 裡做的三件事。① 新的 token 算出自己的 q、k、v，黃色。② KV cache 是兩排格子，K 一排、V 一排，前面是 t1 到 t5 和省略號，青色；新的 k 和 v 接到兩排的最後，紅色。③ q 讀整份 K 和 V，n+1 格，得到輸出 o。下方註記：前面 n 格不重算，因為 causal mask 讓 token j 只受 j 之前的影響；代價是每個 token 每一層留下一格 k 和 v，直到 request 結束。">
@@ -1326,7 +1326,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
             </figure>
               <p>Gated DeltaNet 是其中一種，它把「加進 S」改成兩步，就是圖中的 ① 和 ②。第一步，用 decay gate α<sub>t</sub>（0 到 1 之間的一個數）把整個 S 乘小一點，讓舊的內容淡掉。第二步，先用新 token 的 k 從 S 讀出它原本記的 value，再依 write gate β<sub>t</sub> 決定換掉多少，換成新的 v；所以同一個 key 再寫一次，會更新它記的值，不會再疊一份上去。</p>
               <p><strong>固定大小的代價是記不住全部細節，所以實際的 model 混著用</strong>：Qwen3-Next 的 48 層裡，36 層是 Gated DeltaNet、12 層是一般的 attention（3:1），只有那 12 層存 KV cache。Kimi Linear、Qwen3.5 也是同一種配方。</p>
-              <p id="i6-4"><b>State-space model（Mamba）：每個 channel 一個小 state。</b>SSM（例如 Mamba）也維護固定大小的 state，差別在形狀：linear attention 的 state 是一個 dk × dv 的矩陣；Mamba 替 token 的 vector 的每一維各留一個很短的 vector h，每一維叫一個 channel，所以 d 維的 vector 有 d 個 channel。Mamba 屬於 selective SSM：決定「舊的 h 留多少、新的輸入寫多少」的兩個係數 Ā、B̄，由每個 token 的內容算出來，<strong>所以這一層能自己決定記住什麼</strong>。</p>
+              <p id="i6-4"><b>State-space model（Mamba）：也是固定大小的 state，vector 的每一維各留一個。</b>SSM（例如 Mamba）也維護固定大小的 state，差別在形狀：linear attention 的 state 是一個 dk × dv 的矩陣；Mamba 替 token 的 vector 的每一維各留一個很短的 vector h，每一維叫一個 channel，所以 d 維的 vector 有 d 個 channel。Mamba 屬於 selective SSM：決定「舊的 h 留多少、新的輸入寫多少」的兩個係數 Ā、B̄，由每個 token 的內容算出來，<strong>所以這一層能自己決定記住什麼</strong>。</p>
               <p id="i6-5"><b>Sparse attention：KV 全部照存，每一步只讀 top-k 個 token。</b>DeepSeek-V3.2 的 sparse attention（DSA）先用一個便宜的 indexer 替前面每個 token 打分數，挑出分數最高的 2,048 個，attention 只讀這些：</p>
               <figure class="diagram">
               <div class="scroll">
@@ -1570,7 +1570,7 @@ MHA（Hkv = 64）：2 × 80 × 64 × 128 × 2 = 2,621,440 byte = 2.5 MiB</code><
               </div>
               <figcaption>同一條公式，代入不同的 model，差多少？最上和最下差 13 倍：每 100 GB 的空閒記憶體，Llama 3 70B 放得下 31 萬個 token，Qwen3-Next 放得下 407 萬個。藍色是 GQA，黃色是 MLA，青色和深紅是只有部分層存完整 KV 的 model。本文用 config.json 算，不是量測。</figcaption>
             </figure>
-              <p id="i7-2"><b>公式沒算到的部分：固定大小的 cache 與 state、FP8 的存法。</b>表只算隨長度成長的部分。gpt-oss-120b 的 sliding 層和 Qwen3-Next 的 Gated DeltaNet state 各另佔一筆固定的記憶體，每個 request 約 4.5 MiB 與 36 MiB，<strong>所以 context 很短時，它們的優勢不明顯</strong>。DeepSeek-V3.2 在開源的 serving engine vLLM（把 model 跑成服務的軟體）上可以改用 FP8 存，依 <a href="https://vllm.ai/blog/2025-09-29-deepseek-v3-2" target="_blank" rel="noopener">vLLM 2025-09 的說明</a>每個 token 約 39 KiB，不到表中 68.6 KiB 的六成。</p>
+              <p id="i7-2"><b>每 token KV cache 的公式沒算到的：sliding window 與 linear attention 的固定開銷、FP8 的存法。</b>表只算隨長度成長的部分。gpt-oss-120b 的 sliding 層和 Qwen3-Next 的 Gated DeltaNet state 各另佔一筆固定的記憶體，每個 request 約 4.5 MiB 與 36 MiB，<strong>所以 context 很短時，它們的優勢不明顯</strong>。DeepSeek-V3.2 在開源的 serving engine vLLM（把 model 跑成服務的軟體）上可以改用 FP8 存，依 <a href="https://vllm.ai/blog/2025-09-29-deepseek-v3-2" target="_blank" rel="noopener">vLLM 2025-09 的說明</a>每個 token 約 39 KiB，不到表中 68.6 KiB 的六成。</p>
               <p id="i7-3"><b>選 model：每個 token 的 KV cache 和參數量一樣重要。</b>本文的判斷是，這個差距會改變選擇：Qwen3-32B 的權重 65.6 GB（BF16），比 Qwen3-Next-80B-A3B 的約 160 GB 小得多，但一個 128K 的 request，Qwen3-32B 的 KV cache 要 34.4 GB，Qwen3-Next 只要 3.2 GB；同樣 2 張 H200，前者放得下 6 個這樣的 request，後者約 37 個。<strong>要同時跑很多長 context 的 agent，比較大的 model 反而放得下比較多人</strong>。</p>
               <p>這張表只算記憶體，不是對照實驗：<strong>品質、serving engine 對新架構的支援、固定 state 的開銷，都要另外驗證</strong>。表格會過時，公式不會。</p>
             </div>
@@ -2321,7 +2321,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
   {
    "id": "k3",
    "from": "i1-2",
-   "title": "KV cache：Prefill 留下、Decode 每一步都要讀的中間結果",
+   "title": "KV cache 在 request 裡的角色：Prefill 留下、Decode 每一步都要讀，跟著 context 變大",
    "core": false,
    "points": [
     {
@@ -3130,7 +3130,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
   {
    "id": "k17",
    "from": "i3-4",
-   "title": "KV cache 的由來：前面 token 的 K、V 不會變，存起來不重算",
+   "title": "KV cache 的原理：前面 token 的 K、V 不會變，存起來不重算",
    "core": true,
    "points": [
     {
@@ -4332,7 +4332,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
   {
    "id": "k33",
    "from": "i6-4",
-   "title": "State-space model（Mamba）：每個 channel 一個小 state",
+   "title": "State-space model（Mamba）：也是固定大小的 state，vector 的每一維各留一個",
    "core": false,
    "points": [
     {
@@ -4659,7 +4659,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
   {
    "id": "k38",
    "from": "i7-2",
-   "title": "公式沒算到的部分：固定大小的 cache 與 state、FP8 的存法",
+   "title": "每 token KV cache 的公式沒算到的：sliding window 與 linear attention 的固定開銷、FP8 的存法",
    "core": false,
    "points": [
     {
@@ -5526,7 +5526,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k1.3",
     "k1.4",
     "k1.7"
-   ]
+   ],
+   "closed_ok": "常識：尖峰時多出來的是排隊，而排隊算在 TTFT 裡，是 serving 的常識（B 另外和題幹的「同樣長度」矛盾）。"
   },
   {
    "id": "k1b",
@@ -5553,7 +5554,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k1.1",
     "k1.2"
-   ]
+   ],
+   "closed_ok": "常識：tokenize、detokenize、排隊、網路不在 GPU 的 model 裡算，懂 serving 的人本來就知道"
   },
   {
    "id": "k1c",
@@ -5580,7 +5582,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k1.5",
     "k1.6"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 token ID 都對，model 那一段就沒錯，只剩把 ID 換回文字的那一段。"
   },
   {
    "id": "k2a",
@@ -5609,7 +5612,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k2.7",
     "k2.8",
     "k2.12"
-   ]
+   ],
+   "closed_ok": "推理：題幹給了 30K 輸入、40 個輸出、排隊很短，時間只可能花在讀 prompt。"
   },
   {
    "id": "k2b",
@@ -5622,7 +5626,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
      "why": "卡的不是記憶體：2,000 個 token 的 prompt 都能一起算。卡的是輸入還不存在：output 的 token 要等上一個算完、挑出來，才知道下一步要輸入什麼。"
     },
     {
-     "t": "第 2 個 output token 的輸入是第 1 個，要先從機率表挑出它，才能算下一個",
+     "t": "回答的每個 token 都接在上一個後面；上一個還沒從機率表挑出來，下一個就沒辦法算",
      "ok": true
     },
     {
@@ -5638,7 +5642,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k2.2",
     "k2.3",
     "k2.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：autoregressive 生成，下一個 token 的輸入是上一個抽出來的 token，沒"
   },
   {
    "id": "k2c",
@@ -5666,7 +5671,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k2.9",
     "k2.10",
     "k2.11"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k24c）"
   },
   {
    "id": "k2d",
@@ -5692,7 +5698,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k2.5"
-   ]
+   ],
+   "closed_ok": "常識：有 KV cache 時 decode 每一步只送進上一步產生的那個 token。"
   },
   {
    "id": "k3a",
@@ -5720,7 +5727,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k3.2",
     "k3.3",
     "k3.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹推理：KV cache 每個 context token 存一份，context 從 2,00"
   },
   {
    "id": "k3b",
@@ -5733,8 +5741,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
      "why": "KV cache 是 prefill 留給 decode 用的：prompt 每個 token 在每一層算出的 key 和 value。之後每一步 decode 都要讀它。"
     },
     {
-     "t": "可以：decode 只讀它自己後來加上去的那幾格，prompt 的部分用不到",
-     "why": "Decode 讀的是整份 KV cache，包括 prefill 替 prompt 每個 token、每一層存下的 key 和 value；它只是在後面再加一格。"
+     "t": "可以：decode 只需要最近幾個 token 的結果，prompt 的部分用不到",
+     "why": "Decode 每一步讀的是整份 KV cache，包括 prefill 替 prompt 每個 token、每一層存下的 key 和 value，不是只讀最近的幾個。"
     },
     {
      "t": "行不通：之後每一步 decode 都要讀它，request 還在跑就得一直留著",
@@ -5748,7 +5756,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k3.1",
     "k3.2",
     "k3.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：decode 每一步的 attention 都要讀 prompt 的 K、V，清掉就得重算"
   },
   {
    "id": "k4a",
@@ -5777,7 +5786,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k4.3",
     "k4.4",
     "k4.5"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k5a）"
   },
   {
    "id": "k4b",
@@ -5804,7 +5814,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k4.6",
     "k4.7"
-   ]
+   ],
+   "closed_ok": "推理：題幹說算力有餘卻收不了人，剩下只會是記憶體，而隨 request 數變的只有 KV cache（同節 k4a 題幹的「記"
   },
   {
    "id": "k4c",
@@ -5830,7 +5841,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k4.1"
-   ]
+   ],
+   "closed_ok": "常識：batch 越大總 throughput 越高，是 GPU serving 的常識。"
   },
   {
    "id": "k5a",
@@ -5839,16 +5851,16 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "使用者看到一半就關掉頁面，server 卻沒有偵測到斷線，繼續生成到 max_tokens 才停。這對其他正在排隊的 request 有什麼影響？",
    "choices": [
     {
-     "t": "沒有影響：沒有人在讀的 request 只多花一點算力，不會佔住任何記憶體",
-     "why": "它的 KV cache 一直佔著記憶體，直到 decode 停下來。早一點停，記憶體才早一點釋放、可以收下一個 request；多跑到 max_tokens，排隊的人就多等這一段。"
+     "t": "要多等：它佔著 batch 的一個位子，KV cache 則在使用者關掉頁面時就釋放了",
+     "why": "釋放 KV cache 的是 decode 停下來，不是使用者離開。Decode 只停在三種情況：model 產生 stop token、長度到了 max_tokens、使用者斷線；server 沒偵測到斷線，它就一路跑到 max_tokens，KV cache 也佔到那時候。"
     },
     {
-     "t": "要多等：它的 KV cache 到停下來才釋放，在那之前這份記憶體收不了別人",
+     "t": "要多等：它的 KV cache 到 decode 停下來才釋放，在那之前這份記憶體收不了別人",
      "ok": true
     },
     {
-     "t": "沒有影響：scheduler 每一步都重組 batch，沒有人在讀的 request 會被換掉",
-     "why": "Decode 只停在三種情況：model 產生 stop token、長度到了 max_tokens、使用者斷線。沒偵測到斷線，它就一路跑到 max_tokens，KV cache 也佔到那時候才釋放。"
+     "t": "要多等：它的 KV cache 到 scheduler 下一次重組 batch 就釋放，只多佔一步",
+     "why": "重組 batch 不會讓還在跑的 request 停下來。Decode 只停在三種情況：model 產生 stop token、長度到了 max_tokens、使用者斷線。沒偵測到斷線，它就跑到 max_tokens，KV cache 也佔到那時候才釋放。"
     }
    ],
    "key": [
@@ -5857,7 +5869,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k5.1",
     "k5.2"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹推理：server 沒偵測到斷線，就不可能在使用者關頁面時釋放（B 和題幹矛盾）"
   },
   {
    "id": "k6a",
@@ -5885,7 +5898,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k6.6",
     "k6.7",
     "k6.8"
-   ]
+   ],
+   "closed_ok": "常識：prefix cache 省的是重算、不是記憶體，命中的 K、V 仍要留在 GPU 上。"
   },
   {
    "id": "k6b",
@@ -5912,7 +5926,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k6.4",
     "k6.5"
-   ]
+   ],
+   "closed_ok": "常識：prefix cache 只認從開頭起完全相同的前綴，開頭一變後面全部失效。"
   },
   {
    "id": "k6c",
@@ -5940,7 +5955,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k6.1",
     "k6.2",
     "k6.3"
-   ]
+   ],
+   "closed_ok": "常識：LLM API 無狀態，每一圈重送整段 context（題幹的「錯在哪裡」另外先刪掉了 A）。"
   },
   {
    "id": "k7a",
@@ -5968,7 +5984,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k7.2",
     "k7.3",
     "k7.4"
-   ]
+   ],
+   "closed_ok": "常識：token ID 只是 embedding table 的列號，數值大小沒有語意。"
   },
   {
    "id": "k7b",
@@ -5994,25 +6011,26 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k7.5"
-   ]
+   ],
+   "closed_ok": "常識：embedding 之後的矩陣是 token 數 × d，長度只影響列數。"
   },
   {
    "id": "k7c",
    "ks": "k7",
    "kind": "choice",
-   "q": "你學會了用 Llama 3 70B 當例子，算參數放在哪些零件、每個 token 要算多少。現在要估另一家公司出的語言模型，這套算法還用得上嗎？",
+   "q": "你用 Llama 3 70B 當例子，學會了算參數放在哪些零件、每個 token 要算多少。現在要估另一家公司剛出的語言模型，參數只有 8B。該從哪裡下手？",
    "choices": [
     {
-     "t": "大致用得上：現在的語言模型幾乎都是 Transformer 架構，代入它自己的尺寸就好",
-     "ok": true
+     "t": "從它的架構下手：換了一家公司，零件不一樣，要先弄清楚它有哪些零件",
+     "why": "現在的語言模型幾乎都是同一種架構，叫 Transformer。換一家公司，零件還是同樣那幾種，不必重新認；要換的是尺寸。"
     },
     {
-     "t": "用不上：每一家的架構都是各自設計的，零件和算法要照那個 model 重新學一遍",
-     "why": "現在的語言模型幾乎都是同一種架構，叫 Transformer。零件相同、尺寸不同，所以帳的算法可以沿用，換成那個 model 自己的數字。"
-    },
-    {
-     "t": "要看大小：參數量在 70B 上下的才用得上，小很多或大很多的 model 結構不同",
+     "t": "從找小 model 的算法下手：參數少了近十倍，結構不一樣，70B 的套不上",
      "why": "大小不同只是尺寸（寬度、層數）不同。現在的語言模型幾乎都是 Transformer 這一種架構，算法相同，代入各自的尺寸。"
+    },
+    {
+     "t": "從它的尺寸下手：零件和算法都一樣，要換的是寬度、層數這些數字",
+     "ok": true
     }
    ],
    "key": [
@@ -6020,7 +6038,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k7.1"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：現在的語言模型幾乎都是同一套 decoder-only Transformer 零件，8B 和"
   },
   {
    "id": "k9a",
@@ -6051,7 +6070,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k9.3",
     "k9.4"
    ],
-   "num_choices_ok": "要算才分得出懂不懂 2 × n × d × k；兩個錯的數字各對應一種算錯：2,000 萬是漏了加法，400 萬是漏了 token 數。選項都帶算法，不是只有數字。"
+   "num_choices_ok": "要算才分得出懂不懂 2 × n × d × k；兩個錯的數字各對應一種算錯：2,000 萬是漏了加法，400 萬是漏了 token 數。選項都帶算法，不是只有數字。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k9b",
@@ -6077,7 +6097,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k9.5"
-   ]
+   ],
+   "closed_ok": "常識：推論時權重不變，對話中的修正靠的是 context。"
   },
   {
    "id": "k10a",
@@ -6106,7 +6127,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k10.2",
     "k10.3",
     "k10.4"
-   ]
+   ],
+   "closed_ok": "常識：FFN 逐個 token 各自算，只有 attention 跨 token 搬資訊。"
   },
   {
    "id": "k10b",
@@ -6133,7 +6155,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k10.6",
     "k10.7"
-   ]
+   ],
+   "closed_ok": "常識：residual 連接是把子層輸出加回原 vector。"
   },
   {
    "id": "k10c",
@@ -6142,15 +6165,15 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "拿到一個新 model 的設定，你想快速估它的參數總數，打算先略過最不影響結果的一項。該略過哪一項？",
    "choices": [
     {
-     "t": "LM head：它只在最後一層之後用一次，不像 block 會重複幾十次",
-     "why": "LM head 只用一次，但它是 d × V 的矩陣，V 是詞彙表的大小：Llama 3 70B 是 8,192 × 128,256，約 10 億個參數，比全部的 norm 大了幾個數量級。"
+     "t": "LM head：整個 model 只有一個，只在最後一層之後用一次",
+     "why": "LM head 只有一個，但它是 d × V 的矩陣，V 是詞彙表的大小：Llama 3 70B 是 8,192 × 128,256，約 10 億個參數，比全部的 norm 大了幾個數量級。"
     },
     {
-     "t": "FFN 的第三個矩陣：它只負責把撐寬的 vector 壓回原來的維度",
-     "why": "壓回來的矩陣是 dff × d，和前面兩個 d × dff 的矩陣一樣大（Llama 3 70B 是 28,672 × 8,192），而且每一層都有。略過它，每層 FFN 就少算三分之一。"
+     "t": "FFN 裡壓回來的那個矩陣：每層只有一個，只負責把撐寬的 vector 壓回來",
+     "why": "壓回來的矩陣是 dff × d，和另外兩個 d × dff 的矩陣一樣大（Llama 3 70B 是 28,672 × 8,192），而且每一層都有。略過它，每層 FFN 就少算三分之一。"
     },
     {
-     "t": "每一層的 RMSNorm：每個只有寬度 d 那麼多個係數，全部加起來微不足道",
+     "t": "RMSNorm：每層只有兩個，只負責把 vector 數值的大小拉齊",
      "ok": true
     }
    ],
@@ -6161,7 +6184,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k10.5",
     "k10.8"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：RMSNorm 每個只有一條和寬度一樣長的 vector，參數量比任何一個矩陣小好幾個數量級"
   },
   {
    "id": "k11a",
@@ -6188,7 +6212,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k11.1",
     "k11.3"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k13a）"
   },
   {
    "id": "k11b",
@@ -6214,7 +6239,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k11.2"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k12a",
@@ -6242,7 +6268,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k12.1",
     "k12.3"
    ],
-   "num_choices_ok": "換一組數字算 weights 的大小；兩個錯的數字各對應一種算錯：30 GB 是把 BF16 當成 1 byte，6 GB 是把 30B 當成 30 億。"
+   "num_choices_ok": "換一組數字算 weights 的大小；兩個錯的數字各對應一種算錯：30 GB 是把 BF16 當成 1 byte，6 GB 是把 30B 當成 30 億。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k12b",
@@ -6270,25 +6297,26 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k12.4",
     "k12.5"
-   ]
+   ],
+   "closed_ok": "推理：題幹給了 16 bit 改 4 bit，參數個數沒變，所以記憶體剩四分之一、運算次數不變（同節 k12d 的題幹也寫了運"
   },
   {
    "id": "k12c",
    "ks": "k12",
    "kind": "choice",
-   "q": "上線前你估了兩個數字：weights 佔多少記憶體、每個 token 走過 model 要做幾次運算。上線後發現 prompt 比預期長 4 倍。這兩個數字要怎麼修正？",
+   "q": "上線前你估了兩個數字：weights 佔多少記憶體、每個 token 走過 model 要做幾次運算。上線後發現 prompt 比預期長 4 倍。估算要怎麼修正？",
    "choices": [
     {
-     "t": "都不用改；跟長度有關、要另外算的，只有 attention 裡 token 互相讀取的那一段",
+     "t": "兩個數字都不改；也沒有要另外補算的，prompt 變長只是要算的 token 變多",
+     "why": "兩個數字不改是對的，但還有一段運算跟長度有關：attention 裡 token 互相讀取的那一段，要另外算；KV cache 也在那裡算。"
+    },
+    {
+     "t": "兩個數字都不改；只要另外補算 attention 裡 token 互相讀取的那一段",
      "ok": true
     },
     {
-     "t": "Weights 不用改；每個 token 的運算要乘 4，因為它乘過的每個矩陣都跟著變大",
-     "why": "矩陣的形狀不看 prompt 多長，所以每個 token 約 2 × N 次不變。和長度有關的運算，只有 attention 裡 token 互相讀取的那一段，要另外算。"
-    },
-    {
-     "t": "兩個都要乘 4；prompt 越長，要載入的參數和每個 token 的運算都等比例增加",
-     "why": "參數總數 N 是 model 的性質，不隨 prompt 變。Weights 的大小（N × byte 數）和每個 token 約 2 × N 次運算都和 prompt 多長無關。"
+     "t": "Weights 不改；每個 token 的運算次數乘 4，因為它乘過的每個矩陣都跟著變大",
+     "why": "矩陣的形狀不看 prompt 多長，參數總數 N 也不變，所以每個 token 約 2 × N 次不變。和長度有關的運算只有 attention 裡 token 互相讀取的那一段，是另外算的，不是把這個數字乘 4。"
     }
    ],
    "key": [
@@ -6297,21 +6325,22 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k12.2",
     "k12.7"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：weights 和每個 token 走過矩陣的運算都不看 prompt 長度，只有 atten"
   },
   {
    "id": "k12d",
    "ks": "k12",
    "kind": "choice",
-   "q": "某個小 model 的詞彙表特別大，embedding table 佔了全部參數的兩成。用「每個 token 約 2 × N 次運算」估它，結果會怎樣？",
+   "q": "某個小 model 的詞彙表特別大，embedding table 佔了全部參數的兩成。你沿用估 Llama 3 70B 每個 token 運算次數的那條公式來估它。估出來的數字會怎樣？",
    "choices": [
     {
-     "t": "低估：詞彙表越大，查表要比對的列就越多，運算會比 2 × N 還多",
-     "why": "查表不用比對，也不用算：ID 就是列號，直接取那一列。Embedding table 的參數沒有參與運算，算進 N 只會讓估計偏高。"
+     "t": "低估：詞彙表越大，查表要比對的列就越多，實際的運算比估的還多",
+     "why": "查表不用比對，也不用算：ID 就是列號，直接取那一列。Embedding table 的參數沒有參與運算，卻算進了 N，估計只會偏高。"
     },
     {
-     "t": "一樣準：每個參數都會參與一次乘和一次加，和這個參數放在哪一個零件無關",
-     "why": "有一個例外：embedding table 是查表、不用算。Llama 3 70B 的 embedding table 只佔 1.5%，所以可以忽略；佔到兩成就不能忽略了。"
+     "t": "一樣準：查表幾乎不花運算，embedding table 佔多少都不影響估的結果",
+     "why": "查表確實不用算，問題在公式：2 × N 的 N 把 embedding table 的參數也算了進去。Llama 3 70B 的 embedding table 只佔 1.5%，所以可以忽略；佔到兩成就不能忽略了。"
     },
     {
      "t": "高估：embedding table 是查表、不用算，佔到兩成就不能再忽略",
@@ -6324,7 +6353,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k12.5",
     "k12.6"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從定義推理：那條公式是拿參數總數去估運算（約 2N），embedding table 是查表、不做乘"
   },
   {
    "id": "k13a",
@@ -6350,7 +6380,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k13.1"
-   ]
+   ],
+   "closed_ok": "常識：只有 attention 讓一個 token 讀到別的 token。"
   },
   {
    "id": "k13b",
@@ -6376,7 +6407,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k13.3"
-   ]
+   ],
+   "closed_ok": "常識：讀的一方出 query、被讀的出 key，混合的是 value，是 attention 的基本定義。"
   },
   {
    "id": "k13c",
@@ -6403,7 +6435,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k13.2",
     "k13.4"
-   ]
+   ],
+   "closed_ok": "常識：W_Q、W_K、W_V 是訓練出來的權重，和它們算出來的 K、V（KV cache）是兩回事。"
   },
   {
    "id": "k15a",
@@ -6435,7 +6468,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k15.3",
     "k15.4",
     "k15.5"
-   ]
+   ],
+   "closed_ok": "常識：causal mask 在 prefill 也生效，每個 token 只讀自己和前面的。"
   },
   {
    "id": "k15b",
@@ -6463,7 +6497,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k15.1",
     "k15.6",
     "k15.7"
-   ]
+   ],
+   "closed_ok": "常識：attention 的輸出是 v 的 softmax 加權和，分數遠高的那個權重接近 1。"
   },
   {
    "id": "k15c",
@@ -6489,7 +6524,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k15.8"
-   ]
+   ],
+   "closed_ok": "常識：不除 √dk 時內積隨維度變大，softmax 飽和、gradient 變小，是原論文的理由。"
   },
   {
    "id": "k16a",
@@ -6516,13 +6552,14 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k16.1",
     "k16.3"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：attention 分數是每一對 token 一個，長度加倍、對數變 4 倍"
   },
   {
    "id": "k16b",
    "ks": "k16",
    "kind": "choice",
-   "q": "Context 從 8K 拉到 128K token。一個 head 完整的分數矩陣有 n × n 格，記憶體放不下。實作上怎麼處理？",
+   "q": "Context 從 8K 拉到 128K token 之後，一個 head 完整的分數矩陣大到記憶體放不下。實作上怎麼處理？",
    "choices": [
     {
      "t": "只存 causal mask 沒遮掉的那一半，被遮的一半不佔記憶體",
@@ -6543,7 +6580,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k16.4",
     "k16.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識（FlashAttention 的做法）：分塊算 softmax，不把整個分數矩陣放進記憶體"
   },
   {
    "id": "k17a",
@@ -6570,7 +6608,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k17.1",
     "k17.2"
-   ]
+   ],
+   "closed_ok": "常識：causal mask 保證前面 token 的 k、v 不受後面影響，所以能 cache。"
   },
   {
    "id": "k17b",
@@ -6598,7 +6637,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k17.3",
     "k17.4",
     "k17.5"
-   ]
+   ],
+   "closed_ok": "常識：只算新 token 的 q、k、v，但它的 q 要對 cache 裡全部的 K 算分數。"
   },
   {
    "id": "k17c",
@@ -6624,7 +6664,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k17.6"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k53b）"
   },
   {
    "id": "k17d",
@@ -6650,7 +6691,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k17.7"
-   ]
+   ],
+   "closed_ok": "常識：每個 token（prompt 和生成的）在每一層留一組 k、v，到 request 結束才放掉。"
   },
   {
    "id": "k18a",
@@ -6678,13 +6720,14 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k18.1",
     "k18.2",
     "k18.3"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 head 數加倍、每個 head 的維度減半，乘起來總量不變。"
   },
   {
    "id": "k19a",
    "ks": "k19",
    "kind": "choice",
-   "q": "同一個 model 做兩個版本：一個每個 query head 各存一份 K、V，另一個改成 GQA，每 8 個 query head 共用一份。跑同一段 prompt，兩個版本差在哪裡？",
+   "q": "同一個 model 做兩個版本：一個用 MHA，另一個把 attention 改成 GQA，其他都不變。跑同一段 prompt，兩個版本差在哪裡？",
    "choices": [
     {
      "t": "GQA 版的 KV cache 小很多；attention 要算的分數也少很多",
@@ -6705,7 +6748,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k19.2",
     "k19.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：GQA 讓幾個 query head 共用一組 K、V，省的是 KV cache"
   },
   {
    "id": "k19b",
@@ -6733,7 +6777,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k19.1",
     "k19.3",
     "k19.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：KV cache 存的是 K、V，大小和 KV head 數成正比（16 對 8，乙約 2 倍"
   },
   {
    "id": "k19c",
@@ -6760,7 +6805,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k19.4",
     "k19.6"
-   ]
+   ],
+   "closed_ok": "推理：題幹自己說的是「每個 token」的量，還沒乘 token 數和人數"
   },
   {
    "id": "k20a",
@@ -6789,7 +6835,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k20.2",
     "k20.3",
     "k20.6"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k21b）"
   },
   {
    "id": "k20b",
@@ -6816,25 +6863,26 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k20.4",
     "k20.5"
-   ]
+   ],
+   "closed_ok": "常識：權重只有一份、大小固定"
   },
   {
    "id": "k20c",
    "ks": "k20",
    "kind": "choice",
-   "q": "你要把 GPU 的算力代進公式，估一般的矩陣運算要多久。機器有 2 張 H200，datasheet 上印了每張的 TFLOP/s。這個數字該怎麼用？",
+   "q": "你要估 prefill 要算多久，得把 GPU 的算力代進公式。機器有 2 張 H200，datasheet 上印了每張的 TFLOP/s，代進去之前要先砍一半。為什麼？",
    "choices": [
     {
-     "t": "直接用，再乘上張數：datasheet 印的就是廠商量出來的規格",
-     "why": "Datasheet 印的是 with sparsity 的值，矩陣大部分是 0 時才有。一般的運算只有它的一半，直接用會把時間估成一半。"
+     "t": "印的是 FP8 的算力：權重用 BF16 存，每個數字長一倍，算得就慢一半",
+     "why": "要折的原因不是精度。Datasheet 每張印的 1,979 TFLOP/s，是矩陣大部分是 0 時（with sparsity）才有的值；一般的運算是它的一半，每張 989，2 張合計 1,978（BF16）。"
     },
     {
-     "t": "先除以 2，再乘上張數：印的是矩陣大多是 0 時才有的值",
+     "t": "印的是矩陣大部分是 0 時的算力：一般的運算沒有那麼多 0，只有它的一半",
      "ok": true
     },
     {
-     "t": "直接用，不乘張數：多張卡只增加記憶體，算力不會加起來",
-     "why": "算力是合計的（2 張 H200 合計 1,978 TFLOP/s）。要打折的是 datasheet 印的那個數字：它是 with sparsity 的值，一般運算只有一半。"
+     "t": "印的是短時間的峰值算力：長時間連續運算時，維持得住的只有它的一半",
+     "why": "不是峰值和持續的差別。Datasheet 每張印的 1,979 TFLOP/s，是矩陣大部分是 0 時（with sparsity）才有的值；一般的運算是它的一半，每張 989，2 張合計 1,978。"
     }
    ],
    "key": [
@@ -6842,7 +6890,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k20.7"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：本來就知道：NVIDIA datasheet 上的 Tensor Core TFLOPS 標註「wi"
   },
   {
    "id": "k21a",
@@ -6870,7 +6919,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k21.2",
     "k21.4",
     "k21.5"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k12c）"
   },
   {
    "id": "k21b",
@@ -6897,7 +6947,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k21.1",
     "k21.3"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k20a）"
   },
   {
    "id": "k22a",
@@ -6925,7 +6976,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k22.1",
     "k22.2",
     "k22.3"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k24c）"
   },
   {
    "id": "k22b",
@@ -6952,7 +7004,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k22.4",
     "k22.5"
-   ]
+   ],
+   "closed_ok": "常識：權重整個 batch 共用、讀一遍"
   },
   {
    "id": "k23a",
@@ -6982,34 +7035,36 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k23.3",
     "k23.4"
    ],
-   "num_choices_ok": "每個錯的數字各對應一種算錯的方式：16K 是沒扣權重，100K 是把整台共用的預算當成每個 request 各一份。"
+   "num_choices_ok": "每個錯的數字各對應一種算錯的方式：16K 是沒扣權重，100K 是把整台共用的預算當成每個 request 各一份。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k23b",
    "ks": "k23",
    "kind": "choice",
-   "q": "同一台機器、同一個 model。白天跑客服，每人的 context 約 4K token；晚上改跑文件分析，每人約 64K token。晚上能同時服務的人數，大約是白天的多少？",
+   "q": "同一台機器混著跑兩種 request：客服每個約 4K token，文件分析每個約 32K token，兩種的比例每個小時都在變。KV cache 的記憶體滿了，新的 request 就要排隊。「滿了」該用哪一種方式判斷？",
    "choices": [
     {
-     "t": "約 1/256：attention 隨長度的平方成長，KV cache 的記憶體也跟著平方成長",
-     "why": "隨 n² 成長的是 attention 的運算。KV cache 是每個 token 一份，隨長度等比例成長：context 變 16 倍，一個人佔的記憶體是 16 倍，不是 256 倍。"
+     "t": "看 request 的個數：照記憶體放得下幾個 request，訂一個固定的同時服務人數",
+     "why": "放得下幾個不是固定的數字：人數 × 每人的 context 長度大約固定，每人 4K 時放得下 104 個，32K 時只有 13 個。兩種的比例一變，同一個人數不是放不下，就是空著。"
     },
     {
-     "t": "約 1/16：KV cache 的記憶體跟著長度等比例成長，每人佔 16 倍，人數剩 1/16",
+     "t": "看 context 的總長：所有 request 的 context 加起來，不超過一個定值",
      "ok": true
     },
     {
-     "t": "差不多：人數上限看的是 GPU 的算力和 batch 大小，和每人的 context 多長無關",
-     "why": "人數上限先卡在記憶體。人數 × 每人的 context 長度大約固定，圖上每人 4K 時放得下 104 個，32K 時 13 個，128K 時只剩 3 個。"
+     "t": "看單一 request 的長度：最長的那一個 request 放得下，其餘比較短的也都放得下",
+     "why": "每一個都放得下，不代表加起來放得下。同時服務的人數 × 每人的 context 長度不能超過預算；每個都不長，人數一多一樣超過。"
     }
    ],
    "key": [
-    "同一筆記憶體下，人數 × 每人的 context 長度大約固定：context 加倍，人數就減半。圖上 2 張 H200 扣掉權重後，每人 4K 時 104 個、8K 時 52 個、32K 時 13 個。"
+    "同一筆記憶體下，人數 × 每人的 context 長度大約固定：context 加倍，人數就減半。2 張 H200 扣掉權重後，每人 4K 時放得下 104 個、8K 時 52 個、32K 時 13 個。所以放得下幾個 request 不是固定的數字，要看所有 request 的 context 長度加起來有沒有超過預算。"
    ],
    "covers": [
     "k23.4",
     "k23.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹推理：KV cache 和 token 總數成正比，兩種 request 長度差 8 倍、比例"
   },
   {
    "id": "k23c",
@@ -7018,30 +7073,31 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "團隊想讓同一個服務支援更長的 context，四個人各提一個做法。哪一個人的理由說錯了？",
    "choices": [
     {
-     "t": "KV cache 改存 FP8：每個數字的 byte 減半，token 預算加倍",
+     "t": "KV cache 改存 FP8：每個數字的 byte 減半，同樣的記憶體預算加倍",
      "why": "這個說對了。讓每個數字變小是四個方向之一：KV 改存 FP8，預算從約 43 萬加倍成約 86 萬個 token。"
     },
     {
-     "t": "換成 KV head 更少的架構：attention 的運算變少，預算跟著變多",
+     "t": "換成 KV head 更少的架構：KV cache 變成固定大小，不再跟著變長",
      "ok": true
     },
     {
-     "t": "加 GPU：記憶體容量變大，但權重可能也要切到多張卡上",
+     "t": "加 GPU：記憶體的容量變大，但權重可能也要切到多張卡上",
      "why": "這個說對了。加 GPU 是四個方向之一：容量變大，但權重也可能要切到多張卡。"
     },
     {
-     "t": "把用不到的 KV 搬出 GPU：騰出的記憶體留給正在跑的 request",
+     "t": "把用不到的 KV 搬出 GPU：騰出來的記憶體留給正在跑的 request",
      "why": "這個說對了。把用不到的 KV 搬出 GPU 是四個方向之一。"
     }
    ],
    "key": [
-    "預算是記憶體除以每個 token 的 KV，槓桿只有四個方向：讓每個 token 的 KV 變小（GQA 這類架構）、讓每個數字變小（FP8，預算加倍）、加 GPU（權重可能要切到多張卡）、把用不到的 KV 搬出 GPU。KV head 變少是直接讓每個 token 的 KV 變小，和運算量無關。"
+    "預算是記憶體除以每個 token 的 KV，槓桿只有四個方向：讓每個 token 的 KV 變小（GQA 這類架構）、讓每個數字變小（FP8，預算加倍）、加 GPU（權重可能要切到多張卡）、把用不到的 KV 搬出 GPU。KV head 變少是讓每個 token 的 KV 變小；它還是每個 token 一份，照樣跟著 context 變長。"
    ],
    "covers": [
     "k23.7",
     "k23.8",
     "k23.9"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：KV head 變少只是每個 token 存的量變小，cache 仍然跟著 context 變"
   },
   {
    "id": "k23d",
@@ -7067,7 +7123,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k23.6"
-   ]
+   ],
+   "closed_ok": "常識：算出來的是理論上限，要留餘裕給計算暫存和碎片，是工程常識。"
   },
   {
    "id": "k24a",
@@ -7094,7 +7151,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k24.1",
     "k24.3"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k6a）"
   },
   {
    "id": "k24b",
@@ -7120,7 +7178,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k24.2"
-   ]
+   ],
+   "closed_ok": "常識：新 token 的 attention 還要對前面全部 token 的 K、V 算分數。"
   },
   {
    "id": "k24c",
@@ -7147,7 +7206,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k24.4",
     "k24.5"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k39a）"
   },
   {
    "id": "k25a",
@@ -7175,7 +7235,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k25.3",
     "k25.4",
     "k25.5"
-   ]
+   ],
+   "closed_ok": "常識：router 逐 token、逐層挑 expert，每個 expert 隨時可能被挑中，全部都得在記憶體裡。"
   },
   {
    "id": "k25b",
@@ -7202,7 +7263,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k25.1",
     "k25.2"
-   ]
+   ],
+   "closed_ok": "常識：MoE 的 expert 是 block 裡取代 FFN 的小 FFN，attention 不變。"
   },
   {
    "id": "k26a",
@@ -7231,7 +7293,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k26.2",
     "k26.5"
    ],
-   "num_choices_ok": "選項寫了代哪一個參數數；兩個錯的各對應一種代錯：都代 active（以為 MoE 的權重也只有 active 那麼大）、都代 total（以為每個 token 走過全部 expert）。"
+   "num_choices_ok": "選項寫了代哪一個參數數；兩個錯的各對應一種代錯：都代 active（以為 MoE 的權重也只有 active 那麼大）、都代 total（以為每個 token 走過全部 expert）。",
+   "closed_ok": "推理：「total」和「active」的字面定義就夠：全部參數都要放進記憶體，運算只走 active（同節 k26c 的題幹也"
   },
   {
    "id": "k26b",
@@ -7240,7 +7303,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "你把一個 dense model 換成 MoE model。兩者的層數、KV head 數、head 維度都一樣，MoE 的 active 參數只有 dense 的五分之一。同樣長度的 request，佔的 KV cache 怎麼變？",
    "choices": [
     {
-     "t": "不變：MoE 只換掉 FFN，attention 要存的 K、V 一樣多",
+     "t": "不變：要存的 K、V 形狀沒變，和每個 token 用到多少參數無關",
      "ok": true
     },
     {
@@ -7257,7 +7320,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k26.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：MoE 換的是 FFN 的部分，attention 的 K、V 形狀由層數、KV head 數"
   },
   {
    "id": "k26c",
@@ -7283,7 +7347,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k26.3"
-   ]
+   ],
+   "closed_ok": "常識：MoE 只把 FFN 換成 expert，attention、embedding 等每個 token 都走，不能乘 2/"
   },
   {
    "id": "k26d",
@@ -7310,13 +7375,14 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k26.6",
     "k26.7"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k27a）"
   },
   {
    "id": "k27a",
    "ks": "k27",
    "kind": "choice",
-   "q": "三個團隊都在考慮把 dense model 換成品質相近的 MoE model（total 比較大，active 小很多）。哪一個團隊換了最划算？",
+   "q": "三個團隊都在考慮把 dense model 換成品質相近的 MoE model。哪一個團隊換了最划算？",
    "choices": [
     {
      "t": "GPU 張數固定而且快滿了，想靠 active 小把 model 塞進現有的卡",
@@ -7337,35 +7403,37 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k27.4",
     "k27.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從定義推理：MoE 省的是每個 token 的運算，記憶體反而要放全部的 expert"
   },
   {
    "id": "k27b",
    "ks": "k27",
    "kind": "choice",
-   "q": "你在評估要不要換 MoE，同事提醒：「MoE 是拿記憶體換運算。」這句話要拿 MoE 和哪一種 dense model 比，才成立？",
+   "q": "拿 MoE model 和 dense model 比，結論會跟著選哪一種 dense model 當基準而變。下面三種比法，哪一種的結論說對了？",
    "choices": [
     {
-     "t": "品質相近的：同樣的品質，MoE 的運算比較少，記憶體一定比較大",
-     "why": "和品質相近的 dense model 比，運算少很多，記憶體有多有少：Mixtral 比 Llama 2 70B 少三成，DeepSeek-V3 是 Llama 3.1 405B 的 1.7 倍。「一定比較大」不成立。"
+     "t": "和品質相近的比：MoE 的運算少很多，代價是要放好幾倍的參數",
+     "why": "運算少很多是對的，但記憶體有多有少：Mixtral 比 Llama 2 70B 少三成，DeepSeek-V3 是 Llama 3.1 405B 的 1.7 倍，都不是好幾倍。"
     },
     {
-     "t": "總參數相同的：同樣的參數量，MoE 的運算比較少，記憶體比較大",
-     "why": "總參數相同時，權重佔的記憶體也相同（記憶體看 total），沒有多付記憶體，談不上「換」。"
+     "t": "和總參數相同的比：記憶體一樣大，每個 token 的運算也一樣多",
+     "why": "運算不會一樣多。同樣的運算，MoE 要放的參數是 dense model 的 3.6 倍（Mixtral）到 18 倍（DeepSeek-V3）；反過來，總參數相同時，MoE 每個 token 的運算少很多。"
     },
     {
-     "t": "每個 token 運算量相同的：同樣的運算，MoE 要放好幾倍的參數",
+     "t": "和每個 token 運算量相同的比：運算一樣多，要放的參數是好幾倍",
      "ok": true
     }
    ],
    "key": [
-    "「拿記憶體換運算」是和每個 token 運算量相同的 dense model 比：同樣的運算，MoE 要放的參數是它的 3.6 倍（Mixtral）到 18 倍（DeepSeek-V3）。和品質相近的 dense model 比，記憶體有多有少。"
+    "MoE 常被說成拿記憶體換運算，那是和每個 token 運算量相同的 dense model 比：同樣的運算，MoE 要放的參數是它的 3.6 倍（Mixtral）到 18 倍（DeepSeek-V3）。和品質相近的 dense model 比，運算少很多，記憶體有多有少。"
    ],
    "covers": [
     "k27.1",
     "k27.2",
     "k27.3"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從定義推理：運算量相同等於 active 相同，total 自然是好幾倍，C 一定成立"
   },
   {
    "id": "k28a",
@@ -7394,7 +7462,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k28.3",
     "k28.4",
     "k28.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹推理：batch 裡上百個 token 各挑各的 expert，合起來幾乎每個 expert "
   },
   {
    "id": "k28b",
@@ -7403,16 +7472,16 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "一個 256 選 8 的 MoE model，decode 的 batch 已經開到 128 個 request，GPU 的利用率還是不高。要用滿 GPU，batch 該往哪個方向調？",
    "choices": [
     {
-     "t": "再開大：batch 裡的 token 各挑各的，每個 expert 只分到其中一小部分",
+     "t": "再開大：128 個 request 分下去，每個 expert 一次只湊到幾個 token",
      "ok": true
     },
     {
-     "t": "調小：batch 越大要讀的 expert 越多，讀取的時間拖住了 GPU 的運算",
-     "why": "Batch 變大確實讓要讀的 expert 變多，但調小只會讓每個 expert 分到的 token 更少，GPU 更用不滿。"
+     "t": "調小：128 個 request 擠在一起，每個 expert 一次要算的 token 太多",
+     "why": "反了。128 個 token 各挑 8 個、分給 256 個 expert，平均每個 expert 只有 4 個，是太少不是太多；調小只會更少，GPU 更用不滿。"
     },
     {
-     "t": "調了也沒用：每個 token 只算 8 個 expert，GPU 的用量由 active 決定",
-     "why": "Active 決定每個 token 要算多少。GPU 用不用得滿，看每個 expert 一次能湊到多少 token 一起算；總 batch 夠大才湊得滿。"
+     "t": "不用調：每個 expert 一次湊到幾個 token 由 router 決定，和 batch 無關",
+     "why": "Router 決定的是每個 token 去哪幾個 expert；每個 expert 一次湊到幾個，還要看 batch 裡總共有多少 token。Batch 再大，每個 expert 也只分到其中一小部分，所以要很大的總 batch 才用得滿 GPU。"
     }
    ],
    "key": [
@@ -7421,7 +7490,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k28.2",
     "k28.6"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹算：128 個 token × 8 個 expert ÷ 256 個 expert = 每個 "
   },
   {
    "id": "k29a",
@@ -7449,7 +7519,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k29.2",
     "k29.3",
     "k29.4"
-   ]
+   ],
+   "closed_ok": "常識：MLA 每個 token 仍存一份、sparse 全存、linear attention 的 state 固定（k31a"
   },
   {
    "id": "k29b",
@@ -7476,7 +7547,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k29.1",
     "k29.5"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k30b）"
   },
   {
    "id": "k30a",
@@ -7504,7 +7576,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k30.1",
     "k30.4"
    ],
-   "num_choices_ok": "要算才分得出懂不懂；選項都寫了算法。六十四分之一是把每一層都當成封頂在 w，幾乎一樣多是把 sliding window 當成「照存、只是不讀」。"
+   "num_choices_ok": "要算才分得出懂不懂；選項都寫了算法。六十四分之一是把每一層都當成封頂在 w，幾乎一樣多是把 sliding window 當成「照存、只是不讀」。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k30b",
@@ -7531,7 +7604,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k30.2",
     "k30.3"
-   ]
+   ],
+   "closed_ok": "推理：local 的定義就是只讀 window 內，題幹說甲每一層都是 local。"
   },
   {
    "id": "k31a",
@@ -7557,7 +7631,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k31.3"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k35a）"
   },
   {
    "id": "k31b",
@@ -7585,7 +7660,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k31.1",
     "k31.2",
     "k31.4"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k36b）"
   },
   {
    "id": "k32a",
@@ -7612,7 +7688,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k32.1",
     "k32.2"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：linear attention 把每個 token 的 k、v 外積累加進一個固定大小的 s"
   },
   {
    "id": "k32b",
@@ -7640,7 +7717,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k32.4",
     "k32.5",
     "k32.6"
-   ]
+   ],
+   "closed_ok": "常識：純累加會把兩個 value 疊在一起"
   },
   {
    "id": "k32c",
@@ -7650,15 +7728,15 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "choices": [
     {
      "t": "Linear attention 的層每一步算得比較慢，要留幾層把速度補回來",
-     "why": "留一般 attention 的層不是為了速度，那幾層反而要存 KV cache。留它們是因為 state 記不住全部細節。"
+     "why": "留一般 attention 的層不是為了速度，那幾層反而要存 KV cache。留它們是因為固定大小的代價是記不住全部細節。"
     },
     {
-     "t": "Linear attention 的 state 記不住全部細節，要留幾層讀得到每個 token",
+     "t": "Linear attention 的層記不住全部的細節，要留幾層讀得到每個 token",
      "ok": true
     },
     {
-     "t": "Linear attention 的 state 每個 request 都要佔一筆，全換反而更佔記憶體",
-     "why": "State 不隨長度長，全換只會更省記憶體。不全換是因為 state 記不住全部細節。"
+     "t": "Linear attention 的層一樣要存每個 token 的 k、v，全換也省不到記憶體",
+     "why": "Linear attention 的層存的量不隨長度成長，全換只會更省記憶體：Qwen3-Next 只有那 12 層一般的 attention 存 KV cache。不全換是因為固定大小的代價是記不住全部細節。"
     }
    ],
    "key": [
@@ -7667,7 +7745,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k32.7",
     "k32.8"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從 k32a 推理：k、v 都壓進固定大小的矩陣，細節會丟，所以留幾層一般的 attention 逐"
   },
   {
    "id": "k33a",
@@ -7695,7 +7774,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k33.1",
     "k33.2",
     "k33.3"
-   ]
+   ],
+   "closed_ok": "常識：Mamba 的 state 大小固定，selective 指留什麼由輸入決定（題幹括號裡的 selective 也提示了"
   },
   {
    "id": "k34a",
@@ -7723,7 +7803,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k34.1",
     "k34.2",
     "k34.3"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識加推理：sparse attention 省的是每一步讀的量，挑哪些 token 每一步重來，所"
   },
   {
    "id": "k34b",
@@ -7732,8 +7813,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "任務是在很長的文件裡逐字核對條文，任何一個 token 都不能漏讀；記憶體還有餘裕。只看這個要求，該選哪一類做法的 model？",
    "choices": [
     {
-     "t": "Sparse attention：每一步挑的是分數最高的 token，要用的都會挑中",
-     "why": "Indexer 是一個便宜的打分器，每一步只挑 2,048 個；挑漏的 token 這一步就讀不到。"
+     "t": "Sparse attention：一次讀得到 2,048 個 token，足夠涵蓋要核對的條文",
+     "why": "讀哪 2,048 個是 indexer 挑的，它是一個便宜的打分器；挑漏的 token 這一步就讀不到，不能保證要核對的字都在裡面。"
     },
     {
      "t": "完整的 attention（GQA）：KV cache 最大，但每一步都讀得到全部",
@@ -7751,7 +7832,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k34.4",
     "k34.5",
     "k34.6"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹推理：「任何一個 token 都不能漏讀」而記憶體有餘裕，只有完整的 attention 每一"
   },
   {
    "id": "k35a",
@@ -7780,7 +7862,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k35.3",
     "k35.4",
     "k35.6"
-   ]
+   ],
+   "closed_ok": "常識：MLA 只壓縮每個 token 存的量，每一步仍讀全部 token。"
   },
   {
    "id": "k35b",
@@ -7807,25 +7890,30 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k35.2",
     "k35.5"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k34b）"
   },
   {
    "id": "k35c",
    "ks": "k35",
    "kind": "choice",
-   "q": "一個 hybrid model 原本每 2 層留 1 層完整的 attention，新版改成每 6 層留 1 層，其他都不變。Context 很長時，會怎麼變？",
+   "q": "一個 hybrid model 原本每 2 層留 1 層完整的 attention，其餘是 sliding window 的層。新版改成每 6 層留 1 層，其他都不變。Context 很長時，會怎麼變？",
    "choices": [
     {
-     "t": "KV cache 約剩三分之一；讀遠處不受影響，便宜的層也讀得到遠處",
-     "why": "便宜的層（local 層或固定 state 的層）讀不到遠處，或只留摘要。遠處靠的就是那幾層完整的 attention，它們從 1/2 變成 1/6。"
+     "t": "KV cache 約剩三分之一，讀遠處不受影響：sliding window 的層也讀得到遠處的 token",
+     "why": "Local 層讀不到遠處。遠處靠的就是那幾層完整的 attention，它們從 1/2 變成 1/6。"
     },
     {
-     "t": "KV cache 約剩三分之一；負責遠處的層也從二分之一變成六分之一",
+     "t": "KV cache 幾乎不變，負責遠處的層變少：sliding window 的層一樣每個 token 都存一份",
+     "why": "Sliding window 的層只存最近一小段，不隨長度長。長 context 時 KV cache 怎麼長，看存完整 KV 的層有幾層：從 1/2 變成 1/6，約剩三分之一。"
+    },
+    {
+     "t": "KV cache 約剩三分之一，負責遠處的層變少：sliding window 的層存的、讀的都只有最近一段",
      "ok": true
     },
     {
-     "t": "KV cache 幾乎不變，便宜的層一樣要存；負責遠處的層變成六分之一",
-     "why": "便宜的層只存最近一小段或一個固定的 state，不隨長度長。長 context 時 KV cache 主要來自存完整 KV 的層，從 1/2 變成 1/6，約剩三分之一。"
+     "t": "KV cache 幾乎不變，讀遠處不受影響：sliding window 的層省的是運算，存的和讀的都照舊",
+     "why": "換成 sliding window 的層，省的是 KV cache：這些層只存最近一小段。代價是它們讀不到遠處，遠處只靠留下來的那幾層完整 attention。"
     }
    ],
    "key": [
@@ -7834,17 +7922,18 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k35.4",
     "k35.7"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹算：完整 attention 的層從 1/2 變 1/6，context 很長時 cache "
   },
   {
    "id": "k35d",
    "ks": "k35",
    "kind": "choice",
-   "q": "你要比兩個 model 的 KV cache 誰隨 context 長得快。X：48 層，每 4 層只有 1 層是完整的 attention，那幾層每個 token 各存 1,024 個數。Y：32 層全是完整的 attention，每層每個 token 存 512 個數。",
+   "q": "你要比兩個 model 的 KV cache 誰隨 context 長得快。X：48 層，每 4 層有 1 層完整的 attention，其餘是 sliding window 的層；每一層的 K、V 都是每個 token 1,024 個數。Y：32 層全是完整的 attention；每一層的 K、V 都是每個 token 512 個數。",
    "choices": [
     {
      "t": "X 長得快：48 層 × 1,024，比 Y 的 32 層 × 512 多",
-     "why": "X 只有 48 ÷ 4 = 12 層存完整 KV，其餘的層不隨長度長，不能拿 48 層去乘。"
+     "why": "X 只有 48 ÷ 4 = 12 層存完整 KV，其餘的層只存最近一小段，不隨長度長，不能拿 48 層去乘。"
     },
     {
      "t": "Y 長得快：32 層 × 512，比 X 的 12 層 × 1,024 多",
@@ -7861,7 +7950,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k35.7"
    ],
-   "num_choices_ok": "要算才分得出懂不懂；兩個錯的各對應一種算錯：拿全部 48 層去乘、只比每層每 token 的量不乘層數。"
+   "num_choices_ok": "要算才分得出懂不懂；兩個錯的各對應一種算錯：拿全部 48 層去乘、只比每層每 token 的量不乘層數。",
+   "closed_ok": "第二輪閉卷：從題幹算：隨 context 成長的只有完整 attention 的層，X 是 48 ÷ 4 = 1"
   },
   {
    "id": "k36a",
@@ -7891,7 +7981,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k36.6",
     "k36.7"
    ],
-   "num_choices_ok": "要算才分得出懂不懂；選項都寫了代入的式子。640 KiB 是把 query head 數當成 KV head 數，40 KiB 是漏了 K、V 各一份的 2。"
+   "num_choices_ok": "要算才分得出懂不懂；選項都寫了代入的式子。640 KiB 是把 query head 數當成 KV head 數，40 KiB 是漏了 K、V 各一份的 2。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k36b",
@@ -7918,7 +8009,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k36.4",
     "k36.5"
-   ]
+   ],
+   "closed_ok": "常識：GQA 的公式不適用 hybrid 和 MLA（題幹「在 GQA 上都算得對，拿去跑別的會怎樣」也暗示會錯）。"
   },
   {
    "id": "k36c",
@@ -7945,7 +8037,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k36.1",
     "k36.8"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k38a）"
   },
   {
    "id": "k38a",
@@ -7958,11 +8051,11 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
      "why": "每個 token 的量只算隨長度成長的部分。Hybrid model 每個 request 還有一筆固定的記憶體（Qwen3-Next 約 36 MiB）；一兩百個 token 時，這一筆比隨長度成長的部分還大，倍數就縮小。"
     },
     {
-     "t": "更明顯：context 越短，不隨長度變的那一筆固定 state 佔的比例越低",
-     "why": "反了。固定的那一筆不隨長度變小，context 越短，它佔的比例越高，優勢越不明顯。"
+     "t": "更明顯：短的 request 同時放得下很多個，省下的量要再乘上個數",
+     "why": "乘上個數，兩邊一起乘，倍數不會變大。而且每個 request 另有一筆不隨長度變的記憶體（gpt-oss-120b 約 4.5 MiB、Qwen3-Next 約 36 MiB），個數越多這一筆也越多；context 很短時，優勢不明顯。"
     },
     {
-     "t": "縮小很多：每個 request 另有一筆固定的 state，context 短時省下的有限",
+     "t": "縮小很多：每個 request 另有一筆不隨長度變的記憶體，短的時候它佔大宗",
      "ok": true
     }
    ],
@@ -7972,7 +8065,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k38.1",
     "k38.2"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：推理加別題的提示：hybrid model 另有不隨長度變的部分（固定的 state、window "
   },
   {
    "id": "k38b",
@@ -8026,7 +8120,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k39.1",
     "k39.2"
    ],
-   "num_choices_ok": "要算才分得出懂不懂；兩個錯的各對應一種算錯：只比扣掉權重後剩下的空間、以為權重多出來的量會抵掉 KV cache 省下的量。"
+   "num_choices_ok": "要算才分得出懂不懂；兩個錯的各對應一種算錯：只比扣掉權重後剩下的空間、以為權重多出來的量會抵掉 KV cache 省下的量。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k39b",
@@ -8052,7 +8147,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k39.3"
-   ]
+   ],
+   "closed_ok": "推理：題幹給了權重 60 對 150 GB，又說一個人、幾千個 token，KV cache 小到可以忽略，剩下比權重（A 的"
   },
   {
    "id": "k39c",
@@ -8061,16 +8157,16 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "照記憶體的帳，一個新架構的 model 在你的 GPU 上放得下 6 倍的長 context request。同事說：「放得下 6 倍，那就換。」哪一個回應最到位？",
    "choices": [
     {
-     "t": "可以換：帳是照官方 config 算的，放得下的倍數不會因為實測而改變",
-     "why": "照 config 算的只是記憶體。品質、serving engine 對新架構的支援、固定 state 的開銷，這筆帳都沒算，要另外驗證。"
+     "t": "先把帳算細一點：換幾種 context 長度和人數，確認 6 倍不是剛好挑到的例子",
+     "why": "算得再細，回答的還是記憶體。這筆帳不是對照實驗：品質、serving engine 對新架構的支援、固定 state 的開銷，帳上都沒有，要另外驗證。"
     },
     {
-     "t": "先實測：品質、engine 對新架構的支援、固定 state 的開銷，帳上都沒有",
+     "t": "先驗證帳上沒有的：品質、engine 對新架構的支援、固定 state 的開銷",
      "ok": true
     },
     {
-     "t": "先重算：把 context 的長度改短再算一次，倍數還在才代表結論可靠",
-     "why": "改短 context 重算，回答的還是記憶體，而且結論本來就是針對長 context。沒回答的是品質和 engine 的支援。"
+     "t": "先核對帳的輸入：層數、KV head 數照官方的 config 再算一次，數字對了再換",
+     "why": "輸入對了，這筆帳也只算了記憶體。品質、serving engine 對新架構的支援、固定 state 的開銷，都要另外驗證。"
     }
    ],
    "key": [
@@ -8078,7 +8174,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k39.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：記憶體的帳只回答「放不放得下」，品質、engine 支不支援新架構不在帳上"
   },
   {
    "id": "k39d",
@@ -8104,7 +8201,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k39.5"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k36b）"
   },
   {
    "id": "k40a",
@@ -8131,7 +8229,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k40.1",
     "k40.2"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k44a）"
   },
   {
    "id": "k40b",
@@ -8158,7 +8257,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k40.3",
     "k40.4"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k43b）"
   },
   {
    "id": "k40c",
@@ -8185,7 +8285,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k40.5",
     "k40.6"
-   ]
+   ],
+   "closed_ok": "常識：BPE 把空白黏在 token 裡，相接不會錯"
   },
   {
    "id": "k42a",
@@ -8212,7 +8313,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k42.1",
     "k42.2"
-   ]
+   ],
+   "closed_ok": "常識：詞彙表變大，同一段文字切得更少，embedding 和 LM head 的列數變多（同節 k42b 的選項也都把這兩張表"
   },
   {
    "id": "k42b",
@@ -8238,7 +8340,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k42.3"
-   ]
+   ],
+   "closed_ok": "常識：LM head 要替詞彙表每個 token 算一個 logit，embedding 只查一列。"
   },
   {
    "id": "k43a",
@@ -8265,24 +8368,25 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k43.2",
     "k43.3"
-   ]
+   ],
+   "closed_ok": "洩漏只在別節（k42a）"
   },
   {
    "id": "k43b",
    "ks": "k43",
    "kind": "choice",
-   "q": "估一份繁體中文文件的 token 數時，你假設「一個字最多 1 個 token」，把字數當成上限。什麼情況下實際的 token 數會超過字數？",
+   "q": "估一份繁體中文文件的 token 數時，你假設「一個字最多 1 個 token」，把字數當成上限。哪一種情況會讓實際的 token 數超過字數？",
    "choices": [
     {
-     "t": "用到詞彙表收了的詞：一個詞有好幾個字，除了每個字，詞本身還要多算 1 個 token",
-     "why": "詞彙表收了的詞是幾個字合成 1 個 token，token 只會變少。例如「記憶」在 DeepSeek-V3 和 Gemma 3 是 1 個 token。"
+     "t": "用到筆畫多的字：筆畫越多 byte 越多，一個 token 裝不下，要拆成幾個",
+     "why": "一個中文字在 UTF-8 是 3 個 byte，和筆畫無關。拆不拆看詞彙表：收了這個字就是 1 個 token，沒收才拆成 byte 片段。"
     },
     {
-     "t": "不會超過：切中文時最小的單位是一個完整的字，再罕見的字也只算 1 個 token",
-     "why": "最小的單位是 byte，不是字。一個中文字在 UTF-8 是 3 個 byte；Llama 3 把「帳」切成兩個 byte 片段（2 個 token），2023 年的 cl100k_base 平均一個繁體字 1.36 個 token。"
+     "t": "用到繁體字：詞彙表以簡體為主，繁體字要拆成 byte 片段，各算 1 個",
+     "why": "繁體字不是都要拆：「帳」在 o200k_base、Qwen3、DeepSeek-V3、Gemma 3 都是 1 個 token，只有 Llama 3 拆成兩個 byte 片段。拆不拆，看詞彙表有沒有收那個字。"
     },
     {
-     "t": "用到詞彙表沒收的字：一個字 3 個 byte，會拆成幾個片段，各算 1 個 token",
+     "t": "用到詞彙表沒收的字：一個字 3 個 byte，要拆成 byte 片段，各算 1 個",
      "ok": true
     }
    ],
@@ -8292,7 +8396,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k43.1",
     "k43.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：BPE tokenizer 遇到詞彙表沒收的字會退回 UTF-8 的 byte，中文一個字 3"
   },
   {
    "id": "k44a",
@@ -8351,19 +8456,19 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "id": "k44c",
    "ks": "k44",
    "kind": "choice",
-   "q": "你拿別人用技術文件量出來的「每個繁體字幾個 token」，去估自己的客服對話紀錄（口語，夾著英文和數字）。這個數字該怎麼用？",
+   "q": "你拿別人量出來的「每個繁體字幾個 token」去估自己客服對話的用量，tokenizer 是同一個。對方提醒：這個數字只能當量級看。主要的原因是什麼？",
    "choices": [
     {
-     "t": "當精確值用：每個字的 token 數只看 tokenizer，和語料的類型無關",
-     "why": "同一個 tokenizer，文字不同，切出來也不同。那份實測的語料是技術文章，拿掉英文術語後句子不完整，所以數字只能當量級看。"
+     "t": "樣本太小：量的字數不夠多，不足以代表一般的繁體中文",
+     "why": "問題不在字數（量了 50,315 個字）。只能當量級看，是因為語料是技術文章，拿掉英文術語後句子不完整。"
     },
     {
-     "t": "當量級用：語料的類型不同，量的時候還拿掉了英文和數字",
+     "t": "語料有偏：量的是技術文件，還先拿掉英文和數字，句子不完整",
      "ok": true
     },
     {
-     "t": "完全不能用：換一種語料，每個字的 token 數會差到好幾倍",
-     "why": "量級是對得上的：另一份繁體語料量 GPT-4 的 tokenizer 約 1.4，和實測的 1.36 相近；DeepSeek 與 Qwen 官方的中文經驗值 0.6 到 0.67，也和簡體那一欄相近。"
+     "t": "缺少旁證：只有這一份量測，和別處查得到的經驗值對不起來",
+     "why": "對得上：另一份繁體語料量 GPT-4 的 tokenizer 約 1.4，和實測的 1.36 相近；DeepSeek 與 Qwen 官方的中文經驗值 0.6 到 0.67，也和簡體那一欄相近。只能當量級看，是因為語料是技術文章、句子不完整。"
     }
    ],
    "key": [
@@ -8371,7 +8476,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k44.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：主要是猜：題幹強調拿去估「客服對話」，最像是語料種類對不上"
   },
   {
    "id": "k45a",
@@ -8424,7 +8530,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k45.1",
     "k45.3"
-   ]
+   ],
+   "closed_ok": "常識：serving 的帳都以 token 計，token 多了 prefill、KV cache、decode 步數都跟著變"
   },
   {
    "id": "k45c",
@@ -8484,18 +8591,18 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "id": "k45e",
    "ks": "k45",
    "kind": "choice",
-   "q": "你的成本是用上一代 model 量的。供應商推出新一代，每個 token 的單價不變，你的 prompt 也沒改。直接升級，帳單會不會變？",
+   "q": "你的成本是用上一代 model 量的。供應商推出新一代，每個 token 的單價不變，你的 prompt 也沒改。要估升級之後的帳單，token 數該用哪一個？",
    "choices": [
     {
-     "t": "不會：token 數是文字本身的性質，prompt 沒改、單價沒變，帳單就一樣",
-     "why": "Token 數是 tokenizer 的性質，不是文字的性質，換一代 model 就可能變。Claude 4.7 之後的 model 換了新的 tokenizer，同一段文字約多 30% 的 token。"
+     "t": "舊 model 量到的 token 數：同一家供應商的新一代，tokenizer 只差在零頭",
+     "why": "Token 數是 tokenizer 的性質，換一代 model 就可能變，而且不是零頭：Claude 4.7 之後的 model 換了新的 tokenizer，同一段文字約多 30% 的 token。"
     },
     {
-     "t": "只有輸出那一半可能會：輸入的 prompt 沒改，input 的 token 數不會動",
-     "why": "輸入也要重新切：tokenizer 換了，同一段 prompt 的 token 數就變（Claude 4.7 之後約多 30%）。要用新的 model 實際數一次。"
+     "t": "字數換算的 token 數：拿這個語言每個字平均幾個 token，乘上 prompt 的字數",
+     "why": "平均值只是估算：繁體中文 1,000 個 token 約 1,100 到 1,400 個字，範圍不小。要估自己的帳，用要用的那個 model 實際數一次（open-weight model 用 repo 裡的 tokenizer.json，Claude 用 count_tokens 端點）。"
     },
     {
-     "t": "可能會：新一代可能換了 tokenizer，同一批 prompt 要用新的 model 重數",
+     "t": "新 model 實際重數的 token 數：換一代可能就換了 tokenizer，數字會變",
      "ok": true
     }
    ],
@@ -8506,7 +8613,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k45.8",
     "k45.9",
     "k45.10"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：新一代 model 可能換 tokenizer，同一段 prompt 的 token 數會變，"
   },
   {
    "id": "k46a",
@@ -8534,25 +8642,26 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k46.1",
     "k46.2",
     "k46.4"
-   ]
+   ],
+   "closed_ok": "常識：多 byte 字元可能被切在兩個 token，要 buffer 到完整再 decode，是串流處理 UTF-8 的常識。"
   },
   {
    "id": "k46b",
    "ks": "k46",
    "kind": "choice",
-   "q": "你的串流程式用英文的回答測了幾千次都沒事，接下來要開放給中文使用者。Detokenize 這一段需不需要另外用中文測？",
+   "q": "你的串流程式用英文的回答測了幾千次都沒事，接下來要開放給中文使用者。Detokenize 這一段還要另外用中文測，主要是為了測到什麼？",
    "choices": [
     {
-     "t": "需要：token 斷在一個字中間的情況，英文很少碰到，中文常常碰到",
+     "t": "半個字：token 斷在一個字的中間，這種情況英文很少碰到",
      "ok": true
     },
     {
-     "t": "不需要：byte 轉成文字的邏輯和語言無關，英文測過就等於都測過",
-     "why": "邏輯相同，碰到的輸入不同：一個中文字是 3 個 byte，詞彙表沒收的字會拆成 byte 片段，先到的 token 只有半個字。這種情況英文很少碰到，所以英文的測試測不出來。"
+     "t": "速度：中文的 token 數比英文多，串流可能跟不上生成",
+     "why": "Token 多不會讓 detokenize 出錯。英文測不到的是半個字：一個中文字是 3 個 byte，先到的 token 可能只帶來前 2 個（Llama 3 的「帳」先來 E5 B8），還印不出來。"
     },
     {
-     "t": "不需要：中文一個字就是一個完整的 token，比英文更不容易出問題",
-     "why": "一個 token 不一定是一個完整的中文字：Llama 3 把「帳」切成兩個 token，第一個只帶來 E5 B8 兩個 byte，印不出來。"
+     "t": "編碼：中文走的是另一種編碼，英文那段 decode 邏輯用不到",
+     "why": "中文和英文都是 UTF-8，走同一段邏輯。差別在一個中文字是 3 個 byte，先到的 token 可能只帶來一部分；這種情況英文很少碰到，中文常常碰到。"
     }
    ],
    "key": [
@@ -8560,7 +8669,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k46.3"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：中文一個字是多個 byte，token 可能斷在字的中間，串流逐個 detokenize 會吐"
   },
   {
    "id": "k47a",
@@ -8588,7 +8698,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k47.3",
     "k47.4",
     "k47.5"
-   ]
+   ],
+   "closed_ok": "常識：logit 除以大於 1 的 T，差距縮小、分布變平。"
   },
   {
    "id": "k47b",
@@ -8615,7 +8726,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k47.1",
     "k47.6"
-   ]
+   ],
+   "closed_ok": "常識：T = 0 是 greedy"
   },
   {
    "id": "k47c",
@@ -8641,25 +8753,26 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k47.2"
-   ]
+   ],
+   "closed_ok": "常識：logit 是未正規化的分數，要過 softmax 才是機率。"
   },
   {
    "id": "k49a",
    "ks": "k49",
    "kind": "choice",
-   "q": "自架的 model 有時下一個 token 幾乎確定（補完固定格式），有時有很多合理的接法（寫故事）。你希望確定時候選少、不確定時候選多。該用哪一個參數？",
+   "q": "自架的 model 設了 top_k = 50。寫故事時沒問題；補完固定格式時，下一個 token 明明幾乎確定，偶爾卻抽到機率很低的 token。同事建議改用 top_p = 0.9。這樣改有沒有用？",
    "choices": [
     {
-     "t": "Top-p：累加機率到 p 為止，model 有把握時留得少、沒把握時留得多",
+     "t": "沒差：top-k 的 k 只是上限，有把握時它和 top-p 一樣只留一兩個",
+     "why": "Top-k 的 k 是固定的個數：不管機率表多集中，都留機率最高的 k 個，所以幾乎確定時還有 49 個機率很低的候選。留幾個會看 model 有多少把握的是 top-p。"
+    },
+    {
+     "t": "有用：top-k 再有把握也留滿 50 個，top-p 在有把握時只留一兩個",
      "ok": true
     },
     {
-     "t": "Top-k：留下的個數會跟著機率表集中的程度自動增減，k 只是上限",
-     "why": "Top-k 的 k 是固定的個數：不管機率表多集中，都留機率最高的 k 個，其餘的不會抽到。"
-    },
-    {
-     "t": "兩個都可以：留下的個數都固定，差別只在用個數設還是用比例設",
-     "why": "Top-p 的 p 不是「留下幾成的 token」，是累加的機率：從高到低加到總和達到 p 為止，所以留幾個看 model 有多少把握。"
+     "t": "更糟：top-p 留的是機率排在前九成的 token，候選會比 50 個還多",
+     "why": "Top-p 的 p 不是「留下幾成的 token」，是累加的機率：從高到低加到總和達到 p 為止。Model 幾乎確定時，一兩個 token 就達到 0.9，候選反而最少。"
     }
    ],
    "key": [
@@ -8669,7 +8782,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k49.1",
     "k49.2",
     "k49.3"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從定義推理：top-k 固定留 50 個，top-p 累積到 0.9 就停，下一個 token 幾乎"
   },
   {
    "id": "k49b",
@@ -8696,7 +8810,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k49.4"
    ],
-   "num_choices_ok": "要照累加的規則走一次才分得出懂不懂：2 個是以為停在超過 p 之前，「剛好等於 0.9」是以為留下的總和會被截成 p。選項都寫了理由，不是純數字。"
+   "num_choices_ok": "要照累加的規則走一次才分得出懂不懂：2 個是以為停在超過 p 之前，「剛好等於 0.9」是以為留下的總和會被截成 p。選項都寫了理由，不是純數字。",
+   "closed_ok": "常識：top-p 取累積機率達到 p 的最小集合，是 nucleus sampling 的定義，0.88 不到 0.9 所以納"
   },
   {
    "id": "k50a",
@@ -8722,25 +8837,26 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k50.1"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：stop token（EOS）就是機率表裡的一個 token，和其他 token 一樣被抽，抽"
   },
   {
    "id": "k50b",
    "ks": "k50",
    "kind": "choice",
-   "q": "你自架 Qwen3 並開了 thinking mode（先寫一段推理再回答）。同事為了「最穩定、最保險」把 temperature 設成 0。這個設定有什麼風險？",
+   "q": "你自架 Qwen3 並開了 thinking mode（先寫一段推理再回答）。同事為了「最穩定、最保險」把 temperature 設成 0（greedy decoding）。照 Qwen3 的 model card，這樣設要擔心的是哪一種風險？",
    "choices": [
     {
-     "t": "沒有風險：greedy 每一步都挑最可能的 token，是品質最有保障的設定",
-     "why": "Greedy 有一個已知的陷阱：Qwen3 的官方 model card 說 thinking mode 不要用 greedy decoding，會讓表現變差，還可能無止境地重複。它建議的是 Temperature 0.6、TopP 0.95、TopK 20。"
+     "t": "回答可能變得太短，推理還沒寫完就收尾",
+     "why": "Model card 說的方向相反：thinking mode 用 greedy decoding 會讓表現變差，還可能無止境地重複，不是太早結束。它建議的是 Temperature 0.6、TopP 0.95、TopK 20。"
     },
     {
-     "t": "表現可能變差，輸出還可能重複不停：這個模式的 model card 說不要用 greedy",
+     "t": "表現可能變差，輸出還可能重複不停",
      "ok": true
     },
     {
-     "t": "風險只在 non-thinking mode：直接回答才怕 greedy，先推理的模式不受影響",
-     "why": "反了。Model card 指明不要用 greedy 的是 thinking mode，也就是先寫出一段推理再回答的那一種。"
+     "t": "推理可能整段被跳過，直接寫出答案",
+     "why": "Model card 沒有說推理會被跳過。它說的是 thinking mode 不要用 greedy decoding：會讓表現變差，還可能無止境地重複。"
     }
    ],
    "key": [
@@ -8750,7 +8866,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
     "k50.3",
     "k50.4",
     "k50.5"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：本來就知道：Qwen3 的 model card 寫明 thinking mode 不要用 gree"
   },
   {
    "id": "k50c",
@@ -8759,16 +8876,16 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "q": "同事說：「我們的 sampling 照 model card 的建議值設，回答都會自己結束，max_tokens 可以不設。」該怎麼回？",
    "choices": [
     {
-     "t": "還是要設：每一步只是可能抽到 stop token，任何設定都要有長度上限保底",
+     "t": "還是要設：照建議值設，回答會不會自己結束也沒有保證",
      "ok": true
     },
     {
-     "t": "可以不設：建議值就是調到讓 stop token 一定會出現，回答會自己結束",
-     "why": "沒有哪一組設定保證 stop token 一定出現：每一步都可能抽到它，也可能抽到別的。所以不論設定是什麼，都要設 max_tokens。"
+     "t": "還是要設：回答遲早會自己結束，上限只是用來控制成本",
+     "why": "回答不保證會自己結束：每一步只是可能抽到 stop token，也可能抽到別的。設 max_tokens 不只是控制成本，是輸出停不下來時讓長度上限替你停。"
     },
     {
-     "t": "可以不設：max_tokens 只會把正常的回答截短，擋不住停不下來的輸出",
-     "why": "長度到了 max_tokens，decode 就停，這正是輸出停不下來時替你停的那一道（第 1 章的三種停止條件之一）。"
+     "t": "可以不設：建議值就是調到讓回答自己收尾的那一組設定",
+     "why": "沒有哪一組設定保證回答會自己結束：每一步都可能抽到 stop token，也可能抽到別的。所以不論設定是什麼，都要設 max_tokens。"
     }
    ],
    "key": [
@@ -8777,7 +8894,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k50.6",
     "k50.7"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：抽樣沒有保證會抽到 stop token（k50b 的「重複不停」就是例子），所以 max_t"
   },
   {
    "id": "k50d",
@@ -8803,7 +8921,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k50.2"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 prompt 沒變、回答變長，變的只有 decode 的步數。"
   },
   {
    "id": "k51a",
@@ -8830,13 +8949,14 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k51.1",
     "k51.2"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：T = 0 是每一步挑最大值、不抽樣（選項 A 的理由錯），但 batch 組成不同會讓浮點數"
   },
   {
    "id": "k51b",
    "ks": "k51",
    "kind": "choice",
-   "q": "T = 0 的輸出偶爾會和上次不同。你打算把 regression test 的通過條件從「逐字相同」放寬成「最多差幾個字」。這樣放寬夠不夠？",
+   "q": "Regression test 把同一個 prompt 跑兩次、逐字比對。有一次沒過：兩次的輸出在某一步挑到了不同的 token。你打算把通過條件放寬成「最多差幾個字」。這樣放寬夠不夠？",
    "choices": [
     {
      "t": "夠了：兩次的差異很小，只會有零星幾個字不同，其餘的部分逐字相同",
@@ -8857,7 +8977,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k51.3",
     "k51.4"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：從題幹推理：autoregressive 生成，某一步挑到不同的 token 之後，後面每一步的輸入"
   },
   {
    "id": "k52a",
@@ -8898,7 +9019,7 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
      "why": "Claude 的官方文件提醒的正好相反：舊 model 上設 temperature = 0，也從來不保證相同的輸出。"
     },
     {
-     "t": "靠得住：batch 的影響只有自架才有，託管的 API 每個 request 單獨算",
+     "t": "靠得住：T = 0 不抽樣，每一步都挑分數最高的，同樣的輸入只有一種結果",
      "why": "託管的 model 一樣不保證：Claude 的文件寫明，舊 model 上設 temperature = 0 也從來不保證相同的輸出。"
     },
     {
@@ -8911,7 +9032,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    ],
    "covers": [
     "k52.3"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識加別題：k51a 已經講了 T = 0 在 serving 系統上也可能不同"
   },
   {
    "id": "k52c",
@@ -8924,12 +9046,12 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
      "ok": true
     },
     {
-     "t": "先全部設成最保守的 temperature 0，等品質出問題再往上調",
-     "why": "T = 0 不是最保守的起點（Qwen3 的 thinking mode 用 greedy 會讓表現變差）。起點是 model card 的建議值，再用自己的 eval 驗證。"
+     "t": "先照 serving engine 的預設值設，再用自己的 eval 驗證要不要調",
+     "why": "起點是這個 model 的 model card 給的建議值，不是 engine 的預設值：先照建議值設，再用自己的 eval 驗證（L7〈建立評估〉）。"
     },
     {
-     "t": "直接照 model card 的建議值設，那是官方測過的最佳值，不必再驗",
-     "why": "建議值只是起點：先照它設，再用自己的 eval 驗證（L7〈建立評估〉）。"
+     "t": "先沿用上一個 model 調好的值，再用自己的 eval 驗證要不要調",
+     "why": "上一個 model 調好的值不是這個 model 的建議值。自架 open-weight model 時，先照它自己的 model card 的建議值，再用自己的 eval 驗證（L7〈建立評估〉）。"
     }
    ],
    "key": [
@@ -8938,7 +9060,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k52.5",
     "k52.6"
-   ]
+   ],
+   "closed_ok": "第二輪閉卷：常識：建議的 sampling 參數是跟著 model 走的，model card 是第一手來源"
   },
   {
    "id": "k53a",
@@ -8965,7 +9088,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k53.1",
     "k53.2"
-   ]
+   ],
+   "closed_ok": "推理：題幹說「把中間的 block 重複 K 次」，同一組權重多跑幾圈，權重不變、運算和延遲變多。"
   },
   {
    "id": "k53b",
@@ -8992,7 +9116,8 @@ token 預算       (容量 − W) ÷ KV           同時的人數 × 每人的�
    "covers": [
     "k53.3",
     "k53.4"
-   ]
+   ],
+   "closed_ok": "常識：diffusion LM 每一步會改動整段 token，KV cache 的前提（前面的 K、V 不變）不成立。"
   }
  ],
  "integration": [

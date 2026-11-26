@@ -109,7 +109,7 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 - **刪。** RMSNorm、pre-norm、√dk 收成名詞註。690 GB 的 S、FlashAttention、roofline 一句帶過連 L10。Continuous batching 只寫 slides 講的（11/04 的主場）。Temperature 0 不保證相同連 L1，不重講。
 - **更正 slides。** 320 KB 實際是 327,680 byte，所以 64 個 request 是 1,819 GB，不是 1,779 GB（頁面註明）；「Serving is hard」的 token ID 是示意，改用 Llama 3 tokenizer 的實際輸出。
 - **可讀性審查（push 前，WORKFLOW I）。** 第一輪 33 BLOCK：tldr 的名詞（KV cache、context、GQA 這類先用後講）、head 在第 3 章先用後講、linear attention 的 S 和第 3 章的分數矩陣同名、表格格子沒回答欄名；也抓到一個錯：Qwen3-Next 那格 3.3 GB 應是 3.2 GB。第二輪剩 2 BLOCK、1 NIT，主線修，沒有審第三輪。
-- **2026-11-25 review（James：「review l9 課程」）。** 精簡照第 0 節〈精簡〉砍支線：佐證只留結論（8.4 三組逐項對照的數字、8.5 Mythbuster 的樣本與百分點、6.2 DeepSeek-V2 的 93%、6.4 Mamba 的 5 倍）；產品參數只留做決定用得到的（9.3 只留 thinking mode 的建議值、7.2 三項清單併成一段、DeepSeek-V3.2 FP8 的 byte 拆法留在來源檔）；換條件重算刪掉（64 個 request 的 637 秒、320,000 byte 的 1,779 GB、S 整個存下來的 690 GB）；章首只安排閱讀的句子刪掉。審查補回來的字只補少一步的推理，所以淨少不多（3.9%）：這一堂的主線是算式，能砍的支線本來就少。還可以再砍、但留給 James 決定的：5.3 的 expert 涵蓋率表（本文的推算）、6.3–6.4 Gated DeltaNet 與 Mamba 的機制、查閱的三個收合區塊。標題的取捨：第 6 章章名用「改」不用「縮小」，因為 sparse attention 不縮小 cache；1.5 與 4.4 都講 agent，1.5 只留「每一圈重送」，結論放 4.4；「Weights」在標題裡一律寫「Weights 的大小」；6.x 拿掉「做法 N：」前綴。題庫還沒做。
+- **2026-11-25 review（James：「review l9 課程」）。** 精簡照第 0 節〈精簡〉砍支線：佐證只留結論（8.4 三組逐項對照的數字、8.5 Mythbuster 的樣本與百分點、6.2 DeepSeek-V2 的 93%、6.4 Mamba 的 5 倍）；產品參數只留做決定用得到的（9.3 只留 thinking mode 的建議值、7.2 三項清單併成一段、DeepSeek-V3.2 FP8 的 byte 拆法留在來源檔）；換條件重算刪掉（64 個 request 的 637 秒、320,000 byte 的 1,779 GB、S 整個存下來的 690 GB）；章首只安排閱讀的句子刪掉。審查補回來的字只補少一步的推理，所以淨少不多（3.9%）：這一堂的主線是算式，能砍的支線本來就少。還可以再砍、但留給 James 決定的：5.3 的 expert 涵蓋率表（本文的推算）、6.3–6.4 Gated DeltaNet 與 Mamba 的機制、查閱的三個收合區塊。標題的取捨：第 6 章章名用「改」不用「縮小」，因為 sparse attention 不縮小 cache；1.5 與 4.4 都講 agent，1.5 只留「每一圈重送」，結論放 4.4；「Weights」在標題裡一律寫「Weights 的大小」；6.x 拿掉「做法 N：」前綴。題庫 2026-11-26 做完（`guide/QUIZ.md`〈各堂題庫〉的 L9 備註）；同日 3.5 改一句（MHA 的「每個 head 有自己的 q、k、v」和 3.6 的 GQA 對不起來，出題的 agent 指出的），這一句沒有另外再審。
 
 ## L10 GPU 入門與 kernel 最佳化（10 章，55 分）
 
@@ -122,6 +122,18 @@ L9–L11 沒有舊頁面，直接寫成 v7。三堂由三個 subagent 同時寫�
 - **更正 slides。** Little's law 那頁是 4 KB 不是 512 B；A100 到 Rubin 的頻寬是 10.8 倍不是約 9 倍，BF16 的 ridge 也沒有一路右移；MFU 22% 的分母是 FP8 peak，換成 BF16 是 43%；故障原因的 8%／17%／30% 用 Llama 3 論文 Table 5 確認。
 - **待決定。** 55 分鐘比其他堂長（可讀性審查補了約 20 個名詞的解釋，從 50 分變 55 分）；要縮的話，第 4 章〈晶片裡面〉（2026-11-12 前是第 5 章）可以整章改成查閱（約省 4 分）。
 - **可讀性審查（push 前，WORKFLOW I）。** 第一輪 71 BLOCK：tldr 約 20 個先用後講的名詞、查閱表的硬體名詞與「–」、幾個對不起來的數字（Llama 3 故障 58.7% 對圖上加起來的 55.9%，差的是沒畫出的兩個小類；NVLink 900 是兩個方向合計，每個方向 450；EP144 × 2 = 288 是 256 個 expert 加 32 份備份）。作者另外更正兩處沒被標的：Llama 3 8B 的 GQA 是 g = 4，不是 8；slides 列的是三個 GPU 丟時間的地方，第四個是人的時間。第二輪剩 12 BLOCK、1 NIT，主線修，沒有審第三輪。
+
+- **2026-11-26 review（James：「把 l9, l10 review 完 順便加上題目」；照 L9 11-25 的四項做）。**
+  - 取捨的邏輯：這一堂的主線是「先算瓶頸在 bytes 還是 FLOP，再選改法，最後用對的數字確認」。凡是不改變這個判斷的，照第 0 節〈精簡〉砍：佐證只留結論（3.5 的 EP144 拆法與 Wang 的 15.74、7.3 FlashAttention 論文的 SRAM 規格與 7.6 倍、8.4 DeepEP 的四個 GB/s、10.3 的 466 與 47 次）；產品參數只留做決定用得到的（6.4 逐個 tile language 的介紹、Helion 的 1,520 組設定、7.5 的 ln 256 門檻）；只是可以照打的操作刪掉（6.2 的編譯指令、5.4 官方範例的輸出）；重複講第二次的刪掉（3.1 的 prefill 對照、10.2 圖說已有的算式、10.3 圖說已有的 58.7% 拆法）。
+  - 數字太密的段落（`check_article` 的 R18 從 27 段降到 18 段）：數字進表（第 3 章前情的三個數字）或留在已有的圖和查閱表（2.6 各代的 ridge、4.5 各代要在路上的 bytes），正文只講結論。剩下的 18 段多半是一步一步的算式（MBU、speed of light、Little's law）。
+  - **n-gpugen 逐代的表整張拿掉**（2006–2026 每一代加了什麼）。理由：它是功能名的目錄，一格四到六個沒解釋的名詞，第一輪五個 BLOCK 都在它的格子裡；正文用到的功能（TMA、TMEM、cp.async）在 4.5 的查閱各有解釋，不靠這張表。留下那一段「43,000 倍裡同精度只有約 200 倍」。要找回來看 2026-11-26 之前的 commit。**這一項要 James 確認。**
+  - 5.2 的 MFU 經驗值（訓練 35–45%、prefill 40–60%、decode 10–40%）拿掉：沒寫分母的精度，而同一段才說「報 MFU 要寫明分母」；decode 的 10–40% 又和第 3 章 batch 1 的 0.5% 對不起來，要補條件才成立。
+  - 事實查核改三處：Rubin 的 HBM4 頻寬出貨規格下修成 19.2 TB/s（ridge 與 Little's law 的查閱表跟著重算，〈Ridge 的趨勢〉的結論不變）；vLLM 在 Hopper 上預設的 attention backend 是 FlashAttention，FlashInfer 排第二，Blackwell 才是 FlashInfer 第一；FA4 的 exp 有 10–25% 是多項式近似，結果不再逐位元相同（審查者從 7.3 與 7.5 的矛盾問出來的）。紀錄在 `sources/l10.md` 最後一節。
+  - 標題：10 個章名改 9 個、51 個小標改 45 個。取捨：第 8 章章名用「Kernel 之外的空等」，因為 SM 之間與 GPU 之間都不是「kernel 之間」；6.5 不列五層的名字（只看標題的讀者分不出「明確的 tile」和「tile language」），改寫選層的規則；9.1、9.4 拿掉「本文的判斷：」前綴，判斷寫回內文。`outline.py lint` 剩 3 個是誤判（數量後面已經列出是哪幾個）。
+  - 導讀：照審查補上業界的名字（roofline、ridge point、memory-bound、compute-bound、KV cache），第二條拆成兩條（逐字輸出慢在搬資料；batch 分攤不了每個請求自己的資料）。
+  - 可讀性審查兩輪：76 → 20 BLOCK，主線再修 14、strict 7（`review_reports/l10-20261126/TRIAGE.md`）。閱讀時間 55 分 → 50 分。
+  - 還可以再砍、留給 James 決定的：第 4 章〈GPU 晶片的內部〉整章改成查閱（約省 4 分，但第 5 章的 counter 要先認得 SM 與 Tensor Core）；n-chips〈其他晶片〉的表；第 10 章的電力與用水。
+  - 沒查到、照留的：4.5 Little's law 的算例為什麼是 32 個 warp（出自 slides；第 1 章說一個 SM 最多 64 個）。
 
 ## L11 作業回饋與 agent 的十個陷阱（10 章，35 分）
 
