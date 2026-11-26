@@ -78,7 +78,7 @@
     <ul class="core">
       <li><span><b>邊界有三種：函式呼叫、介面、協定。</b>例子裡三樣東西在同一個 container 裡直接互相呼叫，這是函式呼叫：最簡單也最快，但一個壞了全部一起壞，也分不出是哪一個壞了。抽成介面，元件可以換，但還在同一個程式裡，沒有隔離。用協定拆成獨立的服務，才能各自掛掉、各自換機器、給好幾個 agent 共用，<strong>代價是服務之間多了呼叫和故障，一個 request 出錯要到好幾個服務找 log</strong>（第 1 章）。</span></li>
       <li><span><b>拆不拆先看失敗與安全，不先數 agent 有幾個。</b>例子裡 Anthropic 把這個服務拆成三塊：對話紀錄只追加、不修改，活得比另外兩塊久；harness 不存狀態，掛了就開一個新的，讀紀錄接著做；sandbox 碰不到憑證。拆完之後，<strong>第一個回應反而來得更快</strong>（第 2 章）。</span></li>
-      <li><span><b>每一條邊界各問三個問題。</b>不可信的東西要和憑證這類秘密隔開嗎？狀態要活得比程式本身久嗎？多個 agent 要共用同一套 tool 和 sandbox 嗎？三題都答「否」，例如只在自己筆電上跑的小工具，<strong>函式呼叫就夠了</strong>（第 3 章）。</span></li>
+      <li><span><b>每一條邊界各問三個問題。</b>外部網頁、email 和 model 寫的程式碼都不可信，要讓它們碰不到憑證嗎？狀態要活得比程式本身久嗎？多個 agent 要共用同一套 tool 和 sandbox 嗎？三題都答「否」，例如只在自己筆電上跑的小工具，<strong>函式呼叫就夠了</strong>（第 3 章）。</span></li>
     </ul>
     <p class="readhow">八個開源 harness 各自的設計重心，整理在最後的〈查閱〉一章，需要時再翻。這堂假設讀過 L2〈<a href="l02.html">How Claude Code Works</a>〉：harness 每一步做什麼，tool、hook、subagent、MCP 是什麼。</p>
   </section>
@@ -292,7 +292,7 @@
 <div class="table-wrap"><table>
                 <thead><tr><th>問題</th><th>答「是」就拆出去</th><th>代價</th></tr></thead>
                 <tbody>
-                  <tr><td>不可信的東西要和秘密隔開嗎？</td><td><strong>秘密（例如 credential）放在 sandbox 外面</strong></td><td>多一段 proxy，多一種故障</td></tr>
+                  <tr><td>要讓外部內容（網頁、email）和 model 寫的程式碼碰不到 credential 嗎？</td><td><strong>Credential 放在 sandbox 外面</strong></td><td>多一段 proxy，多一種故障</td></tr>
                   <tr><td>狀態要活得比 process 久嗎？</td><td><strong>Session log 放在 harness 外面</strong>，掛了能續跑</td><td>每一步多一次寫入，要設計 log 的介面</td></tr>
                   <tr><td>多個 agent 要共用同一份基礎設施嗎？</td><td><strong>Tool、memory、sandbox 池做成服務</strong></td><td>要有協定與版本，一掛全部受影響</td></tr>
                 </tbody>
@@ -305,7 +305,7 @@
           <div class="idea" id="i4">
             <h3>查閱：八個 harness 的設計重心</h3>
             <div class="prose">
-<p id="i4-1"><span class="anchor" id="x2"></span><b>每個 harness 都把一個假設寫進結構。</b>第 3 章的同一個問題，各家 harness 的答案不同，因為它們的假設不同。以第一題（不可信的東西要和秘密隔開嗎）為例：Codex CLI 先把指令關進 sandbox，要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不開 sandbox，有風險的動作預設交給一個自動判斷風險的分類器（這個模式叫 auto mode），也可以改成每次先問人；它假設環境不一定能隔離。兩種假設都可能成立。<strong>讀下面八個 harness 時，可以問每個設計背後假設了什麼</strong>。</p>
+<p id="i4-1"><span class="anchor" id="x2"></span><b>每個 harness 都把一個假設寫進結構。</b>第 3 章的同一個問題，各家 harness 的答案不同，因為它們的假設不同。以第一題（要讓外部內容和 model 寫的程式碼碰不到 credential 嗎）為例：Codex CLI 先把指令關進 sandbox，要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不開 sandbox，有風險的動作預設交給一個自動判斷風險的分類器（這個模式叫 auto mode），也可以改成每次先問人；它假設環境不一定能隔離。兩種假設都可能成立。<strong>讀下面八個 harness 時，可以問每個設計背後假設了什麼</strong>。</p>
 <p>下面的表<strong>不必讀完</strong>，需要時再查。表裡的 context、compaction 是 <a href="l04.html">L4</a> 的詞，prompt cache、TTL 是 L8〈<a href="l08.html#i3">Prefix cache</a>〉的詞。這裡列八個 coding agent harness，每個用一句話說它的設計重心，右欄是最值得看的一個設計對應到哪一章。</p>
 <div class="table-wrap"><table>
                 <thead><tr><th>Harness</th><th>一句話</th><th>對應</th></tr></thead>
@@ -966,7 +966,7 @@
     {
      "id": "k10.4",
      "type": "mechanism",
-     "t": "「不可信的東西要和秘密隔開嗎」答「是」，就把秘密（例如 credential）放在 sandbox 外面。",
+     "t": "「要讓外部內容和 model 寫的程式碼碰不到 credential 嗎」答「是」，就把 credential 放在 sandbox 外面。",
      "at": [
       "#i3 表1 列1 ‹問題›",
       "#i3 表1 列1 ‹答「是」就拆出去›"
@@ -1097,7 +1097,7 @@
     {
      "id": "k12.2",
      "type": "mechanism",
-     "t": "以「不可信的東西要和秘密隔開嗎」為例：Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不開 sandbox，有風險的動作預設交給自動判斷風險的分類器（auto mode），也可以改成每次先問人，假設環境不一定能隔離。兩種假設都可能成立。",
+     "t": "以「要讓外部內容和 model 寫的程式碼碰不到 credential 嗎」為例：Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人，假設隔離比問人可靠（人被問多了會不看就同意）；Claude Code 預設不開 sandbox，有風險的動作預設交給自動判斷風險的分類器（auto mode），也可以改成每次先問人，假設環境不一定能隔離。兩種假設都可能成立。",
      "at": [
       "#i4 ¶1",
       "#i4 表1 列2 ‹一句話›",
@@ -1944,7 +1944,7 @@
     }
    ],
    "key": [
-    "不可信的東西（外部 email）和秘密（API key）要隔開：把秘密放在 sandbox 外面；代價是多一段 proxy，多一種故障。"
+    "外部 email 不可信，要讓它碰不到 API key：把 API key 放在 sandbox 外面；代價是多一段 proxy，多一種故障。"
    ],
    "covers": [
     "k10.4",
@@ -2024,7 +2024,7 @@
     },
     {
      "t": "至少把 sandbox 拆出去：自己用也該把 model 寫的 code 隔離開來",
-     "why": "第一個問題問的是不可信的東西要不要和秘密隔開。只讀本機的 diff、不碰秘密，這一題答否。三題都答否，函式呼叫就夠。"
+     "why": "第一個問題問的是要不要讓外部內容和 model 寫的程式碼碰不到 credential。只讀本機的 diff、不碰秘密，這一題答否。三題都答否，函式呼叫就夠。"
     }
    ],
    "key": [
@@ -2123,7 +2123,7 @@
    "id": "k12a",
    "ks": "k12",
    "kind": "choice",
-   "q": "面對「不可信的東西要不要和秘密隔開」，Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人；Claude Code 預設不開 sandbox，有風險的動作交給分類器判斷，也可以改成每次先問人。兩者各假設了什麼？",
+   "q": "面對「要不要讓外部內容和 model 寫的程式碼碰不到 credential」，Codex CLI 先把指令關進 sandbox、要出 sandbox 才問人；Claude Code 預設不開 sandbox，有風險的動作交給分類器判斷，也可以改成每次先問人。兩者各假設了什麼？",
    "choices": [
     {
      "t": "Codex：隔離比問人可靠，人會不看就同意；Claude Code：環境不一定能隔離",
@@ -2160,7 +2160,7 @@
    "q": "你們做一個替客戶跑 coding 任務的雲端服務，系統裡只有一個 agent。它會讀客戶的 repo 和外部網頁，手上拿著客戶的 git token，一個任務常常跑一小時以上。同事說：「我們只有一個 agent，不是 multi-agent 平台，全部放在同一個 container 就好。」這個選法漏看了什麼？你會把哪幾樣拆出去，哪一樣不必拆？",
    "key": [
     "照 agent 的數量選架構只是常見的選法；要不要拆的理由是失敗與安全，一個 agent 也會碰到（全部放同一個 container 時，container 掛了 session 就沒了，code 也讀得到 credential）",
-    "它讀外部網頁、又拿著 token：不可信的東西要和秘密隔開，所以 credential 要放到 sandbox 外面",
+    "它讀外部網頁、又拿著 token：外部網頁不可信，要讓它碰不到 token，所以 credential 要放到 sandbox 外面",
     "任務跑一小時以上：狀態要活得比 process 久，所以 session log 放到 harness 外面，harness 自己不存狀態，掛了就開一個新的、讀 log 接著做",
     "只有一個 agent，沒有共用的需要：tool、memory 不必為了共用做成服務。邊界是一條一條決定的，不必整套換成 microkernel"
    ]
