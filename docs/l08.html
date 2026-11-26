@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261126">
+<link rel="stylesheet" href="styles.css?v=20261126b">
 </head>
 <body>
 <header class="topbar">
@@ -677,7 +677,7 @@
   r：cache read 相對於 base input 的倍率（上圖用 0.1）</code></pre></figure>
 <p>上圖就是這條算式停頓一次的情況，兩根長條是代進去的結果：粉色那一大段是 k × 1.25 × C，重寫整個 context 的那一筆，第 2 章 TraceLab 那些重算的舊內容就是這樣來的。把「離開多久」拖到 5 分鐘以內，cache 沒有過期，粉色就不見了，5 分鐘 TTL 反而便宜。</p>
 <p>完全沒停過才是 5 分鐘划算；上圖的例子<strong>只要停過一次，1 小時 TTL 就便宜三倍以上</strong>。Agent 的 context 通常比新增的內容大得多，換別的數字方向也一樣。<strong>所以有人會停下來想的互動 session 用 1 小時</strong>。中間不等人的短任務用 5 分鐘，例如 subagent（你直接對話的 agent 派出去做一件子任務的另一個 agent），它就是沒有停頓的情況。Uber 也是這樣設的：互動 session 改成 1 小時，subagent 維持 5 分鐘。</p>
-<p><b>Claude Code 的預設看你怎麼付錢。</b>依 2026-11 的 Claude Code 文件：</p>
+<p class="h-minor"><b>Claude Code 的預設看你怎麼付錢。</b>依 2026-11 的 Claude Code 文件：</p>
 <ul>
 <li>用 Claude 訂閱，而且還在方案額度內：main conversation（你直接對話的那一串）用 1 小時，subagent 和 compaction 用 5 分鐘。</li>
 <li>按 token 付錢：用 API key、透過 Amazon Bedrock 這類雲端平台，或訂閱超過額度後扣 usage credits（額度外另外計費的用量）。這時每一筆 cache write 都照單價記在你的帳上，Claude Code 就全部預設用單價較低的 5 分鐘。照上面的帳，這個預設只在沒有停頓時划算。訂閱用戶一超過額度，main conversation 就從 1 小時降回 5 分鐘。</li>
@@ -751,9 +751,9 @@ vllm:prefix_cache_hits     1185000
                   <p>出處：<a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">Claude pricing</a>、<a href="https://developers.openai.com/api/docs/models/gpt-5.6-sol" target="_blank" rel="noopener">GPT-5.6 Sol</a>、<a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener">Gemini pricing</a>。其他 provider 的 cache 規則不同，例如 Gemini 4 Argon 的 prefix cache 不必設定，遇到共同的開頭自動打折；官方只列 cache read 的價格，沒有 cache write 的價格，所以表上寫「—」。</p>
                 </div>
               </details>
-<p id="i3-7"><span class="anchor" id="n-prefill"></span><b>Input 與 output 單價的來源：prefill 與 decode。</b><b>Provider 的成本主要是 GPU 的時間，所以一個 token 的成本，約等於 GPU 每秒的花費除以它每秒處理幾個 token。</b>Model 處理一個 request 分兩個階段：讀 input 的階段叫 prefill，產生回覆的階段叫 decode。比 <b>input 和 output 的單價，就是比同一組 GPU 每秒能 prefill 幾個 token、能 decode 幾個 token。</b>下面借 <a href="l09.html#i4">L9 算帳的那一組設定</a>：Llama 3 70B，一個 700 億參數的 model，跑在 2 張 NVIDIA H200 GPU 上。Provider 不公開自己的成本，所以下面的數字是本文的推算，是理論上限，只看量級。</p>
-<p><b>Prefill 卡在算力，叫 compute-bound。</b>每個 input token 都要和全部權重各做一次乘法、一次加法。Prompt 裡的幾千個 token 一起算，權重從記憶體讀一次就給它們全部用，所以讀的時間不是問題，GPU 的運算單元一直是忙的。每秒能算幾個 token，看 GPU 每秒能做幾次運算。</p>
-<p><b>Decode 卡在記憶體頻寬，叫 memory-bound。</b>Decode 每一輪只替一個 request 產生一個 token，卻要把全部權重從 GPU 記憶體讀一遍。這裡的「一輪」是 GPU 算出一個 token 的一次計算，不是 agent 的一步；agent 的一步要跑幾百輪才產生一段回覆。運算單元多半在等資料，每秒能產生幾個 token，看 GPU 每秒能從記憶體讀幾 byte。batch 只有一個 request 時，兩個上限算出來差約兩百倍：</p>
+<p id="i3-7"><span class="anchor" id="n-prefill"></span><b>Input 與 output 單價的來源：prefill 與 decode。</b>Provider 的成本主要是 GPU 的時間，所以一個 token 的成本，約等於 GPU 每秒的花費除以它每秒處理幾個 token。Model 處理一個 request 分兩個階段：讀 input 的階段叫 prefill，產生回覆的階段叫 decode。比 <b>input 和 output 的單價，就是比同一組 GPU 每秒能 prefill 幾個 token、能 decode 幾個 token。</b>下面借 <a href="l09.html#i4">L9 算帳的那一組設定</a>：Llama 3 70B，一個 700 億參數的 model，跑在 2 張 NVIDIA H200 GPU 上。Provider 不公開自己的成本，所以下面的數字是本文的推算，是理論上限，只看量級。</p>
+<p class="h-minor"><b>Prefill 卡在算力，叫 compute-bound。</b>每個 input token 都要和全部權重各做一次乘法、一次加法。Prompt 裡的幾千個 token 一起算，權重從記憶體讀一次就給它們全部用，所以讀的時間不是問題，GPU 的運算單元一直是忙的。每秒能算幾個 token，看 GPU 每秒能做幾次運算。</p>
+<p class="h-minor"><b>Decode 卡在記憶體頻寬，叫 memory-bound。</b>Decode 每一輪只替一個 request 產生一個 token，卻要把全部權重從 GPU 記憶體讀一遍。這裡的「一輪」是 GPU 算出一個 token 的一次計算，不是 agent 的一步；agent 的一步要跑幾百輪才產生一段回覆。運算單元多半在等資料，每秒能產生幾個 token，看 GPU 每秒能從記憶體讀幾 byte。batch 只有一個 request 時，兩個上限算出來差約兩百倍：</p>
 <figure class="file"><figcaption>上限怎麼算（Llama 3 70B、2 張 H200）</figcaption><pre><code class="lang-text">權重      705 億個參數 × 2 byte（BF16 格式）= 141 GB
 GPU       2 張 H200 合計：每秒 1,978 TFLOP 運算，每秒從記憶體讀 9.6 TB，記憶體 282 GB
 
@@ -763,7 +763,7 @@ decode    batch 1：每一輪讀 141 GB，9.6 TB ÷ 141 GB ≈ 68 輪，每秒 �
 
 KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約 43 萬個 token
 放滿時    每一輪讀 ≈ 整塊記憶體 282 GB，282 GB ÷ 9.6 TB ≈ 29 毫秒</code></pre></figure>
-<p><b>Batching 攤掉權重，攤不掉 KV cache。</b>這裡的 batching 是 serving 系統把同時在跑的很多 request 排成一批、一起 decode，和上一節打折的 Batch API 是兩件事。權重讀一次，batch 裡每個 request 都拿它算出自己的下一個 token，權重的成本就攤給整個 batch。但每個 request 還要讀自己的 KV cache。KV cache 就是 3.1 說的「每個 token 算出的一組中間結果」，兩組向量，叫 K 和 V；新的 token 要回頭讀前文全部的 K、V，才算得出下一個 token，這一步叫 attention。Prefix cache 存的也是它。KV cache 只服務自己的 request，batch 再大也攤不掉。</p>
+<p class="h-minor"><b>Batching 攤掉權重，攤不掉 KV cache。</b>這裡的 batching 是 serving 系統把同時在跑的很多 request 排成一批、一起 decode，和上一節打折的 Batch API 是兩件事。權重讀一次，batch 裡每個 request 都拿它算出自己的下一個 token，權重的成本就攤給整個 batch。但每個 request 還要讀自己的 KV cache。KV cache 就是 3.1 說的「每個 token 算出的一組中間結果」，兩組向量，叫 K 和 V；新的 token 要回頭讀前文全部的 K、V，才算得出下一個 token，這一步叫 attention。Prefix cache 存的也是它。KV cache 只服務自己的 request，batch 再大也攤不掉。</p>
 <figure class="diagram" data-calc="decode">
               <div class="scroll">
                 <svg viewBox="0 0 720 176" role="img" aria-label="三根照比例的水平長條，每個 request 的 context 都是 8K token 時，每產生 1 個 output token 要從記憶體讀多少 byte。Batch 1 是 144 GB，幾乎全是青色的權重。Batch 8 是 20 GB，權重縮成八分之一。Batch 52，記憶體放滿，是 5.4 GB，青色的權重和深紅的 KV cache 各約一半。深紅的 KV cache 在三根長條上一樣長，2.7 GB，不隨 batch 變小。">
@@ -817,7 +817,7 @@ KV cache  每個 token 約 320 KB；282 GB 扣掉權重剩 141 GB，放得下約
               </div>
               <figcaption>Batch 變大，每個 output token 要讀的 byte 少多少？每個 request 的 context 都是 8K token。青色的權重攤給越多 request，就越短；深紅的 KV cache 每個 request 各一份，三根一樣長。Batch 52 是 GPU 記憶體放得下的最多 request（下一段算），這時 KV cache 已經佔一半。本文用 L9 的規格推算，長條照比例畫。</figcaption>
             </figure>
-<p data-num-own><b><span style="color: var(--key)">Batch 的上限是記憶體，不是算力</span>。</b><span style="color: var(--key)">上面兩個上限差約兩百</span>倍，意思是權重讀一次，要給約兩百個 token 用，算力才會用滿；這個比例在 roofline model 裡叫 ridge point（<a href="l10.html#i3">L10〈Decode〉</a>）。Decode 每一輪每個 request 只出一個 token，所以 batch 要約兩百個 request。但 batch 越大，KV cache 越多。上面的算式顯示，這兩張 GPU 扣掉權重，<a href="l09.html#i4-3">只放得下約 43 萬個 token 的 KV cache</a>；每個 request 的 context 是 8K 時，最多放 52 個，只有所需的四分之一左右。</p>
+<p class="h-minor" data-num-own><b><span style="color: var(--key)">Batch 的上限是記憶體，不是算力</span>。</b><span style="color: var(--key)">上面兩個上限差約兩百</span>倍，意思是權重讀一次，要給約兩百個 token 用，算力才會用滿；這個比例在 roofline model 裡叫 ridge point（<a href="l10.html#i3">L10〈Decode〉</a>）。Decode 每一輪每個 request 只出一個 token，所以 batch 要約兩百個 request。但 batch 越大，KV cache 越多。上面的算式顯示，這兩張 GPU 扣掉權重，<a href="l09.html#i4-3">只放得下約 43 萬個 token 的 KV cache</a>；每個 request 的 context 是 8K 時，最多放 52 個，只有所需的四分之一左右。</p>
 <p data-num-own>放滿時，每一輪要讀的權重加 KV cache，差不多就是整塊 GPU 記憶體，所以一輪約 29 毫秒（上面的算式），和 context 長短無關。一輪替 batch 裡每個 request 各出一個 token，所以每秒產生的 token 數，看放得下幾個 request。Context 越長，同一筆記憶體放得下的 request 越少，decode 每秒產生的 token 就越少：</p>
 <figure class="diagram">
               <div class="scroll">
@@ -1302,7 +1302,7 @@ $ claude -p "這些 CI 失敗分不出類別，說明原因：$(cat unknown.txt)
                 </tbody>
               </table></div>
 <p>兩個 benchmark 都是平均看 low 划算，但 <strong>max 多解的那些題每題要多花 $24 到 $70</strong>，值不值得看那一題值多少。文章也說 Humanity's Last Exam 最後一級只多半分、多花 46%，落在雜訊範圍內。這些是廠商自己的數字，當方向看。實務上的折衷可以看 Uber：預設 effort 是 medium，理由是 thinking 算在最貴的 output 裡，而 medium 對大多數任務的成本和品質已經平衡。</p>
-<p><b>Per-turn effort：換 effort 不要改 request 最上層的值。</b>Request 最上層的 effort 設定寫在 messages 前面，一改，cache 就斷（第 3 章〈七種會打斷 cache 的動作〉）。Claude API 有兩種換法，都只在 messages 尾端加東西，前面不動，所以 cache 保留。兩種都以 turn 為單位（第 1 章：你送一則訊息，到 agent 回覆為止），<strong>同一個 turn 裡的 tool 步驟不能各用一種 effort</strong>。原因是 API 的規則：turn 中間每一步的最後一則訊息只裝 tool 結果，API 不把它算成新的輸入，effort 訊息接在它後面，要等到你送下一則訊息才生效。要讓某一類步驟固定用 low，就交給一個 subagent，它自己的 request 設 low（本章開頭的 routing）。</p>
+<p class="h-minor"><b>Per-turn effort：換 effort 不要改 request 最上層的值。</b>Request 最上層的 effort 設定寫在 messages 前面，一改，cache 就斷（第 3 章〈七種會打斷 cache 的動作〉）。Claude API 有兩種換法，都只在 messages 尾端加東西，前面不動，所以 cache 保留。兩種都以 turn 為單位（第 1 章：你送一則訊息，到 agent 回覆為止），<strong>同一個 turn 裡的 tool 步驟不能各用一種 effort</strong>。原因是 API 的規則：turn 中間每一步的最後一則訊息只裝 tool 結果，API 不把它算成新的輸入，effort 訊息接在它後面，要等到你送下一則訊息才生效。要讓某一類步驟固定用 low，就交給一個 subagent，它自己的 request 設 low（本章開頭的 routing）。</p>
 <ul>
                 <li><b>Per-message effort（beta）。</b>你送出的訊息後面，緊接一則只帶 effort 設定、沒有文字的訊息。它在 API 上的 role 寫 <code>system</code>，但它在 messages 尾端，不是排在最前面的 system prompt，所以前面的 cache 不動。<strong>這個 turn 的回覆就用新的等級</strong>，之後的 turn 沿用，直到下一則這種訊息。</li>
                 <li><b>Prompt 引導。</b>在你這則訊息的文字最後加一句：要多想就加「Please think hard before responding.」，要少想就加「Answer directly without deliberating.」。<strong>這只是請求</strong>：Haiku 5.5 和 Fable 5.2 對「少想」那句不太照做，要少想就用前一種。</li>

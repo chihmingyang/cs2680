@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261126">
+<link rel="stylesheet" href="styles.css?v=20261126b">
 </head>
 <body>
 <header class="topbar">
@@ -882,7 +882,7 @@ $ claude agents                      # research preview；列出 Working、Needs
 <div class="exbody prose">
 
 <p>讀書會成員轉來的簡體中文評論（2026-10-29）引用一個 benchmark，說 agent 做到一半時主幹一變，成功率跌到兩成；接著建議執行期用 git worktree 隔離，合併期清空對話歷史。原文應該是鸭哥的〈<a href="https://yage.ai/share/git-worktree-agent-merge-flush-en-20261029.html" target="_blank" rel="noopener">Why Agents Still Delete Your New Code on Merge</a>〉（有<a href="https://yage.ai/share/git-worktree-agent-merge-flush-20261029.html" target="_blank" rel="noopener">中文版</a>）。Benchmark 是 <a href="https://arxiv.org/abs/2610.32196" target="_blank" rel="noopener">SWE-Shift</a>（Huang 等，2026-10-23）。數字依摘要與 <a href="https://github.com/JeixHuang/SWE-Shift" target="_blank" rel="noopener">repo</a> 公布的結果檔；arXiv 全文 2026-11-03 仍被 rate limit，沒有讀到。</p>
-<p><b>SWE-Shift 量什麼。</b>SWE-bench 這類 benchmark 假設任務開始後 repo 不會動。SWE-Shift 問的是：做到一半 repo 變了，agent 還做得完嗎。它有 120 個場景、12 類變動；每個場景在進度的一成到九成取 9 個節點（T10 到 T90），到了節點就把 workspace 和對話存下來，分成兩條繼續：Clean 照舊做完，Shifted 先注入變動再做完。PSR 是 paired success rate：同一個節點兩條都成功才算，成功的門檻還包括保留還成立的工作、用現在的證據。證據指 agent 判斷時依據的結果，例如讀到的檔案內容、測試或查詢的輸出；用現在的證據，就是變動之後重新讀、重新跑，不用變動前留在 context 裡的舊版。下表比兩個系統：Astra 是 GPT-6 Astra，Fable 是 Claude Fable 5.1。</p>
+<p class="h-minor"><b>SWE-Shift 量什麼。</b>SWE-bench 這類 benchmark 假設任務開始後 repo 不會動。SWE-Shift 問的是：做到一半 repo 變了，agent 還做得完嗎。它有 120 個場景、12 類變動；每個場景在進度的一成到九成取 9 個節點（T10 到 T90），到了節點就把 workspace 和對話存下來，分成兩條繼續：Clean 照舊做完，Shifted 先注入變動再做完。PSR 是 paired success rate：同一個節點兩條都成功才算，成功的門檻還包括保留還成立的工作、用現在的證據。證據指 agent 判斷時依據的結果，例如讀到的檔案內容、測試或查詢的輸出；用現在的證據，就是變動之後重新讀、重新跑，不用變動前留在 context 裡的舊版。下表比兩個系統：Astra 是 GPT-6 Astra，Fable 是 Claude Fable 5.1。</p>
 <div class="table-wrap"><table>
 <thead><tr><th>變動<br><small>agent 怎麼得知</small></th><th>Worktree<br>擋得住？</th><th>PSR<br>Astra／Fable</th></tr></thead>
 <tbody>
@@ -901,7 +901,7 @@ $ claude agents                      # research preview；列出 Working、Needs
 </tbody>
 </table></div>
 <p>依 repo 的 <code>cases/public/*/case.json</code> 與 <code>docs/paper/results.json</code>；F07、F08、F11、F12 的說明是本文依 case.json 的欄位整理的。「擋得住」的意思是：變動只改檔案，agent 在自己的 worktree 裡看不到它，要到 merge 才碰到。這個 20% 不是日常的事故頻率：場景是挑過的，變動一定和任務有關。</p>
-<p><b>兩個痛點，一個有量測，一個是合理的解讀。</b>「順手刪掉主幹新加的 code」有量測：F03 的場景都會收到訊息，明白寫著另一個 agent（題目裡的 teammate）的工作要保留，SWE-Shift 判成功時也檢查那份工作還在不在；即使這樣，PSR 仍只有 22.2 和 30.5。公布的資料沒有把失敗再分成「刪掉了」和其他原因，所以能確定的只是：刪掉別人的工作算在這七到八成的失敗裡，佔多少不知道；本節最後一段的 Django 案例就是一例。知道了為什麼還會刪？鸭哥的解讀是 context 裡還留著舊計畫和舊版的檔案內容，本文沒讀到全文，無法確認論文怎麼證明。「後期改不了舊計畫」是從下圖讀出來的：兩個強系統的線，變動越晚到越低。這個下降混了兩個原因：計畫固著（agent 照著做到一半的舊計畫繼續做，不改計畫）和晚期預算少（每個場景都有固定的步數上限，變動越晚到，剩下能重做的步數越少）。repo 公布的資料沒有把它們分開。</p>
+<p class="h-minor"><b>兩個痛點，一個有量測，一個是合理的解讀。</b>「順手刪掉主幹新加的 code」有量測：F03 的場景都會收到訊息，明白寫著另一個 agent（題目裡的 teammate）的工作要保留，SWE-Shift 判成功時也檢查那份工作還在不在；即使這樣，PSR 仍只有 22.2 和 30.5。公布的資料沒有把失敗再分成「刪掉了」和其他原因，所以能確定的只是：刪掉別人的工作算在這七到八成的失敗裡，佔多少不知道；本節最後一段的 Django 案例就是一例。知道了為什麼還會刪？鸭哥的解讀是 context 裡還留著舊計畫和舊版的檔案內容，本文沒讀到全文，無法確認論文怎麼證明。「後期改不了舊計畫」是從下圖讀出來的：兩個強系統的線，變動越晚到越低。這個下降混了兩個原因：計畫固著（agent 照著做到一半的舊計畫繼續做，不改計畫）和晚期預算少（每個場景都有固定的步數上限，變動越晚到，剩下能重做的步數越少）。repo 公布的資料沒有把它們分開。</p>
 <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 640 300" role="img" aria-label="折線圖：變動在任務進度的 T10 到 T90 注入時，三個系統的 PSR。GPT-6 Astra 從 T10 的 38.8% 一路下滑，T70 只剩 2.4%，T90 是 14.3%。Claude Fable 5.1 從 27.4% 平緩下滑到 T80 的 6.2%，T90 是 9.8%。Kimi-K3 一路在 6% 到 9% 之間，幾乎是平的。">
@@ -934,7 +934,7 @@ $ claude agents                      # research preview；列出 Working、Needs
               </div>
               <figcaption>變動越晚到，agent 越救不回來嗎？GPT-6 Astra 和 Claude Fable 5.1 這兩個強系統大致是，只是到 T90 又回升一點；Kimi-K3 本來就低，看不出差別。依 repo 的 results.json（論文 Figure 4 的資料）重畫，本文的整理，2026-11-03 再比對一次。</figcaption>
             </figure>
-<p><b>建議成不成立。</b>成立，但範圍要縮到上表擋得住的四類。Worktree 把 F01 到 F04 延到 merge 那一刻，git 會把它變成明確的 diff 和 conflict marker，agent 不必自己察覺。清空歷史補另一半：帶著執行期對話的 agent 會把 main 的新東西當成要改回去的差異，新 context 只看得到現況。鸭哥的文章說論文量到 flush 歷史能回 6 到 9 個百分點，本文沒讀到全文，只能轉述。代價是新 context 不知道你為什麼這樣改，所以原因要寫在 commit message 或計畫檔。擋不住的八類，要在流程裡排固定的重讀節點。</p>
+<p class="h-minor"><b>建議成不成立。</b>成立，但範圍要縮到上表擋得住的四類。Worktree 把 F01 到 F04 延到 merge 那一刻，git 會把它變成明確的 diff 和 conflict marker，agent 不必自己察覺。清空歷史補另一半：帶著執行期對話的 agent 會把 main 的新東西當成要改回去的差異，新 context 只看得到現況。鸭哥的文章說論文量到 flush 歷史能回 6 到 9 個百分點，本文沒讀到全文，只能轉述。代價是新 context 不知道你為什麼這樣改，所以原因要寫在 commit message 或計畫檔。擋不住的八類，要在流程裡排固定的重讀節點。</p>
 <figure class="file"><figcaption>執行期一個 worktree，合併期一個新 context（本文擬的例子）</figcaption><pre><code># 執行期：一個任務一個 worktree，main 上的新 commit 不會跑進你的目錄
 $ claude -w feat-auth
 &gt; 照 docs/plans/auth.md 實作，做完 commit。

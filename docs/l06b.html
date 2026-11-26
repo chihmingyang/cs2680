@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261126">
+<link rel="stylesheet" href="styles.css?v=20261126b">
 </head>
 <body>
 <header class="topbar">
@@ -633,7 +633,7 @@ src/accounts/login.py                      # 用這個，並把舊筆記標成�
   "created":    "2026-06-20"
 }</code></pre></figure>
               <p>Reflection 有兩種典型的失敗，snippet 的欄位各擋一種（哪個欄位擋哪一種，是本文的對應）。<strong>Memory hallucination 是推測被存成事實</strong>。例子：原話是「在 Harvard 唸書」，存進去的卻是「Harvard 的訪問學生」；「訪問學生」這個身分是 model 推測的，沒有人說過。換成上面的例子，就是把「常問 LLM inference」存成「他是做 LLM inference 的工程師」。擋它的是 <code>kind: hypothesis</code>：之後讀到這一條，就知道它是推測，只當背景參考，不蓋過使用者說過的話。<strong>Overgeneralization 是證據太少就做 reflection</strong>：使用者只問過一次 vLLM，就被記成長期偏好。擋它的是 <code>evidence</code> 和 <code>confidence</code>：只連得回一筆事件的 reflection，一眼看得出證據不夠，confidence 也只能標 low。所以 <strong>reflection 要等累積了夠多新證據再做</strong>；另一個時機是幾條事實互相衝突或重複，這時本來就要把它們合起來看。</p>
-              <p><b>Reflection 錯了要能退：原本的 store 不動，結果另存一份。</b>上面的欄位讓之後讀到這一條的 agent 認得出它是推測、證據有多少，但錯的 reflection 還是會寫進 store。「能退」是指發現 reflection 寫錯之後，回得到 reflection 之前的那份 store。為什麼需要、要怎麼做，可以從 reflection 的三個性質推出來（本文的推論）：</p>
+              <p class="h-minor"><b>Reflection 錯了要能退：原本的 store 不動，結果另存一份。</b>上面的欄位讓之後讀到這一條的 agent 認得出它是推測、證據有多少，但錯的 reflection 還是會寫進 store。「能退」是指發現 reflection 寫錯之後，回得到 reflection 之前的那份 store。為什麼需要、要怎麼做，可以從 reflection 的三個性質推出來（本文的推論）：</p>
               <ul>
                 <li><b>它是有損的。</b>上面的例子裡，reflection 只是多寫一條，原本的四筆還在。但 store 越寫越多之後，reflection 也用來整理 store 本身：把重複的幾條合成一條，把互相矛盾的幾條換成 model 認為最新的那一條。這種 reflection 會拿掉原本的記憶；合錯了，被拿掉的細節就不在 store 裡了。</li>
                 <li><b>它沒辦法當場驗。</b>Code 改壞了，測試會失敗。Reflection 沒有對應的測試：<code>evidence</code> 查得到這一條看過哪幾筆事件，查不到它的結論對不對，因為這句話沒有人說過。<strong>要等之後某個 session 照著它做出奇怪的事才看得出來</strong>。那時紀錄裡看得到的是 agent 的行為，不會標出是哪一條記憶造成的，所以很難追回是哪一次 reflection 寫錯。</li>
@@ -881,7 +881,7 @@ LIMIT 5;                                              -- top-k：k 決定要花�
             <h3><span class="idea-no">5</span>跨層的操作：整理、遺忘、量測</h3>
             <div class="prose">
               <p>前四章各講四層裡的一層（四層在第 1 章）。還有三件事不屬於任何一層，因為它們一次會動到好幾層：session 之間回頭整理、遺忘、量整套記憶有沒有用。先把四層接成一條記憶走過的路，看這三件事落在路上的哪裡。</p>
-              <p><b>每一站都要有一條寫下來的規則。</b>一條記憶從寫入到失效經過六站：</p>
+              <p class="h-minor"><b>每一站都要有一條寫下來的規則。</b>一條記憶從寫入到失效經過六站：</p>
               <figure class="diagram">
               <div class="scroll">
                 <svg viewBox="0 0 720 268" role="img" aria-label="一條記憶的生命週期。上方是 context window，下方是 memory store。新的互動經過三站寫進 memory store：Observe（值得記嗎）、Encode（存成什麼）、Store（放哪裡；這是一站，不是 memory store 那個地方）。Retrieve（這次要哪幾條）是唯一把 memory store 的內容帶回 context 的一站，標成深紅。Reflect（合併、reflection）與 Forget（失效、刪除）改 memory store 裡已有的記憶。每一站標著本文哪一章會講。">
