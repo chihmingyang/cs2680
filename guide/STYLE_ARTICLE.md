@@ -139,7 +139,7 @@
   - 改了標題要跟著改的：側欄（`add_lecture.py --sync-own`）、題庫每一節的 `title`（小測區塊的標題，`outline.py quiz-titles lXX --write`）、本頁與別頁用〈舊標題〉指過來的地方（`grep -n '舊標題' docs/*.html`）、`dag.html`（`dag.py`）。
   - 現況（2026-11-20）：L8 照這一節改完，是範例；L8b 同一天改完（第 2、3 章各多切出小標）；L9 2026-11-25 改完。其他堂還沒改，`outline.py lint all` 列出 132 個；動到那一堂時一起改，或 James 說要推到全站時做。
 - **分組與地圖（v5.0）**：章依內容分成 2–3 組，組名寫在 `div.ideas` 裡的 `p.idea-group#g-a`（「A · Loop：agent 的最小單位」），放在該組第一章前面。側欄目錄（`ol.sn-subs`）不放分組，只列章（v5.7）。`header.part-head` 加一句 `p.lede` 說三組各講什麼；header 後面放 `nav.map`：每組一個 `p.map-g`，每章一列 `a.map-row[href="#iN"]`（`span.map-no` 章號、`span.map-t` 主題 + `<small>` 結論、`span.map-m` 頁碼與分鐘）。分鐘用 `check_article.py` 的公式（400 單位／分鐘）算該章收合時的字數，寫法見 WORKFLOW B4。
-- **章內小標加 id（v5.0）**：結構性的粗體小標（找法 1–4、改法 1–4、四種策略、五種失敗…）寫成 `<p id="i2-3"><b>找法 1：…。</b>…`，sidenav 的第三層 `ol.sn-sub2s > li > a.sn-sub2` 連到它們，只在該章在畫面上時顯示。每章 4–9 個。
+- **章內小標加 id（v5.0）**：結構性的粗體小標（找法 1–4、改法 1–4、四種策略、五種失敗…）寫成 `<p id="i2-3"><b>找法 1：…。</b>…`，sidenav 的第三層 `ol.sn-sub2s > li > a.sn-sub2` 連到它們，只在該章在畫面上時顯示。每章 4–9 個。版面上小標自成一行（2026-11-26 James：「每一個 title 應該是上下要有留空，而不是文章內容連在後面」）：`styles.css` 把 `.prose > p[id]` 開頭的 `<b>` 設成 `display: block`，上面多留空、下面接內文。HTML 照舊寫成同一個 `<p>`，不要為了換行拆成兩段或改成 `h4`（側欄、`outline.py`、題庫都靠這個結構）。
 - **名詞註 `details.gloss`（v5.0，取代觀念補充）**：少見的名詞、別堂講過的東西、超出 slide 的背景，放在它第一次出現的那段正文後面，收合：
   ```html
   <details class="gloss" id="n-rag">
