@@ -354,3 +354,11 @@ James 問：每次改一章，能不能像 CI 的 regression test 一樣，確�
 5. **題庫**：搬走的節、題保留原 id，新頁的 JSON 加 `"moved_from": "l06"`，`app.js` 會把讀者在舊頁的作答紀錄複製一份過來。只有拆開的那一節（L6 舊第 10 章）要分 points 和題目；新開的節用沒用過的 id（L6 的 `k43`），不要重用搬走的 id，否則舊頁的 localStorage 會被當成新題的答案。跨兩半的整合題改寫成只用本頁的節，另一堂的觀念寫在題幹裡當前提（L6b 的 x7）。
 6. **別頁的連結和文字**：`grep -n 'l06.html' docs/*.html`，逐條判斷屬於哪一半；首頁課程地圖的 chip、`dag.json` 的 `src`、`excluded`、`lectures` 一起改，`python3 -I tools/dag.py` 重寫 `dag.html`。
 7. 兩頁跑 `bash tools/verify.sh l06`、`l06b`，全站 `all`；新寫的 tldr、lede、目錄章開頭、兩半之間的過場句跑可讀性審查（I），只審新寫的定位；`app.js` 有改就把全站的 `?v=` 版本號加一號。
+8. **第三例：L10 → L10〈GPU Basics & Roofline〉＋ L10b〈Kernel Optimization〉**（2026-11-27，`notes/l10split/build.py`、`site.py`）。這一例不是兩組互不依賴，是太長、而且依賴只有單向（STYLE_ARTICLE 第 0 節〈太長就拆堂〉）。多出來的步驟：
+   - 後半頁第 1 章開頭加收合的〈前情〉註（`details.gloss`，放在章首那一段之後）。註裡的段落另外編號（`註 n-l10 ¶1`），不會動到題庫 `points` 的 `at`。
+   - 後半頁提到前半的「第 N 章」逐句改成 L10〈節名〉加連結；前半頁指向後半的改成 L10b〈節名〉。SVG 的 `<text>`、`aria-label`、圖說、題庫的 `key`／`why`／`points` 裡也有「第 N 章」，build script 最後用 assert 掃一次。
+   - 「下一堂」「後面的講次」要重看：拆完之後，前半頁的「下一堂」變成指後半頁（L10 3.2 原本說 batching 是下一堂的主題）。
+   - 題庫：`sections` 的 `from`、`points` 的 `at`、整合題的 `after` 一起換章號；跨兩半的整合題（L10 的 x5）改成只用本頁的節，另一半的觀念寫進題幹。
+   - 順序（整串寫在 `notes/l10split/rebuild.sh`，用 `set -eo pipefail`：build script 的 assert 失敗時，後面的步驟不能接著跑在舊的頁面上）：build script 寫兩頁 → `add_lecture.py docs/l10b.html --sum …`（全站側欄；build script 重跑後要再跑一次，否則 `verify.sh` 的 add_lecture 會報兩頁的側欄不同步）→ `add_lecture.py --sync-own` → 兩頁 `check_article.py --fix-time` → `site.py`（首頁的列與 chip、兩列的閱讀時間、別頁的連結、`dag.json`；`add_lecture.py` 不會更新已經存在的首頁列）→ `dag.py`。重跑 build script 會蓋掉前面幾步，要整串重跑。
+   - 審查：前半頁審導讀與改過的句子；後半頁除了這些，整頁再掃一次 R3 與 R15，因為讀者現在從這一頁開始讀。L10b 第一輪掃出 17 條 R3／R15，多數是前半頁定義過的詞；統一加進〈前情〉表，不在正文逐處補。修完的句子要連題庫的 `points`、`key`、`why` 一起改（build script 用替換表，最後 assert 舊說法不在了）。2026-11-27 起審查者不能寫檔，報告要它用文字回報，主線整理成 `review_reports/<名稱>/TRIAGE.md`。
+   - `review_log.tsv`：搬走的章把 key 改成新頁的章號，審查後重新 `mark`。

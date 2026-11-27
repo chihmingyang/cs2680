@@ -65,6 +65,11 @@
   - 每堂要能單獨讀：tldr 和 `part-head` 的 lede 說這堂和另一堂怎麼分；用到另一堂的觀念時寫 L6〈章名〉並連過去，名詞在本堂第一次出現的地方重新解釋（run、harness、context 不能靠另一堂解釋過）。
   - 目錄章、動手試試、延伸閱讀、fineprint 的來源也依觀念分到兩堂；延伸閱讀的 `rg-intro` 說另外幾篇在哪一堂。`ul.meta` 加一列「同一份 slides」連到另一堂；eyebrow 補「和 L6 同一份 slides」。`data-pdf`、`data-pages-total` 照原 slides 填（頁碼連結要驗證得過）。
   - 做法見 `WORKFLOW.md` K。
+  - **太長就拆堂**（2026-11-27，James 看完 L10 的 review：「如果覺得一個 lesson 太長，我建議是拆分 lesson」）。一堂太長時，先看能不能拆成兩堂，再考慮砍內容；〈精簡〉只砍支線，不拿來把一堂壓短。門檻是本文的判斷：閱讀時間約 40 分鐘以上就檢查一次。
+    - 切法還是看觀念 DAG，但不要求兩組互不依賴。依賴只有單向也可以拆：後半用到前半、前半不用後半（L10 的第 6–10 章用到第 1–5 章的 roofline 與晶片內部，反過來沒有），後半就是接在前半後面的下一堂。兩組互相用到對方時不拆。
+    - 後半那一堂要能單獨讀：導讀的最後一行說這堂假設讀過哪一堂；第 1 章開頭放一個收合的〈前情〉註，把帶過來的詞各用一句話講一次並連回去（L10b 的 `#n-l10`）。
+    - 第一例是 L10（50 分）拆成 L10〈GPU Basics & Roofline〉25 分與 L10b〈Kernel Optimization〉30 分。拆完之後，原本「還可以再砍」的三項（晶片內部、其他晶片的表、電力與用水）都留著。
+    - 其他超過門檻、還沒檢查的堂（2026-11-27 的顯示值）：L7 50 分，L3、L4、L6b、L8 各 45 分。一個 session 一堂。
 - **新講次（L9 起，2026-11-06）**：沒有舊頁面，骨架用 `tools/new_lecture.py`。延伸閱讀摘要的「跟這堂課的關係」連到本頁的章。一堂有兩份 deck 時（L10）合成一篇，meta 一份一行。
 
 
@@ -137,7 +142,7 @@
     | 本文的判斷：硬上限給沒人看的任務… | 硬上限給沒人看的任務… | 7 |
   - 檢查有兩層。機械的：`python3 -I tools/outline.py lint lXX`（指代、只有數量、重名、前綴、只有主題；只 warn，`verify.sh` 會跑）。機械看不出來的（詞是不是業界的、單看懂不懂）：WORKFLOW I3〈只看標題的測試〉，一個沒讀過內文的 agent 只看大綱，把題庫的題目指到節、列出看不懂的標題。
   - 改了標題要跟著改的：側欄（`add_lecture.py --sync-own`）、題庫每一節的 `title`（小測區塊的標題，`outline.py quiz-titles lXX --write`）、本頁與別頁用〈舊標題〉指過來的地方（`grep -n '舊標題' docs/*.html`）、`dag.html`（`dag.py`）。
-  - 現況（2026-11-20）：L8 照這一節改完，是範例；L8b 同一天改完（第 2、3 章各多切出小標）；L9 2026-11-25 改完；L10 2026-11-26 改完。其他堂還沒改，`outline.py lint all` 列出 132 個；動到那一堂時一起改，或 James 說要推到全站時做。
+  - 現況（2026-11-20）：L8 照這一節改完，是範例；L8b 同一天改完（第 2、3 章各多切出小標）；L9 2026-11-25 改完；L10 2026-11-26 改完（2026-11-27 拆成 L10、L10b，標題照搬）。其他堂還沒改，`outline.py lint all` 列出 132 個；動到那一堂時一起改，或 James 說要推到全站時做。
 - **分組與地圖（v5.0）**：章依內容分成 2–3 組，組名寫在 `div.ideas` 裡的 `p.idea-group#g-a`（「A · Loop：agent 的最小單位」），放在該組第一章前面。側欄目錄（`ol.sn-subs`）不放分組，只列章（v5.7）。`header.part-head` 加一句 `p.lede` 說三組各講什麼；header 後面放 `nav.map`：每組一個 `p.map-g`，每章一列 `a.map-row[href="#iN"]`（`span.map-no` 章號、`span.map-t` 主題 + `<small>` 結論、`span.map-m` 頁碼與分鐘）。分鐘用 `check_article.py` 的公式（400 單位／分鐘）算該章收合時的字數，寫法見 WORKFLOW B4。
 - **章內小標加 id（v5.0）**：結構性的粗體小標（找法 1–4、改法 1–4、四種策略、五種失敗…）寫成 `<p id="i2-3"><b>找法 1：…。</b>…`，sidenav 的第三層 `ol.sn-sub2s > li > a.sn-sub2` 連到它們，只在該章在畫面上時顯示。每章 4–9 個。版面上小標自成一行（2026-11-26 James：「每一個 title 應該是上下要有留空，而不是文章內容連在後面」）：`styles.css` 把 `.prose > p[id]` 開頭的 `<b>` 設成 `display: block`，上面多留空、下面接內文。HTML 照舊寫成同一個 `<p>`，不要為了換行拆成兩段或改成 `h4`（側欄、`outline.py`、題庫都靠這個結構）。判斷「這個粗體是不是標題」的準則是直覺（2026-11-26 James：「主要是看設計上符不符合直覺」）：
   - **小標**（`p[id]`，側欄列得出來）：自成一行、字比內文大一級、上方多留空。小測方塊後面不再多留（方塊自己有下邊距）。
@@ -241,7 +246,7 @@ James：「其實沒人會去看延伸閱讀，光看完原文就花時間了。
 **兩檔都適用**：
 
 1. 主動語態，不寫「被」。
-2. 標準術語保留英文：context window、harness、subagent、prefix cache、KV cache、prefill、decode、batching、compaction、benchmark、throughput、latency 等。第一次出現可加一句中文說明。
+2. 標準術語保留英文：context window、harness、subagent、prefix cache、KV cache、prefill、decode、batching、compaction、benchmark、throughput、latency、secret、credential 等。第一次出現可加一句中文說明。中文裡有現成的詞也一樣：「秘密」不寫，寫 secret（2026-11-27 James 改 L8b）；`check_article.py` 對 James 改過的中譯會 warn。
 3. 不用填充詞（其實、基本上、非常、相當、可以說、事實上、簡單來說）、成語、破折號插入語、「不是 X，而是 Y」句型。
 4. 數字用阿拉伯數字，保留單位。每個數字前面寫它量的是什麼，有對照就把倍數或差距算好，並讓讀者看得出它撐起哪個結論；兩組以上並排就做成表或圖，不要把一張表塞進一句話。Tldr 和摘要只留撐起論點的一兩個數字（2026-11-07，起因 L1 tldr「聊天是 1 次、750 token、105 token」；審查時是 `REVIEW_READABILITY.md` 的 R12）。
 5. 全形標點；中英文之間半形空格。新寫的檔案或片段先跑 `tools/punct.py FILE --diff` 看它會改什麼，再不帶 `--diff` 執行。**不要對既有頁面整頁跑**：頁面裡的數學式與英文片語（`× (1 + 2)`、`Fail?`）要維持 ASCII，2026-10-19 的規則版本已經避開大多數，但仍先看 diff。
@@ -366,7 +371,7 @@ James：「其實沒人會去看延伸閱讀，光看完原文就花時間了。
 | l07.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 |
 | l08.html | 8_agent_design_5.pdf | 54 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 |
 | l09.html | 9_llm_serving_basics_1.pdf | 51 | 2026-10-19 | Efficient LLM serving basics I: intro to LLMs | LLM 的結構與 serving 的帳 |
-| l10.html | 10_llm_serving_basics_2a.pdf ＋ 10_llm_serving_basics_2b.pdf | 41 ＋ 55 | 2026-10-21（2b 是 11-02） | Efficient LLM serving basics II: intro to GPUs | GPU 入門與 kernel 最佳化 |
+| l10.html、l10b.html | 10_llm_serving_basics_2a.pdf ＋ 10_llm_serving_basics_2b.pdf | 41 ＋ 55 | 2026-10-21（2b 是 11-02） | Efficient LLM serving basics II: intro to GPUs | GPU 入門與 roofline（L10）；kernel 最佳化（L10b，2026-11-27 拆出） |
 | l11.html | feedback_assignment.pdf | 72 | 2026-11-02 | Assignments feedback and agent pitfalls | 作業回饋與 agent 的十個陷阱 |
 
 Part II 還沒有頁面的講次（依課程網站 2026-11-06 的時程，可能調整；PDF 檔名等 slides 公開後再填）：

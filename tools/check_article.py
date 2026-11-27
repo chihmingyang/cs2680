@@ -39,6 +39,8 @@ SKIP = {"pre", "code", "svg", "summary", "figcaption", "script", "style"}
 PROSE_CLASSES = {"prose", "hint", "qtext", "qctx", "qh", "lede", "qset-lede", "thesis", "exbody", "answer",
                  "note-own", "rg-s", "rg-g"}
 FILLERS = ["其實", "基本上", "非常", "相當", "可以說", "事實上", "總而言之", "簡單來說", "換句話說", "顯然"]
+# STYLE_ARTICLE 第 5 節第 2 點：標準術語保留英文。只列 James 改稿改過的中譯（2026-11-27 L8b「秘密」→「secret」）。
+TRANSLATED_TERMS = {"秘密": "secret"}
 # 2026-10-28: where a red key point (<strong>) may not go
 # 2026-11-20 (James：查閱區塊和表裡也標紅字): table cells and details.gloss are allowed now; th is not
 STRONG_NOT_IN = {"b", "a", "code", "pre", "h1", "h2", "h3", "h4", "summary", "figcaption", "figure", "svg",
@@ -404,6 +406,10 @@ def main():
         for m in COURSE_DATA.finditer(body):
             ctx = re.sub(r"\s+", " ", body[max(0, m.start() - 20):m.end() + 20])
             print(f"  warn: 課程內部的數據「{m.group(0)}」：改寫成機制加一個讀者會算的例子（R19）: …{ctx}…")
+    for zh, en in TRANSLATED_TERMS.items():
+        n = len(re.findall(zh, re.sub(r"<[^>]+>", "", html)))
+        if n:
+            print(f"  warn: 「{zh}」{n} 處：標準術語保留英文，寫「{en}」（STYLE_ARTICLE 第 5 節第 2 點）")
     for line, n, txt in number_load(html):
         print(f"  warn: line {line}: 一段太多數字（{n} 個），數字進圖或表，句子只講結論（R18）: {txt[:40]}")
     if args.fix_time:

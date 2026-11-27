@@ -229,7 +229,7 @@
       </tbody>
     </table></div>
     <p>你熟悉的系統裡其實早就有這個形狀。Kubernetes 的 control plane 從不自己跑容器：它把 Pod spec 交給 node 上的 kubelet，kubelet 把容器跑起來，再回報 status；容器 OOM 了，kubelet 回報，control plane 決定要不要重開。對應過來，<b>core 是 control plane，execution 服務是 kubelet，sandbox 是 Pod</b>。作業系統的 microkernel 也是一樣：kernel 只做排程和訊息傳遞，driver 在 kernel 外面跑，driver 當掉，kernel 不會一起倒。</p>
-    <p>要不要拆，回到 L8 第 9 章最後那三個問題，套在 execution 上就是：<b>model 寫的程式要和秘密隔開嗎？</b>（幾乎一定要，除非是你自己筆電上的單人工具）<b>sandbox 裡的狀態要活得比一次呼叫久嗎？</b>（多步驟的資料分析要）<b>很多 agent 要共用同一批執行機器嗎？</b>（平台要）。市面上的 E2B、Modal、Daytona 這類 sandbox 服務，賣的就是這一層。</p>
+    <p>要不要拆，回到 L8 第 9 章最後那三個問題，套在 execution 上就是：<b>model 寫的程式要和 secret 隔開嗎？</b>（幾乎一定要，除非是你自己筆電上的單人工具）<b>sandbox 裡的狀態要活得比一次呼叫久嗎？</b>（多步驟的資料分析要）<b>很多 agent 要共用同一批執行機器嗎？</b>（平台要）。市面上的 E2B、Modal、Daytona 這類 sandbox 服務，賣的就是這一層。</p>
   </section>
 
   <!-- ===================== 7 ===================== -->
@@ -391,7 +391,7 @@
     { k: '偷 credential', c: 'import os\nprint(os.environ["ANTHROPIC_API_KEY"])',
       r: [['bad', 'Key 被印出來', 'Key 就在 agent 的環境變數裡，程式讀得到。印出來的字會進 context，再進 transcript（L11 第 7 章）。'],
           ['mid', '看有沒有傳進去', '介面不管這件事。provider 有沒有把 env 傳進 container，決定了讀不讀得到。'],
-          ['ok', 'Sandbox 裡沒有 key', '秘密放在 sandbox 外面；程式需要打外部 API 時，由外面的 proxy 代打（L8 第 9 章 Managed Agents 的做法）。印出來的是 KeyError。']] },
+          ['ok', 'Sandbox 裡沒有 key', 'secret 放在 sandbox 外面；程式需要打外部 API 時，由外面的 proxy 代打（L8 第 9 章 Managed Agents 的做法）。印出來的是 KeyError。']] },
     { k: '網路斷線', c: '# 程式本身沒問題，是 core 和 execution 服務之間的網路斷了',
       r: [['ok', '不會發生', '沒有網路邊界，就沒有這種故障。'],
           ['ok', '幾乎不會', 'Provider 在同一台機器上。'],
@@ -495,7 +495,7 @@
       w: 'Sandbox 佔資源，閒置會被回收，裡面的狀態一起消失。Execution 服務不知道任務做到哪，所以重建和補做是 core 的責任。' },
     { q: 'Core 送出請求後 timeout。下面哪一個是正確的理解？', o: ['程式一定沒有跑', '程式一定跑完了，只是很慢', '程式可能沒跑、還在跑或已經跑完；重送前要靠 request_id 避免做兩次'], a: 2,
       w: '跨過網路後，三種情況從 core 這邊看都一樣。這就是 partial failure；idempotency key 讓重送變得安全。' },
-    { q: '在你自己筆電上跑、只有你一個人用、不連任何秘密的小工具，最合理的選擇是？', o: ['一定要拆出 execution 服務，比較專業', '在本機執行、加上基本的 timeout 就夠了；拆出去只付代價、用不到好處', '不要讓 agent 跑任何程式'], a: 1,
+    { q: '在你自己筆電上跑、只有你一個人用、不連任何 secret 的小工具，最合理的選擇是？', o: ['一定要拆出 execution 服務，比較專業', '在本機執行、加上基本的 timeout 就夠了；拆出去只付代價、用不到好處', '不要讓 agent 跑任何程式'], a: 1,
       w: 'L8 第 9 章的三個問題都答「否」時，microkernel 的好處用不到，只多了網路故障和除錯成本。' }
   ];
   var qz = $('#quiz');
