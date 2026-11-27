@@ -68,7 +68,9 @@ L1–L8 改成 v7 時，每一堂怎麼排份量、補了什麼、刪了什麼�
 - **刪。** 26 種失敗、七個問題收成查閱（只是命名）。Mem0 程式碼刪掉（Mem0 改成只新增，舊頁「合併舊記憶」不成立）。三種 policy 的程式碼換成一張圖。Claude Code 目錄樹刪掉（L2 主場）。650 步的舊圖和算式不符，重畫。
 - **可讀性審查（2026-11-06～07）。** 第一輪 39 BLOCK、8 NIT；第二輪剩 5 BLOCK，主線修：tldr 的 88% 要「重試一次」；context 在表 2 第一次出現就解釋；寫出 git 為什麼沒有 /rewind 的三個限制、context 怎麼另外退；圖 4 的段尾驗證和每步檢查分開；system prompt 的「份量」指向表 2 列 3。順手更正：Cisco 那列的記憶檔仍會載入、只是移出 system prompt；表 2 的機制是共用 context，不是同一個 model；topic 檔一條記憶一個檔；記憶 checklist 是七站。
 
-## L7 Agent 評估（10 章，45 分）
+## L7 讀 benchmark 分數（7 章加查閱，40 分）＋ L7b 建立自己的評估（2 章，15 分）
+
+2026-11-27 以前是一堂（9 章加查閱，50 分）。下面各條的章號，除了最後〈2026-11-27 拆堂〉那一條，都是拆之前的：舊第 8、9 章現在是 L7b 的第 1、2 章。
 
 - **排法。** 一定要會（1–2）：選 model、能不能上線、分數變高算不算數，三個決定都靠它，推不出來。讀分數時要問的（3–7 指標、雜訊、leakage、grader、飽和）：每章對應一題；錯了當場看不出來，代價大。要用時會做（8–9 建立評估、用評估做決定）：代價最大，但要用前面的結論，所以排在後面。需要時查（10）：八個 benchmark 只是命名，兩個問題就能讀懂。
 - **補。** 自己怎麼做 eval（Anthropic 2026-01、Husain 與 Shankar 2025–26、LangChain 2026、Cursor 2026-03，都是單方經驗）：課程只講 benchmark。Grader 的效度（OpenAI 2026 兩度撤回、Epoch 審 24 個 12 個 Flawed、Berkeley RDI 2026-04、METR 2026-03）：課程只有一句，這些改變了結論。Harness 與基礎設施的雜訊（ARC Prize 2026-09 同一個 model 62.7% 到 98.6%、Anthropic 2026-02）。
@@ -78,6 +80,15 @@ L1–L8 改成 v7 時，每一堂怎麼排份量、補了什麼、刪了什麼�
 
 - **圖改照 slides（2026-11-11）。** James：投影片的幾張圖做得比講義好，要多加圖。第 7 章的月數橫條圖換成六格小折線圖（課程〈How fast the frontier caught up〉：同一個 0–4 年的橫軸，比斜率），後面加 23 個 benchmark 的時間軸（〈Benchmarks saturate quickly〉）；第 3 章在真實的榜之前加一張 Pareto 示意圖（課程 Assignment 3 那張，多畫 A 支配 B 的灰底）；第 4 章的題數表後面加一張本文的橫條圖（題數對「差幾分才算數」，一條 4 分的線）。折線中間的轉折、時間軸的起訖是照 slides 的圖讀的，圖說有寫；標出的數字照課程。題庫 k32c、k32.5 原本問舊橫條圖的藍色兩條，改成問新圖沒有基準線的那一格。新圖還沒有對應的新題。
 - **可讀性審查（2026-11-11，checklist v16，整頁）。** 第一輪 75 BLOCK，第二輪 11；fix 為主，9 處 needs-source（這次環境抓不到網頁），紀錄在 `guide/review_reports/l07-20261111/TRIAGE.md`。tldr、i1、i6 有 needs-source，沒有記成審過。順手更正：Chatbot Arena 是人投票，不是 model 當裁判。
+- **2026-11-27 拆堂（James：「如果覺得一個 lesson 太長，我建議是拆分 lesson」；L10 拆完後他說「好」，從 L7 開始）。**
+  - 切在第 7、8 章之間。前七章回答「怎麼讀別人的分數」：分數是整個系統的輸出、公開分數的限制、讀分數的五個問題（指標、雜訊、leakage、grader、飽和）。後兩章回答「怎麼量自己的 agent、怎麼用分數做決定」。`dag.json` 裡 `build-eval` 用到 `grader-validity`、`leakage`、`noise`，前七章的節點不用後兩章，依賴是單向的。
+  - 〈查閱〉（八個 benchmark、五層目標、早期指標）留在 L7：第 1、2、5、7 章連過去，L7b 只有一處（TheAgentCompany 的部分分數），改成跨頁連結。
+  - L7 剩 40 分，在門檻上，不再拆：第 2 章的五個問題由第 3–7 章逐一展開，第 7 章最後又拿一個分數把五個問題跑一次；拆開就斷了這條線。
+  - 名字：L7〈Reading Agent Benchmarks〉、L7b〈Building Agent Evals〉。舊錨點 `#i8`、`#i9` 與其下的小標、`#t3`、`#x4` 照 `#moved` 表轉到 L7b。
+  - L7 的導讀拿掉第三條（自己量），改成最後一行指到 L7b。L7b 的導讀重寫，情境接 L7 的客服 agent；第 1 章開頭加〈前情〉表 `#n-l07`（10 列）。
+  - 題庫跟著分：L7 38 節、182 題、4 題整合；L7b 15 節、80 題、4 題整合，題號不變（`moved_from`）。L7b 的四題整合題原本都用到前七章的節，`ks` 改成只用 L7b 的節（x4 k46、k47；x5 k42、k52；x6 k47、k51；x7 k48、k52），題目與要點不變：要點用到的 L7 觀念，L7b 的正文和〈前情〉都有寫。
+  - 閱讀材料：14 篇裡，tracing、observability、sandbox、policy 那 5 篇（Headlong、Dapper、AgentOps、Firecracker、ActPlane）放 L7b，其餘 9 篇留 L7。
+  - 審查：兩頁的導讀與改過的句子各審兩輪；L7b 另外整頁掃 R3、R15（`review_reports/l07split-20261127/TRIAGE.md`）。順帶修掉拆堂前就有的幾處：導讀說「有沒有關係」在第 3–7 章（是第 2–7 章）；TheAgentCompany 的註少了「分不出誰做到哪一步」那一步；L7b 1.1 的五個調查數字刪成兩個；分數跳升那張圖說「四組例子」數不出四組。
 
 ## L8 成本、速度與 harness 架構（10 章，40 分）
 

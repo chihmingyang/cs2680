@@ -6,8 +6,8 @@
 - 頁面沒有「問題討論」段，也不開 GitHub 討論串（2026-11-09 James 決定拿掉，舊串已關閉，`discuss.py`、`check_discuss.py` 已刪）。題目改放在每一節後面的小測，規則在 `guide/QUIZ.md`。
 - 這個環境不能用 GitHub GraphQL，也不能改 repo 設定；用 `gh api` 的 REST endpoint。
 - 舊的 claude.ai artifact 已停用，不要再發布到它。
-- L1–L11（L6、L8、L10 各另拆出 L6b、L8b、L10b）都是 v7 依想法重組的版面，兩段：核心觀念、原文出處（2026-11-13 James：延伸閱讀沒人看，縮成只有標題與連結；摘要、導讀、等級都刪了）。動手試試 2026-11-17 拿掉（2026-11-17 James：「把動手試試拔掉，如果覺得動手試試題目不錯可以到整合題」）：好的練習題寫成題庫的整合題（`guide/QUIZ.md`〈從動手試試搬來的題〉），正文要用的指令寫在正文；`check_article.py` 看到 `#s-try` 會報錯，各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
-- 一堂不綁一份 slides（2026-11-10 James）：依觀念切堂，一份 slides 可以拆成幾堂（L6 可靠性／L6b memory；L8 成本與速度／L8b harness 架構；L10 GPU 與 roofline／L10b kernel 最佳化），幾份也可以併成一堂。一堂太長（閱讀約 40 分以上）先考慮拆堂，再考慮砍內容（2026-11-27 James：「如果覺得一個 lesson 太長，我建議是拆分 lesson」）；依賴只有單向也可以拆。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
+- L1–L11（L6、L7、L8、L10 各另拆出 L6b、L7b、L8b、L10b）都是 v7 依想法重組的版面，兩段：核心觀念、原文出處（2026-11-13 James：延伸閱讀沒人看，縮成只有標題與連結；摘要、導讀、等級都刪了）。動手試試 2026-11-17 拿掉（2026-11-17 James：「把動手試試拔掉，如果覺得動手試試題目不錯可以到整合題」）：好的練習題寫成題庫的整合題（`guide/QUIZ.md`〈從動手試試搬來的題〉），正文要用的指令寫在正文；`check_article.py` 看到 `#s-try` 會報錯，各堂的取捨在 `guide/V7_DECISIONS.md`。新講次或重做一堂 → 照 `.claude/skills/idea-first-lecture/SKILL.md`，一個 session 一堂，或一堂一個 subagent。
+- 一堂不綁一份 slides（2026-11-10 James）：依觀念切堂，一份 slides 可以拆成幾堂（L6 可靠性／L6b memory；L8 成本與速度／L8b harness 架構；L7 讀分數／L7b 建評估；L10 GPU 與 roofline／L10b kernel 最佳化），幾份也可以併成一堂。一堂太長（閱讀約 40 分以上）先考慮拆堂，再考慮砍內容（2026-11-27 James：「如果覺得一個 lesson 太長，我建議是拆分 lesson」）；依賴只有單向也可以拆。規則在 STYLE_ARTICLE 第 0 節，做法在 WORKFLOW K。
 - 替一堂建題庫（每一節的小測與整合題），或改了某一節要補題 → 照 `.claude/skills/build-quiz/SKILL.md`，一個 session 一堂，先做完那一堂的可讀性審查。
 - 紅字（`<strong>`）獨立成一步，可讀性審查過了才標（2026-11-11 James）→ 照 `.claude/skills/mark-red/SKILL.md`；寫作時不放紅字。
 - James 貼一段說看不懂、要補案例或圖 → 照 `.claude/skills/rewrite-with-example/SKILL.md`；他轉來一篇評論或文章要查證 → 照 `.claude/skills/fact-check-extension/SKILL.md`。

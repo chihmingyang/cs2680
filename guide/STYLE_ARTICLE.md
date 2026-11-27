@@ -69,7 +69,8 @@
     - 切法還是看觀念 DAG，但不要求兩組互不依賴。依賴只有單向也可以拆：後半用到前半、前半不用後半（L10 的第 6–10 章用到第 1–5 章的 roofline 與晶片內部，反過來沒有），後半就是接在前半後面的下一堂。兩組互相用到對方時不拆。
     - 後半那一堂要能單獨讀：導讀的最後一行說這堂假設讀過哪一堂；第 1 章開頭放一個收合的〈前情〉註，把帶過來的詞各用一句話講一次並連回去（L10b 的 `#n-l10`）。
     - 第一例是 L10（50 分）拆成 L10〈GPU Basics & Roofline〉25 分與 L10b〈Kernel Optimization〉30 分。拆完之後，原本「還可以再砍」的三項（晶片內部、其他晶片的表、電力與用水）都留著。
-    - 其他超過門檻、還沒檢查的堂（2026-11-27 的顯示值）：L7 50 分，L3、L4、L6b、L8 各 45 分。一個 session 一堂。
+    - 第二例是 L7（50 分）拆成 L7〈Reading Agent Benchmarks〉40 分與 L7b〈Building Agent Evals〉15 分（2026-11-27）：讀別人的分數和建自己的評估是兩個問題，後者用到前者的 grader、leakage、雜訊。L7 剩 40 分，仍在門檻上，不再拆：第 2 章的五個問題由第 3–7 章逐一展開，第 7 章最後又拿一個分數把五個問題跑一次，拆開就斷了這條線。
+    - 其他超過門檻、還沒檢查的堂（2026-11-27 的顯示值）：L3、L4、L6b、L8 各 45 分。一個 session 一堂。
 - **新講次（L9 起，2026-11-06）**：沒有舊頁面，骨架用 `tools/new_lecture.py`。延伸閱讀摘要的「跟這堂課的關係」連到本頁的章。一堂有兩份 deck 時（L10）合成一篇，meta 一份一行。
 
 
@@ -368,7 +369,7 @@ James：「其實沒人會去看延伸閱讀，光看完原文就花時間了。
 | l04.html | 4_agent_design_1.pdf | 56 | 2026-09-16 | Agents design I: context management and tool design | Context 管理與 tool 設計 |
 | l05.html | 5_agent_design_2.pdf | 46 | 2026-09-23 | Agents design II: multi-agent architecture, coordination, and communication | Multi-agent 架構與溝通 |
 | l06.html | 6_agent_design_3.pdf | 31 | 2026-09-28 | Agents design III: agent memory and reliability | Agent memory 與可靠性 |
-| l07.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | Agent 評估 |
+| l07.html、l07b.html | 7_agent_design_4.pdf | 37 | 2026-09-30 | Agent design IV: agent evaluation | 讀 benchmark 分數（L7）；建立自己的評估（L7b，2026-11-27 拆出） |
 | l08.html | 8_agent_design_5.pdf | 54 | 2026-10-07 | Advanced agent design I: Cost and performance | 成本、速度與 harness 架構 |
 | l09.html | 9_llm_serving_basics_1.pdf | 51 | 2026-10-19 | Efficient LLM serving basics I: intro to LLMs | LLM 的結構與 serving 的帳 |
 | l10.html、l10b.html | 10_llm_serving_basics_2a.pdf ＋ 10_llm_serving_basics_2b.pdf | 41 ＋ 55 | 2026-10-21（2b 是 11-02） | Efficient LLM serving basics II: intro to GPUs | GPU 入門與 roofline（L10）；kernel 最佳化（L10b，2026-11-27 拆出） |

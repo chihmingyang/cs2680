@@ -16,7 +16,7 @@
     <a class="brand" href="index.html">CS2680 <span>觀念導讀</span></a>
     <nav class="lecnav" aria-label="講次">
       <a href="l08b.html" rel="prev">← L8b</a>
-      <span class="here">L9 / 14</span>
+      <span class="here">L9 / 15</span>
       <a href="l10.html" rel="next">L10 →</a>
     </nav>
   </div>
@@ -40,7 +40,8 @@
 <li class="sn-lec"><a class="sn-row" href="l05.html"><span class="sn-no">L5</span><span class="sn-t">Multi-agent Architecture &amp; Communication</span><span class="sn-ck" data-read-key="l05" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06.html"><span class="sn-no">L6</span><span class="sn-t">Agent Reliability</span><span class="sn-ck" data-read-key="l06" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l06b.html"><span class="sn-no">L6b</span><span class="sn-t">Agent Memory</span><span class="sn-ck" data-read-key="l06b" title="已讀" hidden>✓</span></a></li>
-<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Agent Eval</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07.html"><span class="sn-no">L7</span><span class="sn-t">Reading Agent Benchmarks</span><span class="sn-ck" data-read-key="l07" title="已讀" hidden>✓</span></a></li>
+<li class="sn-lec"><a class="sn-row" href="l07b.html"><span class="sn-no">L7b</span><span class="sn-t">Building Agent Evals</span><span class="sn-ck" data-read-key="l07b" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l08.html"><span class="sn-no">L8</span><span class="sn-t">Cost &amp; Latency</span><span class="sn-ck" data-read-key="l08" title="已讀" hidden>✓</span></a></li>
 <li class="sn-lec"><a class="sn-row" href="l08b.html"><span class="sn-no">L8b</span><span class="sn-t">Harness Architecture</span><span class="sn-ck" data-read-key="l08b" title="已讀" hidden>✓</span></a></li>
 </ol>
@@ -1925,7 +1926,7 @@ UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-1: unexpected
             </figure>
               <p id="i9-3"><b>Sampling 對輸出長度的影響：greedy 可能重複不停，要設 max_tokens。</b>每一步都可能抽到 stop token，也可能抽到別的，<strong>所以設定會改變回答在第幾步結束</strong>，也就改變 decode 的步數、時間和成本。Greedy 有一個已知的陷阱。Qwen3 有兩種模式：thinking mode 先寫出一段推理再回答，non-thinking mode 直接回答；它的<a href="https://huggingface.co/Qwen/Qwen3-32B" target="_blank" rel="noopener">官方 model card</a> 說 thinking mode <strong>不要用 greedy decoding</strong>，會讓表現變差，還可能無止境地重複。它建議的值是 Temperature 0.6、TopP 0.95、TopK 20。所以不論設定是什麼，都要設 <code>max_tokens</code>，讓第 1 章的長度上限替你停下來。</p>
               <p id="i9-4"><b>Temperature 0 的 nondeterminism：batch 一變，輸出可能不同。</b>同一個 prompt 在 serving 系統裡，每一步和不同的 request 排在同一個 batch；batch 的大小一變，GPU 的加總順序可能跟著變，浮點數的結果差一點點。碰到兩個 token 分數很接近時，就會挑到不同的 token，之後整段都不一樣。原因與量測見 L1〈<a href="l01.html#t2">浮點數沒有結合律</a>〉。</p>
-              <p id="i9-5"><b>託管 model 的 sampling 參數：Claude Opus 5.5 不接受，設定主要用在自架。</b>2026-11 查 Claude Opus 5.5 的 <a href="https://platform.claude.com/docs/en/models/opus-5-5/migration-guide" target="_blank" rel="noopener">migration guide</a>：request 帶 <code>temperature</code>、<code>top_p</code>、<code>top_k</code> 會被拒絕（回 400），要改用 prompt 引導行為；文件也提醒，舊 model 上設 temperature = 0 也從來不保證相同的輸出。所以<strong>這一章的設定，主要用在自己架的 open-weight model</strong>：<strong>先照 model card 的建議值，再用自己的 eval 驗證</strong>（L7〈<a href="l07.html#i8">建立評估</a>〉）。</p>
+              <p id="i9-5"><b>託管 model 的 sampling 參數：Claude Opus 5.5 不接受，設定主要用在自架。</b>2026-11 查 Claude Opus 5.5 的 <a href="https://platform.claude.com/docs/en/models/opus-5-5/migration-guide" target="_blank" rel="noopener">migration guide</a>：request 帶 <code>temperature</code>、<code>top_p</code>、<code>top_k</code> 會被拒絕（回 400），要改用 prompt 引導行為；文件也提醒，舊 model 上設 temperature = 0 也從來不保證相同的輸出。所以<strong>這一章的設定，主要用在自己架的 open-weight model</strong>：<strong>先照 model card 的建議值，再用自己的 eval 驗證</strong>（L7b〈<a href="l07b.html#i1">建立評估</a>〉）。</p>
             </div>
           </div>
 <div class="idea" id="i10">
