@@ -6467,7 +6467,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k1.1",
     "k1.2",
     "k1.7"
-   ]
+   ],
+   "closed_ok": "常識：CPU core 的面積多半花在 cache、branch prediction、out-of-order，是計算機結構"
   },
   {
    "id": "k1b",
@@ -6494,25 +6495,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k1.3",
     "k1.4"
-   ]
+   ],
+   "closed_ok": "常識：GPU 的 FP32 core 只是運算單元、和 CPU core 對等的是 SM，懂 GPU 架構的人本來就知道。"
   },
   {
    "id": "k1c",
    "ks": "k1",
    "kind": "choice",
-   "q": "一份簡報拿 H200 的峰值算力（BF16 的值）除以 64 核 server CPU 的峰值算力（FP32 的值），說 GPU 快約 200 倍。兩邊改用同一種精度來比，結論會怎麼變？",
+   "q": "一份簡報拿 H200 的峰值算力（BF16 的值）除以 64 核 server CPU 的峰值算力（FP32 的值），說 GPU 快約 200 倍。兩邊都改用 FP32 來比，倍數會剩多少？",
    "choices": [
     {
-     "t": "GPU 仍然領先，倍數大致還是兩百倍",
-     "why": "989 TFLOP/s 是 BF16 的值。同樣用 FP32，H200 只有 67 TFLOP/s，對 CPU 的約 5 TFLOP/s 是十幾倍，不是兩百倍。"
+     "t": "GPU 的 FP32 峰值約是 BF16 值的一半，倍數剩一百倍左右",
+     "why": "位元數加倍，算力不是只少一半。989 TFLOP/s 是 BF16 的值，同樣用 FP32，H200 只有 67 TFLOP/s，約是 989 的 1/15；對 CPU 的約 5 TFLOP/s 是十幾倍。"
     },
     {
-     "t": "兩邊變得差不多，領先的幅度消失了",
-     "why": "同樣用 FP32，H200 還有 67 TFLOP/s，CPU 約 5 TFLOP/s，仍差十幾倍；平行的單位、待命的 thread、記憶體頻寬也都是 GPU 大得多。"
-    },
-    {
-     "t": "GPU 仍然領先，但倍數縮到十幾倍",
+     "t": "GPU 的 FP32 峰值約是 BF16 值的 1/15，倍數剩十幾倍",
      "ok": true
+    },
+    {
+     "t": "GPU 的 FP32 峰值約是 BF16 值的 1/80，倍數剩兩三倍",
+     "why": "少得沒有這麼多。同樣用 FP32，H200 還有 67 TFLOP/s，約是 989 的 1/15；對 CPU 的約 5 TFLOP/s 仍差十幾倍，平行的單位、待命的 thread、記憶體頻寬也都是 GPU 大得多。"
     }
    ],
    "key": [
@@ -6521,7 +6523,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k1.5",
     "k1.6"
-   ]
+   ],
+   "closed_ok": "常識：熟規格表的人知道 BF16 Tensor Core 與 FP32 的峰值差十幾倍。"
   },
   {
    "id": "k3a",
@@ -6549,7 +6552,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k3.1",
     "k3.3",
     "k3.4"
-   ]
+   ],
+   "closed_ok": "常識：GPU 靠換 warp 藏住等記憶體的時間，warp 太少就藏不住，是 GPU 架構的常識。"
   },
   {
    "id": "k3b",
@@ -6575,7 +6579,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k3.2"
-   ]
+   ],
+   "closed_ok": "常識：每個 warp 的 register 常駐在 SM 上、切換不必存取狀態，是 GPU 架構的常識。"
   },
   {
    "id": "k4a",
@@ -6602,7 +6607,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k4.1",
     "k4.4"
-   ]
+   ],
+   "closed_ok": "常識：SIMD 要明寫向量運算、SIMT 只寫單一 thread 的 scalar 程式，是平行程式的常識。"
   },
   {
    "id": "k4b",
@@ -6629,7 +6635,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k4.2",
     "k4.3"
-   ]
+   ],
+   "closed_ok": "常識：一個 warp 共用指令流、每個 thread 有自己的 register 與編號，是 SIMT 的常識。"
   },
   {
    "id": "k5a",
@@ -6657,7 +6664,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k5.1",
     "k5.2",
     "k5.3"
-   ]
+   ],
+   "closed_ok": "常識：warp divergence 時兩邊輪流執行、時間相加，寫過 CUDA 的人知道。"
   },
   {
    "id": "k5b",
@@ -6684,7 +6692,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k5.4",
     "k5.5"
-   ]
+   ],
+   "closed_ok": "常識：資料相依的分支會造成 warp divergence，是 GPU 程式的常識。"
   },
   {
    "id": "k6a",
@@ -6711,7 +6720,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k6.3",
     "k6.7"
-   ]
+   ],
+   "closed_ok": "常識：GPU 要程式自己開出夠多 thread 才填得滿，小工作量填不滿 SM，是常識。"
   },
   {
    "id": "k6b",
@@ -6739,7 +6749,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k6.1",
     "k6.2",
     "k6.4"
-   ]
+   ],
+   "closed_ok": "常識：控制邏輯占面積和電力、core 變大就放不了那麼多個，是 CPU 與 GPU 設計取捨的常識。"
   },
   {
    "id": "k6c",
@@ -6766,25 +6777,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k6.5",
     "k6.6"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 thread 的狀態得放到晶片外，換 warp 時就要搬進搬出，從題幹的因果推得出。"
   },
   {
    "id": "k6d",
    "ks": "k6",
    "kind": "choice",
-   "q": "Batch 1 的 decode 時，GPU 的運算單元大多閒著。有人把每一步拆出更多 thread，讓 132 個 SM 上都有 warp 可換。運算單元會忙起來嗎？",
+   "q": "Batch 1 的 decode 時，GPU 的運算單元大多閒著。有人把每一步拆出更多 thread，讓 132 個 SM 上都有 warp 可換，運算單元還是忙不起來。卡在哪裡？",
    "choices": [
     {
-     "t": "會忙起來：warp 夠多，等記憶體的時間都有別的 warp 補上",
-     "why": "換 warp 藏得住等待，補不出資料。讀進來的每個 weight 只做一次乘加，而 HBM 每秒送得來的資料有上限；warp 再多，送來的資料也只夠運算單元忙一小段時間。"
+     "t": "卡在指令流：32 個 thread 共用一條，新拆出來的 thread 只能輪流跑",
+     "why": "共用一條指令流的 thread，分支不同時才要輪流跑；model 的每個 token 做的是同樣的矩陣乘法。這一層和 thread 的數量無關，缺的是每個 byte 上的運算：每個 weight 讀進來只做一次乘加，HBM 每秒送得來的資料有上限。"
     },
     {
-     "t": "只改善一部分：每個 weight 讀進來只做一次乘加，資料供不上",
+     "t": "卡在資料：每個 weight 讀進來只做一次乘加，HBM 送來的量不夠算",
      "ok": true
     },
     {
-     "t": "沒有差別：decode 的 thread 本來就夠，SM 早就都有 warp",
-     "why": "有些步驟能平行的工作不多，確實填不滿 132 個 SM，這一層多拆 thread 有幫助。但另一層和 thread 的數量無關：每個 weight 只做一次乘加，資料供不上。"
+     "t": "卡在排程：warp 變多之後，scheduler 每個 cycle 發不完這些指令",
+     "why": "Warp 多不是負擔：GPU 本來就要約 27 萬個 thread 才填得滿 132 個 SM。這一層和 thread 的數量無關，缺的是每個 byte 上的運算：每個 weight 只做一次乘加，HBM 每秒送得來的資料有上限，warp 再多，送來的資料也只夠運算單元忙一小段時間。"
     }
    ],
    "key": [
@@ -6793,7 +6805,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k6.9",
     "k6.10"
-   ]
+   ],
+   "closed_ok": "推理：memory-bound 時頻寬餵不飽運算單元，多拆 thread 不會多出資料。"
   },
   {
    "id": "k6e",
@@ -6819,7 +6832,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k6.8"
-   ]
+   ],
+   "closed_ok": "常識：大量、獨立、規則的矩陣運算適合 GPU，循序和分支多的不適合，是常識。"
   },
   {
    "id": "k7a",
@@ -6846,7 +6860,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k7.1",
     "k7.2"
-   ]
+   ],
+   "closed_ok": "常識：SM 排滿之後不是卡搬資料就是卡運算，要兩邊都估，是 roofline 的基本想法。"
   },
   {
    "id": "k7b",
@@ -6872,13 +6887,14 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k7.5"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k7c",
    "ks": "k7",
    "kind": "choice",
-   "q": "同一個矩陣乘向量，weights 從 FP32 改存成 BF16，每個 weight 還是做一次 multiply-add。這個 kernel 的哪個數字變了？",
+   "q": "同一個矩陣乘向量，weights 從 FP32 改存成 BF16。這個 kernel 的哪個數字變了？",
    "choices": [
     {
      "t": "要算的 FLOP 減半，要搬的 bytes 沒有變",
@@ -6899,7 +6915,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k7.3",
     "k7.4"
-   ]
+   ],
+   "closed_ok": "推理：換精度只改每個數的 byte 數，乘加次數由矩陣形狀決定。"
   },
   {
    "id": "k9a",
@@ -6927,7 +6944,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k9.1",
     "k9.2",
     "k9.3"
-   ]
+   ],
+   "closed_ok": "推理：「放不下」對容量、「讀得太慢」對頻寬，從兩個症狀的描述直接對得上。"
   },
   {
    "id": "k10a",
@@ -6954,7 +6972,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k10.1",
     "k10.2"
-   ]
+   ],
+   "closed_ok": "常識：roofline：搬和算可以重疊，取較大的那一項，估出來的是時間下限，懂效能分析的人知道。"
   },
   {
    "id": "k10b",
@@ -6981,7 +7000,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k10.3",
     "k10.4"
-   ]
+   ],
+   "closed_ok": "常識：不管幾個 token 整份 weights 都要讀一次，token 少時 FLOP 很少，所以卡在搬資料，是 LLM 推"
   },
   {
    "id": "k10c",
@@ -7008,7 +7028,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k10.5",
     "k10.6"
-   ]
+   ],
+   "closed_ok": "常識：長 prompt 的 prefill 是 compute-bound、batch 1 的 decode 是 memory"
   },
   {
    "id": "k11a",
@@ -7038,7 +7059,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k11.4",
     "k11.6"
    ],
-   "num_choices_ok": "要算才分得出懂不懂：2,000 是沒比 ridge 就拿 peak，62 是 peak ÷ intensity；選項都附了卡在哪一邊"
+   "num_choices_ok": "要算才分得出懂不懂：2,000 是沒比 ridge 就拿 peak，62 是 peak ÷ intensity；選項都附了卡在哪一邊",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k11b",
@@ -7065,7 +7087,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k11.2",
     "k11.5"
-   ]
+   ],
+   "closed_ok": "推理：題幹排除了程式和 GPU，剩下會變的只有輸入，用排除法推得出。"
   },
   {
    "id": "k11c",
@@ -7092,7 +7115,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k11.4",
     "k11.7"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k11d",
@@ -7118,7 +7142,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k11.8"
-   ]
+   ],
+   "closed_ok": "常識：memory-bound 時要提高 intensity 或少搬 bytes，是 roofline 的常識。"
   },
   {
    "id": "k11e",
@@ -7144,7 +7169,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k11.10"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k12a",
@@ -7173,7 +7199,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k12.3",
     "k12.4",
     "k12.5"
-   ]
+   ],
+   "closed_ok": "常識：方陣乘法的 intensity 和 N 成正比，N 小了就掉到 memory-bound，懂 roofline 的人知道"
   },
   {
    "id": "k12b",
@@ -7201,7 +7228,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k12.2",
     "k12.5",
     "k12.6"
-   ]
+   ],
+   "closed_ok": "推理：加長前文或向量時 FLOP 和 bytes 等比例長，只有共用 K、V 讓每個 byte 多算幾次，從 intensit"
   },
   {
    "id": "k12c",
@@ -7228,7 +7256,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k12.7",
     "k12.8"
-   ]
+   ],
+   "closed_ok": "常識：短前文的 KV cache 遠小於 weights，是 LLM 推論的常識。"
   },
   {
    "id": "k13a",
@@ -7336,7 +7365,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k14.1",
     "k14.2"
-   ]
+   ],
+   "closed_ok": "常識：batch 1 的 decode 每個 weight 只用一次、被 HBM 頻寬卡住，是 LLM 推論的常識。"
   },
   {
    "id": "k14b",
@@ -7363,7 +7393,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k14.3",
     "k14.4"
-   ]
+   ],
+   "closed_ok": "常識：第一個 token 的時間跟 prompt 長度走、decode 的間隔主要看 weights，是 LLM 推論的常識。"
   },
   {
    "id": "k16a",
@@ -7390,7 +7421,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k16.1",
     "k16.2"
-   ]
+   ],
+   "closed_ok": "常識：batching 讓一次 weights 的讀取給整個 batch 共用，memory-bound 時一步的時間幾乎不變"
   },
   {
    "id": "k16b",
@@ -7418,7 +7450,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k16.1",
     "k16.3",
     "k16.4"
-   ]
+   ],
+   "closed_ok": "常識：decode 卡在頻寬，加算力而頻寬不變幾乎沒用，是常識。"
   },
   {
    "id": "k17a",
@@ -7445,7 +7478,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k17.1",
     "k17.3"
-   ]
+   ],
+   "closed_ok": "常識：weights 由整個 batch 分攤、KV cache 是各請求自己的，是 batching 的常識。"
   },
   {
    "id": "k17b",
@@ -7471,7 +7505,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k17.2"
-   ]
+   ],
+   "closed_ok": "常識：ridge = peak ÷ 頻寬，weights 的 intensity 和 batch 成正比，懂 roofline"
   },
   {
    "id": "k17c",
@@ -7499,7 +7534,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k17.5",
     "k17.6"
    ],
-   "num_choices_ok": "每個錯的數字各對應一種算錯的方式：64 是忘了 KV cache，21 是只除以 KV cache 的 3 倍、漏了 weights 那一份；選項都帶了算法。"
+   "num_choices_ok": "每個錯的數字各對應一種算錯的方式：64 是忘了 KV cache，21 是只除以 KV cache 的 3 倍、漏了 weights 那一份；選項都帶了算法。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k17d",
@@ -7525,7 +7561,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k17.4"
-   ]
+   ],
+   "closed_ok": "常識：會估 Llama 3 8B 每個 token 的 KV cache，就知道 batch 128 × 4K 遠大於 16 "
   },
   {
    "id": "k18a",
@@ -7553,7 +7590,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k18.1",
     "k18.2",
     "k18.4"
-   ]
+   ],
+   "closed_ok": "常識：長 context、多請求時 KV cache 比 weights 大好幾倍，decode 的時間花在讀記憶體，是 LL"
   },
   {
    "id": "k18b",
@@ -7580,7 +7618,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k18.3",
     "k18.5"
-   ]
+   ],
+   "closed_ok": "推理：用頻寬估出來的是速度上限，量到更快只能是實際讀的 bytes 比估的少，從估法的定義推得出。"
   },
   {
    "id": "k18c",
@@ -7606,7 +7645,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k18.6"
-   ]
+   ],
+   "closed_ok": "常識：每一步要讀的 KV cache 是 batch × context，context 變大就得降 batch，是常識。"
   },
   {
    "id": "k19a",
@@ -7638,7 +7678,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k19.1",
     "k19.2"
    ],
-   "num_choices_ok": "每個錯的數字各對應一種算錯的方式：128 是套用 dense model 的假設，32 是只除以每個 token 用的 expert 數，2 是漏乘每個 token 用 4 個 expert；選項都帶了算法。"
+   "num_choices_ok": "每個錯的數字各對應一種算錯的方式：128 是套用 dense model 的假設，32 是只除以每個 token 用的 expert 數，2 是漏乘每個 token 用 4 個 expert；選項都帶了算法。",
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k19b",
@@ -7665,7 +7706,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k19.4",
     "k19.7"
-   ]
+   ],
+   "closed_ok": "推理：64 × 8 次選擇散到 256 個 expert，幾乎每個都要讀，從題幹的數字推得出省的只是 FLOP。"
   },
   {
    "id": "k19c",
@@ -7693,7 +7735,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k19.6",
     "k19.8",
     "k19.9"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 GPU 少、請求也少，總 batch 小，每個 expert 分到的 token 自然少。"
   },
   {
    "id": "k20a",
@@ -7719,7 +7762,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k20.1"
-   ]
+   ],
+   "closed_ok": "常識：peak 是 Tensor Core 做矩陣乘法的數字、頻寬要夠多讀取同時在路上才拿得到，懂 GPU 效能的人知道。"
   },
   {
    "id": "k20b",
@@ -7745,7 +7789,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k20.2"
-   ]
+   ],
+   "closed_ok": "常識：CUDA 的 shared memory 是每個 SM 私有的，是常識。"
   },
   {
    "id": "k22a",
@@ -7772,7 +7817,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k22.1",
     "k22.2"
-   ]
+   ],
+   "closed_ok": "常識：一個 SM 分成四個 partition、各有 warp scheduler，懂 NVIDIA GPU 架構的人知道。"
   },
   {
    "id": "k22b",
@@ -7798,7 +7844,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k22.3"
-   ]
+   ],
+   "closed_ok": "常識：Tensor Core 只做矩陣乘加，逐元素運算走 FP32 core，是常識。"
   },
   {
    "id": "k23a",
@@ -7824,25 +7871,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k23.6"
-   ]
+   ],
+   "closed_ok": "常識：softmax 不是矩陣乘法、用不到 Tensor Core，要用 FP32 core 的 peak，是常識。"
   },
   {
    "id": "k23b",
    "ks": "k23",
    "kind": "choice",
-   "q": "新一代 GPU 把 Tensor Core 的 peak 加倍，FP32 core 的算力沒變。一個 compute-bound 的 LLM 工作（例如長 prompt 的 prefill），時間會減半嗎？",
+   "q": "新一代 GPU 把 Tensor Core 的 peak 加倍，其他單元沒變。一個 compute-bound 的 LLM 工作（例如長 prompt 的 prefill）搬過去，時間卻到不了減半。主要是被什麼拖住？",
    "choices": [
     {
-     "t": "剛好減半：FLOP 幾乎全是矩陣乘法，其餘運算的時間可以忽略",
-     "why": "FLOP 的比例不等於時間的比例。LLM 的 FLOP 超過 99% 是矩陣乘法沒錯，但其餘運算每個 FLOP 花的時間多得多：Horace He 量過的 model 裡，normalization 的 FLOP/s 比矩陣乘法低 250 倍，pointwise 運算低 700 倍。這一段不會跟著 Tensor Core 變快。"
+     "t": "矩陣乘法以外的運算：它們占了近半的 FLOP，新的 peak 管不到這一半",
+     "why": "LLM 的 FLOP 超過 99% 是矩陣乘法，其餘只占很小一部分（Horace He 量過的 model 是 0.2%）。它們拖住時間不是因為 FLOP 多，是每個 FLOP 花的時間多得多：normalization 的 FLOP/s 比矩陣乘法低 250 倍，pointwise 運算低 700 倍。"
     },
     {
-     "t": "到不了減半：非矩陣乘法占的時間遠多於 FLOP 比例，這段沒變快",
+     "t": "矩陣乘法以外的運算：FLOP 很少，占的時間卻多得多，這段沒有變快",
      "ok": true
     },
     {
-     "t": "幾乎不變：compute-bound 的工作卡在 FP32 core，不在 Tensor Core",
-     "why": "LLM 的 FLOP 超過 99% 是矩陣乘法，都在 Tensor Core 上算，這一段會跟著變快。不會變快的只有 softmax、normalization 這類跑在 FP32 core 上的運算。"
+     "t": "矩陣乘法裡的一部分：只有某些形狀用得上 Tensor Core，其餘沒有變快",
+     "why": "Tensor Core 的 peak 矩陣乘法都拿得到，拿不到的是 softmax、normalization 這類運算：它們跑在 FP32 core 上，FLOP 只占很小一部分，但 FLOP/s 比矩陣乘法低幾百倍，占的時間遠多於 FLOP 的比例。"
     }
    ],
    "key": [
@@ -7851,25 +7899,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k23.1",
     "k23.7"
-   ]
+   ],
+   "closed_ok": "常識：讀過 FlashAttention 論文的人知道非矩陣乘法的運算 FLOP 少、單位成本高。"
   },
   {
    "id": "k23c",
    "ks": "k23",
    "kind": "choice",
-   "q": "同樣做 2,048 次 multiply-add：一種用一般的 warp 指令在 FP32 core 上算，一種用一條 Tensor Core 指令。Tensor Core 省下的是什麼？",
+   "q": "同樣做 2,048 次 multiply-add，用 Tensor Core 比在 FP32 core 上用一般的指令算快。Tensor Core 省下的主要是什麼？",
    "choices": [
     {
-     "t": "要算的 FLOP：整塊一起算，乘加的次數比一個一個算少",
-     "why": "FLOP 沒有變少，兩邊都是 2,048 次 multiply-add。省下的是指令：一條 mma 指令等於 64 條一般的 warp 指令（2,048 ÷ 32），取指令、解碼、排程被分攤；累加到一半的值也不必寫回 register 再讀出來。"
+     "t": "每次乘加的時間：專用的乘法器比較快，一次乘加用的 cycle 變少",
+     "why": "專用電路省的不是單次乘加的時間：乘法器和加法器排成整塊 tile 的形狀，省的是累加到一半的值寫回 register 再讀出來。另外一條 mma 指令等於 64 條一般的 warp 指令（2,048 ÷ 32），取指令、解碼、排程被分攤。"
     },
     {
-     "t": "取指令、解碼、排程的次數，和中間值進出 register 的來回",
+     "t": "指令和暫存的開銷：取指令、解碼、排程變少，中間值不必進出 register",
      "ok": true
     },
     {
-     "t": "要搬的 bytes：整塊一起算，A 和 B 不必先讀進運算單元",
-     "why": "A、B 還是要讀進來，要搬的 bytes 沒有變少。省下的是指令：一條 mma 指令等於 64 條一般的 warp 指令（2,048 ÷ 32），取指令、解碼、排程被分攤；累加到一半的值也不必寫回 register 再讀出來。"
+     "t": "HBM 的讀取：A、B 整塊讀進來一次，不必每次乘加都回 HBM 拿",
+     "why": "A、B 兩種算法都要讀進來，要搬的 bytes 沒有變少。省下的是指令：一條 mma 指令等於 64 條一般的 warp 指令（2,048 ÷ 32），取指令、解碼、排程被分攤；累加到一半的值也不必寫回 register 再讀出來。"
     }
    ],
    "key": [
@@ -7878,7 +7927,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k23.2",
     "k23.3"
-   ]
+   ],
+   "closed_ok": "常識：懂 Tensor Core 的人知道省的是每次乘加各自的指令開銷。"
   },
   {
    "id": "k23d",
@@ -7905,25 +7955,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k23.4",
     "k23.5"
-   ]
+   ],
+   "closed_ok": "常識：Tensor Core 和 SM 其他部分用同一個時脈，快是靠重用 operand 和低精度，是常識。"
   },
   {
    "id": "k24a",
    "ks": "k24",
    "kind": "choice",
-   "q": "一個 kernel 裡，同一塊 16 KB 的資料會被用上百次。現在每用一次，就從 HBM 讀一次。該往哪個方向改？",
+   "q": "一個 kernel 裡，同一塊 16 KB 的資料會被用上百次。現在每用一次，就從 HBM 讀一次。該怎麼改？",
    "choices": [
     {
-     "t": "讀一次放進 shared memory，之後都從那裡重複拿",
+     "t": "讀一次放進 shared memory：之後每次用，等待不到原本的十分之一",
      "ok": true
     },
     {
-     "t": "維持從 HBM 讀，因為 HBM 是晶片上頻寬最大的一層",
-     "why": "反了。HBM 是表上晶片內最遠的一層：latency 約 500 cycles、頻寬 4.8 TB/s；shared memory 約 30 cycles，132 個 SM 合計約 33 TB/s。會重複用的資料該放到上面幾層，讓 HBM 只讀一次。"
+     "t": "讀一次放進 L2 cache：之後每次用，等待不到原本的十分之一",
+     "why": "L2 約 250 cycles，只比 HBM 的約 500 cycles 少一半。Shared memory 約 30 cycles，每個 SM 有 256 KB，16 KB 放得下；會重複用的資料該放到這麼近的一層，讓 HBM 只讀一次。"
     },
     {
-     "t": "改放到 CPU 的記憶體，把 HBM 的頻寬留給 weights",
-     "why": "CPU 記憶體比 HBM 更遠：latency 是微秒級，PCIe 5.0 每個方向約 64 GB/s。會重複用的資料該往運算單元的方向搬（shared memory、register），讓 HBM 只讀一次。"
+     "t": "照樣每次從 HBM 讀，但一次多發幾筆：等待重疊之後，就不必搬了",
+     "why": "這樣 HBM 還是被讀上百次。HBM 是晶片內最遠的一層，約 500 cycles、4.8 TB/s；會重複用的資料該放到靠近運算單元的幾層（shared memory 約 30 cycles），讓 HBM 只讀一次。"
     }
    ],
    "key": [
@@ -7932,7 +7983,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k24.1",
     "k24.4"
-   ]
+   ],
+   "closed_ok": "常識：會重複用的小塊資料放 shared memory 是寫 kernel 的標準做法。"
   },
   {
    "id": "k24b",
@@ -7958,7 +8010,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k24.2"
-   ]
+   ],
+   "closed_ok": "常識：記憶體階層越快越小，SM 上的 SRAM 只有幾百 KB，是常識。"
   },
   {
    "id": "k25a",
@@ -7985,7 +8038,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k25.1",
     "k25.2"
-   ]
+   ],
+   "closed_ok": "常識：實際拿到的頻寬是同時在路上的 bytes ÷ latency，兩者沒變就不變，懂記憶體平行度的人知道。"
   },
   {
    "id": "k25b",
@@ -8013,7 +8067,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k25.4",
     "k25.5",
     "k25.7"
-   ]
+   ],
+   "closed_ok": "常識：latency 由硬體決定，程式能改的只有每筆的大小和同時在路上的筆數，是常識。"
   },
   {
    "id": "k25c",
@@ -8039,7 +8094,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k25.6"
-   ]
+   ],
+   "closed_ok": "常識：每個還在路上的 load 都要占一個目的 register，而每個 thread 的 register 很少，懂架構的人"
   },
   {
    "id": "k25d",
@@ -8065,7 +8121,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k25.10"
-   ]
+   ],
+   "closed_ok": "常識：連續位址的讀取會合併成一個請求（coalescing），是 CUDA 的常識。"
   },
   {
    "id": "k26a",
@@ -8092,7 +8149,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k26.2",
     "k26.3"
-   ]
+   ],
+   "closed_ok": "常識：nvidia-smi 的 GPU-Util 只表示有 kernel 在跑，不代表算力用滿，是常識。"
   },
   {
    "id": "k26b",
@@ -8118,7 +8176,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k26.1"
-   ]
+   ],
+   "closed_ok": "常識：GPU-Util 量的是有 kernel 在執行的時間比例，和用了幾個 SM 無關，是常識。"
   },
   {
    "id": "k26c",
@@ -8144,7 +8203,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k26.4"
-   ]
+   ],
+   "closed_ok": "常識：GPU-Util 是時間比例，35% 就是其餘時間沒有 kernel 在跑，是常識。"
   },
   {
    "id": "k26d",
@@ -8170,7 +8230,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k26.5"
-   ]
+   ],
+   "closed_ok": "推理：「忙的時間比例」要等於「用量」，前提只能是一忙就全速，從定義推得出。"
   },
   {
    "id": "k28a",
@@ -8198,7 +8259,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k28.1",
     "k28.3",
     "k28.6"
-   ]
+   ],
+   "closed_ok": "推理：tokens/s 一樣表示分子一樣，差的只能是分母，從 MFU 的定義推得出。"
   },
   {
    "id": "k28b",
@@ -8207,16 +8269,16 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "引擎 A 在舊一代的 GPU 上 MFU 是 40%；引擎 B 在新一代的 GPU 上 MFU 是 25%，tokens/s 卻比 A 高，兩邊算 MFU 的方法相同。哪一個結論站得住？",
    "choices": [
     {
-     "t": "A 把手上的 GPU 用得比較滿；所以要買的是 A 跑的那一張舊一代 GPU",
-     "why": "MFU 量的是軟體把手上的 GPU 用到幾成，和這張 GPU 本身多快無關，不能拿來挑 GPU。挑 GPU 還是看 tokens/s 和成本。"
+     "t": "B 的軟體把 GPU 用得比較好：它每秒做完的 token 比 A 的多",
+     "why": "Tokens/s 高，可能只是那張 GPU 比較快。兩套軟體跑在不同的 GPU 上時，比軟體看 MFU 才公平：它量的是軟體把手上的 GPU 用到幾成，A 是 40%，B 是 25%。"
     },
     {
-     "t": "A 把手上的 GPU 用得比較滿；要買哪一張 GPU，另外看 tokens/s 和成本",
+     "t": "A 的軟體把 GPU 用得比較好：跨不同的 GPU 比軟體要看 MFU",
      "ok": true
     },
     {
-     "t": "B 的 tokens/s 比較高；所以 B 的軟體把手上的 GPU 用得比 A 還要滿",
-     "why": "Tokens/s 高可能只是那張 GPU 比較快。兩套軟體跑在不同的 GPU 上時，比軟體要看 MFU：A 是 40%，B 是 25%。"
+     "t": "B 的那張 GPU 不值得買：MFU 才 25%，大半的算力是白買的",
+     "why": "MFU 量的是軟體把手上的 GPU 用到幾成，和這張 GPU 本身多快無關，不能拿來挑 GPU。B 的 MFU 低，tokens/s 卻比較高；要挑哪張 GPU，還是看 tokens/s 和成本。"
     }
    ],
    "key": [
@@ -8225,7 +8287,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k28.5",
     "k28.7"
-   ]
+   ],
+   "closed_ok": "推理：tokens/s 高可以只來自硬體新；除以各自的 peak 才比得出軟體。"
   },
   {
    "id": "k28c",
@@ -8252,7 +8315,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k28.2",
     "k28.4"
-   ]
+   ],
+   "closed_ok": "常識：MFU 的分子只算 model 理論上需要的 FLOP，重算的不算，懂 MFU 定義的人知道。"
   },
   {
    "id": "k29a",
@@ -8279,7 +8343,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k29.3",
     "k29.4"
-   ]
+   ],
+   "closed_ok": "常識：batch 1 的 decode 是 memory-bound，MFU 本來就極低，該看 MBU，是常識。"
   },
   {
    "id": "k29b",
@@ -8306,7 +8371,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k29.1",
     "k29.2"
-   ]
+   ],
+   "closed_ok": "推理：題幹給的公式只算 weights，長前文多讀的 KV cache 沒算進去，推得出會低估。"
   },
   {
    "id": "k29c",
@@ -8333,7 +8399,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k29.5",
     "k29.6"
-   ]
+   ],
+   "closed_ok": "推理：model、GPU、價格都一樣，成本差只能來自 tokens/s，三個選項只有 C 問的是 tokens/s。"
   },
   {
    "id": "k30a",
@@ -8361,7 +8428,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k30.2",
     "k30.3",
     "k30.4"
-   ]
+   ],
+   "closed_ok": "常識：DCGM 的 SM activity 只表示 SM 上有 warp，不代表運算單元在算，懂這個 counter 的人知道"
   },
   {
    "id": "k31a",
@@ -8389,7 +8457,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k31.1",
     "k31.2",
     "k31.3"
-   ]
+   ],
+   "closed_ok": "常識：GPU-Util 高而 SM activity 低表示一直有 kernel 但多數 SM 沒工作，懂這幾個 counte"
   },
   {
    "id": "k31b",
@@ -8398,16 +8467,16 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "一張 GPU 的監控數字：GPU-Util 接近 100%，SM activity 0.9，但 DRAM activity 和 Tensor activity 都很低。時間最可能花在哪裡？",
    "choices": [
     {
-     "t": "花在等：一串小運算彼此相依、沒辦法平行，要用 profiler 打開單一 kernel 看",
+     "t": "花在等上一步的結果：一串小運算前後相依，下一步打開單一 kernel 來看",
      "ok": true
     },
     {
-     "t": "花在讀 HBM：SM 忙、Tensor Core 閒就是 memory-bound，要算 MBU",
-     "why": "Memory-bound 的訊號是 DRAM activity 高。這裡 DRAM activity 也低，HBM 沒在送；SM 上有 warp、兩個單元卻都不忙，時間花在等（latency-bound）。"
+     "t": "花在 kernel 之間的空檔：CPU 送 launch 太慢，下一步看整段的 timeline",
+     "why": "GPU-Util 接近 100%，kernel 之間沒有空檔；有空檔是 GPU-Util 低的情況。這裡 SM 也忙，DRAM activity 和 Tensor activity 卻都低，是 latency-bound：運算單元沒在算、HBM 也沒在送，時間花在等。"
     },
     {
-     "t": "花在算：SM activity 高就是 compute-bound，要算 MFU 看差多少",
-     "why": "SM activity 高只表示 SM 上有 warp。Compute-bound 的訊號是 Tensor activity 高，這裡它很低。"
+     "t": "花在閒著的 SM：thread block 開得太少，下一步加大 batch 把 SM 填滿",
+     "why": "SM activity 0.9 表示 SM 上已經有工作；thread block 太少是 SM activity 低的情況。SM 忙、DRAM activity 和 Tensor activity 卻都低，是 latency-bound：SM 上有 warp，但運算單元沒在算、HBM 也沒在送。"
     }
    ],
    "key": [
@@ -8416,7 +8485,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k31.4",
     "k31.5"
-   ]
+   ],
+   "closed_ok": "推理：SM activity 0.9 排除了 kernel 之間的空檔與 SM 閒著。"
   },
   {
    "id": "k32a",
@@ -8443,7 +8513,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k32.5",
     "k32.6"
-   ]
+   ],
+   "closed_ok": "推理：兩種原因都讓時間幾乎不隨 batch 變，只有看 kernel 之間有沒有空檔分得出來，推得出。"
   },
   {
    "id": "k32b",
@@ -8469,7 +8540,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k32.2"
-   ]
+   ],
+   "closed_ok": "常識：Nsight Compute 會重播 kernel 多次來收 counter，時間只能相對比較，用過的人知道。"
   },
   {
    "id": "k32c",
@@ -8497,7 +8569,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k32.1",
     "k32.3",
     "k32.4"
-   ]
+   ],
+   "closed_ok": "常識：profiling 由粗到細，先找慢的區段再深入單一 kernel，是工程常識。"
   },
   {
    "id": "k33a",
@@ -8525,7 +8598,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k33.1",
     "k33.3",
     "k33.5"
-   ]
+   ],
+   "closed_ok": "常識：kernel launch 是非同步的，不同步只量到發指令的時間，是 CUDA 的常識。"
   },
   {
    "id": "k33b",
@@ -8551,7 +8625,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k33.4"
-   ]
+   ],
+   "closed_ok": "常識：非同步執行的錯誤要到下一個同步點才回報，是 CUDA 的常識。"
   },
   {
    "id": "k33c",
@@ -8578,7 +8653,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k33.2",
     "k33.6"
-   ]
+   ],
+   "closed_ok": "常識：host 與 GPU 之間走 PCIe，比 HBM 慢一到兩個量級，是常識。"
   },
   {
    "id": "k35a",
@@ -8606,7 +8682,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k35.1",
     "k35.2",
     "k35.3"
-   ]
+   ],
+   "closed_ok": "常識：CUDA 的 block 會開滿 thread，多出來的要靠 guard 擋，否則越界，是 CUDA 的入門常識。"
   },
   {
    "id": "k35b",
@@ -8633,7 +8710,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k35.4",
     "k35.5"
-   ]
+   ],
+   "closed_ok": "常識：一個 warp 是 32 個 thread，block 的 thread 數不是 32 的倍數時最後一個 warp 有空"
   },
   {
    "id": "k35c",
@@ -8659,7 +8737,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k35.6"
-   ]
+   ],
+   "closed_ok": "常識：launch 後馬上檢查只看得到 launch 本身的錯，執行時的錯要同步後才看得到，是 CUDA 的常識。"
   },
   {
    "id": "k36a",
@@ -8686,7 +8765,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k36.2",
     "k36.3"
-   ]
+   ],
+   "closed_ok": "常識：依 tensor 值的 Python 分支會造成 graph break，用過 torch.compile 的人知道。"
   },
   {
    "id": "k36b",
@@ -8715,7 +8795,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k36.3",
     "k36.4",
     "k36.5"
-   ]
+   ],
+   "closed_ok": "常識：graph compiler 改不到單一 op 的 kernel 內部，要往下一層寫，是常識。"
   },
   {
    "id": "k37a",
@@ -8743,7 +8824,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k37.1",
     "k37.2",
     "k37.4"
-   ]
+   ],
+   "closed_ok": "常識：Triton 的價值在自動處理 tile 進 shared memory 和同步，矩陣乘法省最多，用過的人知道。"
   },
   {
    "id": "k37b",
@@ -8769,25 +8851,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k37.3"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k37c",
    "ks": "k37",
    "kind": "choice",
-   "q": "同一個 op，可以用 Triton 寫，也可以用再高一點的 Helion 寫。選 Helion 換到什麼、付出什麼？",
+   "q": "同一個 op，可以用 Triton 寫，也可以用再高一點的 Helion 寫。改用 Helion，多省下什麼、代價是什麼？",
    "choices": [
     {
-     "t": "換到不必自己手調 tile 大小這類設定，付出更長的編譯時間",
+     "t": "不必自己手調 tile 大小和迴圈順序；代價是編譯時要花時間搜尋",
      "ok": true
     },
     {
-     "t": "換到自己決定 tile 怎麼搬進 shared memory，付出幾天的工",
-     "why": "那是往下走，不是往上：要自己決定的細節越多，層越下面。自己決定 tile 怎麼搬進 shared memory 是 Triton 下面那一層的事。"
+     "t": "不必自己排 layout 和 warp 的分工；代價是少了這一層的控制",
+     "why": "Layout 和 warp 的分工，在 Triton 這一層就已經交給 compiler 了，不是 Helion 多省的。Helion 編譯成 Triton，再自動搜尋 tile 大小、迴圈順序這些設定，代價是編譯時間。"
     },
     {
-     "t": "換到自己排 layout 和 warp 的分工，付出每一代都要重做",
-     "why": "那是更下面的 layout 與 warp 分工那一層。Helion 在 Triton 上面：編譯成 Triton，再自動搜尋設定。"
+     "t": "不必再以 tile 為單位寫，只寫 model；代價是慢的 op 沒辦法單獨調",
+     "why": "Helion 還是以 tile 為單位的寫法：寫法像 PyTorch 加上 tile，編譯成 Triton。它多省的是手調，自動搜尋 tile 大小、迴圈順序這些設定，代價是編譯時間。"
     }
    ],
    "key": [
@@ -8796,7 +8879,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k37.5",
     "k37.6"
-   ]
+   ],
+   "closed_ok": "常識：知道 Helion 的人知道它的賣點是 autotuner、代價是調校時間。"
   },
   {
    "id": "k38a",
@@ -8823,7 +8907,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k38.1",
     "k38.2"
-   ]
+   ],
+   "closed_ok": "常識：先量測找出真的瓶頸再最佳化，是工程常識。"
   },
   {
    "id": "k38b",
@@ -8850,7 +8935,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k38.3",
     "k38.9"
-   ]
+   ],
+   "closed_ok": "常識：常見形狀的 GEMM 先用現成調好的函式庫，是常識。"
   },
   {
    "id": "k38c",
@@ -8877,7 +8963,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k38.7",
     "k38.8"
-   ]
+   ],
+   "closed_ok": "常識：時間花在 launch 之間的空檔就用 CUDA Graphs 一次送出，是常識。"
   },
   {
    "id": "k38d",
@@ -8886,15 +8973,15 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "要替一個自訂的 op 寫 kernel：它是規則的運算，目前沒有和前後的運算 fuse 在一起。團隊明年會換下一代 GPU，也在評估另一個廠牌。寫在哪一層最合適？",
    "choices": [
     {
-     "t": "layout 與 warp 分工那一層：幾週寫完，之後各代都能沿用",
+     "t": "layout 與 warp 分工那一層：要幾週，但調好一次，換代、換廠牌都能沿用",
      "why": "這一層最難搬：要幾週，而且每一代 GPU 都要重做。它是 GEMM 或 attention 要逼近 peak 時才用的。"
     },
     {
-     "t": "CUDA C++：全部自己來，但規則的運算寫在這一層最省事",
-     "why": "直接寫 CUDA C++ 只留給排序、稀疏矩陣、圖演算法這類不規則的工作。越往下控制越多，成本也越高；沒有 fuse 或少一個 op，用 tile language 幾小時就夠。"
+     "t": "CUDA C++：全部自己來，但寫法最通用，換代、換廠牌都照樣能跑",
+     "why": "直接寫 CUDA C++ 只留給排序、稀疏矩陣、圖演算法這類不規則的工作。越往下成本越高，也越難搬；能在不同廠牌、不同代的 GPU 上跑的是 tile language 寫的 kernel，一個 op 幾小時。"
     },
     {
-     "t": "tile language：幾小時寫得完，換代、換廠牌都還能跑",
+     "t": "tile language：一個 op 幾小時，寫好之後換代、換廠牌都還能跑",
      "ok": true
     }
    ],
@@ -8905,7 +8992,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k38.4",
     "k38.5",
     "k38.6"
-   ]
+   ],
+   "closed_ok": "推理：題幹的規則運算、換代、換廠牌三個條件指向可攜的 tile language。"
   },
   {
    "id": "k38e",
@@ -8914,16 +9002,16 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "一支去年編好的 GPU 程式，原封不動拿到新一代的 GPU 上執行。通常會怎樣？",
    "choices": [
     {
-     "t": "跑不起來，機器碼是照舊 GPU 編的，要重新編譯才能載入",
-     "why": "執行檔裡除了 SASS（機器碼）還包著 PTX。載入時找不到符合這顆 GPU 的 SASS，driver 就把 PTX 即時編譯，所以通常還能跑。"
+     "t": "跑得起來，但新一代才有的指令要更新 driver 才用得到",
+     "why": "Driver 做的是載入時把執行檔裡的 PTX 即時編譯，讓舊程式能跑；它不會替舊程式換上新指令。TMA、TMEM 這類新一代的指令要重新編譯才用得到。"
     },
     {
-     "t": "跑得起來，但新一代才有的指令要重新編譯之後才用得到",
+     "t": "跑得起來，但新一代才有的指令要重新編譯才用得到",
      "ok": true
     },
     {
-     "t": "跑得起來，driver 載入時會自動換成新一代的指令來執行",
-     "why": "PTX 的 JIT 只保證舊程式能跑。新一代的指令（TMA、TMEM）要重新編譯才用得到。"
+     "t": "跑得起來，而且新一代才有的指令 driver 會自動用上",
+     "why": "PTX 的 JIT 只保證舊程式能跑：載入時找不到符合這顆 GPU 的 SASS，driver 就把 PTX 即時編譯。新一代的指令（TMA、TMEM）要重新編譯才用得到。"
     }
    ],
    "key": [
@@ -8932,7 +9020,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k38.11",
     "k38.12"
-   ]
+   ],
+   "closed_ok": "常識：新一代才有的指令要改寫或重編才用得上，driver 不會代換。"
   },
   {
    "id": "k39a",
@@ -8959,7 +9048,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k39.2",
     "k39.6"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 kernel 是 memory-bound，三個改法只有 B 動到搬資料那一邊，推得出。"
   },
   {
    "id": "k39b",
@@ -8986,7 +9076,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k39.1",
     "k39.3"
-   ]
+   ],
+   "closed_ok": "推理：題幹說 Tensor Core 在等下一塊 tile 載入，對應的改法就是算這一塊時先載下一塊。"
   },
   {
    "id": "k39c",
@@ -9013,7 +9104,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k39.4",
     "k39.5"
-   ]
+   ],
+   "closed_ok": "推理：題幹給了 split-K 的定義（把長的加總切給多個 block），輸出 tile 少、加總長的才需要切，推得出。"
   },
   {
    "id": "k40a",
@@ -9041,7 +9133,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k40.1",
     "k40.2",
     "k40.3"
-   ]
+   ],
+   "closed_ok": "推理：題幹說兩個矩陣乘法是 compute-bound，fusion 省的是搬中間值，推得出幫助小很多。"
   },
   {
    "id": "k40b",
@@ -9067,7 +9160,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k40.4"
-   ]
+   ],
+   "closed_ok": "推理：weights 總量沒變、兩個矩陣本來就各乘同一個 x，省的只能是 x 的讀取和 launch，從題幹推得出。"
   },
   {
    "id": "k41a",
@@ -9095,7 +9189,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k41.1",
     "k41.2",
     "k41.3"
-   ]
+   ],
+   "closed_ok": "常識：attention 的 S、P 是 n×n，長度加倍變四倍，長 context 時遠大於 n×d 的 Q、K、V、O，是"
   },
   {
    "id": "k41b",
@@ -9121,7 +9216,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k41.4"
-   ]
+   ],
+   "closed_ok": "常識：decode 一次只有一個新 token 的 query，S 是 1×n，是常識。"
   },
   {
    "id": "k41c",
@@ -9147,7 +9243,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k41.5"
-   ]
+   ],
+   "closed_ok": "常識：8K×8K 的 S 有上百 MB，SM 上的記憶體只有幾百 KB，是常識。"
   },
   {
    "id": "k42a",
@@ -9174,7 +9271,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k42.5",
     "k42.6"
-   ]
+   ],
+   "closed_ok": "常識：FlashAttention 是精確演算法，結果和標準寫法相同，懂的人知道。"
   },
   {
    "id": "k42b",
@@ -9201,7 +9299,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k42.1",
     "k42.2"
-   ]
+   ],
+   "closed_ok": "常識：FlashAttention 只讀 Q、K、V、寫 O，S 和 P 不落到 HBM，懂的人知道。"
   },
   {
    "id": "k42c",
@@ -9210,16 +9309,16 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "Prefill 的 context 從 8K 加到 32K。標準寫法和 FlashAttention 的 attention 記憶體用量，各怎麼跟著長度變？",
    "choices": [
     {
-     "t": "標準寫法跟著長度的平方長，FlashAttention 只跟著長度等比例長",
+     "t": "標準寫法隨長度的平方成長，FlashAttention 隨長度等比例成長",
      "ok": true
     },
     {
-     "t": "兩者都跟著長度的平方長，FlashAttention 只是每一步搬的次數較少",
-     "why": "FlashAttention 不存 n × n 的 S 和 P，剩下的 Q、K、V、O 都是 n × d，所以記憶體隨長度線性成長。"
+     "t": "標準寫法隨長度的平方成長，FlashAttention 固定、不隨長度成長",
+     "why": "FlashAttention 一次只算一小塊，但 Q、K、V、O 還在，都跟著長度變長，所以記憶體隨長度線性成長，不是固定。不見的只是 n × n 的那兩份。"
     },
     {
-     "t": "兩者都跟著長度等比例長，FlashAttention 只是每一步搬的次數較少",
-     "why": "標準寫法要存 n × n 的 S 和 P，隨長度的平方成長：長度 4 倍，它們是 16 倍。"
+     "t": "標準寫法隨長度等比例成長，FlashAttention 固定、不隨長度成長",
+     "why": "標準寫法要存 n × n 的 S 和 P，隨長度的平方成長：長度 4 倍，它們是 16 倍。FlashAttention 不存這兩份，剩下的 Q、K、V、O 隨長度線性成長，也不是固定。"
     }
    ],
    "key": [
@@ -9227,7 +9326,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k42.4"
-   ]
+   ],
+   "closed_ok": "常識：讀過 FlashAttention 論文的人知道記憶體從平方降到線性；閉卷答對但沒把握。"
   },
   {
    "id": "k42d",
@@ -9253,7 +9353,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k42.3"
-   ]
+   ],
+   "closed_ok": "常識：online softmax 邊讀邊維護最大值和指數總和，懂 FlashAttention 的人知道。"
   },
   {
    "id": "k43a",
@@ -9280,7 +9381,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k43.2",
     "k43.3"
-   ]
+   ],
+   "closed_ok": "常識：最大值更新時舊的累加乘上 exp(舊 m − 新 m) 即可，是 online softmax 的數學。"
   },
   {
    "id": "k43b",
@@ -9307,7 +9409,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k43.4",
     "k43.5"
-   ]
+   ],
+   "closed_ok": "常識：10⁻¹⁶ 是倍精度浮點捨入的量級，是常識。"
   },
   {
    "id": "k43c",
@@ -9333,24 +9436,25 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k43.1"
-   ]
+   ],
+   "closed_ok": "常識：取指數前減掉最大值是為了避免溢位，是數值計算的常識。"
   },
   {
    "id": "k44a",
    "ks": "k44",
    "kind": "choice",
-   "q": "新一代 GPU 的 Tensor Core 吞吐是上一代的兩倍，算 exp 的單元和 shared memory 的頻寬都沒變。把上一代調好的 attention kernel 原樣搬過去，速度會怎樣？",
+   "q": "新一代 GPU 的 Tensor Core 吞吐是上一代的兩倍。把上一代調好的 FlashAttention kernel 原樣搬過去，卻快不到兩倍。新的上限在哪裡？",
    "choices": [
     {
-     "t": "大約快兩倍：attention 的 FLOP 幾乎都是矩陣乘法，跟著 Tensor Core 走",
-     "why": "FLOP 多半是矩陣乘法沒錯，但時間看的是最慢的單元。同一塊 tile 在 B200 上 MMA 從 2,048 個 cycle 降到 1,024，exp 還是 1,024，exp 成了一樣長的瓶頸。"
+     "t": "HBM 的頻寬：沒有跟著加倍，n × n 的中間值進出 HBM 成了最慢的",
+     "why": "FlashAttention 從第一版就把 n × n 矩陣的 HBM 流量拿掉了，瓶頸早已移到晶片上的單元。B200 上是 MMA 的時間減半（2,048 個 cycle 降到 1,024）之後，exp 和它一樣長。"
     },
     {
-     "t": "幾乎不會變快：attention 是 memory-bound，上限一直是 HBM 的頻寬",
-     "why": "FlashAttention 已經把 n × n 的 HBM 流量拿掉，瓶頸移到晶片上的單元。Tensor Core 變快，就輪到沒變快的 exp。"
+     "t": "shared memory 的頻寬：沒有跟著加倍，tile 送不夠快給 Tensor Core",
+     "why": "Shared memory 的頻寬確實沒變，但它還不是最慢的：同一塊 tile 在 B200 上 MMA 從 2,048 個 cycle 降到 1,024，exp 也是 1,024，shared memory 只要 768。先撞到的是 exp。"
     },
     {
-     "t": "快不到兩倍：矩陣乘法的時間減半之後，softmax 的 exp 變成新的上限",
+     "t": "算 exp 的單元：吞吐沒有跟著加倍，softmax 成了最慢的一步",
      "ok": true
     }
    ],
@@ -9360,7 +9464,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k44.3",
     "k44.9"
-   ]
+   ],
+   "closed_ok": "常識：知道 FlashAttention-4 動機的人答得出；同一節的 k44b 題幹也提到 exp，照題號順序作答時 k44a 在前。"
   },
   {
    "id": "k44b",
@@ -9388,25 +9493,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k44.4",
     "k44.5",
     "k44.7"
-   ]
+   ],
+   "closed_ok": "推理：o 和 ℓ 用同一個 m、相除會消掉，多項式算的 exp 是近似值，從數學推得出。"
   },
   {
    "id": "k44c",
    "ks": "k44",
    "kind": "choice",
-   "q": "團隊要把推論機器換成新一代的 GPU，serving engine 的版本不動。對 engine 裡的 attention kernel，換之前該有什麼預期？",
+   "q": "團隊要把推論機器換成新一代的 GPU，繼續用原本的 serving engine。換之前，對 engine 裡的 attention kernel 該先做哪一件事？",
    "choices": [
     {
-     "t": "舊的 kernel 重新編譯就能用，速度會跟著新一代的規格等比例往上走",
-     "why": "每一版 kernel 修的是當時最慢的那個單元（HBM 流量、平行度、等 load、exp），換了 GPU 最慢的單元跟著換，所以每一代都要重寫。"
+     "t": "先在新的 GPU 上，替現有的 kernel 重新搜尋 tile 大小這類設定",
+     "why": "FlashAttention 1 到 4 的演算法沒變，每一版改的是 kernel 怎麼配合當時最慢的單元；換了 GPU，最慢的單元跟著換，修法是 TMA、TMEM 這類新的做法，不是重調設定。所以每一代 GPU 都要重寫 attention kernel，換之前先確認 engine 用的 kernel 支援新的那一代。"
     },
     {
-     "t": "舊的 kernel 是替上一代調的，要先確認 engine 已經有支援新一代的版本",
+     "t": "先查 engine 用的 attention kernel 有沒有替新一代重寫的版本",
      "ok": true
     },
     {
-     "t": "舊的 kernel 演算法已經過時，要等替新一代設計的 attention 演算法出來",
-     "why": "FlashAttention 1 到 4 的演算法沒變，變的是 kernel 怎麼配合當代的硬體。要確認的是 engine 有沒有新一代的 kernel。"
+     "t": "先把 attention 的精度降一級，讓 Tensor Core 多出來的吞吐用得上",
+     "why": "降精度是讓 Tensor Core 更快，但換了 GPU 之後先撞到的是沒有跟著變快的單元（B200 上是 exp），不在 Tensor Core。每一代 GPU 都要重寫 attention kernel，所以先確認 engine 用的 kernel 支援新的那一代。"
     }
    ],
    "key": [
@@ -9415,7 +9521,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k44.1",
     "k44.10"
-   ]
+   ],
+   "closed_ok": "推理：新指令要重寫才用得上，只重調 tile 大小不夠，降精度沒有根據。"
   },
   {
    "id": "k45a",
@@ -9441,7 +9548,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k45.1"
-   ]
+   ],
+   "closed_ok": "推理：每個 kernel 都到頂而整體還差一截，差的只能在 kernel 之外，從題幹推得出。"
   },
   {
    "id": "k46a",
@@ -9450,15 +9558,15 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "一個 GEMM 切成 200 個輸出 tile，一個 tile 開一個 block，放到有 148 個 SM 的 GPU 上跑。執行時會看到什麼？",
    "choices": [
     {
-     "t": "分兩輪：一個 SM 只放得下一個這種 block，第二輪有 96 個 SM 整輪閒著",
+     "t": "分兩輪：第一輪 148 個 SM 各放一個 block，第二輪有 96 個 SM 閒著",
      "ok": true
     },
     {
-     "t": "一輪跑完：一個 SM 能同時放好幾個 block，200 個 block 全都放得上去",
+     "t": "一輪跑完：其中 52 個 SM 各放兩個 block，所以沒有 SM 整輪閒著",
      "why": "那是 vec_add 那種小 block。GEMM 的一個 block 要用掉一個 SM 大部分的 shared memory 和 register，一個 SM 一次只放得下一個，block 比 SM 多就要分輪跑。"
     },
     {
-     "t": "分兩輪：兩輪各放 100 個 block，所以每一輪都只有 48 個 SM 沒有工作",
+     "t": "分兩輪：兩輪各放 100 個 block，所以每一輪都有 48 個 SM 閒著",
      "why": "第一輪會先放滿 148 個 SM，第二輪只剩 52 個 block，其餘 96 個 SM 整輪沒有工作。"
     }
    ],
@@ -9469,25 +9577,26 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k46.1",
     "k46.2",
     "k46.3"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：200 個 block 對 148 個 SM，第二輪剩 52 個；錯的選項各對應一種算錯的方式。"
   },
   {
    "id": "k46b",
    "ks": "k46",
    "kind": "choice",
-   "q": "一個 GEMM 的 tile 數只比 SM 多一些，想讓所有 SM 差不多同時做完。兩個改法：甲，每個 SM 只放一個 block，這個 block 跑迴圈、一直領新的 tile；乙，把工作切得比 tile 更細，平均分給每個 SM。哪一個做得到？",
+   "q": "一個 GEMM 的 tile 比 SM 多，想讓所有 SM 差不多同時做完。兩個改法：甲，每個 SM 只放一個 block，這個 block 跑迴圈、一直領新的 tile；乙，把工作切得比 tile 更細，再分給各個 SM。哪一個做得到？",
    "choices": [
     {
-     "t": "只有甲：block 一直在領 tile，先做完的 SM 會接手其他 SM 還沒做完的部分",
+     "t": "只有甲：block 一直在領 tile，先做完的 SM 會接手別的 SM 還沒做完的 tile",
      "why": "一個 tile 只會被一個 block 領走，不會做到一半由別人接手。160 份工作分給 132 個 SM，還是只有 28 個 SM 有第二份。"
     },
     {
-     "t": "只有乙：甲省的是每個 block 重複的準備工作，多出來的 tile 仍落在少數 SM",
+     "t": "只有乙：甲省的是每個 block 重複的準備工作，tile 怎麼分給各個 SM 沒有變",
      "ok": true
     },
     {
      "t": "兩個都能：甲和乙都讓每個 SM 一直有工作可做，差別只在準備工作做幾次",
-     "why": "甲（persistent kernel）省的只是重複的準備工作（算位址、初始化累加器這類）。多出來的 tile 只有少數 SM 領得到，其他 SM 照樣閒著。"
+     "why": "甲（persistent kernel）省的只是重複的準備工作（算位址、初始化累加器這類）。160 份工作分給 132 個 SM，還是只有 28 個 SM 有第二份，其他 SM 照樣閒著。"
     }
    ],
    "key": [
@@ -9497,7 +9606,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k46.4",
     "k46.5",
     "k46.6"
-   ]
+   ],
+   "closed_ok": "推理：以整個 tile 為單位就做不齊，切得比 tile 細才能平分。"
   },
   {
    "id": "k47a",
@@ -9506,15 +9616,15 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "Decode 的 attention kernel：batch 4、每個請求存 8 份 K、V，其中一個請求的 context 比其他的長很多。這個 kernel 跑的時候，132 個 SM 會是什麼狀況？",
    "choices": [
     {
-     "t": "block 跟著 context 的長度變多，長請求分到比較多 SM，所以 SM 大致都有工作",
-     "why": "只按 batch × head 切時，block 數和 context 的長度無關：請求再長，也只是它的 block 讀比較久，其他 SM 做完只能等它。"
+     "t": "block 只有 32 個，但各自攤給幾個 SM 一起跑，所以 SM 大致都有工作",
+     "why": "Block 比 SM 少時不會自己攤開：32 個 block 只用到 32 個 SM，132 個 SM 大半閒著。要讓更多 SM 一起讀，得沿 KV cache 切，把一個請求的頁分給好幾個 SM。"
     },
     {
-     "t": "block 和 prefill 時一樣多，每個 token 各有一個 query，所以 SM 大致都有工作",
-     "why": "Prefill 有很多 query，切法很多；decode 每個請求只有一個 query，只能按 batch × head 切，4 × 8 只有 32 個 block。"
+     "t": "block 隨 context 長度變多，長請求占掉多數 SM，短請求的要排隊等",
+     "why": "Decode 每個請求只有一個 query，只按 batch × K、V 的份數切，block 數和 context 的長度無關：batch 4、8 份只有 32 個 block。請求再長，也只是它的 block 讀比較久，其他 SM 做完只能等它。"
     },
     {
-     "t": "block 只有 32 個，大半 SM 沒有工作；短請求的做完之後，還要等長請求的讀完",
+     "t": "block 只有 32 個，大半 SM 閒著，而且要等長請求的 block 讀完",
      "ok": true
     }
    ],
@@ -9525,7 +9635,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k47.1",
     "k47.2",
     "k47.3"
-   ]
+   ],
+   "closed_ok": "推理：4 × 8 = 32 個 block 對 132 個 SM，從題幹算得出。"
   },
   {
    "id": "k47b",
@@ -9551,7 +9662,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k47.4"
-   ]
+   ],
+   "closed_ok": "常識：online softmax 的部分結果 (m, ℓ, o) 可以照同樣的換算合併，懂 FlashAttention 的"
   },
   {
    "id": "k47c",
@@ -9579,7 +9691,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k47.5",
     "k47.6",
     "k47.7"
-   ]
+   ],
+   "closed_ok": "常識：CUDA Graph 要求每次 launch 的設定固定，block 數固定才能重播，是常識。"
   },
   {
    "id": "k48a",
@@ -9606,7 +9719,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k48.1",
     "k48.2"
-   ]
+   ],
+   "closed_ok": "推理：固定的 launch 開銷對越短的 kernel 占比越大，從題幹的 5 毫秒與 5 微秒推得出。"
   },
   {
    "id": "k48b",
@@ -9633,7 +9747,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k48.4",
     "k48.5"
-   ]
+   ],
+   "closed_ok": "常識：CUDA Graph 錄下的是固定的 launch 設定，grid 會變就不能直接重播，資料數值變沒關係，是常識。"
   },
   {
    "id": "k48c",
@@ -9661,7 +9776,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k48.6",
     "k48.7",
     "k48.8"
-   ]
+   ],
+   "closed_ok": "推理：題幹給了 PDL 的定義（上一個 kernel 提早通知可以開始），下一個 kernel 能先做的只有不依賴資料的準備，"
   },
   {
    "id": "k48d",
@@ -9717,7 +9833,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k49.2",
     "k49.3",
     "k49.4"
-   ]
+   ],
+   "closed_ok": "推理：題幹說通訊時 GEMM 都停著，把通訊 fuse 進 tile 改的是時機（和計算交錯），量和次數沒變，推得出。"
   },
   {
    "id": "k49b",
@@ -9745,24 +9862,25 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k49.1",
     "k49.5",
     "k49.6"
-   ]
+   ],
+   "closed_ok": "推理：線路已經到頂就不能傳得更快，能做的只剩讓通訊和計算重疊，從題幹推得出。"
   },
   {
    "id": "k50a",
    "ks": "k50",
    "kind": "choice",
-   "q": "你的團隊要自架 LLM 服務。知道了 split-KV、CUDA Graphs、把通訊藏在計算後面這些手法之後，實際該做的是什麼？",
+   "q": "你的團隊要自架 LLM 服務。知道了 split-KV、CUDA Graphs、DeepEP 這些做法之後，實際該做的是什麼？",
    "choices": [
     {
-     "t": "選一個已內建這些手法的 engine，內建的最佳化會自己生效，不必另外確認",
-     "why": "選了還要驗證：用 Nsight Systems 的 timeline 確認 kernel 之間沒有大空檔、通訊有藏在計算後面；看到空檔，回到第 5 章的決策樹。"
+     "t": "選內建這些做法的 engine，再看 GPU-Util 是不是一直維持在接近 100%",
+     "why": "要確認的是兩件事：kernel 之間沒有大空檔、通訊有藏在計算後面。這要在 Nsight Systems 的 timeline 上看；一個百分比看不出通訊有沒有和計算重疊。"
     },
     {
-     "t": "先自己實作這些手法的 kernel，再拿現成 engine 的數字當對照，逐步調整",
-     "why": "這些手法幾乎都已經在 serving engine 裡：vLLM 和 SGLang 都內建 FlashInfer 與 CUDA Graphs，DeepEP 和 DeepGEMM 也是開源的。通常不必自己寫。"
+     "t": "選內建這些做法的 engine，再逐一打開最慢的 kernel 看它離 peak 多遠",
+     "why": "這些做法處理的是 kernel 和 kernel 之間、GPU 和 GPU 之間的事，打開單一 kernel 看不到。要用 Nsight Systems 的 timeline 確認 kernel 之間沒有大空檔、通訊有藏在計算後面。"
     },
     {
-     "t": "選一個已內建這些手法的 engine，再看 timeline 確認空檔和通訊都處理了",
+     "t": "選內建這些做法的 engine，再看 timeline 上的空檔和通訊有沒有藏好",
      "ok": true
     }
    ],
@@ -9773,7 +9891,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k50.1",
     "k50.2",
     "k50.3"
-   ]
+   ],
+   "closed_ok": "推理：題幹列的兩個工具各對一種空等；選 engine 的人不自己寫 kernel。"
   },
   {
    "id": "k51a",
@@ -9801,7 +9920,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k51.3",
     "k51.4",
     "k51.5"
-   ]
+   ],
+   "closed_ok": "常識：benchmark 的「對」和「快」都由 harness 判定，harness 有洞分數就不可信，懂 benchmark"
   },
   {
    "id": "k51b",
@@ -9810,16 +9930,16 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "你讓 agent 自己寫 kernel：寫完編譯、和參考實作比對輸出、量時間，再把結果回給它改。跑了一晚，報出的加速從 3 倍升到 40 倍。同事說每一輪都經過比對和計時，所以輪數越多、數字越可信。這個說法漏了什麼？",
    "choices": [
     {
-     "t": "比對和計時可能有洞：agent 照著分數在改，輪數越多越可能改到洞上",
+     "t": "agent 追的是 harness 給的分數：輪數越多，越可能只是學會怎麼拿分",
      "ok": true
     },
     {
-     "t": "agent 會忘記早先的回饋：輪數越多，前面修好的錯越可能又被改回來",
-     "why": "就算改回錯的版本，只要比對沒有洞，那一輪就會被擋下來。數字不可信的來源是比對和計時本身：這兩格有漏洞時，agent 會朝著漏洞最佳化，把力氣花在拿分，而不是把 kernel 寫快。"
+     "t": "agent 記不住 harness 早先的回饋：輪數越多，前面修好的錯越可能被改回來",
+     "why": "就算改回錯的版本，只要比對沒有漏洞，那一輪就會被擋下來。數字能不能信，看的是測試和 harness 有沒有漏洞：有漏洞時，agent 會朝著漏洞最佳化，輪數越多，分數越可能是鑽出來的。"
     },
     {
-     "t": "model 的能力有上限：輪數越多，後面幾輪越可能只是重複同樣的改法",
-     "why": "這說的是加速會停住，解釋不了數字為什麼不可信。迴圈的品質取決於比對和 profile 這兩格：它們有漏洞時，agent 會朝著漏洞最佳化，輪數越多，分數越可能是鑽洞鑽出來的。"
+     "t": "harness 的量測每一輪都有誤差：輪數越多，累積的誤差越大，數字越不準",
+     "why": "每一輪都是重新比對、重新計時，誤差不會一輪一輪累積。數字能不能信，看的是測試和 harness 有沒有漏洞：有漏洞時，agent 會朝著漏洞最佳化，把力氣花在拿分，而不是把 kernel 寫快。"
     }
    ],
    "key": [
@@ -9829,7 +9949,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k51.2",
     "k51.6",
     "k51.7"
-   ]
+   ],
+   "closed_ok": "常識：agent 最佳化的是 harness 的分數（reward hacking），分數突然跳高要先懷疑。"
   },
   {
    "id": "k51c",
@@ -9855,7 +9976,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k51.8"
-   ]
+   ],
+   "closed_ok": "常識：kernel 有 bytes ÷ 頻寬、FLOP ÷ peak 的物理下限可以擋，懂 roofline 的人知道。"
   },
   {
    "id": "k52a",
@@ -9884,7 +10006,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k52.2",
     "k52.3",
     "k52.4"
-   ]
+   ],
+   "closed_ok": "推理：題幹說清空 buffer 之後輸出就錯了，原本只能是靠 buffer 裡殘留的答案過關，推得出。"
   },
   {
    "id": "k52b",
@@ -9911,7 +10034,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k52.6",
     "k52.7"
-   ]
+   ],
+   "closed_ok": "推理：輸出不隨輸入變的題可以不算就過關，產生的假加速只會把平均灌高，推得出。"
   },
   {
    "id": "k52c",
@@ -9938,7 +10062,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k52.5",
     "k52.8"
-   ]
+   ],
+   "closed_ok": "推理：幾萬倍超出合理範圍，agent 又讀得到 harness 原始碼，最可能是還沒補的新手法，從題幹推得出。"
   },
   {
    "id": "k53a",
@@ -9966,7 +10091,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k53.2",
     "k53.3",
     "k53.4"
-   ]
+   ],
+   "closed_ok": "推理：題幹說題目只有幾十微秒、serving 已經用 CUDA Graphs，併 op 省下的 launch 在 servin"
   },
   {
    "id": "k53b",
@@ -9992,7 +10118,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k53.6"
-   ]
+   ],
+   "closed_ok": "推理：兩邊精度不同就不是同一件工作，分不出加速來自寫法還是低精度，推得出。"
   },
   {
    "id": "k53c",
@@ -10019,7 +10146,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k53.1",
     "k53.5"
-   ]
+   ],
+   "closed_ok": "推理：題幹列的三項檢查各擋掉 B、C 那一種，呼叫現成函式庫的答案對、計時也真，推得出擋不住。"
   },
   {
    "id": "k54a",
@@ -10046,7 +10174,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k54.1",
     "k54.2"
-   ]
+   ],
+   "closed_ok": "推理：兩項都要做完，時間至少是較大的那一項，能重疊所以不必相加，從下限的意思推得出。"
   },
   {
    "id": "k54b",
@@ -10072,7 +10201,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k54.3"
-   ]
+   ],
+   "closed_ok": "推理：低於下限不可能是真的，高於下限只是沒違反、還不能證明，從下限的定義推得出。"
   },
   {
    "id": "k55a",
@@ -10100,7 +10230,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k55.2",
     "k55.3",
     "k55.5"
-   ]
+   ],
+   "closed_ok": "推理：B、C 量到的時間都會短於下限，只有拖慢參考實作時 kernel 自己的時間沒變，從題幹推得出。"
   },
   {
    "id": "k55b",
@@ -10128,7 +10259,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k55.4",
     "k55.8",
     "k55.9"
-   ]
+   ],
+   "closed_ok": "推理：題幹給了 launch 的次數和總時間，差距幾乎全是 launch，要放大題目才量得到計算本身，推得出。"
   },
   {
    "id": "k55c",
@@ -10155,7 +10287,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k55.6",
     "k55.7"
-   ]
+   ],
+   "closed_ok": "推理：題幹說輸出幾乎不隨輸入變，不算的 kernel 也會一致，這種比對沒有鑑別力，推得出。"
   },
   {
    "id": "k55d",
@@ -10182,7 +10315,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k55.10",
     "k55.11"
-   ]
+   ],
+   "closed_ok": "常識：kernel benchmark 的 baseline 是未編譯的 eager PyTorch，贏它不代表贏得過 tor"
   },
   {
    "id": "k55e",
@@ -10210,7 +10344,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k55.1",
     "k55.12",
     "k55.13"
-   ]
+   ],
+   "closed_ok": "推理：自動檢查只擋已知的手法，倍數合理不代表沒作弊，該讀的是倍數最高的那幾個，推得出。"
   },
   {
    "id": "k56a",
@@ -10219,16 +10354,16 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "q": "一個工作要 16 張 GPU 緊密地交換資料。放在兩台各 8 張的 HGX server 上，或放在一櫃 NVL72 裡，GPU 之間走的線差在哪？",
    "choices": [
     {
-     "t": "兩種都全程走 NVLink：NVLink 可以把不同的 server 接起來，差別只在線的長短",
-     "why": "HGX 的 NVLink 只連同一台裡的 8 張，這是 scale-up；跨 server 要經過網卡，用 RDMA，這是 scale-out。兩台各 8 張時，跨台的交換走的是網卡。"
+     "t": "兩台 HGX 之間用 NVLink 相連；NVL72 的 16 張分在幾台 server，要經過網卡",
+     "why": "反了。HGX 的 NVLink 只連同一台裡的 8 張，跨 server 要經過網卡，用 RDMA；NVL72 一整櫃的 72 張都在同一個 NVLink 網域裡，16 張之間不必經過網卡。"
     },
     {
-     "t": "兩台之間要經過網卡走 RDMA；NVL72 的 16 張都在同一個 NVLink 網域裡",
+     "t": "兩台 HGX 之間要經過網卡走 RDMA；NVL72 的 16 張都在同一個 NVLink 網域",
      "ok": true
     },
     {
-     "t": "兩種都要經過網卡：NVLink 只連同一台 server 的 8 張，放進同一櫃裡還是算跨機",
-     "why": "NVL72 把 scale-up 的範圍從一台的 8 張擴大到一整櫃的 72 張：72 張都在同一個 NVLink 網域裡，16 張之間不必經過網卡。"
+     "t": "兩台 HGX 之間的 NVLink 要多過一層 switch；NVL72 的 16 張接在同一層上",
+     "why": "NVLink 不跨 server：HGX 的 NVLink 只連同一台裡的 8 張（scale-up），兩台之間要經過網卡，用 RDMA（scale-out）。差別不在 switch 的層數。"
     }
    ],
    "key": [
@@ -10237,7 +10372,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k56.3",
     "k56.4"
-   ]
+   ],
+   "closed_ok": "常識：熟 NVIDIA 產品線的人知道 HGX 是機內 8 張、NVL72 是整櫃一個 NVLink 網域。"
   },
   {
    "id": "k56b",
@@ -10264,7 +10400,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k56.1",
     "k56.2"
-   ]
+   ],
+   "closed_ok": "推理：線的頻寬、故障率、機房供電是物理和設施的限制，改程式動不了，推得出要在買之前算。"
   },
   {
    "id": "k58a",
@@ -10292,7 +10429,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k58.2",
     "k58.4"
    ],
-   "num_choices_ok": "每個錯的數字各對應一種算錯：10 ms 是用了兩個方向合計的 900 GB/s，180 ms 是用了跨機網卡的 50 GB/s"
+   "num_choices_ok": "每個錯的數字各對應一種算錯：10 ms 是用了兩個方向合計的 900 GB/s，180 ms 是用了跨機網卡的 50 GB/s",
+   "closed_ok": "常識：NVLink 規格表的 900 GB/s 是雙向合計，單向 450 GB/s，懂硬體規格的人知道。"
   },
   {
    "id": "k58b",
@@ -10319,7 +10457,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k58.3",
     "k58.4"
-   ]
+   ],
+   "closed_ok": "推理：題幹排除了兩台各自的速度，剩下會跟 prompt 長度變長的只有跨機搬 KV cache，推得出。"
   },
   {
    "id": "k58c",
@@ -10346,7 +10485,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k58.1",
     "k58.5"
-   ]
+   ],
+   "closed_ok": "常識：每一層都要交換資料的 tensor parallelism 要留在 NVLink 網域裡、不跨機，是常識。"
   },
   {
    "id": "k58d",
@@ -10372,7 +10512,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    ],
    "covers": [
     "k58.1"
-   ]
+   ],
+   "closed_ok": "刻意的計算題：每個錯的選項各是一種算錯的方式"
   },
   {
    "id": "k59a",
@@ -10400,7 +10541,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k59.1",
     "k59.4",
     "k59.6"
-   ]
+   ],
+   "closed_ok": "常識：上萬張 GPU 時故障是每幾小時一次的常態，訓練靠 checkpoint、serving 要能轉移請求，是大規模叢集的常"
   },
   {
    "id": "k59b",
@@ -10427,7 +10569,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "covers": [
     "k59.2",
     "k59.3"
-   ]
+   ],
+   "closed_ok": "常識：公開的大規模訓練統計（Llama 3 的訓練）裡 GPU 與 HBM 故障排前兩名，讀過的人知道。"
   },
   {
    "id": "k60a",
@@ -10455,7 +10598,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k60.1",
     "k60.2",
     "k60.4"
-   ]
+   ],
+   "closed_ok": "常識：NVL72 一櫃約 120 kW 以上、要液冷，是一般氣冷機櫃的近十倍，懂資料中心的人知道。"
   },
   {
    "id": "k61a",
@@ -10483,7 +10627,8 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "k61.1",
     "k61.2",
     "k61.3"
-   ]
+   ],
+   "closed_ok": "推理：取用量包含之後排回去的水，一定不小於消耗量，把取用當成蒸發只會高估，從定義推得出。"
   }
  ],
  "integration": [
@@ -10541,8 +10686,7 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
    "ks": [
     "k38",
     "k42",
-    "k44",
-    "k50"
+    "k44"
    ],
    "after": "i10",
    "q": "你們自架的 serving 在 profile 之後，發現長 prompt 的 prefill 裡 attention 那一步最慢。一位很強的工程師提議自己用 CUDA 手寫一個 attention kernel，估兩個月。你怎麼評估這個提議？在答應之前，你會先確認哪幾件事？",
@@ -10550,7 +10694,7 @@ claimed 0.05 ms -&gt; impossible: check the timer and the test</code></pre></fig
     "寫在哪一層有順序：從最上層開始，量到某個運算確實是瓶頸才往下；往下之前先找現成的 kernel，自己寫的版本很難比調好的函式庫快，還要自己維護",
     "Attention 慢的原因已經有標準的解法：把分數矩陣切成小塊在晶片上算完，n × n 的中間值不寫回 GPU 的主記憶體，而且算出來的結果和原本相同；先確認現在用的是不是這種 kernel",
     "這種 kernel 每一代 GPU 的瓶頸都不一樣，換一代就要重寫；自己寫等於承諾每一代都重做一次",
-    "多數團隊該做的是選一個已經內建這些最佳化的 serving engine，再用 timeline 確認 kernel 之間沒有大空檔"
+    "所以答應之前先確認兩件事：時間是不是其實丟在 kernel 之間的空檔；現在的 serving engine 用的 attention kernel 是不是已經支援這一代 GPU。這兩件都排除了，才輪到自己寫"
    ]
   },
   {
